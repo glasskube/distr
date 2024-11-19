@@ -11,3 +11,7 @@ run: frontend
 .PHONY: build
 build: frontend
 	$(GOCMD) build -o dist/cloud ./cmd/
+
+.PHONY: docker-build
+docker-build:
+	docker build . --tag cloud  --network host
