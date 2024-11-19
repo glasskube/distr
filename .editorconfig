@@ -15,3 +15,6 @@ ij_typescript_use_double_quotes = false
 [*.md]
 max_line_length = off
 trim_trailing_whitespace = false
+
+[{Makefile,go.mod,go.sum,*.go,.gitmodules}]
+indent_style = tab

@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/cloud-ui",
+            "outputPath": "internal/frontend/dist/cloud-ui",
             "index": "frontend/cloud-ui/src/index.html",
             "browser": "frontend/cloud-ui/src/main.ts",
             "polyfills": [
