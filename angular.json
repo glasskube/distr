@@ -3,36 +3,36 @@
   "version": 1,
   "newProjectRoot": "frontend",
   "projects": {
-    "cloud": {
+    "cloud-ui": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
         }
       },
-      "root": "frontend/cloud",
-      "sourceRoot": "frontend/cloud/src",
+      "root": "frontend/cloud-ui",
+      "sourceRoot": "frontend/cloud-ui/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/cloud",
-            "index": "frontend/cloud/src/index.html",
-            "browser": "frontend/cloud/src/main.ts",
+            "outputPath": "dist/cloud-ui",
+            "index": "frontend/cloud-ui/src/index.html",
+            "browser": "frontend/cloud-ui/src/main.ts",
             "polyfills": [
               "zone.js"
             ],
-            "tsConfig": "frontend/cloud/tsconfig.app.json",
+            "tsConfig": "frontend/cloud-ui/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "frontend/cloud/public"
+                "input": "frontend/cloud-ui/public"
               }
             ],
             "styles": [
-              "frontend/cloud/src/styles.scss"
+              "frontend/cloud-ui/src/styles.scss"
             ],
             "scripts": []
           },
@@ -64,10 +64,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "cloud:build:production"
+              "buildTarget": "cloud-ui:build:production"
             },
             "development": {
-              "buildTarget": "cloud:build:development"
+              "buildTarget": "cloud-ui:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -82,16 +82,16 @@
               "zone.js",
               "zone.js/testing"
             ],
-            "tsConfig": "frontend/cloud/tsconfig.spec.json",
+            "tsConfig": "frontend/cloud-ui/tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "frontend/cloud/public"
+                "input": "frontend/cloud-ui/public"
               }
             ],
             "styles": [
-              "frontend/cloud/src/styles.scss"
+              "frontend/cloud-ui/src/styles.scss"
             ],
             "scripts": []
           }
