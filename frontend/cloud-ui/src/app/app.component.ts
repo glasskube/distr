@@ -1,13 +1,19 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {Component, OnInit} from '@angular/core';
+import {SideBarComponent} from './components/side-bar/side-bar.component';
+import {initFlowbite} from 'flowbite';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [SideBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
-  title = 'cloud';
+export class AppComponent implements OnInit{
+  title = 'Glasskube Cloud';
+
+  ngOnInit(): void {
+    initFlowbite();
+  }
+
 }
