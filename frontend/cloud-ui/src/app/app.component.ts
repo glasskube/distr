@@ -9,7 +9,7 @@ import {initFlowbite} from 'flowbite';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit{
+export class AppComponent implements OnInit {
   title = 'Glasskube Cloud';
 
   ngOnInit(): void {
