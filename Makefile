@@ -1,15 +1,19 @@
 GOCMD ?= go
 
-.PHONY: frontend
-frontend:
-	npm run build
+.PHONY: frontend-dev
+frontend-dev:
+	npm run build:dev
+
+.PHONY: frontend-prod
+frontend-prod:
+	npm run build:prod
 
 .PHONY: run
-run: frontend
+run: frontend-dev
 	$(GOCMD) run ./cmd/
 
 .PHONY: build
-build: frontend
+build: frontend-prod
 	$(GOCMD) build -o dist/cloud ./cmd/
 
 .PHONY: docker-build

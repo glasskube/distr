@@ -9,7 +9,7 @@ COPY frontend/ frontend/
 COPY angular.json .
 COPY tailwind.config.js .
 COPY tsconfig.json .
-RUN npm run build
+RUN npm run build:prod
 
 FROM golang:1.23 AS builder
 ARG TARGETOS
