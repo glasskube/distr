@@ -1,5 +1,16 @@
 GOCMD ?= go
 
+.PHONY: lint-frontend
+lint-frontend:
+	npm run lint
+
+.PHONY: lint-go
+lint-go:
+	golangci-lint run
+
+.PHONY: lint
+lint: lint-go lint-frontend
+
 .PHONY: frontend
 frontend:
 	npm run build
