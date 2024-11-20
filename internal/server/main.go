@@ -35,8 +35,13 @@ func Init() error {
 	if err != nil {
 		instance.logger.Error("cannot set up db pool", zap.Error(err))
 		return err
+	} else if conn, err := instance.dbPool.Acquire(context.Background()); err != nil {
+		// this actually checks whether the DB can be connected to
+		instance.logger.Error("cannot acquire connection", zap.Error(err))
+		return err
+	} else {
+		conn.Release()
 	}
-	// TODO quick dummy query against one of our tables to check connection ?
 	return nil
 }
 
