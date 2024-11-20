@@ -3,6 +3,7 @@ import {appConfig} from './app/app.config';
 import {AppComponent} from './app/app.component';
 import posthog from 'posthog-js';
 import {environment} from './env/env';
+import {initFlowbite} from 'flowbite';
 
 if (environment.posthogToken) {
   posthog.init(environment.posthogToken, {
@@ -16,3 +17,5 @@ if (environment.posthogToken) {
 }
 
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
+
+initFlowbite();

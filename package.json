@@ -1,6 +1,8 @@
 {
-  "name": "cloud",
+  "name": "@glasskube/cloud",
   "version": "0.0.0",
+  "description": "Glasskube cloud",
+  "homepage": "https://glasskube.cloud/",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -21,6 +23,8 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@fontsource/poppins": "^5.1.0",
+    "flowbite": "^2.5.2",
     "posthog-js": "^1.187.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
