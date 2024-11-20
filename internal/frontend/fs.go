@@ -5,7 +5,7 @@ import (
 	"io/fs"
 )
 
-//go:embed dist/cloud-ui/browser/*
+//go:embed dist/*
 var embeddedFsys embed.FS
 
 func BrowserFS() fs.FS {

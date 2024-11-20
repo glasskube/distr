@@ -62,6 +62,9 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "proxyConfig": "frontend/cloud-ui/src/proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "cloud-ui:build:production"
