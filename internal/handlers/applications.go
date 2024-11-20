@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func ApplicationsRouter(r chi.Router) {
@@ -22,7 +23,10 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 		// TODO proper logging
 		w.WriteHeader(http.StatusInternalServerError) // TODO status depending on err
 	} else {
-		json.NewEncoder(w).Encode(applications)
+		err := json.NewEncoder(w).Encode(applications)
+		if err != nil {
+
+		}
 	}
 }
 

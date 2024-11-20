@@ -8,6 +8,10 @@ lint-frontend:
 lint-go:
 	golangci-lint run
 
+.PHONY: lint-go-fix
+lint-go-fix:
+	golangci-lint run --fix
+
 .PHONY: lint
 lint: lint-go lint-frontend
 

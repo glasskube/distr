@@ -3,13 +3,16 @@ package context
 import (
 	"context"
 	"errors"
+
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type contextKey int
+
 const (
-	ctxKeyDb          = "db"
-	ctxKeyApplication = "application"
+	ctxKeyDb contextKey = iota
+	ctxKeyApplication
 )
 
 var NotContainedInCtx = errors.New("item not contained in context")

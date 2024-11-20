@@ -1,10 +1,11 @@
 package server
 
 import (
+	"net/http"
+
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func ApiRouter() chi.Router {

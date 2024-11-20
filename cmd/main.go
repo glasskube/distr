@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/glasskube/cloud/internal/server"
-	"github.com/go-chi/chi/v5/middleware"
 	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/glasskube/cloud/internal/server"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/glasskube/cloud/internal/frontend"
 	"github.com/go-chi/chi/v5"
