@@ -50,7 +50,13 @@
                   "maximumError": "4kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "frontend/cloud-ui/src/env/env.ts",
+                  "with": "frontend/cloud-ui/src/env/env.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
