@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/go-chi/chi/v5"
@@ -20,12 +22,12 @@ func ApplicationsRouter(r chi.Router) {
 
 func getApplications(w http.ResponseWriter, r *http.Request) {
 	if applications, err := db.GetApplications(r.Context()); err != nil {
-		// TODO proper logging
-		w.WriteHeader(http.StatusInternalServerError) // TODO status depending on err
+		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get applications", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		err := json.NewEncoder(w).Encode(applications)
 		if err != nil {
-
+			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
 		}
 	}
 }
@@ -36,7 +38,7 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 	// could use the https://github.com/go-chi/render package for that or we do it ourselves
 	err := json.NewEncoder(w).Encode(application)
 	if err != nil {
-		// TODO proper logging
+		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
 	}
 }
 
@@ -46,7 +48,7 @@ func applicationMiddleware(next http.Handler) http.Handler {
 		applicationId := chi.URLParam(r, "applicationId")
 		application, err := db.GetApplication(ctx, applicationId)
 		if err != nil {
-			// TODO proper logging
+			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get application", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if application == nil {
 			w.WriteHeader(http.StatusNotFound)

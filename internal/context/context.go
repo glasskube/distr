@@ -2,20 +2,19 @@ package context
 
 import (
 	"context"
-	"errors"
 
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 type contextKey int
 
 const (
 	ctxKeyDb contextKey = iota
+	ctxKeyLogger
 	ctxKeyApplication
 )
-
-var NotContainedInCtx = errors.New("item not contained in context")
 
 func GetDbOrPanic(ctx context.Context) *pgxpool.Pool {
 	val := ctx.Value(ctxKeyDb)
@@ -29,6 +28,21 @@ func GetDbOrPanic(ctx context.Context) *pgxpool.Pool {
 
 func WithDb(ctx context.Context, db *pgxpool.Pool) context.Context {
 	ctx = context.WithValue(ctx, ctxKeyDb, db)
+	return ctx
+}
+
+func GetLoggerOrPanic(ctx context.Context) *zap.Logger {
+	val := ctx.Value(ctxKeyLogger)
+	if logger, ok := val.(*zap.Logger); ok {
+		if logger != nil {
+			return logger
+		}
+	}
+	panic("logger not contained in context")
+}
+
+func WithLogger(ctx context.Context, logger *zap.Logger) context.Context {
+	ctx = context.WithValue(ctx, ctxKeyLogger, logger)
 	return ctx
 }
 

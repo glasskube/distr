@@ -22,7 +22,6 @@ func main() {
 	}
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.Logger)
 	router.Mount("/api", server.ApiRouter())
 	router.Handle("/*", StaticFileHandler())
 
