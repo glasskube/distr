@@ -5,6 +5,4 @@ import {Component} from '@angular/core';
   standalone: true,
   templateUrl: './dashboard-placeholder.component.html',
 })
-export class DashboardPlaceholderComponent {
-
-}
+export class DashboardPlaceholderComponent {}
