@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/cors"
-
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/go-chi/chi/v5"
@@ -21,7 +19,6 @@ func ApiRouter() chi.Router {
 		loggerCtxMiddleware,
 		loggingMiddleware,
 		dbCtxMiddleware,
-		corsMiddleware(),
 	)
 	router.Route("/applications", handlers.ApplicationsRouter)
 	return router
@@ -58,11 +55,4 @@ func loggingMiddleware(wh http.Handler) http.Handler {
 			zap.String("time", elapsed.String()))
 	}
 	return http.HandlerFunc(fn)
-}
-
-func corsMiddleware() func(next http.Handler) http.Handler {
-	return cors.Handler(cors.Options{
-		AllowedOrigins: []string{"http://localhost:4200"}, // TODO allow localhost only during dev
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	})
 }

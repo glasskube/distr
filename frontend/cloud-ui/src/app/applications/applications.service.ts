@@ -8,7 +8,7 @@ import {catchError, Observable} from 'rxjs';
   providedIn: 'root',
 })
 export class ApplicationsService {
-  applicationsUrl = environment.apiBase + '/applications';
+  applicationsUrl = '/api/applications';
 
   constructor(private httpClient: HttpClient) {}
 
