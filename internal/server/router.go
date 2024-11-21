@@ -15,9 +15,10 @@ func ApiRouter() chi.Router {
 	// TODO for all (most) routes auth middleware
 	router := chi.NewRouter()
 	router.Use(
-		loggingMiddleware(getLogger()),
-		middleware.Recoverer,
+		middleware.RequestID,
 		loggerCtxMiddleware,
+		loggingMiddleware,
+		middleware.Recoverer,
 		dbCtxMiddleware,
 	)
 	router.Route("/applications", handlers.ApplicationsRouter)
@@ -34,25 +35,25 @@ func dbCtxMiddleware(next http.Handler) http.Handler {
 
 func loggerCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger := getLogger()
+		logger := getLogger().
+			With(zap.String("requestId", middleware.GetReqID(r.Context())))
 		ctx := internalctx.WithLogger(r.Context(), logger)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func loggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
-	return func(wh http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-			now := time.Now()
-			wh.ServeHTTP(ww, r)
-			elapsed := time.Since(now)
-			logger.Info("handling request",
-				zap.String("method", r.Method),
-				zap.String("path", r.URL.Path),
-				zap.Int("status", ww.Status()),
-				zap.String("time", elapsed.String()))
-		}
-		return http.HandlerFunc(fn)
+func loggingMiddleware(wh http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		now := time.Now()
+		wh.ServeHTTP(ww, r)
+		elapsed := time.Since(now)
+		logger := internalctx.GetLoggerOrPanic(r.Context())
+		logger.Info("handling request",
+			zap.String("method", r.Method),
+			zap.String("path", r.URL.Path),
+			zap.Int("status", ww.Status()),
+			zap.String("time", elapsed.String()))
 	}
+	return http.HandlerFunc(fn)
 }
