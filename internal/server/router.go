@@ -1,9 +1,10 @@
 package server
 
 import (
-	"github.com/go-chi/cors"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/cors"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/handlers"
