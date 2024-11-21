@@ -20,6 +20,7 @@ func ApplicationsRouter(r chi.Router) {
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.Use(applicationMiddleware)
 		r.Get("/", getApplication)
+		r.Put("/", updateApplication)
 	})
 }
 
@@ -29,12 +30,36 @@ func createApplication(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if err = db.SaveApplication(r.Context(), &application); err != nil {
+	} else if err = db.CreateApplication(r.Context(), &application); err != nil {
 		log.Warn("could not create application", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, err = fmt.Fprintln(w, err); err != nil {
 			log.Error("failed to write error to response", zap.Error(err))
 		}
+	} else if err = json.NewEncoder(w).Encode(application); err != nil {
+		log.Error("failed to encode json", zap.Error(err))
+	}
+}
+
+func updateApplication(w http.ResponseWriter, r *http.Request) {
+	log := internalctx.GetLoggerOrPanic(r.Context())
+	var application types.Application
+	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	existing := internalctx.GetApplicationOrPanic(r.Context())
+	if application.ID == "" {
+		application.ID = existing.ID
+	} else if application.ID != existing.ID {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	if err := db.UpdateApplication(r.Context(), &application); err != nil {
+		log.Warn("could not update application", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(application); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
