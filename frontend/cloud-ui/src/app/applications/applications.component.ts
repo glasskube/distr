@@ -10,7 +10,6 @@ import {RouterLink} from '@angular/router';
   standalone: true,
   imports: [AsyncPipe, RouterLink],
   templateUrl: './applications.component.html',
-  styleUrl: './applications.component.scss',
 })
 export class ApplicationsComponent {
   applications$!: Observable<Application[]>;
