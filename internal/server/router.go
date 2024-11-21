@@ -18,7 +18,6 @@ func ApiRouter() chi.Router {
 		middleware.RequestID,
 		loggerCtxMiddleware,
 		loggingMiddleware,
-		middleware.Recoverer,
 		dbCtxMiddleware,
 	)
 	router.Route("/applications", handlers.ApplicationsRouter)
