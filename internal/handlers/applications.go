@@ -2,22 +2,39 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"go.uber.org/zap"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 )
 
 func ApplicationsRouter(r chi.Router) {
 	// TODO r.Use(AuthMiddleware)
 	r.Get("/", getApplications)
+	r.Post("/", createApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.Use(applicationMiddleware)
 		r.Get("/", getApplication)
 	})
+}
+
+func createApplication(w http.ResponseWriter, r *http.Request) {
+	var application types.Application
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if err = db.SaveApplication(r.Context(), &application); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintln(w, err)
+	} else if err = json.NewEncoder(w).Encode(application); err != nil {
+		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode json", zap.Error(err))
+	}
 }
 
 func getApplications(w http.ResponseWriter, r *http.Request) {
