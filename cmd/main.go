@@ -31,7 +31,7 @@ func main() {
 		<-sigint
 		_ = server.Shutdown()
 		fmt.Println("ok bye")
-		os.Exit(1)
+		os.Exit(0)
 	}()
 
 	addr := ":8080"
