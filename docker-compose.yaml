@@ -5,7 +5,7 @@ volumes:
 
 services:
   postgres:
-    image: 'postgres:15.5-alpine3.17'
+    image: 'postgres:17.1-alpine3.20'
     environment:
       POSTGRES_USER: local
       POSTGRES_PASSWORD: local
