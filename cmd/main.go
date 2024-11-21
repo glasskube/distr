@@ -4,29 +4,41 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/glasskube/cloud/internal/server"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/glasskube/cloud/internal/frontend"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
+	if err := server.Init(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to init server: %v\n", err)
+		panic(err)
+	}
 	router := chi.NewRouter()
-	router.Mount("/api", ApiRouter())
+	router.Use(middleware.Recoverer)
+	router.Mount("/api", server.ApiRouter())
 	router.Handle("/*", StaticFileHandler())
+
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT)
+		<-sigint
+		_ = server.Shutdown()
+		fmt.Println("ok bye")
+		os.Exit(0)
+	}()
 
 	addr := ":8080"
 	fmt.Printf("listen on %v\n", addr)
 	if err := http.ListenAndServe(addr, router); err != nil {
 		panic(err)
 	}
-	fmt.Println("ok bye")
-}
-
-func ApiRouter() chi.Router {
-	router := chi.NewRouter()
-	router.Get("/hello", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusAccepted) })
-	// TODO: add api routes here
-	return router
 }
 
 func StaticFileHandler() http.HandlerFunc {
