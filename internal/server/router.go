@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/go-chi/cors"
 	"net/http"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -12,6 +13,7 @@ func ApiRouter() chi.Router {
 	// TODO for all (most) routes auth middleware
 	router := chi.NewRouter()
 	router.Use(loggerCtxMiddleware, dbCtxMiddleware)
+	router.Use(corsMiddleware())
 	router.Route("/applications", handlers.ApplicationsRouter)
 	return router
 }
@@ -29,5 +31,12 @@ func loggerCtxMiddleware(next http.Handler) http.Handler {
 		logger := getLogger()
 		ctx := internalctx.WithLogger(r.Context(), logger)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func corsMiddleware() func(next http.Handler) http.Handler {
+	return cors.Handler(cors.Options{
+		AllowedOrigins: []string{"http://localhost:4200"}, // TODO allow localhost only during dev
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	})
 }

@@ -1,0 +1,9 @@
+<div class="p-4 sm:ml-64">
+  <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 mt-14">
+    @for (application of applications$ | async; track application.id) {
+    <p>{{application.name}}</p>
+    } @empty {
+    <li aria-hidden="true"> There are no items. </li>
+    }
+  </div>
+</div>
