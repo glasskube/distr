@@ -24,15 +24,19 @@ func ApplicationsRouter(r chi.Router) {
 }
 
 func createApplication(w http.ResponseWriter, r *http.Request) {
+	log := internalctx.GetLoggerOrPanic(r.Context())
 	var application types.Application
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err = db.SaveApplication(r.Context(), &application); err != nil {
+		log.Warn("could not create application", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = fmt.Fprintln(w, err)
+		if _, err = fmt.Fprintln(w, err); err != nil {
+			log.Error("failed to write error to response", zap.Error(err))
+		}
 	} else if err = json.NewEncoder(w).Encode(application); err != nil {
-		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode json", zap.Error(err))
+		log.Error("failed to encode json", zap.Error(err))
 	}
 }
 
