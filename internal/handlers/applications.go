@@ -25,7 +25,6 @@ func ApplicationsRouter(r chi.Router) {
 
 func createApplication(w http.ResponseWriter, r *http.Request) {
 	var application types.Application
-	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
