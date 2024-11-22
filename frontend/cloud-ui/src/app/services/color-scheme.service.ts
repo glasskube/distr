@@ -1,42 +1,42 @@
-import {effect, Injectable} from '@angular/core';
-import {BehaviorSubject, fromEvent} from 'rxjs';
+import {effect, Injectable, signal, WritableSignal} from '@angular/core';
+import {fromEvent} from 'rxjs';
 import {toSignal} from '@angular/core/rxjs-interop';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ColorSchemeService {
-  private _colorScheme: BehaviorSubject<'dark' | ''> = new BehaviorSubject<'dark' | ''>('');
-  storage = toSignal(fromEvent(window, 'storage'));
   private COLOR_SCHEME = 'COLOR_SCHEME';
 
+  // syncs color scheme across tabs
+  private storageSignal = toSignal(fromEvent(window, 'storage'));
+  private _colorSchemeSignal: WritableSignal<'dark' | ''> = signal(this.readColorSchemeFromLocalStorage());
+
+  public get colorScheme() {
+    return this._colorSchemeSignal;
+  }
+
   constructor() {
-    // syncs color scheme across tabs
     effect(() => {
-      this.storage();
-      this.initColorScheme();
+      window.localStorage[this.COLOR_SCHEME] = this.colorScheme();
+    });
+    effect(() => {
+      this.storageSignal();
+      this.colorScheme.set(this.readColorSchemeFromLocalStorage());
     });
   }
 
-  public initColorScheme() {
+  private readColorSchemeFromLocalStorage() {
     switch (window.localStorage[this.COLOR_SCHEME]) {
       case '':
-        this.updateColorScheme('');
-        return;
+        return '';
       case 'dark':
-        this.updateColorScheme('dark');
-        return;
+        return 'dark';
       default:
-        if (window && window.matchMedia('(prefers-color-scheme: dark)').matches) this.updateColorScheme('dark');
+        if (window && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
     }
-  }
-
-  public colorScheme() {
-    return this._colorScheme.asObservable();
-  }
-
-  public updateColorScheme(colorScheme: 'dark' | '') {
-    window.localStorage[this.COLOR_SCHEME] = colorScheme;
-    this._colorScheme.next(colorScheme);
+    return '';
   }
 }

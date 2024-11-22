@@ -1,29 +1,24 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {AsyncPipe, NgIf} from '@angular/common';
+import {Component, inject} from '@angular/core';
+import {NgIf} from '@angular/common';
 import {ColorSchemeService} from '../../services/color-scheme.service';
 
 @Component({
   selector: 'app-color-scheme-switcher',
   standalone: true,
   templateUrl: './color-scheme-switcher.component.html',
-  imports: [NgIf, AsyncPipe],
+  imports: [NgIf],
 })
-export class ColorSchemeSwitcherComponent implements OnInit {
+export class ColorSchemeSwitcherComponent {
   private colorSchemeService = inject(ColorSchemeService);
-  colorScheme$ = this.colorSchemeService.colorScheme();
-  colorScheme: 'dark' | '' = '';
+  public colorSchemeSignal = this.colorSchemeService.colorScheme;
+
+  constructor() {}
 
   switchColorScheme() {
     let newColorScheme: 'dark' | '' = 'dark';
-    if ('dark' === this.colorScheme) {
+    if ('dark' === this.colorSchemeSignal()) {
       newColorScheme = '';
     }
-    this.colorScheme = newColorScheme;
-    this.colorSchemeService.updateColorScheme(newColorScheme);
-  }
-
-  ngOnInit(): void {
-    this.colorSchemeService.colorScheme().subscribe((colorScheme) => (this.colorScheme = colorScheme));
-    this.colorSchemeService.initColorScheme();
+    this.colorSchemeSignal.set(newColorScheme);
   }
 }

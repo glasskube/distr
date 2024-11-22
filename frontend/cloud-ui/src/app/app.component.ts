@@ -1,4 +1,4 @@
-import {Component, HostBinding, inject, OnInit} from '@angular/core';
+import {Component, effect, HostBinding, inject, OnInit} from '@angular/core';
 import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {NavBarComponent} from './components/nav-bar/nav-bar.component';
 import {Event, NavigationEnd, Router, RouterOutlet} from '@angular/router';
@@ -14,7 +14,7 @@ import {ColorSchemeService} from './services/color-scheme.service';
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit {
-  @HostBinding('class') theme: 'dark' | '' = '';
+  @HostBinding('class') colorScheme: 'dark' | '' = '';
   title = 'Glasskube Cloud';
 
   private router = inject(Router);
@@ -22,11 +22,13 @@ export class AppComponent implements OnInit {
     filter((event: Event) => event instanceof NavigationEnd)
   );
 
-  constructor(private colorSchemeService: ColorSchemeService) {}
+  constructor(private colorSchemeService: ColorSchemeService) {
+    effect(() => {
+      this.colorScheme = this.colorSchemeService.colorScheme();
+    });
+  }
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => posthog.capture('$pageview'));
-    this.colorSchemeService.colorScheme().subscribe((colorScheme) => (this.theme = colorScheme));
-    this.colorSchemeService.initColorScheme();
   }
 }
