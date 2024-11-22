@@ -1,1 +1,4 @@
-INSERT INTO application (name) values ('my-application'), ('another-application'), ('application-of-somebody-else');
+INSERT INTO application (name, type)
+VALUES ('my-application', 'docker'),
+  ('another-application', 'docker'),
+  ('application-of-somebody-else', 'docker');
