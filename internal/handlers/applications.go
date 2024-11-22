@@ -54,6 +54,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 		application.ID = existing.ID
 	} else if application.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	if err := db.UpdateApplication(r.Context(), &application); err != nil {
