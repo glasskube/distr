@@ -20,12 +20,12 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 	}
 }
 
-func CreateApplication(ctx context.Context, appliation *types.Application) error {
+func CreateApplication(ctx context.Context, application *types.Application) error {
 	db := internalctx.GetDbOrPanic(ctx)
 	row := db.QueryRow(ctx,
-		"INSERT INTO application (name) VALUES (@name) RETURNING id",
-		pgx.NamedArgs{"name": appliation.Name})
-	if err := row.Scan(&appliation.ID); err != nil {
+		"INSERT INTO application (name) VALUES (@name) RETURNING id, created_at",
+		pgx.NamedArgs{"name": application.Name})
+	if err := row.Scan(&application.ID, &application.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
 	return nil
