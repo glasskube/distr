@@ -44,7 +44,8 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
-	if rows, err := db.Query(ctx, "select id, name, created_at from application where id = @id", pgx.NamedArgs{"id": id}); err != nil {
+	if rows, err := db.Query(ctx,
+		"select id, name, created_at from application where id = @id", pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if err == pgx.ErrNoRows {
