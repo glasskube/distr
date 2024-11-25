@@ -50,7 +50,13 @@
                   "maximumError": "4kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "frontend/cloud-ui/src/env/env.ts",
+                  "with": "frontend/cloud-ui/src/env/env.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -62,6 +68,9 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "proxyConfig": "frontend/cloud-ui/src/proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "cloud-ui:build:production"

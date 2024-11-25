@@ -1,8 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./frontend/**/*.{html,ts}"],
+  content: ['./frontend/cloud-ui/src/**/*.{html,ts}', './frontend/cloud-ui/node_modules/flowbite/**/*.js'],
   theme: {
     extend: {},
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      display: ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
+    },
   },
-  plugins: [],
+  plugins: [require('flowbite/plugin')],
 };

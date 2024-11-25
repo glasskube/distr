@@ -1,0 +1,14 @@
+volumes:
+  postgres:
+
+services:
+  postgres:
+    image: 'postgres:17.2-alpine3.20'
+    environment:
+      POSTGRES_USER: local
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: glasskube
+    volumes:
+      - 'postgres:/var/lib/postgresql/types/'
+    ports:
+      - '5432:5432'

@@ -1,31 +1,40 @@
 {
-  "name": "cloud",
+  "name": "@glasskube/cloud",
   "version": "0.0.0",
+  "description": "Glasskube cloud",
+  "homepage": "https://glasskube.cloud/",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "build:prod": "ng build --configuration=production",
+    "build:dev": "ng build --configuration=development",
+    "watch": "ng build --watch --configuration=development",
+    "test": "ng test",
+    "lint": "prettier --check .",
+    "lint:fix": "prettier --write ."
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^18.2.0",
-    "@angular/common": "^18.2.0",
-    "@angular/compiler": "^18.2.0",
-    "@angular/core": "^18.2.0",
-    "@angular/forms": "^18.2.0",
-    "@angular/platform-browser": "^18.2.0",
-    "@angular/platform-browser-dynamic": "^18.2.0",
-    "@angular/router": "^18.2.0",
+    "@angular/animations": "^19.0.0",
+    "@angular/common": "^19.0.0",
+    "@angular/compiler": "^19.0.0",
+    "@angular/core": "^19.0.0",
+    "@angular/forms": "^19.0.0",
+    "@angular/platform-browser": "^19.0.0",
+    "@angular/platform-browser-dynamic": "^19.0.0",
+    "@angular/router": "^19.0.0",
+    "@fontsource/inter": "^5.1.0",
+    "@fontsource/poppins": "^5.1.0",
+    "flowbite": "^2.5.2",
+    "posthog-js": "^1.187.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.14.10"
+    "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.2.12",
-    "@angular/cli": "^18.2.12",
-    "@angular/compiler-cli": "^18.2.0",
+    "@angular-devkit/build-angular": "^19.0.0",
+    "@angular/cli": "^19.0.0",
+    "@angular/compiler-cli": "^19.0.0",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.20",
     "jasmine-core": "~5.4.0",
@@ -35,7 +44,8 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.4.49",
+    "prettier": "^3.3.3",
     "tailwindcss": "^3.4.15",
-    "typescript": "~5.5.2"
+    "typescript": "~5.6.0"
   }
 }
