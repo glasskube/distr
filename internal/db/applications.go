@@ -128,3 +128,29 @@ type applicationWithOptionalVersionRow struct {
 	ApplicationVersionName            *string
 	ApplicationVersionComposeFileData *[]byte
 }
+
+func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
+	db := internalctx.GetDbOrPanic(ctx)
+	row := db.QueryRow(ctx,
+		"INSERT INTO ApplicationVersion (name, application_id) VALUES (@name, @applicationId) RETURNING id",
+		pgx.NamedArgs{"name": applicationVersion.Name, "applicationId": applicationVersion.ApplicationId})
+	if err := row.Scan(&applicationVersion.ID); err != nil {
+		return fmt.Errorf("could not save application: %w", err)
+	}
+	return nil
+}
+
+func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
+	db := internalctx.GetDbOrPanic(ctx)
+	rows, err := db.Query(ctx,
+		"UPDATE ApplicationVersion SET name = @name WHERE id = @id RETURNING *",
+		pgx.NamedArgs{"id": applicationVersion.ID, "name": applicationVersion.Name})
+	if err != nil {
+		return fmt.Errorf("could not update applicationversion: %w", err)
+	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[types.ApplicationVersion]); err != nil {
+		return fmt.Errorf("could not get updated applicationversion: %w", err)
+	} else {
+		*applicationVersion = updated
+		return nil
+	}
+}

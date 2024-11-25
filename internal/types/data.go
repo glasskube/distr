@@ -15,4 +15,5 @@ type ApplicationVersion struct {
 	CreatedAt       time.Time `db:"created_at" json:"createdAt"`
 	Name            string    `db:"name" json:"name"`
 	ComposeFileData *[]byte   `db:"compose_file_data" json:"composeFileData"`
+	ApplicationId   string    `db:"application_id" json:"-"`
 }
