@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Application } from '../types/application';
-import { combineLatest, map, Observable, scan, shareReplay, startWith, Subject, tap } from 'rxjs';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Application} from '../types/application';
+import {combineLatest, map, Observable, scan, shareReplay, startWith, Subject, tap} from 'rxjs';
 
 export function distinctById(applications: readonly Application[]): Application[] {
   return applications.filter((value: Application, index, self) => {
-    return self.findIndex(element => element.id === value.id) === index;
+    return self.findIndex((element) => element.id === value.id) === index;
   });
 }
 
@@ -22,7 +22,9 @@ export class ApplicationsService {
   private readonly initialApplications: Observable<Application[]>;
   private readonly savedApplications = new Subject<Application>();
   private readonly savedApplicationsAccumulated = this.savedApplications.pipe(
-    scan((list: Application[], it: Application) => [it, ...list], []), startWith([]))
+    scan((list: Application[], it: Application) => [it, ...list], []),
+    startWith([])
+  );
 
   private readonly applications: Observable<Application[]>;
 
@@ -31,8 +33,8 @@ export class ApplicationsService {
     this.applications = combineLatest([this.initialApplications, this.savedApplicationsAccumulated]).pipe(
       map(([initialLs, savedLs]) => distinctById([...savedLs, ...initialLs])),
       map((ls: Application[]) => ls.sort(compareApplicationsByName)),
-      shareReplay(1),
-    )
+      shareReplay(1)
+    );
   }
 
   getApplications(): Observable<Application[]> {
@@ -40,12 +42,14 @@ export class ApplicationsService {
   }
 
   createApplication(application: Application): Observable<Application> {
-    return this.httpClient.post<Application>(this.applicationsUrl, application)
-      .pipe(tap(it => this.savedApplications.next(it)));
+    return this.httpClient
+      .post<Application>(this.applicationsUrl, application)
+      .pipe(tap((it) => this.savedApplications.next(it)));
   }
 
   updateApplication(application: Application): Observable<Application> {
-    return this.httpClient.put<Application>(`${this.applicationsUrl}/${application.id}`, application)
-      .pipe(tap(it => this.savedApplications.next(it)));
+    return this.httpClient
+      .put<Application>(`${this.applicationsUrl}/${application.id}`, application)
+      .pipe(tap((it) => this.savedApplications.next(it)));
   }
 }

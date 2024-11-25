@@ -1,10 +1,10 @@
 import {Component} from '@angular/core';
 import {ApplicationsService} from './applications.service';
-import { AsyncPipe, DatePipe } from '@angular/common';
+import {AsyncPipe, DatePipe} from '@angular/common';
 import {Application} from '../types/application';
 import {Observable} from 'rxjs';
 import {RouterLink} from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 
 @Component({
   selector: 'app-applications',
@@ -29,8 +29,8 @@ export class ApplicationsComponent {
     this.editForm.patchValue({
       id: application.id,
       name: application.name,
-      type: "docker-compose"
-    })
+      type: 'docker-compose',
+    });
   }
 
   newApplication() {
@@ -38,21 +38,21 @@ export class ApplicationsComponent {
   }
 
   saveApplication() {
-    if(this.editForm.valid) {
-      const val = this.editForm.value
+    if (this.editForm.valid) {
+      const val = this.editForm.value;
       let result: Observable<Application>;
-      if(!val.id) {
+      if (!val.id) {
         result = this.applicationsService.createApplication({
           name: val.name!,
-          type: val.type!
+          type: val.type!,
         });
       } else {
         result = this.applicationsService.updateApplication({
           id: val.id!,
-          name: val.name!
+          name: val.name!,
         });
       }
-      result.subscribe(application => this.editApplication(application));
+      result.subscribe((application) => this.editApplication(application));
     }
   }
 }
