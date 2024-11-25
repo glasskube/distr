@@ -29,7 +29,7 @@ export class ApplicationsComponent {
     this.editForm.patchValue({
       id: application.id,
       name: application.name,
-      type: 'docker-compose',
+      type: 'docker',
     });
   }
 
