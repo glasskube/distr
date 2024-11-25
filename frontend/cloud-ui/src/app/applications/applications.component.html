@@ -1002,6 +1002,10 @@
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Product</h3>
         <button
           type="button"
+          data-drawer-target="drawer-update-product"
+          (click)="newApplication()"
+          data-drawer-show="drawer-update-product"
+          aria-controls="drawer-update-product"
           class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
           data-modal-toggle="createProductModal">
           <svg
