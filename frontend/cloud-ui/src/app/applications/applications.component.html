@@ -1,5 +1,5 @@
 <!-- Start block -->
-<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased">
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased mt-14 sm:ml-64">
   <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div
@@ -9,84 +9,40 @@
             <label for="simple-search" class="sr-only">Search</label>
             <div class="relative w-full">
               <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg
-                  aria-hidden="true"
-                  class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                  fill="currentColor"
-                  viewbox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" />
-                </svg>
+                <fa-icon [icon]="magnifyingGlassIcon" class="text-gray-500 dark:text-gray-400"></fa-icon>
               </div>
-              <input
-                type="text"
-                id="simple-search"
-                placeholder="Search for products"
-                required=""
+              <input type="text" id="simple-search" placeholder="Search for products" required=""
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
             </div>
           </form>
         </div>
         <div
           class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-          <button
-            (click)="newApplication()"
-            type="button"
-            id="createProductButton"
-            data-drawer-show="manage-application-drawer"
-            aria-controls="manage-application-drawer"
+          <button (click)="newApplication()" type="button" id="createProductButton"
+            data-drawer-show="manage-application-drawer" aria-controls="manage-application-drawer"
             class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-            <svg
-              class="h-3.5 w-3.5 mr-1.5 -ml-1"
-              fill="currentColor"
-              viewbox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true">
-              <path
-                clip-rule="evenodd"
-                fill-rule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
-            </svg>
+            <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
             Add product
           </button>
           <div class="flex items-center space-x-3 w-full md:w-auto">
-            <button
-              id="actionsDropdownButton"
-              data-dropdown-toggle="actionsDropdown"
+            <button id="actionsDropdownButton" data-dropdown-toggle="actionsDropdown"
               class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
               type="button">
               Actions
-              <svg
-                class="-mr-1 ml-1.5 w-5 h-5"
-                fill="currentColor"
-                viewbox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true">
-                <path
-                  clip-rule="evenodd"
-                  fill-rule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-              </svg>
+              <fa-icon [icon]="caretDownIcon" class="-mr-1 ml-1.5 w-5 h-5 text-gray-500 dark:text-gray-400"></fa-icon>
             </button>
-            <div
-              id="actionsDropdown"
+            <div id="actionsDropdown"
               class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
               <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
                 <li>
-                  <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                  >Mass Edit</a
-                  >
+                  <a href="#"
+                    class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Mass Edit</a>
                 </li>
               </ul>
               <div class="py-1">
-                <a
-                  href="#"
-                  class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                >Delete all</a
-                >
+                <a href="#"
+                  class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Delete
+                  all</a>
               </div>
             </div>
           </div>
@@ -95,101 +51,64 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-          <tr>
-            <th scope="col" class="p-4">
-              <div class="flex items-center">
-                <input
-                  id="checkbox-all"
-                  type="checkbox"
-                  class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                <label for="checkbox-all" class="sr-only">checkbox</label>
-              </div>
-            </th>
-            <th scope="col" class="p-4">Product</th>
-            <th scope="col" class="p-4">Type</th>
-            <th scope="col" class="p-4">Creation Date</th>
-            <th scope="col" class="p-4"></th>
-          </tr>
+            <tr>
+              <th scope="col" class="p-4">
+                <div class="flex items-center">
+                  <input id="checkbox-all" type="checkbox"
+                    class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                  <label for="checkbox-all" class="sr-only">checkbox</label>
+                </div>
+              </th>
+              <th scope="col" class="p-4">Product</th>
+              <th scope="col" class="p-4">Type</th>
+              <th scope="col" class="p-4">Creation Date</th>
+              <th scope="col" class="p-4"></th>
+            </tr>
           </thead>
           <tbody>
             @for (application of applications$ | async; track application.id) {
-              <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <td class="p-4 w-4">
-                  <div class="flex items-center">
-                    <input
-                      id="checkbox-table-search-1"
-                      type="checkbox"
-                      onclick="event.stopPropagation()"
-                      class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
-                  </div>
-                </td>
-                <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  <div class="flex items-center mr-3">
-                    <img
-                      src="https://avatars.githubusercontent.com/u/5429470?s=200&v=4"
-                      alt="Docker"
-                      class="h-8 w-auto mr-3 rounded" />
-                    {{ application.name }}
-                  </div>
-                </th>
-                <td class="px-4 py-3">
-                  <span
-                    class="bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-primary-900 dark:text-primary-300"
-                  >docker-compose</span
-                  >
-                </td>
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  <div class="flex items-center">
-                    {{ application.createdAt | date: 'dd.MM.YYYY HH:mm' }}
-                  </div>
-                </td>
+            <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <td class="p-4 w-4">
+                <div class="flex items-center">
+                  <input id="checkbox-table-search-1" type="checkbox" onclick="event.stopPropagation()"
+                    class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                  <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+                </div>
+              </td>
+              <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <div class="flex items-center mr-3">
+                  <img src="https://avatars.githubusercontent.com/u/5429470?s=200&v=4" alt="Docker"
+                    class="h-8 w-auto mr-3 rounded" />
+                  {{ application.name }}
+                </div>
+              </th>
+              <td class="px-4 py-3">
+                <span
+                  class="bg-primary-100 text-primary-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">docker-compose</span>
+              </td>
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <div class="flex items-center">
+                  {{ application.createdAt | date: 'dd.MM.YYYY HH:mm' }}
+                </div>
+              </td>
 
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  <div class="flex items-center space-x-4">
-                    <button
-                      type="button"
-                      (click)="editApplication(application)"
-                      data-drawer-target="manage-application-drawer"
-                      data-drawer-show="manage-application-drawer"
-                      data-drawer-placement="right"
-                      aria-controls="manage-application-drawer"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 mr-2 -ml-0.5"
-                        viewbox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true">
-                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                        <path
-                          fill-rule="evenodd"
-                          d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                          clip-rule="evenodd" />
-                      </svg>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      data-modal-target="delete-modal"
-                      data-modal-toggle="delete-modal"
-                      class="flex items-center text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 mr-2 -ml-0.5"
-                        viewbox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true">
-                        <path
-                          fill-rule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                          clip-rule="evenodd" />
-                      </svg>
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <div class="flex items-center space-x-4">
+                  <button type="button" (click)="editApplication(application)"
+                    data-drawer-target="manage-application-drawer" data-drawer-show="manage-application-drawer"
+                    data-drawer-placement="right" aria-controls="manage-application-drawer"
+                    class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Edit
+                  </button>
+                  <button type="button" data-modal-target="delete-modal" data-modal-toggle="delete-modal"
+                    class="flex items-center text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                    <fa-icon [icon]="trashIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
             }
           </tbody>
         </table>
@@ -200,82 +119,42 @@
 
 
 <div id="manage-application-drawer"
-     class="fixed top-0 right-0 z-50 h-screen p-4 overflow-y-auto transition-transform translate-x-full bg-white w-80 dark:bg-gray-800"
-     tabindex="-1" aria-labelledby="drawer-right-label">
-  <h5
-    id="drawer-label"
+  class="fixed top-0 right-0 z-50 h-screen p-4 overflow-y-auto transition-transform translate-x-full bg-white w-80 dark:bg-gray-800"
+  tabindex="-1" aria-labelledby="drawer-right-label">
+  <h5 id="drawer-label"
     class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
     Manage Application
   </h5>
-  <button
-    type="button"
-    data-drawer-dismiss="manage-application-drawer"
-    aria-controls="manage-application-drawer"
+  <button type="button" data-drawer-dismiss="manage-application-drawer" aria-controls="manage-application-drawer"
     class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-    <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-      <path
-        fill-rule="evenodd"
-        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-        clip-rule="evenodd"></path>
-    </svg>
+    <fa-icon [icon]="xmarkIcon" class="w-5 h-5"></fa-icon>
     <span class="sr-only">Close menu</span>
   </button>
   <form [formGroup]="editForm" (ngSubmit)="saveApplication()">
     <div class="space-y-4">
       <div>
         <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
-        <input
-          formControlName="name"
-          type="text"
-          name="title"
-          id="name"
+        <input formControlName="name" type="text" name="title" id="name"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-          value=""
-          placeholder="Application name"
-          required="" />
+          value="" placeholder="Application name" required="" />
       </div>
       <div>
         <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
-        <select
-          formControlName="type"
-          id="category"
+        <select formControlName="type" id="category"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
           <option selected="">docker</option>
         </select>
       </div>
     </div>
     <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
-      <button
-        type="submit"
+      <button type="submit"
         class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 mr-2 -ml-0.5"
-          viewbox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true">
-          <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-          <path
-            fill-rule="evenodd"
-            d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-            clip-rule="evenodd" />
-        </svg>
+        <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
         Update
       </button>
-      <button
-        type="button"
+      <button type="button"
         class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-        <svg
-          aria-hidden="true"
-          class="w-5 h-5 mr-1 -ml-1"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg">
-          <path
-            fill-rule="evenodd"
-            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-            clip-rule="evenodd"></path>
-        </svg>
+        <fa-icon [icon]="trashIcon" class="w-5 h-5 mr-1 -ml-1"></fa-icon>
         Delete
       </button>
     </div>
