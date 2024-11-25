@@ -23,6 +23,7 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@fontsource/inter": "^5.1.0",
     "@fontsource/poppins": "^5.1.0",
     "flowbite": "^2.5.2",
     "posthog-js": "^1.187.0",
