@@ -28,8 +28,7 @@ export class ApplicationsComponent {
     type: new FormControl('', Validators.required),
   });
 
-  public constructor(private applicationsService: ApplicationsService) {
-  }
+  public constructor(private applicationsService: ApplicationsService) {}
 
   ngOnInit() {
     this.applications$ = this.applicationsService.getApplications();

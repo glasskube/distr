@@ -47,7 +47,7 @@
               <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
                 <li>
                   <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                  >Mass Edit</a
+                    >Mass Edit</a
                   >
                 </li>
               </ul>
@@ -58,21 +58,21 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-          <tr>
-            <th scope="col" class="p-4">
-              <div class="flex items-center">
-                <input
-                  id="checkbox-all"
-                  type="checkbox"
-                  class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                <label for="checkbox-all" class="sr-only">checkbox</label>
-              </div>
-            </th>
-            <th scope="col" class="p-4">Application</th>
-            <th scope="col" class="p-4">Type</th>
-            <th scope="col" class="p-4">Creation Date</th>
-            <th scope="col" class="p-4"></th>
-          </tr>
+            <tr>
+              <th scope="col" class="p-4">
+                <div class="flex items-center">
+                  <input
+                    id="checkbox-all"
+                    type="checkbox"
+                    class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                  <label for="checkbox-all" class="sr-only">checkbox</label>
+                </div>
+              </th>
+              <th scope="col" class="p-4">Application</th>
+              <th scope="col" class="p-4">Type</th>
+              <th scope="col" class="p-4">Creation Date</th>
+              <th scope="col" class="p-4"></th>
+            </tr>
           </thead>
           <tbody>
             @for (application of applications$ | async; track application.id) {
