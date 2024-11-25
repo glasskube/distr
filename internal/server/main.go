@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -29,9 +30,21 @@ func Init() error {
 
 	instance.logger.Info("initializing server")
 
-	var err error
 	// TODO read DB connection options from environment here or get it passed as param
-	instance.dbPool, err = pgxpool.New(context.Background(), "postgres://local:local@localhost:5432/glasskube")
+	dbConfig, err := pgxpool.ParseConfig("postgres://local:local@localhost:5432/glasskube")
+	if err != nil {
+		return err
+	}
+	dbConfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		typeNames := []string{"DEPLOYMENT_TYPE"}
+		if pgTypes, err := conn.LoadTypes(ctx, typeNames); err != nil {
+			return err
+		} else {
+			conn.TypeMap().RegisterTypes(pgTypes)
+			return nil
+		}
+	}
+	instance.dbPool, err = pgxpool.NewWithConfig(context.Background(), dbConfig)
 	if err != nil {
 		instance.logger.Error("cannot set up db pool", zap.Error(err))
 		return err
