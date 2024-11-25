@@ -11,7 +11,7 @@ import (
 
 func GetApplications(ctx context.Context) ([]types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
-	if rows, err := db.Query(ctx, "select id, name, created_at from application"); err != nil {
+	if rows, err := db.Query(ctx, "select * from Application"); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
@@ -23,8 +23,8 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 func CreateApplication(ctx context.Context, application *types.Application) error {
 	db := internalctx.GetDbOrPanic(ctx)
 	row := db.QueryRow(ctx,
-		"INSERT INTO application (name) VALUES (@name) RETURNING id, created_at",
-		pgx.NamedArgs{"name": application.Name})
+		"INSERT INTO Application (name, type) VALUES (@name, @type) RETURNING id, created_at",
+		pgx.NamedArgs{"name": application.Name, "type": application.Type})
 	if err := row.Scan(&application.ID, &application.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
@@ -33,19 +33,22 @@ func CreateApplication(ctx context.Context, application *types.Application) erro
 
 func UpdateApplication(ctx context.Context, application *types.Application) error {
 	db := internalctx.GetDbOrPanic(ctx)
-	_, err := db.Exec(ctx,
-		"UPDATE application SET name = @name WHERE id = @id",
+	rows, err := db.Query(ctx,
+		"UPDATE Application SET name = @name WHERE id = @id RETURNING *",
 		pgx.NamedArgs{"id": application.ID, "name": application.Name})
 	if err != nil {
 		return fmt.Errorf("could not update application: %w", err)
+	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		return fmt.Errorf("could not get updated application: %w", err)
+	} else {
+		*application = updated
+		return nil
 	}
-	return nil
 }
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
-	if rows, err := db.Query(ctx,
-		"select id, name, created_at from application where id = @id", pgx.NamedArgs{"id": id}); err != nil {
+	if rows, err := db.Query(ctx, "select * from Application where id = @id", pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if err == pgx.ErrNoRows {
