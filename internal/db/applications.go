@@ -13,7 +13,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, "select * from Application"); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
 		return applications, nil
