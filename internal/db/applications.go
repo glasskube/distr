@@ -3,22 +3,12 @@ package db
 import (
 	"context"
 	"fmt"
+	"time"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
 )
-
-func GetApplications(ctx context.Context) ([]types.Application, error) {
-	db := internalctx.GetDbOrPanic(ctx)
-	if rows, err := db.Query(ctx, "select * from Application"); err != nil {
-		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
-		return nil, fmt.Errorf("failed to get applications: %w", err)
-	} else {
-		return applications, nil
-	}
-}
 
 func CreateApplication(ctx context.Context, appliation *types.Application) error {
 	db := internalctx.GetDbOrPanic(ctx)
@@ -46,16 +36,95 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 	}
 }
 
+func GetApplications(ctx context.Context) ([]types.Application, error) {
+	db := internalctx.GetDbOrPanic(ctx)
+	if rows, err := db.Query(ctx, `
+			select a.id,
+			       a.created_at,
+			       a.name,
+			       a.type,
+			       av.id,
+			       av.created_at,
+			       av.name,
+			       av.compose_file_data
+			from Application a
+			    left join ApplicationVersion av on a.id = av.application_id`); err != nil {
+		return nil, fmt.Errorf("failed to query applications: %w", err)
+	} else if joinedStructs, err := pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
+		return nil, fmt.Errorf("failed to get applications: %w", err)
+	} else {
+		return collectApplicationsWithVersions(joinedStructs), nil
+	}
+}
+
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
-	if rows, err := db.Query(ctx, "select * from Application where id = @id", pgx.NamedArgs{"id": id}); err != nil {
+	if rows, err := db.Query(ctx, `
+			select a.id,
+			       a.created_at,
+			       a.name,
+			       a.type,
+			       av.id,
+			       av.created_at,
+			       av.name,
+			       av.compose_file_data
+			from Application a
+			    left join ApplicationVersion av on a.id = av.application_id
+			where a.id = @id
+		`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
-		}
+	} else if joinedStructs, err := pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
 		return nil, fmt.Errorf("failed to get application: %w", err)
+	} else if applications := collectApplicationsWithVersions(joinedStructs); len(applications) != 1 {
+		if len(applications) == 0 {
+			return nil, nil
+		} else {
+			return nil, pgx.ErrTooManyRows
+		}
 	} else {
-		return &application, nil
+		return &applications[0], nil
 	}
+}
+
+func collectApplicationsWithVersions(joinedStructs []applicationWithOptionalVersionRow) []types.Application {
+	applicationsMap := make(map[string]*types.Application)
+	for _, joinedStruct := range joinedStructs {
+		if _, ok := applicationsMap[joinedStruct.ApplicationId]; !ok {
+			applicationsMap[joinedStruct.ApplicationId] = &types.Application{
+				ID:        joinedStruct.ApplicationId,
+				CreatedAt: joinedStruct.ApplicationCreatedAt,
+				Name:      joinedStruct.ApplicationName,
+				Type:      joinedStruct.ApplicationType,
+				Versions:  make([]types.ApplicationVersion, 0),
+			}
+		}
+
+		existing, _ := applicationsMap[joinedStruct.ApplicationId]
+
+		if joinedStruct.ApplicationVersionId != nil {
+			version := types.ApplicationVersion{
+				ID:              *joinedStruct.ApplicationVersionId,
+				CreatedAt:       *joinedStruct.ApplicationVersionCreatedAt,
+				Name:            *joinedStruct.ApplicationVersionName,
+				ComposeFileData: joinedStruct.ApplicationVersionComposeFileData,
+			}
+			existing.Versions = append(existing.Versions, version)
+		}
+	}
+	applications := make([]types.Application, 0, len(applicationsMap))
+	for _, application := range applicationsMap {
+		applications = append(applications, *application)
+	}
+	return applications
+}
+
+type applicationWithOptionalVersionRow struct {
+	ApplicationId                     string
+	ApplicationCreatedAt              time.Time
+	ApplicationName                   string
+	ApplicationType                   types.DeploymentType
+	ApplicationVersionId              *string
+	ApplicationVersionCreatedAt       *time.Time
+	ApplicationVersionName            *string
+	ApplicationVersionComposeFileData *[]byte
 }
