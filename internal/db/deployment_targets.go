@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -45,5 +46,28 @@ func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarge
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
 		return &result, nil
+	}
+}
+
+func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
+	db := internalctx.GetDbOrPanic(ctx)
+	args := pgx.NamedArgs{"name": dt.Name, "type": dt.Type, "lat": nil, "lon": nil}
+	if dt.Geolocation != nil {
+		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
+	}
+	rows, err := db.Query(ctx,
+		"INSERT INTO DeploymentTarget (name, type, geolocation_lat, geolocation_lon) "+
+			"VALUES (@name, @type, @lat, @lon) RETURNING "+
+			deploymentTargetOutputExpr,
+		args)
+	if err != nil {
+		return fmt.Errorf("failed to query DeploymentTargets: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTarget])
+	if err != nil {
+		return fmt.Errorf("could not save DeploymentTarget: %w", err)
+	} else {
+		*dt = result
+		return nil
 	}
 }
