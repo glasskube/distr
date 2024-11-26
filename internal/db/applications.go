@@ -37,6 +37,7 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func GetApplications(ctx context.Context) ([]types.Application, error) {
+	// TODO dont return compose_file_data here (should be its own endpoint + db method)
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, `
 			select a.id,
@@ -58,6 +59,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 }
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
+	// TODO dont return compose_file_data here (should be its own endpoint + db method)
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, `
 			select a.id,
