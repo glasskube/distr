@@ -37,9 +37,11 @@ func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	// TODO: implement
-	fmt.Fprintln(w, "not implemented")
+	dt := internalctx.GetDeploymentTarget(r.Context())
+	err := json.NewEncoder(w).Encode(dt)
+	if err != nil {
+		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+	}
 }
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
