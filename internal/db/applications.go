@@ -27,7 +27,7 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 		pgx.NamedArgs{"id": application.ID, "name": application.Name})
 	if err != nil {
 		return fmt.Errorf("could not update application: %w", err)
-	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[types.Application]); err != nil {
 		return fmt.Errorf("could not get updated application: %w", err)
 	} else {
 		*application = updated
