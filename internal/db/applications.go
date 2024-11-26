@@ -2,8 +2,10 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
@@ -51,8 +53,8 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 	if rows, err := db.Query(ctx, "select * from Application where id = @id", pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.NotFound
 		}
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {

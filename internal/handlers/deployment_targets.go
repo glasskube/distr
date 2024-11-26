@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/go-chi/chi/v5"
@@ -23,7 +25,6 @@ func DeploymentTargetsRouter(r chi.Router) {
 }
 
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
 	if deploymentTargets, err := db.GetDeploymentTargets(r.Context()); err != nil {
 		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get DeploymentTargets", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -55,7 +56,17 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: implement
-		wh.ServeHTTP(w, r)
+		ctx := r.Context()
+		id := r.PathValue("deploymentTargetId")
+		deploymentTarget, err := db.GetDeploymentTarget(ctx, id)
+		if errors.Is(err, apierrors.NotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else if err != nil {
+			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get application", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
+			wh.ServeHTTP(w, r.WithContext(ctx))
+		}
 	})
 }
