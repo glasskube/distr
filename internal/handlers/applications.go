@@ -113,7 +113,7 @@ func getApplicationVersions(w http.ResponseWriter, r *http.Request) {
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	application := internalctx.GetApplication(r.Context())
-	applicationVersionId := chi.URLParam(r, "applicationVersionId")
+	applicationVersionId := r.PathValue("applicationVersionId")
 	// once performance becomes more important, do not load the whole application but only the requested version
 	for _, applicationVersion := range application.Versions {
 		if applicationVersion.ID == applicationVersionId {
@@ -174,7 +174,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	applicationVersionIdFromUrl := chi.URLParam(r, "applicationVersionId")
+	applicationVersionIdFromUrl := r.PathValue("applicationVersionId")
 	existing := internalctx.GetApplication(r.Context())
 	var existingVersion *types.ApplicationVersion
 	for _, version := range existing.Versions {
@@ -202,7 +202,7 @@ func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	application := internalctx.GetApplication(ctx)
-	applicationVersionId := chi.URLParam(r, "applicationVersionId")
+	applicationVersionId := r.PathValue("applicationVersionId")
 	// once performance becomes more important, do not load the whole application but only the requested version
 	for _, applicationVersion := range application.Versions {
 		if applicationVersion.ID == applicationVersionId {
@@ -226,7 +226,7 @@ func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
 func applicationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		applicationId := chi.URLParam(r, "applicationId")
+		applicationId := r.PathValue("applicationId")
 		application, err := db.GetApplication(ctx, applicationId)
 		if errors.Is(err, apierrors.NotFound) {
 			w.WriteHeader(http.StatusNotFound)
