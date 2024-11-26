@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"time"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
@@ -39,92 +38,51 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 func GetApplications(ctx context.Context) ([]types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, `
-			select a.id,
+			SELECT a.id,
 			       a.created_at,
 			       a.name,
 			       a.type,
-			       av.id,
-			       av.created_at,
-			       av.name
-			from Application a
-			    left join ApplicationVersion av on a.id = av.application_id`); err != nil {
+			       CASE WHEN count(av.id) > 0
+			           THEN array_agg(row(av.id, av.created_at, av.name))
+						 END as versions
+			FROM Application a
+			    LEFT JOIN ApplicationVersion av on a.id = av.application_id
+			GROUP BY a.id
+			`); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if joinedStructs, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
+	} else if applications, err :=
+		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
-		return collectApplicationsWithVersions(joinedStructs), nil
+		return applications, nil
 	}
 }
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, `
-			select a.id,
+			SELECT a.id,
 			       a.created_at,
 			       a.name,
 			       a.type,
-			       av.id,
-			       av.created_at,
-			       av.name
-			from Application a
-			    left join ApplicationVersion av on a.id = av.application_id
-			where a.id = @id
+			       CASE WHEN count(av.id) > 0
+			           THEN array_agg(row(av.id, av.created_at, av.name))
+						 END as versions
+			FROM Application a
+			    LEFT JOIN ApplicationVersion av on a.id = av.application_id
+			WHERE a.id = @id
+			GROUP BY a.id
 		`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if joinedStructs, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
-		return nil, fmt.Errorf("failed to get application: %w", err)
-	} else if applications := collectApplicationsWithVersions(joinedStructs); len(applications) != 1 {
-		if len(applications) == 0 {
+	} else if application, err :=
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		if err == pgx.ErrNoRows {
 			return nil, nil
-		} else {
-			return nil, pgx.ErrTooManyRows
 		}
+		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {
-		return &applications[0], nil
+		return &application, nil
 	}
-}
-
-func collectApplicationsWithVersions(joinedStructs []applicationWithOptionalVersionRow) []types.Application {
-	applicationsMap := make(map[string]*types.Application)
-	for _, joinedStruct := range joinedStructs {
-		if _, ok := applicationsMap[joinedStruct.ApplicationId]; !ok {
-			applicationsMap[joinedStruct.ApplicationId] = &types.Application{
-				ID:        joinedStruct.ApplicationId,
-				CreatedAt: joinedStruct.ApplicationCreatedAt,
-				Name:      joinedStruct.ApplicationName,
-				Type:      joinedStruct.ApplicationType,
-				Versions:  make([]types.ApplicationVersion, 0),
-			}
-		}
-
-		existing := applicationsMap[joinedStruct.ApplicationId]
-
-		if joinedStruct.ApplicationVersionId != nil {
-			version := types.ApplicationVersion{
-				ID:        *joinedStruct.ApplicationVersionId,
-				CreatedAt: *joinedStruct.ApplicationVersionCreatedAt,
-				Name:      *joinedStruct.ApplicationVersionName,
-			}
-			existing.Versions = append(existing.Versions, version)
-		}
-	}
-	applications := make([]types.Application, 0, len(applicationsMap))
-	for _, application := range applicationsMap {
-		applications = append(applications, *application)
-	}
-	return applications
-}
-
-type applicationWithOptionalVersionRow struct {
-	ApplicationId               string
-	ApplicationCreatedAt        time.Time
-	ApplicationName             string
-	ApplicationType             types.DeploymentType
-	ApplicationVersionId        *string
-	ApplicationVersionCreatedAt *time.Time
-	ApplicationVersionName      *string
 }
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
