@@ -46,7 +46,8 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			       a.type,
 			       CASE WHEN count(av.id) > 0
 			           THEN array_agg(row(av.id, av.created_at, av.name))
-						 END as versions
+			           ELSE array[]::record[]
+			           END as versions
 			FROM Application a
 			    LEFT JOIN ApplicationVersion av on a.id = av.application_id
 			GROUP BY a.id
@@ -69,7 +70,8 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			       a.type,
 			       CASE WHEN count(av.id) > 0
 			           THEN array_agg(row(av.id, av.created_at, av.name))
-						 END as versions
+			           ELSE array[]::record[]
+			           END as versions
 			FROM Application a
 			    LEFT JOIN ApplicationVersion av on a.id = av.application_id
 			WHERE a.id = @id
