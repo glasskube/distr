@@ -76,7 +76,11 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 		log.Warn("could not update application", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
-	} else if err = json.NewEncoder(w).Encode(application); err != nil {
+		return
+	}
+	// TODO there might be a way to join the versions via the UPDATE command, but I'm not sure it's worth the complexity?
+	application.Versions = existing.Versions
+	if err := json.NewEncoder(w).Encode(application); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
