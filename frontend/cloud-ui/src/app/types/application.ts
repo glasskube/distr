@@ -1,6 +1,5 @@
-export interface Application {
-  id?: string;
-  name?: string;
-  createdAt?: string;
+import {BaseModel, Named} from './base';
+
+export interface Application extends BaseModel, Named {
   type?: string;
 }
