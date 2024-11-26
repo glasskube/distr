@@ -209,6 +209,7 @@ func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
 			if data, err := db.GetApplicationVersionComposeFile(ctx, applicationVersionId); err != nil {
 				log.Error("failed to get compose file from DB", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintln(w, err)
 			} else if data == nil {
 				break
 			} else {
