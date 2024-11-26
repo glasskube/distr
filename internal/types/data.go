@@ -1,10 +1,14 @@
 package types
 
-import "time"
-
 type Application struct {
-	ID        string         `db:"id" json:"id"`
-	CreatedAt time.Time      `db:"created_at" json:"createdAt"`
-	Name      string         `db:"name" json:"name"`
-	Type      DeploymentType `db:"type" json:"type"`
+	Base
+	Name string         `db:"name" json:"name"`
+	Type DeploymentType `db:"type" json:"type"`
+}
+
+type DeploymentTarget struct {
+	Base
+	Name        string         `db:"name" json:"name"`
+	Type        DeploymentType `db:"type" json:"type"`
+	Geolocation *Geolocation   `db:"geolocation" json:"geolocation,omitempty"`
 }
