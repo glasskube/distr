@@ -3,9 +3,17 @@ import {ApplicationsService} from './applications.service';
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {Application} from '../types/application';
 import {Observable} from 'rxjs';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCaretDown, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBoxArchive,
+  faCaretDown,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-applications',
@@ -20,12 +28,14 @@ export class ApplicationsComponent {
   penIcon = faPen;
   trashIcon = faTrash;
   xmarkIcon = faXmark;
+  releaseIcon = faBoxArchive;
 
   applications$!: Observable<Application[]>;
+  selectedApplication?: Application;
   editForm = new FormGroup({
     id: new FormControl(''),
     name: new FormControl('', Validators.required),
-    type: new FormControl('', Validators.required),
+    type: new FormControl('docker', Validators.required)
   });
 
   public constructor(private applicationsService: ApplicationsService) {}
@@ -35,15 +45,17 @@ export class ApplicationsComponent {
   }
 
   editApplication(application: Application) {
+    this.selectedApplication = application;
     this.editForm.patchValue({
       id: application.id,
-      name: application.name,
-      type: 'docker',
+      name: application.name
     });
   }
 
   newApplication() {
+    this.selectedApplication = undefined;
     this.editForm.reset();
+    this.editForm.patchValue({type: 'docker'});
   }
 
   saveApplication() {

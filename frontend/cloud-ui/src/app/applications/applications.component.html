@@ -170,22 +170,42 @@
           formControlName="type"
           id="category"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-          <option selected="">docker</option>
+          <option selected>docker</option>
         </select>
       </div>
     </div>
+
+
+    <ol class="relative border-s border-gray-200 dark:border-gray-700 ml-2 mt-8">
+      @for(version of selectedApplication?.versions; track version.id) {
+        <li class="mb-10 ms-6">
+          <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -start-3 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900">
+              <fa-icon [icon]="releaseIcon"></fa-icon>
+          </span>
+          <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">{{ version.name }}</h3>
+          <time class="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">{{ version.createdAt | date: 'dd.MM.YYYY HH:mm' }}</time>
+          <p class="text-base font-normal text-gray-500 dark:text-gray-400"></p>
+        </li>
+      }
+    </ol>
+
+
     <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
       <button
         type="submit"
         class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
         <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
-        Update
+        @if (selectedApplication?.id) {
+          Update
+        } @else {
+          Create
+        }
       </button>
       <button
         type="button"
-        class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-        <fa-icon [icon]="trashIcon" class="w-5 h-5 mr-1 -ml-1"></fa-icon>
-        Delete
+        data-drawer-dismiss="manage-application-drawer"
+        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+        Cancel
       </button>
     </div>
   </form>
