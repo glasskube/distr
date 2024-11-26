@@ -1,0 +1,14 @@
+POST http://localhost:8080/api/applications/e82597d4-4e08-45bf-8e0d-f9b67ea8b187/versions
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="file.txt"
+
+< ../docker-compose.yaml
+--WebAppBoundary--
+Content-Disposition: form-data; name=applicationversion
+Content-Type: application/json
+
+{ "name": "some-new-version-v3" }
+--WebAppBoundary--
+###

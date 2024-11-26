@@ -27,12 +27,12 @@ func DeploymentTargetsRouter(r chi.Router) {
 
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 	if deploymentTargets, err := db.GetDeploymentTargets(r.Context()); err != nil {
-		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get DeploymentTargets", zap.Error(err))
+		internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTargets", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		err := json.NewEncoder(w).Encode(deploymentTargets)
 		if err != nil {
-			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
 		}
 	}
 }
@@ -41,12 +41,12 @@ func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	dt := internalctx.GetDeploymentTarget(r.Context())
 	err := json.NewEncoder(w).Encode(dt)
 	if err != nil {
-		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
 	}
 }
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLoggerOrPanic(r.Context())
+	log := internalctx.GetLogger(r.Context())
 	var dt types.DeploymentTarget
 	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -61,7 +61,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLoggerOrPanic(r.Context())
+	log := internalctx.GetLogger(r.Context())
 	var dt types.DeploymentTarget
 	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -95,7 +95,7 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 		if errors.Is(err, apierrors.NotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get application", zap.Error(err))
+			internalctx.GetLogger(r.Context()).Error("failed to get application", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)

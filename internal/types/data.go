@@ -1,9 +1,21 @@
 package types
 
+import "time"
+
 type Application struct {
 	Base
-	Name string         `db:"name" json:"name"`
-	Type DeploymentType `db:"type" json:"type"`
+	Name     string               `db:"name" json:"name"`
+	Type     DeploymentType       `db:"type" json:"type"`
+	Versions []ApplicationVersion `db:"versions" json:"versions"`
+}
+
+type ApplicationVersion struct {
+	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	ID              string    `db:"id" json:"id"`
+	CreatedAt       time.Time `db:"created_at" json:"createdAt"`
+	Name            string    `db:"name" json:"name"`
+	ComposeFileData *[]byte   `db:"compose_file_data" json:"-"`
+	ApplicationId   string    `db:"application_id" json:"-"`
 }
 
 type DeploymentTarget struct {
