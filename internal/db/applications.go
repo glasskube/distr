@@ -51,7 +51,8 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			from Application a
 			    left join ApplicationVersion av on a.id = av.application_id`); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if joinedStructs, err := pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
+	} else if joinedStructs, err :=
+		pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
 		return collectApplicationsWithVersions(joinedStructs), nil
@@ -75,7 +76,8 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			where a.id = @id
 		`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if joinedStructs, err := pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
+	} else if joinedStructs, err :=
+		pgx.CollectRows(rows, pgx.RowToStructByPos[applicationWithOptionalVersionRow]); err != nil {
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else if applications := collectApplicationsWithVersions(joinedStructs); len(applications) != 1 {
 		if len(applications) == 0 {
@@ -101,7 +103,7 @@ func collectApplicationsWithVersions(joinedStructs []applicationWithOptionalVers
 			}
 		}
 
-		existing, _ := applicationsMap[joinedStruct.ApplicationId]
+		existing := applicationsMap[joinedStruct.ApplicationId]
 
 		if joinedStruct.ApplicationVersionId != nil {
 			version := types.ApplicationVersion{
