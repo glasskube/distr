@@ -61,9 +61,30 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	// TODO: implement
-	fmt.Fprintln(w, "not implemented")
+	log := internalctx.GetLoggerOrPanic(r.Context())
+	var dt types.DeploymentTarget
+	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	existing := internalctx.GetDeploymentTarget(r.Context())
+	if dt.ID == "" {
+		dt.ID = existing.ID
+	} else if dt.ID != existing.ID {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "wrong id")
+		return
+	}
+
+	if err := db.UpdateDeploymentTarget(r.Context(), &dt); err != nil {
+		log.Warn("could not update DeploymentTarget", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
+		log.Error("failed to encode json", zap.Error(err))
+	}
 }
 
 func deploymentTargetMiddelware(wh http.Handler) http.Handler {

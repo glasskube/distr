@@ -71,3 +71,24 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) err
 		return nil
 	}
 }
+
+func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
+	db := internalctx.GetDbOrPanic(ctx)
+	args := pgx.NamedArgs{"id": dt.ID, "name": dt.Name, "lat": nil, "lon": nil}
+	if dt.Geolocation != nil {
+		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
+	}
+	rows, err := db.Query(ctx,
+		"UPDATE DeploymentTarget SET name = @name, geolocation_lat = @lat, geolocation_lon = @lon "+
+			" WHERE id = @id RETURNING "+
+			deploymentTargetOutputExpr,
+		args)
+	if err != nil {
+		return fmt.Errorf("could not update DeploymentTarget: %w", err)
+	} else if updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTarget]); err != nil {
+		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
+	} else {
+		*dt = updated
+		return nil
+	}
+}
