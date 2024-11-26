@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"os"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -127,19 +129,29 @@ func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
 func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLoggerOrPanic(ctx)
-	if file, _, err := r.FormFile("docker-compose"); err != nil {
+
+	body := r.FormValue("applicationversion")
+	var applicationVersion types.ApplicationVersion
+	if err := json.NewDecoder(strings.NewReader(body)).Decode(&applicationVersion); err != nil {
+		log.Error("failed to deocde version", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if file, _, err := r.FormFile("file"); err != nil {
+		if !errors.Is(err, http.ErrMissingFile) {
+			log.Error("failed to get file from upload", zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	} else if data, err := io.ReadAll(file); err != nil {
 		log.Error("failed to read file from upload", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else {
-		// TODO
-		fmt.Fprintf(os.Stderr, "%v\n", file)
+		applicationVersion.ComposeFileData = &data
 	}
-	var applicationVersion types.ApplicationVersion
-	if err := json.NewDecoder(r.Body).Decode(&applicationVersion); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+
 	application := internalctx.GetApplicationOrPanic(ctx)
 	applicationVersion.ApplicationId = application.ID
 	if err := db.CreateApplicationVersion(ctx, &applicationVersion); err != nil {

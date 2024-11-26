@@ -131,9 +131,16 @@ type applicationWithOptionalVersionRow struct {
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDbOrPanic(ctx)
+	args := pgx.NamedArgs{
+		"name":          applicationVersion.Name,
+		"applicationId": applicationVersion.ApplicationId,
+	}
+	if applicationVersion.ComposeFileData != nil {
+		args["composeFileData"] = *applicationVersion.ComposeFileData
+	}
 	row := db.QueryRow(ctx,
-		"INSERT INTO ApplicationVersion (name, application_id) VALUES (@name, @applicationId) RETURNING id",
-		pgx.NamedArgs{"name": applicationVersion.Name, "applicationId": applicationVersion.ApplicationId})
+		`INSERT INTO ApplicationVersion (name, application_id, compose_file_data)
+					VALUES (@name, @applicationId, @composeFileData::bytea) RETURNING id`, args)
 	if err := row.Scan(&applicationVersion.ID); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
