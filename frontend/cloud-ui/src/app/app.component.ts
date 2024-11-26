@@ -5,11 +5,12 @@ import {Event, NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import posthog from 'posthog-js';
 import {filter, Observable} from 'rxjs';
 import {ColorSchemeService} from './services/color-scheme.service';
+import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [SideBarComponent, NavBarComponent, RouterOutlet],
+  imports: [SideBarComponent, NavBarComponent, RouterOutlet, FontAwesomeModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

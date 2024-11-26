@@ -9,12 +9,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func CreateApplication(ctx context.Context, appliation *types.Application) error {
+func CreateApplication(ctx context.Context, application *types.Application) error {
 	db := internalctx.GetDbOrPanic(ctx)
 	row := db.QueryRow(ctx,
-		"INSERT INTO Application (name, type) VALUES (@name, @type) RETURNING id",
-		pgx.NamedArgs{"name": appliation.Name, "type": appliation.Type})
-	if err := row.Scan(&appliation.ID); err != nil {
+		"INSERT INTO Application (name, type) VALUES (@name, @type) RETURNING id, created_at",
+		pgx.NamedArgs{"name": application.Name, "type": application.Type})
+	if err := row.Scan(&application.ID, &application.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
 	return nil
