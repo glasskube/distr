@@ -40,7 +40,7 @@ func ApplicationsRouter(r chi.Router) {
 }
 
 func createApplication(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLoggerOrPanic(r.Context())
+	log := internalctx.GetLogger(r.Context())
 	var application types.Application
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -57,14 +57,14 @@ func createApplication(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateApplication(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLoggerOrPanic(r.Context())
+	log := internalctx.GetLogger(r.Context())
 	var application types.Application
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	existing := internalctx.GetApplicationOrPanic(r.Context())
+	existing := internalctx.GetApplication(r.Context())
 	if application.ID == "" {
 		application.ID = existing.ID
 	} else if application.ID != existing.ID {
@@ -83,43 +83,43 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 
 func getApplications(w http.ResponseWriter, r *http.Request) {
 	if applications, err := db.GetApplications(r.Context()); err != nil {
-		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get applications", zap.Error(err))
+		internalctx.GetLogger(r.Context()).Error("failed to get applications", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		err := json.NewEncoder(w).Encode(applications)
 		if err != nil {
-			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
 		}
 	}
 }
 
 func getApplication(w http.ResponseWriter, r *http.Request) {
-	application := internalctx.GetApplicationOrPanic(r.Context())
+	application := internalctx.GetApplication(r.Context())
 	// in the future we might want to transform the application to a well-defined endpoint-type instead of passing through
 	// could use the https://github.com/go-chi/render package for that or we do it ourselves
 	err := json.NewEncoder(w).Encode(application)
 	if err != nil {
-		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
 	}
 }
 
 func getApplicationVersions(w http.ResponseWriter, r *http.Request) {
-	application := internalctx.GetApplicationOrPanic(r.Context())
+	application := internalctx.GetApplication(r.Context())
 	err := json.NewEncoder(w).Encode(application.Versions)
 	if err != nil {
-		internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
 	}
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
-	application := internalctx.GetApplicationOrPanic(r.Context())
+	application := internalctx.GetApplication(r.Context())
 	applicationVersionId := chi.URLParam(r, "applicationVersionId")
 	// once performance becomes more important, do not load the whole application but only the requested version
 	for _, applicationVersion := range application.Versions {
 		if applicationVersion.ID == applicationVersionId {
 			err := json.NewEncoder(w).Encode(applicationVersion)
 			if err != nil {
-				internalctx.GetLoggerOrPanic(r.Context()).Error("failed to encode to json", zap.Error(err))
+				internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
 			}
 			return
 		}
@@ -129,7 +129,7 @@ func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
 
 func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	log := internalctx.GetLoggerOrPanic(ctx)
+	log := internalctx.GetLogger(ctx)
 
 	body := r.FormValue("applicationversion")
 	var applicationVersion types.ApplicationVersion
@@ -153,7 +153,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		applicationVersion.ComposeFileData = &data
 	}
 
-	application := internalctx.GetApplicationOrPanic(ctx)
+	application := internalctx.GetApplication(ctx)
 	applicationVersion.ApplicationId = application.ID
 	if err := db.CreateApplicationVersion(ctx, &applicationVersion); err != nil {
 		log.Warn("could not create applicationversion", zap.Error(err))
@@ -167,7 +167,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLoggerOrPanic(r.Context())
+	log := internalctx.GetLogger(r.Context())
 	var applicationVersion types.ApplicationVersion
 	if err := json.NewDecoder(r.Body).Decode(&applicationVersion); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -175,7 +175,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	applicationVersionIdFromUrl := chi.URLParam(r, "applicationVersionId")
-	existing := internalctx.GetApplicationOrPanic(r.Context())
+	existing := internalctx.GetApplication(r.Context())
 	var existingVersion *types.ApplicationVersion
 	for _, version := range existing.Versions {
 		if version.ID == applicationVersionIdFromUrl {
@@ -200,8 +200,8 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 
 func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	log := internalctx.GetLoggerOrPanic(ctx)
-	application := internalctx.GetApplicationOrPanic(ctx)
+	log := internalctx.GetLogger(ctx)
+	application := internalctx.GetApplication(ctx)
 	applicationVersionId := chi.URLParam(r, "applicationVersionId")
 	// once performance becomes more important, do not load the whole application but only the requested version
 	for _, applicationVersion := range application.Versions {
@@ -231,7 +231,7 @@ func applicationMiddleware(next http.Handler) http.Handler {
 		if errors.Is(err, apierrors.NotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get application", zap.Error(err))
+			internalctx.GetLogger(r.Context()).Error("failed to get application", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			ctx = internalctx.WithApplication(ctx, application)

@@ -6,7 +6,7 @@ import (
 	"github.com/glasskube/cloud/internal/types"
 )
 
-func GetApplicationOrPanic(ctx context.Context) *types.Application {
+func GetApplication(ctx context.Context) *types.Application {
 	val := ctx.Value(ctxKeyApplication)
 	if application, ok := val.(*types.Application); ok {
 		if application != nil {

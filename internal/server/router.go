@@ -48,7 +48,7 @@ func loggingMiddleware(wh http.Handler) http.Handler {
 		now := time.Now()
 		wh.ServeHTTP(ww, r)
 		elapsed := time.Since(now)
-		logger := internalctx.GetLoggerOrPanic(r.Context())
+		logger := internalctx.GetLogger(r.Context())
 		logger.Info("handling request",
 			zap.String("method", r.Method),
 			zap.String("path", r.URL.Path),

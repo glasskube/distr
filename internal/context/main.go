@@ -16,7 +16,7 @@ const (
 	ctxKeyDeploymentTarget
 )
 
-func GetDbOrPanic(ctx context.Context) *pgxpool.Pool {
+func GetDb(ctx context.Context) *pgxpool.Pool {
 	val := ctx.Value(ctxKeyDb)
 	if db, ok := val.(*pgxpool.Pool); ok {
 		if db != nil {
@@ -31,7 +31,7 @@ func WithDb(ctx context.Context, db *pgxpool.Pool) context.Context {
 	return ctx
 }
 
-func GetLoggerOrPanic(ctx context.Context) *zap.Logger {
+func GetLogger(ctx context.Context) *zap.Logger {
 	val := ctx.Value(ctxKeyLogger)
 	if logger, ok := val.(*zap.Logger); ok {
 		if logger != nil {

@@ -21,7 +21,7 @@ const (
 )
 
 func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error) {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, "SELECT "+deploymentTargetOutputExpr+" FROM DeploymentTarget"); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentTarget]); err != nil {
@@ -32,7 +32,7 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error)
 }
 
 func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarget, error) {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+deploymentTargetOutputExpr+" FROM DeploymentTarget WHERE id = @id",
 		pgx.NamedArgs{"id": id})
@@ -50,7 +50,7 @@ func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarge
 }
 
 func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{"name": dt.Name, "type": dt.Type, "lat": nil, "lon": nil}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
@@ -73,7 +73,7 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) err
 }
 
 func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{"id": dt.ID, "name": dt.Name, "lat": nil, "lon": nil}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})

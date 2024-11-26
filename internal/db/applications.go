@@ -12,7 +12,7 @@ import (
 )
 
 func CreateApplication(ctx context.Context, application *types.Application) error {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	row := db.QueryRow(ctx,
 		"INSERT INTO Application (name, type) VALUES (@name, @type) RETURNING id, created_at",
 		pgx.NamedArgs{"name": application.Name, "type": application.Type})
@@ -23,7 +23,7 @@ func CreateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func UpdateApplication(ctx context.Context, application *types.Application) error {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE Application SET name = @name WHERE id = @id RETURNING *",
 		pgx.NamedArgs{"id": application.ID, "name": application.Name})
@@ -38,7 +38,7 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func GetApplications(ctx context.Context) ([]types.Application, error) {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT a.id,
 			       a.created_at,
@@ -61,7 +61,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 }
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT a.id,
 			       a.created_at,
@@ -88,7 +88,7 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 }
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
 		"applicationId": applicationVersion.ApplicationId,
@@ -106,7 +106,7 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 }
 
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE ApplicationVersion SET name = @name WHERE id = @id RETURNING *",
 		pgx.NamedArgs{"id": applicationVersion.ID, "name": applicationVersion.Name})
@@ -121,7 +121,7 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 }
 
 func GetApplicationVersionComposeFile(ctx context.Context, applicationVersionId string) ([]byte, error) {
-	db := internalctx.GetDbOrPanic(ctx)
+	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, "SELECT compose_file_data FROM ApplicationVersion WHERE id = @id", pgx.NamedArgs{
 		"id": applicationVersionId,
 	}); err != nil {
