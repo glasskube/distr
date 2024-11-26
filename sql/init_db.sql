@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS DeploymentTarget (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
   name TEXT NOT NULL,
-  type DEPLOYMENT_TYPE NOT NULL
+  type DEPLOYMENT_TYPE NOT NULL,
+  geolocation_lat FLOAT,
+  geolocation_lon FLOAT
 );
 
 CREATE TABLE IF NOT EXISTS Organization_DeploymentTarget (

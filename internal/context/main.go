@@ -13,6 +13,7 @@ const (
 	ctxKeyDb contextKey = iota
 	ctxKeyLogger
 	ctxKeyApplication
+	ctxKeyDeploymentTarget
 )
 
 func GetDbOrPanic(ctx context.Context) *pgxpool.Pool {

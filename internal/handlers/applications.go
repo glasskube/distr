@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"strings"
 
-	"go.uber.org/zap"
-
+	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
 func ApplicationsRouter(r chi.Router) {
@@ -228,11 +228,11 @@ func applicationMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		applicationId := chi.URLParam(r, "applicationId")
 		application, err := db.GetApplication(ctx, applicationId)
-		if err != nil {
+		if errors.Is(err, apierrors.NotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else if err != nil {
 			internalctx.GetLoggerOrPanic(r.Context()).Error("failed to get application", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
-		} else if application == nil {
-			w.WriteHeader(http.StatusNotFound)
 		} else {
 			ctx = internalctx.WithApplication(ctx, application)
 			next.ServeHTTP(w, r.WithContext(ctx))

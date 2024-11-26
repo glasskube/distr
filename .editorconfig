@@ -18,3 +18,4 @@ trim_trailing_whitespace = false
 
 [{Makefile,go.mod,go.sum,*.go,.gitmodules}]
 indent_style = tab
+tab_width = 4
