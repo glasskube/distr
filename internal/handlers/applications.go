@@ -33,6 +33,7 @@ func ApplicationsRouter(r chi.Router) {
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
 				r.Put("/", updateApplicationVersion)
+				r.Get("/compose-file", getApplicationVersionComposeFile)
 			})
 		})
 	})
@@ -195,6 +196,30 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	} else if err = json.NewEncoder(w).Encode(applicationVersion); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
+}
+
+func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLoggerOrPanic(ctx)
+	application := internalctx.GetApplicationOrPanic(ctx)
+	applicationVersionId := chi.URLParam(r, "applicationVersionId")
+	// once performance becomes more important, do not load the whole application but only the requested version
+	for _, applicationVersion := range application.Versions {
+		if applicationVersion.ID == applicationVersionId {
+			if data, err := db.GetApplicationVersionComposeFile(ctx, applicationVersionId); err != nil {
+				log.Error("failed to get compose file from DB", zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+			} else if data == nil {
+				break
+			} else {
+				w.Header().Add("Content-Type", "application/yaml")
+				if _, err := w.Write(data); err != nil {
+					log.Error("failed to write compose file to response", zap.Error(err))
+				}
+			}
+		}
+	}
+	w.WriteHeader(http.StatusNotFound)
 }
 
 func applicationMiddleware(next http.Handler) http.Handler {

@@ -37,7 +37,6 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func GetApplications(ctx context.Context) ([]types.Application, error) {
-	// TODO dont return compose_file_data here (should be its own endpoint + db method)
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, `
 			select a.id,
@@ -46,8 +45,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			       a.type,
 			       av.id,
 			       av.created_at,
-			       av.name,
-			       av.compose_file_data
+			       av.name
 			from Application a
 			    left join ApplicationVersion av on a.id = av.application_id`); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
@@ -60,7 +58,6 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 }
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
-	// TODO dont return compose_file_data here (should be its own endpoint + db method)
 	db := internalctx.GetDbOrPanic(ctx)
 	if rows, err := db.Query(ctx, `
 			select a.id,
@@ -69,8 +66,7 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			       a.type,
 			       av.id,
 			       av.created_at,
-			       av.name,
-			       av.compose_file_data
+			       av.name
 			from Application a
 			    left join ApplicationVersion av on a.id = av.application_id
 			where a.id = @id
@@ -107,10 +103,9 @@ func collectApplicationsWithVersions(joinedStructs []applicationWithOptionalVers
 
 		if joinedStruct.ApplicationVersionId != nil {
 			version := types.ApplicationVersion{
-				ID:              *joinedStruct.ApplicationVersionId,
-				CreatedAt:       *joinedStruct.ApplicationVersionCreatedAt,
-				Name:            *joinedStruct.ApplicationVersionName,
-				ComposeFileData: joinedStruct.ApplicationVersionComposeFileData,
+				ID:        *joinedStruct.ApplicationVersionId,
+				CreatedAt: *joinedStruct.ApplicationVersionCreatedAt,
+				Name:      *joinedStruct.ApplicationVersionName,
 			}
 			existing.Versions = append(existing.Versions, version)
 		}
@@ -123,14 +118,13 @@ func collectApplicationsWithVersions(joinedStructs []applicationWithOptionalVers
 }
 
 type applicationWithOptionalVersionRow struct {
-	ApplicationId                     string
-	ApplicationCreatedAt              time.Time
-	ApplicationName                   string
-	ApplicationType                   types.DeploymentType
-	ApplicationVersionId              *string
-	ApplicationVersionCreatedAt       *time.Time
-	ApplicationVersionName            *string
-	ApplicationVersionComposeFileData *[]byte
+	ApplicationId               string
+	ApplicationCreatedAt        time.Time
+	ApplicationName             string
+	ApplicationType             types.DeploymentType
+	ApplicationVersionId        *string
+	ApplicationVersionCreatedAt *time.Time
+	ApplicationVersionName      *string
 }
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
@@ -163,5 +157,21 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	} else {
 		*applicationVersion = updated
 		return nil
+	}
+}
+
+func GetApplicationVersionComposeFile(ctx context.Context, applicationVersionId string) ([]byte, error) {
+	db := internalctx.GetDbOrPanic(ctx)
+	if rows, err := db.Query(ctx, "SELECT compose_file_data FROM ApplicationVersion WHERE id = @id", pgx.NamedArgs{
+		"id": applicationVersionId,
+	}); err != nil {
+		return nil, fmt.Errorf("could not get applicationversion: %w", err)
+	} else if data, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[[]byte]); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	} else {
+		return data, nil
 	}
 }
