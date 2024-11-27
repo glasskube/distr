@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {Observable} from 'rxjs';
 import {Application} from '../types/application';
-import {ApplicationsService} from './applications.service';
+import {ApplicationsService} from '../services/applications.service';
 
 @Component({
   selector: 'app-applications',
@@ -30,7 +30,8 @@ export class ApplicationsComponent {
   xmarkIcon = faXmark;
   releaseIcon = faBoxArchive;
 
-  applications$!: Observable<Application[]>;
+  private readonly applications = inject(ApplicationsService);
+  applications$: Observable<Application[]> = this.applications.list();
   selectedApplication?: Application;
   editForm = new FormGroup({
     id: new FormControl(''),
@@ -43,12 +44,6 @@ export class ApplicationsComponent {
   fileToUpload: File | null = null;
   @ViewChild('fileInput')
   fileInput?: ElementRef;
-
-  public constructor(private applicationsService: ApplicationsService) {}
-
-  ngOnInit() {
-    this.applications$ = this.applicationsService.getApplications();
-  }
 
   editApplication(application: Application) {
     this.selectedApplication = application;
@@ -83,12 +78,12 @@ export class ApplicationsComponent {
       const val = this.editForm.value;
       let result: Observable<Application>;
       if (!val.id) {
-        result = this.applicationsService.createApplication({
+        result = this.applications.create({
           name: val.name!,
           type: val.type!,
         });
       } else {
-        result = this.applicationsService.updateApplication({
+        result = this.applications.update({
           id: val.id!,
           name: val.name!,
         });
@@ -103,7 +98,7 @@ export class ApplicationsComponent {
 
   createVersion() {
     if (this.newVersionForm.valid && this.fileToUpload != null && this.selectedApplication) {
-      this.applicationsService
+      this.applications
         .createApplicationVersion(
           this.selectedApplication,
           {
@@ -112,8 +107,6 @@ export class ApplicationsComponent {
           this.fileToUpload
         )
         .subscribe((av) => {
-          // not super correct state management, but good enough
-          this.selectedApplication!.versions = [av, ...(this.selectedApplication!.versions || [])];
           this.resetVersionForm();
         });
     }
