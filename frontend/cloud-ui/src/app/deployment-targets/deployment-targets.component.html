@@ -14,7 +14,7 @@
               <input
                 type="text"
                 id="simple-search"
-                placeholder="Search for applications"
+                placeholder="Search for deployment targets "
                 required=""
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
             </div>
@@ -23,16 +23,16 @@
         <div
           class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
           <button
-            (click)="newApplication()"
+            (click)="newDeploymentTarget()"
             type="button"
-            id="createApplicationButton"
-            data-drawer-show="manage-application-drawer"
-            data-drawer-body-scrolling="true"
-            aria-controls="manage-application-drawer"
+            id="createDeploymentTargetButton"
+            data-drawer-show="manage-deployment-target-drawer"
+            aria-controls="manage-deployment-target-drawer"
             class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
             <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-            Add application
+            Add deployment target
           </button>
+          <!--
           <div class="flex items-center space-x-3 w-full md:w-auto">
             <button
               id="actionsDropdownButton"
@@ -48,36 +48,41 @@
               <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
                 <li>
                   <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                    >Mass Edit</a
+                  >Mass Edit</a
                   >
                 </li>
               </ul>
             </div>
           </div>
+          -->
         </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th scope="col" class="p-4">
-                <div class="flex items-center">
-                  <input
-                    id="checkbox-all"
-                    type="checkbox"
-                    class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                  <label for="checkbox-all" class="sr-only">checkbox</label>
-                </div>
-              </th>
-              <th scope="col" class="p-4">Application</th>
+              <!--
+            <th scope="col" class="p-4">
+              <div class="flex items-center">
+                <input
+                  id="checkbox-all"
+                  type="checkbox"
+                  class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                <label for="checkbox-all" class="sr-only">checkbox</label>
+              </div>
+            </th>
+            -->
+              <th scope="col" class="p-4">Deployment Target</th>
               <th scope="col" class="p-4">Type</th>
               <th scope="col" class="p-4">Creation Date</th>
+              <th scope="col" class="p-4">Geolocation</th>
               <th scope="col" class="p-4"></th>
             </tr>
           </thead>
           <tbody>
-            @for (application of applications$ | async; track application.id) {
+            @for (dt of deploymentTargets$ | async; track dt.id) {
               <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <!--
                 <td class="p-4 w-4">
                   <div class="flex items-center">
                     <input
@@ -88,34 +93,39 @@
                     <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
                   </div>
                 </td>
+                -->
                 <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <div class="flex items-center mr-3">
                     <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto mr-3 rounded" height="199" width="199" />
-                    {{ application.name }}
+                    {{ dt.name }}
                   </div>
                 </th>
                 <td class="px-4 py-3">
                   <span
                     class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                    {{ application.type }}
+                    {{ dt.type }}
                   </span>
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <div class="flex items-center">
-                    {{ application.createdAt | date: 'dd.MM.YYYY HH:mm' }}
+                    {{ dt.createdAt | date: 'dd.MM.YYYY HH:mm' }}
                   </div>
+                </td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  @if (dt.geolocation) {
+                    {{ dt.geolocation.lat }}/{{ dt.geolocation.lon }}
+                  }
                 </td>
 
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <div class="flex justify-end space-x-4">
                     <button
                       type="button"
-                      (click)="editApplication(application)"
-                      data-drawer-target="manage-application-drawer"
-                      data-drawer-show="manage-application-drawer"
-                      data-drawer-body-scrolling="true"
+                      (click)="editDeploymentTarget(dt)"
+                      data-drawer-target="manage-deployment-target-drawer"
+                      data-drawer-show="manage-deployment-target-drawer"
                       data-drawer-placement="right"
-                      aria-controls="manage-application-drawer"
+                      aria-controls="manage-deployment-target-drawer"
                       class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                       <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
                       Edit
@@ -132,24 +142,29 @@
 </section>
 
 <div
-  id="manage-application-drawer"
+  id="manage-deployment-target-drawer"
   class="fixed top-0 right-0 z-50 h-screen p-4 overflow-y-auto transition-transform translate-x-full bg-white w-80 dark:bg-gray-800"
   tabindex="-1"
   aria-labelledby="drawer-right-label">
   <h5
     id="drawer-label"
     class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-    Manage Application
+    @if (editForm.value.id) {
+      Modify
+    } @else {
+      New
+    }
+    Deployment Target
   </h5>
   <button
     type="button"
-    data-drawer-dismiss="manage-application-drawer"
-    aria-controls="manage-application-drawer"
+    data-drawer-dismiss="manage-deployment-target-drawer"
+    aria-controls="manage-deployment-target-drawer"
     class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
     <fa-icon [icon]="xmarkIcon" class="w-5 h-5"></fa-icon>
     <span class="sr-only">Close menu</span>
   </button>
-  <form [formGroup]="editForm" (ngSubmit)="saveApplication()">
+  <form [formGroup]="editForm" (ngSubmit)="saveDeploymentTarget()">
     <div class="space-y-4">
       <div>
         <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
@@ -160,8 +175,8 @@
           id="name"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
           value=""
-          placeholder="Application name"
-          required />
+          placeholder="Deployment target name"
+          required="" />
       </div>
       <div>
         <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
@@ -169,89 +184,53 @@
           formControlName="type"
           id="category"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-          <option selected>docker</option>
+          <option selected="">docker</option>
         </select>
       </div>
-
-      <div class="mt-8 mb-4 flex justify-center w-full pb-4 space-x-4 sm:px-4 sm:mt-0">
-        <button
-          type="submit"
-          [disabled]="editForm.invalid"
-          class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-          @if (selectedApplication?.id) {
-            <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
-            Update
-          } @else {
-            <fa-icon [icon]="plusIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
-            Create
-          }
-        </button>
-        <button
-          type="button"
-          data-drawer-dismiss="manage-application-drawer"
-          class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-          Cancel
-        </button>
-      </div>
+      <ng-container formGroupName="geolocation">
+        <div>
+          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >Geolocation latitude</label
+          >
+          <input
+            formControlName="lat"
+            type="number"
+            step="0.000001"
+            id="lat"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+            placeholder="Geolocation latitude" />
+        </div>
+        <div>
+          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >Geolocation longitude</label
+          >
+          <input
+            formControlName="lon"
+            type="number"
+            step="0.000001"
+            id="lon"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+            placeholder="Geolocation longitude" />
+        </div>
+      </ng-container>
+    </div>
+    <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
+      <button
+        type="submit"
+        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+        <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
+        @if (editForm.value.id) {
+          Update
+        } @else {
+          Create
+        }
+      </button>
+      <button
+        type="button"
+        class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+        <fa-icon [icon]="trashIcon" class="w-5 h-5 mr-1 -ml-1"></fa-icon>
+        Delete
+      </button>
     </div>
   </form>
-
-  @if (selectedApplication?.id) {
-    <form [formGroup]="newVersionForm" (ngSubmit)="createVersion()">
-      <div>
-        <h3 class="font-semibold block mt-10 mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">
-          New Version
-        </h3>
-        <div class="space-y-4">
-          <div>
-            <input
-              formControlName="versionName"
-              type="text"
-              name="versionName"
-              id="versionName"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-              value=""
-              placeholder="Version Name"
-              required />
-          </div>
-          <div class="w-full">
-            <input
-              id="file_input"
-              type="file"
-              #fileInput
-              (change)="onFileSelected($event)"
-              class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-              aria-describedby="file_input_help" />
-            <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
-              Choose your docker compose file
-            </p>
-            <div class="flex items-center space-x-2.5">
-              <button
-                type="submit"
-                [disabled]="newVersionForm.invalid || fileToUpload === null"
-                class="text-white bg-blue-700 hover:bg-blue-800 w-full focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 block">
-                Create New Version
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-  }
-
-  <ol class="relative border-s border-gray-200 dark:border-gray-700 ml-2 mt-8">
-    @for (version of selectedApplication?.versions; track version.id) {
-      <li class="mb-10 ms-6">
-        <span
-          class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -start-3 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900">
-          <fa-icon [icon]="releaseIcon"></fa-icon>
-        </span>
-        <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">{{ version.name }}</h3>
-        <time class="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">{{
-          version.createdAt | date: 'dd.MM.YYYY HH:mm'
-        }}</time>
-        <p class="text-base font-normal text-gray-500 dark:text-gray-400"></p>
-      </li>
-    }
-  </ol>
 </div>

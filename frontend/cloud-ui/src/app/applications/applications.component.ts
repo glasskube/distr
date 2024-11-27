@@ -1,8 +1,5 @@
+import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, ElementRef, ViewChild} from '@angular/core';
-import {ApplicationsService} from './applications.service';
-import {AsyncPipe, DatePipe} from '@angular/common';
-import {Application} from '../types/application';
-import {Observable} from 'rxjs';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -14,12 +11,14 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {initFlowbite} from 'flowbite';
+import {Observable} from 'rxjs';
+import {Application} from '../types/application';
+import {ApplicationsService} from './applications.service';
 
 @Component({
   selector: 'app-applications',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent],
+  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage],
   templateUrl: './applications.component.html',
 })
 export class ApplicationsComponent {
@@ -49,10 +48,6 @@ export class ApplicationsComponent {
 
   ngOnInit() {
     this.applications$ = this.applicationsService.getApplications();
-  }
-
-  ngAfterViewInit() {
-    initFlowbite();
   }
 
   editApplication(application: Application) {
