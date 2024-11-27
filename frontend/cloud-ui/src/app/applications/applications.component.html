@@ -74,8 +74,8 @@
           }
           <th scope="col" class="p-4">Application</th>
           <th scope="col" class="p-4">Type</th>
-          <th scope="col" class="p-4">Versions</th>
           @if (fullVersion) {
+            <th scope="col" class="p-4">Versions</th>
             <th scope="col" class="p-4">Creation Date</th>
             <th scope="col" class="p-4"></th>
           }
@@ -108,13 +108,13 @@
                 {{ application.type }}
               </span>
             </td>
-            <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-              <div class="flex items-center">
-                {{ application.versions?.length || 0 }}
-              </div>
-            </td>
 
             @if (fullVersion) {
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <div class="flex items-center">
+                  {{ application.versions?.length || 0 }}
+                </div>
+              </td>
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <div class="flex items-center">
                   {{ application.createdAt | date: 'dd.MM.YYYY HH:mm' }}
