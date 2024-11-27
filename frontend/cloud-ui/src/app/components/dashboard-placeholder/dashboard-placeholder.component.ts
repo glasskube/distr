@@ -3,6 +3,7 @@ import {GlobeComponent} from '../globe/globe.component';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ApplicationsComponent} from '../../applications/applications.component';
 import {DeploymentTargetsComponent} from '../../deployment-targets/deployment-targets.component';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-dashboard-placeholder',
