@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {ApplicationsService} from './applications.service';
-import {AsyncPipe, DatePipe} from '@angular/common';
+import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Application} from '../types/application';
 import {Observable} from 'rxjs';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -10,7 +10,7 @@ import {faCaretDown, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@
 @Component({
   selector: 'app-applications',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent],
+  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage],
   templateUrl: './applications.component.html',
 })
 export class ApplicationsComponent {
