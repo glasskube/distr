@@ -3,7 +3,7 @@ import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {NavBarComponent} from './components/nav-bar/nav-bar.component';
 import {Event, NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import posthog from 'posthog-js';
-import {filter, Observable} from 'rxjs';
+import {filter, interval, Observable} from 'rxjs';
 import {ColorSchemeService} from './services/color-scheme.service';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {initFlowbite} from 'flowbite';
@@ -17,14 +17,13 @@ import {initFlowbite} from 'flowbite';
 })
 export class AppComponent implements OnInit {
   @HostBinding('class') colorScheme: 'dark' | '' = '';
-  title = 'Glasskube Cloud';
 
-  private router = inject(Router);
-  private navigationEnd$: Observable<NavigationEnd> = this.router.events.pipe(
+  private readonly router = inject(Router);
+  private readonly navigationEnd$: Observable<NavigationEnd> = this.router.events.pipe(
     filter((event: Event) => event instanceof NavigationEnd)
   );
 
-  constructor(private colorSchemeService: ColorSchemeService) {
+  constructor(private readonly colorSchemeService: ColorSchemeService) {
     effect(() => {
       this.colorScheme = this.colorSchemeService.colorScheme();
     });
@@ -32,9 +31,6 @@ export class AppComponent implements OnInit {
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => posthog.capture('$pageview'));
-  }
-
-  ngAfterViewInit() {
-    initFlowbite();
+    interval(500).subscribe(() => initFlowbite());
   }
 }

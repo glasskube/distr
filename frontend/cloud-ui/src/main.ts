@@ -1,9 +1,8 @@
 import {bootstrapApplication} from '@angular/platform-browser';
-import {appConfig} from './app/app.config';
-import {AppComponent} from './app/app.component';
 import posthog from 'posthog-js';
+import {AppComponent} from './app/app.component';
+import {appConfig} from './app/app.config';
 import {environment} from './env/env';
-import {initFlowbite} from 'flowbite';
 
 if (environment.posthogToken) {
   posthog.init(environment.posthogToken, {
@@ -17,5 +16,3 @@ if (environment.posthogToken) {
 }
 
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-
-initFlowbite();
