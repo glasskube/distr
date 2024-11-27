@@ -27,6 +27,7 @@
             type="button"
             id="createApplicationButton"
             data-drawer-show="manage-application-drawer"
+            data-drawer-body-scrolling="true"
             aria-controls="manage-application-drawer"
             class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
             <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
@@ -112,6 +113,7 @@
                       (click)="editApplication(application)"
                       data-drawer-target="manage-application-drawer"
                       data-drawer-show="manage-application-drawer"
+                      data-drawer-body-scrolling="true"
                       data-drawer-placement="right"
                       aria-controls="manage-application-drawer"
                       class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
@@ -159,7 +161,7 @@
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
           value=""
           placeholder="Application name"
-          required="" />
+          required />
       </div>
       <div>
         <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
@@ -167,23 +169,89 @@
           formControlName="type"
           id="category"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-          <option selected="">docker</option>
+          <option selected>docker</option>
         </select>
       </div>
-    </div>
-    <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
-      <button
-        type="submit"
-        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-        <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
-        Update
-      </button>
-      <button
-        type="button"
-        class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-        <fa-icon [icon]="trashIcon" class="w-5 h-5 mr-1 -ml-1"></fa-icon>
-        Delete
-      </button>
+
+      <div class="mt-8 mb-4 flex justify-center w-full pb-4 space-x-4 sm:px-4 sm:mt-0">
+        <button
+          type="submit"
+          [disabled]="editForm.invalid"
+          class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+          @if (selectedApplication?.id) {
+            <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
+            Update
+          } @else {
+            <fa-icon [icon]="plusIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
+            Create
+          }
+        </button>
+        <button
+          type="button"
+          data-drawer-dismiss="manage-application-drawer"
+          class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+          Cancel
+        </button>
+      </div>
     </div>
   </form>
+
+  @if (selectedApplication?.id) {
+    <form [formGroup]="newVersionForm" (ngSubmit)="createVersion()">
+      <div>
+        <h3 class="font-semibold block mt-10 mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">
+          New Version
+        </h3>
+        <div class="space-y-4">
+          <div>
+            <input
+              formControlName="versionName"
+              type="text"
+              name="versionName"
+              id="versionName"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              value=""
+              placeholder="Version Name"
+              required />
+          </div>
+          <div class="w-full">
+            <input
+              id="file_input"
+              type="file"
+              #fileInput
+              (change)="onFileSelected($event)"
+              class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              aria-describedby="file_input_help" />
+            <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
+              Choose your docker compose file
+            </p>
+            <div class="flex items-center space-x-2.5">
+              <button
+                type="submit"
+                [disabled]="newVersionForm.invalid || fileToUpload === null"
+                class="text-white bg-blue-700 hover:bg-blue-800 w-full focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 block">
+                Create New Version
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  }
+
+  <ol class="relative border-s border-gray-200 dark:border-gray-700 ml-2 mt-8">
+    @for (version of selectedApplication?.versions; track version.id) {
+      <li class="mb-10 ms-6">
+        <span
+          class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -start-3 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900">
+          <fa-icon [icon]="releaseIcon"></fa-icon>
+        </span>
+        <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">{{ version.name }}</h3>
+        <time class="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">{{
+          version.createdAt | date: 'dd.MM.YYYY HH:mm'
+        }}</time>
+        <p class="text-base font-normal text-gray-500 dark:text-gray-400"></p>
+      </li>
+    }
+  </ol>
 </div>

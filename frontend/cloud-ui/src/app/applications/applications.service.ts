@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable, tap} from 'rxjs';
-import {Application} from '../types/application';
+import {Application, ApplicationVersion} from '../types/application';
 import {DefaultReactiveList, ReactiveList} from '../services/cache';
 
 @Injectable({
@@ -27,5 +27,16 @@ export class ApplicationsService {
     return this.httpClient
       .put<Application>(`${this.applicationsUrl}/${application.id}`, application)
       .pipe(tap((it) => this.cache.save(it)));
+  }
+
+  createApplicationVersion(
+    application: Application,
+    applicationVersion: ApplicationVersion,
+    file: File
+  ): Observable<ApplicationVersion> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('applicationversion', JSON.stringify(applicationVersion));
+    return this.httpClient.post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData);
   }
 }
