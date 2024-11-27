@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, ElementRef, ViewChild} from '@angular/core';
 import {ApplicationsService} from './applications.service';
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {Application} from '../types/application';
@@ -36,9 +36,13 @@ export class ApplicationsComponent {
     id: new FormControl(''),
     name: new FormControl('', Validators.required),
     type: new FormControl('docker', Validators.required),
-    versionName: new FormControl(),
+  });
+  newVersionForm = new FormGroup({
+    versionName: new FormControl('', Validators.required),
   });
   fileToUpload: File | null = null;
+  @ViewChild('fileInput')
+  fileInput?: ElementRef;
 
   public constructor(private applicationsService: ApplicationsService) {}
 
@@ -51,14 +55,27 @@ export class ApplicationsComponent {
     this.editForm.patchValue({
       id: application.id,
       name: application.name,
-      versionName: '',
     });
+    this.resetVersionForm();
   }
 
   newApplication() {
     this.selectedApplication = undefined;
+    this.resetEditForm();
+    this.resetVersionForm();
+  }
+
+  private resetEditForm() {
     this.editForm.reset();
     this.editForm.patchValue({type: 'docker'});
+  }
+
+  private resetVersionForm() {
+    this.newVersionForm.reset();
+    this.fileToUpload = null;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 
   saveApplication() {
@@ -85,19 +102,19 @@ export class ApplicationsComponent {
   }
 
   createVersion() {
-    console.log(this.editForm, this.fileToUpload);
-    if (this.editForm.controls.versionName.valid && this.fileToUpload != null && this.selectedApplication) {
+    if (this.newVersionForm.valid && this.fileToUpload != null && this.selectedApplication) {
       this.applicationsService
         .createApplicationVersion(
           this.selectedApplication,
           {
-            name: this.editForm.controls.versionName.value,
+            name: this.newVersionForm.controls.versionName.value!,
           },
           this.fileToUpload
         )
         .subscribe((av) => {
           // not super correct state management, but good enough
           this.selectedApplication!.versions = [av, ...(this.selectedApplication!.versions || [])];
+          this.resetVersionForm();
         });
     }
   }
