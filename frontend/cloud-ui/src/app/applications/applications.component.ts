@@ -3,7 +3,7 @@ import {ApplicationsService} from './applications.service';
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {Application} from '../types/application';
 import {Observable} from 'rxjs';
-import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBoxArchive,
@@ -14,6 +14,7 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import {initFlowbite} from 'flowbite';
 
 @Component({
   selector: 'app-applications',
@@ -48,6 +49,10 @@ export class ApplicationsComponent {
 
   ngOnInit() {
     this.applications$ = this.applicationsService.getApplications();
+  }
+
+  ngAfterViewInit() {
+    initFlowbite();
   }
 
   editApplication(application: Application) {

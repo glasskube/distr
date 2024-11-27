@@ -6,6 +6,7 @@ import posthog from 'posthog-js';
 import {filter, Observable} from 'rxjs';
 import {ColorSchemeService} from './services/color-scheme.service';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
+import {initFlowbite} from 'flowbite';
 
 @Component({
   selector: 'app-root',
@@ -31,5 +32,9 @@ export class AppComponent implements OnInit {
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => posthog.capture('$pageview'));
+  }
+
+  ngAfterViewInit() {
+    initFlowbite();
   }
 }
