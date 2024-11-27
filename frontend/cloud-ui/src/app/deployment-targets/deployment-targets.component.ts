@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, Input} from '@angular/core';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -13,6 +13,7 @@ import {lastValueFrom} from 'rxjs';
   templateUrl: './deployment-targets.component.html',
 })
 export class DeploymentTargetsComponent {
+  @Input('fullVersion') fullVersion = false;
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
   readonly caretDownIcon = faCaretDown;
