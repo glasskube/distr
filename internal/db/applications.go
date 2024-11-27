@@ -40,17 +40,17 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 func GetApplications(ctx context.Context) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-			SELECT a.id,
-			       a.created_at,
-			       a.name,
-			       a.type,
-			       CASE WHEN count(av.id) > 0
-			           THEN array_agg(row(av.id, av.created_at, av.name))
-			           ELSE array[]::record[]
-			           END as versions
+			SELECT
+			    a.id,
+			    a.created_at,
+			    a.name,
+			    a.type,
+			    coalesce((
+			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
+			    	FROM applicationversion av
+			    	WHERE av.application_id = a.id
+			    ), array[]::record[]) as versions
 			FROM Application a
-			    LEFT JOIN ApplicationVersion av on a.id = av.application_id
-			GROUP BY a.id
 			`); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err :=
@@ -64,18 +64,18 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-			SELECT a.id,
-			       a.created_at,
-			       a.name,
-			       a.type,
-			       CASE WHEN count(av.id) > 0
-			           THEN array_agg(row(av.id, av.created_at, av.name))
-			           ELSE array[]::record[]
-			           END as versions
+			SELECT
+			    a.id,
+			    a.created_at,
+			    a.name,
+			    a.type,
+			    coalesce((
+			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
+			    	FROM applicationversion av
+			    	WHERE av.application_id = a.id
+			    ), array[]::record[]) as versions
 			FROM Application a
-			    LEFT JOIN ApplicationVersion av on a.id = av.application_id
 			WHERE a.id = @id
-			GROUP BY a.id
 		`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err :=
@@ -100,8 +100,8 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	}
 	row := db.QueryRow(ctx,
 		`INSERT INTO ApplicationVersion (name, application_id, compose_file_data)
-					VALUES (@name, @applicationId, @composeFileData::bytea) RETURNING id`, args)
-	if err := row.Scan(&applicationVersion.ID); err != nil {
+					VALUES (@name, @applicationId, @composeFileData::bytea) RETURNING id, created_at`, args)
+	if err := row.Scan(&applicationVersion.ID, &applicationVersion.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
 	return nil

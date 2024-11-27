@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Application} from '../types/application';
+import {Application, ApplicationVersion} from '../types/application';
 import {combineLatest, map, Observable, scan, shareReplay, startWith, Subject, tap} from 'rxjs';
 
 export function distinctById(applications: readonly Application[]): Application[] {
@@ -51,5 +51,16 @@ export class ApplicationsService {
     return this.httpClient
       .put<Application>(`${this.applicationsUrl}/${application.id}`, application)
       .pipe(tap((it) => this.savedApplications.next(it)));
+  }
+
+  createApplicationVersion(
+    application: Application,
+    applicationVersion: ApplicationVersion,
+    file: File
+  ): Observable<ApplicationVersion> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('applicationversion', JSON.stringify(applicationVersion));
+    return this.httpClient.post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData);
   }
 }
