@@ -1,236 +1,239 @@
-<!-- Start block -->
-<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased mt-14 sm:ml-64">
-  <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
-    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-      <div
-        class="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between mx-4 py-4 dark:border-gray-700">
-        <div class="w-full md:w-1/2">
-          <form class="flex items-center">
-            <label for="simple-search" class="sr-only">Search</label>
-            <div class="relative w-full">
-              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <fa-icon [icon]="magnifyingGlassIcon" class="text-gray-500 dark:text-gray-400"></fa-icon>
-              </div>
-              <input
-                type="text"
-                id="simple-search"
-                placeholder="Search for deployment targets "
-                required=""
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+<div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+  @if (fullVersion) {
+    <div
+      class="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between mx-4 py-4 dark:border-gray-700">
+      <div class="w-full md:w-1/2">
+        <form class="flex items-center">
+          <label for="simple-search" class="sr-only">Search</label>
+          <div class="relative w-full">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <fa-icon [icon]="magnifyingGlassIcon" class="text-gray-500 dark:text-gray-400"></fa-icon>
             </div>
-          </form>
-        </div>
-        <div
-          class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-          <button
-            (click)="newDeploymentTarget()"
-            type="button"
-            id="createDeploymentTargetButton"
-            data-drawer-show="manage-deployment-target-drawer"
-            aria-controls="manage-deployment-target-drawer"
-            class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-            <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-            Add deployment target
-          </button>
-          <!--
-          <div class="flex items-center space-x-3 w-full md:w-auto">
-            <button
-              id="actionsDropdownButton"
-              data-dropdown-toggle="actionsDropdown"
-              class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-              type="button">
-              Actions
-              <fa-icon [icon]="caretDownIcon" class="-mr-1 ml-1.5 w-5 h-5 text-gray-500 dark:text-gray-400"></fa-icon>
-            </button>
-            <div
-              id="actionsDropdown"
-              class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-              <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
-                <li>
-                  <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                  >Mass Edit</a
-                  >
-                </li>
-              </ul>
-            </div>
+            <input
+              type="text"
+              id="simple-search"
+              placeholder="Search for deployment targets "
+              required=""
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
           </div>
-          -->
-        </div>
+        </form>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-              <!--
-            <th scope="col" class="p-4">
+      <div
+        class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+        <button
+          (click)="newDeploymentTarget()"
+          type="button"
+          id="createDeploymentTargetButton"
+          data-drawer-show="manage-deployment-target-drawer"
+          aria-controls="manage-deployment-target-drawer"
+          class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+          <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
+          Add deployment target
+        </button>
+        <!--
+        <div class="flex items-center space-x-3 w-full md:w-auto">
+          <button
+            id="actionsDropdownButton"
+            data-dropdown-toggle="actionsDropdown"
+            class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+            type="button">
+            Actions
+            <fa-icon [icon]="caretDownIcon" class="-mr-1 ml-1.5 w-5 h-5 text-gray-500 dark:text-gray-400"></fa-icon>
+          </button>
+          <div
+            id="actionsDropdown"
+            class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
+            <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
+              <li>
+                <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                >Mass Edit</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        -->
+      </div>
+    </div>
+  }
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <!--
+        <th scope="col" class="p-4">
+          <div class="flex items-center">
+            <input
+              id="checkbox-all"
+              type="checkbox"
+              class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+            <label for="checkbox-all" class="sr-only">checkbox</label>
+          </div>
+        </th>
+        -->
+          <th scope="col" class="p-4">Deployment Target</th>
+          <th scope="col" class="p-4">Type</th>
+          @if (fullVersion) {
+            <th scope="col" class="p-4">Creation Date</th>
+            <th scope="col" class="p-4">Geolocation</th>
+            <th scope="col" class="p-4"></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (dt of deploymentTargets$ | async; track dt.id) {
+          <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <!--
+            <td class="p-4 w-4">
               <div class="flex items-center">
                 <input
-                  id="checkbox-all"
+                  id="checkbox-table-search-1"
                   type="checkbox"
+                  (click)="$event.stopPropagation()"
                   class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                <label for="checkbox-all" class="sr-only">checkbox</label>
+                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+              </div>
+            </td>
+            -->
+            <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              <div class="flex items-center mr-3">
+                <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto mr-3 rounded" height="199" width="199" />
+                {{ dt.name }}
               </div>
             </th>
-            -->
-              <th scope="col" class="p-4">Deployment Target</th>
-              <th scope="col" class="p-4">Type</th>
-              <th scope="col" class="p-4">Creation Date</th>
-              <th scope="col" class="p-4">Geolocation</th>
-              <th scope="col" class="p-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (dt of deploymentTargets$ | async; track dt.id) {
-              <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <!--
-                <td class="p-4 w-4">
-                  <div class="flex items-center">
-                    <input
-                      id="checkbox-table-search-1"
-                      type="checkbox"
-                      (click)="$event.stopPropagation()"
-                      class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
-                  </div>
-                </td>
-                -->
-                <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  <div class="flex items-center mr-3">
-                    <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto mr-3 rounded" height="199" width="199" />
-                    {{ dt.name }}
-                  </div>
-                </th>
-                <td class="px-4 py-3">
-                  <span
-                    class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                    {{ dt.type }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  <div class="flex items-center">
-                    {{ dt.createdAt | date: 'dd.MM.YYYY HH:mm' }}
-                  </div>
-                </td>
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  @if (dt.geolocation) {
-                    {{ dt.geolocation.lat }}/{{ dt.geolocation.lon }}
-                  }
-                </td>
+            <td class="px-4 py-3">
+              <span
+                class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                {{ dt.type }}
+              </span>
+            </td>
+            @if (fullVersion) {
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <div class="flex items-center">
+                  {{ dt.createdAt | date: 'dd.MM.YYYY HH:mm' }}
+                </div>
+              </td>
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                @if (dt.geolocation) {
+                  {{ dt.geolocation.lat }}/{{ dt.geolocation.lon }}
+                }
+              </td>
 
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  <div class="flex justify-end space-x-4">
-                    <button
-                      type="button"
-                      (click)="editDeploymentTarget(dt)"
-                      data-drawer-target="manage-deployment-target-drawer"
-                      data-drawer-show="manage-deployment-target-drawer"
-                      data-drawer-placement="right"
-                      aria-controls="manage-deployment-target-drawer"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                      <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-                      Edit
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <div class="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    (click)="editDeploymentTarget(dt)"
+                    data-drawer-target="manage-deployment-target-drawer"
+                    data-drawer-show="manage-deployment-target-drawer"
+                    data-drawer-placement="right"
+                    aria-controls="manage-deployment-target-drawer"
+                    class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Edit
+                  </button>
+                </div>
+              </td>
             }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div
-  id="manage-deployment-target-drawer"
-  class="fixed top-0 right-0 z-50 h-screen p-4 overflow-y-auto transition-transform translate-x-full bg-white w-80 dark:bg-gray-800"
-  tabindex="-1"
-  aria-labelledby="drawer-right-label">
-  <h5
-    id="drawer-label"
-    class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-    @if (editForm.value.id) {
-      Modify
-    } @else {
-      New
-    }
-    Deployment Target
-  </h5>
-  <button
-    type="button"
-    data-drawer-dismiss="manage-deployment-target-drawer"
-    aria-controls="manage-deployment-target-drawer"
-    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-    <fa-icon [icon]="xmarkIcon" class="w-5 h-5"></fa-icon>
-    <span class="sr-only">Close menu</span>
-  </button>
-  <form [formGroup]="editForm" (ngSubmit)="saveDeploymentTarget()">
-    <div class="space-y-4">
-      <div>
-        <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
-        <input
-          formControlName="name"
-          type="text"
-          name="title"
-          id="name"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-          value=""
-          placeholder="Deployment target name"
-          required="" />
-      </div>
-      <div>
-        <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
-        <select
-          formControlName="type"
-          id="category"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-          <option selected="">docker</option>
-        </select>
-      </div>
-      <ng-container formGroupName="geolocation">
-        <div>
-          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >Geolocation latitude</label
-          >
-          <input
-            formControlName="lat"
-            type="number"
-            step="0.000001"
-            id="lat"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-            placeholder="Geolocation latitude" />
-        </div>
-        <div>
-          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >Geolocation longitude</label
-          >
-          <input
-            formControlName="lon"
-            type="number"
-            step="0.000001"
-            id="lon"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-            placeholder="Geolocation longitude" />
-        </div>
-      </ng-container>
-    </div>
-    <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
-      <button
-        type="submit"
-        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-        <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
-        @if (editForm.value.id) {
-          Update
-        } @else {
-          Create
+          </tr>
         }
-      </button>
-      <button
-        type="button"
-        class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-        <fa-icon [icon]="trashIcon" class="w-5 h-5 mr-1 -ml-1"></fa-icon>
-        Delete
-      </button>
-    </div>
-  </form>
+      </tbody>
+    </table>
+  </div>
 </div>
+
+@if (fullVersion) {
+  <div
+    id="manage-deployment-target-drawer"
+    class="fixed top-0 right-0 z-50 h-screen p-4 overflow-y-auto transition-transform translate-x-full bg-white w-80 dark:bg-gray-800"
+    tabindex="-1"
+    aria-labelledby="drawer-right-label">
+    <h5
+      id="drawer-label"
+      class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+      @if (editForm.value.id) {
+        Modify
+      } @else {
+        New
+      }
+      Deployment Target
+    </h5>
+    <button
+      type="button"
+      data-drawer-dismiss="manage-deployment-target-drawer"
+      aria-controls="manage-deployment-target-drawer"
+      class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+      <fa-icon [icon]="xmarkIcon" class="w-5 h-5"></fa-icon>
+      <span class="sr-only">Close menu</span>
+    </button>
+    <form [formGroup]="editForm" (ngSubmit)="saveDeploymentTarget()">
+      <div class="space-y-4">
+        <div>
+          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+          <input
+            formControlName="name"
+            type="text"
+            name="title"
+            id="name"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+            value=""
+            placeholder="Deployment target name"
+            required="" />
+        </div>
+        <div>
+          <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
+          <select
+            formControlName="type"
+            id="category"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+            <option selected="">docker</option>
+          </select>
+        </div>
+        <ng-container formGroupName="geolocation">
+          <div>
+            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >Geolocation latitude</label
+            >
+            <input
+              formControlName="lat"
+              type="number"
+              step="0.000001"
+              id="lat"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              placeholder="Geolocation latitude" />
+          </div>
+          <div>
+            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >Geolocation longitude</label
+            >
+            <input
+              formControlName="lon"
+              type="number"
+              step="0.000001"
+              id="lon"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              placeholder="Geolocation longitude" />
+          </div>
+        </ng-container>
+      </div>
+      <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
+        <button
+          type="submit"
+          class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+          <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
+          @if (editForm.value.id) {
+            Update
+          } @else {
+            Create
+          }
+        </button>
+        <button
+          type="button"
+          class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+          <fa-icon [icon]="trashIcon" class="w-5 h-5 mr-1 -ml-1"></fa-icon>
+          Delete
+        </button>
+      </div>
+    </form>
+  </div>
+}

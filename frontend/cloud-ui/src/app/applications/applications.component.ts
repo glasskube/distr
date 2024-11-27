@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, Input, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -22,6 +22,7 @@ import {ApplicationsService} from '../services/applications.service';
   templateUrl: './applications.component.html',
 })
 export class ApplicationsComponent {
+  @Input('fullVersion') fullVersion: boolean = false;
   magnifyingGlassIcon = faMagnifyingGlass;
   plusIcon = faPlus;
   caretDownIcon = faCaretDown;

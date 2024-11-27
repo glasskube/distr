@@ -1,7 +1,7 @@
 import {Routes} from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
-import {ApplicationsComponent} from './applications/applications.component';
-import {DeploymentTargetsComponent} from './deployment-targets/deployment-targets.component';
+import {ApplicationsPageComponent} from './applications/applications-page.component';
+import {DeploymentTargetsPageComponent} from './deployment-targets/deployment-targets-page.component';
 
 export const routes: Routes = [
   {
@@ -9,8 +9,8 @@ export const routes: Routes = [
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
       {path: 'dashboard', component: DashboardPlaceholderComponent},
-      {path: 'applications', component: ApplicationsComponent},
-      {path: 'deployment-targets', component: DeploymentTargetsComponent},
+      {path: 'applications', component: ApplicationsPageComponent},
+      {path: 'deployment-targets', component: DeploymentTargetsPageComponent},
     ],
   },
 ];
