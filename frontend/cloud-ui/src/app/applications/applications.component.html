@@ -175,20 +175,69 @@
       </div>
     </div>
 
+    @if (selectedApplication?.id) {
+      <div>
+        <h3 class="block mt-10 mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">New Version</h3>
+        <div class="space-y-4">
+          <div>
+            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+            <input
+              formControlName="versionName"
+              type="text"
+              name="versionName"
+              id="versionName"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              value=""
+              placeholder="Version Name"
+              required />
+          </div>
+          <div class="w-full">
+            <input
+              id="file_input"
+              type="file"
+              (change)="onFileSelected($event)"
+              class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              aria-describedby="file_input_help" />
+            <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">YAML.</p>
+            <div class="flex items-center space-x-2.5">
+              <button
+                (click)="createVersion()"
+                type="button"
+                class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                <svg
+                  aria-hidden="true"
+                  class="w-4 h-4 mr-1 -ml-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    fill-rule="evenodd"
+                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                    clip-rule="evenodd"></path>
+                </svg>
+                Create New Version
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
 
     <ol class="relative border-s border-gray-200 dark:border-gray-700 ml-2 mt-8">
-      @for(version of selectedApplication?.versions; track version.id) {
+      @for (version of selectedApplication?.versions; track version.id) {
         <li class="mb-10 ms-6">
-          <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -start-3 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900">
-              <fa-icon [icon]="releaseIcon"></fa-icon>
+          <span
+            class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -start-3 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900">
+            <fa-icon [icon]="releaseIcon"></fa-icon>
           </span>
           <h3 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">{{ version.name }}</h3>
-          <time class="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">{{ version.createdAt | date: 'dd.MM.YYYY HH:mm' }}</time>
+          <time class="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">{{
+            version.createdAt | date: 'dd.MM.YYYY HH:mm'
+          }}</time>
           <p class="text-base font-normal text-gray-500 dark:text-gray-400"></p>
         </li>
       }
     </ol>
-
 
     <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
       <button

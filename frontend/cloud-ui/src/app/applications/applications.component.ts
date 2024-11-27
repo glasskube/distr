@@ -3,7 +3,7 @@ import {ApplicationsService} from './applications.service';
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {Application} from '../types/application';
 import {Observable} from 'rxjs';
-import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBoxArchive,
@@ -12,7 +12,7 @@ import {
   faPen,
   faPlus,
   faTrash,
-  faXmark
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -35,8 +35,10 @@ export class ApplicationsComponent {
   editForm = new FormGroup({
     id: new FormControl(''),
     name: new FormControl('', Validators.required),
-    type: new FormControl('docker', Validators.required)
+    type: new FormControl('docker', Validators.required),
+    versionName: new FormControl(),
   });
+  fileToUpload: File | null = null;
 
   public constructor(private applicationsService: ApplicationsService) {}
 
@@ -48,7 +50,8 @@ export class ApplicationsComponent {
     this.selectedApplication = application;
     this.editForm.patchValue({
       id: application.id,
-      name: application.name
+      name: application.name,
+      versionName: '',
     });
   }
 
@@ -74,6 +77,28 @@ export class ApplicationsComponent {
         });
       }
       result.subscribe((application) => this.editApplication(application));
+    }
+  }
+
+  onFileSelected(event: any) {
+    this.fileToUpload = event.target.files[0];
+  }
+
+  createVersion() {
+    console.log(this.editForm, this.fileToUpload);
+    if (this.editForm.controls.versionName.valid && this.fileToUpload != null && this.selectedApplication) {
+      this.applicationsService
+        .createApplicationVersion(
+          this.selectedApplication,
+          {
+            name: this.editForm.controls.versionName.value,
+          },
+          this.fileToUpload
+        )
+        .subscribe((av) => {
+          // not super correct state management, but good enough
+          this.selectedApplication!.versions = [av, ...(this.selectedApplication!.versions || [])];
+        });
     }
   }
 }

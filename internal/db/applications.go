@@ -100,8 +100,8 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	}
 	row := db.QueryRow(ctx,
 		`INSERT INTO ApplicationVersion (name, application_id, compose_file_data)
-					VALUES (@name, @applicationId, @composeFileData::bytea) RETURNING id`, args)
-	if err := row.Scan(&applicationVersion.ID); err != nil {
+					VALUES (@name, @applicationId, @composeFileData::bytea) RETURNING id, created_at`, args)
+	if err := row.Scan(&applicationVersion.ID, &applicationVersion.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
 	return nil
