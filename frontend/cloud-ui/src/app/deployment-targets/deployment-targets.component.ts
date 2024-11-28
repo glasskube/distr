@@ -1,16 +1,20 @@
-import {Component, inject, Input} from '@angular/core';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {animate, state, style, transition, trigger} from '@angular/animations';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {Component, inject, Input, TemplateRef, ViewContainerRef} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCaretDown, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {DeploymentTarget} from '../types/deployment-target';
 import {lastValueFrom} from 'rxjs';
+import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {ModalRef, ModalService} from '../services/modal.service';
+import {DeploymentTarget} from '../types/deployment-target';
+import {modalFlyInOut} from '../animations/modal';
 
 @Component({
   selector: 'app-deployment-targets',
   imports: [AsyncPipe, DatePipe, FaIconComponent, FormsModule, ReactiveFormsModule, NgOptimizedImage],
   templateUrl: './deployment-targets.component.html',
+  animations: [modalFlyInOut],
 })
 export class DeploymentTargetsComponent {
   @Input('fullVersion') fullVersion = false;
@@ -20,6 +24,10 @@ export class DeploymentTargetsComponent {
   readonly penIcon = faPen;
   readonly trashIcon = faTrash;
   readonly xmarkIcon = faXmark;
+
+  private instructionsModal?: ModalRef;
+  private readonly modal = inject(ModalService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list();
@@ -44,6 +52,15 @@ export class DeploymentTargetsComponent {
       geolocation: {lat: undefined, lon: undefined},
       ...dt,
     });
+  }
+
+  showInstructions(templateRef: TemplateRef<unknown>) {
+    this.hideInstructions();
+    this.instructionsModal = this.modal.show(templateRef, this.viewContainerRef);
+  }
+
+  hideInstructions(): void {
+    this.instructionsModal?.close();
   }
 
   async saveDeploymentTarget() {
