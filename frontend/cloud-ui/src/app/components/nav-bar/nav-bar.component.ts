@@ -1,10 +1,15 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {OverlayModule} from '@angular/cdk/overlay';
+import {Component} from '@angular/core';
+import {dropdownAnimation} from '../../animations/dropdown';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 
 @Component({
   selector: 'app-nav-bar',
   standalone: true,
   templateUrl: './nav-bar.component.html',
-  imports: [ColorSchemeSwitcherComponent],
+  imports: [ColorSchemeSwitcherComponent, OverlayModule],
+  animations: [dropdownAnimation],
 })
-export class NavBarComponent {}
+export class NavBarComponent {
+  showDropdown = false;
+}

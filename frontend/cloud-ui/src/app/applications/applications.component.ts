@@ -14,12 +14,15 @@ import {
 import {Observable} from 'rxjs';
 import {Application} from '../types/application';
 import {ApplicationsService} from '../services/applications.service';
+import {OverlayModule} from '@angular/cdk/overlay';
+import {dropdownAnimation} from '../animations/dropdown';
 
 @Component({
   selector: 'app-applications',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage],
+  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage, OverlayModule],
   templateUrl: './applications.component.html',
+  animations: [dropdownAnimation],
 })
 export class ApplicationsComponent {
   @Input('fullVersion') fullVersion: boolean = false;
@@ -30,6 +33,7 @@ export class ApplicationsComponent {
   trashIcon = faTrash;
   xmarkIcon = faXmark;
   releaseIcon = faBoxArchive;
+  showDropdown = false;
 
   private readonly applications = inject(ApplicationsService);
   applications$: Observable<Application[]> = this.applications.list();
