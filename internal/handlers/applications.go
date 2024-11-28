@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/contenttype"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
@@ -155,12 +156,12 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		// max file size is 100KiB
 		if head.Size > 102400 {
 			log.Debug("large body was rejected")
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			fmt.Fprintln(w, "file too large (max 100 KiB)")
 			return
-		} else if head.Header.Get("Content-Type") != "application/yaml" {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "only yaml files are allowed (you tried %v)", head.Header.Get("Content-Type"))
+		} else if err := contenttype.IsYaml(head.Header); err != nil {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			fmt.Fprint(w, err)
 			return
 		} else if data, err := io.ReadAll(file); err != nil {
 			log.Error("failed to read file from upload", zap.Error(err))
