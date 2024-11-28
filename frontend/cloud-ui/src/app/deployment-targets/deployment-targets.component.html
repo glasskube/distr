@@ -72,6 +72,7 @@
         </th>
         -->
           <th scope="col" class="p-4">Deployment Target</th>
+          <th scope="col" class="p-4">Status</th>
           <th scope="col" class="p-4">Type</th>
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
@@ -97,10 +98,28 @@
             -->
             <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               <div class="flex items-center mr-3">
-                <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto mr-3 rounded" height="199" width="199" />
+                <div class="relative mr-3">
+                  <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto rounded" height="199" width="199" />
+                  @if (dt.currentStatus) {
+                    <span class="absolute w-2 h-2 rounded bg-lime-700 -bottom-0.5 -end-0.5"></span>
+                  } @else {
+                    <span class="absolute w-2 h-2 rounded bg-gray-500 -bottom-0.5 -end-0.5"></span>
+                  }
+                </div>
                 {{ dt.name }}
               </div>
             </th>
+            <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              <div class="flex items-center">
+                @if (dt.currentStatus) {
+                  <div class="h-4 w-4 rounded-full inline-block mr-2 bg-lime-700"></div>
+                  OK
+                } @else {
+                  <div class="h-4 w-4 rounded-full inline-block mr-2 bg-gray-500"></div>
+                  Unknown
+                }
+              </div>
+            </td>
             <td class="px-4 py-3">
               <span
                 class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
