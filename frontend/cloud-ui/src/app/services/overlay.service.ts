@@ -1,9 +1,9 @@
-import {GlobalPositionStrategy, Overlay, OverlayRef} from '@angular/cdk/overlay';
+import {GlobalPositionStrategy, Overlay, OverlayConfig} from '@angular/cdk/overlay';
 import {TemplatePortal} from '@angular/cdk/portal';
 import {EmbeddedViewRef, inject, Injectable, TemplateRef, ViewContainerRef} from '@angular/core';
 import {Observable, Subject, takeUntil} from 'rxjs';
 
-export class ModalRef {
+export class EmbeddedOverlayRef {
   private readonly closed$ = new Subject<void>();
 
   constructor(private readonly embeddedViewRef: EmbeddedViewRef<unknown>) {}
@@ -19,7 +19,7 @@ export class ModalRef {
 }
 
 @Injectable({providedIn: 'root'})
-export class ModalService {
+export class OverlayService {
   private readonly overlay = inject(Overlay);
 
   /**
@@ -27,12 +27,27 @@ export class ModalService {
    * @param viewContainerRef needed to create a TemplatePortal. you can get it by injecting `ViewContainerRef`
    * @returns a handle of the modal with some control functions
    */
-  public show(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): ModalRef {
-    const overlayRef = this.overlay.create({
+  public showModal(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
+    return this.show(templateRef, viewContainerRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().top(),
     });
-    const modalRef = new ModalRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
+  }
+
+  public showDrawer(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
+    return this.show(templateRef, viewContainerRef, {
+      hasBackdrop: true,
+      positionStrategy: new GlobalPositionStrategy().end().centerVertically(),
+    });
+  }
+
+  private show(
+    templateRef: TemplateRef<unknown>,
+    viewContainerRef: ViewContainerRef,
+    config: OverlayConfig
+  ): EmbeddedOverlayRef {
+    const overlayRef = this.overlay.create(config);
+    const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
     overlayRef
       .backdropClick()
       .pipe(takeUntil(modalRef.closed()))
