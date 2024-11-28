@@ -21,9 +21,16 @@ func main() {
 		panic(err)
 	}
 	router := chi.NewRouter()
-	router.Use(middleware.Recoverer)
+	router.Use(
+		// Handles panics
+		middleware.Recoverer,
+		// Reject bodies larger than 1MiB
+		middleware.RequestSize(1048576),
+	)
 	router.Mount("/api", server.ApiRouter())
-	router.Handle("/*", StaticFileHandler())
+	router.With(
+		middleware.Compress(5, "text/html", "text/css", "text/javascript"),
+	).Handle("/*", StaticFileHandler())
 
 	go func() {
 		sigint := make(chan os.Signal, 1)

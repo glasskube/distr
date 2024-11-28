@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/contenttype"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
@@ -144,18 +145,31 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if file, _, err := r.FormFile("file"); err != nil {
+	if file, head, err := r.FormFile("file"); err != nil {
 		if !errors.Is(err, http.ErrMissingFile) {
 			log.Error("failed to get file from upload", zap.Error(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-	} else if data, err := io.ReadAll(file); err != nil {
-		log.Error("failed to read file from upload", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
 	} else {
-		applicationVersion.ComposeFileData = &data
+		log.Sugar().Debugf("got file %v with type %v and size %v", head.Filename, head.Header, head.Size)
+		// max file size is 100KiB
+		if head.Size > 102400 {
+			log.Debug("large body was rejected")
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			fmt.Fprintln(w, "file too large (max 100 KiB)")
+			return
+		} else if err := contenttype.IsYaml(head.Header); err != nil {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			fmt.Fprint(w, err)
+			return
+		} else if data, err := io.ReadAll(file); err != nil {
+			log.Error("failed to read file from upload", zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		} else {
+			applicationVersion.ComposeFileData = &data
+		}
 	}
 
 	application := internalctx.GetApplication(ctx)
