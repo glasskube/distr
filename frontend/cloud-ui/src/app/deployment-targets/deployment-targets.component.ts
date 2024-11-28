@@ -4,15 +4,28 @@ import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} fr
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCaretDown, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {lastValueFrom} from 'rxjs';
+import {RelativeDatePipe} from '../../util/dates';
+import {IsStalePipe} from '../../util/model';
+import {modalFlyInOut} from '../animations/modal';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {DeploymentTarget} from '../types/deployment-target';
-import {modalFlyInOut} from '../animations/modal';
+import {StatusDotComponent} from '../components/status-dot';
 import {drawerFlyInOut} from '../animations/drawer';
 
 @Component({
   selector: 'app-deployment-targets',
-  imports: [AsyncPipe, DatePipe, FaIconComponent, FormsModule, ReactiveFormsModule, NgOptimizedImage],
+  imports: [
+    AsyncPipe,
+    DatePipe,
+    FaIconComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    NgOptimizedImage,
+    IsStalePipe,
+    RelativeDatePipe,
+    StatusDotComponent,
+  ],
   templateUrl: './deployment-targets.component.html',
   animations: [modalFlyInOut, drawerFlyInOut],
 })
