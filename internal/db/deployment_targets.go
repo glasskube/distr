@@ -14,15 +14,25 @@ import (
 
 const (
 	deploymentTargetOutputExpr = `
-		id, created_at, name, type,
-		CASE WHEN geolocation_lat IS NOT NULL AND geolocation_lon IS NOT NULL
-		  THEN (geolocation_lat, geolocation_lon) END AS geolocation
+		dt.id, dt.created_at, dt.name, dt.type,
+		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
+		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation,
+		CASE WHEN status.id IS NOT NULL
+			THEN (status.id, status.created_at, status.message) END AS current_status
 	`
+	deploymentTargetFromExpr = `
+		FROM DeploymentTarget dt LEFT JOIN DeploymentTargetStatus status ON dt.id = status.deployment_target_id
+		WHERE (
+			status.id IS NULL OR status.created_at = (
+				SELECT max(s.created_at) FROM DeploymentTargetStatus s WHERE s.deployment_target_id = status.deployment_target_id
+			)
+		)
+`
 )
 
 func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error) {
 	db := internalctx.GetDb(ctx)
-	if rows, err := db.Query(ctx, "SELECT "+deploymentTargetOutputExpr+" FROM DeploymentTarget"); err != nil {
+	if rows, err := db.Query(ctx, "SELECT "+deploymentTargetOutputExpr+" "+deploymentTargetFromExpr); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentTarget]); err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTargets: %w", err)
@@ -34,7 +44,7 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error)
 func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarget, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+deploymentTargetOutputExpr+" FROM DeploymentTarget WHERE id = @id",
+		"SELECT "+deploymentTargetOutputExpr+" "+deploymentTargetFromExpr+" AND dt.id = @id",
 		pgx.NamedArgs{"id": id})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
