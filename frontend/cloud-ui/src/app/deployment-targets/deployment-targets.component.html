@@ -100,13 +100,9 @@
               <div class="flex items-center mr-3">
                 <div class="relative mr-3">
                   <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto rounded" height="199" width="199" />
-                  @if (!dt.currentStatus) {
-                    <span class="absolute w-2 h-2 rounded bg-gray-500 -bottom-0.5 -end-0.5"></span>
-                  } @else if (dt.currentStatus | isStale) {
-                    <span class="absolute w-2 h-2 rounded bg-yellow-300 -bottom-0.5 -end-0.5"></span>
-                  } @else {
-                    <span class="absolute w-2 h-2 rounded bg-lime-700 -bottom-0.5 -end-0.5"></span>
-                  }
+                  <app-status-dot
+                    class="absolute w-2 h-2 -bottom-0.5 -end-0.5"
+                    [deploymentTarget]="dt"></app-status-dot>
                 </div>
                 {{ dt.name }}
               </div>
@@ -114,21 +110,21 @@
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               @if (!dt.currentStatus) {
                 <div class="flex items-center" title="No status has been posted by the agent">
-                  <span class="h-4 w-4 rounded-full inline-block mr-2 bg-gray-500"></span>
+                  <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   Initial
                 </div>
               } @else if (dt.currentStatus | isStale) {
                 <div
                   class="flex items-center"
                   [title]="'Last status is ' + (dt.currentStatus.createdAt | relativeDate: true) + ' old'">
-                  <span class="h-4 w-4 rounded-full inline-block mr-2 bg-yellow-300"></span>
+                  <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   Stale
                 </div>
               } @else {
                 <div
                   class="flex items-center"
                   [title]="'Last status: ' + (dt.currentStatus.createdAt | date: 'medium')">
-                  <span class="h-4 w-4 rounded-full inline-block mr-2 bg-lime-700"></span>
+                  <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   OK
                 </div>
               }

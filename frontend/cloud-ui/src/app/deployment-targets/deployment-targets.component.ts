@@ -10,6 +10,7 @@ import {modalFlyInOut} from '../animations/modal';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {ModalRef, ModalService} from '../services/modal.service';
 import {DeploymentTarget} from '../types/deployment-target';
+import {StatusDotComponent} from '../components/status-dot';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -22,6 +23,7 @@ import {DeploymentTarget} from '../types/deployment-target';
     NgOptimizedImage,
     IsStalePipe,
     RelativeDatePipe,
+    StatusDotComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   animations: [modalFlyInOut],

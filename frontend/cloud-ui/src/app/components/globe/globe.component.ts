@@ -1,8 +1,21 @@
-import {Component, ElementRef, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
+import {
+  ApplicationRef,
+  Component,
+  ElementRef,
+  inject,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
+  ViewContainerRef,
+} from '@angular/core';
 import Globe from 'globe.gl';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {fromEvent, Subscription} from 'rxjs';
 import {Router} from '@angular/router';
+import {ComponentPortal, DomPortalOutlet} from '@angular/cdk/portal';
+import {StatusDotComponent} from '../status-dot';
 
 type ValueOrPredicate<IN, OUT> = OUT | ((arg: IN) => OUT);
 
@@ -22,6 +35,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
   private readonly globeInstance = Globe();
   private readonly resize$ = fromEvent(window, 'resize');
   private readonly subscription = new Subscription();
+  private readonly app = inject(ApplicationRef);
 
   private get parentHeight(): number {
     return this.parentElement?.offsetHeight ?? 0;
@@ -105,9 +119,12 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
     el.innerHTML = `
       <div class="relative">
         <img src="/docker.png" alt="docker" class="w-6 h-6 rounded">
-        <span class="absolute w-2 h-2 rounded ${dt.currentStatus ? 'bg-lime-600' : 'bg-gray-500'} -bottom-0.5 -end-0.5"></span>
+        <div class="dot-outlet absolute w-2 h-2 -bottom-0.5 -end-0.5"></div>
       </div>
       ${dt.name}`;
+    const cp = new ComponentPortal(StatusDotComponent);
+    const ref = cp.attach(new DomPortalOutlet(el.querySelector('.dot-outlet')!, undefined, this.app));
+    ref.instance.deploymentTarget = dt;
     return el;
   }
 
