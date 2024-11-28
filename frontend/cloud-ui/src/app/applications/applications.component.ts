@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, Input, ViewChild} from '@angular/core';
+import { Component, ElementRef, inject, Input, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -16,13 +16,15 @@ import {Application} from '../types/application';
 import {ApplicationsService} from '../services/applications.service';
 import {OverlayModule} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../animations/dropdown';
+import { EmbeddedOverlayRef, OverlayService } from '../services/overlay.service';
+import { drawerFlyInOut } from '../animations/drawer';
 
 @Component({
   selector: 'app-applications',
   standalone: true,
   imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage, OverlayModule],
   templateUrl: './applications.component.html',
-  animations: [dropdownAnimation],
+  animations: [dropdownAnimation, drawerFlyInOut],
 })
 export class ApplicationsComponent {
   @Input('fullVersion') fullVersion: boolean = false;
@@ -50,7 +52,26 @@ export class ApplicationsComponent {
   @ViewChild('fileInput')
   fileInput?: ElementRef;
 
-  editApplication(application: Application) {
+  private manageApplicationDrawerRef?: EmbeddedOverlayRef;
+  private readonly modal = inject(OverlayService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+
+  openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
+    this.hideDrawer();
+    if(application) {
+      this.loadApplication(application);
+    } else {
+      this.reset();
+    }
+    this.manageApplicationDrawerRef = this.modal.showDrawer(templateRef, this.viewContainerRef);
+  }
+
+  hideDrawer() {
+    this.manageApplicationDrawerRef?.close();
+    this.reset();
+  }
+
+  loadApplication(application: Application) {
     this.selectedApplication = application;
     this.editForm.patchValue({
       id: application.id,
@@ -59,7 +80,7 @@ export class ApplicationsComponent {
     this.resetVersionForm();
   }
 
-  newApplication() {
+  reset() {
     this.selectedApplication = undefined;
     this.resetEditForm();
     this.resetVersionForm();
@@ -93,7 +114,7 @@ export class ApplicationsComponent {
           name: val.name!,
         });
       }
-      result.subscribe((application) => this.editApplication(application));
+      result.subscribe((application) => this.loadApplication(application));
     }
   }
 

@@ -29,6 +29,5 @@ export class AppComponent implements OnInit {
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => posthog.capture('$pageview'));
-    interval(500).subscribe(() => initFlowbite());
   }
 }

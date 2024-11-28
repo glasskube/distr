@@ -6,7 +6,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCaretDown, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {lastValueFrom} from 'rxjs';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {ModalRef, ModalService} from '../services/modal.service';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {DeploymentTarget} from '../types/deployment-target';
 import {modalFlyInOut} from '../animations/modal';
 
@@ -25,8 +25,8 @@ export class DeploymentTargetsComponent {
   readonly trashIcon = faTrash;
   readonly xmarkIcon = faXmark;
 
-  private instructionsModal?: ModalRef;
-  private readonly modal = inject(ModalService);
+  private instructionsModal?: EmbeddedOverlayRef;
+  private readonly modal = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
@@ -56,7 +56,7 @@ export class DeploymentTargetsComponent {
 
   showInstructions(templateRef: TemplateRef<unknown>) {
     this.hideInstructions();
-    this.instructionsModal = this.modal.show(templateRef, this.viewContainerRef);
+    this.instructionsModal = this.modal.showModal(templateRef, this.viewContainerRef);
   }
 
   hideInstructions(): void {
