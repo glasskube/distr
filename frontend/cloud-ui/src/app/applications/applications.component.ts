@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, Input, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -13,15 +13,21 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {Observable} from 'rxjs';
 import {Application} from '../types/application';
-import {ApplicationsService} from './applications.service';
+import {ApplicationsService} from '../services/applications.service';
+import {OverlayModule} from '@angular/cdk/overlay';
+import {dropdownAnimation} from '../animations/dropdown';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
+import {drawerFlyInOut} from '../animations/drawer';
 
 @Component({
   selector: 'app-applications',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage],
+  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage, OverlayModule],
   templateUrl: './applications.component.html',
+  animations: [dropdownAnimation, drawerFlyInOut],
 })
 export class ApplicationsComponent {
+  @Input('fullVersion') fullVersion: boolean = false;
   magnifyingGlassIcon = faMagnifyingGlass;
   plusIcon = faPlus;
   caretDownIcon = faCaretDown;
@@ -29,8 +35,10 @@ export class ApplicationsComponent {
   trashIcon = faTrash;
   xmarkIcon = faXmark;
   releaseIcon = faBoxArchive;
+  showDropdown = false;
 
-  applications$!: Observable<Application[]>;
+  private readonly applications = inject(ApplicationsService);
+  applications$: Observable<Application[]> = this.applications.list();
   selectedApplication?: Application;
   editForm = new FormGroup({
     id: new FormControl(''),
@@ -44,13 +52,26 @@ export class ApplicationsComponent {
   @ViewChild('fileInput')
   fileInput?: ElementRef;
 
-  public constructor(private applicationsService: ApplicationsService) {}
+  private manageApplicationDrawerRef?: EmbeddedOverlayRef;
+  private readonly overlay = inject(OverlayService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
 
-  ngOnInit() {
-    this.applications$ = this.applicationsService.list();
+  openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
+    this.hideDrawer();
+    if (application) {
+      this.loadApplication(application);
+    } else {
+      this.reset();
+    }
+    this.manageApplicationDrawerRef = this.overlay.showDrawer(templateRef, this.viewContainerRef);
   }
 
-  editApplication(application: Application) {
+  hideDrawer() {
+    this.manageApplicationDrawerRef?.close();
+    this.reset();
+  }
+
+  loadApplication(application: Application) {
     this.selectedApplication = application;
     this.editForm.patchValue({
       id: application.id,
@@ -59,7 +80,7 @@ export class ApplicationsComponent {
     this.resetVersionForm();
   }
 
-  newApplication() {
+  reset() {
     this.selectedApplication = undefined;
     this.resetEditForm();
     this.resetVersionForm();
@@ -83,17 +104,17 @@ export class ApplicationsComponent {
       const val = this.editForm.value;
       let result: Observable<Application>;
       if (!val.id) {
-        result = this.applicationsService.createApplication({
+        result = this.applications.create({
           name: val.name!,
           type: val.type!,
         });
       } else {
-        result = this.applicationsService.updateApplication({
+        result = this.applications.update({
           id: val.id!,
           name: val.name!,
         });
       }
-      result.subscribe((application) => this.editApplication(application));
+      result.subscribe((application) => this.loadApplication(application));
     }
   }
 
@@ -103,7 +124,7 @@ export class ApplicationsComponent {
 
   createVersion() {
     if (this.newVersionForm.valid && this.fileToUpload != null && this.selectedApplication) {
-      this.applicationsService
+      this.applications
         .createApplicationVersion(
           this.selectedApplication,
           {
@@ -112,8 +133,6 @@ export class ApplicationsComponent {
           this.fileToUpload
         )
         .subscribe((av) => {
-          // not super correct state management, but good enough
-          this.selectedApplication!.versions = [av, ...(this.selectedApplication!.versions || [])];
           this.resetVersionForm();
         });
     }

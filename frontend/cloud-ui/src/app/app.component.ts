@@ -16,8 +16,6 @@ import {initFlowbite} from 'flowbite';
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit {
-  @HostBinding('class') colorScheme: 'dark' | '' = '';
-
   private readonly router = inject(Router);
   private readonly navigationEnd$: Observable<NavigationEnd> = this.router.events.pipe(
     filter((event: Event) => event instanceof NavigationEnd)
@@ -25,12 +23,11 @@ export class AppComponent implements OnInit {
 
   constructor(private readonly colorSchemeService: ColorSchemeService) {
     effect(() => {
-      this.colorScheme = this.colorSchemeService.colorScheme();
+      document.body.classList.toggle('dark', this.colorSchemeService.colorScheme() === 'dark');
     });
   }
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => posthog.capture('$pageview'));
-    interval(500).subscribe(() => initFlowbite());
   }
 }

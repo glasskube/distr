@@ -113,7 +113,7 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 		if errors.Is(err, apierrors.NotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get application", zap.Error(err))
+			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)

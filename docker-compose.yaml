@@ -9,6 +9,6 @@ services:
       POSTGRES_PASSWORD: local
       POSTGRES_DB: glasskube
     volumes:
-      - 'postgres:/var/lib/postgresql/types/'
+      - 'postgres:/var/lib/postgresql/data/'
     ports:
       - '5432:5432'

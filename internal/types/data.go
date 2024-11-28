@@ -10,7 +10,7 @@ type Application struct {
 }
 
 type ApplicationVersion struct {
-	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
 	ID              string    `db:"id" json:"id"`
 	CreatedAt       time.Time `db:"created_at" json:"createdAt"`
 	Name            string    `db:"name" json:"name"`
@@ -33,7 +33,16 @@ type DeploymentWithData struct {
 
 type DeploymentTarget struct {
 	Base
-	Name        string         `db:"name" json:"name"`
-	Type        DeploymentType `db:"type" json:"type"`
-	Geolocation *Geolocation   `db:"geolocation" json:"geolocation,omitempty"`
+	Name          string                  `db:"name" json:"name"`
+	Type          DeploymentType          `db:"type" json:"type"`
+	Geolocation   *Geolocation            `db:"geolocation" json:"geolocation,omitempty"`
+	CurrentStatus *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
+}
+
+type DeploymentTargetStatus struct {
+	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	ID                 string    `db:"id" json:"id"`
+	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
+	Message            string    `db:"message" json:"message"`
+	DeploymentTargetId string    `db:"deployment_target_id" json:"-"`
 }

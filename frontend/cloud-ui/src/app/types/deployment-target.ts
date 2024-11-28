@@ -1,6 +1,6 @@
 import {BaseModel, Named} from './base';
 import {Geolocation} from './geolocation';
-import {Deployment, DeploymentWithData} from './deployment';
+import {DeploymentWithData} from './deployment';
 import {Observable} from 'rxjs';
 
 export interface DeploymentTarget extends BaseModel, Named {
@@ -8,4 +8,9 @@ export interface DeploymentTarget extends BaseModel, Named {
   type: string;
   geolocation?: Geolocation;
   latestDeployment?: Observable<DeploymentWithData>;
+  currentStatus?: DeploymentTargetStatus;
+}
+
+export interface DeploymentTargetStatus extends BaseModel {
+  message: string;
 }
