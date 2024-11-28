@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import { Component, ElementRef, inject, Input, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
+import {Component, ElementRef, inject, Input, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -16,8 +16,8 @@ import {Application} from '../types/application';
 import {ApplicationsService} from '../services/applications.service';
 import {OverlayModule} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../animations/dropdown';
-import { EmbeddedOverlayRef, OverlayService } from '../services/overlay.service';
-import { drawerFlyInOut } from '../animations/drawer';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
+import {drawerFlyInOut} from '../animations/drawer';
 
 @Component({
   selector: 'app-applications',
@@ -53,17 +53,17 @@ export class ApplicationsComponent {
   fileInput?: ElementRef;
 
   private manageApplicationDrawerRef?: EmbeddedOverlayRef;
-  private readonly modal = inject(OverlayService);
+  private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
     this.hideDrawer();
-    if(application) {
+    if (application) {
       this.loadApplication(application);
     } else {
       this.reset();
     }
-    this.manageApplicationDrawerRef = this.modal.showDrawer(templateRef, this.viewContainerRef);
+    this.manageApplicationDrawerRef = this.overlay.showDrawer(templateRef, this.viewContainerRef);
   }
 
   hideDrawer() {

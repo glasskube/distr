@@ -1,4 +1,4 @@
-import { GlobalPositionStrategy, Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
+import {GlobalPositionStrategy, Overlay, OverlayConfig} from '@angular/cdk/overlay';
 import {TemplatePortal} from '@angular/cdk/portal';
 import {EmbeddedViewRef, inject, Injectable, TemplateRef, ViewContainerRef} from '@angular/core';
 import {Observable, Subject, takeUntil} from 'rxjs';
@@ -28,20 +28,24 @@ export class OverlayService {
    * @returns a handle of the modal with some control functions
    */
   public showModal(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
-    return this.show(templateRef, viewContainerRef,{
+    return this.show(templateRef, viewContainerRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().top(),
-    })
+    });
   }
 
   public showDrawer(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
-    return this.show(templateRef, viewContainerRef,{
+    return this.show(templateRef, viewContainerRef, {
       hasBackdrop: true,
-      positionStrategy: new GlobalPositionStrategy().end().centerVertically()
-    })
+      positionStrategy: new GlobalPositionStrategy().end().centerVertically(),
+    });
   }
 
-  private show(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef, config: OverlayConfig): EmbeddedOverlayRef {
+  private show(
+    templateRef: TemplateRef<unknown>,
+    viewContainerRef: ViewContainerRef,
+    config: OverlayConfig
+  ): EmbeddedOverlayRef {
     const overlayRef = this.overlay.create(config);
     const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
     overlayRef
