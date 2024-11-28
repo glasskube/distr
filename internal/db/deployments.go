@@ -74,9 +74,8 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{"deployment_target_id": d.DeploymentTargetId, "application_version_id": d.ApplicationVersionId}
 	rows, err := db.Query(ctx,
-		"INSERT INTO Deployment (deployment_target_id, application_version_id) "+
-			"VALUES (@deployment_target_id, @application_version_id) RETURNING "+
-			deploymentOutputExpr,
+		`INSERT INTO Deployment (deployment_target_id, application_version_id)
+			VALUES (@deployment_target_id, @application_version_id) RETURNING `+deploymentOutputExpr,
 		args)
 	if err != nil {
 		return fmt.Errorf("failed to query Deployments: %w", err)

@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"net/http"
@@ -14,30 +16,29 @@ import (
 func DeploymentsRouter(r chi.Router) {
 	// TODO r.Use(AuthMiddleware)
 	r.Get("/", getDeployments)
-	//r.Post("/", createDeployment)
+	r.Post("/", createDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
 		r.Get("/", getDeployment)
 	})
 }
 
-//
-//func createDeployment(w http.ResponseWriter, r *http.Request) {
-//	log := internalctx.GetLogger(r.Context())
-//	var deployment types.Deployment
-//	if err := json.NewDecoder(r.Body).Decode(&deployment); err != nil {
-//		w.WriteHeader(http.StatusBadRequest)
-//		return
-//	} else if err = db.CreateDeployment(r.Context(), &deployment); err != nil {
-//		log.Warn("could not create deployment", zap.Error(err))
-//		w.WriteHeader(http.StatusInternalServerError)
-//		if _, err = fmt.Fprintln(w, err); err != nil {
-//			log.Error("failed to write error to response", zap.Error(err))
-//		}
-//	} else if err = json.NewEncoder(w).Encode(deployment); err != nil {
-//		log.Error("failed to encode json", zap.Error(err))
-//	}
-//}
+func createDeployment(w http.ResponseWriter, r *http.Request) {
+	log := internalctx.GetLogger(r.Context())
+	var deployment types.Deployment
+	if err := json.NewDecoder(r.Body).Decode(&deployment); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if err = db.CreateDeployment(r.Context(), &deployment); err != nil {
+		log.Warn("could not create deployment", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		if _, err = fmt.Fprintln(w, err); err != nil {
+			log.Error("failed to write error to response", zap.Error(err))
+		}
+	} else if err = json.NewEncoder(w).Encode(deployment); err != nil {
+		log.Error("failed to encode json", zap.Error(err))
+	}
+}
 
 func getDeployments(w http.ResponseWriter, r *http.Request) {
 	deploymentTargetId := r.URL.Query().Get("deploymentTargetId")

@@ -1,9 +1,7 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable, tap} from 'rxjs';
-import {DefaultReactiveList} from './cache';
+import {Observable} from 'rxjs';
 import {Deployment} from '../types/deployment';
-import {DeploymentTarget} from '../types/deployment-target';
 
 @Injectable({
   providedIn: 'root',
@@ -12,9 +10,9 @@ export class DeploymentService {
   private readonly baseUrl = '/api/deployments';
   private readonly httpClient = inject(HttpClient);
 
-  // create(request: Deployment): Observable<Deployment> {
-  //   return this.httpClient.post<Deployment>(this.baseUrl, request).pipe(tap((it) => this.cache.save(it)));
-  // }
+  create(request: Deployment): Observable<Deployment> {
+    return this.httpClient.post<Deployment>(this.baseUrl, request);
+  }
 
   listForDeploymentTarget(deploymentTargetId: string | undefined): Observable<Deployment[]> {
     if (!deploymentTargetId) {

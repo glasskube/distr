@@ -13,10 +13,11 @@ import {
   faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import {DeploymentTarget} from '../types/deployment-target';
-import {firstValueFrom, lastValueFrom, map} from 'rxjs';
+import {firstValueFrom, lastValueFrom, map, of} from 'rxjs';
 import {ApplicationsService} from '../applications/applications.service';
 import {Application} from '../types/application';
 import {DeploymentService} from '../services/deployment.service';
+import {Deployment} from '../types/deployment';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -87,6 +88,7 @@ export class DeploymentTargetsComponent {
     }
   }
 
+  private selectedDeploymentTarget?: DeploymentTarget | null;
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
   selectedApplication?: Application | null;
@@ -108,6 +110,7 @@ export class DeploymentTargetsComponent {
 
   async newDeployment(dt: DeploymentTarget) {
     this.deployForm.reset();
+    this.selectedDeploymentTarget = dt;
     this.deployForm.patchValue({
       deploymentTargetId: dt.id,
     });
@@ -123,9 +126,10 @@ export class DeploymentTargetsComponent {
 
   async saveDeployment() {
     if (this.deployForm.valid) {
-      const val = this.deployForm.value;
-
-      // TODO
+      const deployment = this.deployForm.value;
+      await firstValueFrom(this.deployments.create(deployment as Deployment));
+      this.selectedDeploymentTarget!!.latestDeployment =
+        this.deploymentTargets.latestDeploymentFor(this.selectedDeploymentTarget!!.id!!);
     }
   }
 
