@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
@@ -49,11 +50,14 @@ func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
 	}
 }
 
-func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetId string) (*types.DeploymentWithData, error) {
+func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetId string) (
+	*types.DeploymentWithData, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		`select d.id, d.created_at, d.deployment_target_id, d.application_version_id, a.id as application_id, a.name as application_name, av.name as application_version_name
-			from deployment d join applicationversion av on(d.application_version_id=av.id) join application a on (av.application_id=a.id)
+		`select d.id, d.created_at, d.deployment_target_id, d.application_version_id,
+       			a.id as application_id, a.name as application_name, av.name as application_version_name
+			from deployment d join applicationversion av on(d.application_version_id=av.id)
+				join application a on (av.application_id=a.id)
 			where deployment_target_id = @deploymentTargetId
 			ORDER BY d.created_at DESC LIMIT 1`,
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})

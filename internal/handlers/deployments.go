@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func DeploymentsRouter(r chi.Router) {
