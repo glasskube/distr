@@ -47,7 +47,7 @@ export class ApplicationsComponent {
   public constructor(private applicationsService: ApplicationsService) {}
 
   ngOnInit() {
-    this.applications$ = this.applicationsService.getApplications();
+    this.applications$ = this.applicationsService.list();
   }
 
   editApplication(application: Application) {

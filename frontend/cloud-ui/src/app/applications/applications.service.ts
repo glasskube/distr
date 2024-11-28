@@ -15,7 +15,7 @@ export class ApplicationsService {
     this.cache = new DefaultReactiveList(this.httpClient.get<Application[]>(this.applicationsUrl));
   }
 
-  getApplications(): Observable<Application[]> {
+  list(): Observable<Application[]> {
     return this.cache.get();
   }
 
