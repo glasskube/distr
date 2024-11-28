@@ -10,7 +10,7 @@ import {
   faPlus,
   faShip,
   faTrash,
-  faXmark
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, lastValueFrom, map} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
@@ -58,14 +58,16 @@ export class DeploymentTargetsComponent {
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  readonly deploymentTargets$ = this.deploymentTargets.list()
-    .pipe(map(dts =>
-      dts.map(dt => {
+  readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
+    map((dts) =>
+      dts.map((dt) => {
         if (dt.id) {
           dt.latestDeployment = this.deploymentTargets.latestDeploymentFor(dt.id);
         }
         return dt;
-      })));
+      })
+    )
+  );
 
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
@@ -143,12 +145,11 @@ export class DeploymentTargetsComponent {
 
   readonly deployments = inject(DeploymentService);
 
-
   deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationVersionId: new FormControl<string | undefined>(undefined, Validators.required),
-    notes: new FormControl<string | undefined>(undefined)
+    notes: new FormControl<string | undefined>(undefined),
   });
 
   async newDeployment(dt: DeploymentTarget, deploymentModal: TemplateRef<any>) {
@@ -158,13 +159,12 @@ export class DeploymentTargetsComponent {
     this.deployForm.patchValue({
       deploymentTargetId: dt.id,
     });
-    this.deploymentTargets.latestDeploymentFor(dt.id!!).subscribe(d => {
+    this.deploymentTargets.latestDeploymentFor(dt.id!!).subscribe((d) => {
       this.deployForm.patchValue({
         applicationId: d.applicationId,
         applicationVersionId: d.applicationVersionId,
       });
       this.updatedSelectedApplication(d.applicationId);
-
     });
   }
 
@@ -172,8 +172,9 @@ export class DeploymentTargetsComponent {
     if (this.deployForm.valid) {
       const deployment = this.deployForm.value;
       await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.selectedDeploymentTarget!!.latestDeployment =
-        this.deploymentTargets.latestDeploymentFor(this.selectedDeploymentTarget!!.id!!);
+      this.selectedDeploymentTarget!!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
+        this.selectedDeploymentTarget!!.id!!
+      );
       this.hideModal();
     }
   }
@@ -184,7 +185,7 @@ export class DeploymentTargetsComponent {
 
   async updatedSelectedApplication(applicationId: string) {
     let applications = await firstValueFrom(this.applications$);
-    this.selectedApplication = applications.find(a => a.id === applicationId) || null;
+    this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
   }
 
   validApplicationSelected() {
