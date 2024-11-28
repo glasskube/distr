@@ -8,9 +8,10 @@ import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
 import {modalFlyInOut} from '../animations/modal';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {ModalRef, ModalService} from '../services/modal.service';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {DeploymentTarget} from '../types/deployment-target';
 import {StatusDotComponent} from '../components/status-dot';
+import {drawerFlyInOut} from '../animations/drawer';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -26,7 +27,7 @@ import {StatusDotComponent} from '../components/status-dot';
     StatusDotComponent,
   ],
   templateUrl: './deployment-targets.component.html',
-  animations: [modalFlyInOut],
+  animations: [modalFlyInOut, drawerFlyInOut],
 })
 export class DeploymentTargetsComponent {
   @Input('fullVersion') fullVersion = false;
@@ -37,8 +38,9 @@ export class DeploymentTargetsComponent {
   readonly trashIcon = faTrash;
   readonly xmarkIcon = faXmark;
 
-  private instructionsModal?: ModalRef;
-  private readonly modal = inject(ModalService);
+  private instructionsModal?: EmbeddedOverlayRef;
+  private manageDeploymentTargetRef?: EmbeddedOverlayRef;
+  private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
@@ -54,11 +56,27 @@ export class DeploymentTargetsComponent {
     }),
   });
 
-  newDeploymentTarget() {
-    this.editForm.reset();
+  openDrawer(templateRef: TemplateRef<unknown>, deploymentTarget?: DeploymentTarget) {
+    this.hideDrawer();
+    if (deploymentTarget) {
+      this.loadDeploymentTarget(deploymentTarget);
+    } else {
+      this.reset();
+    }
+    this.manageDeploymentTargetRef = this.overlay.showDrawer(templateRef, this.viewContainerRef);
   }
 
-  editDeploymentTarget(dt: DeploymentTarget) {
+  hideDrawer() {
+    this.manageDeploymentTargetRef?.close();
+    this.reset();
+  }
+
+  reset() {
+    this.editForm.reset();
+    this.editForm.patchValue({type: 'docker'});
+  }
+
+  loadDeploymentTarget(dt: DeploymentTarget) {
     this.editForm.patchValue({
       // to reset the geolocation inputs in case dt has no geolocation
       geolocation: {lat: undefined, lon: undefined},
@@ -68,7 +86,7 @@ export class DeploymentTargetsComponent {
 
   showInstructions(templateRef: TemplateRef<unknown>) {
     this.hideInstructions();
-    this.instructionsModal = this.modal.show(templateRef, this.viewContainerRef);
+    this.instructionsModal = this.overlay.showModal(templateRef, this.viewContainerRef);
   }
 
   hideInstructions(): void {
@@ -91,7 +109,7 @@ export class DeploymentTargetsComponent {
         };
       }
 
-      this.editDeploymentTarget(
+      this.loadDeploymentTarget(
         await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
       );
     }
