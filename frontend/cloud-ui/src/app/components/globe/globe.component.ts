@@ -105,7 +105,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
     el.innerHTML = `
       <div class="relative">
         <img src="/docker.png" alt="docker" class="w-6 h-6 rounded">
-        <span class="absolute w-2 h-2 rounded bg-lime-600 -bottom-0.5 -end-0.5"></span>
+        <span class="absolute w-2 h-2 rounded ${dt.currentStatus ? 'bg-lime-600' : 'bg-gray-500'} -bottom-0.5 -end-0.5"></span>
       </div>
       ${dt.name}`;
     return el;
