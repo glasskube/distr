@@ -1,3 +1,4 @@
+import {animate, state, style, transition, trigger} from '@angular/animations';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, inject, Input, TemplateRef, ViewContainerRef} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -7,11 +8,13 @@ import {lastValueFrom} from 'rxjs';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {ModalRef, ModalService} from '../services/modal.service';
 import {DeploymentTarget} from '../types/deployment-target';
+import {modalFlyInOut} from '../animations/modal';
 
 @Component({
   selector: 'app-deployment-targets',
   imports: [AsyncPipe, DatePipe, FaIconComponent, FormsModule, ReactiveFormsModule, NgOptimizedImage],
   templateUrl: './deployment-targets.component.html',
+  animations: [modalFlyInOut],
 })
 export class DeploymentTargetsComponent {
   @Input('fullVersion') fullVersion = false;
