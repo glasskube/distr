@@ -30,6 +30,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.7.1",
     "@fortawesome/free-regular-svg-icons": "^6.7.1",
     "@fortawesome/free-solid-svg-icons": "^6.7.1",
+    "dayjs": "^1.11.13",
     "flowbite": "^2.5.2",
     "globe.gl": "^2.33.2",
     "posthog-js": "^1.187.0",
