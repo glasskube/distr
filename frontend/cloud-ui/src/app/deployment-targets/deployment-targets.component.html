@@ -140,6 +140,40 @@
 
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <div class="flex justify-end space-x-4">
+                  @if (!dt.currentStatus) {
+                    <button
+                      type="button"
+                      (click)="showInstructions(instructionsModal)"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                      Show Instructions
+                    </button>
+                    <ng-template #instructionsModal>
+                      <div class="p-4 w-full mt-12 max-w-2xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
+                        <!-- Modal header -->
+                        <div
+                          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructios</h3>
+                          <button
+                            type="button"
+                            (click)="hideInstructions()"
+                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                            <fa-icon [icon]="xmarkIcon"></fa-icon>
+                            <span class="sr-only">Close modal</span>
+                          </button>
+                        </div>
+                        <!-- Modal body -->
+                        <div class="p-4 md:p-5 space-y-4">
+                          <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                            To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
+                            server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
+                          </p>
+                          <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
+curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose -f - up -d</pre
+                          >
+                        </div>
+                      </div>
+                    </ng-template>
+                  }
                   <button
                     type="button"
                     (click)="editDeploymentTarget(dt)"
