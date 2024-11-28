@@ -15,6 +15,12 @@ VALUES (
     'docker'
   );
 
+INSERT INTO applicationversion (name, compose_file_data, application_id)
+VALUES ('v3', decode(E'hello: world\n', 'escape'), '14c4daf4-b49b-47c4-a280-e6ca8e33648c'),
+       ('v2', decode(E'hello: world\n', 'escape'), '14c4daf4-b49b-47c4-a280-e6ca8e33648c'),
+       ('v1', decode(E'hello: world\n', 'escape'), '14c4daf4-b49b-47c4-a280-e6ca8e33648c'),
+       ('v1', decode(E'hello: world\n', 'escape'), 'a3de7cca-1d6f-4277-9b25-9e502277507f');
+
 INSERT INTO DeploymentTarget (id, name, type, geolocation_lat, geolocation_lon)
 VALUES (
     'ffb06f6a-ee36-46a4-ba9d-751f19947fff',

@@ -1,3 +1,21 @@
+DROP INDEX IF EXISTS fk_ApplicationVersion_application_id;
+
+DROP INDEX IF EXISTS fk_DeploymentTargetStatus_deployment_target_id;
+
+DROP INDEX IF EXISTS fk_Deployment_deployment_target_id;
+
+DROP INDEX IF EXISTS fk_Deployment_application_version_id;
+
+DROP INDEX IF EXISTS fk_DeploymentStatus_deployment_target_id;
+
+DROP INDEX IF EXISTS fk_Organization_Application_organization_id;
+
+DROP INDEX IF EXISTS fk_Organization_Application_application_id;
+
+DROP INDEX IF EXISTS fk_Organization_DeploymentTarget_organization_id;
+
+DROP INDEX IF EXISTS fk_Organization_DeploymentTarget_user_account_id;
+
 DROP TABLE IF EXISTS Organization_UserAccount;
 
 DROP TABLE IF EXISTS Organization_Application;
