@@ -187,5 +187,4 @@ export class DeploymentTargetsComponent {
     let applications = await firstValueFrom(this.applications$);
     this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
   }
-
 }

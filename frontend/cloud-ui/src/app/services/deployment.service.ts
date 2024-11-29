@@ -13,5 +13,4 @@ export class DeploymentService {
   create(request: Deployment): Observable<Deployment> {
     return this.httpClient.post<Deployment>(this.baseUrl, request);
   }
-
 }
