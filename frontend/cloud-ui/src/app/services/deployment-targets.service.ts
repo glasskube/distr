@@ -4,6 +4,7 @@ import {CrudService} from './interfaces';
 import {DeploymentTarget} from '../types/deployment-target';
 import {Observable, tap} from 'rxjs';
 import {DefaultReactiveList} from './cache';
+import {DeploymentWithData} from '../types/deployment';
 
 @Injectable({
   providedIn: 'root',
@@ -25,5 +26,9 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
     return this.httpClient
       .put<DeploymentTarget>(`${this.baseUrl}/${request.id}`, request)
       .pipe(tap((it) => this.cache.save(it)));
+  }
+
+  latestDeploymentFor(deploymentTargetId: string): Observable<DeploymentWithData> {
+    return this.httpClient.get<DeploymentWithData>(`${this.baseUrl}/${deploymentTargetId}/latest-deployment`);
   }
 }

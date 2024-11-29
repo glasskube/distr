@@ -59,22 +59,23 @@
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
           <!--
-        <th scope="col" class="p-4">
-          <div class="flex items-center">
-            <input
-              id="checkbox-all"
-              type="checkbox"
-              class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-            <label for="checkbox-all" class="sr-only">checkbox</label>
-          </div>
-        </th>
-        -->
+      <th scope="col" class="p-4">
+        <div class="flex items-center">
+          <input
+            id="checkbox-all"
+            type="checkbox"
+            class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+          <label for="checkbox-all" class="sr-only">checkbox</label>
+        </div>
+      </th>
+      -->
           <th scope="col" class="p-4">Deployment Target</th>
           <th scope="col" class="p-4">Status</th>
           <th scope="col" class="p-4">Type</th>
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
             <th scope="col" class="p-4">Geolocation</th>
+            <th scope="col" class="p-4">Current Deployment</th>
             <th scope="col" class="p-4"></th>
           }
         </tr>
@@ -144,15 +145,20 @@
                   {{ dt.geolocation.lat }}/{{ dt.geolocation.lon }}
                 }
               </td>
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                @if (dt.latestDeployment | async; as deployment) {
+                  {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
+                }
+              </td>
 
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <div class="flex justify-end space-x-4">
                   @if (!dt.currentStatus) {
                     <button
                       type="button"
-                      (click)="showInstructions(instructionsModal)"
+                      (click)="showModal(instructionsModal)"
                       class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                      Show Instructions
+                      Connection instructions
                     </button>
                     <ng-template #instructionsModal>
                       <div
@@ -165,7 +171,7 @@
                           <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructios</h3>
                           <button
                             type="button"
-                            (click)="hideInstructions()"
+                            (click)="hideModal()"
                             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                             <fa-icon [icon]="xmarkIcon"></fa-icon>
                             <span class="sr-only">Close modal</span>
@@ -184,12 +190,24 @@ curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose 
                       </div>
                     </ng-template>
                   }
+                  @if (dt.currentStatus) {
+                    <button
+                      type="button"
+                      (click)="newDeployment(dt, deploymentModal)"
+                      aria-controls="manage-deployment-target-drawer"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                      <fa-icon
+                        [icon]="shipIcon"
+                        class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                      Deploy
+                    </button>
+                  }
                   <button
                     type="button"
                     (click)="openDrawer(manageDeploymentTargetDrawer, dt)"
                     aria-controls="manage-deployment-target-drawer"
                     class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                    <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                    <fa-icon [icon]="penIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
                     Edit
                   </button>
                 </div>
@@ -297,5 +315,87 @@ curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose 
         </button>
       </div>
     </form>
+  </div>
+</ng-template>
+
+<ng-template #deploymentModal>
+  <div
+    @modalFlyInOut
+    style="transform-origin: top center"
+    class="z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-md max-h-full">
+      <!-- Modal content -->
+      <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+        <!-- Modal header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Deploy new application version</h3>
+          <button
+            type="button"
+            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+            (click)="hideModal()">
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+            </svg>
+            <span class="sr-only">Close modal</span>
+          </button>
+        </div>
+        <!-- Modal body -->
+        <form class="p-4 md:p-5" [formGroup]="deployForm" (ngSubmit)="saveDeployment()">
+          <div class="grid gap-4 mb-4 grid-cols-2">
+            <div class="col-span-2 sm:col-span-1">
+              <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >Application</label
+              >
+              <select
+                id="applicationId"
+                formControlName="applicationId"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                @for (app of applications$ | async; track app.id) {
+                  <option [value]="app.id">{{ app.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >Version</label
+              >
+              <select
+                id="applicationVersion"
+                formControlName="applicationVersionId"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                [disabled]="deployForm.controls.applicationId.invalid">
+                @if (selectedApplication?.versions) {
+                  @for (version of selectedApplication?.versions; track version.id) {
+                    <option [value]="version.id">{{ version.name }}</option>
+                  }
+                }
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Deployment notes</label
+              >
+              <textarea
+                id="description"
+                rows="4"
+                formControlName="notes"
+                class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Add deployment notes"></textarea>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            <fa-icon [icon]="shipIcon" class="h-5 w-5 mr-2 -ml-0.5 dark:text-gray-400"></fa-icon>
+            Deploy
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </ng-template>

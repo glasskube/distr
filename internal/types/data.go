@@ -15,7 +15,20 @@ type ApplicationVersion struct {
 	CreatedAt       time.Time `db:"created_at" json:"createdAt"`
 	Name            string    `db:"name" json:"name"`
 	ComposeFileData *[]byte   `db:"compose_file_data" json:"-"`
-	ApplicationId   string    `db:"application_id" json:"-"`
+	ApplicationId   string    `db:"application_id" json:"applicationId"`
+}
+
+type Deployment struct {
+	Base
+	DeploymentTargetId   string `db:"deployment_target_id" json:"deploymentTargetId"`
+	ApplicationVersionId string `db:"application_version_id" json:"applicationVersionId"`
+}
+
+type DeploymentWithData struct {
+	Deployment
+	ApplicationId          string `db:"application_id" json:"applicationId"`
+	ApplicationName        string `db:"application_name" json:"applicationName"`
+	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
 }
 
 type DeploymentTarget struct {

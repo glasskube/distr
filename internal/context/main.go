@@ -13,6 +13,7 @@ const (
 	ctxKeyDb contextKey = iota
 	ctxKeyLogger
 	ctxKeyApplication
+	ctxKeyDeployment
 	ctxKeyDeploymentTarget
 )
 

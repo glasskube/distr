@@ -21,6 +21,7 @@ func ApiRouter() chi.Router {
 		dbCtxMiddleware,
 	)
 	router.Route("/applications", handlers.ApplicationsRouter)
+	router.Route("/deployments", handlers.DeploymentsRouter)
 	router.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
 	return router
 }

@@ -21,8 +21,26 @@ func DeploymentTargetsRouter(r chi.Router) {
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
 		r.Use(deploymentTargetMiddelware)
 		r.Get("/", getDeploymentTarget)
+		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
 	})
+}
+
+func getLatestDeployment(w http.ResponseWriter, r *http.Request) {
+	dt := internalctx.GetDeploymentTarget(r.Context())
+	if deployment, err := db.GetLatestDeploymentForDeploymentTarget(r.Context(), dt.ID); err != nil {
+		if errors.Is(err, apierrors.NotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			internalctx.GetLogger(r.Context()).Error("failed to get latest deployment", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	} else {
+		err := json.NewEncoder(w).Encode(deployment)
+		if err != nil {
+			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
+		}
+	}
 }
 
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {

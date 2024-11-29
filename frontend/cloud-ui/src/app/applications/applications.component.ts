@@ -21,7 +21,6 @@ import {drawerFlyInOut} from '../animations/drawer';
 
 @Component({
   selector: 'app-applications',
-  standalone: true,
   imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage, OverlayModule],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut],

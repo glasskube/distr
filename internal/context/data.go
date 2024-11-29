@@ -21,6 +21,21 @@ func WithApplication(ctx context.Context, application *types.Application) contex
 	return ctx
 }
 
+func GetDeployment(ctx context.Context) *types.Deployment {
+	val := ctx.Value(ctxKeyDeployment)
+	if deployment, ok := val.(*types.Deployment); ok {
+		if deployment != nil {
+			return deployment
+		}
+	}
+	panic("deployment not contained in context")
+}
+
+func WithDeployment(ctx context.Context, deployment *types.Deployment) context.Context {
+	ctx = context.WithValue(ctx, ctxKeyDeployment, deployment)
+	return ctx
+}
+
 func WithDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) context.Context {
 	return context.WithValue(ctx, ctxKeyDeploymentTarget, dt)
 }

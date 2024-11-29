@@ -4,6 +4,10 @@ GOCMD ?= go
 lint-frontend:
 	npm run lint
 
+.PHONY: lint-frontend-fix
+lint-frontend-fix:
+	npm run lint:fix
+
 .PHONY: lint-go
 lint-go:
 	golangci-lint run
@@ -14,6 +18,9 @@ lint-go-fix:
 
 .PHONY: lint
 lint: lint-go lint-frontend
+
+.PHONY: lint-fix
+lint-fix: lint-go-fix lint-frontend-fix
 
 .PHONY: frontend-dev
 frontend-dev:
