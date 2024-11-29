@@ -8,7 +8,7 @@ export function isStale(model: BaseModel, duration: Duration = dayjs.duration({m
   return isOlderThan(model.createdAt, duration);
 }
 
-@Pipe({standalone: true, name: 'isStale'})
+@Pipe({name: 'isStale'})
 export class IsStalePipe implements PipeTransform {
   transform(value: BaseModel): boolean {
     return isStale(value);
