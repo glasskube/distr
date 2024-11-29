@@ -188,7 +188,4 @@ export class DeploymentTargetsComponent {
     this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
   }
 
-  validApplicationSelected() {
-    return Boolean(this.deployForm.value.applicationId);
-  }
 }

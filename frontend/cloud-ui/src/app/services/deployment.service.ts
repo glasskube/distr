@@ -14,11 +14,4 @@ export class DeploymentService {
     return this.httpClient.post<Deployment>(this.baseUrl, request);
   }
 
-  listForDeploymentTarget(deploymentTargetId: string | undefined): Observable<Deployment[]> {
-    if (!deploymentTargetId) {
-      return new Observable<Deployment[]>((subscriber) => subscriber.next([]));
-    }
-    const options = {params: new HttpParams().set('deploymentTargetId', deploymentTargetId)};
-    return this.httpClient.get<Deployment[]>(this.baseUrl, options);
-  }
 }
