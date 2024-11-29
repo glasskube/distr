@@ -3,15 +3,7 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {
-  faCaretDown,
-  faMagnifyingGlass,
-  faPen,
-  faPlus,
-  faShip,
-  faTrash,
-  faXmark,
-} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass, faPen, faPlus, faShip, faXmark,} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, lastValueFrom, map} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
@@ -46,10 +38,8 @@ export class DeploymentTargetsComponent {
   @Input('fullVersion') fullVersion = false;
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
-  readonly caretDownIcon = faCaretDown;
   readonly penIcon = faPen;
   readonly shipIcon = faShip;
-  readonly trashIcon = faTrash;
   readonly xmarkIcon = faXmark;
 
   private modal?: EmbeddedOverlayRef;

@@ -12,6 +12,7 @@ import {IsStalePipe} from '../../util/model';
       [class.bg-gray-500]="!deploymentTarget.currentStatus"></div>
   `,
   imports: [IsStalePipe],
+  standalone: true
 })
 export class StatusDotComponent {
   @Input({required: true}) deploymentTarget!: DeploymentTarget;
