@@ -158,7 +158,7 @@
                       type="button"
                       (click)="showModal(instructionsModal)"
                       class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                      Connect Deployment Target
+                      Connection instructions
                     </button>
                     <ng-template #instructionsModal>
                       <div
@@ -354,7 +354,6 @@ curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose 
               <select
                 id="applicationId"
                 formControlName="applicationId"
-                (change)="onApplicationIdChange($event)"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
                 @for (app of applications$ | async; track app.id) {
                   <option [value]="app.id">{{ app.name }}</option>

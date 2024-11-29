@@ -1,4 +1,4 @@
-import {Component, inject, Input, TemplateRef, ViewContainerRef} from '@angular/core';
+import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewContainerRef} from '@angular/core';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -24,6 +24,7 @@ import {Deployment} from '../types/deployment';
 import {StatusDotComponent} from '../components/status-dot';
 import {drawerFlyInOut} from '../animations/drawer';
 import {ApplicationsService} from '../services/applications.service';
+import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -42,7 +43,7 @@ import {ApplicationsService} from '../services/applications.service';
   standalone: true,
   animations: [modalFlyInOut, drawerFlyInOut],
 })
-export class DeploymentTargetsComponent {
+export class DeploymentTargetsComponent implements OnDestroy {
   @Input('fullVersion') fullVersion = false;
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
@@ -61,10 +62,11 @@ export class DeploymentTargetsComponent {
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
     map((dts) =>
       dts.map((dt) => {
-        if (dt.id) {
-          dt.latestDeployment = this.deploymentTargets.latestDeploymentFor(dt.id);
+        let dtView = dt as DeploymentTargetViewModel;
+        if (dtView.id) {
+          dtView.latestDeployment = this.deploymentTargets.latestDeploymentFor(dtView.id);
         }
-        return dt;
+        return dtView;
       })
     )
   );
@@ -138,12 +140,10 @@ export class DeploymentTargetsComponent {
     }
   }
 
-  private selectedDeploymentTarget?: DeploymentTarget | null;
+  private selectedDeploymentTarget?: DeploymentTargetViewModel | null;
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
   selectedApplication?: Application | null;
-
-  readonly deployments = inject(DeploymentService);
 
   deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
@@ -151,6 +151,16 @@ export class DeploymentTargetsComponent {
     applicationVersionId: new FormControl<string | undefined>(undefined, Validators.required),
     notes: new FormControl<string | undefined>(undefined),
   });
+
+  readonly deployments = inject(DeploymentService);
+
+  private readonly applicationIdChange$ = this.deployForm.controls.applicationId.valueChanges.subscribe((it) =>
+    this.updatedSelectedApplication(it!!)
+  );
+
+  ngOnDestroy(): void {
+    this.applicationIdChange$.unsubscribe();
+  }
 
   async newDeployment(dt: DeploymentTarget, deploymentModal: TemplateRef<any>) {
     this.showModal(deploymentModal);
@@ -177,10 +187,6 @@ export class DeploymentTargetsComponent {
       );
       this.hideModal();
     }
-  }
-
-  onApplicationIdChange($event: any) {
-    this.updatedSelectedApplication($event.target.value);
   }
 
   async updatedSelectedApplication(applicationId: string) {

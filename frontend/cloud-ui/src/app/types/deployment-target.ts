@@ -7,7 +7,7 @@ export interface DeploymentTarget extends BaseModel, Named {
   name: string;
   type: string;
   geolocation?: Geolocation;
-  latestDeployment?: Observable<DeploymentWithData>;
+
   currentStatus?: DeploymentTargetStatus;
 }
 
