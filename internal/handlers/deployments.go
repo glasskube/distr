@@ -67,7 +67,7 @@ func deploymentMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		deploymentId := r.PathValue("deploymentId")
 		deployment, err := db.GetDeployment(ctx, deploymentId)
-		if errors.Is(err, apierrors.NotFound) {
+		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get deployment", zap.Error(err))

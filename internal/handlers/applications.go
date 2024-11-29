@@ -247,7 +247,7 @@ func applicationMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		applicationId := r.PathValue("applicationId")
 		application, err := db.GetApplication(ctx, applicationId)
-		if errors.Is(err, apierrors.NotFound) {
+		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get application", zap.Error(err))

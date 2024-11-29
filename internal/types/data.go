@@ -46,3 +46,17 @@ type DeploymentTargetStatus struct {
 	Message            string    `db:"message" json:"message"`
 	DeploymentTargetId string    `db:"deployment_target_id" json:"-"`
 }
+
+type UserAccount struct {
+	Base
+	Email        string `db:"email" json:"email"`
+	PasswordHash []byte `db:"password_hash" json:"-"`
+	PasswordSalt []byte `db:"password_salt" json:"-"`
+	Password     string `db:"-" json:",omitempty"`
+	Name         string `db:"name" json:"name,omitempty"`
+}
+
+type Organization struct {
+	Base
+	Name string `db:"name" json:"name"`
+}

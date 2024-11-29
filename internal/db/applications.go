@@ -81,7 +81,7 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 	} else if application, err :=
 		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apierrors.NotFound
+			return nil, apierrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {

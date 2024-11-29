@@ -54,7 +54,7 @@ func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarge
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTarget])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apierrors.NotFound
+		return nil, apierrors.ErrNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
