@@ -1,6 +1,7 @@
 import {HttpClient, HttpInterceptorFn} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {EMPTY, ignoreElements, lastValueFrom, map, mapTo, Observable, of, tap, throwError} from 'rxjs';
+import {jwtDecode} from 'jwt-decode';
+import {map, Observable, of, tap, throwError} from 'rxjs';
 
 const tokenStorageKey = 'cloud_token';
 
@@ -30,6 +31,14 @@ export class AuthService {
       tap((r) => (this.token = r.token)),
       map(() => undefined)
     );
+  }
+
+  public getClaims(): {sub: string; email: string; name: string; [claim: string]: unknown} {
+    if (this.token !== null) {
+      return jwtDecode(this.token);
+    } else {
+      throw new Error('token is null');
+    }
   }
 
   public logout(): Observable<void> {
