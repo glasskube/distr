@@ -8,20 +8,14 @@ import (
 
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
-
-var tokenAuth *jwtauth.JWTAuth
-
-func init() {
-	tokenAuth = jwtauth.New("HS256", []byte("secret"), nil) // replace with secret key
-}
 
 func AuthRouter(r chi.Router) {
 	r.Post("/login", authLoginHandler)
@@ -49,13 +43,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error("user has no organizations")
 		}
 		org := orgs[0]
-		claims := map[string]any{
-			"sub":   user.ID,
-			"name":  user.Name,
-			"email": user.Email,
-			"org":   org.ID,
-		}
-		if _, tokenString, err := tokenAuth.Encode(claims); err != nil {
+		if _, tokenString, err := auth.GenerateToken(*user, *org); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Warn("token creation failed", zap.Error(err))
 		} else {

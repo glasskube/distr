@@ -15,7 +15,6 @@ import (
 )
 
 func DeploymentsRouter(r chi.Router) {
-	// TODO r.Use(AuthMiddleware)
 	r.Get("/", getDeployments)
 	r.Post("/", createDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {

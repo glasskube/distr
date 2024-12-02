@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	"github.com/glasskube/cloud/internal/contenttype"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
@@ -18,7 +19,6 @@ import (
 )
 
 func ApplicationsRouter(r chi.Router) {
-	// TODO r.Use(AuthMiddleware)
 	r.Get("/", getApplications)
 	r.Post("/", createApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
@@ -88,6 +88,13 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 }
 
 func getApplications(w http.ResponseWriter, r *http.Request) {
+	log := internalctx.GetLogger(r.Context())
+	if user, err := auth.CurrentUser(r.Context()); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, err)
+	} else {
+		log.Sugar().Debugf("get applications with user %v", user)
+	}
 	if applications, err := db.GetApplications(r.Context()); err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get applications", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
