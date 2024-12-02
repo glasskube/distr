@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -37,24 +36,20 @@ func GenerateToken(user types.UserAccount, org types.Organization) (jwt.Token, s
 	return JWTAuth.Encode(claims)
 }
 
-func CurrentUser(ctx context.Context) (*types.UserAccount, error) {
+func CurrentUserId(ctx context.Context) (string, error) {
 	if token, _, err := jwtauth.FromContext(ctx); err != nil {
-		return nil, err
-	} else if user, err := db.GetUserAccountWithID(ctx, token.Subject()); err != nil {
-		return nil, err
+		return "", err
 	} else {
-		return user, nil
+		return token.Subject(), nil
 	}
 }
 
-func CurrentOrg(ctx context.Context) (*types.Organization, error) {
+func CurrentOrgId(ctx context.Context) (string, error) {
 	if token, _, err := jwtauth.FromContext(ctx); err != nil {
-		return nil, err
+		return "", err
 	} else if orgId, ok := token.Get(OrgIdKey); !ok {
-		return nil, errors.New("missing org id in token")
-	} else if org, err := db.GetOrganizationWithID(ctx, orgId.(string)); err != nil {
-		return nil, err
+		return "", errors.New("missing org id in token")
 	} else {
-		return org, nil
+		return orgId.(string), nil
 	}
 }

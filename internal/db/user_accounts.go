@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgerrcode"
@@ -92,5 +93,18 @@ func GetUserAccountWithEmail(ctx context.Context, email string) (*types.UserAcco
 		}
 	} else {
 		return &userAccount, nil
+	}
+}
+
+// GetCurrentUser retrieves the user account ID from the context auth token (subject claim) and returns the corresponding UserAccount
+//
+// TODO: this function should probably be moved to another module and maybe support some kind of result caching.
+func GetCurrentUser(ctx context.Context) (*types.UserAccount, error) {
+	if userId, err := auth.CurrentUserId(ctx); err != nil {
+		return nil, err
+	} else if user, err := GetUserAccountWithID(ctx, userId); err != nil {
+		return nil, err
+	} else {
+		return user, nil
 	}
 }
