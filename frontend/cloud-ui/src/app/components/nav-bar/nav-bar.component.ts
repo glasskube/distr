@@ -3,6 +3,8 @@ import {Component, inject, OnInit} from '@angular/core';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {AuthService} from '../../services/auth.service';
+import {lastValueFrom} from 'rxjs';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-nav-bar',
@@ -13,6 +15,7 @@ import {AuthService} from '../../services/auth.service';
 })
 export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   showDropdown = false;
   email?: string;
   name?: string;
@@ -27,6 +30,11 @@ export class NavBarComponent implements OnInit {
     } catch (e) {
       console.error(e);
     }
+  }
+
+  public async logout() {
+    await lastValueFrom(this.auth.logout());
+    await this.router.navigate(['/login']);
   }
 }
 
