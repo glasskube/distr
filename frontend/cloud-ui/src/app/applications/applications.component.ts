@@ -111,7 +111,7 @@ export class ApplicationsComponent {
         result = this.applications.update({
           id: val.id!,
           name: val.name!,
-          type: 'docker'
+          type: 'docker',
         });
       }
       result.subscribe((application) => this.loadApplication(application));
