@@ -28,47 +28,13 @@
           <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
           Add deployment target
         </button>
-        <!--
-        <div class="flex items-center space-x-3 w-full md:w-auto">
-          <button
-            id="actionsDropdownButton"
-            data-dropdown-toggle="actionsDropdown"
-            class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-            type="button">
-            Actions
-            <fa-icon [icon]="caretDownIcon" class="-mr-1 ml-1.5 w-5 h-5 text-gray-500 dark:text-gray-400"></fa-icon>
-          </button>
-          <div
-            id="actionsDropdown"
-            class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-            <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
-              <li>
-                <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >Mass Edit</a
-                >
-              </li>
-            </ul>
-          </div>
-        </div>
-        -->
       </div>
     </div>
   }
   <div class="overflow-x-auto">
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
         <tr>
-          <!--
-      <th scope="col" class="p-4">
-        <div class="flex items-center">
-          <input
-            id="checkbox-all"
-            type="checkbox"
-            class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-          <label for="checkbox-all" class="sr-only">checkbox</label>
-        </div>
-      </th>
-      -->
           <th scope="col" class="p-4">Deployment Target</th>
           <th scope="col" class="p-4">Status</th>
           <th scope="col" class="p-4">Type</th>
@@ -83,22 +49,10 @@
       <tbody>
         @for (dt of deploymentTargets$ | async; track dt.id) {
           <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <!--
-            <td class="p-4 w-4">
-              <div class="flex items-center">
-                <input
-                  id="checkbox-table-search-1"
-                  type="checkbox"
-                  (click)="$event.stopPropagation()"
-                  class="w-4 h-4 text-primary-600 bg-gray-100 rounded border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
-              </div>
-            </td>
-            -->
             <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               <div class="flex items-center mr-3">
                 <div class="relative mr-3">
-                  <img ngSrc="/docker.png" alt="Docker" class="h-8 w-auto rounded" height="199" width="199" />
+                  <img [ngSrc]="'/'+dt.type+'.png'" [alt]="dt.type" class="h-8 w-auto rounded" height="199" width="199" />
                   <app-status-dot
                     class="absolute w-2 h-2 -bottom-0.5 -end-0.5"
                     [deploymentTarget]="dt"></app-status-dot>
@@ -184,7 +138,7 @@
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
                           <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
-curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose -f - up -d</pre
+curl https://glasskube.cloud/api/v1/connect?token=c76A2a3V5dV1ycV8sa4DIGLmyXyFAk6Sr27iF3ZDKJ1yz1J1yz1s | docker compose -f - up -d</pre
                           >
                         </div>
                       </div>
