@@ -25,12 +25,14 @@ export class OverlayService {
   /**
    * @param templateRef the template to show
    * @param viewContainerRef needed to create a TemplatePortal. you can get it by injecting `ViewContainerRef`
+   * @param config optional overlay config
    * @returns a handle of the modal with some control functions
    */
-  public showModal(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
+  public showModal(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef, config?: OverlayConfig): EmbeddedOverlayRef {
     return this.show(templateRef, viewContainerRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().top(),
+      ...config
     });
   }
 

@@ -1,0 +1,114 @@
+<div
+  @modalFlyInOut
+  style="transform-origin: top center"
+  class="p-4 w-full mt-12 max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
+  <!-- Modal header -->
+  <div
+    class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Let's get you started</h3>
+    <button
+      type="button"
+      class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+      <fa-icon [icon]="xmarkIcon"></fa-icon>
+      <span class="sr-only">Close modal</span>
+    </button>
+  </div>
+  <!-- Modal body -->
+  <div class="p-4 md:p-5 space-y-4">
+    <section class="antialiased">
+      <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
+        <app-onboarding-wizard-stepper #stepper (attemptContinue)="attemptContinue()" class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          <cdk-step [stepControl]="applicationForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Choose An Application</h3>
+
+                <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="flex items-start">
+                      <div class="flex h-5 items-center">
+                        <input id="sample-app-radio" [formControl]="applicationForm.controls.type" aria-describedby="sample-app-radio-text"
+                               type="radio" name="appType" value="sample" class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                      </div>
+
+                      <div class="ms-4 text-sm">
+                        <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white">Sample Bookmarking Application</label>
+                        <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                          I'm just testing – Show me how to deploy some sample app.<br>
+                          This will create an application named <a href="https://github.com/go-shiori/shiori" target="_blank">Shiori</a>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="flex items-start">
+                      <div class="flex h-5 items-center">
+                        <input id="custom-app-radio" [formControl]="applicationForm.controls.type" aria-describedby="custom-app-radio-text"
+                               type="radio" name="appType" value="custom" class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" checked />
+                      </div>
+
+                      <div class="ms-4 text-sm">
+                        <label for="custom-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"> My Own Application </label>
+                        <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">I have my own docker compose file and want to deploy it.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                @if(applicationForm.controls.type.value === 'sample') {
+                  <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+
+                  </div>
+                } @else {
+                  <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                    <div class="w-full">
+                      <label for="applicationName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Application Name</label>
+                      <input [formControl]="applicationForm.controls.custom.controls.name" type="text" name="name" id="applicationName"
+                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                             placeholder="asdf-app" required>
+                    </div>
+                    <div class="w-full">
+                      <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Version Name</label>
+                      <input [formControl]="applicationForm.controls.custom.controls.versionName" type="text" name="breadth" id="applicationVersion"
+                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                             placeholder="v4.2.0" required>
+                    </div>
+                    <div class="w-full">
+                      <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Docker Compose File</label>
+                      <input
+                        id="file_input"
+                        type="file"
+                        accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
+                        #fileInput
+                        (change)="onFileSelected($event)"
+                        class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                        aria-describedby="file_input_help" />
+
+                    </div>
+                  </div>
+                }
+
+              </div>
+            </div>
+          </cdk-step>
+          <cdk-step [stepControl]="deploymentTargetForm">
+            <div class="space-y-6">
+              <div class="space-y-1">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Connect Deployment Target</h3>
+                <input type="text" [formControl]="deploymentTargetForm.controls.name" name="name" />
+              </div>
+            </div>
+          </cdk-step>
+          <cdk-step [stepControl]="installationForm">
+            <div class="space-y-6">
+              <div class="space-y-1">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Install Application</h3>
+              </div>
+            </div>
+          </cdk-step>
+        </app-onboarding-wizard-stepper>
+      </div>
+    </section>
+  </div>
+</div>
