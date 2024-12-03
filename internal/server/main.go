@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/glasskube/cloud/internal/env"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -30,8 +32,7 @@ func Init() error {
 
 	instance.logger.Info("initializing server")
 
-	// TODO read DB connection options from environment here or get it passed as param
-	dbConfig, err := pgxpool.ParseConfig("postgres://local:local@localhost:5432/glasskube")
+	dbConfig, err := pgxpool.ParseConfig(env.DatabaseUrl())
 	if err != nil {
 		return err
 	}
