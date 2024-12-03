@@ -12,7 +12,9 @@ import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.comp
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {ApplicationsService} from '../../services/applications.service';
-import {switchMap} from 'rxjs';
+import {firstValueFrom, lastValueFrom, switchMap, withLatestFrom} from 'rxjs';
+import {DeploymentService} from '../../services/deployment.service';
+import {Application} from '../../types/application';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -23,6 +25,8 @@ import {switchMap} from 'rxjs';
 export class OnboardingWizardComponent {
   protected readonly xmarkIcon = faXmark;
   private applications = inject(ApplicationsService);
+  private deploymentTargets = inject(DeploymentTargetsService);
+  private deployments = inject(DeploymentService);
   @ViewChild('stepper') stepper!: CdkStepper;
 
   applicationForm = new FormGroup({
@@ -44,14 +48,22 @@ export class OnboardingWizardComponent {
   fileInput?: ElementRef;
 
   deploymentTargetForm = new FormGroup({
-    name: new FormControl<string>('', Validators.required),
+    customerName: new FormControl<string>('', Validators.required),
+    accessType: new FormControl<string>('full', Validators.required),
+    technicalContact: new FormGroup({
+      name: new FormControl<string>({
+        value: '',
+        disabled: true
+      }, Validators.required),
+      email: new FormControl<string>({
+        value: '',
+        disabled: true
+      })
+    })
   });
 
-  installationForm = new FormGroup({
+  private createdApplicationVersionId?: string;
 
-  })
-
-  private applicationDone = false
   private loading = false
 
   ngOnInit() {
@@ -67,6 +79,18 @@ export class OnboardingWizardComponent {
         this.applicationForm.controls.custom.controls.versionName.enable();
       }
     })
+
+    this.deploymentTargetForm.controls.accessType.valueChanges.subscribe(type => {
+      if(type === 'full') {
+        // disable validators
+        // TODO loop over controls
+        this.deploymentTargetForm.controls.technicalContact.controls.name.disable();
+        this.deploymentTargetForm.controls.technicalContact.controls.email.disable();
+      } else {
+        this.deploymentTargetForm.controls.technicalContact.controls.name.enable();
+        this.deploymentTargetForm.controls.technicalContact.controls.email.enable();
+      }
+    })
   }
 
   onFileSelected(event: any) {
@@ -80,12 +104,11 @@ export class OnboardingWizardComponent {
 
     if(this.stepper.selectedIndex == 0) {
       if(this.applicationForm.valid) {
-        if(this.applicationDone) {
-          this.stepper.next()
-        } else if(this.applicationForm.controls.type.value === 'sample') {
-          this.applications.createSample().subscribe(() => {
+        if(this.applicationForm.controls.type.value === 'sample') {
+          this.loading = true;
+          this.applications.createSample().subscribe((app) => {
+            this.createdApplicationVersionId = app.versions![0].id
             this.loading = false;
-            this.applicationDone = true;
             this.stepper.next()
           });
         } else if(this.fileToUpload != null) {
@@ -98,16 +121,42 @@ export class OnboardingWizardComponent {
               application, {
                 name: this.applicationForm.controls.custom.controls.versionName.value!,
               }, this.fileToUpload!)
-          })).subscribe(() => {
+          })).subscribe((av) => {
+            this.createdApplicationVersionId = av.id;
             this.loading = false;
-            this.applicationDone = true;
             this.stepper.next()
           })
         }
       }
     } else if(this.stepper.selectedIndex == 1) {
-      console.log('TODO handle deployment target')
-      this.stepper.next()
+      if(this.deploymentTargetForm.valid) {
+        this.loading = true
+        const base = {
+          name: this.deploymentTargetForm.controls.customerName.value!.toLowerCase().replaceAll(' ', '-'),
+          type: "docker",
+          geolocation: {
+            lat: 48.1956026,
+            lon: 16.3633028
+          }
+        }
+        this.deploymentTargets.create({
+          ...base,
+          name: base.name + "-staging",
+        }).pipe(switchMap(() => {
+          return this.deploymentTargets.create({
+            ...base,
+            name: base.name + "-prod"
+          })
+        }), switchMap(dt => {
+          return this.deployments.create({
+            applicationVersionId: this.createdApplicationVersionId!,
+            deploymentTargetId: dt.id!
+          })
+        })).subscribe((x) => {
+          this.loading = false;
+          this.stepper.next();
+        })
+      }
     } else if(this.stepper.selectedIndex == 2) {
       // TODO
       window.location.href = '/dashboard';
