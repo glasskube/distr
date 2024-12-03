@@ -4,9 +4,12 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {ApplicationsComponent} from '../../applications/applications.component';
 import {DeploymentTargetsComponent} from '../../deployment-targets/deployment-targets.component';
 import {AsyncPipe} from '@angular/common';
-import {OverlayService} from '../../services/overlay.service';
+import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
+import {ApplicationsService} from '../../services/applications.service';
+import {combineLatest, empty, first, lastValueFrom, Observable, of, take, withLatestFrom} from 'rxjs';
+import {combineLatestInit} from 'rxjs/internal/observable/combineLatest';
 
 @Component({
   selector: 'app-dashboard-placeholder',
@@ -17,14 +20,24 @@ export class DashboardPlaceholderComponent {
   private overlay = inject(OverlayService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   public readonly deploymentTargets$ = this.deploymentTargets.list();
+  private readonly applications = inject(ApplicationsService);
+  readonly applications$ = this.applications.list();
 
   private viewContainerRef = inject(ViewContainerRef);
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
-  ngAfterViewInit() {
-    this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
-      hasBackdrop: true, // TODO
-      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically()
-    });
+  private overlayRef?: EmbeddedOverlayRef
+
+  ngOnInit() {
+    const always = false;
+    combineLatest([this.applications$, this.deploymentTargets$]).pipe(first()).subscribe(([apps, dts]) => {
+      if(always || apps.length === 0 || dts.length === 0) {
+        this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
+          hasBackdrop: true,
+          backdropStyleOnly: true,
+          positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically()
+        });
+      }
+    })
   }
 }

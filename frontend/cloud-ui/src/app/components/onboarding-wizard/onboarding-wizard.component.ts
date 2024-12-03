@@ -12,7 +12,18 @@ import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.comp
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {ApplicationsService} from '../../services/applications.service';
-import {filter, find, firstValueFrom, last, lastValueFrom, Observable, switchMap, tap, withLatestFrom} from 'rxjs';
+import {
+  filter,
+  find,
+  firstValueFrom,
+  last,
+  lastValueFrom,
+  Observable,
+  Subject,
+  switchMap, takeUntil,
+  tap,
+  withLatestFrom
+} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
@@ -68,11 +79,9 @@ export class OnboardingWizardComponent {
   private loading = false
 
   ngOnInit() {
-    // TODO subscription kill switch
-    this.applicationForm.controls.type.valueChanges.subscribe(type => {
+    this.applicationForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(type => {
       if(type === 'sample') {
         // disable validators
-        // TODO loop over controls
         this.applicationForm.controls.custom.controls.name.disable();
         this.applicationForm.controls.custom.controls.versionName.disable();
       } else {
@@ -80,11 +89,9 @@ export class OnboardingWizardComponent {
         this.applicationForm.controls.custom.controls.versionName.enable();
       }
     })
-
-    this.deploymentTargetForm.controls.accessType.valueChanges.subscribe(type => {
+    this.deploymentTargetForm.controls.accessType.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(type => {
       if(type === 'full') {
         // disable validators
-        // TODO loop over controls
         this.deploymentTargetForm.controls.technicalContact.controls.name.disable();
         this.deploymentTargetForm.controls.technicalContact.controls.email.disable();
       } else {
@@ -92,6 +99,11 @@ export class OnboardingWizardComponent {
         this.deploymentTargetForm.controls.technicalContact.controls.email.enable();
       }
     })
+  }
+
+  private destroyed$: Subject<void> = new Subject();
+  ngOnDestroy() {
+    this.destroyed$.complete();
   }
 
   onFileSelected(event: any) {
@@ -109,22 +121,19 @@ export class OnboardingWizardComponent {
           this.loading = true;
           this.applications.createSample().subscribe((app) => {
             this.createdApp = app;
-            this.loading = false;
-            this.stepper.next()
+            this.nextStep()
           });
         } else if(this.fileToUpload != null) {
           this.loading = true
           this.applications.create({
             name: this.applicationForm.controls.custom.controls.name.value!,
             type: "docker"
-          }).pipe(switchMap(application => this.applications.createApplicationVersion(
-              application, {
+          }).pipe(switchMap(application => this.applications.createApplicationVersion(application, {
                 name: this.applicationForm.controls.custom.controls.versionName.value!,
               }, this.fileToUpload!)
           ), withLatestFrom(this.applications.list())).subscribe(([version, apps]) => {
             this.createdApp = apps.find(a => a.id === version.applicationId)
-            this.loading = false;
-            this.stepper.next()
+            this.nextStep()
           })
         }
       }
@@ -152,14 +161,16 @@ export class OnboardingWizardComponent {
             applicationVersionId: this.createdApp!.versions![0].id!,
             deploymentTargetId: dt.id!
           }))
-        ).subscribe(() => {
-          this.loading = false;
-          this.stepper.next();
-        })
+        ).subscribe(() => this.nextStep())
       }
     } else if(this.stepper.selectedIndex == 2) {
       // TODO
       window.location.href = '/dashboard';
     }
+  }
+
+  private nextStep() {
+    this.loading = false;
+    this.stepper.next();
   }
 }
