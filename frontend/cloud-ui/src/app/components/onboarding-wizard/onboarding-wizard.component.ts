@@ -51,6 +51,7 @@ export class OnboardingWizardComponent {
 
   })
 
+  private applicationDone = false
   private loading = false
 
   ngOnInit() {
@@ -78,10 +79,15 @@ export class OnboardingWizardComponent {
     }
 
     if(this.stepper.selectedIndex == 0) {
-      // TODO only create new one if previously not created!
       if(this.applicationForm.valid) {
-        if(this.applicationForm.controls.type.value === 'sample') {
-          // TODO new backend endpoint /api/applications/sample
+        if(this.applicationDone) {
+          this.stepper.next()
+        } else if(this.applicationForm.controls.type.value === 'sample') {
+          this.applications.createSample().subscribe(() => {
+            this.loading = false;
+            this.applicationDone = true;
+            this.stepper.next()
+          });
         } else if(this.fileToUpload != null) {
           this.loading = true
           this.applications.create({
@@ -94,6 +100,7 @@ export class OnboardingWizardComponent {
               }, this.fileToUpload!)
           })).subscribe(() => {
             this.loading = false;
+            this.applicationDone = true;
             this.stepper.next()
           })
         }
