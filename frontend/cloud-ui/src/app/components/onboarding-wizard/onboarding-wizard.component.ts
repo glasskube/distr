@@ -12,9 +12,10 @@ import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.comp
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {ApplicationsService} from '../../services/applications.service';
-import {firstValueFrom, lastValueFrom, switchMap, withLatestFrom} from 'rxjs';
+import {filter, find, firstValueFrom, last, lastValueFrom, Observable, switchMap, tap, withLatestFrom} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
+import {DeploymentTarget} from '../../types/deployment-target';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -29,6 +30,9 @@ export class OnboardingWizardComponent {
   private deployments = inject(DeploymentService);
   @ViewChild('stepper') stepper!: CdkStepper;
 
+  createdApp?: Application;
+  createdDeploymentTarget?: DeploymentTarget;
+
   applicationForm = new FormGroup({
     type: new FormControl<string>('sample', Validators.required),
     custom: new FormGroup({
@@ -40,7 +44,6 @@ export class OnboardingWizardComponent {
         value: '',
         disabled: true,
       }, Validators.required),
-      // TODO file upload
     })
   });
   fileToUpload: File | null = null;
@@ -49,7 +52,7 @@ export class OnboardingWizardComponent {
 
   deploymentTargetForm = new FormGroup({
     customerName: new FormControl<string>('', Validators.required),
-    accessType: new FormControl<string>('full', Validators.required),
+    accessType: new FormControl<string>('', Validators.required),
     technicalContact: new FormGroup({
       name: new FormControl<string>({
         value: '',
@@ -61,8 +64,6 @@ export class OnboardingWizardComponent {
       })
     })
   });
-
-  private createdApplicationVersionId?: string;
 
   private loading = false
 
@@ -107,7 +108,7 @@ export class OnboardingWizardComponent {
         if(this.applicationForm.controls.type.value === 'sample') {
           this.loading = true;
           this.applications.createSample().subscribe((app) => {
-            this.createdApplicationVersionId = app.versions![0].id
+            this.createdApp = app;
             this.loading = false;
             this.stepper.next()
           });
@@ -116,13 +117,12 @@ export class OnboardingWizardComponent {
           this.applications.create({
             name: this.applicationForm.controls.custom.controls.name.value!,
             type: "docker"
-          }).pipe(switchMap(application => {
-            return this.applications.createApplicationVersion(
+          }).pipe(switchMap(application => this.applications.createApplicationVersion(
               application, {
                 name: this.applicationForm.controls.custom.controls.versionName.value!,
               }, this.fileToUpload!)
-          })).subscribe((av) => {
-            this.createdApplicationVersionId = av.id;
+          ), withLatestFrom(this.applications.list())).subscribe(([version, apps]) => {
+            this.createdApp = apps.find(a => a.id === version.applicationId)
             this.loading = false;
             this.stepper.next()
           })
@@ -142,17 +142,17 @@ export class OnboardingWizardComponent {
         this.deploymentTargets.create({
           ...base,
           name: base.name + "-staging",
-        }).pipe(switchMap(() => {
-          return this.deploymentTargets.create({
+        }).pipe(
+          switchMap(() => this.deploymentTargets.create({
             ...base,
             name: base.name + "-prod"
-          })
-        }), switchMap(dt => {
-          return this.deployments.create({
-            applicationVersionId: this.createdApplicationVersionId!,
+          })),
+          tap((dt) => this.createdDeploymentTarget = dt),
+          switchMap(dt => this.deployments.create({
+            applicationVersionId: this.createdApp!.versions![0].id!,
             deploymentTargetId: dt.id!
-          })
-        })).subscribe((x) => {
+          }))
+        ).subscribe(() => {
           this.loading = false;
           this.stepper.next();
         })

@@ -106,20 +106,20 @@
                   </div>
                 </div>
 
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Who is managing the customers' environment?</h4>
+                <h4 class="font-normal text-gray-900 dark:text-white">Who is managing the customers' environment?</h4>
 
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
                     <div class="flex items-start">
                       <div class="flex h-5 items-center">
                         <input id="sample-app-radio" [formControl]="deploymentTargetForm.controls.accessType" aria-describedby="sample-app-radio-text"
-                               type="radio" name="appType" value="sample" class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                               type="radio" name="appType" value="full" class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
                         <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white">I Am</label>
                         <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          I have full access to the customers machine and can install something there.
+                          I have the necessary rights to access the customers machine and can install something there.
                         </p>
                       </div>
                     </div>
@@ -129,7 +129,7 @@
                     <div class="flex items-start">
                       <div class="flex h-5 items-center">
                         <input id="custom-app-radio" [formControl]="deploymentTargetForm.controls.accessType" aria-describedby="custom-app-radio-text"
-                               type="radio" name="appType" value="custom" class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                               type="radio" name="appType" value="none" class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
@@ -142,35 +142,23 @@
                   </div>
                 </div>
 
-                @if(deploymentTargetForm.controls.accessType.value === 'full') {
-                  <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-
-                  </div>
-                } @else {
+                @if(deploymentTargetForm.controls.accessType.value === 'none') {
+                  <h4 class="font-normal text-gray-900 dark:text-white">Customer Technical Contact Person</h4>
+                  <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                    This person should be able to execute a simple install command in their environment.
+                  </p>
                   <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                     <div class="w-full">
-                      <label for="applicationName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Application Name</label>
-                      <input [formControl]="applicationForm.controls.custom.controls.name" type="text" name="name" id="applicationName"
+                      <label for="techContactName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+                      <input [formControl]="deploymentTargetForm.controls.technicalContact.controls.name" type="text" name="name" id="techContactName"
                              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                             placeholder="asdf-app" required>
+                             placeholder="John Doe">
                     </div>
                     <div class="w-full">
-                      <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Version Name</label>
-                      <input [formControl]="applicationForm.controls.custom.controls.versionName" type="text" name="breadth" id="applicationVersion"
+                      <label for="techContactEmail" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                      <input [formControl]="deploymentTargetForm.controls.technicalContact.controls.email" type="email" name="breadth" id="techContactEmail"
                              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                             placeholder="v4.2.0" required>
-                    </div>
-                    <div class="w-full">
-                      <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Docker Compose File</label>
-                      <input
-                        id="file_input"
-                        type="file"
-                        accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
-                        #fileInput
-                        (change)="onFileSelected($event)"
-                        class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                        aria-describedby="file_input_help" />
-
+                             placeholder="john@doe.com">
                     </div>
                   </div>
                 }
@@ -183,29 +171,29 @@
               <div class="space-y-4">
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Connect Customer Environment</h3>
 
-                <div class="grid md:grid-cols-12 sm:gap-16 lg:gap-8 xl:gap-16">
-                  <div class="me-auto place-self-center md:col-span-7">
-                    <div class="flex justify-center items-center mb-4 w-10 h-10 bg-green-100 rounded-lg dark:bg-green-900 lg:h-16 lg:w-16">
-                      <svg class="w-5 h-5 text-green-700 dark:text-green-400 lg:w-8 lg:h-8" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m4 6 2 2 4-4m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"/>
-                      </svg>
-                    </div>
-                    <h1 class="mb-2 text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">Your request has been registered successfully.</h1>
-                    <p class="mb-6 text-gray-500 dark:text-gray-400">I have successfully received your request to repair this product, until we resolve this case you can track the status of your request.</p>
-                    <a href="#" class="inline-flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
-                      <svg class="-ms-2 me-2 h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-width="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/>
-                        <path stroke="currentColor" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                      </svg>
-                      View status
-                    </a>
-                  </div>
-                  <div class="md:col-span-5 lg:mt-0 hidden md:flex">
-                    <a href="#">
-                      <img class="mb-4 dark:hidden" src="https://flowbite.s3.amazonaws.com/blocks/e-commerce/service-light.svg" alt="illustration" />
-                      <img class="mb-4 hidden dark:block md:h-full" src="https://flowbite.s3.amazonaws.com/blocks/e-commerce/service-dark.svg" alt="illustration" />
-                    </a>
-                  </div>
+                <p class="mb-6 text-gray-500 dark:text-gray-400">
+                  Your application <b class="dark:text-white">{{ createdApp?.name }}</b>
+                  will be deployed to <b class="dark:text-white">{{ createdDeploymentTarget?.name }}</b>,
+                  as soon as the Glasskube Agent is installed in that environment.
+                </p>
+                <p class="mb-3 text-gray-500 dark:text-gray-400">
+                  @if(deploymentTargetForm.controls.accessType.value === 'full') {
+                    To do so, follow these steps:
+                  } @else {
+                    To do so, {{deploymentTargetForm.controls.technicalContact.controls.name.value}} or you can follow these steps:
+                  }
+                </p>
+
+                <div class="p-4 md:p-5 space-y-4 text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                  <ol class="space-y-1 text-gray-500 list-decimal list-inside dark:text-gray-400">
+                    <li>Connect to the target environment (e.g. via SSH)</li>
+                    <li>Make sure docker is installed</li>
+                    <li>Execute the following in the terminal:
+                      <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
+curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose -f - up -d</pre>
+                    </li>
+                  </ol>
+
                 </div>
 
                 <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">

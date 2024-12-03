@@ -9,4 +9,5 @@ export interface ApplicationVersion {
   id?: string;
   name?: string;
   createdAt?: string;
+  applicationId?: string;
 }
