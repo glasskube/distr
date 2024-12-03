@@ -1,4 +1,4 @@
-import {Component, ElementRef, inject, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, inject, Output, ViewChild} from '@angular/core';
 import {GlobeComponent} from '../globe/globe.component';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ApplicationsComponent} from '../../applications/applications.component';
@@ -20,9 +20,10 @@ import {
   lastValueFrom,
   Observable,
   Subject,
-  switchMap, takeUntil,
+  switchMap,
+  takeUntil,
   tap,
-  withLatestFrom
+  withLatestFrom,
 } from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
@@ -44,18 +45,26 @@ export class OnboardingWizardComponent {
   createdApp?: Application;
   createdDeploymentTarget?: DeploymentTarget;
 
+  @Output('closed') closed = new EventEmitter<void>();
+
   applicationForm = new FormGroup({
     type: new FormControl<string>('sample', Validators.required),
     custom: new FormGroup({
-      name: new FormControl<string>({
-        value: '',
-        disabled: true,
-      }, Validators.required),
-      versionName: new FormControl<string>({
-        value: '',
-        disabled: true,
-      }, Validators.required),
-    })
+      name: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      versionName: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+    }),
   });
   fileToUpload: File | null = null;
   @ViewChild('fileInput')
@@ -65,22 +74,25 @@ export class OnboardingWizardComponent {
     customerName: new FormControl<string>('', Validators.required),
     accessType: new FormControl<string>('', Validators.required),
     technicalContact: new FormGroup({
-      name: new FormControl<string>({
-        value: '',
-        disabled: true
-      }, Validators.required),
+      name: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
       email: new FormControl<string>({
         value: '',
-        disabled: true
-      })
-    })
+        disabled: true,
+      }),
+    }),
   });
 
-  private loading = false
+  private loading = false;
 
   ngOnInit() {
-    this.applicationForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(type => {
-      if(type === 'sample') {
+    this.applicationForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
+      if (type === 'sample') {
         // disable validators
         this.applicationForm.controls.custom.controls.name.disable();
         this.applicationForm.controls.custom.controls.versionName.disable();
@@ -88,9 +100,9 @@ export class OnboardingWizardComponent {
         this.applicationForm.controls.custom.controls.name.enable();
         this.applicationForm.controls.custom.controls.versionName.enable();
       }
-    })
-    this.deploymentTargetForm.controls.accessType.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(type => {
-      if(type === 'full') {
+    });
+    this.deploymentTargetForm.controls.accessType.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
+      if (type === 'full') {
         // disable validators
         this.deploymentTargetForm.controls.technicalContact.controls.name.disable();
         this.deploymentTargetForm.controls.technicalContact.controls.email.disable();
@@ -98,7 +110,7 @@ export class OnboardingWizardComponent {
         this.deploymentTargetForm.controls.technicalContact.controls.name.enable();
         this.deploymentTargetForm.controls.technicalContact.controls.email.enable();
       }
-    })
+    });
   }
 
   private destroyed$: Subject<void> = new Subject();
@@ -111,62 +123,84 @@ export class OnboardingWizardComponent {
   }
 
   attemptContinue() {
-    if(this.loading) {
-      return
+    if (this.loading) {
+      return;
     }
 
-    if(this.stepper.selectedIndex == 0) {
-      if(this.applicationForm.valid) {
-        if(this.applicationForm.controls.type.value === 'sample') {
+    if (this.stepper.selectedIndex == 0) {
+      if (this.applicationForm.valid) {
+        if (this.applicationForm.controls.type.value === 'sample') {
           this.loading = true;
           this.applications.createSample().subscribe((app) => {
             this.createdApp = app;
-            this.nextStep()
+            this.nextStep();
           });
-        } else if(this.fileToUpload != null) {
-          this.loading = true
-          this.applications.create({
-            name: this.applicationForm.controls.custom.controls.name.value!,
-            type: "docker"
-          }).pipe(switchMap(application => this.applications.createApplicationVersion(application, {
-                name: this.applicationForm.controls.custom.controls.versionName.value!,
-              }, this.fileToUpload!)
-          ), withLatestFrom(this.applications.list())).subscribe(([version, apps]) => {
-            this.createdApp = apps.find(a => a.id === version.applicationId)
-            this.nextStep()
-          })
+        } else if (this.fileToUpload != null) {
+          this.loading = true;
+          this.applications
+            .create({
+              name: this.applicationForm.controls.custom.controls.name.value!,
+              type: 'docker',
+            })
+            .pipe(
+              switchMap((application) =>
+                this.applications.createApplicationVersion(
+                  application,
+                  {
+                    name: this.applicationForm.controls.custom.controls.versionName.value!,
+                  },
+                  this.fileToUpload!
+                )
+              ),
+              withLatestFrom(this.applications.list())
+            )
+            .subscribe(([version, apps]) => {
+              this.createdApp = apps.find((a) => a.id === version.applicationId);
+              this.nextStep();
+            });
         }
       }
-    } else if(this.stepper.selectedIndex == 1) {
-      if(this.deploymentTargetForm.valid) {
-        this.loading = true
+    } else if (this.stepper.selectedIndex == 1) {
+      if (this.deploymentTargetForm.valid) {
+        this.loading = true;
         const base = {
           name: this.deploymentTargetForm.controls.customerName.value!.toLowerCase().replaceAll(' ', '-'),
-          type: "docker",
+          type: 'docker',
           geolocation: {
             lat: 48.1956026,
-            lon: 16.3633028
-          }
-        }
-        this.deploymentTargets.create({
-          ...base,
-          name: base.name + "-staging",
-        }).pipe(
-          switchMap(() => this.deploymentTargets.create({
+            lon: 16.3633028,
+          },
+        };
+        this.deploymentTargets
+          .create({
             ...base,
-            name: base.name + "-prod"
-          })),
-          tap((dt) => this.createdDeploymentTarget = dt),
-          switchMap(dt => this.deployments.create({
-            applicationVersionId: this.createdApp!.versions![0].id!,
-            deploymentTargetId: dt.id!
-          }))
-        ).subscribe(() => this.nextStep())
+            name: base.name + '-staging',
+          })
+          .pipe(
+            switchMap(() =>
+              this.deploymentTargets.create({
+                ...base,
+                name: base.name + '-prod',
+              })
+            ),
+            tap((dt) => (this.createdDeploymentTarget = dt)),
+            switchMap((dt) =>
+              this.deployments.create({
+                applicationVersionId: this.createdApp!.versions![0].id!,
+                deploymentTargetId: dt.id!,
+              })
+            )
+          )
+          .subscribe(() => this.nextStep());
       }
-    } else if(this.stepper.selectedIndex == 2) {
+    } else if (this.stepper.selectedIndex == 2) {
       // TODO
       window.location.href = '/dashboard';
     }
+  }
+
+  close() {
+    this.closed.emit();
   }
 
   private nextStep() {

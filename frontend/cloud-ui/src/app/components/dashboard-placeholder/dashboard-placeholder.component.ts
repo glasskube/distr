@@ -26,18 +26,25 @@ export class DashboardPlaceholderComponent {
   private viewContainerRef = inject(ViewContainerRef);
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
-  private overlayRef?: EmbeddedOverlayRef
+  private overlayRef?: EmbeddedOverlayRef;
 
   ngOnInit() {
-    const always = false;
-    combineLatest([this.applications$, this.deploymentTargets$]).pipe(first()).subscribe(([apps, dts]) => {
-      if(always || apps.length === 0 || dts.length === 0) {
-        this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
-          hasBackdrop: true,
-          backdropStyleOnly: true,
-          positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically()
-        });
-      }
-    })
+    const always = true;
+    combineLatest([this.applications$, this.deploymentTargets$])
+      .pipe(first())
+      .subscribe(([apps, dts]) => {
+        if (always || apps.length === 0 || dts.length === 0) {
+          this.overlayRef?.close();
+          this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
+            hasBackdrop: true,
+            backdropStyleOnly: true,
+            positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+          });
+        }
+      });
+  }
+
+  closeWizard() {
+    this.overlayRef?.close();
   }
 }

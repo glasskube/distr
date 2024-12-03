@@ -49,6 +49,8 @@ export class ApplicationsService implements CrudService<Application> {
   }
 
   createSample(): Observable<Application> {
-    return this.httpClient.post<Application>(`${this.applicationsUrl}/sample`, null).pipe(tap((it) => this.cache.save(it)));
+    return this.httpClient
+      .post<Application>(`${this.applicationsUrl}/sample`, null)
+      .pipe(tap((it) => this.cache.save(it)));
   }
 }

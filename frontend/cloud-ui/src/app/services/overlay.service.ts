@@ -19,7 +19,7 @@ export class EmbeddedOverlayRef {
 }
 
 export class ExtendedOverlayConfig extends OverlayConfig {
-  backdropStyleOnly?: boolean
+  backdropStyleOnly?: boolean;
 }
 
 @Injectable({providedIn: 'root'})
@@ -32,11 +32,15 @@ export class OverlayService {
    * @param config optional overlay config
    * @returns a handle of the modal with some control functions
    */
-  public showModal(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef, config?: ExtendedOverlayConfig): EmbeddedOverlayRef {
+  public showModal(
+    templateRef: TemplateRef<unknown>,
+    viewContainerRef: ViewContainerRef,
+    config?: ExtendedOverlayConfig
+  ): EmbeddedOverlayRef {
     return this.show(templateRef, viewContainerRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().top(),
-      ...config
+      ...config,
     });
   }
 
@@ -54,7 +58,7 @@ export class OverlayService {
   ): EmbeddedOverlayRef {
     const overlayRef = this.overlay.create(config);
     const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
-    if(!config.backdropStyleOnly) {
+    if (!config.backdropStyleOnly) {
       overlayRef
         .backdropClick()
         .pipe(takeUntil(modalRef.closed()))
