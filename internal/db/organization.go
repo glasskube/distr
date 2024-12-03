@@ -11,12 +11,20 @@ import (
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
-	// TODO: Implement
-	return errors.New("not implemented")
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, "INSERT INTO Organization (name) VALUES (@name)", pgx.NamedArgs{"name": org.Name})
+	if err != nil {
+		return err
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization]); err != nil {
+		return err
+	} else {
+		*org = *result
+		return nil
+	}
 }
 
 func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organization, error) {
-	// TODO: Implement
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT o.id, o.created_at, o.name
