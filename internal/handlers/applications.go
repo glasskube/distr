@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/contenttype"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -11,9 +15,6 @@ import (
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
-	"io"
-	"net/http"
-	"strings"
 )
 
 func ApplicationsRouter(r chi.Router) {
