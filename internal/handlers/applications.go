@@ -261,7 +261,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 	version := types.ApplicationVersion{
 		Name:            "v1.0.0",
-		ComposeFileData: nil, // TODO copy from somewhere
+		ComposeFileData: &shioriComposeFile,
 		ApplicationId:   application.ID,
 	}
 	if err := db.CreateApplicationVersion(ctx, &version); err != nil {
@@ -294,3 +294,47 @@ func applicationMiddleware(next http.Handler) http.Handler {
 		}
 	})
 }
+
+// TODO maybe shiori is not the best sample app, because it doesn't have a "production" docker compose file
+// from https://github.com/go-shiori/shiori/blob/master/docker-compose.yaml
+var shioriComposeFile = []byte(`# Docker compose for development purposes only.
+# Edit it to fit your current development needs.
+version: "3"
+services:
+  shiori:
+    build:
+      context: .
+      dockerfile: Dockerfile.compose
+    container_name: shiori
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./dev-data:/srv/shiori"
+      - ".:/src/shiori"
+    restart: unless-stopped
+    links:
+      - "postgres"
+      - "mariadb"
+    environment:
+      SHIORI_DIR: /srv/shiori
+      #SHIORI_DATABASE_URL: mysql://shiori:shiori@(mariadb)/shiori?charset=utf8mb4
+      SHIORI_DATABASE_URL: postgres://shiori:shiori@postgres/shiori?sslmode=disable
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: shiori
+      POSTGRES_USER: shiori
+    ports:
+      - "5432:5432"
+
+  mariadb:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: shiori
+      MYSQL_USER: shiori
+      MYSQL_PASSWORD: shiori
+    ports:
+      - "3306:3306"
+`)
