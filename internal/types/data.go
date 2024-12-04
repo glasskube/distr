@@ -49,11 +49,11 @@ type DeploymentTargetStatus struct {
 
 type UserAccount struct {
 	Base
-	Email        string `db:"email" json:"email"`
-	PasswordHash []byte `db:"password_hash" json:"-"`
-	PasswordSalt []byte `db:"password_salt" json:"-"`
-	Password     string `db:"-" json:",omitempty"`
-	Name         string `db:"name" json:"name,omitempty"`
+	Email        string `db:"email"`
+	PasswordHash []byte `db:"password_hash"`
+	PasswordSalt []byte `db:"password_salt"`
+	Password     string `db:"-"`
+	Name         string `db:"name"`
 }
 
 type Organization struct {
