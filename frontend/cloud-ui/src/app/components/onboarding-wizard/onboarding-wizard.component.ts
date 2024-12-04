@@ -118,8 +118,8 @@ export class OnboardingWizardComponent {
     this.destroyed$.complete();
   }
 
-  onFileSelected(event: any) {
-    this.fileToUpload = event.target.files[0];
+  onFileSelected(event: Event) {
+    this.fileToUpload = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
   attemptContinue() {
