@@ -174,7 +174,7 @@ export class OnboardingWizardComponent {
         this.deploymentTargets
           .create({
             ...base,
-            name: base.name + '-staging',
+            name: base.name + ' (staging)',
           })
           .pipe(
             /*switchMap(() =>
