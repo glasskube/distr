@@ -127,7 +127,7 @@ export class OnboardingWizardComponent {
       return;
     }
 
-    if (this.stepper.selectedIndex == 0) {
+    if (this.stepper.selectedIndex === 0) {
       if (this.applicationForm.valid) {
         if (this.applicationForm.controls.type.value === 'sample') {
           this.loading = true;
