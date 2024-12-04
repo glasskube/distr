@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS DeploymentTarget (
   type DEPLOYMENT_TYPE NOT NULL,
   geolocation_lat FLOAT,
   geolocation_lon FLOAT,
+  access_key_salt BYTEA,
+  access_key_hash BYTEA,
   organization_id UUID NOT NULL REFERENCES Organization (id)
 );
 

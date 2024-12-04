@@ -114,6 +114,10 @@ export class DeploymentTargetsComponent implements OnDestroy {
     this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
   }
 
+  requestAccess(dt: DeploymentTarget) {
+    this.deploymentTargets.requestAccess(dt.id!).subscribe(console.log);
+  }
+
   hideModal(): void {
     this.modal?.close();
   }

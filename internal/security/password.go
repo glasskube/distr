@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"errors"
+	mathrand "math/rand"
 
 	"github.com/glasskube/cloud/internal/types"
 	"golang.org/x/crypto/argon2"
@@ -29,6 +30,15 @@ func HashPassword(userAccount *types.UserAccount) error {
 	}
 }
 
+func HashAccessKey(accessKey string) ([]byte, []byte, error) {
+	if salt, err := generateSalt(); err != nil {
+		return nil, nil, err
+	} else {
+		hash := generateHash(accessKey, salt)
+		return salt, hash, nil
+	}
+}
+
 func VerifyPassword(userAccount types.UserAccount, password string) error {
 	if !bytes.Equal(userAccount.PasswordHash, generateHash(password, userAccount.PasswordSalt)) {
 		return ErrInvalidPassword
@@ -45,4 +55,19 @@ func generateSalt() ([]byte, error) {
 	salt := make([]byte, 16)
 	_, err := rand.Read(salt)
 	return salt, err
+}
+
+func GenerateAccessKey() string {
+	// TODO better
+	return randSeq(32)
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[mathrand.Intn(len(letters))]
+	}
+	return string(b)
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/cloud/internal/security"
 	"net/http"
 
 	"github.com/glasskube/cloud/internal/apierrors"
@@ -22,6 +24,7 @@ func DeploymentTargetsRouter(r chi.Router) {
 		r.Get("/", getDeploymentTarget)
 		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
+		r.Post("/access-request", createAccessForDeploymentTarget)
 	})
 }
 
@@ -100,6 +103,39 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
+		log.Error("failed to encode json", zap.Error(err))
+	}
+}
+
+func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	existing := internalctx.GetDeploymentTarget(ctx)
+
+	if existing.CurrentStatus != nil {
+		// TODO test
+		log.Warn("access key cannot be regenerated because deployment target has already been connected")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	accessKey := security.GenerateAccessKey()
+	if salt, hash, err := security.HashAccessKey(accessKey); err != nil {
+		log.Error("failed to hash access key", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else {
+		existing.AccessKeySalt = &salt
+		existing.AccessKeyHash = &hash
+	}
+
+	if err := db.UpdateDeploymentTargetAccess(ctx, existing); err != nil {
+		log.Warn("could not update DeploymentTarget", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+	} else if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
+		Token: accessKey,
+	}); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }

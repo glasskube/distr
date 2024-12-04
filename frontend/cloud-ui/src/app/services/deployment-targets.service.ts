@@ -31,4 +31,8 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   latestDeploymentFor(deploymentTargetId: string): Observable<DeploymentWithData> {
     return this.httpClient.get<DeploymentWithData>(`${this.baseUrl}/${deploymentTargetId}/latest-deployment`);
   }
+
+  requestAccess(deploymentTargetId: string){
+    return this.httpClient.post<any>(`${this.baseUrl}/${deploymentTargetId}/access-request`, {});
+  }
 }

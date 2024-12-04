@@ -15,7 +15,7 @@ import (
 
 const (
 	deploymentTargetOutputExpr = `
-		dt.id, dt.created_at, dt.name, dt.type,
+		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation
 	`
@@ -121,6 +121,28 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) err
 			" WHERE id = @id AND organization_id = @orgId RETURNING "+
 			deploymentTargetOutputExpr,
 		args)
+	if err != nil {
+		return fmt.Errorf("could not update DeploymentTarget: %w", err)
+	} else if updated, err :=
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget]); err != nil {
+		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
+	} else {
+		*dt = updated
+		return nil
+	}
+}
+
+func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarget) error {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return err
+	}
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"UPDATE DeploymentTarget AS dt SET access_key_salt = @accessKeySalt, access_key_hash = @accessKeyHash "+
+			"WHERE id = @id AND organization_id = @orgId RETURNING "+
+			deploymentTargetOutputExpr,
+		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgId})
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
 	} else if updated, err :=

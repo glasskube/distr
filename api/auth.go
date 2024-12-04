@@ -26,3 +26,7 @@ func (r *AuthRegistrationRequest) Validate() error {
 		return nil
 	}
 }
+
+type DeploymentTargetAccessTokenResponse struct {
+	Token string `json:"token"`
+}
