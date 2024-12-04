@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -20,7 +21,12 @@ const (
 	OrgIdKey     = "org"
 )
 
-var JWTAuth = jwtauth.New("HS256", []byte("secret"), nil) // replace with secret key
+// JWTAuth is for generating/validating JWTs.
+// Here we use symmetric encryption for now. This has the downside that the token can not be validated by clients,
+// which should be OK for now.
+//
+// TODO: Maybe migrate to asymmetric encryption at some point.
+var JWTAuth = jwtauth.New("HS256", env.JWTSecret(), nil)
 
 func GenerateToken(user types.UserAccount, org types.Organization) (jwt.Token, string, error) {
 	now := time.Now()
