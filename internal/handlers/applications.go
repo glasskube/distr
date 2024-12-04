@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/glasskube/cloud/internal/resources"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/contenttype"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -18,9 +20,9 @@ import (
 )
 
 func ApplicationsRouter(r chi.Router) {
-	// TODO r.Use(AuthMiddleware)
 	r.Get("/", getApplications)
 	r.Post("/", createApplication)
+	r.Post("/sample", createSampleApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.Use(applicationMiddleware)
 		r.Get("/", getApplication)
@@ -242,12 +244,54 @@ func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
+func createSampleApplication(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	// TODO only serve request if user does not have a sample application yet
+	application := types.Application{
+		Name: "Shiori",
+		Type: types.DeploymentTypeDocker,
+	}
+	if err := db.CreateApplication(ctx, &application); err != nil {
+		log.Warn("could not create sample application", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		if _, err = fmt.Fprintln(w, err); err != nil {
+			log.Error("failed to write error to response", zap.Error(err))
+		}
+		return
+	}
+	var composeFileData []byte
+	if composeFile, err := resources.Get("embedded/shiori-compose.yaml"); err != nil {
+		log.Warn("failed to read shiori compose file", zap.Error(err))
+		composeFileData = nil
+	} else {
+		composeFileData = composeFile
+	}
+	version := types.ApplicationVersion{
+		Name:            "v1.7.1",
+		ComposeFileData: &composeFileData,
+		ApplicationId:   application.ID,
+	}
+	if err := db.CreateApplicationVersion(ctx, &version); err != nil {
+		log.Warn("could not create sample applicationversion", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		if _, err = fmt.Fprintln(w, err); err != nil {
+			log.Error("failed to write error to response", zap.Error(err))
+		}
+	} else {
+		application.Versions = append(application.Versions, version)
+		if err = json.NewEncoder(w).Encode(application); err != nil {
+			log.Error("failed to encode json", zap.Error(err))
+		}
+	}
+}
+
 func applicationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		applicationId := r.PathValue("applicationId")
 		application, err := db.GetApplication(ctx, applicationId)
-		if errors.Is(err, apierrors.NotFound) {
+		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get application", zap.Error(err))

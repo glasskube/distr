@@ -7,6 +7,7 @@ import (
 	"maps"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
@@ -33,9 +34,16 @@ const (
 )
 
 func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error) {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
-		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr); err != nil {
+		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+" AND dt.organization_id = @orgId",
+		pgx.NamedArgs{"orgId": orgId},
+	); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentTarget]); err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTargets: %w", err)
@@ -45,16 +53,23 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error)
 }
 
 func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarget, error) {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+" AND dt.id = @id",
-		pgx.NamedArgs{"id": id})
+		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+
+			" AND dt.id = @id AND dt.organization_id = @orgId",
+		pgx.NamedArgs{"id": id, "orgId": orgId},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTarget])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apierrors.NotFound
+		return nil, apierrors.ErrNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
@@ -63,14 +78,19 @@ func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarge
 }
 
 func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return err
+	}
+
 	db := internalctx.GetDb(ctx)
-	args := pgx.NamedArgs{"name": dt.Name, "type": dt.Type, "lat": nil, "lon": nil}
+	args := pgx.NamedArgs{"name": dt.Name, "type": dt.Type, "orgId": orgId, "lat": nil, "lon": nil}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
 	}
 	rows, err := db.Query(ctx,
-		"INSERT INTO DeploymentTarget AS dt (name, type, geolocation_lat, geolocation_lon) "+
-			"VALUES (@name, @type, @lat, @lon) RETURNING "+
+		"INSERT INTO DeploymentTarget AS dt (name, type, organization_id, geolocation_lat, geolocation_lon) "+
+			"VALUES (@name, @type, @orgId, @lat, @lon) RETURNING "+
 			deploymentTargetOutputExpr,
 		args)
 	if err != nil {
@@ -86,14 +106,19 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) err
 }
 
 func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return err
+	}
+
 	db := internalctx.GetDb(ctx)
-	args := pgx.NamedArgs{"id": dt.ID, "name": dt.Name, "lat": nil, "lon": nil}
+	args := pgx.NamedArgs{"id": dt.ID, "name": dt.Name, "orgId": orgId, "lat": nil, "lon": nil}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
 	}
 	rows, err := db.Query(ctx,
 		"UPDATE DeploymentTarget AS dt SET name = @name, geolocation_lat = @lat, geolocation_lon = @lon "+
-			" WHERE id = @id RETURNING "+
+			" WHERE id = @id AND organization_id = @orgId RETURNING "+
 			deploymentTargetOutputExpr,
 		args)
 	if err != nil {

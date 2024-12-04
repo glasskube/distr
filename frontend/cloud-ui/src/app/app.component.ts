@@ -11,9 +11,8 @@ import {initFlowbite} from 'flowbite';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [SideBarComponent, NavBarComponent, RouterOutlet, FontAwesomeModule],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  imports: [RouterOutlet, FontAwesomeModule],
+  template: `<router-outlet></router-outlet>`,
 })
 export class AppComponent implements OnInit {
   private readonly router = inject(Router);

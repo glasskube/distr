@@ -15,7 +15,6 @@ import (
 )
 
 func DeploymentTargetsRouter(r chi.Router) {
-	// TODO r.Use(AuthMiddleware)
 	r.Get("/", getDeploymentTargets)
 	r.Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
@@ -29,7 +28,7 @@ func DeploymentTargetsRouter(r chi.Router) {
 func getLatestDeployment(w http.ResponseWriter, r *http.Request) {
 	dt := internalctx.GetDeploymentTarget(r.Context())
 	if deployment, err := db.GetLatestDeploymentForDeploymentTarget(r.Context(), dt.ID); err != nil {
-		if errors.Is(err, apierrors.NotFound) {
+		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			internalctx.GetLogger(r.Context()).Error("failed to get latest deployment", zap.Error(err))
@@ -110,7 +109,7 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 		ctx := r.Context()
 		id := r.PathValue("deploymentTargetId")
 		deploymentTarget, err := db.GetDeploymentTarget(ctx, id)
-		if errors.Is(err, apierrors.NotFound) {
+		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))

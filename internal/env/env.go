@@ -1,6 +1,7 @@
 package env
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -12,8 +13,9 @@ const (
 )
 
 var (
-	currentEnv  = ""
-	databaseUrl = ""
+	currentEnv  string
+	databaseUrl string
+	jwtSecret   []byte
 )
 
 func init() {
@@ -26,10 +28,19 @@ func init() {
 		fmt.Fprintf(os.Stderr, "environment not loaded: %v\n", err)
 	}
 	databaseUrl = os.Getenv("DATABASE_URL")
+	if decoded, err := base64.StdEncoding.DecodeString(os.Getenv("JWT_SECRET")); err != nil {
+		panic(err)
+	} else {
+		jwtSecret = decoded
+	}
 }
 
 func DatabaseUrl() string {
 	return databaseUrl
+}
+
+func JWTSecret() []byte {
+	return jwtSecret
 }
 
 func IsDev() bool {
