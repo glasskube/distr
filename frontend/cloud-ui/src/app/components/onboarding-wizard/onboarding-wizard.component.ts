@@ -194,8 +194,7 @@ export class OnboardingWizardComponent {
           .subscribe(() => this.nextStep());
       }
     } else if (this.stepper.selectedIndex == 2) {
-      // TODO
-      window.location.href = '/dashboard';
+      this.close();
     }
   }
 
