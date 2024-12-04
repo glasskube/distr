@@ -5,6 +5,7 @@ import {DeploymentTargetsPageComponent} from './deployment-targets/deployment-ta
 import {inject} from '@angular/core';
 import {AuthService} from './services/auth.service';
 import {LoginComponent} from './login/login.component';
+import {NavShellComponent} from './components/nav-shell.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -21,6 +22,7 @@ export const routes: Routes = [
         }
       },
     ],
+    component: NavShellComponent,
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
       {path: 'dashboard', component: DashboardPlaceholderComponent},
