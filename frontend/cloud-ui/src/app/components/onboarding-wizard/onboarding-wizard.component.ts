@@ -177,12 +177,12 @@ export class OnboardingWizardComponent {
             name: base.name + '-staging',
           })
           .pipe(
-            switchMap(() =>
+            /*switchMap(() =>
               this.deploymentTargets.create({
                 ...base,
                 name: base.name + '-prod',
               })
-            ),
+            ),*/
             tap((dt) => (this.createdDeploymentTarget = dt)),
             switchMap((dt) =>
               this.deployments.create({
