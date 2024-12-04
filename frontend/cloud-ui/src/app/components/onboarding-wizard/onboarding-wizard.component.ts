@@ -160,7 +160,7 @@ export class OnboardingWizardComponent {
             });
         }
       }
-    } else if (this.stepper.selectedIndex == 1) {
+    } else if (this.stepper.selectedIndex === 1) {
       if (this.deploymentTargetForm.valid) {
         this.loading = true;
         const base = {
