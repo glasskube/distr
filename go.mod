@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1
-	github.com/lestrrat-go/jwx/v2 v2.0.20
+	github.com/lestrrat-go/jwx/v2 v2.0.21
 	github.com/onsi/gomega v1.36.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.29.0
@@ -23,7 +23,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
-	github.com/lestrrat-go/httprc v1.0.4 // indirect
+	github.com/lestrrat-go/httprc v1.0.5 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
