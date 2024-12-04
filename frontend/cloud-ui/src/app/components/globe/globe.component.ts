@@ -99,9 +99,8 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private updateDimensions(): void {
-    const h = this.parentHeight;
-    const w = this.parentWidth;
-    this.globeInstance.width(w).height(h);
+    const d = Math.min(this.parentHeight, this.parentWidth);
+    this.globeInstance.width(d).height(d);
   }
 
   private getMarkerElement(dt: DeploymentTarget): HTMLElement {
