@@ -18,6 +18,10 @@ export class EmbeddedOverlayRef {
   }
 }
 
+export class ExtendedOverlayConfig extends OverlayConfig {
+  backdropStyleOnly?: boolean;
+}
+
 @Injectable({providedIn: 'root'})
 export class OverlayService {
   private readonly overlay = inject(Overlay);
@@ -25,12 +29,18 @@ export class OverlayService {
   /**
    * @param templateRef the template to show
    * @param viewContainerRef needed to create a TemplatePortal. you can get it by injecting `ViewContainerRef`
+   * @param config optional overlay config
    * @returns a handle of the modal with some control functions
    */
-  public showModal(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
+  public showModal(
+    templateRef: TemplateRef<unknown>,
+    viewContainerRef: ViewContainerRef,
+    config?: ExtendedOverlayConfig
+  ): EmbeddedOverlayRef {
     return this.show(templateRef, viewContainerRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().top(),
+      ...config,
     });
   }
 
@@ -44,14 +54,16 @@ export class OverlayService {
   private show(
     templateRef: TemplateRef<unknown>,
     viewContainerRef: ViewContainerRef,
-    config: OverlayConfig
+    config: ExtendedOverlayConfig
   ): EmbeddedOverlayRef {
     const overlayRef = this.overlay.create(config);
     const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
-    overlayRef
-      .backdropClick()
-      .pipe(takeUntil(modalRef.closed()))
-      .subscribe(() => modalRef.close());
+    if (!config.backdropStyleOnly) {
+      overlayRef
+        .backdropClick()
+        .pipe(takeUntil(modalRef.closed()))
+        .subscribe(() => modalRef.close());
+    }
     return modalRef;
   }
 }
