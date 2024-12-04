@@ -212,34 +212,42 @@
                 </div>
 
                 @if (deploymentTargetForm.controls.accessType.value === 'none') {
-                  <h4 class="font-normal text-gray-900 dark:text-white">Customer Technical Contact Person</h4>
-                  <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                    This person should be able to execute a simple install command in their environment.
-                  </p>
-                  <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                    <div class="w-full">
-                      <label for="techContactName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Name</label
-                      >
-                      <input
-                        [formControl]="deploymentTargetForm.controls.technicalContact.controls.name"
-                        type="text"
-                        name="name"
-                        id="techContactName"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="John Doe" />
-                    </div>
-                    <div class="w-full">
-                      <label for="techContactEmail" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Email</label
-                      >
-                      <input
-                        [formControl]="deploymentTargetForm.controls.technicalContact.controls.email"
-                        type="email"
-                        name="breadth"
-                        id="techContactEmail"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="john@doe.com" />
+                  <div>
+                    <label class="mt-4 block text-sm font-medium text-gray-900 dark:text-white"
+                      >Customer Technical Contact Person</label
+                    >
+                    <p class="mt-1 mb-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                      This person should be able to execute a simple install command in their environment.
+                    </p>
+                    <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="techContactName"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Name</label
+                        >
+                        <input
+                          [formControl]="deploymentTargetForm.controls.technicalContact.controls.name"
+                          type="text"
+                          name="name"
+                          id="techContactName"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="John Doe" />
+                      </div>
+                      <div class="w-full">
+                        <label
+                          for="techContactEmail"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Email</label
+                        >
+                        <input
+                          [formControl]="deploymentTargetForm.controls.technicalContact.controls.email"
+                          type="email"
+                          name="breadth"
+                          id="techContactEmail"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="john@doe.com" />
+                      </div>
                     </div>
                   </div>
                 }
