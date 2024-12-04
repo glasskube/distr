@@ -41,6 +41,8 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		if len(orgs) < 1 {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Error("user has no organizations")
+		} else if len(orgs) > 1 {
+			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
 		}
 		org := orgs[0]
 		if _, tokenString, err := auth.GenerateToken(*user, *org); err != nil {
