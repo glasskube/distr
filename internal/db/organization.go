@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
@@ -12,11 +13,15 @@ import (
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, "INSERT INTO Organization (name) VALUES (@name)", pgx.NamedArgs{"name": org.Name})
+	rows, err := db.Query(ctx,
+		"INSERT INTO Organization (name) VALUES (@name) RETURNING id, created_at, name",
+		pgx.NamedArgs{"name": org.Name},
+	)
 	if err != nil {
 		return err
 	}
-	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization]); err != nil {
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
+	if err != nil {
 		return err
 	} else {
 		*org = *result
@@ -35,7 +40,9 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 	`, pgx.NamedArgs{"id": userId})
 	if err != nil {
 		return nil, err
-	} else if result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.Organization]); err != nil {
+	}
+	result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.Organization])
+	if err != nil {
 		return nil, err
 	} else {
 		return result, nil
@@ -43,8 +50,22 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 }
 
 func GetOrganizationWithID(ctx context.Context, orgId string) (*types.Organization, error) {
-	// TODO: Implement
-	return nil, errors.New("not implemented")
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT id, created_at, name FROM Organization WHERE id = @id",
+		pgx.NamedArgs{"id": orgId},
+	)
+	if err != nil {
+		return nil, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, apierrors.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	} else {
+		return result, nil
+	}
 }
 
 // GetCurrentOrg retrieves the organization_id from the context auth token and returns the corresponding Organization

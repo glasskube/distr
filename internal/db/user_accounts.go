@@ -18,17 +18,17 @@ func CreateUserAccountWithOrganization(
 	ctx context.Context,
 	userAccount *types.UserAccount,
 ) (*types.Organization, error) {
+	org := types.Organization{
+		Name: userAccount.Email,
+	}
 	if err := CreateUserAccount(ctx, userAccount); err != nil {
 		return nil, err
+	} else if err := CreateOrganization(ctx, &org); err != nil {
+		return nil, err
+	} else if err := CreateUserAccountOrganizationAssignment(ctx, userAccount.ID, org.ID); err != nil {
+		return nil, err
 	} else {
-		org := types.Organization{
-			Name: userAccount.Email,
-		}
-		if err := CreateOrganization(ctx, &org); err != nil {
-			return nil, err
-		} else {
-			return &org, nil
-		}
+		return &org, nil
 	}
 }
 
@@ -56,6 +56,15 @@ func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 		*userAccount = created
 		return nil
 	}
+}
+
+func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId string) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(ctx,
+		"INSERT INTO Organization_UserAccount (organization_id, user_account_id) VALUES (@orgId, @userId)",
+		pgx.NamedArgs{"userId": userId, "orgId": orgId},
+	)
+	return err
 }
 
 func GetUserAccountWithID(ctx context.Context, id string) (*types.UserAccount, error) {
@@ -96,7 +105,8 @@ func GetUserAccountWithEmail(ctx context.Context, email string) (*types.UserAcco
 	}
 }
 
-// GetCurrentUser retrieves the user account ID from the context auth token (subject claim) and returns the corresponding UserAccount
+// GetCurrentUser retrieves the user account ID from the context auth token (subject claim) and returns the
+// corresponding UserAccount
 //
 // TODO: this function should probably be moved to another module and maybe support some kind of result caching.
 func GetCurrentUser(ctx context.Context) (*types.UserAccount, error) {
