@@ -2,11 +2,11 @@ name: shiori-glasskube-sample
 
 services:
   shiori:
-    image: "ghcr.io/go-shiori/shiori:v1.7.1"
+    image: 'ghcr.io/go-shiori/shiori:v1.7.1'
     ports:
-      - "8081:8080"
+      - '8081:8080'
     volumes:
-      - "shiori:/srv/shiori"
+      - 'shiori:/srv/shiori'
     restart: unless-stopped
     depends_on:
       - shiori-postgres
@@ -15,14 +15,14 @@ services:
       SHIORI_DATABASE_URL: postgres://shiori:shiori@shiori-postgres/shiori?sslmode=disable
 
   shiori-postgres:
-    image: "postgres:17.2-alpine3.20"
+    image: 'postgres:17.2-alpine3.20'
     environment:
       POSTGRES_PASSWORD: shiori
       POSTGRES_USER: shiori
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
-      - "shiori-postgres:/var/lib/postgresql/data/"
+      - 'shiori-postgres:/var/lib/postgresql/data/'
 
 volumes:
   shiori-postgres:
