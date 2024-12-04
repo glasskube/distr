@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS Application (
   organization_id UUID NOT NULL REFERENCES Organization (id)
 );
 
-CREATE INDEX fk_Application_organization_id ON Application (organization_id);
+CREATE INDEX IF NOT EXISTS fk_Application_organization_id ON Application (organization_id);
 
 CREATE TABLE IF NOT EXISTS ApplicationVersion (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS ApplicationVersion (
   application_id UUID NOT NULL REFERENCES Application (id)
 );
 
-CREATE INDEX fk_ApplicationVersion_application_id ON ApplicationVersion (application_id);
+CREATE INDEX IF NOT EXISTS fk_ApplicationVersion_application_id ON ApplicationVersion (application_id);
 
 CREATE TABLE IF NOT EXISTS DeploymentTarget (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS DeploymentTarget (
   organization_id UUID NOT NULL REFERENCES Organization (id)
 );
 
-CREATE INDEX fk_DeploymentTarget_organization_id ON DeploymentTarget (organization_id);
+CREATE INDEX IF NOT EXISTS fk_DeploymentTarget_organization_id ON DeploymentTarget (organization_id);
 
 CREATE TABLE IF NOT EXISTS DeploymentTargetStatus (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS DeploymentTargetStatus (
   message TEXT NOT NULL
 );
 
-CREATE INDEX fk_DeploymentTargetStatus_deployment_target_id ON DeploymentTargetStatus (deployment_target_id);
+CREATE INDEX IF NOT EXISTS fk_DeploymentTargetStatus_deployment_target_id ON DeploymentTargetStatus (deployment_target_id);
 
 CREATE TABLE IF NOT EXISTS Deployment (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS Deployment (
   application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id)
 );
 
-CREATE INDEX fk_Deployment_deployment_target_id ON Deployment (deployment_target_id);
+CREATE INDEX IF NOT EXISTS fk_Deployment_deployment_target_id ON Deployment (deployment_target_id);
 
-CREATE INDEX fk_Deployment_application_version_id ON Deployment (application_version_id);
+CREATE INDEX IF NOT EXISTS fk_Deployment_application_version_id ON Deployment (application_version_id);
 
 CREATE TABLE IF NOT EXISTS DeploymentStatus (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS DeploymentStatus (
   message TEXT NOT NULL
 );
 
-CREATE INDEX fk_DeploymentStatus_deployment_target_id ON DeploymentStatus (deployment_id);
+CREATE INDEX IF NOT EXISTS fk_DeploymentStatus_deployment_target_id ON DeploymentStatus (deployment_id);
 
 CREATE TABLE IF NOT EXISTS UserAccount (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -82,6 +82,6 @@ CREATE TABLE IF NOT EXISTS Organization_UserAccount (
   PRIMARY KEY (organization_id, user_account_id)
 );
 
-CREATE INDEX fk_Organization_UserAccount_organization_id ON Organization_UserAccount (organization_id);
+CREATE INDEX IF NOT EXISTS fk_Organization_UserAccount_organization_id ON Organization_UserAccount (organization_id);
 
-CREATE INDEX fk_Organization_UserAccount_user_account_id ON Organization_UserAccount (user_account_id);
+CREATE INDEX IF NOT EXISTS fk_Organization_UserAccount_user_account_id ON Organization_UserAccount (user_account_id);

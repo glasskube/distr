@@ -65,23 +65,23 @@ INSERT INTO
 VALUES
   (
     'v3',
-    decode (E 'hello: world\n', 'escape'),
-    '14c4daf4-b49b-47c4-a280-e6ca8e33648c'
+    decode(e'hello: world\n', 'escape'),
+    '9c3e1886-67e4-47c6-980f-1ab6b5bd622f'
   ),
   (
     'v2',
-    decode (E 'hello: world\n', 'escape'),
-    '14c4daf4-b49b-47c4-a280-e6ca8e33648c'
+    decode(e'hello: world\n', 'escape'),
+    '9c3e1886-67e4-47c6-980f-1ab6b5bd622f'
   ),
   (
     'v1',
-    decode (E 'hello: world\n', 'escape'),
-    '14c4daf4-b49b-47c4-a280-e6ca8e33648c'
+    decode(e'hello: world\n', 'escape'),
+    '9c3e1886-67e4-47c6-980f-1ab6b5bd622f'
   ),
   (
     'v1',
-    decode (E 'hello: world\n', 'escape'),
-    'a3de7cca-1d6f-4277-9b25-9e502277507f'
+    decode(e'hello: world\n', 'escape'),
+    '4d5f8130-50fa-49e5-8bca-20590ffd96ca'
   );
 
 INSERT INTO
