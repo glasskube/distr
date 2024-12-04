@@ -31,6 +31,6 @@ export class OnboardingWizardStepperComponent extends CdkStepper {
   }
 
   isFinalStep(): boolean {
-    return this.selectedIndex == 2;
+    return this.selectedIndex === this.steps.length - 1;
   }
 }
