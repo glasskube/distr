@@ -34,8 +34,8 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 	rows, err := db.Query(ctx, `
 		SELECT o.id, o.created_at, o.name
 			FROM UserAccount u
-			LEFT JOIN Organization_UserAccount j ON u.id = j.user_account_id
-			LEFT JOIN Organization o ON o.id = j.organization_id
+			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
+			INNER JOIN Organization o ON o.id = j.organization_id
 			WHERE u.id = @id
 	`, pgx.NamedArgs{"id": userId})
 	if err != nil {
