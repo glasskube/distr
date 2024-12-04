@@ -24,7 +24,7 @@
           <cdk-step [stepControl]="applicationForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Choose An Application</h3>
+                <h3 class="font-normal text-gray-900 dark:text-white">Choose An Application</h3>
 
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <div
@@ -134,8 +134,6 @@
           <cdk-step [stepControl]="deploymentTargetForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Create Your First Customer</h3>
-
                 <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                   <div class="w-full">
                     <label for="customerName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -153,7 +151,9 @@
                   </div>
                 </div>
 
-                <h4 class="font-normal text-gray-900 dark:text-white">Who is managing the customers' environment?</h4>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >Who is managing the customers' environment?</label
+                >
 
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <div
@@ -161,9 +161,9 @@
                     <div class="flex items-start">
                       <div class="flex h-5 items-center">
                         <input
-                          id="sample-app-radio"
+                          id="access-type-full-radio"
                           [formControl]="deploymentTargetForm.controls.accessType"
-                          aria-describedby="sample-app-radio-text"
+                          aria-describedby="access-type-full-radio-text"
                           type="radio"
                           name="appType"
                           value="full"
@@ -171,10 +171,12 @@
                       </div>
 
                       <div class="ms-4 text-sm">
-                        <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"
+                        <label for="access-type-full-radio" class="font-bold leading-none text-gray-900 dark:text-white"
                           >I Am</label
                         >
-                        <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        <p
+                          id="access-type-full-radio-text"
+                          class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I have the necessary rights to access the customers machine and can install something there.
                         </p>
                       </div>
@@ -186,9 +188,9 @@
                     <div class="flex items-start">
                       <div class="flex h-5 items-center">
                         <input
-                          id="custom-app-radio"
+                          id="access-type-none-radio"
                           [formControl]="deploymentTargetForm.controls.accessType"
-                          aria-describedby="custom-app-radio-text"
+                          aria-describedby="access-type-none-radio-text"
                           type="radio"
                           name="appType"
                           value="none"
@@ -196,10 +198,12 @@
                       </div>
 
                       <div class="ms-4 text-sm">
-                        <label for="custom-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"
+                        <label for="access-type-none-radio" class="font-bold leading-none text-gray-900 dark:text-white"
                           >An employee of the customer</label
                         >
-                        <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        <p
+                          id="access-type-none-radio-text"
+                          class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I do not have the necessary rights to install something on my customers machine.
                         </p>
                       </div>
