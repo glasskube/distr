@@ -164,7 +164,7 @@ export class OnboardingWizardComponent {
       if (this.deploymentTargetForm.valid) {
         this.loading = true;
         const base = {
-          name: this.deploymentTargetForm.controls.customerName.value!.toLowerCase().replaceAll(' ', '-'),
+          name: this.deploymentTargetForm.controls.customerName.value!,
           type: 'docker',
           geolocation: {
             lat: 48.1956026,
