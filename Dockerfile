@@ -1,4 +1,4 @@
-FROM node:22.11.0-alpine AS frontend
+FROM node:22.12.0-alpine AS frontend
 WORKDIR /workspace
 
 COPY package-lock.json .

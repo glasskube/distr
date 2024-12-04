@@ -111,6 +111,7 @@ export class ApplicationsComponent {
         result = this.applications.update({
           id: val.id!,
           name: val.name!,
+          type: val.type!,
         });
       }
       result.subscribe((application) => this.loadApplication(application));
