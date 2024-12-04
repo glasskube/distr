@@ -23,7 +23,7 @@ export class OnboardingWizardStepperComponent extends CdkStepper {
   }
 
   isApplicationStep(): boolean {
-    return this.selectedIndex == 0;
+    return this.selectedIndex === 0;
   }
 
   isDeploymentTargetStep(): boolean {
