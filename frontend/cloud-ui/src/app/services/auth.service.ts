@@ -45,21 +45,6 @@ export class AuthService {
     this.token = null;
     return of(undefined);
   }
-
-  public httpInterceptor(): HttpInterceptorFn {
-    return (req, next) => {
-      if (req.url !== '/api/auth/login') {
-        const token = this.token;
-        if (token !== null) {
-          return next(req.clone({headers: req.headers.set('Authentication', `Bearer ${this.token}`)}));
-        } else {
-          return throwError(() => new Error('no token'));
-        }
-      } else {
-        return next(req);
-      }
-    };
-  }
 }
 
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
