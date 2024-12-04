@@ -42,7 +42,7 @@ func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Deployment])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apierrors.NotFound
+		return nil, apierrors.ErrNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get Deployment: %w", err)
 	} else {
@@ -66,7 +66,7 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentWithData])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apierrors.NotFound
+		return nil, apierrors.ErrNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get Deployment: %w", err)
 	} else {

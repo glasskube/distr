@@ -44,4 +44,4 @@ docker-build:
 
 .PHONY: init-db
 init-db:
-	 cat sql/init_db.sql sql/dummy_data.sql | docker compose exec -T postgres psql --dbname glasskube --user local
+	 cat sql/init_db.sql sql/test_data.sql | docker compose exec -T postgres psql --dbname glasskube --user local

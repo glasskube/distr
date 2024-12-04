@@ -4,15 +4,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
 
 func ApiRouter() chi.Router {
-	// TODO for all (most) routes auth middleware
 	router := chi.NewRouter()
 	router.Use(
 		middleware.RequestID,
@@ -20,9 +21,21 @@ func ApiRouter() chi.Router {
 		loggingMiddleware,
 		dbCtxMiddleware,
 	)
-	router.Route("/applications", handlers.ApplicationsRouter)
-	router.Route("/deployments", handlers.DeploymentsRouter)
-	router.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
+
+	// public routes go here
+	router.Group(func(r chi.Router) {
+		r.Route("/auth", handlers.AuthRouter)
+	})
+
+	// authenticated routes go here
+	router.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(auth.JWTAuth))
+		r.Use(jwtauth.Authenticator(auth.JWTAuth))
+		r.Route("/applications", handlers.ApplicationsRouter)
+		r.Route("/deployments", handlers.DeploymentsRouter)
+		r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
+	})
+
 	return router
 }
 

@@ -6,16 +6,22 @@ import (
 	"fmt"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
 )
 
 func CreateApplication(ctx context.Context, application *types.Application) error {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return err
+	}
+
 	db := internalctx.GetDb(ctx)
 	row := db.QueryRow(ctx,
-		"INSERT INTO Application (name, type) VALUES (@name, @type) RETURNING id, created_at",
-		pgx.NamedArgs{"name": application.Name, "type": application.Type})
+		"INSERT INTO Application (name, type, organization_id) VALUES (@name, @type, @orgId) RETURNING id, created_at",
+		pgx.NamedArgs{"name": application.Name, "type": application.Type, "orgId": orgId})
 	if err := row.Scan(&application.ID, &application.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
@@ -23,13 +29,18 @@ func CreateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func UpdateApplication(ctx context.Context, application *types.Application) error {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return err
+	}
+
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"UPDATE Application SET name = @name WHERE id = @id RETURNING *",
-		pgx.NamedArgs{"id": application.ID, "name": application.Name})
+		"UPDATE Application SET name = @name WHERE id = @id AND organization_id = @orgId RETURNING *",
+		pgx.NamedArgs{"id": application.ID, "name": application.Name, "orgId": orgId})
 	if err != nil {
 		return fmt.Errorf("could not update application: %w", err)
-	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[types.Application]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.Application]); err != nil {
 		return fmt.Errorf("could not get updated application: %w", err)
 	} else {
 		*application = updated
@@ -38,6 +49,11 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func GetApplications(ctx context.Context) ([]types.Application, error) {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -51,7 +67,8 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			    	WHERE av.application_id = a.id
 			    ), array[]::record[]) as versions
 			FROM Application a
-			`); err != nil {
+			WHERE a.organization_id = @orgId
+			`, pgx.NamedArgs{"orgId": orgId}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err :=
 		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
@@ -62,6 +79,11 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 }
 
 func GetApplication(ctx context.Context, id string) (*types.Application, error) {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -75,13 +97,13 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			    	WHERE av.application_id = a.id
 			    ), array[]::record[]) as versions
 			FROM Application a
-			WHERE a.id = @id
-		`, pgx.NamedArgs{"id": id}); err != nil {
+			WHERE a.id = @id AND a.organization_id = @orgId
+		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err :=
 		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apierrors.NotFound
+			return nil, apierrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {
