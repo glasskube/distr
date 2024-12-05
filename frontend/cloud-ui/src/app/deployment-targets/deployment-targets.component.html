@@ -142,7 +142,7 @@
                             To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
-                          <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">curl {{ modalConnectUrl }} | docker compose -f - up -d</pre
+                          <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">curl "{{ modalConnectUrl }}" | docker compose -f - up -d</pre
                           >
                           <!-- TODO warning/explanation etc -->
                         </div>

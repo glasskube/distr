@@ -42,6 +42,10 @@ build: frontend-prod
 docker-build:
 	docker build . --tag cloud  --network host
 
+.PHONY: docker-build-agent
+docker-build-agent:
+	docker build -f Dockerfile.agent . --tag glasskube-agent --network host
+
 .PHONY: init-db
 init-db:
 	 cat sql/init_db.sql sql/test_data.sql | docker compose exec -T postgres psql --dbname glasskube --user local

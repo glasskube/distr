@@ -63,9 +63,6 @@ func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarge
 
 func GetDeploymentTargetUnauthenticated(ctx context.Context, id string) (*types.DeploymentTarget, error) {
 	rows, err := queryDeploymentTarget(ctx, id, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
-	}
 	return collectDeploymentTarget(rows, err)
 }
 
@@ -176,8 +173,9 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 
 func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget, message string) error {
 	db := internalctx.GetDb(ctx)
-	_, err := db.Query(ctx,
+	rows, err := db.Query(ctx,
 		"INSERT INTO DeploymentTargetStatus (deployment_target_id, message) VALUES (@deploymentTargetId, @message)",
 		pgx.NamedArgs{"deploymentTargetId": dt.ID, "message": message})
+	defer rows.Close()
 	return err
 }

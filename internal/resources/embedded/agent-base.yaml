@@ -1,7 +1,8 @@
 name: glasskube-agent
 services:
   agent:
-    image: 'glasskube-agent'
+    network_mode: host # TODO enable only for development
+    image: 'glasskube-agent' # TODO tag
     environment:
       GK_ACCESS_KEY_ID: '{{ .accessKeyId }}'
       GK_ACCESS_KEY_SECRET: '{{ .accessKeySecret }}'
