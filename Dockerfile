@@ -21,6 +21,7 @@ COPY go.sum go.sum
 RUN go mod download
 
 COPY cmd/ cmd/
+COPY api/ api/
 # doesn't exist (yet?)
 # COPY pkg/ pkg/
 COPY internal/ internal/
