@@ -50,11 +50,19 @@ func (s *sesMailer) Send(ctx context.Context, mail mail.Mail) error {
 			Body:    &types.Body{},
 		},
 	}
-	if mail.TextBody != "" {
-		message.Message.Body.Text = &types.Content{Data: &mail.TextBody}
+	if mail.TextBodyFunc != nil {
+		if body, err := mail.TextBodyFunc(); err != nil {
+			return err
+		} else {
+			message.Message.Body.Text = &types.Content{Data: &body}
+		}
 	}
-	if mail.HtmlBody != "" {
-		message.Message.Body.Html = &types.Content{Data: &mail.HtmlBody}
+	if mail.HtmlBodyFunc != nil {
+		if body, err := mail.HtmlBodyFunc(); err != nil {
+			return err
+		} else {
+			message.Message.Body.Html = &types.Content{Data: &body}
+		}
 	}
 	if _, err := s.client.SendEmail(ctx, &message); err != nil {
 		return err

@@ -56,11 +56,19 @@ func (s *smtpMailer) Send(ctx context.Context, mail mail.Mail) error {
 			return err
 		}
 	}
-	if mail.HtmlBody != "" {
-		message.SetBodyString(gomail.TypeTextHTML, mail.HtmlBody)
+	if mail.HtmlBodyFunc != nil {
+		if body, err := mail.HtmlBodyFunc(); err != nil {
+			return err
+		} else {
+			message.SetBodyString(gomail.TypeTextHTML, body)
+		}
 	}
-	if mail.TextBody != "" {
-		message.SetBodyString(gomail.TypeTextPlain, mail.TextBody)
+	if mail.TextBodyFunc != nil {
+		if body, err := mail.TextBodyFunc(); err != nil {
+			return err
+		} else {
+			message.SetBodyString(gomail.TypeTextPlain, body)
+		}
 	}
 	return s.client.DialAndSendWithContext(ctx, message)
 }

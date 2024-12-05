@@ -1,0 +1,86 @@
+@media (min-width: 720px) {
+  .message-container {
+    width: 720px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .message-container {
+    width: 1000px;
+    padding: 0 2.4rem;
+  }
+}
+
+.message-container {
+  font-family: Inter, "Noto Sans", "Droid Sans", Helvetica, sans-serif;
+  padding: 0 0.8rem;
+}
+
+a {
+  color: #00b5eb;
+}
+
+hr {
+  border: 1px solid #00b5eb;
+  border-bottom: none;
+  margin-top: 1.6rem;
+  margin-bottom: 1.6rem;
+}
+
+tbody th {
+  text-align: start;
+  font-weight: normal;
+}
+
+th, td {
+  vertical-align: top;
+}
+
+footer {
+  padding-top: 0.8rem;
+  border-top: 0.2rem solid #174c76;
+}
+
+.my-1, p {
+  margin-top: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.my-2, header, footer {
+  margin-top: 1.6rem;
+  margin-bottom: 1.6rem;
+}
+
+.my-3 {
+  margin-top: 2.4rem;
+  margin-bottom: 2.4rem;
+}
+
+.text-small, footer {
+  font-size: 0.8rem;
+}
+
+.text-strong, strong {
+  font-weight: 600;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.cta {
+  display: inline-block;
+  padding: 0.8rem 1.2rem;
+  background: #00b5eb;
+  border-radius: 0.4rem;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+blockquote {
+  border-left: 0.4rem solid #00b5eb;
+  padding-left: 1rem;
+  margin: 2rem 0;
+}

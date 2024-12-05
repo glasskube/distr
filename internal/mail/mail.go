@@ -1,10 +1,15 @@
 package mail
 
+import (
+	"bytes"
+	"html/template"
+)
+
 type Mail struct {
-	To       []string
-	Subject  string
-	HtmlBody string
-	TextBody string
+	To           []string
+	Subject      string
+	HtmlBodyFunc func() (string, error)
+	TextBodyFunc func() (string, error)
 }
 
 type mailOpt func(mail *Mail)
@@ -23,12 +28,23 @@ func Subject(subject string) mailOpt {
 
 func HtmlBody(body string) mailOpt {
 	return func(mail *Mail) {
-		mail.HtmlBody = body
+		mail.HtmlBodyFunc = func() (string, error) { return body, nil }
 	}
 }
+
+func HtmlBodyTemplate(tmpl *template.Template, data any) mailOpt {
+	return func(mail *Mail) {
+		mail.HtmlBodyFunc = func() (string, error) {
+			var b bytes.Buffer
+			err := tmpl.Execute(&b, data)
+			return b.String(), err
+		}
+	}
+}
+
 func TextBody(body string) mailOpt {
 	return func(mail *Mail) {
-		mail.TextBody = body
+		mail.TextBodyFunc = func() (string, error) { return body, nil }
 	}
 }
 
