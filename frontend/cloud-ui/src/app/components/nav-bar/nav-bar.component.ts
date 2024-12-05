@@ -4,12 +4,14 @@ import {lastValueFrom} from 'rxjs';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-nav-bar',
   standalone: true,
   templateUrl: './nav-bar.component.html',
-  imports: [ColorSchemeSwitcherComponent, OverlayModule],
+  imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent],
   animations: [dropdownAnimation],
 })
 export class NavBarComponent implements OnInit {
@@ -18,6 +20,8 @@ export class NavBarComponent implements OnInit {
   email?: string;
   name?: string;
   imageUrl?: string;
+
+  protected readonly faBarsStaggered = faBarsStaggered;
 
   public async ngOnInit() {
     try {

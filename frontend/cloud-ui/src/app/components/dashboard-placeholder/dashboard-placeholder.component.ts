@@ -10,10 +10,19 @@ import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {ApplicationsService} from '../../services/applications.service';
 import {combineLatest, empty, first, lastValueFrom, Observable, of, take, withLatestFrom} from 'rxjs';
 import {combineLatestInit} from 'rxjs/internal/observable/combineLatest';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faPlus} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-dashboard-placeholder',
-  imports: [ApplicationsComponent, DeploymentTargetsComponent, GlobeComponent, AsyncPipe, OnboardingWizardComponent],
+  imports: [
+    ApplicationsComponent,
+    DeploymentTargetsComponent,
+    GlobeComponent,
+    AsyncPipe,
+    OnboardingWizardComponent,
+    FaIconComponent,
+  ],
   templateUrl: './dashboard-placeholder.component.html',
 })
 export class DashboardPlaceholderComponent {
@@ -27,6 +36,8 @@ export class DashboardPlaceholderComponent {
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
   private overlayRef?: EmbeddedOverlayRef;
+
+  protected readonly faPlus = faPlus;
 
   ngOnInit() {
     const always = false;
