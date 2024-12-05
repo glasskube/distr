@@ -9,7 +9,7 @@ type Mail struct {
 
 type mailOpt func(mail *Mail)
 
-func To(to []string) mailOpt {
+func To(to ...string) mailOpt {
 	return func(mail *Mail) {
 		mail.To = append(mail.To, to...)
 	}

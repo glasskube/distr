@@ -7,7 +7,8 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd"
+      "program": "${workspaceFolder}/cmd",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "ng serve",

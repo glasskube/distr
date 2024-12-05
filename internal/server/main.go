@@ -3,40 +3,60 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/glasskube/cloud/internal/env"
-
+	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/cloud/internal/mail/ses"
+	"github.com/glasskube/cloud/internal/mail/smtp"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	gomail "github.com/wneessen/go-mail"
 	"go.uber.org/zap"
+
 	"go.uber.org/zap/zapcore"
 )
 
 type server struct {
 	dbPool *pgxpool.Pool
 	logger *zap.Logger
+	mailer mail.Mailer
 }
 
-var instance *server
-
-func Init() error {
-	if instance != nil {
-		return errors.New("server already initialized")
+func New(ctx context.Context) (*server, error) {
+	s := &server{
+		logger: createLogger(),
 	}
 
-	instance = &server{}
-	instance.logger = createLogger()
-	defer func(logger *zap.Logger) {
-		_ = logger.Sync()
-	}(instance.logger)
+	s.logger.Info("initializing server")
 
-	instance.logger.Info("initializing server")
+	if mailer, err := createMailer(ctx); err != nil {
+		return nil, err
+	} else {
+		s.mailer = mailer
+	}
 
-	dbConfig, err := pgxpool.ParseConfig(env.DatabaseUrl())
+	if db, err := createDBPool(ctx); err != nil {
+		return nil, err
+	} else {
+		s.dbPool = db
+	}
+
+	return s, nil
+}
+
+func (s *server) Shutdown() error {
+	s.logger.Warn("server is shutting down")
+	s.dbPool.Close()
+	return s.logger.Sync()
+}
+
+func createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(env.DatabaseUrl())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	dbConfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
 		typeNames := []string{"DEPLOYMENT_TYPE"}
 		if pgTypes, err := conn.LoadTypes(ctx, typeNames); err != nil {
 			return err
@@ -45,36 +65,47 @@ func Init() error {
 			return nil
 		}
 	}
-	instance.dbPool, err = pgxpool.NewWithConfig(context.Background(), dbConfig)
+	db, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
-		instance.logger.Error("cannot set up db pool", zap.Error(err))
-		return err
-	} else if conn, err := instance.dbPool.Acquire(context.Background()); err != nil {
+		return nil, fmt.Errorf("cannot set up db pool: %w", err)
+	} else if conn, err := db.Acquire(ctx); err != nil {
 		// this actually checks whether the DB can be connected to
-		instance.logger.Error("cannot acquire connection", zap.Error(err))
-		return err
+		return nil, fmt.Errorf("cannot acquire connection: %w", err)
 	} else {
 		conn.Release()
+		return db, nil
 	}
-	return nil
 }
 
-func Shutdown() error {
-	if instance == nil {
-		return errors.New("server not yet initialized")
-	}
-	instance.dbPool.Close()
-	return nil
+func (s *server) GetDbPool() *pgxpool.Pool {
+	return s.dbPool
 }
 
-func getDbPool() *pgxpool.Pool {
-	if instance == nil {
-		panic("server not initialized")
+func createMailer(ctx context.Context) (mail.Mailer, error) {
+	config := env.GetMailerConfig()
+	switch config.Type {
+	case env.MailerTypeSMTP:
+		smtpConfig := smtp.Config{
+			MailerConfig: mail.MailerConfig{
+				FromAddress: config.FromAddress,
+			},
+			Host:      config.SmtpConfig.Host,
+			Port:      config.SmtpConfig.Port,
+			Username:  config.SmtpConfig.Username,
+			Password:  config.SmtpConfig.Password,
+			TLSPolicy: gomail.TLSOpportunistic,
+		}
+		return smtp.New(smtpConfig)
+	case env.MailerTypeSES:
+		sesConfig := ses.Config{MailerConfig: mail.MailerConfig{FromAddress: config.FromAddress}}
+		return ses.NewFromContext(ctx, sesConfig)
+	default:
+		return nil, errors.New("invalid mailer type")
 	}
-	if instance.dbPool == nil {
-		panic("db not initialized")
-	}
-	return instance.dbPool
+}
+
+func (s *server) GetMailer() mail.Mailer {
+	return s.mailer
 }
 
 func createLogger() *zap.Logger {
@@ -100,12 +131,6 @@ func createLogger() *zap.Logger {
 	return zap.Must(config.Build())
 }
 
-func getLogger() *zap.Logger {
-	if instance == nil {
-		panic("server not initialized")
-	}
-	if instance.logger == nil {
-		panic("logger not initialized")
-	}
-	return instance.logger
+func (s *server) GetLogger() *zap.Logger {
+	return s.logger
 }

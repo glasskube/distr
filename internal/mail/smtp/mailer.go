@@ -22,13 +22,20 @@ type Config struct {
 var _ mail.Mailer = &smtpMailer{}
 
 func New(config Config) (*smtpMailer, error) {
-	client, err := gomail.NewClient(config.Host,
-		gomail.WithPort(config.Port),
-		gomail.WithSMTPAuth(gomail.SMTPAuthLogin),
-		gomail.WithUsername(config.Username),
-		gomail.WithPassword(config.Password),
+	options := []gomail.Option{
 		gomail.WithTLSPortPolicy(config.TLSPolicy),
-	)
+	}
+	if config.Port != 0 {
+		options = append(options, gomail.WithPort(config.Port))
+	}
+	if config.Username != "" {
+		options = append(options,
+			gomail.WithSMTPAuth(gomail.SMTPAuthLogin),
+			gomail.WithUsername(config.Username),
+			gomail.WithPassword(config.Password),
+		)
+	}
+	client, err := gomail.NewClient(config.Host, options...)
 
 	if err != nil {
 		return nil, err
