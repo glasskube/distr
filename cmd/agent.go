@@ -8,20 +8,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
 )
-
-/*
-* wie bei password mit salt und hash
-* access key id ist die deployment target id
-* on the fly generieren beim instructions anzeigen (nur hier ist das generierte "cleartext" passwort verfügbar zum anzeigen)
-* nur an dem punkt gibts das decrypted secret das man im browser anzeigen kann
-* zusätzlichen key generieren wird noch nicht supported – wenn das deployment target schon einen status hat, nicht überschreiben derweil
-
-* beim deployment target in der DB steht der encrypted key
- */
 
 func main() {
 	accessKeyId := getFromEnvOrDie("GK_ACCESS_KEY_ID")
@@ -54,24 +45,17 @@ func main() {
 				if body, err := io.ReadAll(resp.Body); err != nil {
 					logger.Error("failed to read response body", zap.Error(err))
 				} else {
-					fmt.Fprintf(os.Stderr, "%v\n", string(body))
-					if data, err := os.ReadFile("/var/run/docker.sock"); err != nil {
-						logger.Error("failed to read file", zap.Error(err))
+					fmt.Fprintf(os.Stderr, "---response body: \n%v\n---\n", string(body))
+
+					err = os.WriteFile("/tmp/compose.yaml", body, 0644)
+					if err != nil {
+						logger.Error("failed to write temp file", zap.Error(err))
+					} else if out, err := exec.Command("docker", "compose", "-f", "/tmp/compose.yaml", "up", "-d").CombinedOutput(); err != nil {
+						logger.Error("failed", zap.Error(err), zap.String("out", string(out)))
 					} else {
-						fmt.Fprintf(os.Stderr, "%v\n", string(data))
+						fmt.Fprintf(os.Stderr, "---compose up output: \n%v\n---\n", string(out))
 					}
-					/*cmd := exec.Command("ls", "/var/run")
-					if stdout, err := cmd.StdoutPipe(); err != nil {
-						logger.Error("failed to pipe", zap.Error(err))
-					} else if err := cmd.Start(); err != nil {
-						logger.Error("failed to start ", zap.Error(err))
-					} else if out, err := io.ReadAll(stdout); err != nil {
-						logger.Error("failed to read from stdout", zap.Error(err))
-					} else {
-						fmt.Fprintf(os.Stderr, " | %v\n", string(out))
-					}*/
-					// TODO apply
-					// TODO report status
+					// TODO report deployment status
 					if resp.StatusCode != http.StatusOK {
 						logger.Error("status code not OK", zap.Int("code", resp.StatusCode), zap.ByteString("body", body))
 					}
