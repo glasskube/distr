@@ -17,6 +17,7 @@ const (
 )
 
 var ErrInvalidPassword = errors.New("invalid password")
+var ErrInvalidAccessKey = errors.New("invalid accessKey")
 
 func HashPassword(userAccount *types.UserAccount) error {
 	if salt, err := generateSalt(); err != nil {
@@ -41,6 +42,14 @@ func HashAccessKey(accessKey string) ([]byte, []byte, error) {
 func VerifyPassword(userAccount types.UserAccount, password string) error {
 	if !bytes.Equal(userAccount.PasswordHash, generateHash(password, userAccount.PasswordSalt)) {
 		return ErrInvalidPassword
+	} else {
+		return nil
+	}
+}
+
+func VerifyAccessKey(accessKeySalt []byte, accessKeyHash []byte, accessKeySecret string) error {
+	if !bytes.Equal(accessKeyHash, generateHash(accessKeySecret, accessKeySalt)) {
+		return ErrInvalidAccessKey
 	} else {
 		return nil
 	}

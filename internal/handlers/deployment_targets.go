@@ -8,11 +8,13 @@ import (
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"net/http"
+	"net/url"
 )
 
 func DeploymentTargetsRouter(r chi.Router) {
@@ -24,7 +26,6 @@ func DeploymentTargetsRouter(r chi.Router) {
 		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
 		r.Post("/access-request", createAccessForDeploymentTarget)
-		r.Get("/connect", connectDeploymentTarget)
 	})
 }
 
@@ -113,20 +114,19 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
 	if deploymentTarget.CurrentStatus != nil {
-		// TODO test
 		log.Warn("access key cannot be regenerated because deployment target has already been connected")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var accessKey string
+	var accessKeySecret string
 	var err error
-	if accessKey, err = security.GenerateAccessKey(); err != nil {
+	if accessKeySecret, err = security.GenerateAccessKey(); err != nil {
 		log.Error("failed to generate access key", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if salt, hash, err := security.HashAccessKey(accessKey); err != nil {
+	if salt, hash, err := security.HashAccessKey(accessKeySecret); err != nil {
 		log.Error("failed to hash access key", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -138,16 +138,29 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	if err := db.UpdateDeploymentTargetAccess(ctx, deploymentTarget); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, accessKeySecret); err != nil {
+		log.Error("could not create connecturl", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
-		Token: accessKey,
+		ConnectUrl:      connectUrl,
+		AccessKeyId:     deploymentTarget.ID,
+		AccessKeySecret: accessKeySecret,
 	}); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
 
-func connectDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-
+func buildConnectUrl(accessKeyId string, accessKeySecret string) (string, error) {
+	if u, err := url.Parse(env.Host()); err != nil {
+		return "", err
+	} else {
+		query := url.Values{}
+		query.Set("accessKeyId", accessKeyId)
+		query.Set("accessKeySecret", accessKeySecret)
+		u = u.JoinPath("/api/connect")
+		u.RawQuery = query.Encode()
+		return u.String(), nil
+	}
 }
 
 func deploymentTargetMiddelware(wh http.Handler) http.Handler {

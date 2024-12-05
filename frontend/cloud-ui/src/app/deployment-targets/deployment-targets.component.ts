@@ -58,7 +58,9 @@ export class DeploymentTargetsComponent implements OnDestroy {
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
-  modalToken?: string;
+  modalConnectUrl?: string;
+  modalAccessKeyId?: string;
+  modalAccessKeySecret?: string;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
@@ -119,14 +121,18 @@ export class DeploymentTargetsComponent implements OnDestroy {
   async showInstructionsModal(templateRef: TemplateRef<unknown>, dt: DeploymentTarget) {
     this.hideModal();
     const response = await firstValueFrom(this.deploymentTargets.requestAccess(dt.id!));
-    if(response && response.token) {
-      this.modalToken = response.token;
+    if(response) {
+      this.modalConnectUrl = response.connectUrl;
+      this.modalAccessKeyId = response.accessKeyId;
+      this.modalAccessKeySecret = response.accessKeySecret;
       this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
     }
   }
 
   hideModal(): void {
-    this.modalToken = undefined;
+    this.modalConnectUrl = undefined;
+    this.modalAccessKeyId = undefined;
+    this.modalAccessKeySecret = undefined;
     this.modal?.close();
   }
 

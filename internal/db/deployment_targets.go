@@ -173,3 +173,11 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 		return nil
 	}
 }
+
+func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget, message string) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Query(ctx,
+		"INSERT INTO DeploymentTargetStatus (deployment_target_id, message) VALUES (@deploymentTargetId, @message)",
+		pgx.NamedArgs{"deploymentTargetId": dt.ID, "message": message})
+	return err
+}

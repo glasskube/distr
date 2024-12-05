@@ -2,6 +2,7 @@ package env
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 
@@ -16,6 +17,7 @@ var (
 	currentEnv  string
 	databaseUrl string
 	jwtSecret   []byte
+	host        string
 )
 
 func init() {
@@ -33,6 +35,10 @@ func init() {
 	} else {
 		jwtSecret = decoded
 	}
+	host = os.Getenv("GLASSKUBE_HOST")
+	if host == "" {
+		panic(errors.New("can't start, GLASSKUBE_HOST not set"))
+	}
 }
 
 func DatabaseUrl() string {
@@ -42,6 +48,8 @@ func DatabaseUrl() string {
 func JWTSecret() []byte {
 	return jwtSecret
 }
+
+func Host() string { return host }
 
 func IsDev() bool {
 	return currentEnv == envDevelopment

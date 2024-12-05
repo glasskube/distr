@@ -5,4 +5,4 @@ services:
     environment:
       GK_ACCESS_KEY_ID: '{{ .accessKeyId }}'
       GK_ACCESS_KEY_SECRET: '{{ .accessKeySecret }}'
-      GK_ENDPOINT: 'https://glasskube.cloud/api/resources'
+      GK_ENDPOINT: '{{ .resourcesUrl }}'

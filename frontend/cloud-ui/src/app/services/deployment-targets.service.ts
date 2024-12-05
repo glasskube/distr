@@ -5,7 +5,7 @@ import {DeploymentTarget} from '../types/deployment-target';
 import {Observable, tap} from 'rxjs';
 import {DefaultReactiveList} from './cache';
 import {DeploymentWithData} from '../types/deployment';
-import {TokenResponse} from '../types/base';
+import {AccessKeyResponse, TokenResponse} from '../types/base';
 
 @Injectable({
   providedIn: 'root',
@@ -34,6 +34,6 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   }
 
   requestAccess(deploymentTargetId: string){
-    return this.httpClient.post<TokenResponse>(`${this.baseUrl}/${deploymentTargetId}/access-request`, {});
+    return this.httpClient.post<AccessKeyResponse>(`${this.baseUrl}/${deploymentTargetId}/access-request`, {});
   }
 }

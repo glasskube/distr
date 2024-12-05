@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,19 +14,6 @@ import (
 )
 
 /*
-
-agent docker compose file (response of /api/connect?token=...) will look like this:
-
-name: glasskube-agent
-services:
-	agent:
-		image: 'glasskube-agent'
-		environment:
-			GK_AGENT_TOKEN: JWT
-			GK_ENDPOINT: https://glasskube.cloud/api/deployment-targets/hardcoded-id/latest-deployment/download
-*/
-
-/*
 * wie bei password mit salt und hash
 * access key id ist die deployment target id
 * on the fly generieren beim instructions anzeigen (nur hier ist das generierte "cleartext" passwort verfügbar zum anzeigen)
@@ -36,8 +24,9 @@ services:
  */
 
 func main() {
-	token := getFromEnvOrDie("GK_AGENT_TOKEN")
-	endpoint := getFromEnvOrDie("GK_ENDPOINT") // TODO /deployment-targets/.../latest-deployment/download
+	accessKeyId := getFromEnvOrDie("GK_ACCESS_KEY_ID")
+	accessKeySecret := getFromEnvOrDie("GK_ACCESS_KEY_SECRET")
+	endpoint := getFromEnvOrDie("GK_ENDPOINT")
 
 	logger := createLogger()
 
@@ -55,7 +44,9 @@ func main() {
 		if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
-			req.Header.Set("Authorization", "Bearer "+token)
+			auth := fmt.Sprintf("%s:%s", accessKeyId, accessKeySecret)
+			encodedAuth := base64.StdEncoding.EncodeToString([]byte(auth))
+			req.Header.Set("Authorization", "Basic "+encodedAuth)
 
 			if resp, err := client.Do(req); err != nil {
 				logger.Error("failed to execute request", zap.Error(err))
