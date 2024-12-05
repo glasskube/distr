@@ -52,6 +52,7 @@ func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
 
 func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetId string) (
 	*types.DeploymentWithData, error) {
+	// TODO all these methods also need the orgId criteria
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`select d.id, d.created_at, d.deployment_target_id, d.application_version_id,
@@ -71,6 +72,28 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 		return nil, fmt.Errorf("failed to get Deployment: %w", err)
 	} else {
 		return &result, nil
+	}
+}
+
+func GetLatestDeploymentComposeFileUnauthenticated(ctx context.Context, deploymentTargetId string) ([]byte, error) {
+	// no orgId check here
+	db := internalctx.GetDb(ctx)
+	if rows, err := db.Query(ctx, `
+		SELECT av.compose_file_data
+		FROM Deployment d
+		INNER JOIN ApplicationVersion av ON d.application_version_id = av.id
+		WHERE d.deployment_target_id = @deploymentTargetId
+		ORDER BY d.created_at DESC LIMIT 1`, pgx.NamedArgs{
+		"deploymentTargetId": deploymentTargetId,
+	}); err != nil {
+		return nil, fmt.Errorf("could not get latest deployment: %w", err)
+	} else if data, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[[]byte]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get latest deployment: %w", err)
+	} else {
+		return data, nil
 	}
 }
 

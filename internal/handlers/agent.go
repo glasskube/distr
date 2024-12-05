@@ -113,14 +113,21 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 		if deploymentTarget, err := db.GetDeploymentTargetUnauthenticated(ctx, accessKeyId); err != nil {
 			log.Error("failed to get deployment target", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
-		} else if err := security.VerifyAccessKey(*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
-			log.Error("failed to verify access key secret", zap.Error(err))
-			w.WriteHeader(http.StatusUnauthorized)
 		} else {
-			// TODO get compose file of deployed applicationversion and send it
-			// if nothing is deployed -> different status code probably
-
-			w.Write([]byte("hello: world"))
+			if err := security.VerifyAccessKey(*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
+				log.Error("failed to verify access key secret", zap.Error(err))
+				w.WriteHeader(http.StatusUnauthorized)
+			} else if composeFileData, err := db.GetLatestDeploymentComposeFileUnauthenticated(ctx, deploymentTarget.ID); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
+				log.Error("failed to get compose file from DB", zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+			} else {
+				w.Header().Add("Content-Type", "application/yaml")
+				if _, err := w.Write(composeFileData); err != nil {
+					log.Error("failed to write compose file", zap.Error(err))
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			}
+			// TODO should probably also write success/error into the status?
 			if err := db.CreateDeploymentTargetStatus(ctx, deploymentTarget, "lol"); err != nil {
 				log.Error("failed to create deployment target status", zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
 			}
