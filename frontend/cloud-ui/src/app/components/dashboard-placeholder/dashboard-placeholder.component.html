@@ -1,8 +1,11 @@
 <div class="p-4 sm:ml-64 bg-gray-50 dark:bg-gray-900">
   <div class="p-4 mt-14">
     <div class="grid grid-rows-2 grid-flow-col gap-4 mb-4 h-144">
-      <div class="row-span-2 justify-stretch h-full mb-4 rounded bg-white dark:bg-gray-800">
-        <app-globe [deploymentTargets]="(deploymentTargets$ | async) ?? []" class="flex-1"></app-globe>
+      <div
+        class="row-span-2 flex justify-stretch items-stretch h-full rounded bg-white dark:bg-gray-800 overflow-hidden">
+        <app-globe
+          [deploymentTargets]="(deploymentTargets$ | async) ?? []"
+          class="flex-1 flex items-center justify-center"></app-globe>
       </div>
 
       <div class="rounded overflow-y-auto">
