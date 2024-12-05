@@ -55,6 +55,21 @@ func main() {
 					logger.Error("failed to read response body", zap.Error(err))
 				} else {
 					fmt.Fprintf(os.Stderr, "%v\n", string(body))
+					if data, err := os.ReadFile("/var/run/docker.sock"); err != nil {
+						logger.Error("failed to read file", zap.Error(err))
+					} else {
+						fmt.Fprintf(os.Stderr, "%v\n", string(data))
+					}
+					/*cmd := exec.Command("ls", "/var/run")
+					if stdout, err := cmd.StdoutPipe(); err != nil {
+						logger.Error("failed to pipe", zap.Error(err))
+					} else if err := cmd.Start(); err != nil {
+						logger.Error("failed to start ", zap.Error(err))
+					} else if out, err := io.ReadAll(stdout); err != nil {
+						logger.Error("failed to read from stdout", zap.Error(err))
+					} else {
+						fmt.Fprintf(os.Stderr, " | %v\n", string(out))
+					}*/
 					// TODO apply
 					// TODO report status
 					if resp.StatusCode != http.StatusOK {
