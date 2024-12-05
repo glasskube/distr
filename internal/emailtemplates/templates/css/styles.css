@@ -13,7 +13,7 @@
 }
 
 .message-container {
-  font-family: Inter, "Noto Sans", "Droid Sans", Helvetica, sans-serif;
+  font-family: Inter, 'Noto Sans', 'Droid Sans', Helvetica, sans-serif;
   padding: 0 0.8rem;
 }
 
@@ -33,7 +33,8 @@ tbody th {
   font-weight: normal;
 }
 
-th, td {
+th,
+td {
   vertical-align: top;
 }
 
@@ -42,12 +43,15 @@ footer {
   border-top: 0.2rem solid #174c76;
 }
 
-.my-1, p {
+.my-1,
+p {
   margin-top: 0.8rem;
   margin-bottom: 0.8rem;
 }
 
-.my-2, header, footer {
+.my-2,
+header,
+footer {
   margin-top: 1.6rem;
   margin-bottom: 1.6rem;
 }
@@ -57,11 +61,13 @@ footer {
   margin-bottom: 2.4rem;
 }
 
-.text-small, footer {
+.text-small,
+footer {
   font-size: 0.8rem;
 }
 
-.text-strong, strong {
+.text-strong,
+strong {
   font-weight: 600;
 }
 
