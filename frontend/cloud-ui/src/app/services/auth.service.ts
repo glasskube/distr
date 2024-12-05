@@ -33,6 +33,14 @@ export class AuthService {
     );
   }
 
+  public register(email: string, name: string | null | undefined, password: string): Observable<void> {
+    let body: any = {email, password};
+    if (name) {
+      body = {...body, name};
+    }
+    return this.httpClient.post<void>(`${this.baseUrl}/register`, body);
+  }
+
   public getClaims(): {sub: string; email: string; name: string; [claim: string]: unknown} {
     if (this.token !== null) {
       return jwtDecode(this.token);
@@ -49,7 +57,7 @@ export class AuthService {
 
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  if (req.url !== '/api/auth/login') {
+  if (req.url !== '/api/auth/login' && req.url !== '/api/auth/register') {
     const token = auth.token;
     if (token !== null) {
       return next(req.clone({headers: req.headers.set('Authorization', `Bearer ${token}`)}));
