@@ -1,0 +1,3 @@
+node_modules
+dist
+internal/frontend/dist
