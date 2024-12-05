@@ -1,0 +1,8 @@
+name: glasskube-agent
+services:
+  agent:
+    image: 'glasskube-agent'
+    environment:
+      GK_ACCESS_KEY_ID: '{{ .accessKeyId }}'
+      GK_ACCESS_KEY_SECRET: '{{ .accessKeySecret }}'
+      GK_ENDPOINT: 'https://glasskube.cloud/api/resources'

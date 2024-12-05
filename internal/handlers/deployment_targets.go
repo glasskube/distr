@@ -5,15 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/security"
-	"net/http"
-
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 func DeploymentTargetsRouter(r chi.Router) {
@@ -25,6 +24,7 @@ func DeploymentTargetsRouter(r chi.Router) {
 		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
 		r.Post("/access-request", createAccessForDeploymentTarget)
+		r.Get("/connect", connectDeploymentTarget)
 	})
 }
 
@@ -110,26 +110,32 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	existing := internalctx.GetDeploymentTarget(ctx)
+	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
-	if existing.CurrentStatus != nil {
+	if deploymentTarget.CurrentStatus != nil {
 		// TODO test
 		log.Warn("access key cannot be regenerated because deployment target has already been connected")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	accessKey := security.GenerateAccessKey()
+	var accessKey string
+	var err error
+	if accessKey, err = security.GenerateAccessKey(); err != nil {
+		log.Error("failed to generate access key", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if salt, hash, err := security.HashAccessKey(accessKey); err != nil {
 		log.Error("failed to hash access key", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
-		existing.AccessKeySalt = &salt
-		existing.AccessKeyHash = &hash
+		deploymentTarget.AccessKeySalt = &salt
+		deploymentTarget.AccessKeyHash = &hash
 	}
 
-	if err := db.UpdateDeploymentTargetAccess(ctx, existing); err != nil {
+	if err := db.UpdateDeploymentTargetAccess(ctx, deploymentTarget); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
@@ -138,6 +144,10 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
+}
+
+func connectDeploymentTarget(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func deploymentTargetMiddelware(wh http.Handler) http.Handler {

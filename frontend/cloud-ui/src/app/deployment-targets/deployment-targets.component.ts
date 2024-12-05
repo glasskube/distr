@@ -58,6 +58,8 @@ export class DeploymentTargetsComponent implements OnDestroy {
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
+  modalToken?: string;
+
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
     map((dts) =>
@@ -109,16 +111,22 @@ export class DeploymentTargetsComponent implements OnDestroy {
     });
   }
 
-  showModal(templateRef: TemplateRef<unknown>) {
+  showDeploymentModal(templateRef: TemplateRef<unknown>) {
     this.hideModal();
     this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
   }
 
-  requestAccess(dt: DeploymentTarget) {
-    this.deploymentTargets.requestAccess(dt.id!).subscribe(console.log);
+  async showInstructionsModal(templateRef: TemplateRef<unknown>, dt: DeploymentTarget) {
+    this.hideModal();
+    const response = await firstValueFrom(this.deploymentTargets.requestAccess(dt.id!));
+    if(response && response.token) {
+      this.modalToken = response.token;
+      this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
+    }
   }
 
   hideModal(): void {
+    this.modalToken = undefined;
     this.modal?.close();
   }
 
@@ -167,7 +175,7 @@ export class DeploymentTargetsComponent implements OnDestroy {
   }
 
   async newDeployment(dt: DeploymentTarget, deploymentModal: TemplateRef<any>) {
-    this.showModal(deploymentModal);
+    this.showDeploymentModal(deploymentModal);
     this.deployForm.reset();
     this.selectedDeploymentTarget = dt;
     this.deployForm.patchValue({

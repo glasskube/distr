@@ -57,13 +57,33 @@ func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarge
 	if err != nil {
 		return nil, err
 	}
+	rows, err := queryDeploymentTarget(ctx, id, &orgId)
+	return collectDeploymentTarget(rows, err)
+}
 
+func GetDeploymentTargetUnauthenticated(ctx context.Context, id string) (*types.DeploymentTarget, error) {
+	rows, err := queryDeploymentTarget(ctx, id, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
+	}
+	return collectDeploymentTarget(rows, err)
+}
+
+func queryDeploymentTarget(ctx context.Context, id string, orgId *string) (pgx.Rows, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+
-			" AND dt.id = @id AND dt.organization_id = @orgId",
-		pgx.NamedArgs{"id": id, "orgId": orgId},
-	)
+	var args pgx.NamedArgs
+	query := "SELECT " + deploymentTargetWithStatusOutputExpr + " " + deploymentTargetFromExpr +
+		" AND dt.id = @id"
+	if orgId != nil {
+		args = pgx.NamedArgs{"id": id, "orgId": *orgId}
+		query = query + " AND dt.organization_id = @orgId"
+	} else {
+		args = pgx.NamedArgs{"id": id}
+	}
+	return db.Query(ctx, query, args)
+}
+
+func collectDeploymentTarget(rows pgx.Rows, err error) (*types.DeploymentTarget, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}

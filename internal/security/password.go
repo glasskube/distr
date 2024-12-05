@@ -3,9 +3,8 @@ package security
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
-	mathrand "math/rand"
-
 	"github.com/glasskube/cloud/internal/types"
 	"golang.org/x/crypto/argon2"
 )
@@ -57,17 +56,8 @@ func generateSalt() ([]byte, error) {
 	return salt, err
 }
 
-func GenerateAccessKey() string {
-	// TODO better
-	return randSeq(32)
-}
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[mathrand.Intn(len(letters))]
-	}
-	return string(b)
+func GenerateAccessKey() (string, error) {
+	key := make([]byte, 16)
+	_, err := rand.Read(key)
+	return base64.URLEncoding.EncodeToString(key), err
 }

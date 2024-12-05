@@ -6,3 +6,7 @@ export interface BaseModel {
 export interface Named {
   name?: string;
 }
+
+export interface TokenResponse {
+  token: string;
+}

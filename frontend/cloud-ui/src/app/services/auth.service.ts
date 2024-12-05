@@ -2,6 +2,7 @@ import {HttpClient, HttpInterceptorFn} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {jwtDecode} from 'jwt-decode';
 import {map, Observable, of, tap, throwError} from 'rxjs';
+import {TokenResponse} from '../types/base';
 
 const tokenStorageKey = 'cloud_token';
 
@@ -27,7 +28,7 @@ export class AuthService {
   }
 
   public login(email: string, password: string): Observable<void> {
-    return this.httpClient.post<{token: string}>(`${this.baseUrl}/login`, {email, password}).pipe(
+    return this.httpClient.post<TokenResponse>(`${this.baseUrl}/login`, {email, password}).pipe(
       tap((r) => (this.token = r.token)),
       map(() => undefined)
     );

@@ -115,7 +115,7 @@
                   @if (!dt.currentStatus) {
                     <button
                       type="button"
-                      (click)="showModal(instructionsModal); requestAccess(dt)"
+                      (click)="showInstructionsModal(instructionsModal, dt)"
                       class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                       Connection instructions
                     </button>
@@ -143,8 +143,9 @@
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
                           <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
-curl https://glasskube.cloud/api/v1/connect?token=c76A2a3V5dV1ycV8sa4DIGLmyXyFAk6Sr27iF3ZDKJ1yz1J1yz1s | docker compose -f - up -d</pre
+curl https://glasskube.cloud/api/v1/connect?token={{ modalToken }} | docker compose -f - up -d</pre
                           >
+                          <!-- TODO warning/explanation etc -->
                         </div>
                       </div>
                     </ng-template>

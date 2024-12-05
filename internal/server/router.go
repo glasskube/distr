@@ -36,6 +36,11 @@ func ApiRouter() chi.Router {
 		r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
 	})
 
+	// agent connect and download routes go here (authenticated but with accessKeyId and accessKeySecret)
+	router.Group(func(r chi.Router) {
+		r.Route("/", handlers.AgentRouter)
+	})
+
 	return router
 }
 
