@@ -6,9 +6,11 @@ import {inject} from '@angular/core';
 import {AuthService} from './services/auth.service';
 import {LoginComponent} from './login/login.component';
 import {NavShellComponent} from './components/nav-shell.component';
+import {RegisterComponent} from './register/register.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
+  {path: 'register', component: RegisterComponent},
   {
     path: '',
     canActivate: [
