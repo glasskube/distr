@@ -12,3 +12,8 @@ services:
       - 'postgres:/var/lib/postgresql/data/'
     ports:
       - '5432:5432'
+  mailpit:
+    image: 'axllent/mailpit:v1.20.7'
+    ports:
+      - '1025:1025'
+      - '8025:8025'

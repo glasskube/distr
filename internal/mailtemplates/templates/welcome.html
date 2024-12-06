@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {{ template "fragments/style.html" }}
+  </head>
+  <body>
+    <div class="message-container">
+      {{ template "fragments/header.html" }}
+      <main>
+        <p>{{ template "fragments/greeting.html" }}</p>
+
+        Welcome to <a href="https://glasskube.cloud/">glasskube.cloud</a>!
+
+        <p>{{template "fragments/signature.html"}}</p>
+      </main>
+      {{template "fragments/footer.html"}}
+    </div>
+  </body>
+</html>
