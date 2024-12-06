@@ -26,7 +26,7 @@ func NewServer(handler http.Handler, logger *zap.Logger) *Server {
 
 func (s *Server) Start(addr string) error {
 	s.server.Addr = addr
-	s.logger.Sugar().Info("starting listener on %v", s.server.Addr)
+	s.logger.Sugar().Infof("starting listener on %v", s.server.Addr)
 	if err := s.server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
 		return nil
 	} else {
