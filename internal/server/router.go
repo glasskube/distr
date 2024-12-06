@@ -6,6 +6,7 @@ import (
 
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
+	"github.com/glasskube/cloud/internal/frontend"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -13,13 +14,26 @@ import (
 	"go.uber.org/zap"
 )
 
-func ApiRouter() chi.Router {
+func NewRouter(s *server) chi.Router {
+	router := chi.NewRouter()
+	router.Use(
+		// Handles panics
+		middleware.Recoverer,
+		// Reject bodies larger than 1MiB
+		middleware.RequestSize(1048576),
+	)
+	router.Mount("/api", ApiRouter(s))
+	router.Mount("/", FrontendRouter())
+	return router
+}
+
+func ApiRouter(s *server) http.Handler {
 	router := chi.NewRouter()
 	router.Use(
 		middleware.RequestID,
-		loggerCtxMiddleware,
+		loggerCtxMiddleware(s),
 		loggingMiddleware,
-		dbCtxMiddleware,
+		contextInjectorMiddelware(s),
 	)
 
 	// public routes go here
@@ -44,21 +58,37 @@ func ApiRouter() chi.Router {
 	return router
 }
 
-func dbCtxMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		db := getDbPool()
-		ctx := internalctx.WithDb(r.Context(), db)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+func FrontendRouter() http.Handler {
+	router := chi.NewRouter()
+	router.Use(
+		middleware.Compress(5, "text/html", "text/css", "text/javascript"),
+	)
+
+	router.Handle("/*", handlers.StaticFileHandler(frontend.BrowserFS()))
+
+	return router
 }
 
-func loggerCtxMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger := getLogger().
-			With(zap.String("requestId", middleware.GetReqID(r.Context())))
-		ctx := internalctx.WithLogger(r.Context(), logger)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+func contextInjectorMiddelware(s *server) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			ctx = internalctx.WithDb(ctx, s.GetDbPool())
+			ctx = internalctx.WithMailer(ctx, s.GetMailer())
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func loggerCtxMiddleware(s *server) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			logger := s.GetLogger().
+				With(zap.String("requestId", middleware.GetReqID(r.Context())))
+			ctx := internalctx.WithLogger(r.Context(), logger)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 func loggingMiddleware(wh http.Handler) http.Handler {

@@ -1,62 +1,36 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/glasskube/cloud/internal/server"
-	"github.com/go-chi/chi/v5/middleware"
-
-	"github.com/glasskube/cloud/internal/frontend"
-	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	if err := server.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to init server: %v\n", err)
-		panic(err)
+	ctx := context.Background()
+
+	s, err := server.New(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to init server: %w", err))
 	}
-	router := chi.NewRouter()
-	router.Use(
-		// Handles panics
-		middleware.Recoverer,
-		// Reject bodies larger than 1MiB
-		middleware.RequestSize(1048576),
-	)
-	router.Mount("/api", server.ApiRouter())
-	router.With(
-		middleware.Compress(5, "text/html", "text/css", "text/javascript"),
-	).Handle("/*", StaticFileHandler())
+	defer func() { _ = s.Shutdown() }()
 
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT)
 		<-sigint
-		_ = server.Shutdown()
-		fmt.Println("ok bye")
+		_ = s.Shutdown()
 		os.Exit(0)
 	}()
 
 	addr := ":8080"
-	fmt.Printf("listen on %v\n", addr)
-	if err := http.ListenAndServe(addr, router); err != nil {
+	s.GetLogger().Sugar().Infof("listen on %v", addr)
+	if err := http.ListenAndServe(addr, server.NewRouter(s)); err != nil {
 		panic(err)
-	}
-}
-
-func StaticFileHandler() http.HandlerFunc {
-	fsys := frontend.BrowserFS()
-	server := http.FileServer(http.FS(fsys))
-	return func(w http.ResponseWriter, r *http.Request) {
-		// check if the requested file exists and use index.html if it does not.
-		if _, err := fs.Stat(fsys, r.URL.Path[1:]); err != nil {
-			http.StripPrefix(r.URL.Path, server).ServeHTTP(w, r)
-		} else {
-			server.ServeHTTP(w, r)
-		}
 	}
 }

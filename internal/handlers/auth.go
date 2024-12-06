@@ -11,6 +11,8 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -55,7 +57,8 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
 	if request, err := JsonBody[api.AuthRegistrationRequest](w, r); err != nil {
 		return
 	} else if err := request.Validate(); err != nil {
@@ -70,7 +73,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		if err := security.HashPassword(&userAccount); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		} else if _, err := db.CreateUserAccountWithOrganization(r.Context(), &userAccount); err != nil {
+		} else if _, err := db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
 			log.Warn("user registration failed", zap.Error(err))
 			if errors.Is(err, apierrors.ErrAlreadyExists) {
 				w.WriteHeader(http.StatusBadRequest)
@@ -79,6 +82,15 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		} else {
+			mailer := internalctx.GetMailer(ctx)
+			mail := mail.New(
+				mail.To(userAccount.Email),
+				mail.Subject("Registration"),
+				mail.HtmlBodyTemplate(mailtemplates.Welcome()),
+			)
+			if err := mailer.Send(ctx, mail); err != nil {
+				log.Error("could not send welcome mail", zap.Error(err))
+			}
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
