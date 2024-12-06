@@ -6,6 +6,7 @@ import (
 
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
+	"github.com/glasskube/cloud/internal/frontend"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -13,7 +14,20 @@ import (
 	"go.uber.org/zap"
 )
 
-func ApiRouter(s *server) chi.Router {
+func NewRouter(s *server) chi.Router {
+	router := chi.NewRouter()
+	router.Use(
+		// Handles panics
+		middleware.Recoverer,
+		// Reject bodies larger than 1MiB
+		middleware.RequestSize(1048576),
+	)
+	router.Mount("/api", ApiRouter(s))
+	router.Mount("/", FrontendRouter())
+	return router
+}
+
+func ApiRouter(s *server) http.Handler {
 	router := chi.NewRouter()
 	router.Use(
 		middleware.RequestID,
@@ -35,6 +49,17 @@ func ApiRouter(s *server) chi.Router {
 		r.Route("/deployments", handlers.DeploymentsRouter)
 		r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
 	})
+
+	return router
+}
+
+func FrontendRouter() http.Handler {
+	router := chi.NewRouter()
+	router.Use(
+		middleware.Compress(5, "text/html", "text/css", "text/javascript"),
+	)
+
+	router.Handle("/*", handlers.StaticFileHandler(frontend.BrowserFS()))
 
 	return router
 }
