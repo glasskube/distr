@@ -10,7 +10,7 @@ import {DeploymentWithData} from '../types/deployment';
   providedIn: 'root',
 })
 export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
-  private readonly baseUrl = '/api/deployment-targets';
+  private readonly baseUrl = '/api/v1/deployment-targets';
   private readonly httpClient = inject(HttpClient);
   private readonly cache = new DefaultReactiveList(this.httpClient.get<DeploymentTarget[]>(this.baseUrl));
 
