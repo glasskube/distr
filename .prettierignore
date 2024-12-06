@@ -1,2 +1,3 @@
 *.json
 **/dist/*
+CHANGELOG.md
