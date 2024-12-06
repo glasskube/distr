@@ -29,7 +29,7 @@ export class DashboardPlaceholderComponent {
   private overlayRef?: EmbeddedOverlayRef;
 
   ngOnInit() {
-    const always = true;
+    const always = false;
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
