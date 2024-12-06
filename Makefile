@@ -40,11 +40,11 @@ frontend-prod: node_modules
 
 .PHONY: run
 run: frontend-dev tidy
-	$(GOCMD) run ./cmd/
+	$(GOCMD) run ./cmd/cloud/
 
 .PHONY: build
 build: frontend-prod tidy
-	$(GOCMD) build -o dist/cloud ./cmd/
+	$(GOCMD) build -o dist/cloud ./cmd/cloud/
 
 .PHONY: docker-build
 docker-build:

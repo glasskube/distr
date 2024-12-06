@@ -26,7 +26,7 @@ COPY api/ api/
 # COPY pkg/ pkg/
 COPY internal/ internal/
 COPY --from=frontend /workspace/internal/frontend/dist internal/frontend/dist
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o cloud ./cmd/
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o cloud ./cmd/cloud/
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details

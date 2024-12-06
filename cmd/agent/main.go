@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -50,7 +51,8 @@ func main() {
 					err = os.WriteFile("/tmp/compose.yaml", body, 0644)
 					if err != nil {
 						logger.Error("failed to write temp file", zap.Error(err))
-					} else if out, err := exec.Command("docker", "compose", "-f", "/tmp/compose.yaml", "up", "-d").CombinedOutput(); err != nil {
+					} else if out, err := exec.Command(
+						"docker", "compose", "-f", "/tmp/compose.yaml", "up", "-d").CombinedOutput(); err != nil {
 						logger.Error("failed", zap.Error(err), zap.String("out", string(out)))
 					} else {
 						fmt.Fprintf(os.Stderr, "---compose up output: \n%v\n---\n", string(out))

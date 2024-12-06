@@ -123,7 +123,7 @@
                       <div
                         @modalFlyInOut
                         style="transform-origin: top center"
-                        class="p-4 w-full mt-12 max-w-2xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
+                        class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
                         <!-- Modal header -->
                         <div
                           class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
@@ -142,9 +142,8 @@
                             To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
-                          <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">curl "{{ modalConnectUrl }}" | docker compose -f - up -d</pre
-                          >
-                          <!-- TODO warning/explanation etc -->
+
+                          <app-connect-instructions [deploymentTargetId]="dt.id!"></app-connect-instructions>
                         </div>
                       </div>
                     </ng-template>

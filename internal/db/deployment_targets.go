@@ -176,6 +176,10 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 	rows, err := db.Query(ctx,
 		"INSERT INTO DeploymentTargetStatus (deployment_target_id, message) VALUES (@deploymentTargetId, @message)",
 		pgx.NamedArgs{"deploymentTargetId": dt.ID, "message": message})
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	} else {
+		rows.Close()
+		return nil
+	}
 }

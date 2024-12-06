@@ -25,6 +25,7 @@ import {StatusDotComponent} from '../components/status-dot';
 import {drawerFlyInOut} from '../animations/drawer';
 import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
+import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -38,6 +39,7 @@ import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
     IsStalePipe,
     RelativeDatePipe,
     StatusDotComponent,
+    ConnectInstructionsComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -57,10 +59,6 @@ export class DeploymentTargetsComponent implements OnDestroy {
   private manageDeploymentTargetRef?: EmbeddedOverlayRef;
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
-
-  modalConnectUrl?: string;
-  modalAccessKeyId?: string;
-  modalAccessKeySecret?: string;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
@@ -120,19 +118,10 @@ export class DeploymentTargetsComponent implements OnDestroy {
 
   async showInstructionsModal(templateRef: TemplateRef<unknown>, dt: DeploymentTarget) {
     this.hideModal();
-    const response = await firstValueFrom(this.deploymentTargets.requestAccess(dt.id!));
-    if(response) {
-      this.modalConnectUrl = response.connectUrl;
-      this.modalAccessKeyId = response.accessKeyId;
-      this.modalAccessKeySecret = response.accessKeySecret;
-      this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
-    }
+    this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
   }
 
   hideModal(): void {
-    this.modalConnectUrl = undefined;
-    this.modalAccessKeyId = undefined;
-    this.modalAccessKeySecret = undefined;
     this.modal?.close();
   }
 

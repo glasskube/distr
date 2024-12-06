@@ -28,11 +28,18 @@ import {
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
+import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 
 @Component({
   selector: 'app-onboarding-wizard',
   templateUrl: './onboarding-wizard.component.html',
-  imports: [FaIconComponent, OnboardingWizardStepperComponent, CdkStep, ReactiveFormsModule],
+  imports: [
+    FaIconComponent,
+    OnboardingWizardStepperComponent,
+    CdkStep,
+    ReactiveFormsModule,
+    ConnectInstructionsComponent,
+  ],
   animations: [modalFlyInOut],
 })
 export class OnboardingWizardComponent {

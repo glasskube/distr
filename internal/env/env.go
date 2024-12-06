@@ -15,10 +15,10 @@ const (
 )
 
 var (
-	currentEnv  string
-	databaseUrl string
-	jwtSecret   []byte
-	host        string
+	currentEnv   string
+	databaseUrl  string
+	jwtSecret    []byte
+	host         string
 	mailerConfig MailerConfig
 )
 

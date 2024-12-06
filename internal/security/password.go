@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+
 	"github.com/glasskube/cloud/internal/types"
 	"golang.org/x/crypto/argon2"
 )

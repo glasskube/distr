@@ -33,7 +33,7 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
     return this.httpClient.get<DeploymentWithData>(`${this.baseUrl}/${deploymentTargetId}/latest-deployment`);
   }
 
-  requestAccess(deploymentTargetId: string){
+  requestAccess(deploymentTargetId: string) {
     return this.httpClient.post<AccessKeyResponse>(`${this.baseUrl}/${deploymentTargetId}/access-request`, {});
   }
 }

@@ -3,6 +3,11 @@ package handlers
 import (
 	"encoding/base64"
 	"errors"
+	"net/http"
+	"net/url"
+	"strings"
+	"text/template"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
@@ -11,10 +16,6 @@ import (
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
-	"net/http"
-	"net/url"
-	"strings"
-	"text/template"
 )
 
 func AgentRouter(r chi.Router) {
@@ -50,9 +51,11 @@ func connect(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
-		log.Warn("deployment target does not have access key salt and hash configured", zap.String("deploymentTargetId", deploymentTarget.ID))
+		log.Warn("deployment target does not have access key salt and hash configured",
+			zap.String("deploymentTargetId", deploymentTarget.ID))
 		w.WriteHeader(http.StatusUnauthorized)
-	} else if err := security.VerifyAccessKey(*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
+	} else if err := security.VerifyAccessKey(
+		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
 		log.Error("failed to verify access key secret", zap.Error(err))
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
@@ -114,10 +117,13 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 			log.Error("failed to get deployment target", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
-			if err := security.VerifyAccessKey(*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
+			if err := security.VerifyAccessKey(
+				*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
 				log.Error("failed to verify access key secret", zap.Error(err))
 				w.WriteHeader(http.StatusUnauthorized)
-			} else if composeFileData, err := db.GetLatestDeploymentComposeFileUnauthenticated(ctx, deploymentTarget.ID); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
+			} else if composeFileData, err :=
+				db.GetLatestDeploymentComposeFileUnauthenticated(ctx, deploymentTarget.ID); err != nil &&
+				!errors.Is(err, apierrors.ErrNotFound) {
 				log.Error("failed to get compose file from DB", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
@@ -129,7 +135,8 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 			}
 			// TODO should probably also write success/error into the status?
 			if err := db.CreateDeploymentTargetStatus(ctx, deploymentTarget, "lol"); err != nil {
-				log.Error("failed to create deployment target status", zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
+				log.Error("failed to create deployment target status", zap.Error(err),
+					zap.String("deploymentTargetId", deploymentTarget.ID))
 			}
 		}
 	}
