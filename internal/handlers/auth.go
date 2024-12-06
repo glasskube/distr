@@ -11,8 +11,8 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/emailtemplates"
 	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -86,7 +86,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			mail := mail.New(
 				mail.To(userAccount.Email),
 				mail.Subject("Registration"),
-				mail.HtmlBodyTemplate(emailtemplates.Welcome()),
+				mail.HtmlBodyTemplate(mailtemplates.Welcome()),
 			)
 			if err := mailer.Send(ctx, mail); err != nil {
 				log.Error("could not send welcome mail", zap.Error(err))

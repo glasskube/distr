@@ -1,4 +1,4 @@
-package emailtemplates
+package mailtemplates
 
 import (
 	"embed"
