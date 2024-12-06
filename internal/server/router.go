@@ -7,7 +7,6 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/handlers"
-	"github.com/glasskube/cloud/internal/mail"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
@@ -45,7 +44,7 @@ func contextInjectorMiddelware(s *server) func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			ctx = internalctx.WithDb(ctx, s.GetDbPool())
-			ctx = mail.AddToContext(ctx, s.GetMailer())
+			ctx = internalctx.WithMailer(ctx, s.GetMailer())
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

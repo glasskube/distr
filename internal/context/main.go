@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 
+	"github.com/glasskube/cloud/internal/mail"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -12,6 +13,7 @@ type contextKey int
 const (
 	ctxKeyDb contextKey = iota
 	ctxKeyLogger
+	ctxKeyMailer
 	ctxKeyApplication
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget
@@ -45,4 +47,17 @@ func GetLogger(ctx context.Context) *zap.Logger {
 func WithLogger(ctx context.Context, logger *zap.Logger) context.Context {
 	ctx = context.WithValue(ctx, ctxKeyLogger, logger)
 	return ctx
+}
+
+func GetMailer(ctx context.Context) mail.Mailer {
+	if mailer, ok := ctx.Value(ctxKeyMailer).(mail.Mailer); ok {
+		if mailer != nil {
+			return mailer
+		}
+	}
+	panic("logger not contained in context")
+}
+
+func WithMailer(ctx context.Context, mailer mail.Mailer) context.Context {
+	return context.WithValue(ctx, ctxKeyMailer, mailer)
 }

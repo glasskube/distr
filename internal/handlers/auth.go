@@ -82,7 +82,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		} else {
-			mailer := mail.FromContext(ctx)
+			mailer := internalctx.GetMailer(ctx)
 			mail := mail.New(
 				mail.To(userAccount.Email),
 				mail.Subject("Registration"),
