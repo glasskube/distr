@@ -1,5 +1,9 @@
 GOCMD ?= go
 
+.PHONY: tidy
+tidy:
+	$(GOCMD) mod tidy
+
 .PHONY: lint-frontend
 lint-frontend:
 	npm run lint
@@ -8,7 +12,7 @@ lint-frontend:
 lint-frontend-fix:
 	npm run lint:fix
 
-.PHONY: lint-go
+.PHONY: lint-go tidy
 lint-go:
 	golangci-lint run
 
@@ -22,20 +26,24 @@ lint: lint-go lint-frontend
 .PHONY: lint-fix
 lint-fix: lint-go-fix lint-frontend-fix
 
+node_modules: package-lock.json
+	npm install --no-save
+	@touch node_modules
+
 .PHONY: frontend-dev
-frontend-dev:
+frontend-dev: node_modules
 	npm run build:dev
 
 .PHONY: frontend-prod
-frontend-prod:
+frontend-prod: node_modules
 	npm run build:prod
 
 .PHONY: run
-run: frontend-dev
+run: frontend-dev tidy
 	$(GOCMD) run ./cmd/
 
 .PHONY: build
-build: frontend-prod
+build: frontend-prod tidy
 	$(GOCMD) build -o dist/cloud ./cmd/
 
 .PHONY: docker-build
