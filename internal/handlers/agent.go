@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"encoding/base64"
+	"context"
 	"errors"
+	"fmt"
+	"github.com/glasskube/cloud/internal/types"
 	"net/http"
 	"net/url"
-	"strings"
 	"text/template"
 
 	"github.com/glasskube/cloud/internal/apierrors"
@@ -19,45 +20,24 @@ import (
 )
 
 func AgentRouter(r chi.Router) {
-	r.Get("/connect", connect)
-	r.Get("/resources", downloadResources)
+	r.Group(func(r chi.Router) {
+		r.Use(queryAuthDeploymentTargetCtxMiddleware)
+		r.Get("/connect", connect)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(basicAuthDeploymentTargetCtxMiddleware)
+		r.Get("/agent/resources", downloadResources)
+		r.Get("/agent/status", postAgentStatus)
+	})
 }
 
 func connect(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	accessKeyId := r.URL.Query().Get("accessKeyId")
-	accessKeySecret := r.URL.Query().Get("accessKeySecret")
-
-	if accessKeyId == "" || accessKeySecret == "" {
-		log.Warn("connect endpoint called without accessKeyId or accessKeySecret", zap.String("accessKeyId", accessKeyId))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	deploymentTarget, err := db.GetDeploymentTargetUnauthenticated(ctx, accessKeyId)
-	if errors.Is(err, apierrors.ErrNotFound) {
-		log.Warn("connect failed: deployment target not found", zap.String("accessKeyId", accessKeyId))
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	} else if err != nil {
-		log.Error("failed to get DeploymentTarget", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
+	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	if deploymentTarget.CurrentStatus != nil {
 		log.Warn("deployment target has already been connected")
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
-		log.Warn("deployment target does not have access key salt and hash configured",
-			zap.String("deploymentTargetId", deploymentTarget.ID))
-		w.WriteHeader(http.StatusUnauthorized)
-	} else if err := security.VerifyAccessKey(
-		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
-		log.Error("failed to verify access key secret", zap.Error(err))
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		w.Header().Add("Content-Type", "application/yaml")
 		if yamlTemplate, err := resources.Get("embedded/agent-base.yaml"); err != nil {
@@ -71,8 +51,8 @@ func connect(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if err := tmpl.Execute(w, map[string]string{
 			"resourcesUrl":    resourcesUrl,
-			"accessKeyId":     accessKeyId,
-			"accessKeySecret": accessKeySecret,
+			"accessKeyId":     r.URL.Query().Get("accessKeyId"),
+			"accessKeySecret": r.URL.Query().Get("accessKeySecret"),
 		}); err != nil {
 			log.Error("failed to execute yaml template", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -84,7 +64,7 @@ func buildResourcesUrl() (string, error) {
 	if u, err := url.Parse(env.Host()); err != nil {
 		return "", err
 	} else {
-		u = u.JoinPath("/api/resources")
+		u = u.JoinPath("/api/agent/resources")
 		return u.String(), nil
 	}
 }
@@ -92,52 +72,91 @@ func buildResourcesUrl() (string, error) {
 func downloadResources(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	authHeader := r.Header.Get("Authorization")
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Basic" {
-		log.Warn("received download request without Basic Authorization header", zap.String("authHeader", authHeader))
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	if authDecoded, err := base64.StdEncoding.DecodeString(parts[1]); err != nil {
-		log.Error("failed to decode auth string", zap.Error(err))
-		w.WriteHeader(500)
-		return
+	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+	var statusMessage string
+	if composeFileData, err :=
+		db.GetLatestDeploymentComposeFileUnauthenticated(ctx, deploymentTarget.ID); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
+		msg := "failed to get compose file from DB"
+		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
+		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
+		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		authParts := strings.Split(string(authDecoded), ":")
-		if len(authParts) != 2 {
-			log.Warn("received download request with invalid Basic Authorization header")
-			w.WriteHeader(http.StatusUnauthorized)
-			return
+		if errors.Is(err, apierrors.ErrNotFound) {
+			statusMessage = "EMPTY"
+		} else {
+			statusMessage = "OK"
 		}
-		accessKeyId := authParts[0]
-		accessKeySecret := authParts[1]
+		w.Header().Add("Content-Type", "application/yaml")
+		if _, err := w.Write(composeFileData); err != nil {
+			msg := "failed to write compose file"
+			statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
+			log.Error(msg, zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+	if err := db.CreateDeploymentTargetStatus(ctx, deploymentTarget, statusMessage); err != nil {
+		log.Error("failed to create deployment target status", zap.Error(err),
+			zap.String("deploymentTargetId", deploymentTarget.ID),
+			zap.String("statusMessage", statusMessage))
+	}
+}
 
-		if deploymentTarget, err := db.GetDeploymentTargetUnauthenticated(ctx, accessKeyId); err != nil {
-			log.Error("failed to get deployment target", zap.Error(err))
+func postAgentStatus(w http.ResponseWriter, r *http.Request) {
+	/*ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+	// TODO get latest deployment
+	if err := db.CreateDeploymentStatus(ctx, deploymentTarget, statusMessage); err != nil {
+		log.Error("failed to create deployment target status", zap.Error(err),
+			zap.String("deploymentTargetId", deploymentTarget.ID),
+			zap.String("statusMessage", statusMessage))
+	}*/
+}
+
+func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		accessKeyId := r.URL.Query().Get("accessKeyId")
+		accessKeySecret := r.URL.Query().Get("accessKeySecret")
+
+		if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, accessKeyId, accessKeySecret); err != nil {
+			log.Error("failed to get deployment target from query auth", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
-			if err := security.VerifyAccessKey(
-				*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
-				log.Error("failed to verify access key secret", zap.Error(err))
-				w.WriteHeader(http.StatusUnauthorized)
-			} else if composeFileData, err :=
-				db.GetLatestDeploymentComposeFileUnauthenticated(ctx, deploymentTarget.ID); err != nil &&
-				!errors.Is(err, apierrors.ErrNotFound) {
-				log.Error("failed to get compose file from DB", zap.Error(err))
-				w.WriteHeader(http.StatusInternalServerError)
-			} else {
-				w.Header().Add("Content-Type", "application/yaml")
-				if _, err := w.Write(composeFileData); err != nil {
-					log.Error("failed to write compose file", zap.Error(err))
-					w.WriteHeader(http.StatusInternalServerError)
-				}
-			}
-			// TODO should probably also write success/error into the status?
-			if err := db.CreateDeploymentTargetStatus(ctx, deploymentTarget, "lol"); err != nil {
-				log.Error("failed to create deployment target status", zap.Error(err),
-					zap.String("deploymentTargetId", deploymentTarget.ID))
-			}
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
+			// TODO set current org ID into context -> no db "Unauthenticated" stuff necessary
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
+	})
+}
+
+func basicAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		if accessKeyId, accessKeySecret, ok := r.BasicAuth(); !ok {
+			log.Error("invalid Basic Auth")
+			w.WriteHeader(http.StatusUnauthorized)
+		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, accessKeyId, accessKeySecret); err != nil {
+			log.Error("failed to get deployment target from query auth", zap.Error(err))
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
+			// TODO set current org ID into context -> no db "Unauthenticated" stuff necessary
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+	})
+}
+
+func getVerifiedDeploymentTarget(ctx context.Context, accessKeyId string, accessKeySecret string) (*types.DeploymentTarget, error) {
+	if deploymentTarget, err := db.GetDeploymentTargetUnauthenticated(ctx, accessKeyId); err != nil {
+		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
+	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
+		return nil, errors.New("deployment target does not have key and salt")
+	} else if err := security.VerifyAccessKey(*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
+		return nil, fmt.Errorf("failed to verify access: %w", err)
+	} else {
+		return deploymentTarget, nil
 	}
 }

@@ -115,3 +115,16 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 		return nil
 	}
 }
+
+func CreateDeploymentStatus(ctx context.Context, deployment *types.Deployment, message string) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"INSERT INTO DeploymentStatus (deployment_id, message) VALUES (@deploymentId, @message)",
+		pgx.NamedArgs{"deploymentId": deployment.ID, "message": message})
+	if err != nil {
+		return err
+	} else {
+		rows.Close()
+		return nil
+	}
+}
