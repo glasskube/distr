@@ -4,12 +4,14 @@ import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBoxesStacked,
-  faCheck, faCheckDouble,
+  faCheck,
+  faCheckDouble,
   faDashboard,
   faGear,
   faKey,
-  faLightbulb, faPalette,
-  faServer
+  faLightbulb,
+  faPalette,
+  faServer,
 } from '@fortawesome/free-solid-svg-icons';
 
 @Component({

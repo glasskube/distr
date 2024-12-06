@@ -1,4 +1,4 @@
-import {Component, inject, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
+import {Component, inject, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {GlobeComponent} from '../globe/globe.component';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ApplicationsComponent} from '../../applications/applications.component';
@@ -8,10 +8,12 @@ import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {ApplicationsService} from '../../services/applications.service';
-import {combineLatest, empty, first, lastValueFrom, Observable, of, take, withLatestFrom} from 'rxjs';
-import {combineLatestInit} from 'rxjs/internal/observable/combineLatest';
+import {combineLatest, first} from 'rxjs';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
+import {ChartVersionComponent} from '../charts/version/chart-version.component';
+import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
+import {ChartTypeComponent} from '../charts/type/chart-type.component';
 
 @Component({
   selector: 'app-dashboard-placeholder',
@@ -22,10 +24,14 @@ import {faPlus} from '@fortawesome/free-solid-svg-icons';
     AsyncPipe,
     OnboardingWizardComponent,
     FaIconComponent,
+    ChartVersionComponent,
+    ChartVersionComponent,
+    ChartUptimeComponent,
+    ChartTypeComponent,
   ],
   templateUrl: './dashboard-placeholder.component.html',
 })
-export class DashboardPlaceholderComponent {
+export class DashboardPlaceholderComponent implements OnInit {
   private overlay = inject(OverlayService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   public readonly deploymentTargets$ = this.deploymentTargets.list();
