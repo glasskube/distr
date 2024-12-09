@@ -4,9 +4,10 @@ import "time"
 
 type Application struct {
 	Base
-	Name     string               `db:"name" json:"name"`
-	Type     DeploymentType       `db:"type" json:"type"`
-	Versions []ApplicationVersion `db:"versions" json:"versions"`
+	OrganizationID string               `db:"organization_id" json:"-"`
+	Name           string               `db:"name" json:"name"`
+	Type           DeploymentType       `db:"type" json:"type"`
+	Versions       []ApplicationVersion `db:"versions" json:"versions"`
 }
 
 type ApplicationVersion struct {
@@ -42,6 +43,11 @@ type DeploymentTarget struct {
 	OrganizationID string                  `db:"organization_id" json:"-"`
 }
 
+type DeploymentTargetWithCreatedBy struct {
+	DeploymentTarget
+	CreatedBy *UserAccount `db:"created_by" json:"createdBy"`
+}
+
 type DeploymentTargetStatus struct {
 	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
 	ID                 string    `db:"id" json:"id"`
@@ -51,15 +57,21 @@ type DeploymentTargetStatus struct {
 }
 
 type UserAccount struct {
-	Base
-	Email        string `db:"email"`
-	PasswordHash []byte `db:"password_hash"`
-	PasswordSalt []byte `db:"password_salt"`
-	Password     string `db:"-"`
-	Name         string `db:"name"`
+	ID           string    `db:"id" json:"id"`
+	CreatedAt    time.Time `db:"created_at" json:"createdAt"`
+	Email        string    `db:"email" json:"email"`
+	PasswordHash []byte    `db:"password_hash" json:"-"`
+	PasswordSalt []byte    `db:"password_salt" json:"-"`
+	Name         string    `db:"name" json:"name,omitempty"`
+	Password     string    `db:"-" json:"-"`
 }
 
 type Organization struct {
 	Base
 	Name string `db:"name" json:"name"`
+}
+
+type OrganizationWithUserRole struct {
+	Organization
+	UserRole UserRole `db:"user_role"`
 }

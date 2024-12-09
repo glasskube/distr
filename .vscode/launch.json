@@ -7,7 +7,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd",
+      "program": "${workspaceFolder}/cmd/cloud",
       "cwd": "${workspaceFolder}"
     },
     {
