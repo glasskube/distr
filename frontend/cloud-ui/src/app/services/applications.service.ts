@@ -9,7 +9,7 @@ import {CrudService} from './interfaces';
   providedIn: 'root',
 })
 export class ApplicationsService implements CrudService<Application> {
-  private readonly applicationsUrl = '/api/applications';
+  private readonly applicationsUrl = '/api/v1/applications';
   private readonly cache: ReactiveList<Application>;
 
   constructor(private readonly httpClient: HttpClient) {

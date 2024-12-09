@@ -7,7 +7,7 @@ import {Deployment} from '../types/deployment';
   providedIn: 'root',
 })
 export class DeploymentService {
-  private readonly baseUrl = '/api/deployments';
+  private readonly baseUrl = '/api/v1/deployments';
   private readonly httpClient = inject(HttpClient);
 
   create(request: Deployment): Observable<Deployment> {
