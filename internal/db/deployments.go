@@ -81,7 +81,7 @@ func GetLatestDeploymentComposeFile(ctx context.Context, deploymentTargetId stri
 		SELECT av.compose_file_data
 		FROM Deployment d
 		INNER JOIN ApplicationVersion av ON d.application_version_id = av.id
-		INNER JOIN DeploymentTarget dt ON d.deployment_target_id = d.id
+		INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id
 		WHERE d.deployment_target_id = @deploymentTargetId AND dt.organization_id = @orgId
 		ORDER BY d.created_at DESC LIMIT 1`, pgx.NamedArgs{
 		"deploymentTargetId": deploymentTargetId,
