@@ -9,4 +9,3 @@ services:
       GK_ENDPOINT: '{{ .resourcesUrl }}'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    user: '0'

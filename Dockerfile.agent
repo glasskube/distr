@@ -13,11 +13,8 @@ COPY cmd/ cmd/
 COPY internal/ internal/
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o agent ./cmd/agent/
 
-# FROM alpine:3.20
-# RUN apk add docker-cli docker-cli-compose # TODO versions potentially problematic
 FROM docker:27.3.1-alpine3.20
 WORKDIR /
 COPY --from=builder /workspace/agent .
-USER 65532:65532
 
 ENTRYPOINT ["/agent"]
