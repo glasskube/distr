@@ -32,7 +32,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
   private readonly router = inject(Router);
   private readonly hostElement = inject(ElementRef).nativeElement as HTMLElement;
   private readonly parentElement = this.hostElement.parentElement;
-  private readonly globeInstance = Globe();
+  private readonly globeInstance = new Globe(this.hostElement);
   private readonly resize$ = fromEvent(window, 'resize');
   private readonly subscription = new Subscription();
   private readonly app = inject(ApplicationRef);
@@ -73,7 +73,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
     this.updateDotRadius();
     // Globe reference:
     // https://github.com/vasturiano/three-globe/#api-reference
-    this.globeInstance(this.hostElement)
+    this.globeInstance
       .globeImageUrl(
         // Other options: https://github.com/vasturiano/three-globe/tree/master/example/img
         'https://raw.githubusercontent.com/vasturiano/three-globe/refs/heads/master/example/img/earth-blue-marble.jpg'
