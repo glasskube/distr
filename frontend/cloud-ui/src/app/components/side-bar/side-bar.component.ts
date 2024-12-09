@@ -4,7 +4,6 @@ import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBoxesStacked,
-  faCheck,
   faCheckDouble,
   faDashboard,
   faGear,
@@ -28,7 +27,8 @@ export class SideBarComponent {
   protected readonly faLightbulb = faLightbulb;
   protected readonly faKey = faKey;
   protected readonly faGear = faGear;
-  protected readonly faCheck = faCheck;
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
+
+  protected readonly userRole: 'distributor' | 'customer' = 'customer'; // TODO: load from auth service
 }

@@ -4,92 +4,111 @@
   aria-label="Sidebar">
   <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
     <ul class="space-y-2 font-medium">
-      <li>
-        <a
-          routerLink="/dashboard"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <fa-icon
-            [icon]="faDashboard"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Dashboard</span>
-        </a>
-      </li>
-      <li>
-        <a
-          routerLink="/applications"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <fa-icon
-            [icon]="faBoxesStacked"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Applications</span>
-        </a>
-      </li>
-      <li>
-        <a
-          routerLink="/deployment-targets"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <fa-icon
-            [icon]="faServer"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Deployment Targets</span>
-        </a>
-      </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faKey" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">License Mgmt</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faCheckDouble" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Pre-Flight</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faLightbulb" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Support Insights</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faPalette" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Branding</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faGear" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">API Keys</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
+      <!-- distributor side bar  -->
+      <ng-container *ngIf="userRole === 'distributor'">
+        <li>
+          <a
+            routerLink="/dashboard"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faDashboard"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a
+            routerLink="/applications"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faBoxesStacked"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Applications</span>
+          </a>
+        </li>
+        <li>
+          <a
+            routerLink="/deployment-targets"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faServer"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Deployment Targets</span>
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faKey" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">License Mgmt</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faCheckDouble" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">Pre-Flight</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faLightbulb" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">Support Insights</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faPalette" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">Branding</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faGear" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">API Keys</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+      </ng-container>
+      <!-- customer side bar  -->
+      <ng-container *ngIf="userRole === 'customer'">
+        <li>
+          <a
+            routerLink="/deployments"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faDashboard"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Deployments</span>
+          </a>
+        </li>
+      </ng-container>
     </ul>
   </div>
-  <div class="absolute bottom-0 left-0 justify-center px-4 pb-4 w-full bg-white dark:bg-gray-800">
+  <div
+    class="absolute bottom-0 left-0 justify-center px-4 pb-4 w-full bg-white dark:bg-gray-800"
+    *ngIf="userRole === 'distributor'">
     <div *ngIf="feedbackAlert" id="alert-update" class="p-4 mb-3 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert">
       <div class="flex justify-between items-center mb-3">
         <span

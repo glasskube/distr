@@ -7,6 +7,7 @@ import {AuthService} from './services/auth.service';
 import {LoginComponent} from './login/login.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {RegisterComponent} from './register/register.component';
+import {DeploymentsPageComponent} from './customer/deployments/deployments-page.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -30,6 +31,7 @@ export const routes: Routes = [
       {path: 'dashboard', component: DashboardPlaceholderComponent},
       {path: 'applications', component: ApplicationsPageComponent},
       {path: 'deployment-targets', component: DeploymentTargetsPageComponent},
+      {path: 'deployments', component: DeploymentsPageComponent},
     ],
   },
 ];
