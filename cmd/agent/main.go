@@ -1,9 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -18,7 +19,8 @@ import (
 func main() {
 	accessKeyId := getFromEnvOrDie("GK_ACCESS_KEY_ID")
 	accessKeySecret := getFromEnvOrDie("GK_ACCESS_KEY_SECRET")
-	endpoint := getFromEnvOrDie("GK_ENDPOINT")
+	resourceEndpoint := getFromEnvOrDie("GK_RESOURCE_ENDPOINT")
+	statusEndpoint := getFromEnvOrDie("GK_STATUS_ENDPOINT")
 
 	logger := createLogger()
 
@@ -33,34 +35,41 @@ func main() {
 	client := http.Client{}
 
 	for ctx.Err() == nil {
-		if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+		if req, err := http.NewRequest(http.MethodGet, resourceEndpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
 			req.SetBasicAuth(accessKeyId, accessKeySecret)
-
 			if resp, err := client.Do(req); err != nil {
 				logger.Error("failed to execute request", zap.Error(err))
+			} else if resp.StatusCode != http.StatusOK {
+				logger.Warn("status code not OK, will not apply", zap.Int("code", resp.StatusCode))
 			} else {
-				if body, err := io.ReadAll(resp.Body); err != nil {
-					logger.Error("failed to read response body", zap.Error(err))
-				} else {
-					fmt.Fprintf(os.Stderr, "---response body: \n%v\n---\n", string(body))
+				status := make(map[string]string)
+				cmd := exec.Command("docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
+				cmd.Stdin = resp.Body
+				out, cmdErr := cmd.CombinedOutput()
+				if cmdErr != nil {
+					status["error"] = cmdErr.Error()
+				}
+				status["output"] = string(out)
+				logger.Debug("docker compose returned", zap.String("output", string(out)), zap.Error(cmdErr))
 
-					err = os.WriteFile("/tmp/compose.yaml", body, 0644)
-					if err != nil {
-						logger.Error("failed to write temp file", zap.Error(err))
-					} else if out, err := exec.Command(
-						"docker", "compose", "-f", "/tmp/compose.yaml", "up", "-d", "--quiet-pull").CombinedOutput(); err != nil {
-						logger.Error("failed", zap.Error(err), zap.String("out", string(out)))
-					} else {
-						fmt.Fprintf(os.Stderr, "---compose up output: \n%v\n---\n", string(out))
-					}
-					// TODO report deployment status
-					if resp.StatusCode != http.StatusOK {
-						logger.Error("status code not OK", zap.Int("code", resp.StatusCode), zap.ByteString("body", body))
+				correlationID := resp.Header.Get("X-Resource-Correlation-ID")
+				if statusJson, err := json.Marshal(status); err != nil {
+					logger.Error("failed to marshal status JSON", zap.Error(err))
+				} else if statusReq, err :=
+					http.NewRequest(http.MethodPost, statusEndpoint, bytes.NewReader(statusJson)); err != nil {
+					logger.Error("failed to create status request", zap.Error(err))
+				} else if correlationID != "" {
+					statusReq.Header.Set("Content-Type", "application/json")
+					statusReq.Header.Set("X-Resource-Correlation-ID", correlationID)
+					statusReq.SetBasicAuth(accessKeyId, accessKeySecret)
+					if statusResp, err := client.Do(statusReq); err != nil {
+						logger.Error("failed to execute status request", zap.Error(err))
+					} else if statusResp.StatusCode != http.StatusOK {
+						logger.Info("response code of status request was not OK", zap.Int("code", statusResp.StatusCode))
 					}
 				}
-				_ = resp.Body.Close()
 			}
 		}
 

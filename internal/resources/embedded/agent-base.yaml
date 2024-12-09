@@ -6,6 +6,7 @@ services:
     environment:
       GK_ACCESS_KEY_ID: '{{ .accessKeyId }}'
       GK_ACCESS_KEY_SECRET: '{{ .accessKeySecret }}'
-      GK_ENDPOINT: '{{ .resourcesUrl }}'
+      GK_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
+      GK_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
