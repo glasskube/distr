@@ -166,6 +166,8 @@ export class OnboardingWizardComponent {
               this.nextStep();
             });
         }
+      } else {
+        this.applicationForm.markAllAsTouched();
       }
     } else if (this.stepper.selectedIndex === 1) {
       if (this.deploymentTargetForm.valid) {
@@ -199,6 +201,8 @@ export class OnboardingWizardComponent {
             )
           )
           .subscribe(() => this.nextStep());
+      } else {
+        this.deploymentTargetForm.markAllAsTouched();
       }
     } else if (this.stepper.selectedIndex == 2) {
       this.close();

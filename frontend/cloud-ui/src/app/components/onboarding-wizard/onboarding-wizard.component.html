@@ -97,6 +97,9 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="asdf-app"
                         required />
+                      @if (applicationForm.controls.custom.controls.name.invalid && !applicationForm.controls.custom.controls.name.untouched) {
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
                     </div>
                     <div class="w-full">
                       <label
@@ -112,6 +115,9 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="v4.2.0"
                         required />
+                      @if (applicationForm.controls.custom.controls.versionName.invalid && !applicationForm.controls.custom.controls.versionName.untouched) {
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
                     </div>
                     <div class="w-full">
                       <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -125,6 +131,9 @@
                         (change)="onFileSelected($event)"
                         class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                         aria-describedby="file_input_help" />
+                      @if (fileToUpload == null && !applicationForm.controls.custom.untouched) {
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-500">File is required.</p>
+                      }
                     </div>
                   </div>
                 }
@@ -148,6 +157,9 @@
                       placeholder="Sustainable Enterprises Ltd"
                       required
                       autocomplete="off" />
+                    @if (deploymentTargetForm.controls.customerName.invalid && !deploymentTargetForm.controls.customerName.untouched) {
+                      <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                    }
                   </div>
                 </div>
 
