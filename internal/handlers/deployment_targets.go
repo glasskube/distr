@@ -158,7 +158,7 @@ func buildConnectUrl(accessKeyId string, accessKeySecret string) (string, error)
 		query := url.Values{}
 		query.Set("accessKeyId", accessKeyId)
 		query.Set("accessKeySecret", accessKeySecret)
-		u = u.JoinPath("/api/connect")
+		u = u.JoinPath("/api/v1/connect")
 		u.RawQuery = query.Encode()
 		return u.String(), nil
 	}

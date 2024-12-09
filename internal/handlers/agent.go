@@ -64,7 +64,7 @@ func buildResourcesUrl() (string, error) {
 	if u, err := url.Parse(env.Host()); err != nil {
 		return "", err
 	} else {
-		u = u.JoinPath("/api/agent/resources")
+		u = u.JoinPath("/api/v1/agent/resources")
 		return u.String(), nil
 	}
 }
