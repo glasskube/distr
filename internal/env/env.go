@@ -2,6 +2,7 @@ package env
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -17,6 +18,7 @@ var (
 	currentEnv   string
 	databaseUrl  string
 	jwtSecret    []byte
+	host         string
 	mailerConfig MailerConfig
 )
 
@@ -36,6 +38,10 @@ func init() {
 		panic(fmt.Errorf("could not decode jwt secret: %w", err))
 	} else {
 		jwtSecret = decoded
+	}
+	host = os.Getenv("GLASSKUBE_HOST")
+	if host == "" {
+		panic(errors.New("can't start, GLASSKUBE_HOST not set"))
 	}
 
 	switch os.Getenv("MAILER_TYPE") {
@@ -66,6 +72,8 @@ func DatabaseUrl() string {
 func JWTSecret() []byte {
 	return jwtSecret
 }
+
+func Host() string { return host }
 
 func IsDev() bool {
 	return currentEnv == envDevelopment

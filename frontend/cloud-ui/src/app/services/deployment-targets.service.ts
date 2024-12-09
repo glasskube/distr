@@ -5,6 +5,7 @@ import {DeploymentTarget} from '../types/deployment-target';
 import {Observable, tap} from 'rxjs';
 import {DefaultReactiveList} from './cache';
 import {DeploymentWithData} from '../types/deployment';
+import {AccessKeyResponse, TokenResponse} from '../types/base';
 
 @Injectable({
   providedIn: 'root',
@@ -30,5 +31,9 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
 
   latestDeploymentFor(deploymentTargetId: string): Observable<DeploymentWithData> {
     return this.httpClient.get<DeploymentWithData>(`${this.baseUrl}/${deploymentTargetId}/latest-deployment`);
+  }
+
+  requestAccess(deploymentTargetId: string) {
+    return this.httpClient.post<AccessKeyResponse>(`${this.baseUrl}/${deploymentTargetId}/access-request`, {});
   }
 }

@@ -14,6 +14,7 @@ const (
 	ctxKeyDb contextKey = iota
 	ctxKeyLogger
 	ctxKeyMailer
+	ctxKeyOrgId
 	ctxKeyApplication
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget

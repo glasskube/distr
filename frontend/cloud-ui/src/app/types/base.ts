@@ -6,3 +6,13 @@ export interface BaseModel {
 export interface Named {
   name?: string;
 }
+
+export interface TokenResponse {
+  token: string;
+}
+
+export interface AccessKeyResponse {
+  connectUrl: string;
+  accessKeyId: string;
+  accessKeySecret: string;
+}

@@ -115,7 +115,7 @@
                   @if (!dt.currentStatus) {
                     <button
                       type="button"
-                      (click)="showModal(instructionsModal)"
+                      (click)="showInstructionsModal(instructionsModal, dt)"
                       class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                       Connection instructions
                     </button>
@@ -123,11 +123,11 @@
                       <div
                         @modalFlyInOut
                         style="transform-origin: top center"
-                        class="p-4 w-full mt-12 max-w-2xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
+                        class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
                         <!-- Modal header -->
                         <div
                           class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructios</h3>
+                          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructions</h3>
                           <button
                             type="button"
                             (click)="hideModal()"
@@ -142,9 +142,8 @@
                             To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
-                          <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
-curl https://glasskube.cloud/api/v1/connect?token=c76A2a3V5dV1ycV8sa4DIGLmyXyFAk6Sr27iF3ZDKJ1yz1J1yz1s | docker compose -f - up -d</pre
-                          >
+
+                          <app-connect-instructions [deploymentTargetId]="dt.id!"></app-connect-instructions>
                         </div>
                       </div>
                     </ng-template>

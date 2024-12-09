@@ -25,6 +25,7 @@ import {StatusDotComponent} from '../components/status-dot';
 import {drawerFlyInOut} from '../animations/drawer';
 import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
+import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -38,6 +39,7 @@ import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
     IsStalePipe,
     RelativeDatePipe,
     StatusDotComponent,
+    ConnectInstructionsComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -109,7 +111,12 @@ export class DeploymentTargetsComponent implements OnDestroy {
     });
   }
 
-  showModal(templateRef: TemplateRef<unknown>) {
+  showDeploymentModal(templateRef: TemplateRef<unknown>) {
+    this.hideModal();
+    this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
+  }
+
+  async showInstructionsModal(templateRef: TemplateRef<unknown>, dt: DeploymentTarget) {
     this.hideModal();
     this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
   }
@@ -163,7 +170,7 @@ export class DeploymentTargetsComponent implements OnDestroy {
   }
 
   async newDeployment(dt: DeploymentTarget, deploymentModal: TemplateRef<any>) {
-    this.showModal(deploymentModal);
+    this.showDeploymentModal(deploymentModal);
     this.deployForm.reset();
     this.selectedDeploymentTarget = dt;
     this.deployForm.patchValue({

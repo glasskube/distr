@@ -279,9 +279,10 @@
                     <li>Make sure docker is installed</li>
                     <li>
                       Execute the following in the terminal:
-                      <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
-curl https://glasskube.cloud/api/connect?token=aaaaaaaaaaaaaaa | docker compose -f - up -d</pre
-                      >
+                      @if (createdDeploymentTarget?.id) {
+                        <app-connect-instructions
+                          [deploymentTargetId]="createdDeploymentTarget!.id!"></app-connect-instructions>
+                      }
                     </li>
                   </ol>
                 </div>

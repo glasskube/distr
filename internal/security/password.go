@@ -3,6 +3,7 @@ package security
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 
 	"github.com/glasskube/cloud/internal/types"
@@ -17,6 +18,7 @@ const (
 )
 
 var ErrInvalidPassword = errors.New("invalid password")
+var ErrInvalidAccessKey = errors.New("invalid accessKey")
 
 func HashPassword(userAccount *types.UserAccount) error {
 	if salt, err := generateSalt(); err != nil {
@@ -29,9 +31,26 @@ func HashPassword(userAccount *types.UserAccount) error {
 	}
 }
 
+func HashAccessKey(accessKey string) ([]byte, []byte, error) {
+	if salt, err := generateSalt(); err != nil {
+		return nil, nil, err
+	} else {
+		hash := generateHash(accessKey, salt)
+		return salt, hash, nil
+	}
+}
+
 func VerifyPassword(userAccount types.UserAccount, password string) error {
 	if !bytes.Equal(userAccount.PasswordHash, generateHash(password, userAccount.PasswordSalt)) {
 		return ErrInvalidPassword
+	} else {
+		return nil
+	}
+}
+
+func VerifyAccessKey(accessKeySalt []byte, accessKeyHash []byte, accessKeySecret string) error {
+	if !bytes.Equal(accessKeyHash, generateHash(accessKeySecret, accessKeySalt)) {
+		return ErrInvalidAccessKey
 	} else {
 		return nil
 	}
@@ -45,4 +64,10 @@ func generateSalt() ([]byte, error) {
 	salt := make([]byte, 16)
 	_, err := rand.Read(salt)
 	return salt, err
+}
+
+func GenerateAccessKey() (string, error) {
+	key := make([]byte, 16)
+	_, err := rand.Read(key)
+	return base64.URLEncoding.EncodeToString(key), err
 }

@@ -15,7 +15,7 @@ import (
 
 const (
 	deploymentTargetOutputExpr = `
-		dt.id, dt.created_at, dt.name, dt.type,
+		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.organization_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation
 	`
@@ -52,18 +52,18 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error)
 	}
 }
 
-func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarget, error) {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.DeploymentTarget, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+
-			" AND dt.id = @id AND dt.organization_id = @orgId",
-		pgx.NamedArgs{"id": id, "orgId": orgId},
-	)
+	var args pgx.NamedArgs
+	query := "SELECT " + deploymentTargetWithStatusOutputExpr + " " + deploymentTargetFromExpr +
+		" AND dt.id = @id"
+	if orgId != nil {
+		args = pgx.NamedArgs{"id": id, "orgId": *orgId}
+		query = query + " AND dt.organization_id = @orgId"
+	} else {
+		args = pgx.NamedArgs{"id": id}
+	}
+	rows, err := db.Query(ctx, query, args)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}
@@ -128,6 +128,41 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) err
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
+		return nil
+	}
+}
+
+func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarget) error {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return err
+	}
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"UPDATE DeploymentTarget AS dt SET access_key_salt = @accessKeySalt, access_key_hash = @accessKeyHash "+
+			"WHERE id = @id AND organization_id = @orgId RETURNING "+
+			deploymentTargetOutputExpr,
+		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgId})
+	if err != nil {
+		return fmt.Errorf("could not update DeploymentTarget: %w", err)
+	} else if updated, err :=
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget]); err != nil {
+		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
+	} else {
+		*dt = updated
+		return nil
+	}
+}
+
+func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget, message string) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"INSERT INTO DeploymentTargetStatus (deployment_target_id, message) VALUES (@deploymentTargetId, @message)",
+		pgx.NamedArgs{"deploymentTargetId": dt.ID, "message": message})
+	if err != nil {
+		return err
+	} else {
+		rows.Close()
 		return nil
 	}
 }
