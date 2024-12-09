@@ -89,24 +89,7 @@ func getFromEnvOrDie(arg string) string {
 }
 
 func createLogger() *zap.Logger {
-	encoderCfg := zap.NewProductionEncoderConfig()
-	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	config := zap.Config{
-		Level:             zap.NewAtomicLevelAt(zap.DebugLevel),
-		Development:       false,
-		DisableCaller:     false,
-		DisableStacktrace: false,
-		Sampling:          nil,
-		Encoding:          "console",
-		EncoderConfig:     encoderCfg,
-		OutputPaths: []string{
-			"stderr",
-		},
-		ErrorOutputPaths: []string{
-			"stderr",
-		},
-	}
-
+	config := zap.NewDevelopmentConfig()
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	return zap.Must(config.Build())
 }
