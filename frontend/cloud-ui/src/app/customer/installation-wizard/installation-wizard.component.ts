@@ -1,11 +1,11 @@
-import {Component, ElementRef, EventEmitter, inject, Input, Output, TemplateRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, inject, Input, Output, ViewChild} from '@angular/core';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {faCopy, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {modalFlyInOut} from '../../animations/modal';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {ApplicationsService} from '../../services/applications.service';
-import {firstValueFrom, Observable, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
+import {firstValueFrom, Observable, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
@@ -84,7 +84,7 @@ export class InstallationWizardComponent {
     this.fileToUpload = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
-  attemptContinue() {
+  async attemptContinue() {
     if (this.loading) {
       return;
     }
@@ -128,7 +128,16 @@ export class InstallationWizardComponent {
         this.nextStep();
       }
     } else if (this.stepper.selectedIndex == 2) {
-      this.close();
+      this.selectedDeploymentTarget = (await firstValueFrom(this.deploymentTargets$))[0];
+      this.deployForm.patchValue({
+        deploymentTargetId: this.selectedDeploymentTarget.id,
+      });
+      if (this.deployForm.valid) {
+        console.log('valid');
+        this.loading = true;
+        await this.saveDeployment();
+        this.close();
+      }
     }
   }
 
@@ -143,12 +152,10 @@ export class InstallationWizardComponent {
 
   protected readonly shipIcon = faShip;
 
-  @Input({required: true})
-  applications$!: Observable<Application[]>;
+  applications$ = this.applications.list();
   selectedApplication?: Application | null;
 
-  @Input({required: true})
-  deploymentTargets$!: Observable<DeploymentTargetViewModel[]>;
+  deploymentTargets$ = this.deploymentTargets.list();
 
   deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
@@ -162,20 +169,6 @@ export class InstallationWizardComponent {
   private readonly applicationIdChange$ = this.deployForm.controls.applicationId.valueChanges.subscribe((it) =>
     this.updatedSelectedApplication(it!!)
   );
-
-  async newDeployment(dt: DeploymentTarget, deploymentModal: TemplateRef<any>) {
-    this.selectedDeploymentTarget = dt;
-    this.deployForm.patchValue({
-      deploymentTargetId: dt.id,
-    });
-    this.deploymentTargets.latestDeploymentFor(dt.id!!).subscribe((d) => {
-      this.deployForm.patchValue({
-        applicationId: d.applicationId,
-        applicationVersionId: d.applicationVersionId,
-      });
-      this.updatedSelectedApplication(d.applicationId);
-    });
-  }
 
   async saveDeployment() {
     if (this.deployForm.valid) {
