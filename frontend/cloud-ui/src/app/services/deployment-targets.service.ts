@@ -34,6 +34,9 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   }
 
   requestAccess(deploymentTargetId: string) {
-    return this.httpClient.post<DeploymentTargetAccessResponse>(`${this.baseUrl}/${deploymentTargetId}/access-request`, {});
+    return this.httpClient.post<DeploymentTargetAccessResponse>(
+      `${this.baseUrl}/${deploymentTargetId}/access-request`,
+      {}
+    );
   }
 }
