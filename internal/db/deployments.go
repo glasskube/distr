@@ -75,16 +75,17 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func GetLatestDeploymentComposeFileUnauthenticated(ctx context.Context, deploymentTargetId string) ([]byte, error) {
-	// no orgId check here
+func GetLatestDeploymentComposeFile(ctx context.Context, deploymentTargetId string, orgId string) ([]byte, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 		SELECT av.compose_file_data
 		FROM Deployment d
 		INNER JOIN ApplicationVersion av ON d.application_version_id = av.id
-		WHERE d.deployment_target_id = @deploymentTargetId
+		INNER JOIN DeploymentTarget dt ON d.deployment_target_id = d.id
+		WHERE d.deployment_target_id = @deploymentTargetId AND dt.organization_id = @orgId
 		ORDER BY d.created_at DESC LIMIT 1`, pgx.NamedArgs{
 		"deploymentTargetId": deploymentTargetId,
+		"orgId":              orgId,
 	}); err != nil {
 		return nil, fmt.Errorf("could not get latest deployment: %w", err)
 	} else if data, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[[]byte]); err != nil {

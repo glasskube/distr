@@ -74,8 +74,9 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	var statusMessage string
+	orgId := internalctx.GetOrgId(ctx)
 	if composeFileData, err :=
-		db.GetLatestDeploymentComposeFileUnauthenticated(ctx, deploymentTarget.ID); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
+		db.GetLatestDeploymentComposeFile(ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
 		msg := "failed to get compose file from DB"
 		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
 		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
@@ -125,7 +126,6 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
-			// TODO set current org ID into context -> no db "Unauthenticated" stuff necessary
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
@@ -143,14 +143,14 @@ func basicAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
-			// TODO set current org ID into context -> no db "Unauthenticated" stuff necessary
+			ctx = internalctx.WithOrgId(ctx, deploymentTarget.OrganizationID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
 }
 
 func getVerifiedDeploymentTarget(ctx context.Context, accessKeyId string, accessKeySecret string) (*types.DeploymentTarget, error) {
-	if deploymentTarget, err := db.GetDeploymentTargetUnauthenticated(ctx, accessKeyId); err != nil {
+	if deploymentTarget, err := db.GetDeploymentTarget(ctx, accessKeyId, nil); err != nil {
 		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
 		return nil, errors.New("deployment target does not have key and salt")

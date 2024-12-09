@@ -15,7 +15,7 @@ import (
 
 const (
 	deploymentTargetOutputExpr = `
-		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash,
+		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.organization_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation
 	`
@@ -52,21 +52,7 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTarget, error)
 	}
 }
 
-func GetDeploymentTarget(ctx context.Context, id string) (*types.DeploymentTarget, error) {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return nil, err
-	}
-	rows, err := queryDeploymentTarget(ctx, id, &orgId)
-	return collectDeploymentTarget(rows, err)
-}
-
-func GetDeploymentTargetUnauthenticated(ctx context.Context, id string) (*types.DeploymentTarget, error) {
-	rows, err := queryDeploymentTarget(ctx, id, nil)
-	return collectDeploymentTarget(rows, err)
-}
-
-func queryDeploymentTarget(ctx context.Context, id string, orgId *string) (pgx.Rows, error) {
+func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.DeploymentTarget, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
 	query := "SELECT " + deploymentTargetWithStatusOutputExpr + " " + deploymentTargetFromExpr +
@@ -77,10 +63,7 @@ func queryDeploymentTarget(ctx context.Context, id string, orgId *string) (pgx.R
 	} else {
 		args = pgx.NamedArgs{"id": id}
 	}
-	return db.Query(ctx, query, args)
-}
-
-func collectDeploymentTarget(rows pgx.Rows, err error) (*types.DeploymentTarget, error) {
+	rows, err := db.Query(ctx, query, args)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}

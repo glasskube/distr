@@ -33,12 +33,13 @@ type DeploymentWithData struct {
 
 type DeploymentTarget struct {
 	Base
-	Name          string                  `db:"name" json:"name"`
-	Type          DeploymentType          `db:"type" json:"type"`
-	Geolocation   *Geolocation            `db:"geolocation" json:"geolocation,omitempty"`
-	AccessKeySalt *[]byte                 `db:"access_key_salt" json:"-"`
-	AccessKeyHash *[]byte                 `db:"access_key_hash" json:"-"`
-	CurrentStatus *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
+	Name           string                  `db:"name" json:"name"`
+	Type           DeploymentType          `db:"type" json:"type"`
+	Geolocation    *Geolocation            `db:"geolocation" json:"geolocation,omitempty"`
+	AccessKeySalt  *[]byte                 `db:"access_key_salt" json:"-"`
+	AccessKeyHash  *[]byte                 `db:"access_key_hash" json:"-"`
+	CurrentStatus  *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
+	OrganizationID string                  `db:"organization_id" json:"-"`
 }
 
 type DeploymentTargetStatus struct {

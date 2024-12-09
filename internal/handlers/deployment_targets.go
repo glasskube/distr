@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/internal/auth"
 	"net/http"
 	"net/url"
 
@@ -168,8 +169,10 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id := r.PathValue("deploymentTargetId")
-		deploymentTarget, err := db.GetDeploymentTarget(ctx, id)
-		if errors.Is(err, apierrors.ErrNotFound) {
+		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+			internalctx.GetLogger(r.Context()).Error("failed to get orgId from token", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
