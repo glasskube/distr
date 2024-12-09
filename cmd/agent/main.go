@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -22,17 +23,17 @@ func main() {
 
 	logger := createLogger()
 
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT)
 		<-sigint
-		fmt.Println("ok bye")
-		os.Exit(0)
+		cancel()
 	}()
 
 	client := http.Client{}
 
-	for {
+	for ctx.Err() == nil {
 		if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
@@ -65,13 +66,15 @@ func main() {
 				_ = resp.Body.Close()
 			}
 		}
+
+		// TODO ctx.Done() ??
 		time.Sleep(5 * time.Second)
 	}
 }
 
 func getFromEnvOrDie(arg string) string {
-	value := os.Getenv(arg)
-	if value == "" {
+	value, ok := os.LookupEnv(arg)
+	if !ok {
 		fmt.Fprintf(os.Stderr, "Cannot start glasskube agent: %v is missing.", arg)
 		os.Exit(1)
 	}

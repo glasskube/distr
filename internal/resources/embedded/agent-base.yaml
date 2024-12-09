@@ -1,12 +1,12 @@
 name: glasskube-agent
 services:
   agent:
-    network_mode: host # TODO enable only for development
+    network_mode: host
     image: 'glasskube-agent' # TODO tag
     environment:
       GK_ACCESS_KEY_ID: '{{ .accessKeyId }}'
       GK_ACCESS_KEY_SECRET: '{{ .accessKeySecret }}'
       GK_ENDPOINT: '{{ .resourcesUrl }}'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # TODO
+      - /var/run/docker.sock:/var/run/docker.sock
     user: '0' # TODO lol

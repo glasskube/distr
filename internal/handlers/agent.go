@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/glasskube/cloud/internal/types"
 	"net/http"
 	"net/url"
 	"text/template"
+
+	"github.com/glasskube/cloud/internal/types"
 
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -75,8 +76,8 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	var statusMessage string
 	orgId := internalctx.GetOrgId(ctx)
-	if composeFileData, err :=
-		db.GetLatestDeploymentComposeFile(ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
+	if composeFileData, err := db.GetLatestDeploymentComposeFile(
+		ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
 		msg := "failed to get compose file from DB"
 		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
 		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
@@ -149,12 +150,17 @@ func basicAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getVerifiedDeploymentTarget(ctx context.Context, accessKeyId string, accessKeySecret string) (*types.DeploymentTarget, error) {
+func getVerifiedDeploymentTarget(
+	ctx context.Context,
+	accessKeyId string,
+	accessKeySecret string,
+) (*types.DeploymentTarget, error) {
 	if deploymentTarget, err := db.GetDeploymentTarget(ctx, accessKeyId, nil); err != nil {
 		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
 		return nil, errors.New("deployment target does not have key and salt")
-	} else if err := security.VerifyAccessKey(*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
+	} else if err := security.VerifyAccessKey(
+		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
 		return nil, fmt.Errorf("failed to verify access: %w", err)
 	} else {
 		return deploymentTarget, nil

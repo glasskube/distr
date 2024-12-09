@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glasskube/cloud/internal/auth"
 	"net/http"
 	"net/url"
+
+	"github.com/glasskube/cloud/internal/auth"
 
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
