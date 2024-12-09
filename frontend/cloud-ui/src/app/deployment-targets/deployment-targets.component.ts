@@ -144,6 +144,8 @@ export class DeploymentTargetsComponent implements OnDestroy {
       this.loadDeploymentTarget(
         await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
       );
+    } else {
+      this.editForm.markAllAsTouched();
     }
   }
 
