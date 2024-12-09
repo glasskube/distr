@@ -4,9 +4,10 @@ import "time"
 
 type Application struct {
 	Base
-	Name     string               `db:"name" json:"name"`
-	Type     DeploymentType       `db:"type" json:"type"`
-	Versions []ApplicationVersion `db:"versions" json:"versions"`
+	Name           string               `db:"name" json:"name"`
+	Type           DeploymentType       `db:"type" json:"type"`
+	Versions       []ApplicationVersion `db:"versions" json:"versions"`
+	OrganizationID string               `db:"organization_id" json:"-"`
 }
 
 type ApplicationVersion struct {

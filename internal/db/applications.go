@@ -65,7 +65,8 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
 			    	FROM applicationversion av
 			    	WHERE av.application_id = a.id
-			    ), array[]::record[]) as versions
+			    ), array[]::record[]) as versions,
+				a.organization_id
 			FROM Application a
 			WHERE a.organization_id = @orgId
 			`, pgx.NamedArgs{"orgId": orgId}); err != nil {
@@ -95,7 +96,8 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
 			    	FROM applicationversion av
 			    	WHERE av.application_id = a.id
-			    ), array[]::record[]) as versions
+			    ), array[]::record[]) as versions,
+				a.organization_id
 			FROM Application a
 			WHERE a.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
