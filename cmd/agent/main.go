@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,9 +36,7 @@ func main() {
 		if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
-			auth := fmt.Sprintf("%s:%s", accessKeyId, accessKeySecret)
-			encodedAuth := base64.StdEncoding.EncodeToString([]byte(auth))
-			req.Header.Set("Authorization", "Basic "+encodedAuth)
+			req.SetBasicAuth(accessKeyId, accessKeySecret)
 
 			if resp, err := client.Do(req); err != nil {
 				logger.Error("failed to execute request", zap.Error(err))
@@ -53,7 +50,7 @@ func main() {
 					if err != nil {
 						logger.Error("failed to write temp file", zap.Error(err))
 					} else if out, err := exec.Command(
-						"docker", "compose", "-f", "/tmp/compose.yaml", "up", "-d").CombinedOutput(); err != nil {
+						"docker", "compose", "-f", "/tmp/compose.yaml", "up", "-d", "--quiet-pull").CombinedOutput(); err != nil {
 						logger.Error("failed", zap.Error(err), zap.String("out", string(out)))
 					} else {
 						fmt.Fprintf(os.Stderr, "---compose up output: \n%v\n---\n", string(out))
