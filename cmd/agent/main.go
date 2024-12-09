@@ -67,8 +67,15 @@ func main() {
 			}
 		}
 
-		// TODO ctx.Done() ??
-		time.Sleep(5 * time.Second)
+		sleepDone := make(chan struct{}, 1)
+		go func() {
+			time.Sleep(5 * time.Second)
+			sleepDone <- struct{}{}
+		}()
+		select {
+		case <-sleepDone:
+		case <-ctx.Done():
+		}
 	}
 }
 
