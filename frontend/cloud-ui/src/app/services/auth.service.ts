@@ -9,7 +9,7 @@ const tokenStorageKey = 'cloud_token';
 @Injectable({providedIn: 'root'})
 export class AuthService {
   private readonly httpClient = inject(HttpClient);
-  private readonly baseUrl = '/api/auth';
+  private readonly baseUrl = '/api/v1/auth';
 
   public get isAuthenticated(): boolean {
     return this.token != null;
@@ -58,7 +58,7 @@ export class AuthService {
 
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  if (req.url !== '/api/auth/login' && req.url !== '/api/auth/register') {
+  if (req.url !== '/api/v1/auth/login' && req.url !== '/api/v1/auth/register') {
     const token = auth.token;
     if (token !== null) {
       return next(req.clone({headers: req.headers.set('Authorization', `Bearer ${token}`)}));
