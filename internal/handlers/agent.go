@@ -54,8 +54,8 @@ func connect(w http.ResponseWriter, r *http.Request) {
 		} else if err := tmpl.Execute(w, map[string]string{
 			"resourcesEndpoint": resourcesEndpoint,
 			"statusEndpoint":    statusEndpoint,
-			"accessKeyId":       r.URL.Query().Get("accessKeyId"),
-			"accessKeySecret":   r.URL.Query().Get("accessKeySecret"),
+			"targetId":          r.URL.Query().Get("targetId"),
+			"targetSecret":      r.URL.Query().Get("targetSecret"),
 		}); err != nil {
 			log.Error("failed to execute yaml template", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -133,10 +133,10 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		accessKeyId := r.URL.Query().Get("accessKeyId")
-		accessKeySecret := r.URL.Query().Get("accessKeySecret")
+		targetId := r.URL.Query().Get("targetId")
+		targetSecret := r.URL.Query().Get("targetSecret")
 
-		if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, accessKeyId, accessKeySecret); err != nil {
+		if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
 			log.Error("failed to get deployment target from query auth", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
@@ -150,10 +150,10 @@ func basicAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		if accessKeyId, accessKeySecret, ok := r.BasicAuth(); !ok {
+		if targetId, targetSecret, ok := r.BasicAuth(); !ok {
 			log.Error("invalid Basic Auth")
 			w.WriteHeader(http.StatusUnauthorized)
-		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, accessKeyId, accessKeySecret); err != nil {
+		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
 			log.Error("failed to get deployment target from query auth", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
@@ -166,15 +166,15 @@ func basicAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 
 func getVerifiedDeploymentTarget(
 	ctx context.Context,
-	accessKeyId string,
-	accessKeySecret string,
+	targetId string,
+	targetSecret string,
 ) (*types.DeploymentTarget, error) {
-	if deploymentTarget, err := db.GetDeploymentTarget(ctx, accessKeyId, nil); err != nil {
+	if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, nil); err != nil {
 		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
 		return nil, errors.New("deployment target does not have key and salt")
 	} else if err := security.VerifyAccessKey(
-		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
+		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, targetSecret); err != nil {
 		return nil, fmt.Errorf("failed to verify access: %w", err)
 	} else {
 		return deploymentTarget, nil

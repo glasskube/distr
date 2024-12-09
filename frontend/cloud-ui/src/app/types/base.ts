@@ -13,6 +13,6 @@ export interface TokenResponse {
 
 export interface AccessKeyResponse {
   connectUrl: string;
-  accessKeyId: string;
-  accessKeySecret: string;
+  targetId: string;
+  targetSecret: string;
 }

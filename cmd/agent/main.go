@@ -17,8 +17,8 @@ import (
 )
 
 func main() {
-	accessKeyId := getFromEnvOrDie("GK_ACCESS_KEY_ID")
-	accessKeySecret := getFromEnvOrDie("GK_ACCESS_KEY_SECRET")
+	targetId := getFromEnvOrDie("GK_TARGET_ID")
+	targetSecret := getFromEnvOrDie("GK_TARGET_SECRET")
 	resourceEndpoint := getFromEnvOrDie("GK_RESOURCE_ENDPOINT")
 	statusEndpoint := getFromEnvOrDie("GK_STATUS_ENDPOINT")
 
@@ -38,7 +38,7 @@ func main() {
 		if req, err := http.NewRequest(http.MethodGet, resourceEndpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
-			req.SetBasicAuth(accessKeyId, accessKeySecret)
+			req.SetBasicAuth(targetId, targetSecret)
 			if resp, err := client.Do(req); err != nil {
 				logger.Error("failed to execute request", zap.Error(err))
 			} else if resp.StatusCode != http.StatusOK {
@@ -63,7 +63,7 @@ func main() {
 				} else if correlationID != "" {
 					statusReq.Header.Set("Content-Type", "application/json")
 					statusReq.Header.Set("X-Resource-Correlation-ID", correlationID)
-					statusReq.SetBasicAuth(accessKeyId, accessKeySecret)
+					statusReq.SetBasicAuth(targetId, targetSecret)
 					if statusResp, err := client.Do(statusReq); err != nil {
 						logger.Error("failed to execute status request", zap.Error(err))
 					} else if statusResp.StatusCode != http.StatusOK {

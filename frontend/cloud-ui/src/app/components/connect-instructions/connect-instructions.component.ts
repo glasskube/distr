@@ -12,15 +12,15 @@ export class ConnectInstructionsComponent {
   private readonly deploymentTargets = inject(DeploymentTargetsService);
 
   modalConnectCommand?: string;
-  modalAccessKeyId?: string;
-  modalAccessKeySecret?: string;
+  modalTargetId?: string;
+  modalTargetSecret?: string;
   commandCopied = false;
 
   ngOnInit() {
     this.deploymentTargets.requestAccess(this.deploymentTargetId).subscribe((response) => {
       this.modalConnectCommand = `curl "${response.connectUrl}" | docker compose -f - up -d`;
-      this.modalAccessKeyId = response.accessKeyId;
-      this.modalAccessKeySecret = response.accessKeySecret;
+      this.modalTargetId = response.targetId;
+      this.modalTargetSecret = response.targetSecret;
     });
   }
 
