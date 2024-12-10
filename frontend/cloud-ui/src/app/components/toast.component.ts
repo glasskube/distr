@@ -16,7 +16,7 @@ import {Toast} from 'ngx-toastr';
   template: `
     <div
       id="toast-danger"
-      class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800"
+      class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800  border border-red-300   dark:border-red-800"
       role="alert">
       <div
         class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200">
@@ -34,7 +34,7 @@ import {Toast} from 'ngx-toastr';
       <div class="ms-3 text-sm font-normal">{{ title }}: {{ message }}</div>
       <button
         type="button"
-        (click)="close()"
+        (click)="remove()"
         class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
         data-dismiss-target="#toast-danger"
         aria-label="Close">
@@ -101,8 +101,4 @@ import {Toast} from 'ngx-toastr';
   ],
   preserveWhitespaces: false,
 })
-export class ToastComponent extends Toast {
-  close() {
-    this.remove();
-  }
-}
+export class ToastComponent extends Toast {}
