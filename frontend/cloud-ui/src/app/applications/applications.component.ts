@@ -1,3 +1,4 @@
+import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, ElementRef, inject, Input, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -12,16 +13,24 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {Observable} from 'rxjs';
-import {Application} from '../types/application';
-import {ApplicationsService} from '../services/applications.service';
-import {OverlayModule} from '@angular/cdk/overlay';
-import {dropdownAnimation} from '../animations/dropdown';
-import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {drawerFlyInOut} from '../animations/drawer';
+import {dropdownAnimation} from '../animations/dropdown';
+import {RequireRoleDirective as RequiredRoleDirective} from '../directives/required-role.directive';
+import {ApplicationsService} from '../services/applications.service';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
+import {Application} from '../types/application';
 
 @Component({
   selector: 'app-applications',
-  imports: [AsyncPipe, DatePipe, ReactiveFormsModule, FaIconComponent, NgOptimizedImage, OverlayModule],
+  imports: [
+    AsyncPipe,
+    DatePipe,
+    ReactiveFormsModule,
+    FaIconComponent,
+    NgOptimizedImage,
+    OverlayModule,
+    RequiredRoleDirective,
+  ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut],
 })

@@ -23,6 +23,7 @@
       <div
         class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
         <button
+          *appRequiredRole="'distributor'"
           (click)="openDrawer(manageApplicationDrawer)"
           type="button"
           id="createApplicationButton"
@@ -103,6 +104,7 @@
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <div class="flex justify-end space-x-4">
                   <button
+                    *appRequiredRole="'distributor'"
                     type="button"
                     (click)="openDrawer(manageApplicationDrawer, application)"
                     class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
