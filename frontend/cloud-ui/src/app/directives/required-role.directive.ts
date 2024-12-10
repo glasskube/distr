@@ -8,7 +8,8 @@ import {
   TemplateRef,
   ViewContainerRef,
 } from '@angular/core';
-import {AuthService, UserRole} from '../services/auth.service';
+import {AuthService} from '../services/auth.service';
+import {UserRole} from '../types/user-account';
 
 @Directive({
   selector: '[appRequiredRole]',

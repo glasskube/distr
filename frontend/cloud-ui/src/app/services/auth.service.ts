@@ -4,10 +4,9 @@ import {jwtDecode} from 'jwt-decode';
 import {map, Observable, of, tap, throwError} from 'rxjs';
 import {TokenResponse} from '../types/base';
 import dayjs from 'dayjs';
+import {UserRole} from '../types/user-account';
 
 const tokenStorageKey = 'cloud_token';
-
-export type UserRole = 'distributor' | 'customer';
 
 export interface JWTClaims {
   sub: string;

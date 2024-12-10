@@ -8,6 +8,7 @@ import {LoginComponent} from './login/login.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {RegisterComponent} from './register/register.component';
 import {InviteComponent} from './invite/invite.component';
+import {UsersComponent} from './components/users/users.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -48,6 +49,7 @@ export const routes: Routes = [
           {path: 'dashboard', component: DashboardPlaceholderComponent},
           {path: 'applications', component: ApplicationsPageComponent},
           {path: 'deployment-targets', component: DeploymentTargetsPageComponent},
+          {path: 'user-accounts', component: UsersComponent},
         ],
       },
     ],
