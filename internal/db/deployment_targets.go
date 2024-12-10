@@ -25,16 +25,20 @@ const (
 		CASE WHEN status.id IS NOT NULL
 			THEN (status.id, status.created_at, status.message) END AS current_status
 	`
-	deploymentTargetFromExpr = `
-		FROM DeploymentTarget dt
+	deploymentTargetJoinExpr = `
 		LEFT JOIN DeploymentTargetStatus status ON dt.id = status.deployment_target_id
 		LEFT JOIN UserAccount u ON dt.created_by_user_account_id = u.id
+	`
+	deploymentTargetWhereExprBase = `
 		WHERE (
 			status.id IS NULL OR status.created_at = (
 				SELECT max(s.created_at) FROM DeploymentTargetStatus s WHERE s.deployment_target_id = status.deployment_target_id
 			)
 		)
-`
+	`
+	deploymentTargetFromExpr = `
+		FROM DeploymentTarget dt
+	` + deploymentTargetJoinExpr + deploymentTargetWhereExprBase
 )
 
 func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCreatedBy, error) {
@@ -121,25 +125,29 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
 	}
-	rows, err := db.Query(ctx,
-		"INSERT INTO DeploymentTarget AS dt "+
-			"(name, type, organization_id, created_by_user_account_id, geolocation_lat, geolocation_lon) "+
-			"VALUES (@name, @type, @orgId, @userId, @lat, @lon) RETURNING "+
-			deploymentTargetOutputExprBase,
-		args)
+	rows, err := db.Query(
+		ctx,
+		`WITH inserted AS (
+			INSERT INTO DeploymentTarget
+			(name, type, organization_id, created_by_user_account_id, geolocation_lat, geolocation_lon)
+			VALUES (@name, @type, @orgId, @userId, @lat, @lon) RETURNING *
+		)
+		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+deploymentTargetWhereExprBase,
+		args,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget])
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy])
 	if err != nil {
 		return fmt.Errorf("could not save DeploymentTarget: %w", err)
 	} else {
-		dt.DeploymentTarget = result
+		*dt = result
 		return nil
 	}
 }
 
-func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) error {
+func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
 	orgId, err := auth.CurrentOrgId(ctx)
 	if err != nil {
 		return err
@@ -151,14 +159,16 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) err
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
 	}
 	rows, err := db.Query(ctx,
-		"UPDATE DeploymentTarget AS dt SET name = @name, geolocation_lat = @lat, geolocation_lon = @lon "+
-			" WHERE id = @id AND organization_id = @orgId RETURNING "+
-			deploymentTargetOutputExpr,
+		`WITH updated AS (
+			UPDATE DeploymentTarget AS dt SET name = @name, geolocation_lat = @lat, geolocation_lon = @lon
+			WHERE id = @id AND organization_id = @orgId RETURNING *
+		)
+		SELECT `+deploymentTargetOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr+deploymentTargetWhereExprBase,
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
 	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget]); err != nil {
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy]); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
