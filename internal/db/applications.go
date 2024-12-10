@@ -13,15 +13,19 @@ import (
 )
 
 func CreateApplication(ctx context.Context, application *types.Application) error {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return err
+	if application.OrganizationID == "" {
+		orgId, err := auth.CurrentOrgId(ctx)
+		if err != nil {
+			return err
+		} else {
+			application.OrganizationID = orgId
+		}
 	}
 
 	db := internalctx.GetDb(ctx)
 	row := db.QueryRow(ctx,
 		"INSERT INTO Application (name, type, organization_id) VALUES (@name, @type, @orgId) RETURNING id, created_at",
-		pgx.NamedArgs{"name": application.Name, "type": application.Type, "orgId": orgId})
+		pgx.NamedArgs{"name": application.Name, "type": application.Type, "orgId": application.OrganizationID})
 	if err := row.Scan(&application.ID, &application.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}
@@ -29,15 +33,19 @@ func CreateApplication(ctx context.Context, application *types.Application) erro
 }
 
 func UpdateApplication(ctx context.Context, application *types.Application) error {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return err
+	if application.OrganizationID == "" {
+		orgId, err := auth.CurrentOrgId(ctx)
+		if err != nil {
+			return err
+		} else {
+			application.OrganizationID = orgId
+		}
 	}
 
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE Application SET name = @name WHERE id = @id AND organization_id = @orgId RETURNING *",
-		pgx.NamedArgs{"id": application.ID, "name": application.Name, "orgId": orgId})
+		pgx.NamedArgs{"id": application.ID, "name": application.Name, "orgId": application.OrganizationID})
 	if err != nil {
 		return fmt.Errorf("could not update application: %w", err)
 	} else if updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.Application]); err != nil {
@@ -59,6 +67,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			SELECT
 			    a.id,
 			    a.created_at,
+				a.organization_id,
 			    a.name,
 			    a.type,
 			    coalesce((
@@ -90,6 +99,7 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			SELECT
 			    a.id,
 			    a.created_at,
+				a.organization_id,
 			    a.name,
 			    a.type,
 			    coalesce((

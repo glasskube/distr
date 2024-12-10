@@ -163,6 +163,6 @@ func getVerifiedDeploymentTarget(
 		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, accessKeySecret); err != nil {
 		return nil, fmt.Errorf("failed to verify access: %w", err)
 	} else {
-		return deploymentTarget, nil
+		return &deploymentTarget.DeploymentTarget, nil
 	}
 }

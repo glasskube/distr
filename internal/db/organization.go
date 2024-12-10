@@ -29,10 +29,10 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
-func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organization, error) {
+func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT o.id, o.created_at, o.name
+		SELECT o.id, o.created_at, o.name, j.user_role
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
@@ -41,7 +41,7 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 	if err != nil {
 		return nil, err
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.Organization])
+	result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.OrganizationWithUserRole])
 	if err != nil {
 		return nil, err
 	} else {

@@ -3,10 +3,13 @@ package types
 import "time"
 
 type DeploymentType string
+type UserRole string
 
 const (
 	DeploymentTypeDocker     = "docker"
 	DepolymentTypeKubernetes = "kubernetes"
+	UserRoleDistributor      = "distributor"
+	UserRoleCustomer         = "customer"
 )
 
 type Base struct {
