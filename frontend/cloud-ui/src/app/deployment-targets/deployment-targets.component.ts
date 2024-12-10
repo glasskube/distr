@@ -195,6 +195,8 @@ export class DeploymentTargetsComponent implements OnDestroy {
         this.selectedDeploymentTarget!!.id!!
       );
       this.hideModal();
+    } else {
+      this.deployForm.markAllAsTouched();
     }
   }
 

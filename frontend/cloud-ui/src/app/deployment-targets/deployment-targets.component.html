@@ -327,6 +327,9 @@
                   <option [value]="app.id">{{ app.name }}</option>
                 }
               </select>
+              @if (deployForm.controls.applicationId.invalid && !deployForm.controls.applicationId.untouched) {
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+              }
             </div>
             <div class="col-span-2 sm:col-span-1">
               <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -343,6 +346,11 @@
                   }
                 }
               </select>
+              @if (
+                deployForm.controls.applicationVersionId.invalid && !deployForm.controls.applicationVersionId.untouched
+              ) {
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+              }
             </div>
             <div class="col-span-2">
               <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
