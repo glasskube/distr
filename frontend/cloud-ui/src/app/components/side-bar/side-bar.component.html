@@ -1,11 +1,13 @@
 <aside
   id="logo-sidebar"
-  class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
-  aria-label="Sidebar">
-  <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
-    <ul class="space-y-2 font-medium">
+  class="fixed top-16 left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+  aria-label="Sidebar"
+  #asideElement>
+  <div class="h-full flex flex-col px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
+    <ul class="space-y-2 font-medium flex-1">
       <li>
         <a
+          (click)="sidebar.hide()"
           routerLink="/dashboard"
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
           <svg
@@ -23,6 +25,7 @@
       <li>
         <a
           routerLink="/applications"
+          (click)="sidebar.hide()"
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
           <svg
             aria-hidden="true"
@@ -38,6 +41,7 @@
       </li>
       <li>
         <a
+          (click)="sidebar.hide()"
           routerLink="/deployment-targets"
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
           <svg
@@ -55,53 +59,53 @@
         </a>
       </li>
     </ul>
-  </div>
-  <div class="absolute bottom-0 left-0 justify-center px-4 pb-4 w-full bg-white dark:bg-gray-800">
-    <div *ngIf="feedbackAlert" id="alert-update" class="p-4 mb-3 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert">
-      <div class="flex justify-between items-center mb-3">
-        <span
-          class="bg-gray-100 text-gray-600 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-600 dark:text-gray-200"
-          >Talk to founders</span
-        >
-        <button
-          type="button"
-          class="inline-flex p-1 w-6 h-6 text-gray-500 bg-gray-50 rounded-lg focus:ring-2 focus:ring-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-          aria-label="Close"
-          (click)="feedbackAlert = false">
-          <span class="sr-only">Feedback</span>
+    @if (feedbackAlert) {
+      <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert">
+        <div class="flex justify-between items-center mb-3">
+          <span
+            class="bg-gray-100 text-gray-600 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-600 dark:text-gray-200"
+            >Talk to founders</span
+          >
+          <button
+            type="button"
+            class="inline-flex p-1 w-6 h-6 text-gray-500 bg-gray-50 rounded-lg focus:ring-2 focus:ring-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+            aria-label="Close"
+            (click)="feedbackAlert = false">
+            <span class="sr-only">Feedback</span>
+            <svg
+              aria-hidden="true"
+              class="w-4 h-4"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="mb-3 text-sm text-gray-700 dark:text-gray-300">
+          We just launched, any feedback helps us building a better product.
+        </div>
+        <a
+          href="https://cal.glasskube.com/team/founder/30min"
+          target="_blank"
+          class="inline-flex items-center text-sm font-medium text-gray-600 dark:text-gray-500 hover:underline">
+          Contact us
           <svg
             aria-hidden="true"
-            class="w-4 h-4"
+            class="ml-1 w-5 h-5"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg">
             <path
               fill-rule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
               clip-rule="evenodd"></path>
           </svg>
-        </button>
+        </a>
       </div>
-      <div class="mb-3 text-sm text-gray-700 dark:text-gray-300">
-        We just launched, any feedback helps us building a better product.
-      </div>
-      <a
-        href="https://cal.glasskube.com/team/founder/30min"
-        target="_blank"
-        class="inline-flex items-center text-sm font-medium text-gray-600 dark:text-gray-500 hover:underline">
-        Contact us
-        <svg
-          aria-hidden="true"
-          class="ml-1 w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg">
-          <path
-            fill-rule="evenodd"
-            d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
-            clip-rule="evenodd"></path>
-        </svg>
-      </a>
-    </div>
+    }
   </div>
 </aside>
