@@ -6,12 +6,13 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build:prod": "ng build --configuration=production",
+    "build:prod": "ng build --configuration=production && npm run sentry:sourcemaps",
     "build:dev": "ng build --configuration=development",
     "watch": "ng build --watch --configuration=development",
     "test": "ng test",
     "lint": "prettier --check .",
-    "lint:fix": "prettier --write ."
+    "lint:fix": "prettier --write .",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org glasskube --project cloud-ui internal/frontend/dist/cloud-ui && sentry-cli sourcemaps upload --org glasskube --project cloud-ui internal/frontend/dist/cloud-ui"
   },
   "private": true,
   "dependencies": {
@@ -30,6 +31,8 @@
     "@fortawesome/free-brands-svg-icons": "^6.7.1",
     "@fortawesome/free-regular-svg-icons": "^6.7.1",
     "@fortawesome/free-solid-svg-icons": "^6.7.1",
+    "@sentry/angular": "^8.43.0",
+    "@sentry/cli": "^2.39.1",
     "dayjs": "^1.11.13",
     "flowbite": "^2.5.2",
     "globe.gl": "^2.33.2",
