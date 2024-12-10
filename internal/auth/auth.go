@@ -18,6 +18,7 @@ const (
 const (
 	UserNameKey  = "name"
 	UserEmailKey = "email"
+	UserRoleKey  = "role"
 	OrgIdKey     = "org"
 )
 
@@ -28,7 +29,7 @@ const (
 // TODO: Maybe migrate to asymmetric encryption at some point.
 var JWTAuth = jwtauth.New("HS256", env.JWTSecret(), nil)
 
-func GenerateToken(user types.UserAccount, org types.Organization) (jwt.Token, string, error) {
+func GenerateToken(user types.UserAccount, org types.OrganizationWithUserRole) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
 		jwt.IssuedAtKey:   now,
@@ -37,6 +38,7 @@ func GenerateToken(user types.UserAccount, org types.Organization) (jwt.Token, s
 		jwt.SubjectKey:    user.ID,
 		UserNameKey:       user.Name,
 		UserEmailKey:      user.Email,
+		UserRoleKey:       org.UserRole,
 		OrgIdKey:          org.ID,
 	}
 	return JWTAuth.Encode(claims)
@@ -47,6 +49,16 @@ func CurrentUserId(ctx context.Context) (string, error) {
 		return "", err
 	} else {
 		return token.Subject(), nil
+	}
+}
+
+func CurrentUserRole(ctx context.Context) (types.UserRole, error) {
+	if token, _, err := jwtauth.FromContext(ctx); err != nil {
+		return "", err
+	} else if userRole, ok := token.Get(UserRoleKey); !ok {
+		return "", errors.New("missing user role in token")
+	} else {
+		return types.UserRole(userRole.(string)), nil
 	}
 }
 

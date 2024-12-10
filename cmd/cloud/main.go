@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/glasskube/cloud/internal/svc"
+	"github.com/glasskube/cloud/internal/util"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize application: %w", err))
 	}
-	defer func() { must(registry.Shutdown()) }()
+	defer func() { util.Must(registry.Shutdown()) }()
 
 	server := registry.GetServer()
 	go onSigterm(func() {
@@ -26,7 +27,7 @@ func main() {
 		cancel()
 	})
 
-	must(server.Start(":8080"))
+	util.Must(server.Start(":8080"))
 }
 
 func onSigterm(callback func()) {
@@ -34,10 +35,4 @@ func onSigterm(callback func()) {
 	signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT)
 	<-sigint
 	callback()
-}
-
-func must(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

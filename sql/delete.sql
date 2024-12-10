@@ -18,10 +18,6 @@ DROP INDEX IF EXISTS fk_Organization_DeploymentTarget_user_account_id;
 
 DROP TABLE IF EXISTS Organization_UserAccount;
 
-DROP TABLE IF EXISTS Organization_Application;
-
-DROP TABLE IF EXISTS Organization_DeploymentTarget;
-
 DROP TABLE IF EXISTS UserAccount;
 
 DROP TABLE IF EXISTS DeploymentStatus;
@@ -39,3 +35,5 @@ DROP TABLE IF EXISTS Application;
 DROP TABLE IF EXISTS Organization;
 
 DROP TYPE IF EXISTS DEPLOYMENT_TYPE;
+
+DROP TYPE IF EXISTS USER_ROLE;

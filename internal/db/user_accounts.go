@@ -14,6 +14,10 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+const (
+	userAccountOutputExpr = "u.id, u.created_at, u.email, u.password_hash, u.password_salt, u.name"
+)
+
 func CreateUserAccountWithOrganization(
 	ctx context.Context,
 	userAccount *types.UserAccount,
@@ -25,7 +29,12 @@ func CreateUserAccountWithOrganization(
 		return nil, err
 	} else if err := CreateOrganization(ctx, &org); err != nil {
 		return nil, err
-	} else if err := CreateUserAccountOrganizationAssignment(ctx, userAccount.ID, org.ID); err != nil {
+	} else if err := CreateUserAccountOrganizationAssignment(
+		ctx,
+		userAccount.ID,
+		org.ID,
+		types.UserRoleDistributor,
+	); err != nil {
 		return nil, err
 	} else {
 		return &org, nil
@@ -35,9 +44,9 @@ func CreateUserAccountWithOrganization(
 func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO UserAccount (email, password_hash, password_salt, name) "+
+		"INSERT INTO UserAccount AS u (email, password_hash, password_salt, name) "+
 			"VALUES (@email, @password_hash, @password_salt, @name) "+
-			"RETURNING id, created_at, email, password_hash, password_salt, name",
+			"RETURNING "+userAccountOutputExpr,
 		pgx.NamedArgs{
 			"email":         userAccount.Email,
 			"password_hash": userAccount.PasswordHash,
@@ -58,11 +67,11 @@ func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 	}
 }
 
-func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId string) error {
+func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId string, role types.UserRole) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
-		"INSERT INTO Organization_UserAccount (organization_id, user_account_id) VALUES (@orgId, @userId)",
-		pgx.NamedArgs{"userId": userId, "orgId": orgId},
+		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
+		pgx.NamedArgs{"userId": userId, "orgId": orgId, "role": role},
 	)
 	return err
 }
@@ -70,7 +79,7 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId 
 func GetUserAccountWithID(ctx context.Context, id string) (*types.UserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT id, created_at, email, password_hash, password_salt, name FROM UserAccount WHERE id = @id",
+		"SELECT "+userAccountOutputExpr+" FROM UserAccount u WHERE u.id = @id",
 		pgx.NamedArgs{"id": id},
 	)
 	if err != nil {
@@ -89,7 +98,7 @@ func GetUserAccountWithID(ctx context.Context, id string) (*types.UserAccount, e
 func GetUserAccountWithEmail(ctx context.Context, email string) (*types.UserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT id, created_at, email, password_hash, password_salt, name FROM UserAccount WHERE email = @email",
+		"SELECT "+userAccountOutputExpr+" FROM UserAccount u WHERE u.email = @email",
 		pgx.NamedArgs{"email": email},
 	)
 	if err != nil {

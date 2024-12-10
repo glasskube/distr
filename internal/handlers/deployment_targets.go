@@ -71,8 +71,8 @@ func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
-	var dt types.DeploymentTarget
-	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
+	var dt types.DeploymentTargetWithCreatedBy
+	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)
 	} else if err = db.CreateDeploymentTarget(r.Context(), &dt); err != nil {
@@ -86,8 +86,8 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
-	var dt types.DeploymentTarget
-	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
+	var dt types.DeploymentTargetWithCreatedBy
+	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)
 		return
@@ -179,7 +179,7 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
+			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
 			wh.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
