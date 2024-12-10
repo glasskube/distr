@@ -88,10 +88,13 @@ export class OnboardingWizardComponent {
         },
         Validators.required
       ),
-      email: new FormControl<string>({
-        value: '',
-        disabled: true,
-      }),
+      email: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        [Validators.required, Validators.email]
+      ),
     }),
   });
 
