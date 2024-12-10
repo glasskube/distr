@@ -99,7 +99,7 @@
                         required />
                       @if (
                         applicationForm.controls.custom.controls.name.invalid &&
-                        !applicationForm.controls.custom.controls.name.untouched
+                        applicationForm.controls.custom.controls.name.touched
                       ) {
                         <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                       }
@@ -120,7 +120,7 @@
                         required />
                       @if (
                         applicationForm.controls.custom.controls.versionName.invalid &&
-                        !applicationForm.controls.custom.controls.versionName.untouched
+                        applicationForm.controls.custom.controls.versionName.touched
                       ) {
                         <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                       }
@@ -137,7 +137,7 @@
                         (change)="onFileSelected($event)"
                         class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                         aria-describedby="file_input_help" />
-                      @if (fileToUpload == null && !applicationForm.controls.custom.untouched) {
+                      @if (fileToUpload == null && applicationForm.controls.custom.touched) {
                         <p class="mt-2 text-sm text-red-600 dark:text-red-500">File is required.</p>
                       }
                     </div>
@@ -165,7 +165,7 @@
                       autocomplete="off" />
                     @if (
                       deploymentTargetForm.controls.customerName.invalid &&
-                      !deploymentTargetForm.controls.customerName.untouched
+                      deploymentTargetForm.controls.customerName.touched
                     ) {
                       <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                     }
@@ -233,8 +233,7 @@
                 </div>
 
                 @if (
-                  deploymentTargetForm.controls.accessType.invalid &&
-                  !deploymentTargetForm.controls.accessType.untouched
+                  deploymentTargetForm.controls.accessType.invalid && deploymentTargetForm.controls.accessType.touched
                 ) {
                   <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                 }
@@ -263,7 +262,7 @@
                           placeholder="John Doe" />
                         @if (
                           deploymentTargetForm.controls.technicalContact.controls.name.invalid &&
-                          !deploymentTargetForm.controls.technicalContact.controls.name.untouched
+                          deploymentTargetForm.controls.technicalContact.controls.name.touched
                         ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
@@ -283,7 +282,7 @@
                           placeholder="john@doe.com" />
                         @if (
                           deploymentTargetForm.controls.technicalContact.controls.email.invalid &&
-                          !deploymentTargetForm.controls.technicalContact.controls.email.untouched
+                          deploymentTargetForm.controls.technicalContact.controls.email.touched
                         ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Please enter a valid email address.</p>
                         }

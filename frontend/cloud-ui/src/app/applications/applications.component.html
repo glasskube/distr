@@ -151,7 +151,7 @@
             value=""
             placeholder="Application name"
             required />
-          @if (editForm.controls.name.invalid && !editForm.controls.name.untouched) {
+          @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
             <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
           }
         </div>
@@ -204,7 +204,7 @@
                 value=""
                 placeholder="v4.2.0"
                 required />
-              @if (newVersionForm.controls.versionName.invalid && !newVersionForm.controls.versionName.untouched) {
+              @if (newVersionForm.controls.versionName.invalid && newVersionForm.controls.versionName.touched) {
                 <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
               }
             </div>
@@ -220,7 +220,7 @@
               <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
                 Choose your docker compose file
               </p>
-              @if (fileToUpload == null && !newVersionForm.untouched) {
+              @if (fileToUpload == null && newVersionForm.touched) {
                 <p class="mt-1 text-sm text-red-600 dark:text-red-500">File is required.</p>
               }
               <div class="flex mt-3 items-center space-x-2.5">

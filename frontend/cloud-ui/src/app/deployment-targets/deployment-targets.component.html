@@ -224,7 +224,7 @@
             value=""
             placeholder="Deployment target name"
             required="" />
-          @if (editForm.controls.name.invalid && !editForm.controls.name.untouched) {
+          @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
             <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
           }
         </div>
@@ -327,7 +327,7 @@
                   <option [value]="app.id">{{ app.name }}</option>
                 }
               </select>
-              @if (deployForm.controls.applicationId.invalid && !deployForm.controls.applicationId.untouched) {
+              @if (deployForm.controls.applicationId.invalid && deployForm.controls.applicationId.touched) {
                 <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
               }
             </div>
@@ -347,7 +347,7 @@
                 }
               </select>
               @if (
-                deployForm.controls.applicationVersionId.invalid && !deployForm.controls.applicationVersionId.untouched
+                deployForm.controls.applicationVersionId.invalid && deployForm.controls.applicationVersionId.touched
               ) {
                 <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
               }
