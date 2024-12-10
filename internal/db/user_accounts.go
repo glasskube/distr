@@ -109,10 +109,10 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId 
 	return err
 }
 
-func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAccount, error) {
+func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountOutputExpr+`
+		"SELECT "+userAccountOutputExpr+`, j.user_role
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 		WHERE j.organization_id = @orgId`,
@@ -120,7 +120,7 @@ func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAc
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
-	} else if result, err := pgx.CollectRows[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+	} else if result, err := pgx.CollectRows[types.UserAccountWithUserRole](rows, pgx.RowToStructByName); err != nil {
 		return nil, fmt.Errorf("could not map users: %w", err)
 	} else {
 		return result, nil
