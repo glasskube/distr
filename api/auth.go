@@ -28,7 +28,7 @@ func (r *AuthRegistrationRequest) Validate() error {
 }
 
 type DeploymentTargetAccessTokenResponse struct {
-	ConnectUrl      string `json:"connectUrl"`
-	AccessKeyId     string `json:"accessKeyId"`
-	AccessKeySecret string `json:"accessKeySecret"`
+	ConnectUrl   string `json:"connectUrl"`
+	TargetId     string `json:"targetId"`
+	TargetSecret string `json:"targetSecret"`
 }
