@@ -21,21 +21,21 @@ import (
 
 func ApplicationsRouter(r chi.Router) {
 	r.Get("/", getApplications)
-	r.Post("/", createApplication)
-	r.Post("/sample", createSampleApplication)
+	r.With(requireDistributor).Post("/", createApplication)
+	r.With(requireDistributor).Post("/sample", createSampleApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.Use(applicationMiddleware)
 		r.Get("/", getApplication)
-		r.Put("/", updateApplication)
+		r.With(requireDistributor).Put("/", updateApplication)
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
 			r.Get("/", getApplicationVersions)
-			r.Post("/", createApplicationVersion)
+			r.With(requireDistributor).Post("/", createApplicationVersion)
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
-				r.Put("/", updateApplicationVersion)
+				r.With(requireDistributor).Put("/", updateApplicationVersion)
 				r.Get("/compose-file", getApplicationVersionComposeFile)
 			})
 		})

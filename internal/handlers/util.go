@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/glasskube/cloud/internal/middleware"
+	"github.com/glasskube/cloud/internal/types"
 )
 
 func JsonBody[T any](w http.ResponseWriter, r *http.Request) (T, error) {
@@ -15,3 +18,5 @@ func JsonBody[T any](w http.ResponseWriter, r *http.Request) (T, error) {
 	}
 	return t, err
 }
+
+var requireDistributor = middleware.UserRoleMiddleware(types.UserRoleDistributor)
