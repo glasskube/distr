@@ -75,10 +75,16 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func GetLatestDeploymentComposeFile(ctx context.Context, deploymentTargetId string, orgId string) ([]byte, error) {
+func GetLatestDeploymentComposeFile(
+	ctx context.Context,
+	deploymentTargetId string,
+	orgId string,
+) (string, []byte, error) {
 	db := internalctx.GetDb(ctx)
-	if rows, err := db.Query(ctx, `
-		SELECT av.compose_file_data
+	var deploymentId string
+	var file []byte
+	rows := db.QueryRow(ctx, `
+		SELECT d.id, av.compose_file_data
 		FROM Deployment d
 		INNER JOIN ApplicationVersion av ON d.application_version_id = av.id
 		INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id
@@ -86,15 +92,14 @@ func GetLatestDeploymentComposeFile(ctx context.Context, deploymentTargetId stri
 		ORDER BY d.created_at DESC LIMIT 1`, pgx.NamedArgs{
 		"deploymentTargetId": deploymentTargetId,
 		"orgId":              orgId,
-	}); err != nil {
-		return nil, fmt.Errorf("could not get latest deployment: %w", err)
-	} else if data, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[[]byte]); err != nil {
+	})
+	if err := rows.Scan(&deploymentId, &file); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apierrors.ErrNotFound
+			return "", nil, apierrors.ErrNotFound
 		}
-		return nil, fmt.Errorf("failed to get latest deployment: %w", err)
+		return "", nil, fmt.Errorf("failed to get latest deployment: %w", err)
 	} else {
-		return data, nil
+		return deploymentId, file, nil
 	}
 }
 
@@ -117,15 +122,15 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	}
 }
 
-func CreateDeploymentStatus(ctx context.Context, deployment *types.Deployment, message string) error {
+func CreateDeploymentStatus(ctx context.Context, deploymentID string, message string) error {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		"INSERT INTO DeploymentStatus (deployment_id, message) VALUES (@deploymentId, @message)",
-		pgx.NamedArgs{"deploymentId": deployment.ID, "message": message})
-	if err != nil {
+	var id string
+	rows := db.QueryRow(ctx,
+		"INSERT INTO DeploymentStatus (deployment_id, message) VALUES (@deploymentId, @message) RETURNING id",
+		pgx.NamedArgs{"deploymentId": deploymentID, "message": message})
+	if err := rows.Scan(&id); err != nil {
 		return err
 	} else {
-		rows.Close()
 		return nil
 	}
 }

@@ -11,8 +11,8 @@ export interface TokenResponse {
   token: string;
 }
 
-export interface AccessKeyResponse {
+export interface DeploymentTargetAccessResponse {
   connectUrl: string;
-  accessKeyId: string;
-  accessKeySecret: string;
+  targetId: string;
+  targetSecret: string;
 }

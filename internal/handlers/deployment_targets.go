@@ -71,8 +71,8 @@ func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
-	var dt types.DeploymentTarget
-	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
+	var dt types.DeploymentTargetWithCreatedBy
+	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)
 	} else if err = db.CreateDeploymentTarget(r.Context(), &dt); err != nil {
@@ -86,8 +86,8 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
-	var dt types.DeploymentTarget
-	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
+	var dt types.DeploymentTargetWithCreatedBy
+	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)
 		return
@@ -122,14 +122,14 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var accessKeySecret string
+	var targetSecret string
 	var err error
-	if accessKeySecret, err = security.GenerateAccessKey(); err != nil {
+	if targetSecret, err = security.GenerateAccessKey(); err != nil {
 		log.Error("failed to generate access key", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if salt, hash, err := security.HashAccessKey(accessKeySecret); err != nil {
+	if salt, hash, err := security.HashAccessKey(targetSecret); err != nil {
 		log.Error("failed to hash access key", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -141,25 +141,25 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	if err := db.UpdateDeploymentTargetAccess(ctx, deploymentTarget); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, accessKeySecret); err != nil {
+	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, targetSecret); err != nil {
 		log.Error("could not create connecturl", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
-		ConnectUrl:      connectUrl,
-		AccessKeyId:     deploymentTarget.ID,
-		AccessKeySecret: accessKeySecret,
+		ConnectUrl:   connectUrl,
+		TargetId:     deploymentTarget.ID,
+		TargetSecret: targetSecret,
 	}); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
 
-func buildConnectUrl(accessKeyId string, accessKeySecret string) (string, error) {
+func buildConnectUrl(targetId string, targetSecret string) (string, error) {
 	if u, err := url.Parse(env.Host()); err != nil {
 		return "", err
 	} else {
 		query := url.Values{}
-		query.Set("accessKeyId", accessKeyId)
-		query.Set("accessKeySecret", accessKeySecret)
+		query.Set("targetId", targetId)
+		query.Set("targetSecret", targetSecret)
 		u = u.JoinPath("/api/v1/connect")
 		u.RawQuery = query.Encode()
 		return u.String(), nil
@@ -179,7 +179,7 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
+			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
 			wh.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})

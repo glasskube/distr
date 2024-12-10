@@ -3,6 +3,7 @@ import {Component, inject, OnInit} from '@angular/core';
 import {lastValueFrom} from 'rxjs';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
+import {SidebarService} from '../../services/sidebar.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
@@ -16,6 +17,7 @@ import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 })
 export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
+  public readonly sidebar = inject(SidebarService);
   showDropdown = false;
   email?: string;
   name?: string;

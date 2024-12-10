@@ -41,6 +41,7 @@
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
             <th scope="col" class="p-4">Geolocation</th>
+            <th scope="col" class="p-4">Created By</th>
             <th scope="col" class="p-4">Current Deployment</th>
             <th scope="col" class="p-4"></th>
           }
@@ -55,7 +56,7 @@
                   <img
                     [ngSrc]="'/' + dt.type + '.png'"
                     [alt]="dt.type"
-                    class="h-8 w-auto rounded"
+                    class="h-8 w-auto rounded max-w-none"
                     height="199"
                     width="199" />
                   <app-status-dot
@@ -102,6 +103,13 @@
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 @if (dt.geolocation) {
                   {{ dt.geolocation.lat }}/{{ dt.geolocation.lon }}
+                }
+              </td>
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                @if (dt.createdBy) {
+                  <span [title]="dt.createdBy.email">
+                    {{ dt.createdBy.name ?? dt.createdBy.email }}
+                  </span>
                 }
               </td>
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
