@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.1.3
-	github.com/onsi/gomega v1.36.0
+	github.com/onsi/gomega v1.36.1
 	github.com/wneessen/go-mail v0.5.2
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.30.0
