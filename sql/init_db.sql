@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS UserAccount (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
   email TEXT NOT NULL UNIQUE,
-  password_hash BYTEA NOT NULL,
-  password_salt BYTEA NOT NULL,
+  password_hash BYTEA,
+  password_salt BYTEA,
   name TEXT
 );
 

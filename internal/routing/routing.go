@@ -50,6 +50,8 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
+			r.Route("/user-accounts", handlers.UserAccountsRouter)
+			r.Route("/settings", handlers.SettingsRouter)
 		})
 
 		// agent connect and download routes go here (authenticated but with accessKeyId and accessKeySecret)
