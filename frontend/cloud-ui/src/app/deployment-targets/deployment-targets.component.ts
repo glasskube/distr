@@ -169,7 +169,7 @@ export class DeploymentTargetsComponent implements OnDestroy {
     this.applicationIdChange$.unsubscribe();
   }
 
-  async newDeployment(dt: DeploymentTarget, deploymentModal: TemplateRef<any>) {
+  async newDeployment(dt: DeploymentTargetViewModel, deploymentModal: TemplateRef<any>) {
     this.showDeploymentModal(deploymentModal);
     this.deployForm.reset();
     this.selectedDeploymentTarget = dt;

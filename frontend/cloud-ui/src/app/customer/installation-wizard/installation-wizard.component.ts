@@ -14,11 +14,12 @@ import {InstallationWizardStepperComponent} from './installation-wizard-stepper.
 import {AsyncPipe} from '@angular/common';
 import {Deployment} from '../../types/deployment';
 import {DeploymentTargetViewModel} from '../../deployment-targets/DeploymentTargetViewModel';
+import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 
 @Component({
   selector: 'app-installation-wizard',
   templateUrl: './installation-wizard.component.html',
-  imports: [ReactiveFormsModule, FaIconComponent, InstallationWizardStepperComponent, CdkStep, AsyncPipe],
+  imports: [ReactiveFormsModule, FaIconComponent, InstallationWizardStepperComponent, CdkStep, AsyncPipe, ConnectInstructionsComponent],
   animations: [modalFlyInOut],
 })
 export class InstallationWizardComponent {
@@ -35,22 +36,6 @@ export class InstallationWizardComponent {
 
   applicationForm = new FormGroup({
     type: new FormControl<string>('sample', Validators.required),
-    custom: new FormGroup({
-      name: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      versionName: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-    }),
   });
   fileToUpload: File | null = null;
   @ViewChild('fileInput')
@@ -61,22 +46,10 @@ export class InstallationWizardComponent {
   private loading = false;
 
   ngOnInit() {
-    this.applicationForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
-      if (type === 'sample') {
-        // disable validators
-        this.applicationForm.controls.custom.controls.name.disable();
-        this.applicationForm.controls.custom.controls.versionName.disable();
-      } else {
-        this.applicationForm.controls.custom.controls.name.enable();
-        this.applicationForm.controls.custom.controls.versionName.enable();
-      }
-    });
   }
 
-  private destroyed$: Subject<void> = new Subject();
 
   ngOnDestroy() {
-    this.destroyed$.complete();
     this.applicationIdChange$.unsubscribe();
   }
 
@@ -90,47 +63,18 @@ export class InstallationWizardComponent {
     }
 
     if (this.stepper.selectedIndex === 0) {
-      if (this.applicationForm.valid) {
-        if (this.applicationForm.controls.type.value === 'sample') {
-          this.loading = true;
-          this.applications.createSample().subscribe((app) => {
-            this.createdApp = app;
-            this.nextStep();
-          });
-        } else if (this.fileToUpload != null) {
-          this.loading = true;
-          this.applications
-            .create({
-              name: this.applicationForm.controls.custom.controls.name.value!,
-              type: 'docker',
-            })
-            .pipe(
-              switchMap((application) =>
-                this.applications.createApplicationVersion(
-                  application,
-                  {
-                    name: this.applicationForm.controls.custom.controls.versionName.value!,
-                  },
-                  this.fileToUpload!
-                )
-              ),
-              withLatestFrom(this.applications.list())
-            )
-            .subscribe(([version, apps]) => {
-              this.createdApp = apps.find((a) => a.id === version.applicationId);
-              this.nextStep();
-            });
-        }
-      }
+      this.selectedDeploymentTarget = (await firstValueFrom(this.deploymentTargets$))[0] as DeploymentTargetViewModel;
+      console.log(this.selectedDeploymentTarget);
+      this.loading = true;
+      this.nextStep();
     } else if (this.stepper.selectedIndex === 1) {
       if (this.deploymentTargetForm.valid) {
         this.loading = true;
         this.nextStep();
       }
     } else if (this.stepper.selectedIndex == 2) {
-      this.selectedDeploymentTarget = (await firstValueFrom(this.deploymentTargets$))[0];
       this.deployForm.patchValue({
-        deploymentTargetId: this.selectedDeploymentTarget.id,
+        deploymentTargetId: this.selectedDeploymentTarget!!.id,
       });
       if (this.deployForm.valid) {
         console.log('valid');
@@ -164,7 +108,7 @@ export class InstallationWizardComponent {
     notes: new FormControl<string | undefined>(undefined),
   });
 
-  private selectedDeploymentTarget?: DeploymentTargetViewModel | null;
+  protected selectedDeploymentTarget?: DeploymentTargetViewModel | null;
 
   private readonly applicationIdChange$ = this.deployForm.controls.applicationId.valueChanges.subscribe((it) =>
     this.updatedSelectedApplication(it!!)

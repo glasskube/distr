@@ -5,8 +5,5 @@
   </div>
 </section>
 <ng-template #installationWizard>
-  <app-installation-wizard
-    [deploymentTargets$]="deploymentTargets$"
-    [applications$]="applications$"
-    (closed)="closeWizard()"></app-installation-wizard>
+  <app-installation-wizard (closed)="closeWizard()"></app-installation-wizard>
 </ng-template>

@@ -40,7 +40,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.formGroup.valid) {
       const value = this.formGroup.value;
       await lastValueFrom(this.auth.login(value.email!, value.password!));
-      await this.router.navigate(['/']);
+      const targetRoute = value.email === 'pmig+customer@glasskube.com' ? '/deployments' : '/';
+      await this.router.navigate([targetRoute]);
     }
   }
 }
