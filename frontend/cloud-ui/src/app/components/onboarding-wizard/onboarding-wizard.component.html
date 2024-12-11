@@ -97,6 +97,12 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="asdf-app"
                         required />
+                      @if (
+                        applicationForm.controls.custom.controls.name.invalid &&
+                        applicationForm.controls.custom.controls.name.touched
+                      ) {
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
                     </div>
                     <div class="w-full">
                       <label
@@ -112,6 +118,12 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="v4.2.0"
                         required />
+                      @if (
+                        applicationForm.controls.custom.controls.versionName.invalid &&
+                        applicationForm.controls.custom.controls.versionName.touched
+                      ) {
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
                     </div>
                     <div class="w-full">
                       <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -125,6 +137,9 @@
                         (change)="onFileSelected($event)"
                         class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                         aria-describedby="file_input_help" />
+                      @if (fileToUpload == null && applicationForm.controls.custom.touched) {
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-500">File is required.</p>
+                      }
                     </div>
                   </div>
                 }
@@ -148,6 +163,12 @@
                       placeholder="Sustainable Enterprises Ltd"
                       required
                       autocomplete="off" />
+                    @if (
+                      deploymentTargetForm.controls.customerName.invalid &&
+                      deploymentTargetForm.controls.customerName.touched
+                    ) {
+                      <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                    }
                   </div>
                 </div>
 
@@ -155,7 +176,7 @@
                   >Who is managing the customers' environment?</label
                 >
 
-                <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <div
                     class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
                     <div class="flex items-start">
@@ -211,6 +232,12 @@
                   </div>
                 </div>
 
+                @if (
+                  deploymentTargetForm.controls.accessType.invalid && deploymentTargetForm.controls.accessType.touched
+                ) {
+                  <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                }
+
                 @if (deploymentTargetForm.controls.accessType.value === 'none') {
                   <div>
                     <label class="mt-4 block text-sm font-medium text-gray-900 dark:text-white"
@@ -233,6 +260,12 @@
                           id="techContactName"
                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           placeholder="John Doe" />
+                        @if (
+                          deploymentTargetForm.controls.technicalContact.controls.name.invalid &&
+                          deploymentTargetForm.controls.technicalContact.controls.name.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
                       </div>
                       <div class="w-full">
                         <label
@@ -243,10 +276,16 @@
                         <input
                           [formControl]="deploymentTargetForm.controls.technicalContact.controls.email"
                           type="email"
-                          name="breadth"
+                          name="email"
                           id="techContactEmail"
                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           placeholder="john@doe.com" />
+                        @if (
+                          deploymentTargetForm.controls.technicalContact.controls.email.invalid &&
+                          deploymentTargetForm.controls.technicalContact.controls.email.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Please enter a valid email address.</p>
+                        }
                       </div>
                     </div>
                   </div>
