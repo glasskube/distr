@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/glasskube/cloud/compare/v0.1.0...v0.2.0) (2024-12-11)
+
+
+### Features
+
+* add user creation and inviting customers ([#103](https://github.com/glasskube/cloud/issues/103)) ([c2c1d8c](https://github.com/glasskube/cloud/commit/c2c1d8c2dc9ae3d2f288b1a5d576dc193b8b842b))
+* customer installation wizard, dashboard charts ([#82](https://github.com/glasskube/cloud/issues/82)) ([cfa74c6](https://github.com/glasskube/cloud/commit/cfa74c67d338e84e5c00e338f00b90f7109fb8ca))
+
+
+### Bug Fixes
+
+* **frontend:** toast error message should not be 'OK' ([#104](https://github.com/glasskube/cloud/issues/104)) ([10f7a27](https://github.com/glasskube/cloud/commit/10f7a2759021ea82a33ac977a5c3e981d440e838))
+
 ## 0.1.0 (2024-12-11)
 
 
