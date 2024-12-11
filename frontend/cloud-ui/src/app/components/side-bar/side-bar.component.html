@@ -5,61 +5,112 @@
   #asideElement>
   <div class="h-full flex flex-col px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
     <ul class="space-y-2 font-medium flex-1">
-      <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLink="/dashboard"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <svg
-            aria-hidden="true"
-            class="w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
-            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
-          </svg>
-          <span class="ms-3">Dashboard</span>
-        </a>
-      </li>
-      <li>
-        <a
-          routerLink="/applications"
-          (click)="sidebar.hide()"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <svg
-            aria-hidden="true"
-            class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
-          </svg>
-          <span class="ms-3">Applications</span>
-        </a>
-      </li>
-      <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLink="/deployment-targets"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <svg
-            aria-hidden="true"
-            class="w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg">
-            <path
-              fill-rule="evenodd"
-              d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"
-              clip-rule="evenodd"></path>
-          </svg>
-          <span class="ms-3">Deployment Targets</span>
-        </a>
-      </li>
+      <!-- distributor side bar  -->
+      @if (userRole === 'distributor') {
+        <li>
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/dashboard"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faDashboard"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/applications"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faBoxesStacked"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Applications</span>
+          </a>
+        </li>
+        <li>
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/deployments"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faServer"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Deployments</span>
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faKey" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">License Mgmt</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faCheckDouble" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">Pre-Flight</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faLightbulb" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">Support Insights</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faPalette" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">Branding</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+            <fa-icon [icon]="faGear" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+            <span class="ms-3">API Keys</span>
+            <span
+              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Pro</span
+            >
+          </a>
+        </li>
+      }
+      <!-- customer side bar  -->
+      @if (userRole === 'customer') {
+        <li>
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/deployments"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faDashboard"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Deployments</span>
+          </a>
+        </li>
+      }
     </ul>
-    @if (feedbackAlert) {
+    @if (feedbackAlert && userRole === 'distributor') {
       <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert">
         <div class="flex justify-between items-center mb-3">
           <span

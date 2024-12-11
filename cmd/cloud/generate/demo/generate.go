@@ -25,6 +25,11 @@ func main() {
 	util.Must(db.CreateUserAccount(ctx, &pmig))
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmig.ID, org.ID, types.UserRoleDistributor))
 
+	pmigCustomer := types.UserAccount{Email: "pmig+customer@glasskube.com", Name: "Philip Miglinci", Password: "12345678"}
+	util.Must(security.HashPassword(&pmigCustomer))
+	util.Must(db.CreateUserAccount(ctx, &pmigCustomer))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmigCustomer.ID, org.ID, types.UserRoleCustomer))
+
 	appMarsBeta := types.Application{
 		Name: "Fastest way to Mars Calculator (Beta)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
 	}
@@ -69,7 +74,7 @@ func main() {
 		CreatedBy: &pmig,
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "GATE Space",
+			Name:           "Danube Aerospace",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.191166, Lon: 16.3717293},
 		},
@@ -84,7 +89,7 @@ func main() {
 		CreatedBy: &pmig,
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Lumen Orbit",
+			Name:           "Lux Orbit",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 47.6349832, Lon: -122.1410062},
 		},
@@ -99,7 +104,7 @@ func main() {
 		CreatedBy: &pmig,
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Alba Orbital",
+			Name:           "Space K",
 			Type:           types.DepolymentTypeKubernetes,
 			Geolocation:    &types.Geolocation{Lat: 55.8578177, Lon: -4.3687363},
 		},
@@ -114,7 +119,7 @@ func main() {
 		CreatedBy: &pmig,
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "580 Founders Café",
+			Name:           "Bay Space Corp",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.76078, Lon: -122.3915258},
 		},
@@ -129,7 +134,7 @@ func main() {
 		CreatedBy: &pmig,
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Quindar",
+			Name:           "Red Target",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 39.1929769, Lon: -105.2403348},
 		},

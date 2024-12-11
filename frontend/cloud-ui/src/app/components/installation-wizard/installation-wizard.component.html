@@ -1,0 +1,214 @@
+<div
+  @modalFlyInOut
+  style="transform-origin: top center"
+  class="p-4 mt-12 max-h-full w-200 bg-white rounded-lg shadow dark:bg-gray-900">
+  <!-- Modal header -->
+  <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Get started with Launch Dashboard</h2>
+    <button
+      type="button"
+      (click)="close()"
+      class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+      <fa-icon [icon]="xmarkIcon"></fa-icon>
+      <span class="sr-only">Close modal</span>
+    </button>
+  </div>
+  <!-- Modal body -->
+  <div class="p-4 md:p-5 space-y-4 w-full">
+    <section class="antialiased">
+      <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
+        <app-installation-wizard-stepper
+          #stepper
+          (attemptContinue)="attemptContinue()"
+          class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          <cdk-step [stepControl]="deploymentTargetForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Target Type</h3>
+
+                <div class="mb-2 grid grid-cols-2 gap-4">
+                  <div
+                    class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="flex items-start">
+                      <div class="flex h-5 items-center">
+                        <input
+                          id="sample-app-radio"
+                          [formControl]="deploymentTargetForm.controls.type"
+                          aria-describedby="sample-app-radio-text"
+                          type="radio"
+                          name="type"
+                          value="docker"
+                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                      </div>
+
+                      <div class="ms-4 text-sm">
+                        <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"
+                          >Docker via docker-compose</label
+                        >
+                        <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                          I already have a virtual machine running with docker and docker-composed installed.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="flex items-start">
+                      <div class="flex h-5 items-center">
+                        <input
+                          id="custom-app-radio"
+                          [formControl]="deploymentTargetForm.controls.type"
+                          aria-describedby="custom-app-radio-text"
+                          type="radio"
+                          name="type"
+                          value="kubernetes"
+                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                          checked />
+                      </div>
+
+                      <div class="ms-4 text-sm">
+                        <label for="custom-app-radio" class="font-bold leading-none text-gray-900 dark:text-white">
+                          Kubernetes via Helm Chart
+                        </label>
+                        <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                          I have access to a fresh namespace in a Kubernetes cluster and have the permissions to install
+                          charts.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex pl-1">
+                    <div class="flex items-center h-5">
+                      <input
+                        disabled
+                        id="helper-checkbox"
+                        aria-describedby="helper-checkbox-text"
+                        type="checkbox"
+                        value=""
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                    </div>
+                    <div class="ms-2 text-sm">
+                      <label for="helper-checkbox" class="text-sm font-medium text-gray-400 dark:text-gray-500">
+                        My deployment target is air-gapped or has limited internet access
+                      </label>
+                      <p id="helper-checkbox-text" class="text-xs font-normal text-gray-500 dark:text-gray-300">
+                        Launch Dashboard does not yet support air-gapped installations.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full">
+                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >Deployment Target Name</label
+                  >
+                  <input
+                    [formControl]="deploymentTargetForm.controls.name"
+                    type="text"
+                    name="name"
+                    id="name"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="Staging Deployment"
+                    required
+                    autocomplete="off" />
+                  @if (deploymentTargetForm.controls.name.invalid && deploymentTargetForm.controls.name.touched) {
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                  }
+                </div>
+
+                <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
+              </div>
+            </div>
+          </cdk-step>
+          <cdk-step [stepControl]="agentForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4">
+                <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                  <div class="">
+                    <h3 class="font-normal text-gray-900 dark:text-white">Download and run installation agent</h3>
+                    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                      To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
+                      server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
+                    </p>
+                    @if (selectedDeploymentTarget) {
+                      <app-connect-instructions
+                        [deploymentTargetId]="selectedDeploymentTarget.id"></app-connect-instructions>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </cdk-step>
+          <cdk-step [stepControl]="deployForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4">
+                <h3 class="font-normal text-gray-900 dark:text-white">Deploy</h3>
+
+                <form [formGroup]="deployForm" (ngSubmit)="saveDeployment()">
+                  <div class="grid gap-4 mb-4 grid-cols-2">
+                    <div class="col-span-2 sm:col-span-1">
+                      <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Application</label
+                      >
+                      <select
+                        id="applicationId"
+                        formControlName="applicationId"
+                        required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                        @for (app of applications$ | async; track app.id) {
+                          <option [value]="app.id">{{ app.name }}</option>
+                        }
+                      </select>
+                      @if (deployForm.controls.applicationId.invalid && deployForm.controls.applicationId.touched) {
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                      <label
+                        for="applicationVersion"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Version</label
+                      >
+                      <select
+                        id="applicationVersion"
+                        formControlName="applicationVersionId"
+                        required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        [disabled]="deployForm.controls.applicationId.invalid">
+                        @if (selectedApplication?.versions) {
+                          @for (version of selectedApplication?.versions; track version.id) {
+                            <option [value]="version.id">{{ version.name }}</option>
+                          }
+                        }
+                      </select>
+                      @if (
+                        deployForm.controls.applicationVersionId.invalid &&
+                        deployForm.controls.applicationVersionId.touched
+                      ) {
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
+                    </div>
+                    <div class="col-span-2">
+                      <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Deployment notes</label
+                      >
+                      <textarea
+                        id="description"
+                        rows="4"
+                        formControlName="notes"
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Add deployment notes"></textarea>
+                    </div>
+                  </div>
+                </form>
+                <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                  <div class="w-full"></div>
+                </div>
+              </div>
+            </div>
+          </cdk-step>
+        </app-installation-wizard-stepper>
+      </div>
+    </section>
+  </div>
+</div>

@@ -43,7 +43,14 @@ export class AuthService {
     return this.httpClient.post<void>(`${this.baseUrl}/register`, body);
   }
 
-  public getClaims(): {sub: string; email: string; name: string; exp: string; [claim: string]: unknown} {
+  public getClaims(): {
+    sub: string;
+    email: string;
+    name: string;
+    role: 'customer' | 'distributor';
+    exp: string;
+    [claim: string]: unknown;
+  } {
     if (this.token !== null) {
       return jwtDecode(this.token);
     } else {

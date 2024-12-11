@@ -225,7 +225,7 @@
             placeholder="Deployment target name"
             required="" />
           @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
-            <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
           }
         </div>
         <div>
@@ -328,7 +328,7 @@
                 }
               </select>
               @if (deployForm.controls.applicationId.invalid && deployForm.controls.applicationId.touched) {
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
               }
             </div>
             <div class="col-span-2 sm:col-span-1">
@@ -349,7 +349,7 @@
               @if (
                 deployForm.controls.applicationVersionId.invalid && deployForm.controls.applicationVersionId.touched
               ) {
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
               }
             </div>
             <div class="col-span-2">
