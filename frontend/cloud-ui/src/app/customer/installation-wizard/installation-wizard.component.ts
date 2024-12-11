@@ -76,7 +76,6 @@ export class InstallationWizardComponent implements OnDestroy {
         deploymentTargetId: this.selectedDeploymentTarget!!.id,
       });
       if (this.deployForm.valid) {
-        console.log('valid');
         this.loading = true;
         await this.saveDeployment();
         this.close();
