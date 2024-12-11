@@ -1,6 +1,8 @@
-<!-- Start block -->
 <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
   <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
     <app-deployment-targets [fullVersion]="true"></app-deployment-targets>
   </div>
 </section>
+<ng-template #installationWizard>
+  <app-installation-wizard (closed)="closeWizard()"></app-installation-wizard>
+</ng-template>

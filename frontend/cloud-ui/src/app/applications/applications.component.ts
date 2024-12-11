@@ -36,13 +36,11 @@ import {Application} from '../types/application';
 })
 export class ApplicationsComponent {
   @Input('fullVersion') fullVersion: boolean = false;
-  magnifyingGlassIcon = faMagnifyingGlass;
-  plusIcon = faPlus;
-  caretDownIcon = faCaretDown;
-  penIcon = faPen;
-  trashIcon = faTrash;
-  xmarkIcon = faXmark;
-  releaseIcon = faBoxArchive;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPlus = faPlus;
+  protected readonly faPen = faPen;
+  protected readonly faXmark = faXmark;
+  protected readonly faBoxArchive = faBoxArchive;
   showDropdown = false;
 
   private readonly applications = inject(ApplicationsService);
@@ -124,6 +122,8 @@ export class ApplicationsComponent {
         });
       }
       result.subscribe((application) => this.loadApplication(application));
+    } else {
+      this.editForm.markAllAsTouched();
     }
   }
 
@@ -144,6 +144,8 @@ export class ApplicationsComponent {
         .subscribe((av) => {
           this.resetVersionForm();
         });
+    } else {
+      this.newVersionForm.markAllAsTouched();
     }
   }
 }

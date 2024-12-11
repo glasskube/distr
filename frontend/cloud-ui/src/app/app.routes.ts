@@ -1,7 +1,6 @@
 import {ActivatedRouteSnapshot, createUrlTreeFromSnapshot, Router, Routes, UrlTree} from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
-import {DeploymentTargetsPageComponent} from './deployment-targets/deployment-targets-page.component';
 import {inject} from '@angular/core';
 import {AuthService} from './services/auth.service';
 import {LoginComponent} from './login/login.component';
@@ -9,6 +8,7 @@ import {NavShellComponent} from './components/nav-shell.component';
 import {RegisterComponent} from './register/register.component';
 import {InviteComponent} from './invite/invite.component';
 import {UsersComponent} from './components/users/users.component';
+import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -48,7 +48,7 @@ export const routes: Routes = [
         children: [
           {path: 'dashboard', component: DashboardPlaceholderComponent},
           {path: 'applications', component: ApplicationsPageComponent},
-          {path: 'deployment-targets', component: DeploymentTargetsPageComponent},
+          {path: 'deployments', component: DeploymentsPageComponent},
           {path: 'user-accounts', component: UsersComponent},
         ],
       },

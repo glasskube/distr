@@ -1,30 +1,13 @@
 import {Component, ElementRef, EventEmitter, inject, Output, ViewChild} from '@angular/core';
-import {GlobeComponent} from '../globe/globe.component';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {ApplicationsComponent} from '../../applications/applications.component';
-import {DeploymentTargetsComponent} from '../../deployment-targets/deployment-targets.component';
-import {AsyncPipe} from '@angular/common';
-import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faXmark} from '@fortawesome/free-solid-svg-icons';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {modalFlyInOut} from '../../animations/modal';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
-import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {ApplicationsService} from '../../services/applications.service';
-import {
-  filter,
-  find,
-  firstValueFrom,
-  last,
-  lastValueFrom,
-  Observable,
-  Subject,
-  switchMap,
-  takeUntil,
-  tap,
-  withLatestFrom,
-} from 'rxjs';
+import {Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
@@ -88,10 +71,13 @@ export class OnboardingWizardComponent {
         },
         Validators.required
       ),
-      email: new FormControl<string>({
-        value: '',
-        disabled: true,
-      }),
+      email: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        [Validators.required, Validators.email]
+      ),
     }),
   });
 
@@ -121,6 +107,7 @@ export class OnboardingWizardComponent {
   }
 
   private destroyed$: Subject<void> = new Subject();
+
   ngOnDestroy() {
     this.destroyed$.complete();
   }
@@ -166,6 +153,8 @@ export class OnboardingWizardComponent {
               this.nextStep();
             });
         }
+      } else {
+        this.applicationForm.markAllAsTouched();
       }
     } else if (this.stepper.selectedIndex === 1) {
       if (this.deploymentTargetForm.valid) {
@@ -199,6 +188,8 @@ export class OnboardingWizardComponent {
             )
           )
           .subscribe(() => this.nextStep());
+      } else {
+        this.deploymentTargetForm.markAllAsTouched();
       }
     } else if (this.stepper.selectedIndex == 2) {
       this.close();

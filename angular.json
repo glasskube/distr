@@ -34,7 +34,9 @@
             "styles": [
               "frontend/cloud-ui/src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/apexcharts/dist/apexcharts.min.js"
+            ]
           },
           "configurations": {
             "production": {

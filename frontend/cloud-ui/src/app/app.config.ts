@@ -1,15 +1,29 @@
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
-import {ApplicationConfig, inject, provideZoneChangeDetection} from '@angular/core';
+import {
+  ApplicationConfig,
+  ErrorHandler,
+  inject,
+  provideAppInitializer,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
-import {provideRouter} from '@angular/router';
+import {provideRouter, Router} from '@angular/router';
 import {routes} from './app.routes';
-import {AuthService, tokenInterceptor} from './services/auth.service';
+import {tokenInterceptor} from './services/auth.service';
+import {errorToastInterceptor} from './services/error-toast.interceptor';
+import {provideToastr} from 'ngx-toastr';
+import * as Sentry from '@sentry/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
     provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([tokenInterceptor])),
+    provideHttpClient(withInterceptors([tokenInterceptor, errorToastInterceptor])),
     provideAnimationsAsync(),
+    provideToastr(),
   ],
 };
