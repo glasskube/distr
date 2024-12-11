@@ -21,7 +21,7 @@
           #stepper
           (attemptContinue)="attemptContinue()"
           class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
-          <cdk-step [stepControl]="applicationForm">
+          <cdk-step [stepControl]="deploymentTargetForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4 w-full">
                 <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Target Type</h3>
@@ -33,7 +33,7 @@
                       <div class="flex h-5 items-center">
                         <input
                           id="sample-app-radio"
-                          [formControl]="applicationForm.controls.type"
+                          [formControl]="deploymentTargetForm.controls.type"
                           aria-describedby="sample-app-radio-text"
                           type="radio"
                           name="type"
@@ -43,7 +43,7 @@
 
                       <div class="ms-4 text-sm">
                         <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"
-                          >Docker via docker-compose</label
+                        >Docker via docker-compose</label
                         >
                         <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I already have a virtual machine running with docker and docker-composed installed.
@@ -58,7 +58,7 @@
                       <div class="flex h-5 items-center">
                         <input
                           id="custom-app-radio"
-                          [formControl]="applicationForm.controls.type"
+                          [formControl]="deploymentTargetForm.controls.type"
                           aria-describedby="custom-app-radio-text"
                           type="radio"
                           name="type"
@@ -98,12 +98,27 @@
                     </div>
                   </div>
                 </div>
+                <div class="w-full">
+                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >Deployment Target Name</label
+                  >
+                  <input
+                    [formControl]="deploymentTargetForm.controls.name"
+                    type="text"
+                    name="name"
+                    id="name"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="Staging Deployment"
+                    required
+                    autocomplete="off" />
+                </div>
+
 
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
               </div>
             </div>
           </cdk-step>
-          <cdk-step [stepControl]="deploymentTargetForm">
+          <cdk-step [stepControl]="agentForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
                 <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
@@ -131,7 +146,7 @@
                   <div class="grid gap-4 mb-4 grid-cols-2">
                     <div class="col-span-2 sm:col-span-1">
                       <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Application</label
+                      >Application</label
                       >
                       <select
                         id="applicationId"
@@ -146,7 +161,7 @@
                       <label
                         for="applicationVersion"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Version</label
+                      >Version</label
                       >
                       <select
                         id="applicationVersion"

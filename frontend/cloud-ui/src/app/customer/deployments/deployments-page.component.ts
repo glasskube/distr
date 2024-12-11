@@ -1,6 +1,4 @@
 import {Component, inject, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
-import {DeploymentsComponent} from './deployments.component';
-import {InstallationWizardComponent} from '../installation-wizard/installation-wizard.component';
 import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {combineLatest, first} from 'rxjs';
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
@@ -8,10 +6,12 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {ApplicationsService} from '../../services/applications.service';
 import {IconDefinition} from '@fortawesome/angular-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
+import {DeploymentTargetsComponent} from '../../deployment-targets/deployment-targets.component';
+import {InstallationWizardComponent} from '../installation-wizard/installation-wizard.component';
 
 @Component({
   selector: 'app-deployments-page',
-  imports: [DeploymentsComponent, InstallationWizardComponent],
+  imports: [DeploymentTargetsComponent, InstallationWizardComponent],
   templateUrl: './deployments-page.component.html',
 })
 export class DeploymentsPageComponent implements OnInit {
@@ -35,7 +35,7 @@ export class DeploymentsPageComponent implements OnInit {
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
-        if (always || apps.length === 0 || dts.length === 0) {
+        if (always || (apps.length > 0 && dts.length === 0)) {
           this.overlayRef?.close();
           this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
             hasBackdrop: true,

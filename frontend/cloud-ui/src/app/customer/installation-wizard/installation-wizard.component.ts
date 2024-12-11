@@ -1,14 +1,13 @@
-import {Component, ElementRef, EventEmitter, inject, Input, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, inject, OnDestroy, Output, ViewChild} from '@angular/core';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {modalFlyInOut} from '../../animations/modal';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {ApplicationsService} from '../../services/applications.service';
-import {firstValueFrom, Observable, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
+import {firstValueFrom, tap} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
-import {DeploymentTarget} from '../../types/deployment-target';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {AsyncPipe} from '@angular/common';
@@ -29,37 +28,27 @@ import {ConnectInstructionsComponent} from '../../components/connect-instruction
   ],
   animations: [modalFlyInOut],
 })
-export class InstallationWizardComponent {
+export class InstallationWizardComponent implements OnDestroy {
   protected readonly xmarkIcon = faXmark;
   private applications = inject(ApplicationsService);
   private deploymentTargets = inject(DeploymentTargetsService);
   private deployments = inject(DeploymentService);
   @ViewChild('stepper') stepper!: CdkStepper;
 
-  createdApp?: Application;
-  createdDeploymentTarget?: DeploymentTarget;
-
   @Output('closed') closed = new EventEmitter<void>();
 
-  applicationForm = new FormGroup({
-    type: new FormControl<string>('sample', Validators.required),
+  deploymentTargetForm = new FormGroup({
+    type: new FormControl<string>('docker', Validators.required),
+    name: new FormControl<string>('', Validators.required),
   });
-  fileToUpload: File | null = null;
-  @ViewChild('fileInput')
-  fileInput?: ElementRef;
 
-  deploymentTargetForm = new FormGroup({});
+  agentForm = new FormGroup({});
 
   private loading = false;
 
-  ngOnInit() {}
 
   ngOnDestroy() {
     this.applicationIdChange$.unsubscribe();
-  }
-
-  onFileSelected(event: Event) {
-    this.fileToUpload = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
   async attemptContinue() {
@@ -68,12 +57,19 @@ export class InstallationWizardComponent {
     }
 
     if (this.stepper.selectedIndex === 0) {
-      this.selectedDeploymentTarget = (await firstValueFrom(this.deploymentTargets$))[0] as DeploymentTargetViewModel;
-      console.log(this.selectedDeploymentTarget);
+      this.deploymentTargets.create(
+        {
+          name: this.deploymentTargetForm.value.name!,
+          type: this.deploymentTargetForm.value.type!,
+        })
+        .pipe(tap(dt => this.selectedDeploymentTarget = dt as DeploymentTargetViewModel))
+        .subscribe(this.nextStep);
+
       this.loading = true;
       this.nextStep();
+
     } else if (this.stepper.selectedIndex === 1) {
-      if (this.deploymentTargetForm.valid) {
+      if (this.agentForm.valid) {
         this.loading = true;
         this.nextStep();
       }
