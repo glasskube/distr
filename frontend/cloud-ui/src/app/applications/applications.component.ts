@@ -115,6 +115,8 @@ export class ApplicationsComponent {
         });
       }
       result.subscribe((application) => this.loadApplication(application));
+    } else {
+      this.editForm.markAllAsTouched();
     }
   }
 
@@ -135,6 +137,8 @@ export class ApplicationsComponent {
         .subscribe((av) => {
           this.resetVersionForm();
         });
+    } else {
+      this.newVersionForm.markAllAsTouched();
     }
   }
 }
