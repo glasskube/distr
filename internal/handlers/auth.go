@@ -82,11 +82,12 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		} else {
+			// TODO generate jwt token containing the email
 			mailer := internalctx.GetMailer(ctx)
 			mail := mail.New(
 				mail.To(userAccount.Email),
-				mail.Subject("Registration"),
-				mail.HtmlBodyTemplate(mailtemplates.Welcome()),
+				mail.Subject("Verify your Glasskube Cloud Email"),
+				mail.HtmlBodyTemplate(mailtemplates.VerifyEmailAtRegistration(userAccount, "/verify?jwt=asdfasdf")),
 			)
 			if err := mailer.Send(ctx, mail); err != nil {
 				log.Error("could not send welcome mail", zap.Error(err))

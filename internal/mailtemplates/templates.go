@@ -2,11 +2,11 @@ package mailtemplates
 
 import (
 	"embed"
+	"github.com/glasskube/cloud/internal/types"
 	"html/template"
 	"io/fs"
 
 	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/types"
 )
 
 //go:embed templates/*
@@ -55,4 +55,11 @@ func Invite(userAccount types.UserAccount, organization types.Organization, toke
 			"Host":         env.Host(),
 			"Token":        token,
 		}
+}
+
+func VerifyEmailAtRegistration(userAccount types.UserAccount, verificationLink string) (*template.Template, any) {
+	return templates.Lookup("verify-email-registration.html"), map[string]any{
+		"UserAccount":      userAccount,
+		"VerificationLink": verificationLink,
+	}
 }

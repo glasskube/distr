@@ -16,10 +16,11 @@ const (
 )
 
 const (
-	UserNameKey  = "name"
-	UserEmailKey = "email"
-	UserRoleKey  = "role"
-	OrgIdKey     = "org"
+	UserNameKey          = "name"
+	UserEmailKey         = "email"
+	UserEmailVerifiedKey = "email_verified"
+	UserRoleKey          = "role"
+	OrgIdKey             = "org"
 )
 
 // JWTAuth is for generating/validating JWTs.
@@ -40,14 +41,15 @@ func GenerateTokenValidFor(
 ) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
-		jwt.IssuedAtKey:   now,
-		jwt.NotBeforeKey:  now,
-		jwt.ExpirationKey: now.Add(validFor),
-		jwt.SubjectKey:    user.ID,
-		UserNameKey:       user.Name,
-		UserEmailKey:      user.Email,
-		UserRoleKey:       org.UserRole,
-		OrgIdKey:          org.ID,
+		jwt.IssuedAtKey:      now,
+		jwt.NotBeforeKey:     now,
+		jwt.ExpirationKey:    now.Add(validFor),
+		jwt.SubjectKey:       user.ID,
+		UserNameKey:          user.Name,
+		UserEmailKey:         user.Email,
+		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
+		UserRoleKey:          org.UserRole,
+		OrgIdKey:             org.ID,
 	}
 	return JWTAuth.Encode(claims)
 }

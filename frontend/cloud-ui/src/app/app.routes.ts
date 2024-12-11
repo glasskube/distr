@@ -9,6 +9,7 @@ import {RegisterComponent} from './register/register.component';
 import {InviteComponent} from './invite/invite.component';
 import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
+import {VerifyComponent} from './verify/verify.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -41,6 +42,7 @@ export const routes: Routes = [
     ],
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
+      //{path: 'verify', component: VerifyComponent},
       {path: 'join', component: InviteComponent},
       {
         path: '',
