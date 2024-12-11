@@ -141,7 +141,7 @@
     <form [formGroup]="editForm" (ngSubmit)="saveApplication()">
       <div class="space-y-4">
         <div>
-          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name *</label>
           <input
             formControlName="name"
             type="text"
@@ -151,9 +151,12 @@
             value=""
             placeholder="Application name"
             required />
+          @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+          }
         </div>
         <div>
-          <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
+          <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type *</label>
           <select
             formControlName="type"
             id="category"
@@ -165,7 +168,6 @@
         <div class="mt-8 mb-4 flex justify-center w-full pb-4 space-x-4 sm:px-4 sm:mt-0">
           <button
             type="submit"
-            [disabled]="editForm.invalid"
             class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
             @if (selectedApplication?.id) {
               <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
@@ -202,6 +204,9 @@
                 value=""
                 placeholder="v4.2.0"
                 required />
+              @if (newVersionForm.controls.versionName.invalid && newVersionForm.controls.versionName.touched) {
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+              }
             </div>
             <div class="w-full">
               <input
@@ -212,13 +217,15 @@
                 (change)="onFileSelected($event)"
                 class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                 aria-describedby="file_input_help" />
-              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
+              <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
                 Choose your docker compose file
               </p>
-              <div class="flex items-center space-x-2.5">
+              @if (fileToUpload == null && newVersionForm.touched) {
+                <p class="mt-1 text-sm text-red-600 dark:text-red-500">File is required.</p>
+              }
+              <div class="flex mt-3 items-center space-x-2.5">
                 <button
                   type="submit"
-                  [disabled]="newVersionForm.invalid || fileToUpload === null"
                   class="text-white bg-blue-700 hover:bg-blue-800 w-full focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 block">
                   Create New Version
                 </button>
