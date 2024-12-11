@@ -2,7 +2,6 @@ import {Component, inject, OnInit, TemplateRef, ViewChild, ViewContainerRef} fro
 import {GlobeComponent} from '../globe/globe.component';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ApplicationsComponent} from '../../applications/applications.component';
-import {DeploymentTargetsComponent} from '../../deployment-targets/deployment-targets.component';
 import {AsyncPipe} from '@angular/common';
 import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
@@ -14,6 +13,7 @@ import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {ChartVersionComponent} from '../charts/version/chart-version.component';
 import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
 import {ChartTypeComponent} from '../charts/type/chart-type.component';
+import {DeploymentTargetsComponent} from '../../deployments/deployment-targets.component';
 
 @Component({
   selector: 'app-dashboard-placeholder',

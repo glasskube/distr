@@ -1,13 +1,13 @@
 import {Component, inject, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
-import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {combineLatest, first} from 'rxjs';
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
-import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {ApplicationsService} from '../../services/applications.service';
 import {IconDefinition} from '@fortawesome/angular-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
-import {DeploymentTargetsComponent} from '../../deployment-targets/deployment-targets.component';
-import {InstallationWizardComponent} from '../installation-wizard/installation-wizard.component';
+import {DeploymentTargetsComponent} from './deployment-targets.component';
+import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
+import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {ApplicationsService} from '../services/applications.service';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 
 @Component({
   selector: 'app-deployments-page',
@@ -31,7 +31,7 @@ export class DeploymentsPageComponent implements OnInit {
   protected readonly faPlus: IconDefinition = faPlus;
 
   ngOnInit() {
-    const always = true;
+    const always = false;
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {

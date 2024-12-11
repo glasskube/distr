@@ -12,8 +12,8 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {AsyncPipe} from '@angular/common';
 import {Deployment} from '../../types/deployment';
-import {DeploymentTargetViewModel} from '../../deployment-targets/DeploymentTargetViewModel';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
+import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
 
 @Component({
   selector: 'app-installation-wizard',
