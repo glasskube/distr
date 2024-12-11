@@ -32,8 +32,7 @@
               }
             ],
             "styles": [
-              "frontend/cloud-ui/src/styles.scss",
-              "node_modules/ngx-toastr/toastr.css"
+              "frontend/cloud-ui/src/styles.scss"
             ],
             "scripts": []
           },
