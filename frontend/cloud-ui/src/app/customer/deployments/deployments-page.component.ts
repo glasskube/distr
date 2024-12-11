@@ -31,7 +31,7 @@ export class DeploymentsPageComponent implements OnInit {
   protected readonly faPlus: IconDefinition = faPlus;
 
   ngOnInit() {
-    const always = false;
+    const always = true;
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {

@@ -56,6 +56,11 @@ export class InstallationWizardComponent implements OnDestroy {
     }
 
     if (this.stepper.selectedIndex === 0) {
+      if (!this.deploymentTargetForm.valid) {
+        this.deploymentTargetForm.markAllAsTouched();
+        return;
+      }
+
       this.deploymentTargets
         .create({
           name: this.deploymentTargetForm.value.name!,
@@ -67,14 +72,18 @@ export class InstallationWizardComponent implements OnDestroy {
       this.loading = true;
       this.nextStep();
     } else if (this.stepper.selectedIndex === 1) {
-      if (this.agentForm.valid) {
-        this.loading = true;
-        this.nextStep();
-      }
+      this.loading = true;
+      this.nextStep();
     } else if (this.stepper.selectedIndex == 2) {
       this.deployForm.patchValue({
         deploymentTargetId: this.selectedDeploymentTarget!!.id,
       });
+
+      if (!this.deployForm.valid) {
+        this.deployForm.markAllAsTouched();
+        return;
+      }
+
       if (this.deployForm.valid) {
         this.loading = true;
         await this.saveDeployment();
@@ -96,8 +105,6 @@ export class InstallationWizardComponent implements OnDestroy {
 
   applications$ = this.applications.list();
   selectedApplication?: Application | null;
-
-  deploymentTargets$ = this.deploymentTargets.list();
 
   deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),

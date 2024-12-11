@@ -152,7 +152,7 @@
             placeholder="Application name"
             required />
           @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
-            <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
           }
         </div>
         <div>
@@ -205,7 +205,7 @@
                 placeholder="v4.2.0"
                 required />
               @if (newVersionForm.controls.versionName.invalid && newVersionForm.controls.versionName.touched) {
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
               }
             </div>
             <div class="w-full">
