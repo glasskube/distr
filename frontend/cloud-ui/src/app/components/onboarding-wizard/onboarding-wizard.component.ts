@@ -7,7 +7,7 @@ import {modalFlyInOut} from '../../animations/modal';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {ApplicationsService} from '../../services/applications.service';
-import {Subject, switchMap, takeUntil, tap, withLatestFrom,} from 'rxjs';
+import {Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
