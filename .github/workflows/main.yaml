@@ -23,9 +23,3 @@ jobs:
         run: golangci-lint run --out-format=colored-line-number
       - name: Build application
         run: make build
-      - name: Sentry Sourcemaps (just to test)
-        run: make sentry-upload-sourcemaps
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - name: Delete Sourcemaps (just to test)
-        run: make delete-sourcemaps

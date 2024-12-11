@@ -18,13 +18,6 @@ export const appConfig: ApplicationConfig = {
       provide: ErrorHandler,
       useValue: Sentry.createErrorHandler(),
     },
-    {
-      provide: Sentry.TraceService,
-      deps: [Router],
-    },
-    provideAppInitializer(() => {
-      inject(Sentry.TraceService);
-    }),
     provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
     provideHttpClient(withInterceptors([tokenInterceptor])),
