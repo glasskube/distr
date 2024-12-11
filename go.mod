@@ -15,7 +15,7 @@ require (
 	github.com/onsi/gomega v1.36.1
 	github.com/wneessen/go-mail v0.5.2
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 )
 
 require (
