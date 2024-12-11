@@ -46,7 +46,6 @@ export class InstallationWizardComponent implements OnDestroy {
 
   private loading = false;
 
-
   ngOnDestroy() {
     this.applicationIdChange$.unsubscribe();
   }
@@ -57,17 +56,16 @@ export class InstallationWizardComponent implements OnDestroy {
     }
 
     if (this.stepper.selectedIndex === 0) {
-      this.deploymentTargets.create(
-        {
+      this.deploymentTargets
+        .create({
           name: this.deploymentTargetForm.value.name!,
           type: this.deploymentTargetForm.value.type!,
         })
-        .pipe(tap(dt => this.selectedDeploymentTarget = dt as DeploymentTargetViewModel))
+        .pipe(tap((dt) => (this.selectedDeploymentTarget = dt as DeploymentTargetViewModel)))
         .subscribe(this.nextStep);
 
       this.loading = true;
       this.nextStep();
-
     } else if (this.stepper.selectedIndex === 1) {
       if (this.agentForm.valid) {
         this.loading = true;
