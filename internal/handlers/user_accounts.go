@@ -9,6 +9,7 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/types"
@@ -70,9 +71,10 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-	_, token, err := auth.GenerateToken(
+	_, token, err := auth.GenerateTokenValidFor(
 		userAccount,
 		types.OrganizationWithUserRole{Organization: *organization, UserRole: body.UserRole},
+		env.InviteTokenValidDuration(),
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

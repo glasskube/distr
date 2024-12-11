@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/glasskube/cloud/internal/util"
 	"github.com/joho/godotenv"
 )
 
@@ -15,11 +17,12 @@ const (
 )
 
 var (
-	currentEnv   string
-	databaseUrl  string
-	jwtSecret    []byte
-	host         string
-	mailerConfig MailerConfig
+	currentEnv               string
+	databaseUrl              string
+	jwtSecret                []byte
+	host                     string
+	mailerConfig             MailerConfig
+	inviteTokenValidDuration = 24 * time.Hour
 )
 
 func init() {
@@ -63,6 +66,10 @@ func init() {
 		panic("invalid MAILER_TYPE")
 	}
 	mailerConfig.FromAddress = os.Getenv("MAILER_FROM_ADDRESS")
+
+	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
+		inviteTokenValidDuration = util.Require(time.ParseDuration(d))
+	}
 }
 
 func DatabaseUrl() string {
@@ -81,4 +88,8 @@ func IsDev() bool {
 
 func GetMailerConfig() MailerConfig {
 	return mailerConfig
+}
+
+func InviteTokenValidDuration() time.Duration {
+	return inviteTokenValidDuration
 }
