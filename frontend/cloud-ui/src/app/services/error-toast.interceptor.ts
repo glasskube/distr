@@ -21,7 +21,7 @@ export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
       error: (err) => {
         if (err instanceof HttpErrorResponse) {
           if (!ignoreGlobalError(req, err)) {
-            toastr.show(err.statusText, 'An error occurred', GLOBAL_ERROR_TOAST_CONFIG);
+            toastr.show('', 'An internal server error occurred', GLOBAL_ERROR_TOAST_CONFIG);
           }
         }
       },
