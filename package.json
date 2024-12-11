@@ -35,6 +35,7 @@
     "flowbite": "^2.5.2",
     "globe.gl": "^2.33.2",
     "jwt-decode": "^4.0.0",
+    "ngx-toastr": "^19.0.0",
     "posthog-js": "^1.187.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
