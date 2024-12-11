@@ -31,7 +31,12 @@ import {Toast} from 'ngx-toastr';
         </svg>
         <span class="sr-only">Error icon</span>
       </div>
-      <div class="ms-3 text-sm font-normal">{{ title }}: {{ message }}</div>
+      <div class="ms-3 text-sm font-normal">
+        {{ title }}
+        @if (message) {
+          :{{ message }}
+        }
+      </div>
       <button
         type="button"
         (click)="remove()"
