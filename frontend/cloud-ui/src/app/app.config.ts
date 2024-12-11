@@ -10,6 +10,8 @@ import {provideAnimationsAsync} from '@angular/platform-browser/animations/async
 import {provideRouter, Router} from '@angular/router';
 import {routes} from './app.routes';
 import {tokenInterceptor} from './services/auth.service';
+import {errorToastInterceptor} from './services/error-toast.interceptor';
+import {provideToastr} from 'ngx-toastr';
 import * as Sentry from '@sentry/angular';
 
 export const appConfig: ApplicationConfig = {
@@ -20,7 +22,8 @@ export const appConfig: ApplicationConfig = {
     },
     provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([tokenInterceptor])),
+    provideHttpClient(withInterceptors([tokenInterceptor, errorToastInterceptor])),
     provideAnimationsAsync(),
+    provideToastr(),
   ],
 };
