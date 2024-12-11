@@ -11,7 +11,6 @@ import {SettingsService} from '../services/settigns.service';
   templateUrl: './invite.component.html',
 })
 export class InviteComponent {
-  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly settings = inject(SettingsService);
   public readonly email = this.auth.getClaims().email;
@@ -33,7 +32,7 @@ export class InviteComponent {
       const value = this.form.value;
       await firstValueFrom(this.settings.updateUserSettings({name: value.name, password: value.password}));
       this.auth.logout();
-      location.assign('/login');
+      location.assign(`/login?email=${this.email}`);
     }
   }
 }
