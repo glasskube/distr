@@ -16,7 +16,7 @@ import {ApexOptions, ChartComponent, NgApexchartsModule} from 'ng-apexcharts';
   imports: [NgApexchartsModule],
 })
 export class ChartTypeComponent {
-  @ViewChild('chart') chart: ChartComponent = {} as ChartComponent;
+  @ViewChild('chart') chart!: ChartComponent;
   public chartOptions: ApexOptions;
 
   constructor() {
