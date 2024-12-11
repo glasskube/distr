@@ -14,6 +14,7 @@ import {ChartVersionComponent} from '../charts/version/chart-version.component';
 import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
 import {ChartTypeComponent} from '../charts/type/chart-type.component';
 import {DeploymentTargetsComponent} from '../../deployments/deployment-targets.component';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard-placeholder',
@@ -37,6 +38,7 @@ export class DashboardPlaceholderComponent implements OnInit {
   public readonly deploymentTargets$ = this.deploymentTargets.list();
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
+  private readonly auth = inject(AuthService);
 
   private viewContainerRef = inject(ViewContainerRef);
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
@@ -46,12 +48,11 @@ export class DashboardPlaceholderComponent implements OnInit {
   protected readonly faPlus = faPlus;
 
   ngOnInit() {
-    const always = false;
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
-        if (always || apps.length === 0 || dts.length === 0) {
-          this.overlayRef?.close();
+        if (this.auth.hasRole('distributor') && (apps.length === 0 || dts.length === 0)) {
+          this.closeWizard();
           this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
             hasBackdrop: true,
             backdropStyleOnly: true,

@@ -4,8 +4,19 @@ import {jwtDecode} from 'jwt-decode';
 import {map, Observable, of, tap, throwError} from 'rxjs';
 import {TokenResponse} from '../types/base';
 import dayjs from 'dayjs';
+import {UserRole} from '../types/user-account';
 
 const tokenStorageKey = 'cloud_token';
+
+export interface JWTClaims {
+  sub: string;
+  org: string;
+  email: string;
+  name: string;
+  exp: string;
+  role: UserRole;
+  [claim: string]: unknown;
+}
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
@@ -28,6 +39,10 @@ export class AuthService {
     }
   }
 
+  public hasRole(role: UserRole): boolean {
+    return this.getClaims().role === role;
+  }
+
   public login(email: string, password: string): Observable<void> {
     return this.httpClient.post<TokenResponse>(`${this.baseUrl}/login`, {email, password}).pipe(
       tap((r) => (this.token = r.token)),
@@ -43,14 +58,7 @@ export class AuthService {
     return this.httpClient.post<void>(`${this.baseUrl}/register`, body);
   }
 
-  public getClaims(): {
-    sub: string;
-    email: string;
-    name: string;
-    role: 'customer' | 'distributor';
-    exp: string;
-    [claim: string]: unknown;
-  } {
+  public getClaims(): JWTClaims {
     if (this.token !== null) {
       return jwtDecode(this.token);
     } else {

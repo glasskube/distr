@@ -67,6 +67,39 @@ func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 	}
 }
 
+func UpateUserAccount(ctx context.Context, userAccount *types.UserAccount) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		`UPDATE UserAccount AS u
+		SET email = @email,
+			name = @name,
+			password_hash = @password_hash,
+			password_salt = @password_salt
+		WHERE id = @id
+		RETURNING `+userAccountOutputExpr,
+		pgx.NamedArgs{
+			"id":            userAccount.ID,
+			"email":         userAccount.Email,
+			"password_hash": userAccount.PasswordHash,
+			"password_salt": userAccount.PasswordSalt,
+			"name":          userAccount.Name,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not query users: %w", err)
+	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apierrors.ErrNotFound
+		} else if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
+			return fmt.Errorf("can not update user with email %v: %w", userAccount.Email, apierrors.ErrAlreadyExists)
+		}
+		return fmt.Errorf("could not update user: %w", err)
+	} else {
+		*userAccount = created
+		return nil
+	}
+}
+
 func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId string, role types.UserRole) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
@@ -74,6 +107,24 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId 
 		pgx.NamedArgs{"userId": userId, "orgId": orgId, "role": role},
 	)
 	return err
+}
+
+func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT "+userAccountOutputExpr+`, j.user_role
+		FROM UserAccount u
+		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
+		WHERE j.organization_id = @orgId`,
+		pgx.NamedArgs{"orgId": orgId},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query users: %w", err)
+	} else if result, err := pgx.CollectRows[types.UserAccountWithUserRole](rows, pgx.RowToStructByName); err != nil {
+		return nil, fmt.Errorf("could not map users: %w", err)
+	} else {
+		return result, nil
+	}
 }
 
 func GetUserAccountWithID(ctx context.Context, id string) (*types.UserAccount, error) {

@@ -1,4 +1,4 @@
-import {Router, Routes} from '@angular/router';
+import {ActivatedRouteSnapshot, createUrlTreeFromSnapshot, Router, Routes, UrlTree} from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
 import {inject} from '@angular/core';
@@ -6,6 +6,8 @@ import {AuthService} from './services/auth.service';
 import {LoginComponent} from './login/login.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {RegisterComponent} from './register/register.component';
+import {InviteComponent} from './invite/invite.component';
+import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 
 export const routes: Routes = [
@@ -14,6 +16,19 @@ export const routes: Routes = [
   {
     path: '',
     canActivate: [
+      (route: ActivatedRouteSnapshot) => {
+        const auth = inject(AuthService);
+        const jwt = route.queryParamMap.get('jwt');
+        if (jwt === null) {
+          return true;
+        } else {
+          // TODO: flush crud service caches
+          auth.token = jwt;
+          const newtree = createUrlTreeFromSnapshot(route, [], null, null);
+          delete newtree.queryParams['jwt']; // prevent infinite loop
+          return newtree;
+        }
+      },
       () => {
         const auth = inject(AuthService);
         const router = inject(Router);
@@ -24,12 +39,19 @@ export const routes: Routes = [
         }
       },
     ],
-    component: NavShellComponent,
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
-      {path: 'dashboard', component: DashboardPlaceholderComponent},
-      {path: 'applications', component: ApplicationsPageComponent},
-      {path: 'deployments', component: DeploymentsPageComponent},
+      {path: 'join', component: InviteComponent},
+      {
+        path: '',
+        component: NavShellComponent,
+        children: [
+          {path: 'dashboard', component: DashboardPlaceholderComponent},
+          {path: 'applications', component: ApplicationsPageComponent},
+          {path: 'deployments', component: DeploymentsPageComponent},
+          {path: 'user-accounts', component: UsersComponent},
+        ],
+      },
     ],
   },
 ];

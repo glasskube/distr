@@ -66,6 +66,11 @@ type UserAccount struct {
 	Password     string    `db:"-" json:"-"`
 }
 
+type UserAccountWithUserRole struct {
+	UserAccount
+	UserRole UserRole `db:"user_role" json:"userRole"`
+}
+
 type Organization struct {
 	Base
 	Name string `db:"name" json:"name"`

@@ -7,8 +7,9 @@ import (
 	"github.com/glasskube/cloud/internal/frontend"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -18,9 +19,9 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 	router := chi.NewRouter()
 	router.Use(
 		// Handles panics
-		middleware.Recoverer,
+		chimiddleware.Recoverer,
 		// Reject bodies larger than 1MiB
-		middleware.RequestSize(1048576),
+		chimiddleware.RequestSize(1048576),
 	)
 	router.Mount("/api", ApiRouter(logger, db, mailer))
 	router.Mount("/", FrontendRouter())
@@ -30,10 +31,10 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Handler {
 	r := chi.NewRouter()
 	r.Use(
-		middleware.RequestID,
-		loggerCtxMiddleware(logger),
-		loggingMiddleware,
-		contextInjectorMiddelware(db, mailer),
+		chimiddleware.RequestID,
+		middleware.LoggerCtxMiddleware(logger),
+		middleware.LoggingMiddleware,
+		middleware.ContextInjectorMiddelware(db, mailer),
 	)
 
 	r.Route("/v1", func(r chi.Router) {
@@ -49,6 +50,8 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
+			r.Route("/user-accounts", handlers.UserAccountsRouter)
+			r.Route("/settings", handlers.SettingsRouter)
 		})
 
 		// agent connect and download routes go here (authenticated but with accessKeyId and accessKeySecret)
@@ -63,7 +66,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 func FrontendRouter() http.Handler {
 	router := chi.NewRouter()
 	router.Use(
-		middleware.Compress(5, "text/html", "text/css", "text/javascript"),
+		chimiddleware.Compress(5, "text/html", "text/css", "text/javascript"),
 	)
 
 	router.Handle("/*", handlers.StaticFileHandler(frontend.BrowserFS()))

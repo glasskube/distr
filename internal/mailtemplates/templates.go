@@ -4,6 +4,9 @@ import (
 	"embed"
 	"html/template"
 	"io/fs"
+
+	"github.com/glasskube/cloud/internal/env"
+	"github.com/glasskube/cloud/internal/types"
 )
 
 //go:embed templates/*
@@ -15,7 +18,7 @@ func init() {
 	if fsys, err := fs.Sub(embeddedFS, "templates"); err != nil {
 		panic(err)
 	} else {
-		templates = template.Must(parse(fsys, "*.html", "fragments/*.html", "css/*.css"))
+		templates = template.Must(parse(fsys, "*.html", "fragments/*.html"))
 	}
 }
 
@@ -38,5 +41,18 @@ func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
 }
 
 func Welcome() (*template.Template, any) {
-	return templates.Lookup("welcome.html"), nil
+	return templates.Lookup("welcome.html"),
+		map[string]any{
+			"Host": env.Host(),
+		}
+}
+
+func Invite(userAccount types.UserAccount, organization types.Organization, token string) (*template.Template, any) {
+	return templates.Lookup("invite.html"),
+		map[string]any{
+			"UserAccount":  userAccount,
+			"Organization": organization,
+			"Host":         env.Host(),
+			"Token":        token,
+		}
 }

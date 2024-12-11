@@ -30,11 +30,19 @@ const (
 var JWTAuth = jwtauth.New("HS256", env.JWTSecret(), nil)
 
 func GenerateToken(user types.UserAccount, org types.OrganizationWithUserRole) (jwt.Token, string, error) {
+	return GenerateTokenValidFor(user, org, defaultTokenExpiration)
+}
+
+func GenerateTokenValidFor(
+	user types.UserAccount,
+	org types.OrganizationWithUserRole,
+	validFor time.Duration,
+) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
 		jwt.IssuedAtKey:   now,
 		jwt.NotBeforeKey:  now,
-		jwt.ExpirationKey: now.Add(defaultTokenExpiration),
+		jwt.ExpirationKey: now.Add(validFor),
 		jwt.SubjectKey:    user.ID,
 		UserNameKey:       user.Name,
 		UserEmailKey:      user.Email,

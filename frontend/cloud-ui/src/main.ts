@@ -8,12 +8,11 @@ import {appConfig} from './app/app.config';
 import {environment} from './env/env';
 import * as Sentry from '@sentry/angular';
 
-if (environment.production) {
-  Sentry.init({
-    dsn: 'https://2a42d7067e57e6d98bf5bec1737c6020@o4508443344633856.ingest.de.sentry.io/4508443366719568',
-    integrations: [],
-  });
-}
+Sentry.init({
+  enabled: environment.production,
+  dsn: 'https://2a42d7067e57e6d98bf5bec1737c6020@o4508443344633856.ingest.de.sentry.io/4508443366719568',
+  integrations: [],
+});
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);

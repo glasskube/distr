@@ -1,4 +1,4 @@
-import {Component, effect, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
+import {Component, effect, ElementRef, inject, ViewChild} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -10,20 +10,19 @@ import {
   faLightbulb,
   faPalette,
   faServer,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons';
+import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
-import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [RouterLink, FaIconComponent],
+  imports: [RouterLink, FaIconComponent, RequireRoleDirective],
 })
-export class SideBarComponent implements OnInit {
+export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
-  private readonly auth = inject(AuthService);
-
   public feedbackAlert = true;
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;
@@ -31,23 +30,17 @@ export class SideBarComponent implements OnInit {
   protected readonly faLightbulb = faLightbulb;
   protected readonly faKey = faKey;
   protected readonly faGear = faGear;
+  protected readonly faUsers = faUsers;
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
 
-  protected userRole: 'distributor' | 'customer' = 'distributor';
-
-  @ViewChild('asideElement') private asideElement!: ElementRef<HTMLElement>;
+  @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
 
   constructor() {
     effect(() => {
       const show = this.sidebar.showSidebar();
-      this.asideElement.nativeElement.classList.toggle('translate-x-0', show);
-      this.asideElement.nativeElement.classList.toggle('-translate-x-full', !show);
+      this.asideElement?.nativeElement.classList.toggle('translate-x-0', show);
+      this.asideElement?.nativeElement.classList.toggle('-translate-x-full', !show);
     });
-  }
-
-  ngOnInit(): void {
-    const {role} = this.auth.getClaims();
-    this.userRole = role;
   }
 }
