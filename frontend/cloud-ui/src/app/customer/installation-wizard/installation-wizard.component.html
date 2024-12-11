@@ -113,11 +113,10 @@
                       To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
                       server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                     </p>
-                    {{selectedDeploymentTarget?.id}}
                     @if (selectedDeploymentTarget) {
-                      <app-connect-instructions [deploymentTargetId]="selectedDeploymentTarget.id"></app-connect-instructions>
+                      <app-connect-instructions
+                        [deploymentTargetId]="selectedDeploymentTarget.id"></app-connect-instructions>
                     }
-
                   </div>
                 </div>
               </div>

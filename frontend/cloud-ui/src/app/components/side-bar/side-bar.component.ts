@@ -49,6 +49,5 @@ export class SideBarComponent implements OnInit {
   ngOnInit(): void {
     const {email, name} = this.auth.getClaims();
     if (email === 'pmig+customer@glasskube.com') this.userRole = 'customer';
-
   }
 }

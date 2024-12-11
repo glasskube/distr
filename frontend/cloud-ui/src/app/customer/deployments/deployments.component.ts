@@ -17,6 +17,7 @@ import {StatusDotComponent} from '../../components/status-dot';
 import {drawerFlyInOut} from '../../animations/drawer';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentViewModel} from './DeploymentViewModel';
+import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -30,6 +31,7 @@ import {DeploymentViewModel} from './DeploymentViewModel';
     IsStalePipe,
     RelativeDatePipe,
     StatusDotComponent,
+    ConnectInstructionsComponent,
   ],
   templateUrl: './deployments.component.html',
   standalone: true,

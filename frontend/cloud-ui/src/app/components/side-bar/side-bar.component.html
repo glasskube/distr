@@ -8,9 +8,10 @@
       <!-- distributor side bar  -->
       @if (userRole === 'distributor') {
         <li>
-          <a (click)="sidebar.hide()"
-             routerLink="/dashboard"
-             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/dashboard"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
             <fa-icon
               [icon]="faDashboard"
               size="lg"
@@ -19,9 +20,10 @@
           </a>
         </li>
         <li>
-          <a (click)="sidebar.hide()"
-             routerLink="/applications"
-             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/applications"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
             <fa-icon
               [icon]="faBoxesStacked"
               size="lg"
@@ -30,9 +32,10 @@
           </a>
         </li>
         <li>
-          <a (click)="sidebar.hide()"
-             routerLink="/deployment-targets"
-             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/deployment-targets"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
             <fa-icon
               [icon]="faServer"
               size="lg"
@@ -46,7 +49,7 @@
             <span class="ms-3">License Mgmt</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         </li>
@@ -56,7 +59,7 @@
             <span class="ms-3">Pre-Flight</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         </li>
@@ -66,7 +69,7 @@
             <span class="ms-3">Support Insights</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         </li>
@@ -76,7 +79,7 @@
             <span class="ms-3">Branding</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         </li>
@@ -86,7 +89,7 @@
             <span class="ms-3">API Keys</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         </li>
@@ -94,10 +97,10 @@
       <!-- customer side bar  -->
       @if (userRole === 'customer') {
         <li>
-          <a (click)="sidebar.hide()"
-             routerLink="/deployments"
-             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700
-          group">
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/deployments"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
             <fa-icon
               [icon]="faDashboard"
               size="lg"
@@ -112,7 +115,7 @@
         <div class="flex justify-between items-center mb-3">
           <span
             class="bg-gray-100 text-gray-600 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-600 dark:text-gray-200"
-          >Talk to founders</span
+            >Talk to founders</span
           >
           <button
             type="button"

@@ -19,7 +19,14 @@ import {ConnectInstructionsComponent} from '../../components/connect-instruction
 @Component({
   selector: 'app-installation-wizard',
   templateUrl: './installation-wizard.component.html',
-  imports: [ReactiveFormsModule, FaIconComponent, InstallationWizardStepperComponent, CdkStep, AsyncPipe, ConnectInstructionsComponent],
+  imports: [
+    ReactiveFormsModule,
+    FaIconComponent,
+    InstallationWizardStepperComponent,
+    CdkStep,
+    AsyncPipe,
+    ConnectInstructionsComponent,
+  ],
   animations: [modalFlyInOut],
 })
 export class InstallationWizardComponent {
@@ -45,9 +52,7 @@ export class InstallationWizardComponent {
 
   private loading = false;
 
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.applicationIdChange$.unsubscribe();

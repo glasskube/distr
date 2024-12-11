@@ -142,9 +142,7 @@
                             To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
-                          <pre class="text-base text-gray-900 dark:text-gray-200 text-wrap">
-curl https://glasskube.cloud/api/v1/connect?token=c76A2a3V5dV1ycV8sa4DIGLmyXyFAk6Sr27iF3ZDKJ1yz1J1yz1s | docker compose -f - up -d</pre
-                          >
+                          <app-connect-instructions [deploymentTargetId]="dt.id!"></app-connect-instructions>
                         </div>
                       </div>
                     </ng-template>
