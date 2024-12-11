@@ -6,13 +6,14 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build:prod": "ng build --configuration=production && npm run sentry:sourcemaps",
+    "build:prod": "ng build --configuration=production",
     "build:dev": "ng build --configuration=development",
     "watch": "ng build --watch --configuration=development",
     "test": "ng test",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org glasskube --project cloud-ui internal/frontend/dist/cloud-ui && sentry-cli sourcemaps upload --org glasskube --project cloud-ui internal/frontend/dist/cloud-ui"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org glasskube --project cloud-ui internal/frontend/dist/cloud-ui && sentry-cli sourcemaps upload --org glasskube --project cloud-ui internal/frontend/dist/cloud-ui",
+    "delete:sourcemaps": "rm internal/frontend/dist/cloud-ui/browser/*.js.map"
   },
   "private": true,
   "dependencies": {

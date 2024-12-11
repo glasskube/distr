@@ -57,3 +57,11 @@ docker-build-agent:
 .PHONY: init-db
 init-db:
 	 cat sql/init_db.sql | docker compose exec -T postgres psql --dbname glasskube --user local
+
+.PHONY: sentry-upload-sourcemaps
+sentry-upload-sourcemaps:
+	npm run sentry:sourcemaps
+
+.PHONY: delete-sourcemaps
+delete-sourcemaps:
+	npm run delete:sourcemaps
