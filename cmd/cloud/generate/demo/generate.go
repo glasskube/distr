@@ -28,7 +28,7 @@ func main() {
 	pmigCustomer := types.UserAccount{Email: "pmig+customer@glasskube.com", Name: "Philip Miglinci", Password: "12345678"}
 	util.Must(security.HashPassword(&pmigCustomer))
 	util.Must(db.CreateUserAccount(ctx, &pmigCustomer))
-	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmigCustomer.ID, org.ID, types.UserRoleDistributor))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmigCustomer.ID, org.ID, types.UserRoleCustomer))
 
 	appMarsBeta := types.Application{
 		Name: "Fastest way to Mars Calculator (Beta)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
