@@ -8,6 +8,7 @@ import {InstallationWizardComponent} from '../components/installation-wizard/ins
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {ApplicationsService} from '../services/applications.service';
 import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-deployments-page',
@@ -16,6 +17,7 @@ import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 })
 export class DeploymentsPageComponent implements OnInit {
   private overlay = inject(OverlayService);
+  private readonly auth = inject(AuthService);
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   deploymentTargets$ = this.deploymentTargets.list();
@@ -32,10 +34,11 @@ export class DeploymentsPageComponent implements OnInit {
 
   ngOnInit() {
     const always = false;
+    const isCustomer = this.auth.getClaims().role === 'customer';
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
-        if (always || (apps.length > 0 && dts.length === 0)) {
+        if (always || (isCustomer && (apps.length > 0 && dts.length === 0))) {
           this.overlayRef?.close();
           this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
             hasBackdrop: true,
