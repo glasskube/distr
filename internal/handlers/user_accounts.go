@@ -18,7 +18,7 @@ import (
 )
 
 func UserAccountsRouter(r chi.Router) {
-	r.With(requireDistributor).Group(func(r chi.Router) {
+	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
 	})

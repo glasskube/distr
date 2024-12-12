@@ -8,7 +8,7 @@ type UserRole string
 const (
 	DeploymentTypeDocker     = "docker"
 	DepolymentTypeKubernetes = "kubernetes"
-	UserRoleDistributor      = "distributor"
+	UserRoleVendor           = "vendor"
 	UserRoleCustomer         = "customer"
 )
 
