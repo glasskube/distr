@@ -1,6 +1,6 @@
 import {BaseModel} from './base';
 
-export type UserRole = 'distributor' | 'customer';
+export type UserRole = 'vendor' | 'customer';
 
 export interface UserAccount extends BaseModel {
   email: string;

@@ -1,6 +1,6 @@
 CREATE TYPE DEPLOYMENT_TYPE AS ENUM ('docker', 'kubernetes');
 
-CREATE TYPE USER_ROLE AS ENUM ('distributor', 'customer');
+CREATE TYPE USER_ROLE AS ENUM ('vendor', 'customer');
 
 CREATE TABLE IF NOT EXISTS Organization (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
