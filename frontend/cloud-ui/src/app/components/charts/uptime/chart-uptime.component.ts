@@ -64,7 +64,7 @@ export class ChartUptimeComponent {
         position: 'top',
       },
       title: {
-        text: 'Deployment Target Uptime',
+        text: 'Deployment Uptime',
         align: 'center',
         offsetY: 10,
         style: {

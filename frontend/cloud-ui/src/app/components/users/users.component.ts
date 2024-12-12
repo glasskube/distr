@@ -1,4 +1,4 @@
-import {Component, inject, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
+import {Component, computed, inject, Signal, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faMagnifyingGlass,
@@ -15,8 +15,10 @@ import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {firstValueFrom} from 'rxjs';
-import {UserRole} from '../../types/user-account';
+import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap, tap} from 'rxjs';
+import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
+import {ActivatedRoute} from '@angular/router';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-users',
@@ -33,8 +35,10 @@ export class UsersComponent {
   public readonly xmarkIcon = faXmark;
   public readonly releaseIcon = faBoxArchive;
 
+  public readonly userRole: Signal<UserRole>;
   private readonly users = inject(UsersService);
-  public users$ = this.users.getUsers();
+  public users$: Observable<UserAccountWithRole[]>;
+  private readonly refresh$ = new Subject<void>();
 
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
@@ -43,8 +47,19 @@ export class UsersComponent {
   public inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-    userRole: new FormControl<UserRole>('customer', {nonNullable: true, validators: [Validators.required]}),
   });
+
+  constructor() {
+    const data = toSignal(inject(ActivatedRoute).data);
+    this.userRole = computed(() => data()?.['userRole'] ?? null);
+    const usersWithRefresh = this.refresh$.pipe(
+      startWith(undefined),
+      switchMap(() => this.users.getUsers())
+    );
+    this.users$ = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
+      map(([userRole, users]) => users.filter((it) => userRole !== null && it.userRole === userRole))
+    );
+  }
 
   public showInviteDialog(): void {
     this.closeInviteDialog();
@@ -58,11 +73,11 @@ export class UsersComponent {
         this.users.addUser({
           email: this.inviteForm.value.email!,
           name: this.inviteForm.value.name || undefined,
-          userRole: this.inviteForm.value.userRole!,
+          userRole: this.userRole(),
         })
       );
       this.closeInviteDialog();
-      this.users$ = this.users.getUsers();
+      this.refresh$.next();
     }
   }
 
