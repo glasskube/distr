@@ -12,7 +12,7 @@
             <input
               type="text"
               id="simple-search"
-              placeholder="Search for deployment targets "
+              placeholder="Search for deployments"
               required=""
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
           </div>
@@ -26,7 +26,7 @@
           id="createDeploymentTargetButton"
           class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
           <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-          Add deployment target
+          Add deployment
         </button>
       </div>
     </div>
@@ -35,7 +35,7 @@
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
       <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
         <tr>
-          <th scope="col" class="p-4">Deployment Target</th>
+          <th scope="col" class="p-4">Deployment</th>
           <th scope="col" class="p-4">Status</th>
           <th scope="col" class="p-4">Type</th>
           @if (fullVersion) {
@@ -147,7 +147,7 @@
                         <!-- Modal body -->
                         <div class="p-4 md:p-5 space-y-4">
                           <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                            To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
+                            To setup this Deployment, the Glasskube Cloud Agent must be installed on the target
                             server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
                           </p>
 
@@ -201,7 +201,7 @@
       } @else {
         New
       }
-      Deployment Target
+      Deployment
     </h5>
     <button
       type="button"
@@ -222,7 +222,7 @@
             id="name"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
             value=""
-            placeholder="Deployment target name"
+            placeholder="Deployment name"
             required="" />
           @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
             <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>

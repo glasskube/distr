@@ -24,7 +24,7 @@
           <cdk-step [stepControl]="deploymentTargetForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4 w-full">
-                <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Target Type</h3>
+                <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Type</h3>
 
                 <div class="mb-2 grid grid-cols-2 gap-4">
                   <div
@@ -99,9 +99,9 @@
                   </div>
                 </div>
                 <div class="w-full">
-                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Deployment Target Name</label
-                  >
+                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Deployment Name
+                  </label>
                   <input
                     [formControl]="deploymentTargetForm.controls.name"
                     type="text"
@@ -127,8 +127,8 @@
                   <div class="">
                     <h3 class="font-normal text-gray-900 dark:text-white">Download and run installation agent</h3>
                     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                      To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
-                      server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
+                      To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
+                      Simply connect to the target (e.g. via SSH) and execute the following:
                     </p>
                     @if (selectedDeploymentTarget) {
                       <app-connect-instructions
