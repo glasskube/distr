@@ -15,10 +15,11 @@ import {
 import {Observable} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
-import {RequireRoleDirective as RequiredRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {Application} from '../types/application';
+import {modalFlyInOut} from '../animations/modal';
+import {RequireRoleDirective} from '../directives/required-role.directive';
 
 @Component({
   selector: 'app-applications',
@@ -29,10 +30,10 @@ import {Application} from '../types/application';
     FaIconComponent,
     NgOptimizedImage,
     OverlayModule,
-    RequiredRoleDirective,
+    RequireRoleDirective,
   ],
   templateUrl: './applications.component.html',
-  animations: [dropdownAnimation, drawerFlyInOut],
+  animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
 export class ApplicationsComponent {
   @Input('fullVersion') fullVersion: boolean = false;
@@ -59,6 +60,7 @@ export class ApplicationsComponent {
   fileInput?: ElementRef;
 
   private manageApplicationDrawerRef?: EmbeddedOverlayRef;
+  private applicationVersionModalRef?: EmbeddedOverlayRef;
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
@@ -75,6 +77,17 @@ export class ApplicationsComponent {
   hideDrawer() {
     this.manageApplicationDrawerRef?.close();
     this.reset();
+  }
+
+  openVersionModal(templateRef: TemplateRef<unknown>, application: Application) {
+    this.hideVersionModal();
+    this.loadApplication(application);
+    this.applicationVersionModalRef = this.overlay.showModal(templateRef, this.viewContainerRef);
+  }
+
+  hideVersionModal() {
+    this.applicationVersionModalRef?.close();
+    this.resetVersionForm();
   }
 
   loadApplication(application: Application) {
@@ -142,7 +155,7 @@ export class ApplicationsComponent {
           this.fileToUpload
         )
         .subscribe((av) => {
-          this.resetVersionForm();
+          this.hideVersionModal();
         });
     } else {
       this.newVersionForm.markAllAsTouched();
