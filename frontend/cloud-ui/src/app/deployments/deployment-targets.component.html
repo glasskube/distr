@@ -51,8 +51,8 @@
         @for (dt of deploymentTargets$ | async; track dt.id) {
           <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
             <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-              <div class="flex items-center mr-3">
-                <div class="relative mr-3">
+              <div class="flex items-center gap-3">
+                <div class="relative">
                   <img
                     [ngSrc]="'/' + dt.type + '.png'"
                     [alt]="dt.type"
@@ -63,7 +63,9 @@
                     class="absolute w-2 h-2 -bottom-0.5 -end-0.5"
                     [deploymentTarget]="dt"></app-status-dot>
                 </div>
-                {{ dt.name }}
+                <span class="max-w-32 sm:max-w-64 overflow-hidden text-ellipsis">
+                  {{ dt.name }}
+                </span>
               </div>
             </th>
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -97,7 +99,7 @@
             @if (fullVersion) {
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <div class="flex items-center">
-                  {{ dt.createdAt | date: 'dd.MM.YYYY HH:mm' }}
+                  {{ dt.createdAt | date: 'short' }}
                 </div>
               </td>
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
