@@ -37,12 +37,9 @@ export class UsersComponent {
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
   });
 
-  public namePlaceholder;
-
   constructor() {
     const data = toSignal(inject(ActivatedRoute).data);
     this.userRole = computed(() => data()?.['userRole'] ?? null);
-    this.namePlaceholder = this.userRole() === 'customer' ? 'Sustainable Corp Ltd.' : 'John Doe';
     const usersWithRefresh = this.refresh$.pipe(
       startWith(undefined),
       switchMap(() => this.users.getUsers())
