@@ -33,7 +33,7 @@ func CreateUserAccountWithOrganization(
 		ctx,
 		userAccount.ID,
 		org.ID,
-		types.UserRoleDistributor,
+		types.UserRoleVendor,
 	); err != nil {
 		return nil, err
 	} else {

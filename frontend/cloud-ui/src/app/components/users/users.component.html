@@ -23,7 +23,7 @@
         <div
           class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
           <button
-            *appRequiredRole="'distributor'"
+            *appRequiredRole="'vendor'"
             (click)="showInviteDialog()"
             type="button"
             id="createApplicationButton"
@@ -63,10 +63,10 @@
                         Customer
                       </span>
                     }
-                    @case ('distributor') {
+                    @case ('vendor') {
                       <span
                         class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
-                        Distributor
+                        Vendor
                       </span>
                     }
                   }
@@ -142,7 +142,7 @@
                   formControlName="userRole"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   required>
-                  <option value="distributor">Distributor</option>
+                  <option value="vendor">Vendor</option>
                   <option value="customer">Customer</option>
                 </select>
               </div>

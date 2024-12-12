@@ -23,7 +23,7 @@ func main() {
 	pmig := types.UserAccount{Email: "pmig@glasskube.com", Name: "Philip Miglinci", Password: "12345678"}
 	util.Must(security.HashPassword(&pmig))
 	util.Must(db.CreateUserAccount(ctx, &pmig))
-	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmig.ID, org.ID, types.UserRoleDistributor))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmig.ID, org.ID, types.UserRoleVendor))
 
 	kosmoz := types.UserAccount{Email: "jakob.steiner@glasskube.eu", Name: "Jakob Steiner", Password: "asdasdasd"}
 	util.Must(security.HashPassword(&kosmoz))
