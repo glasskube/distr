@@ -12,6 +12,7 @@ import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
+import {UsersService} from '../../services/users.service';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -27,9 +28,12 @@ import {ConnectInstructionsComponent} from '../connect-instructions/connect-inst
 })
 export class OnboardingWizardComponent {
   protected readonly xmarkIcon = faXmark;
-  private applications = inject(ApplicationsService);
-  private deploymentTargets = inject(DeploymentTargetsService);
-  private deployments = inject(DeploymentService);
+
+  private readonly applications = inject(ApplicationsService);
+  private readonly deploymentTargets = inject(DeploymentTargetsService);
+  private readonly deployments = inject(DeploymentService);
+  private readonly users = inject(UsersService);
+
   @ViewChild('stepper') stepper!: CdkStepper;
 
   createdApp?: Application;
@@ -62,23 +66,11 @@ export class OnboardingWizardComponent {
 
   deploymentTargetForm = new FormGroup({
     customerName: new FormControl<string>('', Validators.required),
-    accessType: new FormControl<string>('', Validators.required),
-    technicalContact: new FormGroup({
-      name: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      email: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        [Validators.required, Validators.email]
-      ),
-    }),
+    accessType: new FormControl<'full' | 'none'>('full', Validators.required),
+    technicalContactEmail: new FormControl<string>({value: '', disabled: true}, [
+      Validators.required,
+      Validators.email,
+    ]),
   });
 
   private loading = false;
@@ -97,11 +89,9 @@ export class OnboardingWizardComponent {
     this.deploymentTargetForm.controls.accessType.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
       if (type === 'full') {
         // disable validators
-        this.deploymentTargetForm.controls.technicalContact.controls.name.disable();
-        this.deploymentTargetForm.controls.technicalContact.controls.email.disable();
+        this.deploymentTargetForm.controls.technicalContactEmail.disable();
       } else {
-        this.deploymentTargetForm.controls.technicalContact.controls.name.enable();
-        this.deploymentTargetForm.controls.technicalContact.controls.email.enable();
+        this.deploymentTargetForm.controls.technicalContactEmail.enable();
       }
     });
   }
@@ -159,35 +149,35 @@ export class OnboardingWizardComponent {
     } else if (this.stepper.selectedIndex === 1) {
       if (this.deploymentTargetForm.valid) {
         this.loading = true;
-        const base = {
-          name: this.deploymentTargetForm.controls.customerName.value!,
-          type: 'docker',
-          geolocation: {
-            lat: 48.1956026,
-            lon: 16.3633028,
-          },
-        };
-        this.deploymentTargets
-          .create({
-            ...base,
-            name: base.name + ' (staging)',
-          })
-          .pipe(
-            /*switchMap(() =>
-              this.deploymentTargets.create({
-                ...base,
-                name: base.name + '-prod',
-              })
-            ),*/
-            tap((dt) => (this.createdDeploymentTarget = dt)),
-            switchMap((dt) =>
-              this.deployments.create({
-                applicationVersionId: this.createdApp!.versions![0].id!,
-                deploymentTargetId: dt.id!,
-              })
+        if (this.deploymentTargetForm.value.accessType === 'full') {
+          this.deploymentTargets
+            .create({
+              name: this.deploymentTargetForm.controls.customerName.value! + ' (staging)',
+              type: 'docker',
+              geolocation: {
+                lat: 48.1956026,
+                lon: 16.3633028,
+              },
+            })
+            .pipe(
+              tap((dt) => (this.createdDeploymentTarget = dt)),
+              switchMap((dt) =>
+                this.deployments.create({
+                  applicationVersionId: this.createdApp!.versions![0].id!,
+                  deploymentTargetId: dt.id!,
+                })
+              )
             )
-          )
-          .subscribe(() => this.nextStep());
+            .subscribe(() => this.nextStep());
+        } else {
+          this.users
+            .addUser({
+              email: this.deploymentTargetForm.value.technicalContactEmail!,
+              name: this.deploymentTargetForm.value.customerName!,
+              userRole: 'customer',
+            })
+            .subscribe(() => this.nextStep());
+        }
       } else {
         this.deploymentTargetForm.markAllAsTouched();
       }
