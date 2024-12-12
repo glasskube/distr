@@ -48,11 +48,11 @@ build: frontend-prod tidy
 
 .PHONY: docker-build
 docker-build:
-	docker build . --tag cloud  --network host
+	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud  --network host .
 
 .PHONY: docker-build-agent
 docker-build-agent:
-	docker build -f Dockerfile.agent . --tag glasskube-agent --network host
+	docker build -f Dockerfile.agent --tag ghcr.io/glasskube/cloud-agent --network host .
 
 .PHONY: init-db
 init-db:
