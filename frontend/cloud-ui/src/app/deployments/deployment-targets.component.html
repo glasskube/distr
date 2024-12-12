@@ -35,14 +35,13 @@
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
       <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
         <tr>
+          <th scope="col" class="p-4">Managed By</th>
           <th scope="col" class="p-4">Deployment</th>
-          <th scope="col" class="p-4">Status</th>
           <th scope="col" class="p-4">Type</th>
+          <th scope="col" class="p-4">Status</th>
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
-            <th scope="col" class="p-4">Geolocation</th>
-            <th scope="col" class="p-4">Managed By</th>
-            <th scope="col" class="p-4">Current Deployment</th>
+            <th scope="col" class="p-4">Deployed application</th>
             <th scope="col" class="p-4"></th>
           }
         </tr>
@@ -50,7 +49,14 @@
       <tbody>
         @for (dt of deploymentTargets$ | async; track dt.id) {
           <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+            <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              @if (dt.createdBy) {
+                <span [title]="dt.createdBy.email">
+                  {{ dt.createdBy.name ?? dt.createdBy.email }}
+                </span>
+              }
+            </td>
+            <td scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               <div class="flex items-center gap-3">
                 <div class="relative">
                   <img
@@ -67,7 +73,13 @@
                   {{ dt.name }}
                 </span>
               </div>
-            </th>
+            </td>
+            <td class="px-4 py-3">
+              <span
+                class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                {{ dt.type }}
+              </span>
+            </td>
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               @if (!dt.currentStatus) {
                 <div class="flex items-center" title="No status has been posted by the agent">
@@ -90,31 +102,14 @@
                 </div>
               }
             </td>
-            <td class="px-4 py-3">
-              <span
-                class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                {{ dt.type }}
-              </span>
-            </td>
             @if (fullVersion) {
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <div class="flex items-center">
                   {{ dt.createdAt | date: 'short' }}
                 </div>
               </td>
-              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                @if (dt.geolocation) {
-                  {{ dt.geolocation.lat }}/{{ dt.geolocation.lon }}
-                }
-              </td>
-              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                @if (dt.createdBy) {
-                  <span [title]="dt.createdBy.email">
-                    {{ dt.createdBy.name ?? dt.createdBy.email }}
-                  </span>
-                }
-              </td>
-              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              <td
+                class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 @if (dt.latestDeployment | async; as deployment) {
                   {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
                 }

@@ -1,39 +1,27 @@
 import {Component, computed, inject, Signal, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {
-  faMagnifyingGlass,
-  faPlus,
-  faCaretDown,
-  faPen,
-  faTrash,
-  faXmark,
-  faBoxArchive,
-} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {UsersService} from '../../services/users.service';
-import {AsyncPipe, DatePipe, JsonPipe} from '@angular/common';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {AsyncPipe, DatePipe} from '@angular/common';
 import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap, tap} from 'rxjs';
-import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
+import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap} from 'rxjs';
+import {UserAccountWithRole, UserRole} from '../../types/user-account';
 import {ActivatedRoute} from '@angular/router';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {RequireRoleDirective} from '../../directives/required-role.directive';
 
 @Component({
   selector: 'app-users',
-  imports: [FaIconComponent, AsyncPipe, DatePipe, RequireRoleDirective, ReactiveFormsModule],
+  imports: [FaIconComponent, AsyncPipe, DatePipe, ReactiveFormsModule, RequireRoleDirective],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
 })
 export class UsersComponent {
-  public readonly magnifyingGlassIcon = faMagnifyingGlass;
-  public readonly plusIcon = faPlus;
-  public readonly caretDownIcon = faCaretDown;
-  public readonly penIcon = faPen;
-  public readonly trashIcon = faTrash;
-  public readonly xmarkIcon = faXmark;
-  public readonly releaseIcon = faBoxArchive;
+  public readonly faMagnifyingGlass = faMagnifyingGlass;
+  public readonly faPlus = faPlus;
+  public readonly faXmark = faXmark;
 
   public readonly userRole: Signal<UserRole>;
   private readonly users = inject(UsersService);
