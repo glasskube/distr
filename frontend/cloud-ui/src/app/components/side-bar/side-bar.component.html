@@ -31,6 +31,17 @@
       </li>
       <li>
         <a
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+          routerLink="/customers">
+          <fa-icon
+            [icon]="faAddressBook"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+          <span class="ms-3">Customers</span>
+        </a>
+      </li>
+      <li>
+        <a
           (click)="sidebar.hide()"
           routerLink="/deployments"
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
@@ -85,8 +96,11 @@
       <li>
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLink="/user-accounts">
-          <fa-icon [icon]="faUsers" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+          routerLink="/users">
+          <fa-icon
+            [icon]="faUsers"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
           <span class="ms-3">Manage Users</span>
         </a>
       </li>
