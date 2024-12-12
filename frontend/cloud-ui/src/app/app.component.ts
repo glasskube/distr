@@ -1,12 +1,11 @@
-import {Component, effect, HostBinding, inject, OnInit} from '@angular/core';
-import {SideBarComponent} from './components/side-bar/side-bar.component';
-import {NavBarComponent} from './components/nav-bar/nav-bar.component';
+import {Component, effect, inject, OnInit} from '@angular/core';
 import {Event, NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import posthog from 'posthog-js';
-import {filter, interval, Observable} from 'rxjs';
+import {filter, Observable} from 'rxjs';
 import {ColorSchemeService} from './services/color-scheme.service';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
-import {initFlowbite} from 'flowbite';
+import * as Sentry from '@sentry/angular';
+import {AuthService} from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +15,7 @@ import {initFlowbite} from 'flowbite';
 })
 export class AppComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
   private readonly navigationEnd$: Observable<NavigationEnd> = this.router.events.pipe(
     filter((event: Event) => event instanceof NavigationEnd)
   );
@@ -27,6 +27,11 @@ export class AppComponent implements OnInit {
   }
 
   public ngOnInit() {
-    this.navigationEnd$.subscribe(() => posthog.capture('$pageview'));
+    this.navigationEnd$.subscribe(() => {
+      const email = this.auth.isAuthenticated ? this.auth.getClaims().email : undefined;
+      Sentry.setUser({email});
+      posthog.setPersonProperties({email});
+      posthog.capture('$pageview');
+    });
   }
 }
