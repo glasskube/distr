@@ -21,6 +21,7 @@ import {ConnectInstructionsComponent} from '../components/connect-instructions/c
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AuthService} from '../services/auth.service';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -42,6 +43,7 @@ import {AuthService} from '../services/auth.service';
   animations: [modalFlyInOut, drawerFlyInOut],
 })
 export class DeploymentTargetsComponent implements OnInit, OnDestroy {
+  private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
   @Input('fullVersion') fullVersion = false;
   readonly magnifyingGlassIcon = faMagnifyingGlass;
@@ -167,6 +169,8 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
       this.loadDeploymentTarget(
         await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
       );
+      this.toast.success(`${dt.name} saved successfully`);
+      this.hideDrawer();
     } else {
       this.editForm.markAllAsTouched();
     }
@@ -217,6 +221,7 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
       this.selectedDeploymentTarget!!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
         this.selectedDeploymentTarget!!.id!!
       );
+      this.toast.success('Deployment saved successfully');
       this.hideModal();
     } else {
       this.deployForm.markAllAsTouched();

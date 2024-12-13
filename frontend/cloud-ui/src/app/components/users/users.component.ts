@@ -69,10 +69,10 @@ export class UsersComponent {
       this.closeInviteDialog();
       switch (this.userRole()) {
         case 'customer':
-          this.toast.success("Customer has been invited to the organization");
-          break
-        case "vendor":
-          this.toast.success("User has been invited to the organization");
+          this.toast.success('Customer has been invited to the organization');
+          break;
+        case 'vendor':
+          this.toast.success('User has been invited to the organization');
       }
       this.refresh$.next();
     }

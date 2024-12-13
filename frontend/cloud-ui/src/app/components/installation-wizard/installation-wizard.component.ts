@@ -14,6 +14,7 @@ import {AsyncPipe} from '@angular/common';
 import {Deployment} from '../../types/deployment';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
+import {ToastService} from '../../services/toast.service';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -32,6 +33,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   protected readonly xmarkIcon = faXmark;
   protected readonly shipIcon = faShip;
 
+  private readonly toast = inject(ToastService);
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deployments = inject(DeploymentService);
@@ -113,6 +115,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       if (this.deployForm.valid) {
         this.loading = true;
         await this.saveDeployment();
+        this.toast.success('Deployment saved successfully');
         this.close();
       }
     }
