@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -45,35 +47,48 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	organization, err := db.GetCurrentOrg(ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
+	var organization types.Organization
 	userAccount := types.UserAccount{
 		Email: body.Email,
 		Name:  body.Name,
 	}
 
-	if err := db.CreateUserAccount(ctx, &userAccount); errors.Is(err, apierrors.ErrAlreadyExists) {
-		// TODO: In the future this should not be an error, but we don't support multi-org users yet, so for now it is
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		if result, err := db.GetCurrentOrg(ctx); err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return err
+		} else {
+			organization = *result
+		}
 
-	if err := db.CreateUserAccountOrganizationAssignment(ctx, userAccount.ID, organization.ID, body.UserRole); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := db.CreateUserAccount(ctx, &userAccount); errors.Is(err, apierrors.ErrAlreadyExists) {
+			// TODO: In the future this should not be an error, but we don't support multi-org users yet, so for now it is
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return err
+		} else if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+
+		if err := db.CreateUserAccountOrganizationAssignment(
+			ctx,
+			userAccount.ID,
+			organization.ID,
+			body.UserRole,
+		); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+		return nil
+	}); err != nil {
+		log.Warn("could not create user", zap.Error(err))
 		return
 	}
 
 	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
 	_, token, err := auth.GenerateTokenValidFor(
 		userAccount,
-		types.OrganizationWithUserRole{Organization: *organization, UserRole: body.UserRole},
+		types.OrganizationWithUserRole{Organization: organization, UserRole: body.UserRole},
 		env.InviteTokenValidDuration(),
 	)
 	if err != nil {
@@ -83,7 +98,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	if err := mailer.Send(ctx, mail.New(
 		mail.To(userAccount.Email),
 		mail.Subject("Welcome to Glasskube Cloud"),
-		mail.HtmlBodyTemplate(mailtemplates.Invite(userAccount, *organization, token)),
+		mail.HtmlBodyTemplate(mailtemplates.Invite(userAccount, organization, token)),
 	)); err != nil {
 		log.Error("failed to send invite mail", zap.Error(err))
 	}
