@@ -2,11 +2,11 @@ name: glasskube-agent
 services:
   agent:
     network_mode: host
-    image: 'glasskube-agent' # TODO tag
+    image: "ghcr.io/glasskube/cloud-agent:0.1.0" # x-release-please-version
     environment:
-      GK_TARGET_ID: '{{ .targetId }}'
-      GK_TARGET_SECRET: '{{ .targetSecret }}'
-      GK_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
-      GK_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
+      GK_TARGET_ID: "{{ .targetId }}"
+      GK_TARGET_SECRET: "{{ .targetSecret }}"
+      GK_RESOURCE_ENDPOINT: "{{ .resourcesEndpoint }}"
+      GK_STATUS_ENDPOINT: "{{ .statusEndpoint }}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
