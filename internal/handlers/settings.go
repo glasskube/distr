@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"github.com/glasskube/cloud/internal/util"
 	"net/http"
+	"time"
 
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
@@ -34,6 +36,11 @@ func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
+	if body.EmailVerified && user.EmailVerifiedAt == nil {
+		user.EmailVerifiedAt = util.PtrTo(time.Now())
+	}
+
+	// TODO demo data verify
 
 	if err := db.UpateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -44,14 +44,15 @@ func CreateUserAccountWithOrganization(
 func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO UserAccount AS u (email, password_hash, password_salt, name) "+
-			"VALUES (@email, @password_hash, @password_salt, @name) "+
+		"INSERT INTO UserAccount AS u (email, password_hash, password_salt, name, email_verified_at) "+
+			"VALUES (@email, @password_hash, @password_salt, @name, @email_verified_at) "+
 			"RETURNING "+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"email":         userAccount.Email,
-			"password_hash": userAccount.PasswordHash,
-			"password_salt": userAccount.PasswordSalt,
-			"name":          userAccount.Name,
+			"email":             userAccount.Email,
+			"password_hash":     userAccount.PasswordHash,
+			"password_salt":     userAccount.PasswordSalt,
+			"name":              userAccount.Name,
+			"email_verified_at": userAccount.EmailVerifiedAt,
 		},
 	)
 	if err != nil {
@@ -74,15 +75,17 @@ func UpateUserAccount(ctx context.Context, userAccount *types.UserAccount) error
 		SET email = @email,
 			name = @name,
 			password_hash = @password_hash,
-			password_salt = @password_salt
+			password_salt = @password_salt,
+			email_verified_at = @email_verified_at
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"id":            userAccount.ID,
-			"email":         userAccount.Email,
-			"password_hash": userAccount.PasswordHash,
-			"password_salt": userAccount.PasswordSalt,
-			"name":          userAccount.Name,
+			"id":                userAccount.ID,
+			"email":             userAccount.Email,
+			"password_hash":     userAccount.PasswordHash,
+			"password_salt":     userAccount.PasswordSalt,
+			"name":              userAccount.Name,
+			"email_verified_at": userAccount.EmailVerifiedAt,
 		},
 	)
 	if err != nil {

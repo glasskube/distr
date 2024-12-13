@@ -54,6 +54,8 @@ func GenerateTokenValidFor(
 	return JWTAuth.Encode(claims)
 }
 
+// TODO instead do GenerateVerificationTokenFor...
+
 func CurrentUserId(ctx context.Context) (string, error) {
 	if token, _, err := jwtauth.FromContext(ctx); err != nil {
 		return "", err

@@ -10,6 +10,7 @@ type CreateUserAccountRequest struct {
 }
 
 type UpdateUserAccountRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name          string `json:"name"`
+	Password      string `json:"password"`
+	EmailVerified bool   `json:"emailVerified"`
 }

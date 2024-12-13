@@ -77,9 +77,10 @@ func InviteCustomer(
 		}
 }
 
-func VerifyEmailAtRegistration(userAccount types.UserAccount, verificationLink string) (*template.Template, any) {
+func VerifyEmail(userAccount types.UserAccount, token string) (*template.Template, any) {
 	return templates.Lookup("verify-email-registration.html"), map[string]any{
-		"UserAccount":      userAccount,
-		"VerificationLink": verificationLink,
+		"UserAccount": userAccount,
+		"Host":        env.Host(),
+		"Token":       token,
 	}
 }

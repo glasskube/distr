@@ -3,8 +3,10 @@ package handlers
 import (
 	"context"
 	"errors"
+	"github.com/glasskube/cloud/internal/util"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
@@ -87,6 +89,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
+	userAccount.EmailVerifiedAt = util.PtrTo(time.Now())
 	_, token, err := auth.GenerateTokenValidFor(
 		userAccount,
 		types.OrganizationWithUserRole{Organization: organization, UserRole: body.UserRole},

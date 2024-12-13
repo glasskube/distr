@@ -8,7 +8,7 @@ export class SettingsService {
   private readonly httpClient = inject(HttpClient);
   private readonly baseUrl = '/api/v1/settings';
 
-  public updateUserSettings(request: {name?: string; password?: string}): Observable<UserAccount> {
+  public updateUserSettings(request: {name?: string; password?: string, emailVerified?: boolean}): Observable<UserAccount> {
     return this.httpClient.post<UserAccount>(`${this.baseUrl}/user`, request);
   }
 }
