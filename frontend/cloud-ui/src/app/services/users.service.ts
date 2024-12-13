@@ -12,7 +12,12 @@ export class UsersService {
     return this.httpClient.get<UserAccountWithRole[]>(this.baseUrl);
   }
 
-  public addUser(request: {email: string; name?: string; userRole: UserRole, applicationName?: string}): Observable<void> {
+  public addUser(request: {
+    email: string;
+    name?: string;
+    userRole: UserRole;
+    applicationName?: string;
+  }): Observable<void> {
     return this.httpClient.post<void>(this.baseUrl, request);
   }
 }

@@ -11,11 +11,13 @@
         <p>Hi,</p>
 
         <p>
-          {{.Organization.Name}} invited you to install {{ if not .ApplicationName }} and manage applications via Glasskube Cloud. {{ else }} {{.ApplicationName}}. {{ end }}
+          {{.Organization.Name}} invited you to install {{ if not .ApplicationName }} and manage applications via
+          Glasskube Cloud. {{ else }} {{.ApplicationName}}. {{ end }}
         </p>
 
         <p>
-          To finish your setup and get further instructions please click <a href="{{.Host}}/join?jwt={{.Token}}">here</a>.
+          To finish your setup and get further instructions please click
+          <a href="{{.Host}}/join?jwt={{.Token}}">here</a>.
         </p>
 
         <p>{{template "fragments/signature.html"}}</p>
