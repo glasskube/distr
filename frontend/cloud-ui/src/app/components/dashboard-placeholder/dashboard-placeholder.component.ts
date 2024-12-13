@@ -48,9 +48,9 @@ export class DashboardPlaceholderComponent implements OnInit {
   protected readonly faPlus = faPlus;
 
   ngOnInit() {
-    combineLatest([this.applications$, this.deploymentTargets$])
+    combineLatest([this.applications$])
       .pipe(first())
-      .subscribe(([apps, dts]) => {
+      .subscribe(([apps]) => {
         if (this.auth.hasRole('vendor') && apps.length === 0) {
           this.closeWizard();
           this.openWizard();
