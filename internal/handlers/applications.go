@@ -84,7 +84,6 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	// there surely is some way to have the update command returning the versions too, but I don't think it's worth
 	// the work right now
 	application.Versions = existing.Versions
-	// w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(application); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
