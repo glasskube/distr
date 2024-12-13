@@ -12,7 +12,8 @@
           "type": "json",
           "path": "package.json",
           "jsonpath": "$.version"
-        }
+        },
+        "internal/resources/embedded/agent-base.yaml"
       ],
       "changelog-sections": [
         {
