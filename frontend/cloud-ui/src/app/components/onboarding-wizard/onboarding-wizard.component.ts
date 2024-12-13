@@ -13,6 +13,7 @@ import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {UsersService} from '../../services/users.service';
+import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -23,6 +24,7 @@ import {UsersService} from '../../services/users.service';
     CdkStep,
     ReactiveFormsModule,
     ConnectInstructionsComponent,
+    OnboardingWizardIntroComponent,
   ],
   animations: [modalFlyInOut],
 })
@@ -40,6 +42,8 @@ export class OnboardingWizardComponent {
   createdDeploymentTarget?: DeploymentTarget;
 
   @Output('closed') closed = new EventEmitter<void>();
+
+  introForm = new FormGroup({});
 
   applicationForm = new FormGroup({
     type: new FormControl<string>('sample', Validators.required),
@@ -112,6 +116,9 @@ export class OnboardingWizardComponent {
     }
 
     if (this.stepper.selectedIndex === 0) {
+      this.loading = true;
+      this.nextStep();
+    } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
         if (this.applicationForm.controls.type.value === 'sample') {
           this.loading = true;
@@ -146,7 +153,7 @@ export class OnboardingWizardComponent {
       } else {
         this.applicationForm.markAllAsTouched();
       }
-    } else if (this.stepper.selectedIndex === 1) {
+    } else if (this.stepper.selectedIndex === 2) {
       if (this.deploymentTargetForm.valid) {
         this.loading = true;
         if (this.deploymentTargetForm.value.accessType === 'full') {
@@ -181,7 +188,7 @@ export class OnboardingWizardComponent {
       } else {
         this.deploymentTargetForm.markAllAsTouched();
       }
-    } else if (this.stepper.selectedIndex == 2) {
+    } else if (this.stepper.selectedIndex == 3) {
       this.close();
     }
   }

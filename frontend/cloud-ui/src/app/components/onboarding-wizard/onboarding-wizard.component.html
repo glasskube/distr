@@ -4,7 +4,7 @@
   class="p-4 w-full mt-12 max-h-full bg-white rounded-lg shadow dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Onboard your first customer</h2>
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Welcome to Glasskube Cloud</h2>
     <button
       type="button"
       (click)="close()"
@@ -21,11 +21,13 @@
           #stepper
           (attemptContinue)="attemptContinue()"
           class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          <cdk-step [stepControl]="introForm">
+            <app-onboarding-wizard-intro />
+          </cdk-step>
           <cdk-step [stepControl]="applicationForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
                 <h3 class="font-normal text-gray-900 dark:text-white">Choose An Application</h3>
-
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <div
                     class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
@@ -95,7 +97,7 @@
                         name="name"
                         id="applicationName"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="asdf-app"
+                        placeholder="Security Scanner"
                         required />
                       @if (
                         applicationForm.controls.custom.controls.name.invalid &&
@@ -108,7 +110,7 @@
                       <label
                         for="applicationVersion"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Version Name</label
+                        >Version</label
                       >
                       <input
                         [formControl]="applicationForm.controls.custom.controls.versionName"
@@ -160,7 +162,7 @@
                       name="name"
                       id="customerName"
                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="Sustainable Enterprises Ltd"
+                      placeholder="Sustainable Corp Ltd."
                       required
                       autocomplete="off" />
                     @if (
@@ -255,7 +257,7 @@
                         type="email"
                         id="techContactEmail"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="john@doe.com" />
+                        placeholder="michael.scott@corp.com" />
                       @if (
                         deploymentTargetForm.controls.technicalContactEmail.invalid &&
                         deploymentTargetForm.controls.technicalContactEmail.touched
@@ -296,7 +298,7 @@
                   <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Customer has been invited</h3>
                   <p class="mb-6 text-gray-500 dark:text-gray-400">
                     Great! An e-mail has been sent to {{ deploymentTargetForm.value.technicalContactEmail }}, inviting
-                    them to join your Glasskube organization. They will receive instructions on how to set up their
+                    them to your customer portal. They will receive instructions on how to set up their
                     <b>{{ createdApp?.name }}</b> deployment.
                   </p>
                 }

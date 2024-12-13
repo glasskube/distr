@@ -3,6 +3,7 @@ import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faAddressBook,
+  faArrowRightLong,
   faBoxesStacked,
   faCheckDouble,
   faDashboard,
@@ -45,4 +46,6 @@ export class SideBarComponent {
       this.asideElement?.nativeElement.classList.toggle('-translate-x-full', !show);
     });
   }
+
+  protected readonly faArrowRightLong = faArrowRightLong;
 }
