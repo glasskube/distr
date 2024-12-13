@@ -16,7 +16,6 @@ import (
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
-	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
@@ -75,7 +74,6 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-			util.Must(db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error { return nil }))
 			if err := security.HashPassword(&userAccount); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return err
