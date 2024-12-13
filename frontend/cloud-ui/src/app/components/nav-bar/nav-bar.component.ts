@@ -7,6 +7,7 @@ import {SidebarService} from '../../services/sidebar.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
+import {UserRole} from '../../types/user-account';
 
 @Component({
   selector: 'app-nav-bar',
@@ -21,15 +22,17 @@ export class NavBarComponent implements OnInit {
   showDropdown = false;
   email?: string;
   name?: string;
+  role?: UserRole;
   imageUrl?: string;
 
   protected readonly faBarsStaggered = faBarsStaggered;
 
   public async ngOnInit() {
     try {
-      const {email, name} = this.auth.getClaims();
+      const {email, name, role} = this.auth.getClaims();
       this.email = email;
       this.name = name;
+      this.role = role;
       this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
     } catch (e) {
       console.error(e);
