@@ -20,6 +20,7 @@ import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {Application} from '../types/application';
 import {modalFlyInOut} from '../animations/modal';
 import {RequireRoleDirective} from '../directives/required-role.directive';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-applications',
@@ -63,6 +64,8 @@ export class ApplicationsComponent {
   private applicationVersionModalRef?: EmbeddedOverlayRef;
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
+
+  private readonly toast = inject(ToastService);
 
   openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
     this.hideDrawer();
@@ -134,7 +137,13 @@ export class ApplicationsComponent {
           type: val.type!,
         });
       }
-      result.subscribe((application) => this.loadApplication(application));
+      result.subscribe({
+        next: (application) => {
+          this.hideDrawer();
+          this.toast.success(`${application.name} saved successfully`);
+        },
+        error: () => this.toast.error(`An error occurred`),
+      });
     } else {
       this.editForm.markAllAsTouched();
     }
@@ -154,7 +163,8 @@ export class ApplicationsComponent {
           },
           this.fileToUpload
         )
-        .subscribe((av) => {
+        .subscribe((value) => {
+          this.toast.success(`${value.name} created successfully`);
           this.hideVersionModal();
         });
     } else {

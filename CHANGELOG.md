@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.3.0](https://github.com/glasskube/cloud/compare/v0.2.0...v0.3.0) (2024-12-13)
+
+
+### Features
+
+* **frontend:** sentry and posthog user identification ([#111](https://github.com/glasskube/cloud/issues/111)) ([f592617](https://github.com/glasskube/cloud/commit/f5926177c13df51a33c91ecd8d01afa580d18ad2))
+* **frontend:** version modal ([#122](https://github.com/glasskube/cloud/issues/122)) ([d9305f1](https://github.com/glasskube/cloud/commit/d9305f10e6c7f807ec58c072c60851fd50a3a9de))
+* switch table header ordering and placeholders ([#121](https://github.com/glasskube/cloud/issues/121)) ([3d9f5c3](https://github.com/glasskube/cloud/commit/3d9f5c3d12c5d13bb15875d40be47fc8237ad2ea))
+* **ui:** update onboarding flow to create customer user ([#123](https://github.com/glasskube/cloud/issues/123)) ([0293620](https://github.com/glasskube/cloud/commit/029362039a0dc3e6dcd336d1749719f1778aff8a))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.0.4 ([#116](https://github.com/glasskube/cloud/issues/116)) ([f374746](https://github.com/glasskube/cloud/commit/f3747469b3dc094dedebe1fa963fe618001b095c))
+* **deps:** update dependency @angular/cdk to v19.0.3 ([#106](https://github.com/glasskube/cloud/issues/106)) ([b7cf95f](https://github.com/glasskube/cloud/commit/b7cf95f3bafd141f76ee67a3792fc64898157c1d))
+* **deps:** update dependency @sentry/angular to v8.44.0 ([#112](https://github.com/glasskube/cloud/issues/112)) ([3ec3176](https://github.com/glasskube/cloud/commit/3ec3176a174dc8e855817565e1a01bd8029f3a32))
+* **deps:** update dependency globe.gl to v2.34.3 ([#127](https://github.com/glasskube/cloud/issues/127)) ([e7481cf](https://github.com/glasskube/cloud/commit/e7481cf6167b03e9620bbda33ecfc4b56e2a3ef7))
+* **deps:** update dependency posthog-js to v1.196.1 ([#114](https://github.com/glasskube/cloud/issues/114)) ([56741a4](https://github.com/glasskube/cloud/commit/56741a4ac741daad6c0ddd2f7d60cb6b2ad63aa4))
+* **deps:** update dependency posthog-js to v1.198.0 ([#118](https://github.com/glasskube/cloud/issues/118)) ([d5c3b1b](https://github.com/glasskube/cloud/commit/d5c3b1b9d4c941fa6d90e3e96735da462d267e17))
+* **deps:** update dependency posthog-js to v1.199.0 ([#126](https://github.com/glasskube/cloud/issues/126)) ([edd89de](https://github.com/glasskube/cloud/commit/edd89de48f30aa869ceb1d52617df5631c3872a1))
+* **deps:** update module github.com/go-chi/jwtauth/v5 to v5.3.2 ([#110](https://github.com/glasskube/cloud/issues/110)) ([55dce33](https://github.com/glasskube/cloud/commit/55dce3327664b171d163057d2ea38990b7810dc0))
+* **deps:** update module golang.org/x/crypto to v0.31.0 [security] ([#109](https://github.com/glasskube/cloud/issues/109)) ([2b73573](https://github.com/glasskube/cloud/commit/2b73573129ac7cb1da8f049463955185f06fbb7b))
+* **frontend:** success feedback ([#128](https://github.com/glasskube/cloud/issues/128)) ([29d9de9](https://github.com/glasskube/cloud/commit/29d9de94ace771b01ef919b64293e668bc9a1bdb))
+* **frontend:** use wizard for new deployments ([#124](https://github.com/glasskube/cloud/issues/124)) ([a8b4bfa](https://github.com/glasskube/cloud/commit/a8b4bfa36e14527811a4d904224d41b3b41ab1d5))
+* **ui:** add maxwith and text overflow to name columns ([#119](https://github.com/glasskube/cloud/issues/119)) ([4616a78](https://github.com/glasskube/cloud/commit/4616a781d265ea9ca6ad035e1e37b70475c78857))
+* **ui:** move modal submit button and general modal improvements ([#120](https://github.com/glasskube/cloud/issues/120)) ([9b6899d](https://github.com/glasskube/cloud/commit/9b6899df3565efda55dc12e23194421f57ff2f15))
+
+
+### Other
+
+* add agent tag ([#130](https://github.com/glasskube/cloud/issues/130)) ([804eda3](https://github.com/glasskube/cloud/commit/804eda34ca3f3c1e6f4a00a4666123a66e621754))
+* change 'distributor' to 'vendor' everywhere ([#115](https://github.com/glasskube/cloud/issues/115)) ([ea7ed57](https://github.com/glasskube/cloud/commit/ea7ed57db968a767b0d978f3009813c258bebc75))
+* **deps:** update angular-cli monorepo to v19.0.5 ([#125](https://github.com/glasskube/cloud/issues/125)) ([e027fd6](https://github.com/glasskube/cloud/commit/e027fd6d78b5bc8773e2f1f39c9be5545ee23e86))
+* **ui:** consistent naming ([#117](https://github.com/glasskube/cloud/issues/117)) ([51487f2](https://github.com/glasskube/cloud/commit/51487f2f5c4bd484228f1fdd8c39ec9877dda6de))
+
 ## [0.2.0](https://github.com/glasskube/cloud/compare/v0.1.0...v0.2.0) (2024-12-11)
 
 

@@ -182,6 +182,7 @@ export class OnboardingWizardComponent {
               email: this.deploymentTargetForm.value.technicalContactEmail!,
               name: this.deploymentTargetForm.value.customerName!,
               userRole: 'customer',
+              applicationName: this.createdApp?.name,
             })
             .subscribe(() => this.nextStep());
         }
