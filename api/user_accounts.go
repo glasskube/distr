@@ -3,9 +3,10 @@ package api
 import "github.com/glasskube/cloud/internal/types"
 
 type CreateUserAccountRequest struct {
-	Email    string         `json:"email"`
-	Name     string         `json:"name"`
-	UserRole types.UserRole `json:"userRole"`
+	Email           string         `json:"email"`
+	Name            string         `json:"name"`
+	ApplicationName string         `json:"applicationName"`
+	UserRole        types.UserRole `json:"userRole"`
 }
 
 type UpdateUserAccountRequest struct {

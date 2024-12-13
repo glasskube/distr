@@ -47,12 +47,32 @@ func Welcome() (*template.Template, any) {
 		}
 }
 
-func Invite(userAccount types.UserAccount, organization types.Organization, token string) (*template.Template, any) {
-	return templates.Lookup("invite.html"),
+func InviteUser(
+	userAccount types.UserAccount,
+	organization types.Organization,
+	token string,
+) (*template.Template, any) {
+	return templates.Lookup("invite-user.html"),
 		map[string]any{
 			"UserAccount":  userAccount,
 			"Organization": organization,
 			"Host":         env.Host(),
 			"Token":        token,
+		}
+}
+
+func InviteCustomer(
+	userAccount types.UserAccount,
+	organization types.Organization,
+	token string,
+	applicationName string,
+) (*template.Template, any) {
+	return templates.Lookup("invite-customer.html"),
+		map[string]any{
+			"UserAccount":     userAccount,
+			"Organization":    organization,
+			"ApplicationName": applicationName,
+			"Host":            env.Host(),
+			"Token":           token,
 		}
 }
