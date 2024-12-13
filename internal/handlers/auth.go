@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,9 @@ import (
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -70,28 +73,35 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Email:    request.Email,
 			Password: request.Password,
 		}
-		if err := security.HashPassword(&userAccount); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		} else if _, err := db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
-			log.Warn("user registration failed", zap.Error(err))
-			if errors.Is(err, apierrors.ErrAlreadyExists) {
-				w.WriteHeader(http.StatusBadRequest)
-			} else {
+
+		if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+			util.Must(db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error { return nil }))
+			if err := security.HashPassword(&userAccount); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
+				return err
+			} else if _, err := db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
+				if errors.Is(err, apierrors.ErrAlreadyExists) {
+					w.WriteHeader(http.StatusBadRequest)
+				} else {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+				return err
 			}
+			return nil
+		}); err != nil {
+			log.Warn("user registration failed", zap.Error(err))
 			return
-		} else {
-			mailer := internalctx.GetMailer(ctx)
-			mail := mail.New(
-				mail.To(userAccount.Email),
-				mail.Subject("Registration"),
-				mail.HtmlBodyTemplate(mailtemplates.Welcome()),
-			)
-			if err := mailer.Send(ctx, mail); err != nil {
-				log.Error("could not send welcome mail", zap.Error(err))
-			}
-			w.WriteHeader(http.StatusNoContent)
 		}
+
+		mailer := internalctx.GetMailer(ctx)
+		mail := mail.New(
+			mail.To(userAccount.Email),
+			mail.Subject("Registration"),
+			mail.HtmlBodyTemplate(mailtemplates.Welcome()),
+		)
+		if err := mailer.Send(ctx, mail); err != nil {
+			log.Error("could not send welcome mail", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
