@@ -141,4 +141,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     let applications = await firstValueFrom(this.applications$);
     this.selectedApplication = applications.find((a) => a.id === applicationId);
   }
+
+  protected readonly faShip = faShip;
 }
