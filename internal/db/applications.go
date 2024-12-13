@@ -56,6 +56,17 @@ func UpdateApplication(ctx context.Context, application *types.Application) erro
 	}
 }
 
+func DeleteApplicationWithID(ctx context.Context, id string) error {
+	db := internalctx.GetDb(ctx)
+	if cmd, err := db.Exec(ctx, `DELETE FROM Application WHERE id = @id`, pgx.NamedArgs{"id": id}); err != nil {
+		return err
+	} else if cmd.RowsAffected() == 0 {
+		return apierrors.ErrNotFound
+	} else {
+		return nil
+	}
+}
+
 func GetApplications(ctx context.Context) ([]types.Application, error) {
 	orgId, err := auth.CurrentOrgId(ctx)
 	if err != nil {
