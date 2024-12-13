@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/glasskube/cloud/internal/resources"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/contenttype"
@@ -21,21 +23,21 @@ import (
 
 func ApplicationsRouter(r chi.Router) {
 	r.Get("/", getApplications)
-	r.With(requireDistributor).Post("/", createApplication)
-	r.With(requireDistributor).Post("/sample", createSampleApplication)
+	r.With(requireUserRoleVendor).Post("/", createApplication)
+	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.Use(applicationMiddleware)
 		r.Get("/", getApplication)
-		r.With(requireDistributor).Put("/", updateApplication)
+		r.With(requireUserRoleVendor).Put("/", updateApplication)
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
 			r.Get("/", getApplicationVersions)
-			r.With(requireDistributor).Post("/", createApplicationVersion)
+			r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
-				r.With(requireDistributor).Put("/", updateApplicationVersion)
+				r.With(requireUserRoleVendor).Put("/", updateApplicationVersion)
 				r.Get("/compose-file", getApplicationVersionComposeFile)
 			})
 		})
@@ -245,45 +247,45 @@ func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func createSampleApplication(w http.ResponseWriter, r *http.Request) {
+	// TODO only serve request if user does not have a sample application yet
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	// TODO only serve request if user does not have a sample application yet
+
 	application := types.Application{
 		Name: "Shiori",
 		Type: types.DeploymentTypeDocker,
 	}
-	if err := db.CreateApplication(ctx, &application); err != nil {
-		log.Warn("could not create sample application", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = fmt.Fprintln(w, err); err != nil {
-			log.Error("failed to write error to response", zap.Error(err))
-		}
-		return
-	}
+
 	var composeFileData []byte
 	if composeFile, err := resources.Get("embedded/shiori-compose.yaml"); err != nil {
 		log.Warn("failed to read shiori compose file", zap.Error(err))
-		composeFileData = nil
 	} else {
 		composeFileData = composeFile
 	}
+
 	version := types.ApplicationVersion{
 		Name:            "v1.7.1",
 		ComposeFileData: &composeFileData,
-		ApplicationId:   application.ID,
 	}
-	if err := db.CreateApplicationVersion(ctx, &version); err != nil {
-		log.Warn("could not create sample applicationversion", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = fmt.Fprintln(w, err); err != nil {
-			log.Error("failed to write error to response", zap.Error(err))
+
+	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		if err := db.CreateApplication(ctx, &application); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
 		}
-	} else {
-		application.Versions = append(application.Versions, version)
-		if err = json.NewEncoder(w).Encode(application); err != nil {
-			log.Error("failed to encode json", zap.Error(err))
+		version.ApplicationId = application.ID
+		if err := db.CreateApplicationVersion(ctx, &version); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
 		}
+		return nil
+	}); err != nil {
+		log.Warn("could not create sample application", zap.Error(err))
+		return
 	}
+
+	application.Versions = append(application.Versions, version)
+	RespondJSON(w, application)
 }
 
 func applicationMiddleware(next http.Handler) http.Handler {

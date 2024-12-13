@@ -1,11 +1,11 @@
-import {Component, EventEmitter, inject, OnDestroy, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {modalFlyInOut} from '../../animations/modal';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {ApplicationsService} from '../../services/applications.service';
-import {firstValueFrom, tap} from 'rxjs';
+import {firstValueFrom, Subject, takeUntil, tap} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -14,6 +14,7 @@ import {AsyncPipe} from '@angular/common';
 import {Deployment} from '../../types/deployment';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
+import {ToastService} from '../../services/toast.service';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -28,26 +29,54 @@ import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewM
   ],
   animations: [modalFlyInOut],
 })
-export class InstallationWizardComponent implements OnDestroy {
+export class InstallationWizardComponent implements OnInit, OnDestroy {
   protected readonly xmarkIcon = faXmark;
-  private applications = inject(ApplicationsService);
-  private deploymentTargets = inject(DeploymentTargetsService);
-  private deployments = inject(DeploymentService);
-  @ViewChild('stepper') stepper!: CdkStepper;
+  protected readonly shipIcon = faShip;
 
-  @Output('closed') closed = new EventEmitter<void>();
+  private readonly toast = inject(ToastService);
+  private readonly applications = inject(ApplicationsService);
+  private readonly deploymentTargets = inject(DeploymentTargetsService);
+  private readonly deployments = inject(DeploymentService);
 
-  deploymentTargetForm = new FormGroup({
+  @ViewChild('stepper') private stepper?: CdkStepper;
+
+  @Output('closed') readonly closed = new EventEmitter<void>();
+
+  readonly deploymentTargetForm = new FormGroup({
     type: new FormControl<string>('docker', Validators.required),
     name: new FormControl<string>('', Validators.required),
   });
 
-  agentForm = new FormGroup({});
+  readonly agentForm = new FormGroup({});
 
+  readonly deployForm = new FormGroup({
+    deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
+    applicationId: new FormControl<string | undefined>(undefined, Validators.required),
+    applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
+    notes: new FormControl<string | undefined>(undefined),
+  });
+
+  readonly applications$ = this.applications.list();
+  protected selectedApplication?: Application;
+  protected selectedDeploymentTarget?: DeploymentTargetViewModel;
   private loading = false;
+  private readonly destroyed$ = new Subject<void>();
+
+  ngOnInit() {
+    this.deployForm.controls.applicationId.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((it) => this.updatedSelectedApplication(it!));
+    this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
+      if (s === 'VALID') {
+        this.deployForm.controls.applicationVersionId.enable();
+      } else {
+        this.deployForm.controls.applicationVersionId.disable();
+      }
+    });
+  }
 
   ngOnDestroy() {
-    this.applicationIdChange$.unsubscribe();
+    this.destroyed$.next();
   }
 
   async attemptContinue() {
@@ -55,28 +84,27 @@ export class InstallationWizardComponent implements OnDestroy {
       return;
     }
 
-    if (this.stepper.selectedIndex === 0) {
+    if (this.stepper?.selectedIndex === 0) {
       if (!this.deploymentTargetForm.valid) {
         this.deploymentTargetForm.markAllAsTouched();
         return;
       }
 
-      this.deploymentTargets
-        .create({
+      this.loading = true;
+      const created = await firstValueFrom(
+        this.deploymentTargets.create({
           name: this.deploymentTargetForm.value.name!,
           type: this.deploymentTargetForm.value.type!,
         })
-        .pipe(tap((dt) => (this.selectedDeploymentTarget = dt as DeploymentTargetViewModel)))
-        .subscribe(this.nextStep);
-
+      );
+      this.selectedDeploymentTarget = created as DeploymentTargetViewModel;
+      this.nextStep();
+    } else if (this.stepper?.selectedIndex === 1) {
       this.loading = true;
       this.nextStep();
-    } else if (this.stepper.selectedIndex === 1) {
-      this.loading = true;
-      this.nextStep();
-    } else if (this.stepper.selectedIndex == 2) {
+    } else if (this.stepper?.selectedIndex == 2) {
       this.deployForm.patchValue({
-        deploymentTargetId: this.selectedDeploymentTarget!!.id,
+        deploymentTargetId: this.selectedDeploymentTarget!.id,
       });
 
       if (!this.deployForm.valid) {
@@ -87,6 +115,7 @@ export class InstallationWizardComponent implements OnDestroy {
       if (this.deployForm.valid) {
         this.loading = true;
         await this.saveDeployment();
+        this.toast.success('Deployment saved successfully');
         this.close();
       }
     }
@@ -98,39 +127,23 @@ export class InstallationWizardComponent implements OnDestroy {
 
   private nextStep() {
     this.loading = false;
-    this.stepper.next();
+    this.stepper?.next();
   }
-
-  protected readonly shipIcon = faShip;
-
-  applications$ = this.applications.list();
-  selectedApplication?: Application | null;
-
-  deployForm = new FormGroup({
-    deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationVersionId: new FormControl<string | undefined>(undefined, Validators.required),
-    notes: new FormControl<string | undefined>(undefined),
-  });
-
-  protected selectedDeploymentTarget?: DeploymentTargetViewModel | null;
-
-  private readonly applicationIdChange$ = this.deployForm.controls.applicationId.valueChanges.subscribe((it) =>
-    this.updatedSelectedApplication(it!!)
-  );
 
   async saveDeployment() {
     if (this.deployForm.valid) {
       const deployment = this.deployForm.value;
       await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.selectedDeploymentTarget!!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
-        this.selectedDeploymentTarget!!.id!!
+      this.selectedDeploymentTarget!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
+        this.selectedDeploymentTarget!.id!
       );
     }
   }
 
   async updatedSelectedApplication(applicationId: string) {
     let applications = await firstValueFrom(this.applications$);
-    this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
+    this.selectedApplication = applications.find((a) => a.id === applicationId);
   }
+
+  protected readonly faShip = faShip;
 }

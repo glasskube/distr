@@ -15,10 +15,12 @@ import {
 import {Observable} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
-import {RequireRoleDirective as RequiredRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {Application} from '../types/application';
+import {modalFlyInOut} from '../animations/modal';
+import {RequireRoleDirective} from '../directives/required-role.directive';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-applications',
@@ -29,10 +31,10 @@ import {Application} from '../types/application';
     FaIconComponent,
     NgOptimizedImage,
     OverlayModule,
-    RequiredRoleDirective,
+    RequireRoleDirective,
   ],
   templateUrl: './applications.component.html',
-  animations: [dropdownAnimation, drawerFlyInOut],
+  animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
 export class ApplicationsComponent {
   @Input('fullVersion') fullVersion: boolean = false;
@@ -59,8 +61,11 @@ export class ApplicationsComponent {
   fileInput?: ElementRef;
 
   private manageApplicationDrawerRef?: EmbeddedOverlayRef;
+  private applicationVersionModalRef?: EmbeddedOverlayRef;
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
+
+  private readonly toast = inject(ToastService);
 
   openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
     this.hideDrawer();
@@ -75,6 +80,17 @@ export class ApplicationsComponent {
   hideDrawer() {
     this.manageApplicationDrawerRef?.close();
     this.reset();
+  }
+
+  openVersionModal(templateRef: TemplateRef<unknown>, application: Application) {
+    this.hideVersionModal();
+    this.loadApplication(application);
+    this.applicationVersionModalRef = this.overlay.showModal(templateRef, this.viewContainerRef);
+  }
+
+  hideVersionModal() {
+    this.applicationVersionModalRef?.close();
+    this.resetVersionForm();
   }
 
   loadApplication(application: Application) {
@@ -121,7 +137,13 @@ export class ApplicationsComponent {
           type: val.type!,
         });
       }
-      result.subscribe((application) => this.loadApplication(application));
+      result.subscribe({
+        next: (application) => {
+          this.hideDrawer();
+          this.toast.success(`${application.name} saved successfully`);
+        },
+        error: () => this.toast.error(`An error occurred`),
+      });
     } else {
       this.editForm.markAllAsTouched();
     }
@@ -141,8 +163,9 @@ export class ApplicationsComponent {
           },
           this.fileToUpload
         )
-        .subscribe((av) => {
-          this.resetVersionForm();
+        .subscribe((value) => {
+          this.toast.success(`${value.name} created successfully`);
+          this.hideVersionModal();
         });
     } else {
       this.newVersionForm.markAllAsTouched();

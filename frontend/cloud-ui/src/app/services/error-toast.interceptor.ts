@@ -1,37 +1,22 @@
 import {HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {tap} from 'rxjs';
-import {IndividualConfig, ToastrService} from 'ngx-toastr';
 import {inject} from '@angular/core';
-import {ToastComponent} from '../components/toast.component';
-
-export const GLOBAL_ERROR_TOAST_CONFIG: Partial<IndividualConfig> = {
-  toastComponent: ToastComponent,
-  disableTimeOut: true,
-  tapToDismiss: false,
-  titleClass: '',
-  messageClass: '',
-  toastClass: '',
-  positionClass: 'toast-bottom-right',
-};
+import {ToastService} from './toast.service';
 
 export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
-  const toastr = inject(ToastrService);
+  const toast = inject(ToastService);
   return next(req).pipe(
     tap({
       error: (err) => {
-        if (err instanceof HttpErrorResponse) {
-          if (!ignoreGlobalError(req, err)) {
-            toastr.show('', 'An internal server error occurred', GLOBAL_ERROR_TOAST_CONFIG);
-          }
+        if (err instanceof HttpErrorResponse && !ignoreError(req, err)) {
+          toast.error('An error occurred');
         }
       },
     })
   );
 };
 
-function ignoreGlobalError(req: HttpRequest<any>, err: HttpErrorResponse): boolean {
-  if (err.status >= 400 && err.status < 500) {
-    return true;
-  }
-  return false;
+function ignoreError(req: HttpRequest<any>, err: HttpErrorResponse) {
+  // TODO remove this; join latest deployment into the response in GET /deployments and don't do these follow up requests
+  return err.status === 404 && req.url.endsWith('latest-deployment');
 }

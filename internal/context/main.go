@@ -3,8 +3,8 @@ package context
 import (
 	"context"
 
+	"github.com/glasskube/cloud/internal/db/queryable"
 	"github.com/glasskube/cloud/internal/mail"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
@@ -20,9 +20,9 @@ const (
 	ctxKeyDeploymentTarget
 )
 
-func GetDb(ctx context.Context) *pgxpool.Pool {
+func GetDb(ctx context.Context) queryable.Queryable {
 	val := ctx.Value(ctxKeyDb)
-	if db, ok := val.(*pgxpool.Pool); ok {
+	if db, ok := val.(queryable.Queryable); ok {
 		if db != nil {
 			return db
 		}
@@ -30,7 +30,7 @@ func GetDb(ctx context.Context) *pgxpool.Pool {
 	panic("db not contained in context")
 }
 
-func WithDb(ctx context.Context, db *pgxpool.Pool) context.Context {
+func WithDb(ctx context.Context, db queryable.Queryable) context.Context {
 	ctx = context.WithValue(ctx, ctxKeyDb, db)
 	return ctx
 }

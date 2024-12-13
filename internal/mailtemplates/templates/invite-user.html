@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {{ template "fragments/style.html" }}
+  </head>
+  <body>
+    <div class="message-container">
+      {{ template "fragments/header.html" }}
+      <main>
+        <p>Hi,</p>
+
+        <p>
+          Your e-mail address has been added to the <strong>{{.Organization.Name}}</strong> organization on
+          <a href="{{.Host}}/">glasskube.cloud</a>.
+        </p>
+
+        {{if .Token}}
+        <p>
+          Since you don't have an account yet, please finish your setup by clicking
+          <a href="{{.Host}}/join?jwt={{.Token}}">here</a>.
+        </p>
+        {{else}}
+        <p>not supported yet</p>
+        {{end}}
+
+        <p>{{template "fragments/signature.html"}}</p>
+      </main>
+      {{template "fragments/footer.html"}}
+    </div>
+  </body>
+</html>

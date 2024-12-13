@@ -4,7 +4,7 @@
   class="p-4 mt-12 max-h-full w-200 bg-white rounded-lg shadow dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Get started with Launch Dashboard</h2>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create a new deployment</h2>
     <button
       type="button"
       (click)="close()"
@@ -24,7 +24,7 @@
           <cdk-step [stepControl]="deploymentTargetForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4 w-full">
-                <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Target Type</h3>
+                <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Type</h3>
 
                 <div class="mb-2 grid grid-cols-2 gap-4">
                   <div
@@ -64,7 +64,7 @@
                           name="type"
                           value="kubernetes"
                           class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
-                          checked />
+                          [attr.disabled]="true" />
                       </div>
 
                       <div class="ms-4 text-sm">
@@ -74,6 +74,9 @@
                         <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I have access to a fresh namespace in a Kubernetes cluster and have the permissions to install
                           charts.
+                        </p>
+                        <p class="text-xs font-normal text-gray-500 dark:text-gray-300">
+                          Helm deployments are not yet supported.
                         </p>
                       </div>
                     </div>
@@ -93,22 +96,21 @@
                         My deployment target is air-gapped or has limited internet access
                       </label>
                       <p id="helper-checkbox-text" class="text-xs font-normal text-gray-500 dark:text-gray-300">
-                        Launch Dashboard does not yet support air-gapped installations.
+                        Air-gapped installations are not yet supported.
                       </p>
                     </div>
                   </div>
                 </div>
                 <div class="w-full">
-                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Deployment Target Name</label
-                  >
+                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Deployment Name
+                  </label>
                   <input
                     [formControl]="deploymentTargetForm.controls.name"
                     type="text"
                     name="name"
                     id="name"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Staging Deployment"
                     required
                     autocomplete="off" />
                   @if (deploymentTargetForm.controls.name.invalid && deploymentTargetForm.controls.name.touched) {
@@ -127,8 +129,8 @@
                   <div class="">
                     <h3 class="font-normal text-gray-900 dark:text-white">Download and run installation agent</h3>
                     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                      To setup this Deployment Target, the Glasskube Cloud Agent must be installed on the target
-                      server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
+                      To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
+                      Simply connect to the target (e.g. via SSH) and execute the following:
                     </p>
                     @if (selectedDeploymentTarget) {
                       <app-connect-instructions
@@ -173,8 +175,7 @@
                         id="applicationVersion"
                         formControlName="applicationVersionId"
                         required
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        [disabled]="deployForm.controls.applicationId.invalid">
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
                         @if (selectedApplication?.versions) {
                           @for (version of selectedApplication?.versions; track version.id) {
                             <option [value]="version.id">{{ version.name }}</option>

@@ -22,4 +22,4 @@ func RespondJSON(w http.ResponseWriter, data any) {
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-var requireDistributor = middleware.UserRoleMiddleware(types.UserRoleDistributor)
+var requireUserRoleVendor = middleware.UserRoleMiddleware(types.UserRoleVendor)

@@ -2,6 +2,7 @@ import {Component, effect, ElementRef, inject, ViewChild} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
+  faAddressBook,
   faBoxesStacked,
   faCheckDouble,
   faDashboard,
@@ -33,6 +34,7 @@ export class SideBarComponent {
   protected readonly faUsers = faUsers;
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
+  protected readonly faAddressBook = faAddressBook;
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
 

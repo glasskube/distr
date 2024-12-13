@@ -1,10 +1,10 @@
-import {Component, inject, Input, OnDestroy, TemplateRef, ViewContainerRef} from '@angular/core';
+import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, lastValueFrom, map} from 'rxjs';
+import {combineLatest, first, firstValueFrom, lastValueFrom, map} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
 import {modalFlyInOut} from '../animations/modal';
@@ -18,6 +18,10 @@ import {drawerFlyInOut} from '../animations/drawer';
 import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
+import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
+import {GlobalPositionStrategy} from '@angular/cdk/overlay';
+import {AuthService} from '../services/auth.service';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -32,12 +36,15 @@ import {ConnectInstructionsComponent} from '../components/connect-instructions/c
     RelativeDatePipe,
     StatusDotComponent,
     ConnectInstructionsComponent,
+    InstallationWizardComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
   animations: [modalFlyInOut, drawerFlyInOut],
 })
-export class DeploymentTargetsComponent implements OnDestroy {
+export class DeploymentTargetsComponent implements OnInit, OnDestroy {
+  private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
   @Input('fullVersion') fullVersion = false;
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
@@ -49,6 +56,9 @@ export class DeploymentTargetsComponent implements OnDestroy {
   private manageDeploymentTargetRef?: EmbeddedOverlayRef;
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
+
+  @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
+  private deploymentWizardOverlayRef?: EmbeddedOverlayRef;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
@@ -73,12 +83,24 @@ export class DeploymentTargetsComponent implements OnDestroy {
     }),
   });
 
-  openDrawer(templateRef: TemplateRef<unknown>, deploymentTarget?: DeploymentTarget) {
+  ngOnInit() {
+    if (this.fullVersion) {
+      const always = false;
+      const isCustomer = this.auth.getClaims().role === 'customer';
+      combineLatest([this.applications$, this.deploymentTargets$])
+        .pipe(first())
+        .subscribe(([apps, dts]) => {
+          if (always || (isCustomer && apps.length > 0 && dts.length === 0)) {
+            this.openWizard();
+          }
+        });
+    }
+  }
+
+  openDrawer(templateRef: TemplateRef<unknown>, deploymentTarget: DeploymentTarget) {
     this.hideDrawer();
     if (deploymentTarget) {
       this.loadDeploymentTarget(deploymentTarget);
-    } else {
-      this.reset();
     }
     this.manageDeploymentTargetRef = this.overlay.showDrawer(templateRef, this.viewContainerRef);
   }
@@ -86,6 +108,19 @@ export class DeploymentTargetsComponent implements OnDestroy {
   hideDrawer() {
     this.manageDeploymentTargetRef?.close();
     this.reset();
+  }
+
+  openWizard() {
+    this.deploymentWizardOverlayRef?.close();
+    this.deploymentWizardOverlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
+      hasBackdrop: true,
+      backdropStyleOnly: true,
+      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+    });
+  }
+
+  closeWizard() {
+    this.deploymentWizardOverlayRef?.close();
   }
 
   reset() {
@@ -134,6 +169,8 @@ export class DeploymentTargetsComponent implements OnDestroy {
       this.loadDeploymentTarget(
         await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
       );
+      this.toast.success(`${dt.name} saved successfully`);
+      this.hideDrawer();
     } else {
       this.editForm.markAllAsTouched();
     }
@@ -184,6 +221,7 @@ export class DeploymentTargetsComponent implements OnDestroy {
       this.selectedDeploymentTarget!!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
         this.selectedDeploymentTarget!!.id!!
       );
+      this.toast.success('Deployment saved successfully');
       this.hideModal();
     } else {
       this.deployForm.markAllAsTouched();

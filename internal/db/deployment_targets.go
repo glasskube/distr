@@ -59,7 +59,7 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCrea
 	if rows, err := db.Query(ctx,
 		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+" "+
 			"AND dt.organization_id = @orgId "+
-			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'distributor')",
+			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor')",
 		pgx.NamedArgs{"orgId": orgId, "userId": userId, "userRole": userRole},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
