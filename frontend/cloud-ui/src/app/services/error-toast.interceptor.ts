@@ -3,25 +3,16 @@ import {tap} from 'rxjs';
 import {IndividualConfig, ToastrService} from 'ngx-toastr';
 import {inject} from '@angular/core';
 import {ToastComponent} from '../components/toast.component';
-
-export const GLOBAL_ERROR_TOAST_CONFIG: Partial<IndividualConfig> = {
-  toastComponent: ToastComponent,
-  disableTimeOut: true,
-  tapToDismiss: false,
-  titleClass: '',
-  messageClass: '',
-  toastClass: '',
-  positionClass: 'toast-bottom-right',
-};
+import {ToastService} from './toast.service';
 
 export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
-  const toastr = inject(ToastrService);
+  const toast = inject(ToastService);
   return next(req).pipe(
     tap({
       error: (err) => {
         if (err instanceof HttpErrorResponse) {
           if (!ignoreGlobalError(req, err)) {
-            toastr.show('', 'An internal server error occurred', GLOBAL_ERROR_TOAST_CONFIG);
+            toast.error('An internal server error occurred');
           }
         }
       },

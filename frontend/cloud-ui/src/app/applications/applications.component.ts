@@ -20,9 +20,8 @@ import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {Application} from '../types/application';
 import {modalFlyInOut} from '../animations/modal';
 import {RequireRoleDirective} from '../directives/required-role.directive';
-import {ToastrService} from 'ngx-toastr';
-import {GLOBAL_ERROR_TOAST_CONFIG} from '../services/error-toast.interceptor';
 import {HttpErrorResponse} from '@angular/common/http';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-applications',
@@ -67,7 +66,7 @@ export class ApplicationsComponent {
   private readonly overlay = inject(OverlayService);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
-  private readonly toastr = inject(ToastrService);
+  private readonly toast = inject(ToastService);
 
   openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
     this.hideDrawer();
@@ -142,13 +141,9 @@ export class ApplicationsComponent {
       result.subscribe({
         next: (application) => {
           this.hideDrawer();
-          this.toastr.show('', `${application.name} created successfully`, GLOBAL_ERROR_TOAST_CONFIG); // TODO
+          this.toast.success(`${application.name} created successfully`);
         },
-        error: err => {
-          if(err instanceof HttpErrorResponse) {
-            this.toastr.show('', `An error occurred`, GLOBAL_ERROR_TOAST_CONFIG); // TODO
-          }
-        }
+        error: () => this.toast.error(`An error occurred`),
       });
     } else {
       this.editForm.markAllAsTouched();
