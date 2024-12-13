@@ -20,7 +20,6 @@ import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {Application} from '../types/application';
 import {modalFlyInOut} from '../animations/modal';
 import {RequireRoleDirective} from '../directives/required-role.directive';
-import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../services/toast.service';
 
 @Component({
@@ -141,7 +140,7 @@ export class ApplicationsComponent {
       result.subscribe({
         next: (application) => {
           this.hideDrawer();
-          this.toast.success(`${application.name} created successfully`);
+          this.toast.success(`${application.name} saved successfully`);
         },
         error: () => this.toast.error(`An error occurred`),
       });
@@ -164,13 +163,12 @@ export class ApplicationsComponent {
           },
           this.fileToUpload
         )
-        .subscribe((av) => {
+        .subscribe((value) => {
+          this.toast.success(`${value.name} created successfully`);
           this.hideVersionModal();
         });
     } else {
       this.newVersionForm.markAllAsTouched();
     }
   }
-
-  protected readonly faTrash = faTrash;
 }
