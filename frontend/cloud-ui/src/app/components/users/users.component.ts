@@ -11,6 +11,7 @@ import {UserAccountWithRole, UserRole} from '../../types/user-account';
 import {ActivatedRoute} from '@angular/router';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {ToastService} from '../../services/toast.service';
 
 @Component({
   selector: 'app-users',
@@ -19,6 +20,7 @@ import {RequireRoleDirective} from '../../directives/required-role.directive';
   animations: [modalFlyInOut],
 })
 export class UsersComponent {
+  private readonly toast = inject(ToastService);
   public readonly faMagnifyingGlass = faMagnifyingGlass;
   public readonly faPlus = faPlus;
   public readonly faXmark = faXmark;
@@ -65,6 +67,13 @@ export class UsersComponent {
         })
       );
       this.closeInviteDialog();
+      switch (this.userRole()) {
+        case 'customer':
+          this.toast.success("Customer has been invited to the organization");
+          break
+        case "vendor":
+          this.toast.success("User has been invited to the organization");
+      }
       this.refresh$.next();
     }
   }
