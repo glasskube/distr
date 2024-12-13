@@ -1,13 +1,13 @@
 import {Component, computed, inject, Signal, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {UsersService} from '../../services/users.service';
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap} from 'rxjs';
-import {UserAccountWithRole, UserRole} from '../../types/user-account';
+import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
 import {ActivatedRoute} from '@angular/router';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
@@ -21,17 +21,19 @@ import {ToastService} from '../../services/toast.service';
 })
 export class UsersComponent {
   private readonly toast = inject(ToastService);
+  private readonly users = inject(UsersService);
+  private readonly overlay = inject(OverlayService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+
   public readonly faMagnifyingGlass = faMagnifyingGlass;
   public readonly faPlus = faPlus;
   public readonly faXmark = faXmark;
+  protected readonly faTrash = faTrash;
 
   public readonly userRole: Signal<UserRole>;
-  private readonly users = inject(UsersService);
-  public users$: Observable<UserAccountWithRole[]>;
+  public readonly users$: Observable<UserAccountWithRole[]>;
   private readonly refresh$ = new Subject<void>();
 
-  private readonly overlay = inject(OverlayService);
-  private readonly viewContainerRef = inject(ViewContainerRef);
   @ViewChild('inviteUserDialog') private inviteUserDialog!: TemplateRef<unknown>;
   private modalRef?: EmbeddedOverlayRef;
   public inviteForm = new FormGroup({
@@ -74,6 +76,13 @@ export class UsersComponent {
         case 'vendor':
           this.toast.success('User has been invited to the organization');
       }
+      this.refresh$.next();
+    }
+  }
+
+  public async deleteUser(user: UserAccount): Promise<void> {
+    if (confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)) {
+      await firstValueFrom(this.users.delete(user));
       this.refresh$.next();
     }
   }
