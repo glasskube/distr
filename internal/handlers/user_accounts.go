@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"html/template"
 	"net/http"
 
 	"github.com/glasskube/cloud/api"
@@ -95,10 +96,17 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	var tmpl *template.Template
+	var data any
+	if body.UserRole == types.UserRoleCustomer {
+		tmpl, data = mailtemplates.InviteCustomer(userAccount, organization, token, body.ApplicationName)
+	} else {
+		tmpl, data = mailtemplates.InviteUser(userAccount, organization, token)
+	}
 	if err := mailer.Send(ctx, mail.New(
 		mail.To(userAccount.Email),
 		mail.Subject("Welcome to Glasskube Cloud"),
-		mail.HtmlBodyTemplate(mailtemplates.Invite(userAccount, organization, token)),
+		mail.HtmlBodyTemplate(tmpl, data),
 	)); err != nil {
 		log.Error("failed to send invite mail", zap.Error(err))
 	}

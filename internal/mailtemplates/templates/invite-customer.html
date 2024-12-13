@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {{ template "fragments/style.html" }}
+  </head>
+  <body>
+    <div class="message-container">
+      {{ template "fragments/header.html" }}
+      <main>
+        <p>Hi,</p>
+
+        <p>
+          {{.Organization.Name}} invited you to install {{ if not .ApplicationName }} and manage applications via Glasskube Cloud. {{ else }} {{.ApplicationName}}. {{ end }}
+        </p>
+
+        <p>
+          To finish your setup and get further instructions please click <a href="{{.Host}}/join?jwt={{.Token}}">here</a>.
+        </p>
+
+        <p>{{template "fragments/signature.html"}}</p>
+      </main>
+      {{template "fragments/footer.html"}}
+    </div>
+  </body>
+</html>
