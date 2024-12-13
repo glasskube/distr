@@ -3,7 +3,7 @@ import {FormGroup, FormControl, Validators, ReactiveFormsModule} from '@angular/
 import {Router, RouterLink} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
-import {SettingsService} from '../services/settigns.service';
+import {SettingsService} from '../services/settings.service';
 
 @Component({
   selector: 'app-invite',
