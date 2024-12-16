@@ -59,7 +59,7 @@ func GetOrgId(ctx context.Context) string {
 	if dt, ok := val.(string); ok {
 		return dt
 	}
-	panic("deployment target not contained in context")
+	panic("org ID not contained in context")
 }
 
 func WithUserAccount(ctx context.Context, userAccount *types.UserAccount) context.Context {

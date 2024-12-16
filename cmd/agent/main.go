@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glasskube/cloud/api"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,6 +21,7 @@ import (
 func main() {
 	targetId := getFromEnvOrDie("GK_TARGET_ID")
 	targetSecret := getFromEnvOrDie("GK_TARGET_SECRET")
+	loginEndpoint := getFromEnvOrDie("GK_LOGIN_ENDPOINT")
 	resourceEndpoint := getFromEnvOrDie("GK_RESOURCE_ENDPOINT")
 	statusEndpoint := getFromEnvOrDie("GK_STATUS_ENDPOINT")
 
@@ -34,12 +37,15 @@ func main() {
 
 	client := http.Client{}
 
+	var currentToken string
+
 	for ctx.Err() == nil {
 		if req, err := http.NewRequest(http.MethodGet, resourceEndpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
-			req.SetBasicAuth(targetId, targetSecret)
-			if resp, err := client.Do(req); err != nil {
+			if currentToken, err = ensureAuthHeader(client, currentToken, req, loginEndpoint, targetId, targetSecret); err != nil {
+				logger.Error("failed to ensure auth header", zap.Error(err))
+			} else if resp, err := client.Do(req); err != nil {
 				logger.Error("failed to execute request", zap.Error(err))
 			} else if resp.StatusCode != http.StatusOK {
 				logger.Warn("status code not OK, will not apply", zap.Int("code", resp.StatusCode))
@@ -61,13 +67,16 @@ func main() {
 					http.NewRequest(http.MethodPost, statusEndpoint, bytes.NewReader(statusJson)); err != nil {
 					logger.Error("failed to create status request", zap.Error(err))
 				} else if correlationID != "" {
-					statusReq.Header.Set("Content-Type", "application/json")
-					statusReq.Header.Set("X-Resource-Correlation-ID", correlationID)
-					statusReq.SetBasicAuth(targetId, targetSecret)
-					if statusResp, err := client.Do(statusReq); err != nil {
-						logger.Error("failed to execute status request", zap.Error(err))
-					} else if statusResp.StatusCode != http.StatusOK {
-						logger.Info("response code of status request was not OK", zap.Int("code", statusResp.StatusCode))
+					if currentToken, err = ensureAuthHeader(client, currentToken, statusReq, loginEndpoint, targetId, targetSecret); err != nil {
+						logger.Error("failed to ensure auth header for status request", zap.Error(err))
+					} else {
+						statusReq.Header.Set("Content-Type", "application/json")
+						statusReq.Header.Set("X-Resource-Correlation-ID", correlationID)
+						if statusResp, err := client.Do(statusReq); err != nil {
+							logger.Error("failed to execute status request", zap.Error(err))
+						} else if statusResp.StatusCode != http.StatusOK {
+							logger.Info("response code of status request was not OK", zap.Int("code", statusResp.StatusCode))
+						}
 					}
 				}
 			}
@@ -81,6 +90,50 @@ func main() {
 		select {
 		case <-sleepDone:
 		case <-ctx.Done():
+		}
+	}
+}
+
+func ensureAuthHeader(
+	client http.Client,
+	currentToken string,
+	req *http.Request,
+	loginEndpoint string,
+	targetId string,
+	targetSecret string,
+) (string, error) {
+	currentToken, err := ensureToken(client, currentToken, loginEndpoint, targetId, targetSecret)
+	if err != nil {
+		return "", err
+	} else {
+		req.Header.Add("Authorization", "Bearer "+currentToken)
+	}
+	return currentToken, nil
+}
+
+func ensureToken(client http.Client, currentToken string, loginEndpoint string, targetId string, targetSecret string) (string, error) {
+	if currentToken != "" {
+		_, err := jwt.Parse([]byte(currentToken), jwt.WithVerify(false)) // TODO really?
+		if err != nil {
+			// err != nil if expired
+			currentToken = ""
+		} else {
+			return currentToken, nil
+		}
+	}
+	if loginReq, err := http.NewRequest(http.MethodPost, loginEndpoint, nil); err != nil {
+		return "", err
+	} else {
+		loginReq.SetBasicAuth(targetId, targetSecret)
+		if loginResp, err := client.Do(loginReq); err != nil {
+			return "", err
+		} else {
+			var tokenResp api.AuthLoginResponse
+			if err := json.NewDecoder(loginResp.Body).Decode(&tokenResp); err != nil {
+				return "", err
+			} else {
+				return tokenResp.Token, nil
+			}
 		}
 	}
 }

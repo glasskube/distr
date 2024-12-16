@@ -2,8 +2,12 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/cloud/internal/auth"
+	"github.com/go-chi/jwtauth/v5"
 	"io"
 	"net/http"
 	"net/url"
@@ -26,10 +30,20 @@ func AgentRouter(r chi.Router) {
 		r.Use(queryAuthDeploymentTargetCtxMiddleware)
 		r.Get("/connect", connect)
 	})
-	r.Group(func(r chi.Router) {
-		r.Use(basicAuthDeploymentTargetCtxMiddleware)
-		r.Get("/agent/resources", downloadResources)
-		r.Post("/agent/status", postAgentStatus)
+	r.Route("/agent", func(r chi.Router) {
+		// agent login (from basic auth to token)
+		r.Group(func(r chi.Router) {
+			r.Use(basicAuthDeploymentTargetCtxMiddleware)
+			r.Post("/login", agentLogin)
+		})
+		// agent routes, authenticated via token
+		r.Group(func(r chi.Router) {
+			r.Use(jwtauth.Verifier(auth.JWTAuth))
+			r.Use(jwtauth.Authenticator(auth.JWTAuth))
+			r.Use(agentAuthDeploymentTargetCtxMiddleware)
+			r.Get("/resources", downloadResources)
+			r.Post("/status", postAgentStatus)
+		})
 	})
 }
 
@@ -48,10 +62,11 @@ func connect(w http.ResponseWriter, r *http.Request) {
 		} else if tmpl, err := template.New("agent").Parse(string(yamlTemplate)); err != nil {
 			log.Error("failed to get parse yaml template", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
-		} else if resourcesEndpoint, statusEndpoint, err := buildEndpoints(); err != nil {
+		} else if loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints(); err != nil {
 			log.Error("failed to build resources url", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if err := tmpl.Execute(w, map[string]string{
+			"loginEndpoint":     loginEndpoint,
 			"resourcesEndpoint": resourcesEndpoint,
 			"statusEndpoint":    statusEndpoint,
 			"targetId":          r.URL.Query().Get("targetId"),
@@ -63,12 +78,27 @@ func connect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func buildEndpoints() (string, string, error) {
+func buildEndpoints() (string, string, string, error) {
 	if u, err := url.Parse(env.Host()); err != nil {
-		return "", "", err
+		return "", "", "", err
 	} else {
 		u = u.JoinPath("/api/v1/agent")
-		return u.JoinPath("resources").String(), u.JoinPath("status").String(), nil
+		return u.JoinPath("login").String(), u.JoinPath("resources").String(), u.JoinPath("status").String(), nil
+	}
+}
+
+func agentLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+	orgId := internalctx.GetOrgId(ctx)
+
+	// TODO maybe randomize token valid duration
+	if _, token, err := auth.GenerateAgentTokenValidFor(orgId, deploymentTarget.ID, env.AgentTokenMaxValidDuration()); err != nil {
+		log.Error("failed to create agent token", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token})
 	}
 }
 
@@ -77,8 +107,12 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	var statusMessage string
-	orgId := internalctx.GetOrgId(ctx)
-	if deploymentId, composeFileData, err := db.GetLatestDeploymentComposeFile(
+	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+		msg := "failed to get compose file from DB"
+		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
+		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
+		w.WriteHeader(http.StatusInternalServerError)
+	} else if deploymentId, composeFileData, err := db.GetLatestDeploymentComposeFile(
 		ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
 		msg := "failed to get compose file from DB"
 		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
@@ -141,6 +175,27 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+	})
+}
+
+func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+			internalctx.GetLogger(r.Context()).Error("failed to get orgId from token", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else if targetId, err := auth.CurrentSubject(ctx); err != nil {
+			internalctx.GetLogger(r.Context()).Error("failed to get subject from token", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else if err != nil {
+			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})

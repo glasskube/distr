@@ -6,6 +6,7 @@ services:
     environment:
       GK_TARGET_ID: '{{ .targetId }}'
       GK_TARGET_SECRET: '{{ .targetSecret }}'
+      GK_LOGIN_ENDPOINT: '{{ .loginEndpoint }}'
       GK_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
       GK_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
     volumes:
