@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, computed, inject, Signal, TemplateRef, ViewChild} from '@angular/core';
+import {Component, computed, inject, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
@@ -19,7 +19,7 @@ import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-accou
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
 })
-export class UsersComponent {
+export class UsersComponent implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly users = inject(UsersService);
   private readonly overlay = inject(OverlayService);
@@ -32,12 +32,17 @@ export class UsersComponent {
   public readonly userRole: Signal<UserRole>;
   public readonly users$: Observable<UserAccountWithRole[]>;
   private readonly refresh$ = new Subject<void>();
+  private readonly destroyed$ = new Subject<void>();
 
   @ViewChild('inviteUserDialog') private inviteUserDialog!: TemplateRef<unknown>;
   private modalRef?: DialogRef;
   public inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
+  });
+
+  filterForm = new FormGroup({
+    search: new FormControl(''),
   });
 
   constructor() {
@@ -47,9 +52,16 @@ export class UsersComponent {
       startWith(undefined),
       switchMap(() => this.users.getUsers())
     );
-    this.users$ = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
-      map(([userRole, users]) => users.filter((it) => userRole !== null && it.userRole === userRole))
+    // TODO filter
+    this.users$ = combineLatest([toObservable(this.userRole), usersWithRefresh, this.filterForm.valueChanges.pipe(startWith(''))])
+      .pipe(
+      map(([userRole, users, search]) =>
+        users.filter((it) => userRole !== null && it.userRole === userRole)),
     );
+  }
+
+  ngOnDestroy() {
+    this.destroyed$.complete();
   }
 
   public showInviteDialog(): void {

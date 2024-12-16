@@ -1,10 +1,10 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, Input, TemplateRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {filter, Observable, switchMap} from 'rxjs';
+import {EMPTY, filter, map, Observable, startWith, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
@@ -13,6 +13,7 @@ import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
+import {combineLatest} from 'rxjs';
 
 @Component({
   selector: 'app-applications',
@@ -28,7 +29,7 @@ import {Application} from '../types/application';
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ApplicationsComponent {
+export class ApplicationsComponent implements OnInit, OnDestroy {
   @Input('fullVersion') fullVersion: boolean = false;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faPlus = faPlus;
@@ -38,8 +39,18 @@ export class ApplicationsComponent {
   protected readonly faTrash = faTrash;
   showDropdown = false;
 
+  private readonly destroyed$ = new Subject<void>();
   private readonly applications = inject(ApplicationsService);
-  applications$: Observable<Application[]> = this.applications.list();
+  filterForm = new FormGroup({
+    search: new FormControl(''),
+  });
+  applications$: Observable<Application[]> =
+    combineLatest([this.applications.list(), this.filterForm.controls.search.valueChanges.pipe(startWith(''))])
+    .pipe(
+      takeUntil(this.destroyed$),
+      map(([items, search]) => {
+        return items.filter(it => !search || it.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1)
+      }));
   selectedApplication?: Application;
   editForm = new FormGroup({
     id: new FormControl(''),
@@ -50,14 +61,23 @@ export class ApplicationsComponent {
     versionName: new FormControl('', Validators.required),
   });
   fileToUpload: File | null = null;
+
   @ViewChild('fileInput')
   fileInput?: ElementRef;
-
   private manageApplicationDrawerRef?: DialogRef;
   private applicationVersionModalRef?: DialogRef;
+
   private readonly overlay = inject(OverlayService);
 
   private readonly toast = inject(ToastService);
+
+  ngOnInit() {
+    this.applications$
+  }
+
+  ngOnDestroy() {
+    this.destroyed$.complete();
+  }
 
   openDrawer(templateRef: TemplateRef<unknown>, application?: Application) {
     this.hideDrawer();
