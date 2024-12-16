@@ -17,7 +17,7 @@
 
         <p>
           To finish your setup and get further instructions please click
-          <a href="{{.Host}}/join?jwt={{.Token}}">here</a>.
+          <a href="{{.Host}}/join?jwt={{.Token | QueryEscape}}">here</a>.
         </p>
 
         <p>{{template "fragments/signature.html"}}</p>
