@@ -58,13 +58,14 @@ type DeploymentTargetStatus struct {
 }
 
 type UserAccount struct {
-	ID           string    `db:"id" json:"id"`
-	CreatedAt    time.Time `db:"created_at" json:"createdAt"`
-	Email        string    `db:"email" json:"email"`
-	PasswordHash []byte    `db:"password_hash" json:"-"`
-	PasswordSalt []byte    `db:"password_salt" json:"-"`
-	Name         string    `db:"name" json:"name,omitempty"`
-	Password     string    `db:"-" json:"-"`
+	ID              string     `db:"id" json:"id"`
+	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
+	Email           string     `db:"email" json:"email"`
+	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
+	PasswordHash    []byte     `db:"password_hash" json:"-"`
+	PasswordSalt    []byte     `db:"password_salt" json:"-"`
+	Name            string     `db:"name" json:"name,omitempty"`
+	Password        string     `db:"-" json:"-"`
 }
 
 type UserAccountWithUserRole struct {
