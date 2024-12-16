@@ -1,4 +1,4 @@
-import {GlobalPositionStrategy, Overlay, OverlayConfig} from '@angular/cdk/overlay';
+import {BlockScrollStrategy, GlobalPositionStrategy, Overlay, OverlayConfig, ViewportRuler} from '@angular/cdk/overlay';
 import {TemplatePortal} from '@angular/cdk/portal';
 import {EmbeddedViewRef, inject, Injectable, TemplateRef, ViewContainerRef} from '@angular/core';
 import {Observable, Subject, takeUntil} from 'rxjs';
@@ -25,6 +25,7 @@ export class ExtendedOverlayConfig extends OverlayConfig {
 @Injectable({providedIn: 'root'})
 export class OverlayService {
   private readonly overlay = inject(Overlay);
+  private readonly viewportRuler = inject(ViewportRuler);
 
   /**
    * @param templateRef the template to show
@@ -56,7 +57,10 @@ export class OverlayService {
     viewContainerRef: ViewContainerRef,
     config: ExtendedOverlayConfig
   ): EmbeddedOverlayRef {
-    const overlayRef = this.overlay.create(config);
+    const overlayRef = this.overlay.create({
+      scrollStrategy: new BlockScrollStrategy(this.viewportRuler, document),
+      ...config,
+    });
     const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
     if (!config.backdropStyleOnly) {
       overlayRef
