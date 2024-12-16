@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/glasskube/cloud/internal/util"
+
 	"github.com/glasskube/cloud/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 
@@ -25,6 +27,11 @@ func main() {
 	loginEndpoint := getFromEnvOrDie("GK_LOGIN_ENDPOINT")
 	resourceEndpoint := getFromEnvOrDie("GK_RESOURCE_ENDPOINT")
 	statusEndpoint := getFromEnvOrDie("GK_STATUS_ENDPOINT")
+
+	interval := 1 * time.Minute
+	if intervalStr, ok := os.LookupEnv("GK_INTERVAL"); ok {
+		interval = util.Require(time.ParseDuration(intervalStr))
+	}
 
 	logger := createLogger()
 
@@ -86,7 +93,7 @@ func main() {
 
 		sleepDone := make(chan struct{}, 1)
 		go func() {
-			time.Sleep(5 * time.Second)
+			time.Sleep(interval)
 			sleepDone <- struct{}{}
 		}()
 		select {
