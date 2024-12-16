@@ -4,7 +4,7 @@ import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} fro
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, first, firstValueFrom, lastValueFrom, map} from 'rxjs';
+import {combineLatest, filter, first, firstValueFrom, lastValueFrom, map, switchMap} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -129,9 +129,13 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   }
 
   async deleteDeploymentTarget(dt: DeploymentTarget) {
-    if (confirm(`Really delete ${dt.name}? This action can not be undone.`)) {
-      await firstValueFrom(this.deploymentTargets.delete(dt));
-    }
+    this.overlay
+      .confirm(`Really delete ${dt.name}? This action can not be undone.`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.deploymentTargets.delete(dt))
+      )
+      .subscribe();
   }
 
   loadDeploymentTarget(dt: DeploymentTarget) {

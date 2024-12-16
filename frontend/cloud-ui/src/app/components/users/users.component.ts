@@ -5,7 +5,7 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap} from 'rxjs';
+import {combineLatest, filter, firstValueFrom, map, Observable, startWith, Subject, switchMap, tap} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
@@ -80,10 +80,14 @@ export class UsersComponent {
   }
 
   public async deleteUser(user: UserAccount): Promise<void> {
-    if (confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)) {
-      await firstValueFrom(this.users.delete(user));
-      this.refresh$.next();
-    }
+    this.overlay
+      .confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.users.delete(user)),
+        tap(() => this.refresh$.next())
+      )
+      .subscribe();
   }
 
   public closeInviteDialog(): void {

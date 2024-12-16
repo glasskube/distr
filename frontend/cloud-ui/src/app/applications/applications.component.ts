@@ -4,7 +4,7 @@ import {Component, ElementRef, inject, Input, TemplateRef, ViewChild} from '@ang
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, Observable} from 'rxjs';
+import {filter, Observable, switchMap} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
@@ -100,10 +100,14 @@ export class ApplicationsComponent {
     this.resetVersionForm();
   }
 
-  async deleteApplication(application: Application) {
-    if (confirm(`Really delete ${application.name} and all related deployments?`)) {
-      await firstValueFrom(this.applications.delete(application));
-    }
+  deleteApplication(application: Application) {
+    this.overlay
+      .confirm(`Really delete ${application.name} and all related deployments?`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.applications.delete(application))
+      )
+      .subscribe();
   }
 
   private resetEditForm() {
