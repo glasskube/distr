@@ -49,7 +49,6 @@ export const routes: Routes = [
             }
           }
           return true;
-          // return router.createUrlTree(['/verify']);
         } else {
           return router.createUrlTree(['/login']);
         }
