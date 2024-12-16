@@ -1,27 +1,27 @@
-import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
+import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, first, firstValueFrom, lastValueFrom, map} from 'rxjs';
+import {combineLatest, filter, first, firstValueFrom, lastValueFrom, map, switchMap} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
-import {modalFlyInOut} from '../animations/modal';
-import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
-import {DeploymentTarget} from '../types/deployment-target';
-import {Application} from '../types/application';
-import {DeploymentService} from '../services/deployment.service';
-import {Deployment} from '../types/deployment';
-import {StatusDotComponent} from '../components/status-dot';
 import {drawerFlyInOut} from '../animations/drawer';
-import {ApplicationsService} from '../services/applications.service';
-import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
+import {modalFlyInOut} from '../animations/modal';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
-import {GlobalPositionStrategy} from '@angular/cdk/overlay';
+import {StatusDotComponent} from '../components/status-dot';
+import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
+import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {DeploymentService} from '../services/deployment.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {Application} from '../types/application';
+import {Deployment} from '../types/deployment';
+import {DeploymentTarget} from '../types/deployment-target';
+import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -53,13 +53,12 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   readonly xmarkIcon = faXmark;
   protected readonly faTrash = faTrash;
 
-  private modal?: EmbeddedOverlayRef;
-  private manageDeploymentTargetRef?: EmbeddedOverlayRef;
+  private modal?: DialogRef;
+  private manageDeploymentTargetRef?: DialogRef;
   private readonly overlay = inject(OverlayService);
-  private readonly viewContainerRef = inject(ViewContainerRef);
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
-  private deploymentWizardOverlayRef?: EmbeddedOverlayRef;
+  private deploymentWizardOverlayRef?: DialogRef;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
@@ -103,7 +102,7 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
     if (deploymentTarget) {
       this.loadDeploymentTarget(deploymentTarget);
     }
-    this.manageDeploymentTargetRef = this.overlay.showDrawer(templateRef, this.viewContainerRef);
+    this.manageDeploymentTargetRef = this.overlay.showDrawer(templateRef);
   }
 
   hideDrawer() {
@@ -113,7 +112,7 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
 
   openWizard() {
     this.deploymentWizardOverlayRef?.close();
-    this.deploymentWizardOverlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
+    this.deploymentWizardOverlayRef = this.overlay.showModal(this.wizardRef!, {
       hasBackdrop: true,
       backdropStyleOnly: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
@@ -130,9 +129,13 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   }
 
   async deleteDeploymentTarget(dt: DeploymentTarget) {
-    if (confirm(`Really delete ${dt.name}? This action can not be undone.`)) {
-      await firstValueFrom(this.deploymentTargets.delete(dt));
-    }
+    this.overlay
+      .confirm(`Really delete ${dt.name}? This action can not be undone.`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.deploymentTargets.delete(dt))
+      )
+      .subscribe();
   }
 
   loadDeploymentTarget(dt: DeploymentTarget) {
@@ -145,12 +148,12 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
 
   showDeploymentModal(templateRef: TemplateRef<unknown>) {
     this.hideModal();
-    this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
+    this.modal = this.overlay.showModal(templateRef);
   }
 
   async showInstructionsModal(templateRef: TemplateRef<unknown>, dt: DeploymentTarget) {
     this.hideModal();
-    this.modal = this.overlay.showModal(templateRef, this.viewContainerRef);
+    this.modal = this.overlay.showModal(templateRef);
   }
 
   hideModal(): void {
