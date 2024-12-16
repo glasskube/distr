@@ -9,7 +9,7 @@ import {DeploymentTargetsComponent} from '../../deployments/deployment-targets.c
 import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ChartTypeComponent} from '../charts/type/chart-type.component';
 import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
 import {ChartVersionComponent} from '../charts/version/chart-version.component';
@@ -42,7 +42,7 @@ export class DashboardPlaceholderComponent implements OnInit {
 
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
-  private overlayRef?: EmbeddedOverlayRef;
+  private overlayRef?: DialogRef;
 
   protected readonly faPlus = faPlus;
 

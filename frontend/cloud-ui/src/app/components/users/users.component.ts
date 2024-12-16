@@ -8,7 +8,7 @@ import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-sol
 import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
-import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
@@ -34,7 +34,7 @@ export class UsersComponent {
   private readonly refresh$ = new Subject<void>();
 
   @ViewChild('inviteUserDialog') private inviteUserDialog!: TemplateRef<unknown>;
-  private modalRef?: EmbeddedOverlayRef;
+  private modalRef?: DialogRef;
   public inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),

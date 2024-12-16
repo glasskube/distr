@@ -10,7 +10,7 @@ import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
 import {RequireRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
-import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 
@@ -53,8 +53,8 @@ export class ApplicationsComponent {
   @ViewChild('fileInput')
   fileInput?: ElementRef;
 
-  private manageApplicationDrawerRef?: EmbeddedOverlayRef;
-  private applicationVersionModalRef?: EmbeddedOverlayRef;
+  private manageApplicationDrawerRef?: DialogRef;
+  private applicationVersionModalRef?: DialogRef;
   private readonly overlay = inject(OverlayService);
 
   private readonly toast = inject(ToastService);

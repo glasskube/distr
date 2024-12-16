@@ -16,7 +16,7 @@ import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {DeploymentService} from '../services/deployment.service';
-import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {Deployment} from '../types/deployment';
@@ -53,12 +53,12 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   readonly xmarkIcon = faXmark;
   protected readonly faTrash = faTrash;
 
-  private modal?: EmbeddedOverlayRef;
-  private manageDeploymentTargetRef?: EmbeddedOverlayRef;
+  private modal?: DialogRef;
+  private manageDeploymentTargetRef?: DialogRef;
   private readonly overlay = inject(OverlayService);
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
-  private deploymentWizardOverlayRef?: EmbeddedOverlayRef;
+  private deploymentWizardOverlayRef?: DialogRef;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
