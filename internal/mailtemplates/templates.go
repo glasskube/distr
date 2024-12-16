@@ -7,8 +7,9 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/types"
+
+	"github.com/glasskube/cloud/internal/env"
 )
 
 //go:embed templates/*
@@ -81,4 +82,12 @@ func InviteCustomer(
 			"Host":            env.Host(),
 			"Token":           token,
 		}
+}
+
+func VerifyEmail(userAccount types.UserAccount, token string) (*template.Template, any) {
+	return templates.Lookup("verify-email-registration.html"), map[string]any{
+		"UserAccount": userAccount,
+		"Host":        env.Host(),
+		"Token":       token,
+	}
 }

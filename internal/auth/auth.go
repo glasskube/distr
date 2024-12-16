@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/glasskube/cloud/internal/util"
+
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/jwtauth/v5"
@@ -16,10 +18,11 @@ const (
 )
 
 const (
-	UserNameKey  = "name"
-	UserEmailKey = "email"
-	UserRoleKey  = "role"
-	OrgIdKey     = "org"
+	UserNameKey          = "name"
+	UserEmailKey         = "email"
+	UserEmailVerifiedKey = "email_verified"
+	UserRoleKey          = "role"
+	OrgIdKey             = "org"
 )
 
 // JWTAuth is for generating/validating JWTs.
@@ -40,16 +43,26 @@ func GenerateTokenValidFor(
 ) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
-		jwt.IssuedAtKey:   now,
-		jwt.NotBeforeKey:  now,
-		jwt.ExpirationKey: now.Add(validFor),
-		jwt.SubjectKey:    user.ID,
-		UserNameKey:       user.Name,
-		UserEmailKey:      user.Email,
-		UserRoleKey:       org.UserRole,
-		OrgIdKey:          org.ID,
+		jwt.IssuedAtKey:      now,
+		jwt.NotBeforeKey:     now,
+		jwt.ExpirationKey:    now.Add(validFor),
+		jwt.SubjectKey:       user.ID,
+		UserNameKey:          user.Name,
+		UserEmailKey:         user.Email,
+		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
+		UserRoleKey:          org.UserRole,
+		OrgIdKey:             org.ID,
 	}
 	return JWTAuth.Encode(claims)
+}
+
+func GenerateVerificationTokenValidFor(
+	user types.UserAccount,
+	org types.OrganizationWithUserRole,
+	validFor time.Duration,
+) (jwt.Token, string, error) {
+	user.EmailVerifiedAt = util.PtrTo(time.Now())
+	return GenerateTokenValidFor(user, org, validFor)
 }
 
 func GenerateAgentTokenValidFor(targetId string, orgId string, validFor time.Duration) (jwt.Token, string, error) {
@@ -93,5 +106,15 @@ func CurrentOrgId(ctx context.Context) (string, error) {
 		return "", errors.New("missing org id in token")
 	} else {
 		return orgId.(string), nil
+	}
+}
+
+func CurrentUserEmailVerified(ctx context.Context) (bool, error) {
+	if token, _, err := jwtauth.FromContext(ctx); err != nil {
+		return false, err
+	} else if verified, ok := token.Get(UserEmailVerifiedKey); !ok {
+		return false, nil
+	} else {
+		return verified.(bool), nil
 	}
 }

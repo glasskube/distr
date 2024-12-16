@@ -91,7 +91,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-	_, token, err := auth.GenerateTokenValidFor(
+	_, token, err := auth.GenerateVerificationTokenValidFor(
 		userAccount,
 		types.OrganizationWithUserRole{Organization: organization, UserRole: body.UserRole},
 		env.InviteTokenValidDuration(),
