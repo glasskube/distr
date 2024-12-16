@@ -29,6 +29,10 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
       .pipe(tap((it) => this.cache.save(it)));
   }
 
+  delete(request: DeploymentTarget): Observable<void> {
+    return this.httpClient.delete<void>(`${this.baseUrl}/${request.id}`).pipe(tap(() => this.cache.remove(request)));
+  }
+
   latestDeploymentFor(deploymentTargetId: string): Observable<DeploymentWithData> {
     return this.httpClient.get<DeploymentWithData>(`${this.baseUrl}/${deploymentTargetId}/latest-deployment`);
   }

@@ -4,6 +4,8 @@ import (
 	"embed"
 	"html/template"
 	"io/fs"
+	"net/url"
+	"path"
 
 	"github.com/glasskube/cloud/internal/types"
 
@@ -14,6 +16,9 @@ import (
 var embeddedFS embed.FS
 
 var templates *template.Template
+var funcMap = template.FuncMap{
+	"QueryEscape": url.QueryEscape,
+}
 
 func init() {
 	if fsys, err := fs.Sub(embeddedFS, "templates"); err != nil {
@@ -24,15 +29,16 @@ func init() {
 }
 
 func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
-	var t *template.Template = template.New("")
+	var t *template.Template = template.New("").Funcs(funcMap)
 	for _, p := range patterns {
 		if files, err := fs.Glob(fsys, p); err != nil {
 			return nil, err
 		} else {
 			for _, file := range files {
-				if ft, err := template.ParseFS(fsys, file); err != nil {
+				// funcMap must be present during parsing *and* execution
+				if ft, err := template.New("").Funcs(funcMap).ParseFS(fsys, file); err != nil {
 					return nil, err
-				} else if _, err := t.AddParseTree(file, ft.Tree); err != nil {
+				} else if _, err := t.AddParseTree(file, ft.Lookup(path.Base(file)).Tree); err != nil {
 					return nil, err
 				}
 			}

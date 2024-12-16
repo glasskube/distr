@@ -12,7 +12,7 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {Observable} from 'rxjs';
+import {firstValueFrom, Observable} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {ApplicationsService} from '../services/applications.service';
@@ -43,6 +43,7 @@ export class ApplicationsComponent {
   protected readonly faPen = faPen;
   protected readonly faXmark = faXmark;
   protected readonly faBoxArchive = faBoxArchive;
+  protected readonly faTrash = faTrash;
   showDropdown = false;
 
   private readonly applications = inject(ApplicationsService);
@@ -106,6 +107,12 @@ export class ApplicationsComponent {
     this.selectedApplication = undefined;
     this.resetEditForm();
     this.resetVersionForm();
+  }
+
+  async deleteApplication(application: Application) {
+    if (confirm(`Really delete ${application.name} and all related deployments?`)) {
+      await firstValueFrom(this.applications.delete(application));
+    }
   }
 
   private resetEditForm() {

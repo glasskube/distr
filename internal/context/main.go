@@ -18,6 +18,7 @@ const (
 	ctxKeyApplication
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget
+	ctxKeyUserAccount
 )
 
 func GetDb(ctx context.Context) queryable.Queryable {

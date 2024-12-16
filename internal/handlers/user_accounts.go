@@ -24,6 +24,10 @@ func UserAccountsRouter(r chi.Router) {
 	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
+		r.Route("/{userId}", func(r chi.Router) {
+			r.Use(userAccountMiddleware)
+			r.Delete("/", deleteUserAccountHandler)
+		})
 	})
 }
 
@@ -110,4 +114,40 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	)); err != nil {
 		log.Error("failed to send invite mail", zap.Error(err))
 	}
+}
+
+func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	userAccount := internalctx.GetUserAccount(ctx)
+	if currentUserID, err := auth.CurrentUserId(ctx); err != nil {
+		log.Warn("error getting current user", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else if userAccount.ID == currentUserID {
+		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
+	} else if err := db.DeleteUserAccountWithID(ctx, userAccount.ID); err != nil {
+		log.Warn("error deleting user", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func userAccountMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		if userId := r.PathValue("userId"); userId == "" {
+			http.Error(w, "missing userId", http.StatusBadRequest)
+		} else if userAccount, err := db.GetUserAccountWithID(ctx, userId); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				http.NotFound(w, r)
+			} else {
+				log.Warn("error getting user", zap.Error(err))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			h.ServeHTTP(w, r.WithContext(internalctx.WithUserAccount(ctx, userAccount)))
+		}
+	})
 }

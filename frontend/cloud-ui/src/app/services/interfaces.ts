@@ -5,4 +5,5 @@ export interface CrudService<Request, Response = Request> {
   //get(id: string): Observable<Response>;
   create(request: Request): Observable<Response>;
   update(request: Request): Observable<Response>;
+  delete(request: Request): Observable<void>;
 }
