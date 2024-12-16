@@ -30,6 +30,12 @@ export class ApplicationsService implements CrudService<Application> {
       .pipe(tap((it) => this.cache.save(it)));
   }
 
+  delete(application: Application): Observable<void> {
+    return this.httpClient
+      .delete<void>(`${this.applicationsUrl}/${application.id}`)
+      .pipe(tap(() => this.cache.remove(application)));
+  }
+
   createApplicationVersion(
     application: Application,
     applicationVersion: ApplicationVersion,

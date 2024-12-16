@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/glasskube/cloud/internal/auth"
 	"github.com/glasskube/cloud/internal/resources"
 	"github.com/jackc/pgx/v5"
 
@@ -28,6 +29,7 @@ func ApplicationsRouter(r chi.Router) {
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.Use(applicationMiddleware)
 		r.Get("/", getApplication)
+		r.With(requireUserRoleVendor).Delete("/", deleteApplication)
 		r.With(requireUserRoleVendor).Put("/", updateApplication)
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
@@ -286,6 +288,22 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 
 	application.Versions = append(application.Versions, version)
 	RespondJSON(w, application)
+}
+
+func deleteApplication(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	application := internalctx.GetApplication(ctx)
+	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if application.OrganizationID != orgId {
+		http.NotFound(w, r)
+	} else if err := db.DeleteApplicationWithID(ctx, application.ID); err != nil {
+		log.Warn("error deleting application", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+	}
 }
 
 func applicationMiddleware(next http.Handler) http.Handler {

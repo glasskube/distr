@@ -20,4 +20,8 @@ export class UsersService {
   }): Observable<void> {
     return this.httpClient.post<void>(this.baseUrl, request);
   }
+
+  public delete(user: UserAccount): Observable<void> {
+    return this.httpClient.delete<void>(`${this.baseUrl}/${user.id}`);
+  }
 }
