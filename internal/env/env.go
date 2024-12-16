@@ -17,12 +17,13 @@ const (
 )
 
 var (
-	currentEnv               string
-	databaseUrl              string
-	jwtSecret                []byte
-	host                     string
-	mailerConfig             MailerConfig
-	inviteTokenValidDuration = 24 * time.Hour
+	currentEnv                 string
+	databaseUrl                string
+	jwtSecret                  []byte
+	host                       string
+	mailerConfig               MailerConfig
+	inviteTokenValidDuration   = 24 * time.Hour
+	agentTokenMaxValidDuration = 24 * time.Hour
 )
 
 func init() {
@@ -70,6 +71,9 @@ func init() {
 	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
 		inviteTokenValidDuration = util.Require(time.ParseDuration(d))
 	}
+	if d, ok := os.LookupEnv("AGENT_TOKEN_MAX_VALID_DURATION"); ok {
+		agentTokenMaxValidDuration = util.Require(time.ParseDuration(d))
+	}
 }
 
 func DatabaseUrl() string {
@@ -92,4 +96,8 @@ func GetMailerConfig() MailerConfig {
 
 func InviteTokenValidDuration() time.Duration {
 	return inviteTokenValidDuration
+}
+
+func AgentTokenMaxValidDuration() time.Duration {
+	return agentTokenMaxValidDuration
 }
