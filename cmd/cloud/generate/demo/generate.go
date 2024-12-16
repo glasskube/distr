@@ -71,7 +71,7 @@ func main() {
 	util.Must(db.CreateApplicationVersion(ctx, &appLaunchDashboardV001))
 
 	gateSpace := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &pmig,
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Danube Aerospace",
@@ -86,7 +86,7 @@ func main() {
 	}))
 
 	lumenOrbit := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &pmig,
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Lux Orbit",
@@ -101,7 +101,7 @@ func main() {
 	}))
 
 	albaOrbital := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &pmig,
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Space K",
@@ -116,7 +116,7 @@ func main() {
 	}))
 
 	founderCafe := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &pmig,
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Bay Space Corp",
@@ -131,7 +131,7 @@ func main() {
 	}))
 
 	quindar := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &pmig,
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Red Target",

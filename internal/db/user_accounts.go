@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	userAccountOutputExpr = "u.id, u.created_at, u.email, u.password_hash, u.password_salt, u.name"
+	userAccountOutputExpr         = "u.id, u.created_at, u.email, u.password_hash, u.password_salt, u.name"
+	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
 )
 
 func CreateUserAccountWithOrganization(
@@ -112,7 +113,7 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId 
 func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountOutputExpr+`, j.user_role
+		"SELECT "+userAccountWithRoleOutputExpr+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 		WHERE j.organization_id = @orgId`,
