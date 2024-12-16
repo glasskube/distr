@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	userAccountOutputExpr         = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, u.password_salt, u.name"
+	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
+		"u.password_salt, u.name"
 	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
 )
 
