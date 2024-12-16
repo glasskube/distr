@@ -23,9 +23,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
 
   async ngOnInit() {
-    if(this.auth.getClaims().email_verified) {
+    if (this.auth.getClaims().email_verified) {
       await firstValueFrom(this.settings.updateUserSettings({emailVerified: true}));
-      this.toast.success("Your email has been verified");
+      this.toast.success('Your email has been verified');
       await this.router.navigate(['/']);
     }
   }
@@ -33,5 +33,4 @@ export class VerifyComponent implements OnInit, OnDestroy {
   public ngOnDestroy(): void {
     this.destroyed$.next();
   }
-
 }

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/glasskube/cloud/internal/util"
+
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/jwtauth/v5"
@@ -54,7 +56,14 @@ func GenerateTokenValidFor(
 	return JWTAuth.Encode(claims)
 }
 
-// TODO instead do GenerateVerificationTokenFor...
+func GenerateVerificationTokenValidFor(
+	user types.UserAccount,
+	org types.OrganizationWithUserRole,
+	validFor time.Duration,
+) (jwt.Token, string, error) {
+	user.EmailVerifiedAt = util.PtrTo(time.Now())
+	return GenerateTokenValidFor(user, org, validFor)
+}
 
 func CurrentUserId(ctx context.Context) (string, error) {
 	if token, _, err := jwtauth.FromContext(ctx); err != nil {

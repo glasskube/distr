@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/util"
 	"net/http"
-	"time"
 
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/security"
@@ -95,8 +93,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userAccount.EmailVerifiedAt = util.PtrTo(time.Now()) // just for the token to contain email_verified=true
-		_, token, err := auth.GenerateTokenValidFor(
+		_, token, err := auth.GenerateVerificationTokenValidFor(
 			userAccount,
 			types.OrganizationWithUserRole{Organization: *org, UserRole: types.UserRoleVendor},
 			env.InviteTokenValidDuration(),

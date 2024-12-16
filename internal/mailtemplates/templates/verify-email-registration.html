@@ -12,11 +12,8 @@
         <p>Hi {{.UserAccount.Name}}</p>
         {{else}}
         <p>Hi,</p>
-        {{end}}
-
-        Welcome to <a href="https://glasskube.cloud/">glasskube.cloud</a>!
-
-        Please <a href="{{.Host}}/verify?jwt={{.Token}}">click this link</a> to verify that this is your email address.
+        {{end}} Welcome to <a href="https://glasskube.cloud/">glasskube.cloud</a>! Please
+        <a href="{{.Host}}/verify?jwt={{.Token}}">click this link</a> to verify that this is your email address.
 
         <p>{{template "fragments/signature.html"}}</p>
       </main>

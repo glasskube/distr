@@ -2,9 +2,10 @@ package mailtemplates
 
 import (
 	"embed"
-	"github.com/glasskube/cloud/internal/types"
 	"html/template"
 	"io/fs"
+
+	"github.com/glasskube/cloud/internal/types"
 
 	"github.com/glasskube/cloud/internal/env"
 )

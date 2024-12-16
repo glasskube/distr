@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"errors"
-	"github.com/glasskube/cloud/internal/util"
 	"net/http"
 	"time"
+
+	"github.com/glasskube/cloud/internal/util"
 
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"

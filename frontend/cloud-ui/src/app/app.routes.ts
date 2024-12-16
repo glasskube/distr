@@ -4,7 +4,7 @@ import {
   Router,
   RouterStateSnapshot,
   Routes,
-  UrlTree
+  UrlTree,
 } from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
@@ -40,11 +40,9 @@ export const routes: Routes = [
       (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
         const auth = inject(AuthService);
         const router = inject(Router);
-        console.log(state);
         if (auth.isAuthenticated) {
-          if(!auth.getClaims().email_verified) {
-            console.log(route.url[0])
-            if(state.url === '/verify') {
+          if (!auth.getClaims().email_verified) {
+            if (state.url === '/verify') {
               return true;
             } else {
               return router.createUrlTree(['/verify']);
