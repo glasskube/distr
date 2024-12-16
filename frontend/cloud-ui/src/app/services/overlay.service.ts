@@ -22,9 +22,10 @@ export class ExtendedOverlayConfig extends OverlayConfig {
   backdropStyleOnly?: boolean;
 }
 
-@Injectable({providedIn: 'root'})
+@Injectable()
 export class OverlayService {
   private readonly overlay = inject(Overlay);
+  private readonly viewContainerRef = inject(ViewContainerRef);
 
   /**
    * @param templateRef the template to show
@@ -32,32 +33,24 @@ export class OverlayService {
    * @param config optional overlay config
    * @returns a handle of the modal with some control functions
    */
-  public showModal(
-    templateRef: TemplateRef<unknown>,
-    viewContainerRef: ViewContainerRef,
-    config?: ExtendedOverlayConfig
-  ): EmbeddedOverlayRef {
-    return this.show(templateRef, viewContainerRef, {
+  public showModal(templateRef: TemplateRef<unknown>, config?: ExtendedOverlayConfig): EmbeddedOverlayRef {
+    return this.show(templateRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().top(),
       ...config,
     });
   }
 
-  public showDrawer(templateRef: TemplateRef<unknown>, viewContainerRef: ViewContainerRef): EmbeddedOverlayRef {
-    return this.show(templateRef, viewContainerRef, {
+  public showDrawer(templateRef: TemplateRef<unknown>): EmbeddedOverlayRef {
+    return this.show(templateRef, {
       hasBackdrop: true,
       positionStrategy: new GlobalPositionStrategy().end().centerVertically(),
     });
   }
 
-  private show(
-    templateRef: TemplateRef<unknown>,
-    viewContainerRef: ViewContainerRef,
-    config: ExtendedOverlayConfig
-  ): EmbeddedOverlayRef {
+  private show(templateRef: TemplateRef<unknown>, config: ExtendedOverlayConfig): EmbeddedOverlayRef {
     const overlayRef = this.overlay.create(config);
-    const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, viewContainerRef)));
+    const modalRef = new EmbeddedOverlayRef(overlayRef.attach(new TemplatePortal(templateRef, this.viewContainerRef)));
     if (!config.backdropStyleOnly) {
       overlayRef
         .backdropClick()

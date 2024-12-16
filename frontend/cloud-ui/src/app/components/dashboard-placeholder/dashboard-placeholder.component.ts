@@ -1,20 +1,20 @@
-import {Component, inject, OnInit, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
-import {GlobeComponent} from '../globe/globe.component';
-import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {ApplicationsComponent} from '../../applications/applications.component';
-import {AsyncPipe} from '@angular/common';
-import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
-import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
-import {ApplicationsService} from '../../services/applications.service';
-import {combineLatest, first} from 'rxjs';
+import {AsyncPipe} from '@angular/common';
+import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
-import {ChartVersionComponent} from '../charts/version/chart-version.component';
-import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
-import {ChartTypeComponent} from '../charts/type/chart-type.component';
+import {combineLatest, first} from 'rxjs';
+import {ApplicationsComponent} from '../../applications/applications.component';
 import {DeploymentTargetsComponent} from '../../deployments/deployment-targets.component';
+import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
+import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
+import {ChartTypeComponent} from '../charts/type/chart-type.component';
+import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
+import {ChartVersionComponent} from '../charts/version/chart-version.component';
+import {GlobeComponent} from '../globe/globe.component';
+import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 
 @Component({
   selector: 'app-dashboard-placeholder',
@@ -40,7 +40,6 @@ export class DashboardPlaceholderComponent implements OnInit {
   readonly applications$ = this.applications.list();
   private readonly auth = inject(AuthService);
 
-  private viewContainerRef = inject(ViewContainerRef);
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
   private overlayRef?: EmbeddedOverlayRef;
@@ -59,7 +58,7 @@ export class DashboardPlaceholderComponent implements OnInit {
   }
 
   openWizard() {
-    this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
+    this.overlayRef = this.overlay.showModal(this.wizardRef!, {
       hasBackdrop: true,
       backdropStyleOnly: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),

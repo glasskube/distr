@@ -1,26 +1,18 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, Input, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
+import {Component, ElementRef, inject, Input, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {
-  faBoxArchive,
-  faCaretDown,
-  faMagnifyingGlass,
-  faPen,
-  faPlus,
-  faTrash,
-  faXmark,
-} from '@fortawesome/free-solid-svg-icons';
+import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, Observable} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
-import {ApplicationsService} from '../services/applications.service';
-import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
-import {Application} from '../types/application';
 import {modalFlyInOut} from '../animations/modal';
 import {RequireRoleDirective} from '../directives/required-role.directive';
+import {ApplicationsService} from '../services/applications.service';
+import {EmbeddedOverlayRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {Application} from '../types/application';
 
 @Component({
   selector: 'app-applications',
@@ -64,7 +56,6 @@ export class ApplicationsComponent {
   private manageApplicationDrawerRef?: EmbeddedOverlayRef;
   private applicationVersionModalRef?: EmbeddedOverlayRef;
   private readonly overlay = inject(OverlayService);
-  private readonly viewContainerRef = inject(ViewContainerRef);
 
   private readonly toast = inject(ToastService);
 
@@ -75,7 +66,7 @@ export class ApplicationsComponent {
     } else {
       this.reset();
     }
-    this.manageApplicationDrawerRef = this.overlay.showDrawer(templateRef, this.viewContainerRef);
+    this.manageApplicationDrawerRef = this.overlay.showDrawer(templateRef);
   }
 
   hideDrawer() {
@@ -86,7 +77,7 @@ export class ApplicationsComponent {
   openVersionModal(templateRef: TemplateRef<unknown>, application: Application) {
     this.hideVersionModal();
     this.loadApplication(application);
-    this.applicationVersionModalRef = this.overlay.showModal(templateRef, this.viewContainerRef);
+    this.applicationVersionModalRef = this.overlay.showModal(templateRef);
   }
 
   hideVersionModal() {
