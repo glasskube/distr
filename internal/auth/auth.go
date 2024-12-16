@@ -52,7 +52,7 @@ func GenerateTokenValidFor(
 	return JWTAuth.Encode(claims)
 }
 
-func GenerateAgentTokenValidFor(orgId string, targetId string, validFor time.Duration) (jwt.Token, string, error) {
+func GenerateAgentTokenValidFor(targetId string, orgId string, validFor time.Duration) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
 		jwt.IssuedAtKey:   now,

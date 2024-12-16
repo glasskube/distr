@@ -50,18 +50,6 @@ func GetDeploymentTarget(ctx context.Context) *types.DeploymentTarget {
 	panic("deployment target not contained in context")
 }
 
-func WithOrgId(ctx context.Context, orgId string) context.Context {
-	return context.WithValue(ctx, ctxKeyOrgId, orgId)
-}
-
-func GetOrgId(ctx context.Context) string {
-	val := ctx.Value(ctxKeyOrgId)
-	if dt, ok := val.(string); ok {
-		return dt
-	}
-	panic("org ID not contained in context")
-}
-
 func WithUserAccount(ctx context.Context, userAccount *types.UserAccount) context.Context {
 	return context.WithValue(ctx, ctxKeyUserAccount, userAccount)
 }

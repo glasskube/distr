@@ -32,10 +32,7 @@ func AgentRouter(r chi.Router) {
 	})
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
-		r.Group(func(r chi.Router) {
-			r.Use(basicAuthDeploymentTargetCtxMiddleware)
-			r.Post("/login", agentLogin)
-		})
+		r.Post("/login", agentLogin)
 		// agent routes, authenticated via token
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth.JWTAuth))
@@ -90,15 +87,21 @@ func buildEndpoints() (string, string, string, error) {
 func agentLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-	orgId := internalctx.GetOrgId(ctx)
 
-	// TODO maybe randomize token valid duration
-	if _, token, err := auth.GenerateAgentTokenValidFor(orgId, deploymentTarget.ID, env.AgentTokenMaxValidDuration()); err != nil {
-		log.Error("failed to create agent token", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
+	if targetId, targetSecret, ok := r.BasicAuth(); !ok {
+		log.Error("invalid Basic Auth")
+		w.WriteHeader(http.StatusUnauthorized)
+	} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
+		log.Error("failed to get deployment target from query auth", zap.Error(err))
+		w.WriteHeader(http.StatusUnauthorized)
 	} else {
-		_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token})
+		// TODO maybe even randomize token valid duration
+		if _, token, err := auth.GenerateAgentTokenValidFor(deploymentTarget.ID, deploymentTarget.OrganizationID, env.AgentTokenMaxValidDuration()); err != nil {
+			log.Error("failed to create agent token", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token})
+		}
 	}
 }
 
@@ -196,24 +199,6 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		}
-	})
-}
-
-func basicAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		log := internalctx.GetLogger(ctx)
-		if targetId, targetSecret, ok := r.BasicAuth(); !ok {
-			log.Error("invalid Basic Auth")
-			w.WriteHeader(http.StatusUnauthorized)
-		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
-			log.Error("failed to get deployment target from query auth", zap.Error(err))
-			w.WriteHeader(http.StatusUnauthorized)
-		} else {
-			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
-			ctx = internalctx.WithOrgId(ctx, deploymentTarget.OrganizationID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
