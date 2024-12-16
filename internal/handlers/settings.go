@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
 
 	"github.com/glasskube/cloud/internal/util"
 
