@@ -41,7 +41,6 @@ export class ChartTypeComponent {
       legend: {
         show: true,
         position: 'top',
-        offsetY: 12,
         fontFamily: 'Inter',
         labels: {
           colors: 'rgb(156, 163, 175)',
@@ -49,7 +48,7 @@ export class ChartTypeComponent {
         },
       },
       title: {
-        text: 'Deployment types',
+        text: 'Deployment types (Example)',
         align: 'center',
         offsetY: 10,
         style: {

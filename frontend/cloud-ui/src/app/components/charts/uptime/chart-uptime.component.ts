@@ -23,18 +23,18 @@ export class ChartUptimeComponent {
     this.chartOptions = {
       series: [
         {
-          name: 'green',
+          name: 'available',
           data: [10, 10, 9, 10, 9, 10, 10],
           color: '#00bfa5',
         },
         {
-          name: 'red',
+          name: 'unavailable',
           data: [0, 0, 1, 0, 1, 0, 0],
           color: '#f44336',
         },
       ],
       chart: {
-        height: 192,
+        height: 220,
         type: 'bar',
         stacked: true,
         sparkline: {
@@ -60,13 +60,18 @@ export class ChartUptimeComponent {
         ],
       },
       legend: {
-        show: false,
+        show: true,
         position: 'top',
+        fontFamily: 'Inter',
+        offsetY: -18,
+        labels: {
+          colors: 'rgb(156, 163, 175)',
+          useSeriesColors: false,
+        },
       },
       title: {
-        text: 'Deployment Uptime',
+        text: 'Deployment Uptime (Example)',
         align: 'center',
-        offsetY: 10,
         style: {
           color: 'rgb(156, 163, 175)',
           fontFamily: 'Poppins',

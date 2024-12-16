@@ -1,14 +1,26 @@
-<div class="sm:max-w-180">
+<div class="sm:max-w-256">
   <div class="space-y-6 sm:space-y-8">
     <ol
       class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800 sm:justify-center md:flex-row md:items-center lg:gap-6">
       <li
         class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
-        [class.text-gray-500]="!isApplicationStep()"
-        [class.dark:text-gray-400]="!isApplicationStep()"
-        [class.text-blue-700]="isApplicationStep()"
-        [class.dark:text-blue-600]="isApplicationStep()">
-        <fa-icon [icon]="dockerIcon"></fa-icon>
+        [class.text-gray-500]="!(selectedIndex === 0)"
+        [class.dark:text-gray-400]="!(selectedIndex === 0)"
+        [class.text-blue-700]="selectedIndex === 0"
+        [class.dark:text-blue-600]="selectedIndex === 0">
+        <fa-icon [icon]="faCube"></fa-icon>
+        <p class="text-sm font-medium leading-tight">Introduction</p>
+      </li>
+
+      <div class="hidden h-px w-4 shrink-0 bg-gray-200 dark:bg-gray-700 md:block lg:w-16"></div>
+
+      <li
+        class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
+        [class.text-gray-500]="!(selectedIndex === 1)"
+        [class.dark:text-gray-400]="!(selectedIndex === 1)"
+        [class.text-blue-700]="selectedIndex === 1"
+        [class.dark:text-blue-600]="selectedIndex === 1">
+        <fa-icon [icon]="faDocker"></fa-icon>
         <p class="text-sm font-medium leading-tight">Create Application</p>
       </li>
 
@@ -16,11 +28,11 @@
 
       <li
         class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
-        [class.text-gray-500]="!isDeploymentTargetStep()"
-        [class.dark:text-gray-400]="!isDeploymentTargetStep()"
-        [class.text-blue-700]="isDeploymentTargetStep()"
-        [class.dark:text-blue-600]="isDeploymentTargetStep()">
-        <fa-icon [icon]="networkIcon"></fa-icon>
+        [class.text-gray-500]="!(selectedIndex === 2)"
+        [class.dark:text-gray-400]="!(selectedIndex === 2)"
+        [class.text-blue-700]="selectedIndex === 2"
+        [class.dark:text-blue-600]="selectedIndex === 2">
+        <fa-icon [icon]="faAddressBook"></fa-icon>
         <p class="text-sm font-medium leading-tight">Create Customer</p>
       </li>
 
@@ -28,17 +40,17 @@
 
       <li
         class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
-        [class.text-gray-500]="!isFinalStep()"
-        [class.dark:text-gray-400]="!isFinalStep()"
-        [class.text-blue-700]="isFinalStep()"
-        [class.dark:text-blue-600]="isFinalStep()">
-        <fa-icon [icon]="shipIcon"></fa-icon>
-        <p class="text-sm font-medium leading-tight">Connect</p>
+        [class.text-gray-500]="!(selectedIndex === 3)"
+        [class.dark:text-gray-400]="!(selectedIndex === 3)"
+        [class.text-blue-700]="selectedIndex === 3"
+        [class.dark:text-blue-600]="selectedIndex === 3">
+        <fa-icon [icon]="faHubspot"></fa-icon>
+        <p class="text-sm font-medium leading-tight">Distribute Application</p>
       </li>
     </ol>
   </div>
 
-  @if (!isFinalStep()) {
+  @if (!(selectedIndex === 3)) {
     <form [formGroup]="currentFormGroup()" (ngSubmit)="this.attemptContinueOutput.emit()">
       <ng-container *ngTemplateOutlet="selected?.content ?? null"></ng-container>
 

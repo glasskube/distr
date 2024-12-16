@@ -48,18 +48,22 @@ export class DashboardPlaceholderComponent implements OnInit {
   protected readonly faPlus = faPlus;
 
   ngOnInit() {
-    combineLatest([this.applications$, this.deploymentTargets$])
+    combineLatest([this.applications$])
       .pipe(first())
-      .subscribe(([apps, dts]) => {
-        if (this.auth.hasRole('vendor') && (apps.length === 0 || dts.length === 0)) {
+      .subscribe(([apps]) => {
+        if (this.auth.hasRole('vendor') && apps.length === 0) {
           this.closeWizard();
-          this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
-            hasBackdrop: true,
-            backdropStyleOnly: true,
-            positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
-          });
+          this.openWizard();
         }
       });
+  }
+
+  openWizard() {
+    this.overlayRef = this.overlay.showModal(this.wizardRef!, this.viewContainerRef, {
+      hasBackdrop: true,
+      backdropStyleOnly: true,
+      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+    });
   }
 
   closeWizard() {

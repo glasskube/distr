@@ -54,13 +54,14 @@ export class ChartVersionComponent {
         show: true,
         position: 'top',
         fontFamily: 'Inter',
+        offsetY: -18,
         labels: {
           colors: 'rgb(156, 163, 175)',
           useSeriesColors: false,
         },
       },
       title: {
-        text: 'Version Distribution',
+        text: 'Version Distribution (Example)',
         align: 'center',
         style: {
           color: 'rgb(156, 163, 175)',

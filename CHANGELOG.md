@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0](https://github.com/glasskube/cloud/compare/v0.3.0...v0.4.0) (2024-12-13)
+
+
+### Features
+
+* **backend:** use transactions where multiple database writes happen ([#129](https://github.com/glasskube/cloud/issues/129)) ([ef23a9f](https://github.com/glasskube/cloud/commit/ef23a9f2d560546150bd210e2c57c18c7b393fd5))
+* change email footer ([cb45326](https://github.com/glasskube/cloud/commit/cb45326c5e8b5a0b9d65e7767197919de054fa63))
+* **frontend:** add step 0 in onboarding wizard ([#136](https://github.com/glasskube/cloud/issues/136)) ([fda3126](https://github.com/glasskube/cloud/commit/fda312625abd87267db396354e13a42d599c94f6))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v8.45.0 ([#134](https://github.com/glasskube/cloud/issues/134)) ([14ba8ee](https://github.com/glasskube/cloud/commit/14ba8eeb6d1446e6df99ee6699c0997e55b7c209))
+* improve customer invite mail ([#132](https://github.com/glasskube/cloud/issues/132)) ([32f121e](https://github.com/glasskube/cloud/commit/32f121e2eee079d7f1c897259f8b5112740dc75b))
+
+
+### Other
+
+* **deps:** update jdx/mise-action action to v2.1.8 ([#133](https://github.com/glasskube/cloud/issues/133)) ([34c7b30](https://github.com/glasskube/cloud/commit/34c7b300a1b89ccbc13f08792aa691d13d834216))
+* **frontend:** subheading to indicate user role ([#135](https://github.com/glasskube/cloud/issues/135)) ([bb316c0](https://github.com/glasskube/cloud/commit/bb316c06ebc2c1e9d6f61be34e4a31e9b046c1a5))
+
 ## [0.3.0](https://github.com/glasskube/cloud/compare/v0.2.0...v0.3.0) (2024-12-13)
 
 
