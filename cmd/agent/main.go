@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glasskube/cloud/api"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/glasskube/cloud/api"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -43,7 +44,7 @@ func main() {
 		if req, err := http.NewRequest(http.MethodGet, resourceEndpoint, nil); err != nil {
 			logger.Error("failed to create request", zap.Error(err))
 		} else {
-			if currentToken, err = ensureAuthHeader(client, currentToken, req, loginEndpoint, targetId, targetSecret); err != nil {
+			if currentToken, err = ensureAuth(client, currentToken, req, loginEndpoint, targetId, targetSecret); err != nil {
 				logger.Error("failed to ensure auth header", zap.Error(err))
 			} else if resp, err := client.Do(req); err != nil {
 				logger.Error("failed to execute request", zap.Error(err))
@@ -67,7 +68,8 @@ func main() {
 					http.NewRequest(http.MethodPost, statusEndpoint, bytes.NewReader(statusJson)); err != nil {
 					logger.Error("failed to create status request", zap.Error(err))
 				} else if correlationID != "" {
-					if currentToken, err = ensureAuthHeader(client, currentToken, statusReq, loginEndpoint, targetId, targetSecret); err != nil {
+					if currentToken, err =
+						ensureAuth(client, currentToken, statusReq, loginEndpoint, targetId, targetSecret); err != nil {
 						logger.Error("failed to ensure auth header for status request", zap.Error(err))
 					} else {
 						statusReq.Header.Set("Content-Type", "application/json")
@@ -94,7 +96,7 @@ func main() {
 	}
 }
 
-func ensureAuthHeader(
+func ensureAuth(
 	client http.Client,
 	currentToken string,
 	req *http.Request,
@@ -111,13 +113,17 @@ func ensureAuthHeader(
 	return currentToken, nil
 }
 
-func ensureToken(client http.Client, currentToken string, loginEndpoint string, targetId string, targetSecret string) (string, error) {
+func ensureToken(
+	client http.Client,
+	currentToken string,
+	loginEndpoint string,
+	targetId string,
+	targetSecret string,
+) (string, error) {
 	if currentToken != "" {
 		_, err := jwt.Parse([]byte(currentToken), jwt.WithVerify(false)) // TODO really?
-		if err != nil {
+		if err == nil {
 			// err != nil if expired
-			currentToken = ""
-		} else {
 			return currentToken, nil
 		}
 	}

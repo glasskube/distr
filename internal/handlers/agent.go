@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/go-chi/jwtauth/v5"
 	"io"
 	"net/http"
 	"net/url"
 	"text/template"
+
+	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/cloud/internal/auth"
+	"github.com/go-chi/jwtauth/v5"
 
 	"github.com/glasskube/cloud/internal/types"
 
@@ -33,8 +34,9 @@ func AgentRouter(r chi.Router) {
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
 		r.Post("/login", agentLogin)
-		// agent routes, authenticated via token
+
 		r.Group(func(r chi.Router) {
+			// agent routes, authenticated via token
 			r.Use(jwtauth.Verifier(auth.JWTAuth))
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
@@ -96,7 +98,8 @@ func agentLogin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
 		// TODO maybe even randomize token valid duration
-		if _, token, err := auth.GenerateAgentTokenValidFor(deploymentTarget.ID, deploymentTarget.OrganizationID, env.AgentTokenMaxValidDuration()); err != nil {
+		if _, token, err := auth.GenerateAgentTokenValidFor(
+			deploymentTarget.ID, deploymentTarget.OrganizationID, env.AgentTokenMaxValidDuration()); err != nil {
 			log.Error("failed to create agent token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -192,7 +195,8 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		} else if targetId, err := auth.CurrentSubject(ctx); err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get subject from token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
-		} else if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
+		} else if deploymentTarget, err :=
+			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
