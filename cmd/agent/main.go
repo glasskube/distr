@@ -121,7 +121,7 @@ func ensureToken(
 	targetSecret string,
 ) (string, error) {
 	if currentToken != "" {
-		_, err := jwt.Parse([]byte(currentToken), jwt.WithVerify(false)) // TODO really?
+		_, err := jwt.Parse([]byte(currentToken), jwt.WithVerify(false))
 		if err == nil {
 			// err != nil if expired
 			return currentToken, nil
