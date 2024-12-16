@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
@@ -20,12 +21,22 @@ func main() {
 	org := types.Organization{Name: "Glasskube"}
 	util.Must(db.CreateOrganization(ctx, &org))
 
-	pmig := types.UserAccount{Email: "pmig@glasskube.com", Name: "Philip Miglinci", Password: "12345678"}
+	pmig := types.UserAccount{
+		Email:           "pmig@glasskube.com",
+		Name:            "Philip Miglinci",
+		Password:        "12345678",
+		EmailVerifiedAt: util.PtrTo(time.Now()),
+	}
 	util.Must(security.HashPassword(&pmig))
 	util.Must(db.CreateUserAccount(ctx, &pmig))
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmig.ID, org.ID, types.UserRoleVendor))
 
-	pmigCustomer := types.UserAccount{Email: "pmig+customer@glasskube.com", Name: "Philip Miglinci", Password: "12345678"}
+	pmigCustomer := types.UserAccount{
+		Email:           "pmig+customer@glasskube.com",
+		Name:            "Philip Miglinci",
+		Password:        "12345678",
+		EmailVerifiedAt: util.PtrTo(time.Now()),
+	}
 	util.Must(security.HashPassword(&pmigCustomer))
 	util.Must(db.CreateUserAccount(ctx, &pmigCustomer))
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmigCustomer.ID, org.ID, types.UserRoleCustomer))

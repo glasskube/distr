@@ -12,6 +12,7 @@ export interface JWTClaims {
   sub: string;
   org: string;
   email: string;
+  email_verified: boolean;
   name: string;
   exp: string;
   role: UserRole;

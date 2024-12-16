@@ -18,7 +18,7 @@
         {{if .Token}}
         <p>
           Since you don't have an account yet, please finish your setup by clicking
-          <a href="{{.Host}}/join?jwt={{.Token}}">here</a>.
+          <a href="{{.Host}}/join?jwt={{.Token | QueryEscape}}">here</a>.
         </p>
         {{else}}
         <p>not supported yet</p>

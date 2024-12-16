@@ -4,15 +4,21 @@ import (
 	"embed"
 	"html/template"
 	"io/fs"
+	"net/url"
+	"path"
+
+	"github.com/glasskube/cloud/internal/types"
 
 	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/types"
 )
 
 //go:embed templates/*
 var embeddedFS embed.FS
 
 var templates *template.Template
+var funcMap = template.FuncMap{
+	"QueryEscape": url.QueryEscape,
+}
 
 func init() {
 	if fsys, err := fs.Sub(embeddedFS, "templates"); err != nil {
@@ -23,15 +29,16 @@ func init() {
 }
 
 func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
-	var t *template.Template = template.New("")
+	var t *template.Template = template.New("").Funcs(funcMap)
 	for _, p := range patterns {
 		if files, err := fs.Glob(fsys, p); err != nil {
 			return nil, err
 		} else {
 			for _, file := range files {
-				if ft, err := template.ParseFS(fsys, file); err != nil {
+				// funcMap must be present during parsing *and* execution
+				if ft, err := template.New("").Funcs(funcMap).ParseFS(fsys, file); err != nil {
 					return nil, err
-				} else if _, err := t.AddParseTree(file, ft.Tree); err != nil {
+				} else if _, err := t.AddParseTree(file, ft.Lookup(path.Base(file)).Tree); err != nil {
 					return nil, err
 				}
 			}
@@ -75,4 +82,12 @@ func InviteCustomer(
 			"Host":            env.Host(),
 			"Token":           token,
 		}
+}
+
+func VerifyEmail(userAccount types.UserAccount, token string) (*template.Template, any) {
+	return templates.Lookup("verify-email-registration.html"), map[string]any{
+		"UserAccount": userAccount,
+		"Host":        env.Host(),
+		"Token":       token,
+	}
 }

@@ -1,4 +1,11 @@
-import {ActivatedRouteSnapshot, createUrlTreeFromSnapshot, Router, Routes, UrlTree} from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  createUrlTreeFromSnapshot,
+  Router,
+  RouterStateSnapshot,
+  Routes,
+  UrlTree,
+} from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
 import {inject} from '@angular/core';
@@ -9,6 +16,7 @@ import {RegisterComponent} from './register/register.component';
 import {InviteComponent} from './invite/invite.component';
 import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
+import {VerifyComponent} from './verify/verify.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -29,10 +37,17 @@ export const routes: Routes = [
           return newtree;
         }
       },
-      () => {
+      (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
         const auth = inject(AuthService);
         const router = inject(Router);
         if (auth.isAuthenticated) {
+          if (!auth.getClaims().email_verified) {
+            if (state.url === '/verify') {
+              return true;
+            } else {
+              return router.createUrlTree(['/verify']);
+            }
+          }
           return true;
         } else {
           return router.createUrlTree(['/login']);
@@ -41,6 +56,7 @@ export const routes: Routes = [
     ],
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
+      {path: 'verify', component: VerifyComponent},
       {path: 'join', component: InviteComponent},
       {
         path: '',
