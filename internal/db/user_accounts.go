@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, u.password_salt, u.name"
+	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
+		"u.password_salt, u.name"
+	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
 )
 
 func CreateUserAccountWithOrganization(
@@ -126,7 +128,7 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId 
 func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountOutputExpr+`, j.user_role
+		"SELECT "+userAccountWithRoleOutputExpr+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 		WHERE j.organization_id = @orgId`,
@@ -187,7 +189,15 @@ func GetCurrentUser(ctx context.Context) (*types.UserAccount, error) {
 	if user, err := GetCurrentUserWithRole(ctx); err != nil {
 		return nil, err
 	} else {
-		return &user.UserAccount, nil
+		return &types.UserAccount{
+			ID:           user.ID,
+			CreatedAt:    user.CreatedAt,
+			Email:        user.Email,
+			PasswordHash: user.PasswordHash,
+			PasswordSalt: user.PasswordSalt,
+			Name:         user.Name,
+			Password:     user.Password,
+		}, nil
 	}
 }
 

@@ -75,7 +75,7 @@ func main() {
 	}))
 
 	dt1 := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &pmig,
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Space Center Austria",
@@ -86,7 +86,7 @@ func main() {
 	util.Must(db.CreateDeploymentTarget(ctx, &dt1))
 
 	dt2 := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &kosmoz,
+		CreatedBy: &types.UserAccountWithUserRole{ID: kosmoz.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "Edge Location",
@@ -96,7 +96,7 @@ func main() {
 	util.Must(db.CreateDeploymentTarget(ctx, &dt2))
 
 	dt3 := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &kosmoz,
+		CreatedBy: &types.UserAccountWithUserRole{ID: kosmoz.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
 			Name:           "580 Founders Café",

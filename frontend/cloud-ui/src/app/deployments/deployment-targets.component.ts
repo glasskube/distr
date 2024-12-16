@@ -43,8 +43,8 @@ import {ToastService} from '../services/toast.service';
   animations: [modalFlyInOut, drawerFlyInOut],
 })
 export class DeploymentTargetsComponent implements OnInit, OnDestroy {
+  public readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
-  private readonly auth = inject(AuthService);
   @Input('fullVersion') fullVersion = false;
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;

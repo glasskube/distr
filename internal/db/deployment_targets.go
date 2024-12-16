@@ -21,7 +21,7 @@ const (
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
-		", (" + userAccountOutputExpr + ") as created_by"
+		", (" + userAccountWithRoleOutputExpr + ") as created_by"
 	deploymentTargetWithStatusOutputExpr = deploymentTargetOutputExpr + `,
 		CASE WHEN status.id IS NOT NULL
 			THEN (status.id, status.created_at, status.message) END AS current_status
@@ -29,6 +29,7 @@ const (
 	deploymentTargetJoinExpr = `
 		LEFT JOIN DeploymentTargetStatus status ON dt.id = status.deployment_target_id
 		LEFT JOIN UserAccount u ON dt.created_by_user_account_id = u.id
+		LEFT JOIN Organization_UserAccount j ON u.id = j.user_account_id
 	`
 	deploymentTargetWhereExprBase = `
 		WHERE (
@@ -110,7 +111,7 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		if userId, err := auth.CurrentUserId(ctx); err != nil {
 			return err
 		} else {
-			dt.CreatedBy = &types.UserAccount{ID: userId}
+			dt.CreatedBy = &types.UserAccountWithUserRole{ID: userId}
 		}
 	}
 
