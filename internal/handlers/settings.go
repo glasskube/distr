@@ -41,8 +41,6 @@ func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		user.EmailVerifiedAt = util.PtrTo(time.Now())
 	}
 
-	// TODO demo data verify
-
 	if err := db.UpateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err != nil {
