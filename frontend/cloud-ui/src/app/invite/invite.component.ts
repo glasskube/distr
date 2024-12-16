@@ -1,6 +1,5 @@
 import {Component, inject} from '@angular/core';
-import {FormGroup, FormControl, Validators, ReactiveFormsModule} from '@angular/forms';
-import {Router, RouterLink} from '@angular/router';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {firstValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {SettingsService} from '../services/settings.service';
@@ -32,7 +31,7 @@ export class InviteComponent {
       const value = this.form.value;
       await firstValueFrom(this.settings.updateUserSettings({name: value.name, password: value.password}));
       this.auth.logout();
-      location.assign(`/login?email=${this.email}`);
+      location.assign(`/login?email=${encodeURIComponent(this.email)}`);
     }
   }
 }
