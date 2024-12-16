@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"github.com/glasskube/cloud/internal/auth"
+	internalctx "github.com/glasskube/cloud/internal/context"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 
@@ -20,6 +23,7 @@ func SettingsRouter(r chi.Router) {
 
 func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
 	body, err := JsonBody[api.UpdateUserAccountRequest](w, r)
 	if err != nil {
 		return
@@ -37,8 +41,12 @@ func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
-	if body.EmailVerified && user.EmailVerifiedAt == nil {
-		user.EmailVerifiedAt = util.PtrTo(time.Now())
+	if verifiedInToken, err := auth.CurrentUserEmailVerified(ctx); err != nil {
+		log.Warn("failed to check whether current user verified in token", zap.Error(err))
+	} else if verifiedInToken {
+		if body.EmailVerified && user.EmailVerifiedAt == nil {
+			user.EmailVerifiedAt = util.PtrTo(time.Now())
+		}
 	}
 
 	if err := db.UpateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {

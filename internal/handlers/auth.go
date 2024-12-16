@@ -99,8 +99,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			env.InviteTokenValidDuration(),
 		)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			log.Error("could not generate verification token for welcome mail", zap.Error(err))
 		}
 
 		mailer := internalctx.GetMailer(ctx)

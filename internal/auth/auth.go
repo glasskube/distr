@@ -92,3 +92,13 @@ func CurrentOrgId(ctx context.Context) (string, error) {
 		return orgId.(string), nil
 	}
 }
+
+func CurrentUserEmailVerified(ctx context.Context) (bool, error) {
+	if token, _, err := jwtauth.FromContext(ctx); err != nil {
+		return false, err
+	} else if verified, ok := token.Get(UserEmailVerifiedKey); !ok {
+		return false, nil
+	} else {
+		return verified.(bool), nil
+	}
+}
