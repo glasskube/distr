@@ -28,7 +28,7 @@ func main() {
 	resourceEndpoint := getFromEnvOrDie("GK_RESOURCE_ENDPOINT")
 	statusEndpoint := getFromEnvOrDie("GK_STATUS_ENDPOINT")
 
-	interval := 1 * time.Minute
+	interval := 5 * time.Second
 	if intervalStr, ok := os.LookupEnv("GK_INTERVAL"); ok {
 		interval = util.Require(time.ParseDuration(intervalStr))
 	}
