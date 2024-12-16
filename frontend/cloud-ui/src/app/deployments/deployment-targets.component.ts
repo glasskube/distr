@@ -3,7 +3,7 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, first, firstValueFrom, lastValueFrom, map} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
@@ -51,6 +51,7 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   readonly penIcon = faPen;
   readonly shipIcon = faShip;
   readonly xmarkIcon = faXmark;
+  protected readonly faTrash = faTrash;
 
   private modal?: EmbeddedOverlayRef;
   private manageDeploymentTargetRef?: EmbeddedOverlayRef;
@@ -126,6 +127,12 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   reset() {
     this.editForm.reset();
     this.editForm.patchValue({type: 'docker'});
+  }
+
+  async deleteDeploymentTarget(dt: DeploymentTarget) {
+    if (confirm(`Really delete ${dt.name}? This action can not be undone.`)) {
+      await firstValueFrom(this.deploymentTargets.delete(dt));
+    }
   }
 
   loadDeploymentTarget(dt: DeploymentTarget) {

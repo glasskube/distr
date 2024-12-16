@@ -50,7 +50,7 @@ CREATE INDEX IF NOT EXISTS fk_ApplicationVersion_application_id ON ApplicationVe
 CREATE TABLE IF NOT EXISTS DeploymentTarget (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
-  created_by_user_account_id UUID NOT NULL REFERENCES UserAccount (id),
+  created_by_user_account_id UUID NOT NULL REFERENCES UserAccount (id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   type DEPLOYMENT_TYPE NOT NULL,
   geolocation_lat FLOAT,
@@ -74,8 +74,8 @@ CREATE INDEX IF NOT EXISTS fk_DeploymentTargetStatus_deployment_target_id ON Dep
 CREATE TABLE IF NOT EXISTS Deployment (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
-  deployment_target_id UUID NOT NULL REFERENCES DeploymentTarget (id),
-  application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id)
+  deployment_target_id UUID NOT NULL REFERENCES DeploymentTarget (id) ON DELETE CASCADE,
+  application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS fk_Deployment_deployment_target_id ON Deployment (deployment_target_id);

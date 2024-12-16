@@ -61,3 +61,14 @@ func GetOrgId(ctx context.Context) string {
 	}
 	panic("deployment target not contained in context")
 }
+
+func WithUserAccount(ctx context.Context, userAccount *types.UserAccount) context.Context {
+	return context.WithValue(ctx, ctxKeyUserAccount, userAccount)
+}
+
+func GetUserAccount(ctx context.Context) *types.UserAccount {
+	if userAccount, ok := ctx.Value(ctxKeyUserAccount).(*types.UserAccount); ok {
+		return userAccount
+	}
+	panic("no UserAccount found in context")
+}

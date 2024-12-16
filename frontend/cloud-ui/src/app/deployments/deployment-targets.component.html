@@ -114,74 +114,75 @@
                   {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
                 }
               </td>
-
-              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                <div class="flex justify-end space-x-4">
-                  @if (!dt.currentStatus) {
-                    <button
-                      type="button"
-                      (click)="showInstructionsModal(instructionsModal, dt)"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                      Connection instructions
-                    </button>
-                    <ng-template #instructionsModal>
-                      <div
-                        @modalFlyInOut
-                        style="transform-origin: top center"
-                        class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
-                        <!-- Modal header -->
-                        <div
-                          class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructions</h3>
-                          <button
-                            type="button"
-                            (click)="hideModal()"
-                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                            <fa-icon [icon]="xmarkIcon"></fa-icon>
-                            <span class="sr-only">Close modal</span>
-                          </button>
-                        </div>
-                        <!-- Modal body -->
-                        <div class="p-4 md:p-5 space-y-4">
-                          <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                            To setup this Deployment, the Glasskube Cloud Agent must be installed on the target
-                            server/VM. Simply connect to the target (e.g. via SSH) and execute the following:
-                          </p>
-
-                          <app-connect-instructions [deploymentTargetId]="dt.id!"></app-connect-instructions>
-                        </div>
-                      </div>
-                    </ng-template>
-                  }
-                  @if (dt.currentStatus) {
-                    <button
-                      type="button"
-                      (click)="newDeployment(dt, deploymentModal)"
-                      aria-controls="manage-deployment-target-drawer"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                      [disabled]="auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'"
-                      [title]="
-                        auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'
-                          ? 'Must be deployed by customer'
-                          : undefined
-                      ">
-                      <fa-icon
-                        [icon]="shipIcon"
-                        class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-                      Deploy
-                    </button>
-                  }
+              <td
+                class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
+                @if (!dt.currentStatus) {
                   <button
                     type="button"
-                    (click)="openDrawer(manageDeploymentTargetDrawer, dt)"
-                    aria-controls="manage-deployment-target-drawer"
+                    (click)="showInstructionsModal(instructionsModal, dt)"
                     class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                    <fa-icon [icon]="penIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-                    Edit
+                    Connection instructions
                   </button>
-                </div>
+                  <button
+                    type="button"
+                    (click)="newDeployment(dt, deploymentModal)"
+                    aria-controls="manage-deployment-target-drawer"
+                    class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    [disabled]="auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'"
+                    [title]="
+                      auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'
+                        ? 'Must be deployed by customer'
+                        : undefined
+                    ">
+                    <fa-icon [icon]="shipIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Deploy
+                  </button>
+                }
+                <button
+                  type="button"
+                  (click)="openDrawer(manageDeploymentTargetDrawer, dt)"
+                  aria-controls="manage-deployment-target-drawer"
+                  class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                  <fa-icon [icon]="penIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  aria-label="Delete"
+                  (click)="deleteDeploymentTarget(dt)"
+                  class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                  <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
+                </button>
               </td>
             }
+
+            <ng-template #instructionsModal>
+              <div
+                @modalFlyInOut
+                style="transform-origin: top center"
+                class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                  <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructions</h3>
+                  <button
+                    type="button"
+                    (click)="hideModal()"
+                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                    <fa-icon [icon]="xmarkIcon"></fa-icon>
+                    <span class="sr-only">Close modal</span>
+                  </button>
+                </div>
+                <!-- Modal body -->
+                <div class="p-4 md:p-5 space-y-4">
+                  <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                    To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
+                    Simply connect to the target (e.g. via SSH) and execute the following:
+                  </p>
+
+                  <app-connect-instructions [deploymentTargetId]="dt.id!"></app-connect-instructions>
+                </div>
+              </div>
+            </ng-template>
           </tr>
         }
       </tbody>

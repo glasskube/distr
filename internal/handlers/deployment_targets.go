@@ -28,6 +28,7 @@ func DeploymentTargetsRouter(r chi.Router) {
 		r.Get("/", getDeploymentTarget)
 		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
+		r.Delete("/", deleteDeploymentTarget)
 		r.Post("/access-request", createAccessForDeploymentTarget)
 	})
 }
@@ -108,6 +109,26 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
+	}
+}
+
+func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	dt := internalctx.GetDeploymentTarget(ctx)
+	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if dt.OrganizationID != orgId {
+		http.NotFound(w, r)
+	} else if currentUser, err := db.GetCurrentUserWithRole(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if currentUser.UserRole != types.UserRoleVendor && dt.CreatedByUserAccountID != currentUser.ID {
+		http.Error(w, "must be vendor or creator", http.StatusForbidden)
+	} else if err := db.DeleteDeploymentTargetWithID(ctx, dt.ID); err != nil {
+		log.Warn("error deleting deployment target", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

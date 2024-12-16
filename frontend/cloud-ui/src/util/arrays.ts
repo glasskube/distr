@@ -1,13 +1,12 @@
-import {BaseModel, Named} from '../app/types/base';
+export type Predicate<T, R> = (arg: T) => R;
 
-export function distinctById<T extends BaseModel>(input: readonly T[]): T[] {
-  return input.filter((value: T, index, self) => {
-    return self.findIndex((element) => element.id === value.id) === index;
-  });
+export function distinctBy<T>(predicate: Predicate<T, unknown>): (input: T[]) => T[] {
+  return (input) =>
+    input.filter((value: T, index, self) => {
+      return self.findIndex((element) => predicate(element) === predicate(value)) === index;
+    });
 }
 
-export function compareBy<T>(predicate: (arg: T) => string): (a: T, b: T) => number {
+export function compareBy<T>(predicate: Predicate<T, string>): (a: T, b: T) => number {
   return (a, b) => predicate(a).localeCompare(predicate(b));
 }
-
-export const compareByName = compareBy((arg: Named) => arg.name ?? '');
