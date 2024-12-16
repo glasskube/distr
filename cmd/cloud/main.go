@@ -2,23 +2,34 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/glasskube/cloud/internal/migrations"
 	"github.com/glasskube/cloud/internal/svc"
 	"github.com/glasskube/cloud/internal/util"
+	"github.com/spf13/pflag"
 )
+
+var cliOptions = struct{ Migrate bool }{
+	Migrate: true,
+}
+
+func init() {
+	pflag.BoolVar(&cliOptions.Migrate, "migrate", cliOptions.Migrate, "run database migrations before starting the server")
+	pflag.Parse()
+}
 
 func main() {
 	ctx := context.Background()
-	registry, err := svc.NewDefault(ctx)
-	if err != nil {
-		panic(fmt.Errorf("failed to initialize application: %w", err))
-	}
+	registry := util.Require(svc.NewDefault(ctx))
 	defer func() { util.Must(registry.Shutdown()) }()
+
+	if cliOptions.Migrate {
+		util.Must(migrations.Up(registry.GetLogger()))
+	}
 
 	server := registry.GetServer()
 	go onSigterm(func() {
