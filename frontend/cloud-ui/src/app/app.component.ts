@@ -6,11 +6,13 @@ import {ColorSchemeService} from './services/color-scheme.service';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import * as Sentry from '@sentry/angular';
 import {AuthService} from './services/auth.service';
+import {OverlayService} from './services/overlay.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, FontAwesomeModule],
+  providers: [OverlayService],
   template: `<router-outlet></router-outlet>`,
 })
 export class AppComponent implements OnInit {

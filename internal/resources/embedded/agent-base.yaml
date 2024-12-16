@@ -6,7 +6,9 @@ services:
     environment:
       GK_TARGET_ID: '{{ .targetId }}'
       GK_TARGET_SECRET: '{{ .targetSecret }}'
+      GK_LOGIN_ENDPOINT: '{{ .loginEndpoint }}'
       GK_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
       GK_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
+      GK_INTERVAL: '{{ .agentInterval }}'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

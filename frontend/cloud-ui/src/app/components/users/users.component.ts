@@ -1,17 +1,17 @@
-import {Component, computed, inject, Signal, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
+import {AsyncPipe, DatePipe} from '@angular/common';
+import {Component, computed, inject, Signal, TemplateRef, ViewChild} from '@angular/core';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {UsersService} from '../../services/users.service';
-import {AsyncPipe, DatePipe} from '@angular/common';
-import {EmbeddedOverlayRef, OverlayService} from '../../services/overlay.service';
+import {combineLatest, filter, firstValueFrom, map, Observable, startWith, Subject, switchMap, tap} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {combineLatest, firstValueFrom, map, Observable, startWith, Subject, switchMap} from 'rxjs';
-import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
-import {ActivatedRoute} from '@angular/router';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
+import {UsersService} from '../../services/users.service';
+import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
 
 @Component({
   selector: 'app-users',
@@ -23,7 +23,6 @@ export class UsersComponent {
   private readonly toast = inject(ToastService);
   private readonly users = inject(UsersService);
   private readonly overlay = inject(OverlayService);
-  private readonly viewContainerRef = inject(ViewContainerRef);
 
   public readonly faMagnifyingGlass = faMagnifyingGlass;
   public readonly faPlus = faPlus;
@@ -35,7 +34,7 @@ export class UsersComponent {
   private readonly refresh$ = new Subject<void>();
 
   @ViewChild('inviteUserDialog') private inviteUserDialog!: TemplateRef<unknown>;
-  private modalRef?: EmbeddedOverlayRef;
+  private modalRef?: DialogRef;
   public inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
@@ -55,7 +54,7 @@ export class UsersComponent {
 
   public showInviteDialog(): void {
     this.closeInviteDialog();
-    this.modalRef = this.overlay.showModal(this.inviteUserDialog, this.viewContainerRef);
+    this.modalRef = this.overlay.showModal(this.inviteUserDialog);
   }
 
   public async submitInviteForm(): Promise<void> {
@@ -81,10 +80,14 @@ export class UsersComponent {
   }
 
   public async deleteUser(user: UserAccount): Promise<void> {
-    if (confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)) {
-      await firstValueFrom(this.users.delete(user));
-      this.refresh$.next();
-    }
+    this.overlay
+      .confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.users.delete(user)),
+        tap(() => this.refresh$.next())
+      )
+      .subscribe();
   }
 
   public closeInviteDialog(): void {
