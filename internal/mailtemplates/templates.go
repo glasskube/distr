@@ -91,3 +91,11 @@ func VerifyEmail(userAccount types.UserAccount, token string) (*template.Templat
 		"Token":       token,
 	}
 }
+
+func PasswordReset(userAccount types.UserAccount, token string) (*template.Template, any) {
+	return templates.Lookup("password-reset.html"), map[string]any{
+		"UserAccount": userAccount,
+		"Host":        env.Host(),
+		"Token":       token,
+	}
+}

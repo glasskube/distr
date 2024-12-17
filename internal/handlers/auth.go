@@ -24,6 +24,7 @@ import (
 func AuthRouter(r chi.Router) {
 	r.Post("/login", authLoginHandler)
 	r.Post("/register", authRegisterHandler)
+	r.Post("/reset", authResetPasswordHandler)
 }
 
 func authLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +113,38 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Info("verification mail has been sent", zap.String("user", userAccount.Email), zap.String("token", token))
 		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	mailer := internalctx.GetMailer(ctx)
+	if request, err := JsonBody[api.AuthResetPasswordRequest](w, r); err != nil {
+		return
+	} else if err := request.Validate(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if user, err := db.GetUserAccountWithEmail(ctx, request.Email); err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			log.Info("password reset for non-existing user", zap.String("email", request.Email))
+			w.WriteHeader(http.StatusNoContent)
+		} else {
+			log.Warn("could not send reset mail", zap.Error(err))
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
+		}
+	} else if _, token, err := auth.GenerateResetToken(*user); err != nil {
+		log.Warn("could not send reset mail", zap.Error(err))
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+	} else if err := mailer.Send(ctx, mail.New(
+		mail.To(user.Email),
+		mail.Subject("Password reset"),
+		mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, token)),
+	)); err != nil {
+		log.Warn("could not send reset mail", zap.Error(err))
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
