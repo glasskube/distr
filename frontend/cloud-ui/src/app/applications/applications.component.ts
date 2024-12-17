@@ -47,7 +47,7 @@ export class ApplicationsComponent implements OnDestroy {
   applications$: Observable<Application[]> = filteredByFormControl(
     this.applications.list(),
     this.filterForm.controls.search,
-    (it: Application, search: string) => !search || it.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1
+    (it: Application, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
   ).pipe(takeUntil(this.destroyed$));
   selectedApplication?: Application;
   editForm = new FormGroup({

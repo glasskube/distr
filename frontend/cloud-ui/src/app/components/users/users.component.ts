@@ -72,8 +72,8 @@ export class UsersComponent implements OnDestroy {
       this.filterForm.controls.search,
       (it: UserAccountWithRole, search: string) =>
         !search ||
-        it.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1 ||
-        it.email?.toLowerCase().indexOf(search.toLowerCase()) !== -1
+        (it.name || '').toLowerCase().includes(search.toLowerCase()) ||
+        (it.email || '').toLowerCase().includes(search.toLowerCase())
     ).pipe(takeUntil(this.destroyed$));
   }
 

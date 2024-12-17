@@ -82,7 +82,7 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
-    (dt, search) => !search || dt.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1
+    (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   ).pipe(takeUntil(this.destroyed$));
 
   editForm = new FormGroup({
