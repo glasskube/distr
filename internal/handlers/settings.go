@@ -35,7 +35,9 @@ func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Name = body.Name
+	if body.Name != "" {
+		user.Name = body.Name
+	}
 	if body.Password != "" {
 		user.Password = body.Password
 		if err := security.HashPassword(user); err != nil {
