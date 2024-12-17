@@ -107,7 +107,10 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			mail.HtmlBodyTemplate(mailtemplates.VerifyEmail(userAccount, token)),
 		)
 		if err := mailer.Send(ctx, mail); err != nil {
-			log.Error("could not send welcome mail", zap.Error(err))
+			log.Error("could not send verification mail",
+				zap.Error(err), zap.String("user", userAccount.Email), zap.String("token", token))
+		} else {
+			log.Info("verification mail has been sent", zap.String("user", userAccount.Email), zap.String("token", token))
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
