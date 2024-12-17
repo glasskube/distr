@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
@@ -33,11 +34,13 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 	} else if user, err := db.GetUserAccountWithEmail(r.Context(), request.Email); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, "invalid username or password", http.StatusBadRequest)
 	} else if err != nil {
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Warn("user login failed", zap.Error(err))
 	} else if err = security.VerifyPassword(*user, request.Password); err != nil {
 		http.Error(w, "invalid username or password", http.StatusBadRequest)
 	} else if orgs, err := db.GetOrganizationsForUser(r.Context(), user.ID); err != nil {
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Warn("user login failed", zap.Error(err))
 	} else {
@@ -75,12 +78,14 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 			if err := security.HashPassword(&userAccount); err != nil {
+				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return err
 			} else if org, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
 				if errors.Is(err, apierrors.ErrAlreadyExists) {
 					w.WriteHeader(http.StatusBadRequest)
 				} else {
+					sentry.GetHubFromContext(ctx).CaptureException(err)
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 				return err

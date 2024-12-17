@@ -25,6 +25,8 @@ var (
 	inviteTokenValidDuration   = 24 * time.Hour
 	agentTokenMaxValidDuration = 24 * time.Hour
 	agentInterval              = 5 * time.Second
+	sentryDSN                  string
+	sentryDebug                bool
 )
 
 func init() {
@@ -78,6 +80,11 @@ func init() {
 	if d, ok := os.LookupEnv("AGENT_INTERVAL"); ok {
 		agentInterval = util.Require(time.ParseDuration(d))
 	}
+
+	sentryDSN = os.Getenv("SENTRY_DSN")
+	if value, ok := os.LookupEnv("SENTRY_DEBUG"); ok {
+		sentryDebug = util.Require(strconv.ParseBool(value))
+	}
 }
 
 func DatabaseUrl() string {
@@ -108,4 +115,12 @@ func AgentTokenMaxValidDuration() time.Duration {
 
 func AgentInterval() time.Duration {
 	return agentInterval
+}
+
+func SentryDSN() string {
+	return sentryDSN
+}
+
+func SentryDebug() bool {
+	return sentryDebug
 }

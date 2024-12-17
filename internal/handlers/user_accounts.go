@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
@@ -35,6 +36,7 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 	} else if userAccoutns, err := db.GetUserAccountsWithOrgID(ctx, orgId); err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, userAccoutns)
@@ -70,6 +72,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return err
 		} else if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
@@ -80,6 +83,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			organization.ID,
 			body.UserRole,
 		); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
@@ -96,6 +100,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		env.InviteTokenValidDuration(),
 	)
 	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -122,6 +127,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := mailer.Send(ctx, email); err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		log.Error("failed to send invite mail", zap.Error(err))
 	}
 }
@@ -132,11 +138,13 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	userAccount := internalctx.GetUserAccount(ctx)
 	if currentUserID, err := auth.CurrentUserId(ctx); err != nil {
 		log.Warn("error getting current user", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else if userAccount.ID == currentUserID {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.DeleteUserAccountWithID(ctx, userAccount.ID); err != nil {
 		log.Warn("error deleting user", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusNoContent)
@@ -154,6 +162,7 @@ func userAccountMiddleware(h http.Handler) http.Handler {
 				http.NotFound(w, r)
 			} else {
 				log.Warn("error getting user", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {

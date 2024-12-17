@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/migrations"
 	"github.com/glasskube/cloud/internal/svc"
 	"github.com/glasskube/cloud/internal/util"
@@ -24,6 +26,16 @@ func init() {
 
 func main() {
 	ctx := context.Background()
+
+	util.Must(sentry.Init(sentry.ClientOptions{Dsn: env.SentryDSN(), Debug: env.SentryDebug()}))
+	defer sentry.Flush(5 * time.Second)
+	defer func() {
+		if err := recover(); err != nil {
+			sentry.CurrentHub().RecoverWithContext(ctx, err)
+			panic(err)
+		}
+	}()
+
 	registry := util.Require(svc.NewDefault(ctx))
 	defer func() { util.Must(registry.Shutdown()) }()
 

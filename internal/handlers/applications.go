@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
 	"github.com/glasskube/cloud/internal/resources"
 	"github.com/jackc/pgx/v5"
@@ -54,6 +55,7 @@ func createApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err = db.CreateApplication(r.Context(), &application); err != nil {
 		log.Warn("could not create application", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, err = fmt.Fprintln(w, err); err != nil {
 			log.Error("failed to write error to response", zap.Error(err))
@@ -81,6 +83,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.UpdateApplication(r.Context(), &application); err != nil {
 		log.Warn("could not update application", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
 		return
@@ -96,6 +99,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 func getApplications(w http.ResponseWriter, r *http.Request) {
 	if applications, err := db.GetApplications(r.Context()); err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get applications", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		err := json.NewEncoder(w).Encode(applications)
@@ -182,6 +186,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	applicationVersion.ApplicationId = application.ID
 	if err := db.CreateApplicationVersion(ctx, &applicationVersion); err != nil {
 		log.Warn("could not create applicationversion", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, err = fmt.Fprintln(w, err); err != nil {
 			log.Error("failed to write error to response", zap.Error(err))
@@ -216,6 +221,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.UpdateApplicationVersion(r.Context(), &applicationVersion); err != nil {
 		log.Warn("could not update applicationversion", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(applicationVersion); err != nil {

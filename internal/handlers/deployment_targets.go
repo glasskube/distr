@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
 
 	"github.com/glasskube/cloud/api"
@@ -40,6 +41,7 @@ func getLatestDeployment(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			internalctx.GetLogger(r.Context()).Error("failed to get latest deployment", zap.Error(err))
+			sentry.GetHubFromContext(r.Context()).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	} else {
@@ -53,6 +55,7 @@ func getLatestDeployment(w http.ResponseWriter, r *http.Request) {
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 	if deploymentTargets, err := db.GetDeploymentTargets(r.Context()); err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTargets", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		err := json.NewEncoder(w).Encode(deploymentTargets)
@@ -78,6 +81,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 	} else if err = db.CreateDeploymentTarget(r.Context(), &dt); err != nil {
 		log.Warn("could not create DeploymentTarget", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
@@ -105,6 +109,7 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.UpdateDeploymentTarget(r.Context(), &dt); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
@@ -126,6 +131,7 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "must be vendor or creator", http.StatusForbidden)
 	} else if err := db.DeleteDeploymentTargetWithID(ctx, dt.ID); err != nil {
 		log.Warn("error deleting deployment target", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusNoContent)
@@ -147,11 +153,13 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	var err error
 	if targetSecret, err = security.GenerateAccessKey(); err != nil {
 		log.Error("failed to generate access key", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if salt, hash, err := security.HashAccessKey(targetSecret); err != nil {
 		log.Error("failed to hash access key", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
@@ -161,9 +169,11 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.UpdateDeploymentTargetAccess(ctx, deploymentTarget); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, targetSecret); err != nil {
 		log.Error("could not create connecturl", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
 		ConnectUrl:   connectUrl,
@@ -193,11 +203,13 @@ func deploymentTargetMiddelware(wh http.Handler) http.Handler {
 		id := r.PathValue("deploymentTargetId")
 		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get orgId from token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)

@@ -10,8 +10,10 @@ import (
 	"net/url"
 	"text/template"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/go-chi/jwtauth/v5"
 
 	"github.com/glasskube/cloud/internal/types"
@@ -39,6 +41,7 @@ func AgentRouter(r chi.Router) {
 			// agent routes, authenticated via token
 			r.Use(jwtauth.Verifier(auth.JWTAuth))
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
+			r.Use(middleware.SentryUser)
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
 			r.Get("/resources", downloadResources)
 			r.Post("/status", postAgentStatus)
@@ -57,12 +60,15 @@ func connect(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/yaml")
 		if yamlTemplate, err := resources.Get("embedded/agent-base.yaml"); err != nil {
 			log.Error("failed to get agent yaml template", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if tmpl, err := template.New("agent").Parse(string(yamlTemplate)); err != nil {
 			log.Error("failed to get parse yaml template", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints(); err != nil {
 			log.Error("failed to build resources url", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if err := tmpl.Execute(w, map[string]string{
 			"loginEndpoint":     loginEndpoint,
@@ -73,6 +79,7 @@ func connect(w http.ResponseWriter, r *http.Request) {
 			"agentInterval":     env.AgentInterval().String(),
 		}); err != nil {
 			log.Error("failed to execute yaml template", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
