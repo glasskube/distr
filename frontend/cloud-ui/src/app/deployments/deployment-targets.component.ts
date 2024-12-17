@@ -4,7 +4,7 @@ import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} fro
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, filter, first, firstValueFrom, lastValueFrom, map, switchMap} from 'rxjs';
+import {combineLatest, filter, first, firstValueFrom, lastValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -22,6 +22,7 @@ import {Application} from '../types/application';
 import {Deployment} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
+import {filteredByFormControl} from '../../util/filter';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -56,11 +57,16 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
   private readonly overlay = inject(OverlayService);
+  private destroyed$ = new Subject();
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
   private deploymentWizardOverlayRef?: DialogRef;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
+  filterForm = new FormGroup({
+    search: new FormControl(''),
+  });
+
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
     map((dts) =>
       dts.map((dt) => {
@@ -72,6 +78,12 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
       })
     )
   );
+
+  readonly filteredDeploymentTargets$ = filteredByFormControl(
+    this.deploymentTargets$,
+    this.filterForm.controls.search,
+    (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
+  ).pipe(takeUntil(this.destroyed$));
 
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
@@ -206,6 +218,7 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.applicationIdChange$.unsubscribe();
+    this.destroyed$.complete();
   }
 
   async newDeployment(dt: DeploymentTargetViewModel, deploymentModal: TemplateRef<any>) {

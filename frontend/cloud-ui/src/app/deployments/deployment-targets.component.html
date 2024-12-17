@@ -3,7 +3,7 @@
     <div
       class="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between mx-4 py-4 dark:border-gray-700">
       <div class="w-full md:w-1/2">
-        <form class="flex items-center">
+        <form class="flex items-center" [formGroup]="filterForm">
           <label for="simple-search" class="sr-only">Search</label>
           <div class="relative w-full">
             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -13,7 +13,7 @@
               type="text"
               id="simple-search"
               placeholder="Search for deployments"
-              required=""
+              [formControl]="filterForm.controls.search"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
           </div>
         </form>
@@ -47,7 +47,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (dt of deploymentTargets$ | async; track dt.id) {
+        @for (dt of filteredDeploymentTargets$ | async; track dt.id) {
           <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               @if (dt.createdBy) {
