@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"errors"
-	"html/template"
 	"net/http"
 
 	"github.com/glasskube/cloud/api"
@@ -100,18 +99,29 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	var tmpl *template.Template
-	var data any
+	var email mail.Mail
 	if body.UserRole == types.UserRoleCustomer {
-		tmpl, data = mailtemplates.InviteCustomer(userAccount, organization, token, body.ApplicationName)
+		if currentUser, err := db.GetCurrentUserWithRole(ctx); err != nil {
+			log.Error("failed to generate invite mail", zap.Error(err))
+			return
+		} else {
+			email = mail.New(
+				mail.To(userAccount.Email),
+				mail.Bcc(currentUser.Email),
+				mail.ReplyTo(currentUser.Email),
+				mail.Subject("Welcome to Glasskube Cloud"),
+				mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, token, body.ApplicationName)),
+			)
+		}
 	} else {
-		tmpl, data = mailtemplates.InviteUser(userAccount, organization, token)
+		email = mail.New(
+			mail.To(userAccount.Email),
+			mail.Subject("Welcome to Glasskube Cloud"),
+			mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, token)),
+		)
 	}
-	if err := mailer.Send(ctx, mail.New(
-		mail.To(userAccount.Email),
-		mail.Subject("Welcome to Glasskube Cloud"),
-		mail.HtmlBodyTemplate(tmpl, data),
-	)); err != nil {
+
+	if err := mailer.Send(ctx, email); err != nil {
 		log.Error("failed to send invite mail", zap.Error(err))
 	}
 }

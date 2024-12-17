@@ -48,11 +48,17 @@ func New(config Config) (*smtpMailer, error) {
 func (s *smtpMailer) Send(ctx context.Context, mail mail.Mail) error {
 	message := gomail.NewMsg()
 	message.Subject(mail.Subject)
+	if err := message.To(mail.To...); err != nil {
+		return err
+	}
+	if err := message.Bcc(mail.Bcc...); err != nil {
+		return err
+	}
 	if err := message.From(s.config.FromAddress); err != nil {
 		return err
 	}
-	for _, rcpt := range mail.To {
-		if err := message.AddTo(rcpt); err != nil {
+	if mail.ReplyTo != "" {
+		if err := message.ReplyTo(mail.ReplyTo); err != nil {
 			return err
 		}
 	}

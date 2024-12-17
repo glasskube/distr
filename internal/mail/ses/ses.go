@@ -43,12 +43,16 @@ func (s *sesMailer) Send(ctx context.Context, mail mail.Mail) error {
 	message := ses.SendEmailInput{
 		Source: &s.config.FromAddress,
 		Destination: &types.Destination{
-			ToAddresses: mail.To,
+			ToAddresses:  mail.To,
+			BccAddresses: mail.Bcc,
 		},
 		Message: &types.Message{
 			Subject: &types.Content{Data: &mail.Subject},
 			Body:    &types.Body{},
 		},
+	}
+	if mail.ReplyTo != "" {
+		message.ReplyToAddresses = []string{mail.ReplyTo}
 	}
 	if mail.TextBodyFunc != nil {
 		if body, err := mail.TextBodyFunc(); err != nil {
