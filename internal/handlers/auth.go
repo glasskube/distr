@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/glasskube/cloud/api"
@@ -32,13 +31,12 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if request, err := JsonBody[api.AuthLoginRequest](w, r); err != nil {
 		return
 	} else if user, err := db.GetUserAccountWithEmail(r.Context(), request.Email); errors.Is(err, apierrors.ErrNotFound) {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "invalid username or password", http.StatusBadRequest)
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Warn("user login failed", zap.Error(err))
 	} else if err = security.VerifyPassword(*user, request.Password); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "invalid username or password")
+		http.Error(w, "invalid username or password", http.StatusBadRequest)
 	} else if orgs, err := db.GetOrganizationsForUser(r.Context(), user.ID); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Warn("user login failed", zap.Error(err))

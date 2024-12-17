@@ -21,7 +21,7 @@
               placeholder="name@company.com"
               required="" />
             @if (form.controls.email.touched && form.controls.email.errors) {
-              <span class="text-red-500">Email is required and must be a valid email address</span>
+              <span class="text-sm text-red-500">Email is required and must be a valid email address</span>
             }
           </div>
           <div>
@@ -45,7 +45,7 @@
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               required="" />
             @if (form.controls.password.touched && form.controls.password.errors) {
-              <span class="text-red-500">Password is required and must have at leat 8 characters</span>
+              <span class="text-sm text-red-500">Password is required and must have at leat 8 characters</span>
             }
           </div>
           <div>
@@ -60,7 +60,7 @@
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               required="" />
             @if (form.controls.passwordConfirm.touched && form.errors?.['passwordMismatch']) {
-              <span class="text-red-500">Password mismatch</span>
+              <span class="text-sm text-red-500">Password mismatch</span>
             }
           </div>
           <div class="flex items-start">
@@ -74,19 +74,19 @@
                 required="" />
             </div>
             <div class="ml-3 text-sm">
-              <label for="terms" class="font-light text-gray-500 dark:text-gray-300"
-                >I accept the
+              <label for="terms" class="font-light text-gray-500 dark:text-gray-300">
+                I accept the
                 <a
                   class="font-medium text-primary-600 hover:underline dark:text-primary-500"
                   href="https://glasskube.dev/"
-                  target="_blank"
-                  >Terms and Conditions</a
-                ></label
-              >
+                  target="_blank">
+                  Terms and Conditions
+                </a>
+              </label>
+              @if (form.controls.terms.touched && form.controls.terms.errors) {
+                <div class="text-sm text-red-500">Please accept the terms and conditions</div>
+              }
             </div>
-            @if (submitted && form.controls.terms.errors) {
-              <span class="text-red-500">Please accept the terms and conditions</span>
-            }
           </div>
           <button
             type="submit"

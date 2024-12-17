@@ -23,11 +23,10 @@ export class RegisterComponent {
     },
     (control) => (control.value.password === control.value.passwordConfirm ? null : {passwordMismatch: 'error'})
   );
-  public submitted = false;
 
   public async submit(): Promise<void> {
+    this.form.markAllAsTouched();
     if (this.form.valid) {
-      this.submitted = true;
       const value = this.form.value;
       await firstValueFrom(this.auth.register(value.email!, value.name, value.password!));
       await this.router.navigate(['/login'], {queryParams: {email: value.email!}});
