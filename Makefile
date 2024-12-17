@@ -56,4 +56,8 @@ docker-build-agent:
 
 .PHONY: init-db
 init-db:
-	 cat sql/init_db.sql | docker compose exec -T postgres psql --dbname glasskube --user local
+	 go run ./cmd/cloud/migrate/up/
+
+.PHONY: purge-db
+purge-db:
+	 go run ./cmd/cloud/migrate/down/
