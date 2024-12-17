@@ -24,6 +24,7 @@ var (
 	mailerConfig               MailerConfig
 	inviteTokenValidDuration   = 24 * time.Hour
 	agentTokenMaxValidDuration = 24 * time.Hour
+	agentInterval              = 5 * time.Second
 )
 
 func init() {
@@ -74,6 +75,9 @@ func init() {
 	if d, ok := os.LookupEnv("AGENT_TOKEN_MAX_VALID_DURATION"); ok {
 		agentTokenMaxValidDuration = util.Require(time.ParseDuration(d))
 	}
+	if d, ok := os.LookupEnv("AGENT_INTERVAL"); ok {
+		agentInterval = util.Require(time.ParseDuration(d))
+	}
 }
 
 func DatabaseUrl() string {
@@ -100,4 +104,8 @@ func InviteTokenValidDuration() time.Duration {
 
 func AgentTokenMaxValidDuration() time.Duration {
 	return agentTokenMaxValidDuration
+}
+
+func AgentInterval() time.Duration {
+	return agentInterval
 }

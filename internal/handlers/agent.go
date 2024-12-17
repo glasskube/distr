@@ -70,6 +70,7 @@ func connect(w http.ResponseWriter, r *http.Request) {
 			"statusEndpoint":    statusEndpoint,
 			"targetId":          r.URL.Query().Get("targetId"),
 			"targetSecret":      r.URL.Query().Get("targetSecret"),
+			"agentInterval":     env.AgentInterval().String(),
 		}); err != nil {
 			log.Error("failed to execute yaml template", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
