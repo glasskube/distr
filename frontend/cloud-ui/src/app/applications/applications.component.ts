@@ -14,6 +14,7 @@ import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {combineLatest} from 'rxjs';
+import {filteredByFormControl} from '../../util/filter';
 
 @Component({
   selector: 'app-applications',
@@ -44,13 +45,11 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   filterForm = new FormGroup({
     search: new FormControl(''),
   });
-  applications$: Observable<Application[]> =
-    combineLatest([this.applications.list(), this.filterForm.controls.search.valueChanges.pipe(startWith(''))])
-    .pipe(
-      takeUntil(this.destroyed$),
-      map(([items, search]) => {
-        return items.filter(it => !search || it.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1)
-      }));
+  applications$: Observable<Application[]> = filteredByFormControl(
+    this.applications.list(),
+    this.filterForm.controls.search,
+    (it: Application, search: string) => !search || it.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1
+  ).pipe(takeUntil(this.destroyed$));
   selectedApplication?: Application;
   editForm = new FormGroup({
     id: new FormControl(''),
@@ -71,9 +70,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   private readonly toast = inject(ToastService);
 
-  ngOnInit() {
-    this.applications$
-  }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroyed$.complete();

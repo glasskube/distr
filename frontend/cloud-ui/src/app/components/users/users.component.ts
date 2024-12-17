@@ -5,13 +5,25 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, filter, firstValueFrom, map, Observable, startWith, Subject, switchMap, tap} from 'rxjs';
+import {
+  combineLatest,
+  filter,
+  firstValueFrom,
+  map,
+  Observable,
+  startWith,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
+import {filteredByFormControl} from '../../../util/filter';
 
 @Component({
   selector: 'app-users',
@@ -52,12 +64,17 @@ export class UsersComponent implements OnDestroy {
       startWith(undefined),
       switchMap(() => this.users.getUsers())
     );
-    // TODO filter
-    this.users$ = combineLatest([toObservable(this.userRole), usersWithRefresh, this.filterForm.valueChanges.pipe(startWith(''))])
-      .pipe(
-      map(([userRole, users, search]) =>
-        users.filter((it) => userRole !== null && it.userRole === userRole)),
+    const shownUserAccounts = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
+      map(([userRole, users]) => users.filter((it) => userRole !== null && it.userRole === userRole))
     );
+    this.users$ = filteredByFormControl(
+      shownUserAccounts,
+      this.filterForm.controls.search,
+      (it: UserAccountWithRole, search: string) =>
+        !search ||
+        it.name?.toLowerCase().indexOf(search.toLowerCase()) !== -1 ||
+        it.email?.toLowerCase().indexOf(search.toLowerCase()) !== -1
+    ).pipe(takeUntil(this.destroyed$));
   }
 
   ngOnDestroy() {
