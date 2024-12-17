@@ -7,6 +7,8 @@ import (
 
 type Mail struct {
 	To           []string
+	Bcc          []string
+	ReplyTo      string
 	Subject      string
 	HtmlBodyFunc func() (string, error)
 	TextBodyFunc func() (string, error)
@@ -17,6 +19,18 @@ type mailOpt func(mail *Mail)
 func To(to ...string) mailOpt {
 	return func(mail *Mail) {
 		mail.To = append(mail.To, to...)
+	}
+}
+
+func Bcc(to ...string) mailOpt {
+	return func(mail *Mail) {
+		mail.Bcc = append(mail.Bcc, to...)
+	}
+}
+
+func ReplyTo(to string) mailOpt {
+	return func(mail *Mail) {
+		mail.ReplyTo = to
 	}
 }
 
