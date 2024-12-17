@@ -3,6 +3,7 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {AuthService} from '../services/auth.service';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required]),
   });
+  public errorMessage?: string;
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -28,7 +30,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         takeUntil(this.destroyed$)
       )
       .subscribe((email) => {
-        this.formGroup.patchValue({email: email});
+        this.formGroup.patchValue({email});
       });
   }
 
@@ -37,12 +39,25 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   public async submit(): Promise<void> {
+    this.formGroup.markAllAsTouched();
+    this.errorMessage = undefined;
     if (this.formGroup.valid) {
       const value = this.formGroup.value;
-      await lastValueFrom(this.auth.login(value.email!, value.password!));
-      const {role} = this.auth.getClaims();
-      const targetRoute = role === 'customer' ? '/deployments' : '/';
-      await this.router.navigate([targetRoute]);
+      try {
+        await lastValueFrom(this.auth.login(value.email!, value.password!));
+      } catch (e) {
+        if (e instanceof HttpErrorResponse && e.status < 500 && typeof e.error === 'string') {
+          this.errorMessage = e.error;
+        } else {
+          this.errorMessage = 'something went wrong';
+        }
+        return;
+      }
+      if (this.auth.hasRole('customer')) {
+        await this.router.navigate(['/deployments']);
+      } else {
+        await this.router.navigate(['/dashboard']);
+      }
     }
   }
 }
