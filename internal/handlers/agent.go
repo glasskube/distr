@@ -13,6 +13,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/go-chi/jwtauth/v5"
 
 	"github.com/glasskube/cloud/internal/types"
@@ -40,6 +41,7 @@ func AgentRouter(r chi.Router) {
 			// agent routes, authenticated via token
 			r.Use(jwtauth.Verifier(auth.JWTAuth))
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
+			r.Use(middleware.SentryUser)
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
 			r.Get("/resources", downloadResources)
 			r.Post("/status", postAgentStatus)
