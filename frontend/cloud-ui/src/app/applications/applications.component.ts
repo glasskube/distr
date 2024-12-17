@@ -1,10 +1,10 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, Input, OnDestroy, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {EMPTY, filter, map, Observable, startWith, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
+import {filter, Observable, Subject, switchMap, takeUntil} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
@@ -13,7 +13,6 @@ import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {combineLatest} from 'rxjs';
 import {filteredByFormControl} from '../../util/filter';
 
 @Component({
@@ -30,7 +29,7 @@ import {filteredByFormControl} from '../../util/filter';
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ApplicationsComponent implements OnInit, OnDestroy {
+export class ApplicationsComponent implements OnDestroy {
   @Input('fullVersion') fullVersion: boolean = false;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faPlus = faPlus;
@@ -69,8 +68,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   private readonly overlay = inject(OverlayService);
 
   private readonly toast = inject(ToastService);
-
-  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroyed$.complete();
