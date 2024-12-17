@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:embed *
+//go:embed sql/*
 var fs embed.FS
 
 type Logger struct {
@@ -72,7 +72,7 @@ func Down(log *zap.Logger) (err error) {
 func getInstance(db *sql.DB, log *zap.Logger) (*migrate.Migrate, error) {
 	if driver, err := postgres.WithInstance(db, &postgres.Config{}); err != nil {
 		return nil, err
-	} else if sourceInstance, err := iofs.New(fs, "."); err != nil {
+	} else if sourceInstance, err := iofs.New(fs, "sql"); err != nil {
 		return nil, err
 	} else if instance, err := migrate.NewWithInstance("", sourceInstance, "cloud", driver); err != nil {
 		return nil, err
