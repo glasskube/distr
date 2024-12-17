@@ -1,7 +1,7 @@
-import {GlobalPositionStrategy, Overlay, OverlayConfig} from '@angular/cdk/overlay';
+import {BlockScrollStrategy, GlobalPositionStrategy, Overlay, OverlayConfig, ViewportRuler} from '@angular/cdk/overlay';
 import {ComponentPortal, ComponentType, TemplatePortal} from '@angular/cdk/portal';
 import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainerRef} from '@angular/core';
-import {firstValueFrom, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
+import {map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
 import {ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
 
 export class DialogRef<T = void> {
@@ -37,6 +37,7 @@ export const OverlayData = new InjectionToken<unknown>('OVERLAY_DATA');
 @Injectable()
 export class OverlayService {
   private readonly overlay = inject(Overlay);
+  private readonly viewportRuler = inject(ViewportRuler);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   public confirm(message: string) {
@@ -71,7 +72,10 @@ export class OverlayService {
     templateRefOrComponentType: TemplateRef<unknown> | ComponentType<unknown>,
     config: ExtendedOverlayConfig
   ): DialogRef<T> {
-    const overlayRef = this.overlay.create(config);
+    const overlayRef = this.overlay.create({
+      scrollStrategy: new BlockScrollStrategy(this.viewportRuler, document),
+      ...config,
+    });
     const dialogRef = new DialogRef<T>();
     const injector =
       config.data !== null && config.data !== undefined
