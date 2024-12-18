@@ -2,7 +2,7 @@ import {Component, inject, ViewChild} from '@angular/core';
 import {ApexOptions, ChartComponent, NgApexchartsModule} from 'ng-apexcharts';
 import {MetricsService} from '../../../services/metrics.service';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
-import {first, map, switchMap} from 'rxjs';
+import {filter, first, map, switchMap} from 'rxjs';
 
 @Component({
   selector: 'app-chart-uptime',
@@ -69,7 +69,14 @@ export class ChartUptimeComponent {
       },
     };
 
-    this.metrics.getUptimeForDeployment('ae895874-6240-477c-a92f-e0a2b960b27e').subscribe((uptimes) => {
+    /*this.deploymentTargets$.pipe(
+      first(),
+      map(dts => dts.find(dt => dt.currentStatus)),
+      filter(dt => !!dt),
+      switchMap(dt => this.deploymentTargets.latestDeploymentFor(dt.id!)),
+      switchMap(deployment => this.metrics.getUptimeForDeployment(deployment.id!)))*/
+
+    this.metrics.getUptimeForDeployment('5d5e4e61-cd82-46ed-965b-6ba5d3a1d1b8').subscribe((uptimes) => {
       this.chartOptions.xaxis!.categories = uptimes.map(ut => ut.hour);
       this.chartOptions.series = [
         {
