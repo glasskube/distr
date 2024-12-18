@@ -1,11 +1,4 @@
-import {
-  ActivatedRouteSnapshot,
-  createUrlTreeFromSnapshot,
-  Router,
-  RouterStateSnapshot,
-  Routes,
-  UrlTree,
-} from '@angular/router';
+import {ActivatedRouteSnapshot, createUrlTreeFromSnapshot, Router, RouterStateSnapshot, Routes} from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
 import {inject} from '@angular/core';
