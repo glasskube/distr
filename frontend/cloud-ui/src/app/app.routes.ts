@@ -1,3 +1,4 @@
+import {inject} from '@angular/core';
 import {
   ActivatedRouteSnapshot,
   CanActivateFn,
@@ -6,20 +7,18 @@ import {
   RouterStateSnapshot,
   Routes,
 } from '@angular/router';
-import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
-import {inject} from '@angular/core';
-import {AuthService} from './services/auth.service';
-import {LoginComponent} from './login/login.component';
 import {NavShellComponent} from './components/nav-shell.component';
-import {RegisterComponent} from './register/register.component';
-import {InviteComponent} from './invite/invite.component';
 import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
-import {VerifyComponent} from './verify/verify.component';
 import {ForgotComponent} from './forgot/forgot.component';
+import {InviteComponent} from './invite/invite.component';
+import {LoginComponent} from './login/login.component';
 import {PasswordResetComponent} from './password-reset/password-reset.component';
+import {RegisterComponent} from './register/register.component';
+import {AuthService} from './services/auth.service';
 import {UserRole} from './types/user-account';
+import {VerifyComponent} from './verify/verify.component';
 
 const jwtParamRedirectGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const auth = inject(AuthService);
@@ -97,7 +96,13 @@ export const routes: Routes = [
         path: '',
         component: NavShellComponent,
         children: [
-          {path: 'dashboard', component: DashboardPlaceholderComponent, canActivate: [requiredRoleGuard('vendor')]},
+          {
+            path: 'dashboard',
+            loadComponent: async () =>
+              (await import('./components/dashboard-placeholder/dashboard-placeholder.component'))
+                .DashboardPlaceholderComponent,
+            canActivate: [requiredRoleGuard('vendor')],
+          },
           {path: 'applications', component: ApplicationsPageComponent, canActivate: [requiredRoleGuard('vendor')]},
           {path: 'deployments', component: DeploymentsPageComponent},
           {
