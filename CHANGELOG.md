@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/glasskube/cloud/compare/v0.6.0...v0.6.1) (2024-12-18)
+
+
+### Performance
+
+* **backend:** optimize deployment targets query ([#175](https://github.com/glasskube/cloud/issues/175)) ([f300fcc](https://github.com/glasskube/cloud/commit/f300fcc54143bce7f78cad6e20674937e4e68d81))
+
 ## [0.6.0](https://github.com/glasskube/cloud/compare/v0.5.0...v0.6.0) (2024-12-18)
 
 
