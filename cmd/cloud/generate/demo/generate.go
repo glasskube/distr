@@ -31,15 +31,15 @@ func main() {
 	util.Must(db.CreateUserAccount(ctx, &pmig))
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmig.ID, org.ID, types.UserRoleVendor))
 
-	pmigCustomer := types.UserAccount{
-		Email:           "pmig+customer@glasskube.com",
-		Name:            "Philip Miglinci",
+	lw := types.UserAccount{
+		Email:           "lw@glasskube.com",
+		Name:            "Louis Weston",
 		Password:        "12345678",
 		EmailVerifiedAt: util.PtrTo(time.Now()),
 	}
-	util.Must(security.HashPassword(&pmigCustomer))
-	util.Must(db.CreateUserAccount(ctx, &pmigCustomer))
-	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, pmigCustomer.ID, org.ID, types.UserRoleCustomer))
+	util.Must(security.HashPassword(&lw))
+	util.Must(db.CreateUserAccount(ctx, &lw))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, lw.ID, org.ID, types.UserRoleVendor))
 
 	appMarsBeta := types.Application{
 		Name: "Fastest way to Mars Calculator (Beta)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
@@ -77,78 +77,146 @@ func main() {
 	}
 	util.Must(db.CreateApplication(ctx, &appLaunchDashboard))
 	appLaunchDashboardV001 := types.ApplicationVersion{
-		ApplicationId: appMarsLTS.ID, Name: "v0.0.1",
+		ApplicationId: appLaunchDashboard.ID, Name: "v0.0.1",
 	}
 	util.Must(db.CreateApplicationVersion(ctx, &appLaunchDashboardV001))
 
-	gateSpace := types.DeploymentTargetWithCreatedBy{
+	dashboardTest := types.DeploymentTargetWithCreatedBy{
 		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Danube Aerospace",
+			Name:           "Dashboard Testing",
+			Type:           types.DeploymentTypeDocker,
+		},
+	}
+	util.Must(db.CreateDeploymentTarget(ctx, &dashboardTest))
+	util.Must(db.CreateDeploymentTargetStatus(ctx, &dashboardTest.DeploymentTarget, "running"))
+	util.Must(db.CreateDeployment(ctx, &types.Deployment{
+		DeploymentTargetId: dashboardTest.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
+	}))
+
+	calculatorTest := types.DeploymentTargetWithCreatedBy{
+		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+		DeploymentTarget: types.DeploymentTarget{
+			OrganizationID: org.ID,
+			Name:           "Calculator Testing",
+			Type:           types.DeploymentTypeDocker,
+		},
+	}
+	util.Must(db.CreateDeploymentTarget(ctx, &calculatorTest))
+	util.Must(db.CreateDeploymentTargetStatus(ctx, &calculatorTest.DeploymentTarget, "running"))
+	util.Must(db.CreateDeployment(ctx, &types.Deployment{
+		DeploymentTargetId: calculatorTest.ID, ApplicationVersionId: appMarsBetaV419.ID,
+	}))
+
+	danubeAerospace := types.UserAccount{
+		Email:           "devops@danube-aerospace.at",
+		Name:            "Danube Aerospace",
+		Password:        "12345678",
+		EmailVerifiedAt: util.PtrTo(time.Now()),
+	}
+	util.Must(security.HashPassword(&danubeAerospace))
+	util.Must(db.CreateUserAccount(ctx, &danubeAerospace))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, danubeAerospace.ID, org.ID, types.UserRoleCustomer))
+
+	danubeAerospaceVienna := types.DeploymentTargetWithCreatedBy{
+		CreatedBy: &types.UserAccountWithUserRole{ID: danubeAerospace.ID},
+		DeploymentTarget: types.DeploymentTarget{
+			OrganizationID: org.ID,
+			Name:           "DA - Vienna DC",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.191166, Lon: 16.3717293},
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &gateSpace))
-	util.Must(db.CreateDeploymentTargetStatus(ctx, &gateSpace.DeploymentTarget, "running"))
+	util.Must(db.CreateDeploymentTarget(ctx, &danubeAerospaceVienna))
+	util.Must(db.CreateDeploymentTargetStatus(ctx, &danubeAerospaceVienna.DeploymentTarget, "running"))
 	util.Must(db.CreateDeployment(ctx, &types.Deployment{
-		DeploymentTargetId: gateSpace.ID, ApplicationVersionId: appMarsBetaV419.ID,
+		DeploymentTargetId: danubeAerospaceVienna.ID, ApplicationVersionId: appMarsBetaV419.ID,
 	}))
 
-	lumenOrbit := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+	luxOrbit := types.UserAccount{
+		Email:           "it@lux-orbit.uk",
+		Name:            "Lux Orbit",
+		Password:        "12345678",
+		EmailVerifiedAt: util.PtrTo(time.Now()),
+	}
+	util.Must(security.HashPassword(&luxOrbit))
+	util.Must(db.CreateUserAccount(ctx, &luxOrbit))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, luxOrbit.ID, org.ID, types.UserRoleCustomer))
+
+	luxOrbitCanada := types.DeploymentTargetWithCreatedBy{
+		CreatedBy: &types.UserAccountWithUserRole{ID: luxOrbit.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Lux Orbit",
+			Name:           "LO - Canadian Cluster",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 47.6349832, Lon: -122.1410062},
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &lumenOrbit))
-	util.Must(db.CreateDeploymentTargetStatus(ctx, &lumenOrbit.DeploymentTarget, "running"))
+	util.Must(db.CreateDeploymentTarget(ctx, &luxOrbitCanada))
+	util.Must(db.CreateDeploymentTargetStatus(ctx, &luxOrbitCanada.DeploymentTarget, "running"))
 	util.Must(db.CreateDeployment(ctx, &types.Deployment{
-		DeploymentTargetId: lumenOrbit.ID, ApplicationVersionId: appMarsBetaV419.ID,
+		DeploymentTargetId: luxOrbitCanada.ID, ApplicationVersionId: appMarsBetaV419.ID,
 	}))
 
-	albaOrbital := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+	spaceK := types.UserAccount{
+		Email:           "admin@space-k.uk",
+		Name:            "Space K",
+		Password:        "12345678",
+		EmailVerifiedAt: util.PtrTo(time.Now()),
+	}
+	util.Must(security.HashPassword(&spaceK))
+	util.Must(db.CreateUserAccount(ctx, &spaceK))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, spaceK.ID, org.ID, types.UserRoleCustomer))
+
+	spaceKUKWest := types.DeploymentTargetWithCreatedBy{
+		CreatedBy: &types.UserAccountWithUserRole{ID: spaceK.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Space K",
+			Name:           "Space K - uk-west-1",
 			Type:           types.DepolymentTypeKubernetes,
 			Geolocation:    &types.Geolocation{Lat: 55.8578177, Lon: -4.3687363},
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &albaOrbital))
-	util.Must(db.CreateDeploymentTargetStatus(ctx, &albaOrbital.DeploymentTarget, "running"))
+	util.Must(db.CreateDeploymentTarget(ctx, &spaceKUKWest))
+	util.Must(db.CreateDeploymentTargetStatus(ctx, &spaceKUKWest.DeploymentTarget, "running"))
 	util.Must(db.CreateDeployment(ctx, &types.Deployment{
-		DeploymentTargetId: albaOrbital.ID, ApplicationVersionId: appMarsLTSV0299.ID,
+		DeploymentTargetId: spaceKUKWest.ID, ApplicationVersionId: appMarsLTSV0299.ID,
 	}))
 
-	founderCafe := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+	baySpaceCorp := types.UserAccount{
+		Email:           "admin@bay-space.com",
+		Name:            "Bay Space Corp",
+		Password:        "12345678",
+		EmailVerifiedAt: util.PtrTo(time.Now()),
+	}
+	util.Must(security.HashPassword(&baySpaceCorp))
+	util.Must(db.CreateUserAccount(ctx, &baySpaceCorp))
+	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, baySpaceCorp.ID, org.ID, types.UserRoleCustomer))
+
+	baySpaceOffice := types.DeploymentTargetWithCreatedBy{
+		CreatedBy: &types.UserAccountWithUserRole{ID: baySpaceCorp.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Bay Space Corp",
+			Name:           "BSC - Office",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.76078, Lon: -122.3915258},
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &founderCafe))
-	util.Must(db.CreateDeploymentTargetStatus(ctx, &founderCafe.DeploymentTarget, "running"))
+	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceOffice))
+	util.Must(db.CreateDeploymentTargetStatus(ctx, &baySpaceOffice.DeploymentTarget, "running"))
 	util.Must(db.CreateDeployment(ctx, &types.Deployment{
-		DeploymentTargetId: founderCafe.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
+		DeploymentTargetId: baySpaceOffice.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
 	}))
 
-	quindar := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+	baySpaceWest := types.DeploymentTargetWithCreatedBy{
+		CreatedBy: &types.UserAccountWithUserRole{ID: baySpaceCorp.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Red Target",
+			Name:           "BSC - us-central-1",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 39.1929769, Lon: -105.2403348},
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &quindar))
+	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceWest))
 }
