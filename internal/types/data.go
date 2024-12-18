@@ -90,3 +90,8 @@ type OrganizationWithUserRole struct {
 	Organization
 	UserRole UserRole `db:"user_role"`
 }
+
+type UptimeMetric struct {
+	Total   int `json:"total"`
+	Unknown int `json:"unknown"`
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -151,4 +152,26 @@ func main() {
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &quindar))
+
+	for idx := range 10 {
+		dt := types.DeploymentTargetWithCreatedBy{
+			CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+			DeploymentTarget: types.DeploymentTarget{
+				OrganizationID: org.ID,
+				Name:           fmt.Sprintf("Deployment Target %v", idx),
+				Type:           types.DeploymentTypeDocker,
+			},
+		}
+		util.Must(db.CreateDeploymentTarget(ctx, &dt))
+		util.Must(db.CreateDeploymentTargetStatus(ctx, &founderCafe.DeploymentTarget, "running"))
+		deployment := types.Deployment{
+			DeploymentTargetId: dt.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
+		}
+		util.Must(db.CreateDeployment(ctx, &deployment))
+		createdAt := time.Now().Add(-7 * 24 * time.Hour)
+		for createdAt.Before(time.Now()) {
+			util.Must(db.CreateDeploymentStatusWithCreatedAt(ctx, deployment.ID, "demo status", createdAt))
+			createdAt = createdAt.Add(5 * time.Second)
+		}
+	}
 }

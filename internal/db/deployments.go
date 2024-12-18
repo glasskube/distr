@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -128,6 +129,19 @@ func CreateDeploymentStatus(ctx context.Context, deploymentID string, message st
 	rows := db.QueryRow(ctx,
 		"INSERT INTO DeploymentStatus (deployment_id, message) VALUES (@deploymentId, @message) RETURNING id",
 		pgx.NamedArgs{"deploymentId": deploymentID, "message": message})
+	if err := rows.Scan(&id); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func CreateDeploymentStatusWithCreatedAt(ctx context.Context, deploymentID string, message string, createdAt time.Time) error {
+	db := internalctx.GetDb(ctx)
+	var id string
+	rows := db.QueryRow(ctx,
+		"INSERT INTO DeploymentStatus (deployment_id, message, created_at) VALUES (@deploymentId, @message, @createdAt) RETURNING id",
+		pgx.NamedArgs{"deploymentId": deploymentID, "message": message, "createdAt": createdAt})
 	if err := rows.Scan(&id); err != nil {
 		return err
 	} else {
