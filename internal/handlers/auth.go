@@ -137,10 +137,12 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		} else {
 			log.Warn("could not send reset mail", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 		}
 	} else if _, token, err := auth.GenerateResetToken(*user); err != nil {
 		log.Warn("could not send reset mail", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else if err := mailer.Send(ctx, mail.New(
 		mail.To(user.Email),
@@ -148,6 +150,7 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, token)),
 	)); err != nil {
 		log.Warn("could not send reset mail", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusNoContent)
