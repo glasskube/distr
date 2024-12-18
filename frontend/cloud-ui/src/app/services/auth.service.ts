@@ -12,6 +12,7 @@ export interface JWTClaims {
   sub: string;
   org: string;
   email: string;
+  password_reset: boolean;
   email_verified: boolean;
   name: string;
   exp: string;
@@ -51,6 +52,10 @@ export class AuthService {
     );
   }
 
+  public resetPassword(email: string): Observable<void> {
+    return this.httpClient.post<void>(`${this.baseUrl}/reset`, {email});
+  }
+
   public register(email: string, name: string | null | undefined, password: string): Observable<void> {
     let body: any = {email, password};
     if (name) {
@@ -75,7 +80,7 @@ export class AuthService {
 
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  if (req.url !== '/api/v1/auth/login' && req.url !== '/api/v1/auth/register') {
+  if (!req.url.startsWith('/api/v1/auth/')) {
     const token = auth.token;
     try {
       if (dayjs.unix(parseInt(auth.getClaims().exp)).isAfter(dayjs())) {

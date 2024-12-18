@@ -186,18 +186,29 @@ func GetUserAccountWithEmail(ctx context.Context, email string) (*types.UserAcco
 //
 // TODO: this function should probably be moved to another module and maybe support some kind of result caching.
 func GetCurrentUser(ctx context.Context) (*types.UserAccount, error) {
-	if user, err := GetCurrentUserWithRole(ctx); err != nil {
+	if userId, err := auth.CurrentUserId(ctx); err != nil {
 		return nil, err
 	} else {
-		return &types.UserAccount{
-			ID:           user.ID,
-			CreatedAt:    user.CreatedAt,
-			Email:        user.Email,
-			PasswordHash: user.PasswordHash,
-			PasswordSalt: user.PasswordSalt,
-			Name:         user.Name,
-			Password:     user.Password,
-		}, nil
+		db := internalctx.GetDb(ctx)
+		rows, err := db.Query(ctx,
+			"SELECT "+userAccountOutputExpr+`
+			FROM UserAccount u
+			WHERE u.id = @id`,
+			pgx.NamedArgs{"id": userId},
+		)
+		if err != nil {
+			return nil, err
+		}
+		userAccount, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, apierrors.ErrNotFound
+			} else {
+				return nil, fmt.Errorf("could not map user: %w", err)
+			}
+		} else {
+			return &userAccount, nil
+		}
 	}
 }
 

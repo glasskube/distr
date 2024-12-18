@@ -23,6 +23,7 @@ const (
 	UserEmailVerifiedKey = "email_verified"
 	UserRoleKey          = "role"
 	OrgIdKey             = "org"
+	PasswordResetKey     = "password_reset"
 )
 
 // JWTAuth is for generating/validating JWTs.
@@ -52,6 +53,21 @@ func GenerateTokenValidFor(
 		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
 		UserRoleKey:          org.UserRole,
 		OrgIdKey:             org.ID,
+	}
+	return JWTAuth.Encode(claims)
+}
+
+func GenerateResetToken(user types.UserAccount) (jwt.Token, string, error) {
+	now := time.Now()
+	claims := map[string]any{
+		jwt.IssuedAtKey:      now,
+		jwt.NotBeforeKey:     now,
+		jwt.ExpirationKey:    now.Add(env.ResetTokenValidDuration()),
+		jwt.SubjectKey:       user.ID,
+		UserNameKey:          user.Name,
+		UserEmailKey:         user.Email,
+		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
+		PasswordResetKey:     true,
 	}
 	return JWTAuth.Encode(claims)
 }

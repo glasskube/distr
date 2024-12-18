@@ -10,10 +10,13 @@ import {InviteComponent} from './invite/invite.component';
 import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 import {VerifyComponent} from './verify/verify.component';
+import {ForgotComponent} from './forgot/forgot.component';
+import {PasswordResetComponent} from './password-reset/password-reset.component';
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
   {path: 'register', component: RegisterComponent},
+  {path: 'forgot', component: ForgotComponent},
   {
     path: '',
     canActivate: [
@@ -34,14 +37,21 @@ export const routes: Routes = [
         const auth = inject(AuthService);
         const router = inject(Router);
         if (auth.isAuthenticated) {
-          if (!auth.getClaims().email_verified) {
+          if (auth.getClaims().password_reset) {
+            if (state.url === '/reset') {
+              return true;
+            } else {
+              return router.createUrlTree(['/reset']);
+            }
+          } else if (!auth.getClaims().email_verified) {
             if (state.url === '/verify') {
               return true;
             } else {
               return router.createUrlTree(['/verify']);
             }
+          } else {
+            return true;
           }
-          return true;
         } else {
           return router.createUrlTree(['/login']);
         }
@@ -50,6 +60,7 @@ export const routes: Routes = [
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
       {path: 'verify', component: VerifyComponent},
+      {path: 'reset', component: PasswordResetComponent},
       {path: 'join', component: InviteComponent},
       {
         path: '',
