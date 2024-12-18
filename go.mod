@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.1
 	github.com/getsentry/sentry-go v0.30.0
 	github.com/go-chi/chi/v5 v5.2.0
+	github.com/go-chi/httprate v0.14.1
 	github.com/go-chi/jwtauth/v5 v5.3.2
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
@@ -34,6 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.2 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect

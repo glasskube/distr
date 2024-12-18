@@ -9,7 +9,13 @@ export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
     tap({
       error: (err) => {
         if (err instanceof HttpErrorResponse && !ignoreError(req, err)) {
-          toast.error('An error occurred');
+          switch (err.status) {
+            case 429:
+              toast.error('Rate limited! Please try again later.');
+              break;
+            default:
+              toast.error('An error occurred');
+          }
         }
       },
     })

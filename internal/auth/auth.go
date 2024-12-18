@@ -3,9 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
+	"maps"
 	"time"
-
-	"github.com/glasskube/cloud/internal/util"
 
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/types"
@@ -33,14 +32,23 @@ const (
 // TODO: Maybe migrate to asymmetric encryption at some point.
 var JWTAuth = jwtauth.New("HS256", env.JWTSecret(), nil)
 
-func GenerateToken(user types.UserAccount, org types.OrganizationWithUserRole) (jwt.Token, string, error) {
-	return GenerateTokenValidFor(user, org, defaultTokenExpiration)
+func GenerateDefaultToken(user types.UserAccount, org types.OrganizationWithUserRole) (jwt.Token, string, error) {
+	return generateUserToken(user, &org, defaultTokenExpiration, nil)
 }
 
-func GenerateTokenValidFor(
+func GenerateResetToken(user types.UserAccount) (jwt.Token, string, error) {
+	return generateUserToken(user, nil, env.ResetTokenValidDuration(), map[string]any{PasswordResetKey: true})
+}
+
+func GenerateVerificationTokenValidFor(user types.UserAccount) (jwt.Token, string, error) {
+	return generateUserToken(user, nil, env.InviteTokenValidDuration(), map[string]any{UserEmailVerifiedKey: true})
+}
+
+func generateUserToken(
 	user types.UserAccount,
-	org types.OrganizationWithUserRole,
+	org *types.OrganizationWithUserRole,
 	validFor time.Duration,
+	extraClaims map[string]any,
 ) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
@@ -51,34 +59,13 @@ func GenerateTokenValidFor(
 		UserNameKey:          user.Name,
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
-		UserRoleKey:          org.UserRole,
-		OrgIdKey:             org.ID,
 	}
-	return JWTAuth.Encode(claims)
-}
-
-func GenerateResetToken(user types.UserAccount) (jwt.Token, string, error) {
-	now := time.Now()
-	claims := map[string]any{
-		jwt.IssuedAtKey:      now,
-		jwt.NotBeforeKey:     now,
-		jwt.ExpirationKey:    now.Add(env.ResetTokenValidDuration()),
-		jwt.SubjectKey:       user.ID,
-		UserNameKey:          user.Name,
-		UserEmailKey:         user.Email,
-		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
-		PasswordResetKey:     true,
+	if org != nil {
+		claims[UserRoleKey] = org.UserRole
+		claims[OrgIdKey] = org.ID
 	}
+	maps.Copy(claims, extraClaims)
 	return JWTAuth.Encode(claims)
-}
-
-func GenerateVerificationTokenValidFor(
-	user types.UserAccount,
-	org types.OrganizationWithUserRole,
-	validFor time.Duration,
-) (jwt.Token, string, error) {
-	user.EmailVerifiedAt = util.PtrTo(time.Now())
-	return GenerateTokenValidFor(user, org, validFor)
 }
 
 func GenerateAgentTokenValidFor(targetId string, orgId string, validFor time.Duration) (jwt.Token, string, error) {

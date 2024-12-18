@@ -1,4 +1,11 @@
-import {ActivatedRouteSnapshot, createUrlTreeFromSnapshot, Router, RouterStateSnapshot, Routes} from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  CanActivateFn,
+  createUrlTreeFromSnapshot,
+  Router,
+  RouterStateSnapshot,
+  Routes,
+} from '@angular/router';
 import {DashboardPlaceholderComponent} from './components/dashboard-placeholder/dashboard-placeholder.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
 import {inject} from '@angular/core';
@@ -12,6 +19,24 @@ import {DeploymentsPageComponent} from './deployments/deployments-page.component
 import {VerifyComponent} from './verify/verify.component';
 import {ForgotComponent} from './forgot/forgot.component';
 import {PasswordResetComponent} from './password-reset/password-reset.component';
+import {SettingsService} from './services/settings.service';
+import {ToastService} from './services/toast.service';
+import {firstValueFrom} from 'rxjs';
+
+const emailVerificationGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const settings = inject(SettingsService);
+  const toast = inject(ToastService);
+  const router = inject(Router);
+  const {email, email_verified} = auth.getClaims();
+  if (email_verified) {
+    await firstValueFrom(settings.confirmEmailVerification());
+    toast.success('Your email has been verified');
+    await firstValueFrom(auth.logout());
+    return router.createUrlTree(['/login'], {queryParams: {email}});
+  }
+  return true;
+};
 
 export const routes: Routes = [
   {path: 'login', component: LoginComponent},
@@ -59,7 +84,11 @@ export const routes: Routes = [
     ],
     children: [
       {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
-      {path: 'verify', component: VerifyComponent},
+      {
+        path: 'verify',
+        component: VerifyComponent,
+        canActivate: [emailVerificationGuard],
+      },
       {path: 'reset', component: PasswordResetComponent},
       {path: 'join', component: InviteComponent},
       {
