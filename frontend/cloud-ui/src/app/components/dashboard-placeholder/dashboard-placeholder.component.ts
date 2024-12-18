@@ -15,6 +15,7 @@ import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
 import {ChartVersionComponent} from '../charts/version/chart-version.component';
 import {GlobeComponent} from '../globe/globe.component';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
+import {UsersService} from '../../services/users.service';
 
 @Component({
   selector: 'app-dashboard-placeholder',
@@ -38,6 +39,8 @@ export class DashboardPlaceholderComponent implements OnInit {
   public readonly deploymentTargets$ = this.deploymentTargets.list();
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
+  private readonly user = inject(UsersService);
+  public readonly users$ = this.user.getUsers();
   private readonly auth = inject(AuthService);
 
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
