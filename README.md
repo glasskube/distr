@@ -8,7 +8,6 @@ To run Glasskube Cloud locally you need to clone the repository and run the foll
 
 ```shell
 docker-compose up -d # starts the database and a local mailserver
-make init-db # initializes the database (the password is 'local')
 make run # starts Glasskube Cloud
 ```
 

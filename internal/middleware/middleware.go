@@ -4,11 +4,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -64,4 +67,22 @@ func UserRoleMiddleware(userRole types.UserRole) func(handler http.Handler) http
 		}
 		return http.HandlerFunc(fn)
 	}
+}
+
+var Sentry = sentryhttp.New(sentryhttp.Options{Repanic: true}).Handle
+
+func SentryUser(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if hub := sentry.GetHubFromContext(ctx); hub != nil {
+			if token, claims, err := jwtauth.FromContext(ctx); err == nil {
+				user := sentry.User{ID: token.Subject()}
+				if email, ok := claims[auth.UserEmailKey].(string); ok {
+					user.Email = email
+				}
+				hub.Scope().SetUser(user)
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
 }

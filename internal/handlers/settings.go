@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"go.uber.org/zap"
@@ -35,10 +36,13 @@ func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Name = body.Name
+	if body.Name != "" {
+		user.Name = body.Name
+	}
 	if body.Password != "" {
 		user.Password = body.Password
 		if err := security.HashPassword(user); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -53,6 +57,7 @@ func updateUserSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	if err := db.UpateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, user)

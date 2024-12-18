@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.5.0](https://github.com/glasskube/cloud/compare/v0.4.0...v0.5.0) (2024-12-17)
+
+
+### Features
+
+* add conditionally disabling deploy button for vendors ([#147](https://github.com/glasskube/cloud/issues/147)) ([cee1f06](https://github.com/glasskube/cloud/commit/cee1f06d4e5973764ba3a76094bcd912d6f80030))
+* add deleting applications, deployment targets, user accounts ([#139](https://github.com/glasskube/cloud/issues/139)) ([975ade7](https://github.com/glasskube/cloud/commit/975ade724e8d6450d15b44ae62b384adbffb6c64))
+* add login error handling ([#160](https://github.com/glasskube/cloud/issues/160)) ([f5f0a41](https://github.com/glasskube/cloud/commit/f5f0a419d961becfaa2bcd8f79d186e255a9f251))
+* add option to copy & paste the verification link ([e7fe821](https://github.com/glasskube/cloud/commit/e7fe8213716ba0872fd8955ccf57e8cb2e845209))
+* add vendor as bcc and reply-to in customer invite mail ([#163](https://github.com/glasskube/cloud/issues/163)) ([e1cc4d8](https://github.com/glasskube/cloud/commit/e1cc4d8b99a1b51811e3c24a003017a828bce62b))
+* **backend:** add db migrations ([#155](https://github.com/glasskube/cloud/issues/155)) ([87ffd6f](https://github.com/glasskube/cloud/commit/87ffd6f09744ea5b46e29cbc979f7a315e6b46ca))
+* don't use a placeholder for password inputs ([66fe23a](https://github.com/glasskube/cloud/commit/66fe23a664b8ea51e6ba27577e6cb6d964fe231c))
+* email verification ([#145](https://github.com/glasskube/cloud/issues/145)) ([e78be22](https://github.com/glasskube/cloud/commit/e78be22276abd99d0a9c23701f3baecb65ba1aac))
+* make agent interval configurable on backend ([#154](https://github.com/glasskube/cloud/issues/154)) ([78ea860](https://github.com/glasskube/cloud/commit/78ea860d38ef4908ce6f1c9278be91c7a65f8925))
+* **ui:** custom confirm dialog ([#151](https://github.com/glasskube/cloud/issues/151)) ([b14ca14](https://github.com/glasskube/cloud/commit/b14ca14252998916a039b99c78c508f03fa4e765))
+* use jwt for agent requests ([#149](https://github.com/glasskube/cloud/issues/149)) ([b5329d6](https://github.com/glasskube/cloud/commit/b5329d6ca5628feccc862a2c74fbb2f2415ea950))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v8.45.1 ([#150](https://github.com/glasskube/cloud/issues/150)) ([0e5c81b](https://github.com/glasskube/cloud/commit/0e5c81ba927e83ee0f906a858eae0c0d7824b795))
+* **deps:** update dependency globe.gl to v2.34.4 ([#142](https://github.com/glasskube/cloud/issues/142)) ([fa66356](https://github.com/glasskube/cloud/commit/fa663564fb5d0d04a1abae04c52e6776a590ac93))
+* **deps:** update dependency posthog-js to v1.200.1 ([#138](https://github.com/glasskube/cloud/issues/138)) ([50b0c4c](https://github.com/glasskube/cloud/commit/50b0c4cd8e8901e65e0e3b65edb3101e6382dd8b))
+* **deps:** update dependency posthog-js to v1.200.2 ([#148](https://github.com/glasskube/cloud/issues/148)) ([cf17cb3](https://github.com/glasskube/cloud/commit/cf17cb35841faccc692172b0ab22f965ba5b4e16))
+* **deps:** update dependency posthog-js to v1.201.0 ([#153](https://github.com/glasskube/cloud/issues/153)) ([2f6e751](https://github.com/glasskube/cloud/commit/2f6e7510efc57143186204c4594950d8bda5c488))
+* **deps:** update dependency posthog-js to v1.201.1 ([#157](https://github.com/glasskube/cloud/issues/157)) ([d35be88](https://github.com/glasskube/cloud/commit/d35be88795e5f0d8ded291b7835993f595e95223))
+* **deps:** update dependency posthog-js to v1.202.0 ([#159](https://github.com/glasskube/cloud/issues/159)) ([6ec9af5](https://github.com/glasskube/cloud/commit/6ec9af554cbd3feee3d0a81636be5ec13d93bada))
+* **deps:** update dependency posthog-js to v1.202.1 ([#161](https://github.com/glasskube/cloud/issues/161)) ([ec23a25](https://github.com/glasskube/cloud/commit/ec23a2578b4cfdbdaa8b8f06e4c4d06558a8ffd2))
+* **deps:** update font awesome to v6.7.2 ([#156](https://github.com/glasskube/cloud/issues/156)) ([adfc25f](https://github.com/glasskube/cloud/commit/adfc25fa85edf554d698902599146c0f2b8ddb08))
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.0 ([#143](https://github.com/glasskube/cloud/issues/143)) ([701b7e3](https://github.com/glasskube/cloud/commit/701b7e306ca35abf3a2f7b9ea456e10f0046d37d))
+* don't overwrite user name with empty string during token verification ([#167](https://github.com/glasskube/cloud/issues/167)) ([684bb83](https://github.com/glasskube/cloud/commit/684bb839c181e7567e3b0257ceef927ebc48a306))
+* escape query params ([#146](https://github.com/glasskube/cloud/issues/146)) ([156cc1e](https://github.com/glasskube/cloud/commit/156cc1e002b03eda32cd9597e879ce2db91a66c7))
+* revert posthog token ([#144](https://github.com/glasskube/cloud/issues/144)) ([9defc58](https://github.com/glasskube/cloud/commit/9defc58213b30c53f40ab523ec2c772ef67d3bfd))
+* **ui:** fix wizard dialog on small screens ([#152](https://github.com/glasskube/cloud/issues/152)) ([d5b3e82](https://github.com/glasskube/cloud/commit/d5b3e820cdd2e0479485d95ea1d89469d3ab89e3))
+* **ui:** show registration form errors after submit ([#162](https://github.com/glasskube/cloud/issues/162)) ([22eba8c](https://github.com/glasskube/cloud/commit/22eba8cf99fb9203ef01277c86092f39ec8bf302))
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.21.7 ([#141](https://github.com/glasskube/cloud/issues/141)) ([1c1406e](https://github.com/glasskube/cloud/commit/1c1406ee21651ce35bedbe98b677ee057eed1eca))
+* remove unused var ([3acfb20](https://github.com/glasskube/cloud/commit/3acfb209162e501d5855f6f6b98abbcbafc701a1))
+
+
+### Docs
+
+* add Getting started section to README ([#158](https://github.com/glasskube/cloud/issues/158)) ([987ca22](https://github.com/glasskube/cloud/commit/987ca220be3d6d0dfa8a2f928d4590160b437061))
+* remove not needed database init for Getting Started ([dcbf3f0](https://github.com/glasskube/cloud/commit/dcbf3f0e82d69882df0dcd88f3650d510f8b10d6))
+
 ## [0.4.0](https://github.com/glasskube/cloud/compare/v0.3.0...v0.4.0) (2024-12-13)
 
 
