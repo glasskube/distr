@@ -88,6 +88,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			    ), array[]::record[]) as versions
 			FROM Application a
 			WHERE a.organization_id = @orgId
+			ORDER BY a.name
 			`, pgx.NamedArgs{"orgId": orgId}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err :=
