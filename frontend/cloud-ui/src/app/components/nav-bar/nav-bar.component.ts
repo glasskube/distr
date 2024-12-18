@@ -8,12 +8,13 @@ import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-schem
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '../../types/user-account';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-nav-bar',
   standalone: true,
   templateUrl: './nav-bar.component.html',
-  imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent],
+  imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent, RouterLink],
   animations: [dropdownAnimation],
 })
 export class NavBarComponent implements OnInit {
