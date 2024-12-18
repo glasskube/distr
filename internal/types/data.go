@@ -92,6 +92,7 @@ type OrganizationWithUserRole struct {
 }
 
 type UptimeMetric struct {
-	Total   int `json:"total"`
-	Unknown int `json:"unknown"`
+	Hour    time.Time `json:"hour"`
+	Total   int       `json:"total"`
+	Unknown int       `json:"unknown"`
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -68,11 +69,12 @@ func main() {
 
 	app3 := types.Application{Name: "Wizard Security Graph", OrganizationID: org.ID, Type: types.DeploymentTypeDocker}
 	util.Must(db.CreateApplication(ctx, &app3))
-	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
+	av := types.ApplicationVersion{
 		ApplicationId:   app3.ID,
 		Name:            "v1",
 		ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
-	}))
+	}
+	util.Must(db.CreateApplicationVersion(ctx, &av))
 
 	dt1 := types.DeploymentTargetWithCreatedBy{
 		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
@@ -106,4 +108,36 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt3))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &dt3.DeploymentTarget, "running"))
+
+	for idx := range 3 {
+		dt := types.DeploymentTargetWithCreatedBy{
+			CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
+			DeploymentTarget: types.DeploymentTarget{
+				OrganizationID: org.ID,
+				Name:           fmt.Sprintf("Deployment Target %v", idx),
+				Type:           types.DeploymentTypeDocker,
+			},
+		}
+		util.Must(db.CreateDeploymentTarget(ctx, &dt))
+		util.Must(db.CreateDeploymentTargetStatus(ctx, &dt.DeploymentTarget, "running"))
+		deployment := types.Deployment{
+			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,
+		}
+		util.Must(db.CreateDeployment(ctx, &deployment))
+		now := time.Now().UTC()
+		createdAt := now.Add(-1*24*time.Hour - 30*time.Minute)
+		if idx == 2 {
+			createdAt = createdAt.Add(12 * time.Hour)
+		}
+		for createdAt.Before(now) {
+			util.Must(db.CreateDeploymentStatusWithCreatedAt(ctx, deployment.ID, "demo status", createdAt))
+			if idx == 0 && createdAt.Hour() == 15 && createdAt.Minute() > 50 {
+				createdAt = createdAt.Add(15 * time.Minute)
+			} else if idx == 1 && createdAt.Hour() == 22 {
+				createdAt = createdAt.Add(90 * time.Minute)
+			} else {
+				createdAt = createdAt.Add(5 * time.Second)
+			}
+		}
+	}
 }
