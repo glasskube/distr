@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.0](https://github.com/glasskube/cloud/compare/v0.6.1...v0.7.0) (2024-12-18)
+
+
+### Features
+
+* add entity sorting ([#179](https://github.com/glasskube/cloud/issues/179)) ([6737060](https://github.com/glasskube/cloud/commit/6737060290373577cbc4d2df7dba7adda031f2c7))
+* add password reset ([#171](https://github.com/glasskube/cloud/issues/171)) ([1329d51](https://github.com/glasskube/cloud/commit/1329d512509e667aebd1d5de1a9a051132ea4135))
+* only reopen dialog if aborted ([#174](https://github.com/glasskube/cloud/issues/174)) ([e7addc4](https://github.com/glasskube/cloud/commit/e7addc4766609a457c34dc892f54869efd51a5d0))
+
+
+### Bug Fixes
+
+* **frontend:** disable all action buttons for customer managed deployments ([#180](https://github.com/glasskube/cloud/issues/180)) ([007ced2](https://github.com/glasskube/cloud/commit/007ced21e8272f157574a0e4aab00a8adcf8243e))
+* **ui:** guard routes by user role and redirect / depending on role ([#181](https://github.com/glasskube/cloud/issues/181)) ([d929744](https://github.com/glasskube/cloud/commit/d929744853a39382a2761f63cf0e5686f7f53045))
+
+
+### Other
+
+* update demo data ([#178](https://github.com/glasskube/cloud/issues/178)) ([5dc3fd0](https://github.com/glasskube/cloud/commit/5dc3fd08c175b425916cee9f8a994734e34c2c85))
+
 ## [0.6.1](https://github.com/glasskube/cloud/compare/v0.6.0...v0.6.1) (2024-12-18)
 
 
