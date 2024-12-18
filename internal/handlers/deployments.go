@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
@@ -31,6 +32,7 @@ func createDeployment(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err = db.CreateDeployment(r.Context(), &deployment); err != nil {
 		log.Warn("could not create deployment", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		if _, err = fmt.Fprintln(w, err); err != nil {
 			log.Error("failed to write error to response", zap.Error(err))
@@ -44,6 +46,7 @@ func getDeployments(w http.ResponseWriter, r *http.Request) {
 	deploymentTargetId := r.URL.Query().Get("deploymentTargetId")
 	if deployments, err := db.GetDeploymentsForDeploymentTarget(r.Context(), deploymentTargetId); err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get deployments", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		err := json.NewEncoder(w).Encode(deployments)
@@ -70,6 +73,7 @@ func deploymentMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get deployment", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			ctx = internalctx.WithDeployment(ctx, deployment)

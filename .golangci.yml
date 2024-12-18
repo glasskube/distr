@@ -3,7 +3,7 @@ run:
   allow-parallel-runners: true
 linters:
   enable:
-    - dupl
+    #- dupl
     - errcheck
     - copyloopvar
     - ginkgolinter

@@ -32,6 +32,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 	r := chi.NewRouter()
 	r.Use(
 		chimiddleware.RequestID,
+		middleware.Sentry,
 		middleware.LoggerCtxMiddleware(logger),
 		middleware.LoggingMiddleware,
 		middleware.ContextInjectorMiddelware(db, mailer),
@@ -47,6 +48,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth.JWTAuth))
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
+			r.Use(middleware.SentryUser)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
