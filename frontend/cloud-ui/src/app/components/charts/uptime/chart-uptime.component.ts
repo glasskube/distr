@@ -33,63 +33,66 @@ export class ChartUptimeComponent implements OnInit {
     const dts = await firstValueFrom(this.deploymentTargets$);
     for (const dt of dts) {
       if (dt.currentStatus) {
+        let deployment;
         try {
           // temporarily: simply show uptime of the first deployment target with a status and a deployment
-          const deployment = await lastValueFrom(this.deploymentTargets.latestDeploymentFor(dt.id!));
-          this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
-            this.chartOptions = {
-              series: [
-                {
-                  name: 'available',
-                  data: uptimes.map((ut) => ut.total - ut.unknown),
-                  color: '#00bfa5',
-                },
-                {
-                  name: 'unknown',
-                  data: uptimes.map((ut) => ut.unknown),
-                  color: '#f44336',
-                },
-              ],
-              chart: {
-                height: 220,
-                type: 'bar',
-                stacked: true,
-                sparkline: {
-                  enabled: true,
-                },
+          deployment = await lastValueFrom(this.deploymentTargets.latestDeploymentFor(dt.id!));
+        } catch (e) {
+          continue;
+        }
+        this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
+          this.chartOptions = {
+            series: [
+              {
+                name: 'available',
+                data: uptimes.map((ut) => ut.total - ut.unknown),
+                color: '#00bfa5',
               },
-              stroke: {
-                curve: 'smooth',
+              {
+                name: 'unknown',
+                data: uptimes.map((ut) => ut.unknown),
+                color: '#feb019',
               },
-              tooltip: {
-                enabled: false,
+            ],
+            chart: {
+              height: 220,
+              type: 'bar',
+              stacked: true,
+              sparkline: {
+                enabled: true,
               },
-              xaxis: {
-                type: 'datetime',
-                categories: uptimes.map((ut) => ut.hour),
+            },
+            stroke: {
+              curve: 'smooth',
+            },
+            tooltip: {
+              enabled: false,
+            },
+            xaxis: {
+              type: 'datetime',
+              categories: uptimes.map((ut) => ut.hour),
+            },
+            legend: {
+              show: true,
+              position: 'top',
+              fontFamily: 'Inter',
+              offsetY: -18,
+              labels: {
+                colors: 'rgb(156, 163, 175)',
+                useSeriesColors: false,
               },
-              legend: {
-                show: true,
-                position: 'top',
-                fontFamily: 'Inter',
-                offsetY: -18,
-                labels: {
-                  colors: 'rgb(156, 163, 175)',
-                  useSeriesColors: false,
-                },
+            },
+            title: {
+              text: `${dt.name}`,
+              align: 'center',
+              style: {
+                color: 'rgb(156, 163, 175)',
+                fontFamily: 'Poppins',
               },
-              title: {
-                text: `${dt.name}`,
-                align: 'center',
-                style: {
-                  color: 'rgb(156, 163, 175)',
-                  fontFamily: 'Poppins',
-                },
-              },
-            };
-          });
-          return;
-        } catch (e) {}
+            },
+          };
+        });
+        return;
       }
     }
   }
