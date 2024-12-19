@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/cloud/internal/buildconfig"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/migrations"
 	"github.com/glasskube/cloud/internal/svc"
@@ -27,7 +28,11 @@ func init() {
 func main() {
 	ctx := context.Background()
 
-	util.Must(sentry.Init(sentry.ClientOptions{Dsn: env.SentryDSN(), Debug: env.SentryDebug()}))
+	util.Must(sentry.Init(sentry.ClientOptions{
+		Dsn:     env.SentryDSN(),
+		Debug:   env.SentryDebug(),
+		Release: buildconfig.Version(),
+	}))
 	defer sentry.Flush(5 * time.Second)
 	defer func() {
 		if err := recover(); err != nil {
