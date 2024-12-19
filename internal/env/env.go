@@ -28,6 +28,7 @@ var (
 	agentInterval              = 5 * time.Second
 	sentryDSN                  string
 	sentryDebug                bool
+	enableQueryLogging         bool
 )
 
 func init() {
@@ -89,6 +90,10 @@ func init() {
 	if value, ok := os.LookupEnv("SENTRY_DEBUG"); ok {
 		sentryDebug = util.Require(strconv.ParseBool(value))
 	}
+
+	if value, ok := os.LookupEnv("ENABLE_QUERY_LOGGING"); ok {
+		enableQueryLogging = util.Require(strconv.ParseBool(value))
+	}
 }
 
 func DatabaseUrl() string {
@@ -131,4 +136,8 @@ func SentryDSN() string {
 
 func SentryDebug() bool {
 	return sentryDebug
+}
+
+func EnableQueryLogging() bool {
+	return enableQueryLogging
 }
