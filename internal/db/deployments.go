@@ -136,11 +136,17 @@ func CreateDeploymentStatus(ctx context.Context, deploymentID string, message st
 	}
 }
 
-func CreateDeploymentStatusWithCreatedAt(ctx context.Context, deploymentID string, message string, createdAt time.Time) error {
+func CreateDeploymentStatusWithCreatedAt(
+	ctx context.Context,
+	deploymentID string,
+	message string,
+	createdAt time.Time,
+) error {
 	db := internalctx.GetDb(ctx)
 	var id string
 	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentStatus (deployment_id, message, created_at) VALUES (@deploymentId, @message, @createdAt) RETURNING id",
+		"INSERT INTO DeploymentStatus (deployment_id, message, created_at) "+
+			"VALUES (@deploymentId, @message, @createdAt) RETURNING id",
 		pgx.NamedArgs{"deploymentId": deploymentID, "message": message, "createdAt": createdAt})
 	if err := rows.Scan(&id); err != nil {
 		return err

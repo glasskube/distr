@@ -2,11 +2,12 @@ package db
 
 import (
 	"context"
+	"time"
+
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/jackc/pgx/v5"
-	"time"
 )
 
 func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.UptimeMetric, error) {
@@ -107,7 +108,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 		}
 		processRow(true)
 		// last row is the current hour until now, so it does not have the complete total/expected, but a reduced one
-		futureSeconds := (currentBaseHour.Add(1 * time.Hour).Sub(time.Now())).Seconds()
+		futureSeconds := (time.Until(currentBaseHour.Add(1 * time.Hour))).Seconds()
 		currentHourMetric.Total = currentHourMetric.Total - int(futureSeconds/maxAllowedInterval.Seconds())
 		metrics[len(metrics)-1] = currentHourMetric
 		return metrics, nil

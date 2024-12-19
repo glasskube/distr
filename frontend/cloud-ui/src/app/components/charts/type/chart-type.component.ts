@@ -67,18 +67,18 @@ export class ChartTypeComponent {
         },
       },
     };
-    this.deploymentTargets$.subscribe(dts => {
+    this.deploymentTargets$.subscribe((dts) => {
       const managers: {[key: string]: UserAccountWithRole} = {};
       const counts: {[key: string]: number} = {};
-      for(const dt of dts) {
-        if(dt.createdBy?.id && !managers[dt.createdBy.id]) {
+      for (const dt of dts) {
+        if (dt.createdBy?.id && !managers[dt.createdBy.id]) {
           managers[dt.createdBy.id] = dt.createdBy;
-          counts[dt.createdBy.id] = 1
-        } else if(dt.createdBy?.id && managers[dt.createdBy.id]) {
-          counts[dt.createdBy.id] = counts[dt.createdBy.id] + 1
+          counts[dt.createdBy.id] = 1;
+        } else if (dt.createdBy?.id && managers[dt.createdBy.id]) {
+          counts[dt.createdBy.id] = counts[dt.createdBy.id] + 1;
         }
       }
-      this.chartOptions.labels = Object.values(managers).map(v => v.name || v.email);
+      this.chartOptions.labels = Object.values(managers).map((v) => v.name || v.email);
       this.chartOptions.series = Object.values(counts);
     });
   }
