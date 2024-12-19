@@ -3,9 +3,9 @@ name: Build docker images (and push on tags)
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - '*'
+      - "*"
 
 jobs:
   build-server:
@@ -74,3 +74,5 @@ jobs:
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # TODO: finish this
+          build-args: VERSION=${{}}, COMMIT=${{}}
