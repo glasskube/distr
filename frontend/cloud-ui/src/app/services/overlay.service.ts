@@ -99,8 +99,10 @@ export class OverlayService {
     }
 
     if (!config.backdropStyleOnly) {
-      overlayRef
-        .backdropClick()
+      merge(
+        overlayRef.backdropClick(),
+        fromEvent<KeyboardEvent>(window, 'keydown').pipe(filter((it) => it.key === 'Escape'))
+      )
         .pipe(takeUntil(dialogRef.closed()))
         .subscribe(() => dialogRef.dismiss());
     }
