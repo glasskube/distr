@@ -134,7 +134,7 @@ func main() {
 			if idx == 0 && createdAt.Hour() == 15 && createdAt.Minute() > 50 {
 				createdAt = createdAt.Add(15 * time.Minute)
 			} else if idx == 1 && createdAt.Hour() == 22 {
-				createdAt = createdAt.Add(90 * time.Minute)
+				createdAt = createdAt.Add(115 * time.Minute)
 			} else {
 				createdAt = createdAt.Add(5 * time.Second)
 			}
