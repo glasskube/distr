@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"fmt"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/cloud/internal/util"
 	"github.com/jackc/pgx/v5"
+	"time"
 )
 
 func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.UptimeMetric, error) {
@@ -15,35 +16,85 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`
-		select
-			date_trunc('hour', d.created_at) as hour,
-			extract(epoch from interval '1 hour') / extract(epoch from interval '10 second') as total,
-			sum(floor(extract(epoch from d.diff_to_prev) / extract(epoch from interval '10 second'))::int) +
-			(CASE WHEN (date_trunc('hour', now()) = date_trunc('hour', max(d.created_at))) THEN (
-				floor(extract(epoch from now() - max(d.created_at)) / extract(epoch from interval '10 second'))::int
-				) ELSE 0 END) as unknown
+		select hours.base_hour, statuses.created_at, statuses.diff_to_prev
 		from (
-				 select deployment_id,
-						created_at,
-						created_at - lag(created_at) over (
-							partition by deployment_id order by created_at) as diff_to_prev
-				 from deploymentstatus
-				 where created_at > now() - interval '24 hour'
-				 order by deployment_id, created_at
-			 ) as d
-		where d.deployment_id = @deploymentId
-		group by hour, d.deployment_id
-		order by 1;`,
+			-- generate the last 24 dates where hours, minute, seconds is 0
+			SELECT date_trunc('hour', hour_series) as base_hour
+			FROM generate_series(now() - interval '23 hour', now(), interval '1 hour') AS hour_series
+		) as hours left join (
+			select deployment_id,
+				   date_trunc('hour', created_at) as created_at_hour,
+				   created_at,
+				   created_at - lag(created_at) over (
+					   partition by deployment_id order by created_at) as diff_to_prev
+			from deploymentstatus
+			where created_at > now() - interval '24 hour' and deployment_id = @deploymentId
+			order by deployment_id, created_at
+		) as statuses on hours.base_hour = statuses.created_at_hour;`,
 		pgx.NamedArgs{
 			"deploymentId": deploymentId,
 		})
 	if err != nil {
 		return nil, err
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.UptimeMetric])
-	if err != nil {
-		return nil, fmt.Errorf("failed to get uptime metrics: %w", err)
+	// TODO could be made configurable
+	maxAllowedInterval := 10 * time.Second
+	expectedPerHour := int((1 * time.Hour).Seconds() / maxAllowedInterval.Seconds())
+	metricsIdx := -1
+	metrics := make([]types.UptimeMetric, 24)
+	var currentHourMetric types.UptimeMetric
+	var previousRowBaseHour time.Time
+	var currentBaseHour time.Time
+	var currentCreatedAt *time.Time
+	var diffToPrev *time.Duration
+	for rows.Next() {
+		if err := rows.Scan(&currentBaseHour, &currentCreatedAt, &diffToPrev); err != nil {
+			return nil, err
+		}
+		if previousRowBaseHour.IsZero() {
+			// only very first iteration
+			previousRowBaseHour = currentBaseHour.Add(-1 * time.Hour)
+		}
+		hourChanged := !previousRowBaseHour.Equal(currentBaseHour)
+		if hourChanged {
+			if metricsIdx >= 0 {
+				// except on first iteration:
+
+				// manually check duration between last createdAt of the previous hour to the beginning of the new hour
+				if diffToPrev != nil {
+					// TODO
+				}
+				// previousCreatedAt :=
+
+				// save away metrics of last hour
+				metrics[metricsIdx] = currentHourMetric
+			}
+			metricsIdx = metricsIdx + 1
+			currentHourMetric = types.UptimeMetric{
+				Hour:    currentBaseHour,
+				Total:   expectedPerHour,
+				Unknown: 0,
+			}
+		}
+
+		if currentCreatedAt == nil {
+			// no status at all in that hour
+			currentHourMetric.Unknown = currentHourMetric.Total
+		} else {
+			if hourChanged {
+				// manually calculate diff to start of hour
+				diffToPrev = util.PtrTo((*currentCreatedAt).Sub(currentBaseHour))
+			}
+			missingStatuses := int(diffToPrev.Seconds() / (10 * time.Second).Seconds())
+			currentHourMetric.Unknown = currentHourMetric.Unknown + missingStatuses
+		}
+		previousRowBaseHour = currentBaseHour
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
 	} else {
-		return result, nil
+		// last row is the current hour until now
+		metrics[metricsIdx] = currentHourMetric
+		return metrics, nil
 	}
 }

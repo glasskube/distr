@@ -76,7 +76,7 @@ export class ChartUptimeComponent {
       switchMap(dt => this.deploymentTargets.latestDeploymentFor(dt.id!)),
       switchMap(deployment => this.metrics.getUptimeForDeployment(deployment.id!)))*/
 
-    this.metrics.getUptimeForDeployment('5d5e4e61-cd82-46ed-965b-6ba5d3a1d1b8').subscribe((uptimes) => {
+    this.metrics.getUptimeForDeployment('15b950d7-db90-467f-9303-ce277c06fdc3').subscribe((uptimes) => {
       this.chartOptions.xaxis!.categories = uptimes.map(ut => ut.hour);
       this.chartOptions.series = [
         {
@@ -85,7 +85,7 @@ export class ChartUptimeComponent {
           color: '#00bfa5',
         },
         {
-          name: 'unavailable',
+          name: 'unknown',
           data: uptimes.map(ut => ut.unknown),
           color: '#f44336',
         },
