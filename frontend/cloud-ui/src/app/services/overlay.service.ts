@@ -1,7 +1,7 @@
 import {BlockScrollStrategy, GlobalPositionStrategy, Overlay, OverlayConfig, ViewportRuler} from '@angular/cdk/overlay';
 import {ComponentPortal, ComponentType, TemplatePortal} from '@angular/cdk/portal';
 import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainerRef} from '@angular/core';
-import {map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
+import {filter, fromEvent, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
 import {ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
 
 export class DialogRef<T = void> {
