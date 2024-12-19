@@ -1,18 +1,26 @@
 import {BlockScrollStrategy, GlobalPositionStrategy, Overlay, OverlayConfig, ViewportRuler} from '@angular/cdk/overlay';
 import {ComponentPortal, ComponentType, TemplatePortal} from '@angular/cdk/portal';
 import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainerRef} from '@angular/core';
-import {map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
+import {filter, fromEvent, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
 import {ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
 
 export class DialogRef<T = void> {
   private readonly result$ = new Subject<T>();
   private readonly dismissed$ = new Subject<null>();
 
-  public close(data: T) {
+  public onClosed: ((result: T | null) => Promise<void> | void)[] = [];
+
+  public addOnClosedHook(hook: (result: T | null) => Promise<void> | void) {
+    this.onClosed.push(hook);
+  }
+
+  public async close(data: T) {
+    await this.waitForOnClosedHooks();
     this.result$.next(data);
   }
 
-  public dismiss(): void {
+  public async dismiss() {
+    await this.waitForOnClosedHooks();
     this.dismissed$.next(null);
   }
 
@@ -22,6 +30,10 @@ export class DialogRef<T = void> {
 
   public result(): Observable<T | null> {
     return merge(this.result$, this.dismissed$).pipe(take(1));
+  }
+
+  private async waitForOnClosedHooks() {
+    await Promise.all(this.onClosed.map(async (it) => await it(null)));
   }
 }
 
