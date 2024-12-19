@@ -1,5 +1,4 @@
 GOCMD ?= go
-VERSION ?= snapshot
 COMMIT = $(shell git rev-parse --short HEAD)
 LDFLAGS ?= -X github.com/glasskube/cloud/internal/buildconfig.version=$(VERSION) -X github.com/glasskube/cloud/internal/buildconfig.commit=$(COMMIT)
 

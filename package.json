@@ -1,15 +1,17 @@
 {
   "name": "@glasskube/cloud",
   "version": "0.7.0",
+  "type": "module",
   "description": "Glasskube cloud",
   "homepage": "https://glasskube.cloud/",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build:prod": "ng build --configuration=production",
-    "build:dev": "ng build --configuration=development",
-    "watch": "ng build --watch --configuration=development",
-    "test": "ng test",
+    "buildconfig": "node hack/update-frontend-version.js",
+    "start": "npm run buildconfig && ng serve",
+    "build:prod": "npm run buildconfig && ng build --configuration=production",
+    "build:dev": "npm run buildconfig && ng build --configuration=development",
+    "watch": "npm run buildconfig && ng build --watch --configuration=development",
+    "test": "npm run buildconfig && ng test",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write ."
   },
