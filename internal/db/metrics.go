@@ -11,9 +11,6 @@ import (
 )
 
 func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.UptimeMetric, error) {
-	// TODO index ???
-	// TODO created_at not null everywhere
-
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`
