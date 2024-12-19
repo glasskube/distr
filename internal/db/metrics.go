@@ -44,6 +44,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 	metrics := make([]types.UptimeMetric, 24)
 	var currentHourMetric types.UptimeMetric
 	var previousRowBaseHour time.Time
+	var previousRowCreatedAt *time.Time
 	var currentBaseHour time.Time
 	var currentCreatedAt *time.Time
 	var diffToPrev *time.Duration
@@ -61,10 +62,11 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 				// except on first iteration:
 
 				// manually check duration between last createdAt of the previous hour to the beginning of the new hour
-				if diffToPrev != nil {
-					// TODO
+				if previousRowCreatedAt != nil {
+					lastDiff := currentBaseHour.Sub(*previousRowCreatedAt)
+					missingStatuses := int(lastDiff.Seconds() / maxAllowedInterval.Seconds())
+					currentHourMetric.Unknown = currentHourMetric.Unknown + missingStatuses
 				}
-				// previousCreatedAt :=
 
 				// save away metrics of last hour
 				metrics[metricsIdx] = currentHourMetric
@@ -85,10 +87,11 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 				// manually calculate diff to start of hour
 				diffToPrev = util.PtrTo((*currentCreatedAt).Sub(currentBaseHour))
 			}
-			missingStatuses := int(diffToPrev.Seconds() / (10 * time.Second).Seconds())
+			missingStatuses := int(diffToPrev.Seconds() / maxAllowedInterval.Seconds())
 			currentHourMetric.Unknown = currentHourMetric.Unknown + missingStatuses
 		}
 		previousRowBaseHour = currentBaseHour
+		previousRowCreatedAt = currentCreatedAt
 	}
 	if rows.Err() != nil {
 		return nil, rows.Err()
