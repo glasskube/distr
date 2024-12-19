@@ -27,20 +27,24 @@ const (
 			THEN (status.id, status.created_at, status.message) END AS current_status
 	`
 	deploymentTargetJoinExpr = `
-		LEFT JOIN DeploymentTargetStatus status ON dt.id = status.deployment_target_id
-		LEFT JOIN UserAccount u ON dt.created_by_user_account_id = u.id
-		LEFT JOIN Organization_UserAccount j ON u.id = j.user_account_id
-	`
-	deploymentTargetWhereExprBase = `
-		WHERE (
-			status.id IS NULL OR status.created_at = (
-				SELECT max(s.created_at) FROM DeploymentTargetStatus s WHERE s.deployment_target_id = status.deployment_target_id
-			)
-		)
+		LEFT JOIN (
+			-- find the creation date of the latest status entry for each deployment target
+			SELECT deployment_target_id, max(created_at) AS max_created_at
+			FROM DeploymentTargetStatus
+			GROUP BY deployment_target_id
+		) status_max
+		 	ON dt.id = status_max.deployment_target_id
+		LEFT JOIN DeploymentTargetStatus status
+			ON dt.id = status.deployment_target_id
+			AND status.created_at = status_max.max_created_at
+		LEFT JOIN UserAccount u
+			ON dt.created_by_user_account_id = u.id
+		LEFT JOIN Organization_UserAccount j
+			ON u.id = j.user_account_id
 	`
 	deploymentTargetFromExpr = `
 		FROM DeploymentTarget dt
-	` + deploymentTargetJoinExpr + deploymentTargetWhereExprBase
+	` + deploymentTargetJoinExpr
 )
 
 func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCreatedBy, error) {
@@ -59,8 +63,8 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCrea
 
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
-		"SELECT "+deploymentTargetWithStatusOutputExpr+" "+deploymentTargetFromExpr+" "+
-			"AND dt.organization_id = @orgId "+
+		"SELECT"+deploymentTargetWithStatusOutputExpr+deploymentTargetFromExpr+
+			"WHERE dt.organization_id = @orgId "+
 			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor')",
 		pgx.NamedArgs{"orgId": orgId, "userId": userId, "userRole": userRole},
 	); err != nil {
@@ -78,7 +82,7 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCrea
 func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
-	query := "SELECT " + deploymentTargetWithStatusOutputExpr + " " + deploymentTargetFromExpr + " AND dt.id = @id"
+	query := "SELECT" + deploymentTargetWithStatusOutputExpr + deploymentTargetFromExpr + "WHERE dt.id = @id"
 	if orgId != nil {
 		args = pgx.NamedArgs{"id": id, "orgId": *orgId}
 		query = query + " AND dt.organization_id = @orgId"
@@ -134,7 +138,7 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 			(name, type, organization_id, created_by_user_account_id, geolocation_lat, geolocation_lon)
 			VALUES (@name, @type, @orgId, @userId, @lat, @lon) RETURNING *
 		)
-		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+deploymentTargetWhereExprBase,
+		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
 		args,
 	)
 	if err != nil {
@@ -165,7 +169,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 			UPDATE DeploymentTarget AS dt SET name = @name, geolocation_lat = @lat, geolocation_lon = @lon
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
-		SELECT `+deploymentTargetOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr+deploymentTargetWhereExprBase,
+		SELECT `+deploymentTargetOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)

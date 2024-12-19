@@ -26,3 +26,15 @@ func (r *AuthRegistrationRequest) Validate() error {
 		return nil
 	}
 }
+
+type AuthResetPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+func (r *AuthResetPasswordRequest) Validate() error {
+	if r.Email == "" {
+		return errors.New("email is empty")
+	} else {
+		return nil
+	}
+}

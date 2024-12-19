@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.7.0](https://github.com/glasskube/cloud/compare/v0.6.1...v0.7.0) (2024-12-18)
+
+
+### Features
+
+* add entity sorting ([#179](https://github.com/glasskube/cloud/issues/179)) ([6737060](https://github.com/glasskube/cloud/commit/6737060290373577cbc4d2df7dba7adda031f2c7))
+* add password reset ([#171](https://github.com/glasskube/cloud/issues/171)) ([1329d51](https://github.com/glasskube/cloud/commit/1329d512509e667aebd1d5de1a9a051132ea4135))
+* only reopen dialog if aborted ([#174](https://github.com/glasskube/cloud/issues/174)) ([e7addc4](https://github.com/glasskube/cloud/commit/e7addc4766609a457c34dc892f54869efd51a5d0))
+
+
+### Bug Fixes
+
+* **frontend:** disable all action buttons for customer managed deployments ([#180](https://github.com/glasskube/cloud/issues/180)) ([007ced2](https://github.com/glasskube/cloud/commit/007ced21e8272f157574a0e4aab00a8adcf8243e))
+* **ui:** guard routes by user role and redirect / depending on role ([#181](https://github.com/glasskube/cloud/issues/181)) ([d929744](https://github.com/glasskube/cloud/commit/d929744853a39382a2761f63cf0e5686f7f53045))
+
+
+### Other
+
+* update demo data ([#178](https://github.com/glasskube/cloud/issues/178)) ([5dc3fd0](https://github.com/glasskube/cloud/commit/5dc3fd08c175b425916cee9f8a994734e34c2c85))
+
+## [0.6.1](https://github.com/glasskube/cloud/compare/v0.6.0...v0.6.1) (2024-12-18)
+
+
+### Performance
+
+* **backend:** optimize deployment targets query ([#175](https://github.com/glasskube/cloud/issues/175)) ([f300fcc](https://github.com/glasskube/cloud/commit/f300fcc54143bce7f78cad6e20674937e4e68d81))
+
+## [0.6.0](https://github.com/glasskube/cloud/compare/v0.5.0...v0.6.0) (2024-12-18)
+
+
+### Features
+
+* **agent:** restart cloud agent ([#173](https://github.com/glasskube/cloud/issues/173)) ([cf5d667](https://github.com/glasskube/cloud/commit/cf5d66764722154feba5ef367e29c292594be803))
+* **backend:** add sentry ([#169](https://github.com/glasskube/cloud/issues/169)) ([716987e](https://github.com/glasskube/cloud/commit/716987e80e9e8e2a1d5b0b7a545bf6148f1da614))
+* **ui:** text search in tables ([#164](https://github.com/glasskube/cloud/issues/164)) ([4864ee0](https://github.com/glasskube/cloud/commit/4864ee0beef161c8a230f029e6b0e0ea3ac9beed))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v8.46.0 ([#166](https://github.com/glasskube/cloud/issues/166)) ([8f112ac](https://github.com/glasskube/cloud/commit/8f112ac8cecad40a275341467b3cd9ad7eb2d6e4))
+* **deps:** update dependency posthog-js to v1.202.2 ([#165](https://github.com/glasskube/cloud/issues/165)) ([57a4524](https://github.com/glasskube/cloud/commit/57a4524460a8771fba8221a2128bf6ef2f6bbf06))
+
+
+### Other
+
+* add docker-compose project name ([15d62ed](https://github.com/glasskube/cloud/commit/15d62ed7e0ebef213b0ef3f876a4cd79212f8f70))
+* **deps:** update dependency tailwindcss to v3.4.17 ([#172](https://github.com/glasskube/cloud/issues/172)) ([9cb7c75](https://github.com/glasskube/cloud/commit/9cb7c759b6448f2263505abc4223b94c16bc8df8))
+* log verification mails ([#170](https://github.com/glasskube/cloud/issues/170)) ([9272c2d](https://github.com/glasskube/cloud/commit/9272c2d2511d9eb985e6fe969837e5b80d44a576))
+
 ## [0.5.0](https://github.com/glasskube/cloud/compare/v0.4.0...v0.5.0) (2024-12-17)
 
 

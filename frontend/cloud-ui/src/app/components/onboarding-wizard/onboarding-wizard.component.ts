@@ -1,4 +1,4 @@
-import {Component, ElementRef, EventEmitter, inject, Output, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -28,7 +28,7 @@ import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.co
   ],
   animations: [modalFlyInOut],
 })
-export class OnboardingWizardComponent {
+export class OnboardingWizardComponent implements OnInit, OnDestroy {
   protected readonly xmarkIcon = faXmark;
 
   private readonly applications = inject(ApplicationsService);
@@ -38,7 +38,7 @@ export class OnboardingWizardComponent {
 
   @ViewChild('stepper') stepper!: CdkStepper;
 
-  createdApp?: Application;
+  app?: Application;
   createdDeploymentTarget?: DeploymentTarget;
 
   @Output('closed') closed = new EventEmitter<void>();
@@ -117,13 +117,22 @@ export class OnboardingWizardComponent {
 
     if (this.stepper.selectedIndex === 0) {
       this.loading = true;
-      this.nextStep();
+
+      this.applications.list().subscribe((apps) => {
+        if (apps.length === 0) {
+          this.nextStep();
+        } else {
+          this.nextStep();
+          this.app = apps[0];
+          this.nextStep();
+        }
+      });
     } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
         if (this.applicationForm.controls.type.value === 'sample') {
           this.loading = true;
           this.applications.createSample().subscribe((app) => {
-            this.createdApp = app;
+            this.app = app;
             this.nextStep();
           });
         } else if (this.fileToUpload != null) {
@@ -146,7 +155,7 @@ export class OnboardingWizardComponent {
               withLatestFrom(this.applications.list())
             )
             .subscribe(([version, apps]) => {
-              this.createdApp = apps.find((a) => a.id === version.applicationId);
+              this.app = apps.find((a) => a.id === version.applicationId);
               this.nextStep();
             });
         }
@@ -170,7 +179,7 @@ export class OnboardingWizardComponent {
               tap((dt) => (this.createdDeploymentTarget = dt)),
               switchMap((dt) =>
                 this.deployments.create({
-                  applicationVersionId: this.createdApp!.versions![0].id!,
+                  applicationVersionId: this.app!.versions![0].id!,
                   deploymentTargetId: dt.id!,
                 })
               )
@@ -182,7 +191,7 @@ export class OnboardingWizardComponent {
               email: this.deploymentTargetForm.value.technicalContactEmail!,
               name: this.deploymentTargetForm.value.customerName!,
               userRole: 'customer',
-              applicationName: this.createdApp?.name,
+              applicationName: this.app?.name,
             })
             .subscribe(() => this.nextStep());
         }

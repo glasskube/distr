@@ -276,7 +276,7 @@
                 @if (deploymentTargetForm.controls.accessType.value === 'full') {
                   <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Connect Customer Environment</h3>
                   <p class="mb-6 text-gray-500 dark:text-gray-400">
-                    Your application <b class="dark:text-white">{{ createdApp?.name }}</b> will be deployed to
+                    Your application <b class="dark:text-white">{{ app?.name }}</b> will be deployed to
                     <b class="dark:text-white">{{ createdDeploymentTarget?.name }}</b
                     >, as soon as the Glasskube Agent is installed in that environment.
                   </p>
@@ -299,7 +299,7 @@
                   <p class="mb-6 text-gray-500 dark:text-gray-400">
                     Great! An e-mail has been sent to {{ deploymentTargetForm.value.technicalContactEmail }}, inviting
                     them to your customer portal. They will receive instructions on how to set up their
-                    <b>{{ createdApp?.name }}</b> deployment.
+                    <b>{{ app?.name }}</b> deployment.
                   </p>
                 }
               </div>
