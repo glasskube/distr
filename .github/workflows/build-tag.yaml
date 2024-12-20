@@ -3,7 +3,7 @@ name: Build application and upload sourcemaps
 on:
   push:
     tags:
-      - "*"
+      - '*'
 
 jobs:
   build:

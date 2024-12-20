@@ -3,9 +3,9 @@ name: Build docker images (and push on tags)
 on:
   push:
     branches:
-      - "main"
+      - 'main'
     tags:
-      - "*"
+      - '*'
 
 jobs:
   build-server:
