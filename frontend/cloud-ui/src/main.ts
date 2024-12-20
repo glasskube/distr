@@ -37,7 +37,7 @@ if (environment.posthogToken) {
             cr.$set_once = {};
           }
           cr.$set['version'] = buildConfig.version;
-          cr.$set_once['version'] = buildConfig.version;
+          cr.$set_once['initial_version'] = buildConfig.version;
         }
         return cr;
       },
