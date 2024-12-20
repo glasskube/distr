@@ -1,22 +1,12 @@
-import {Component, ViewChild} from '@angular/core';
-import {ApexOptions, ChartComponent, NgApexchartsModule} from 'ng-apexcharts';
+import {Component} from '@angular/core';
+import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
 
 @Component({
   selector: 'app-chart-version',
   templateUrl: './chart-version.component.html',
-  styles: [
-    `
-      #chart {
-        max-width: 100%;
-        max-height: 100%;
-        margin: 0 auto;
-      }
-    `,
-  ],
   imports: [NgApexchartsModule],
 })
 export class ChartVersionComponent {
-  @ViewChild('chart') chart!: ChartComponent;
   public chartOptions: ApexOptions;
 
   constructor() {

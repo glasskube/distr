@@ -1,25 +1,15 @@
-import {Component, inject, OnDestroy, ViewChild} from '@angular/core';
-import {ApexOptions, ChartComponent, NgApexchartsModule} from 'ng-apexcharts';
+import {Component, inject, OnDestroy} from '@angular/core';
+import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
+import {Subject, takeUntil} from 'rxjs';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
-import {map, Subject, takeUntil} from 'rxjs';
 import {UserAccountWithRole} from '../../../types/user-account';
 
 @Component({
   selector: 'app-chart-type',
   templateUrl: './chart-type.component.html',
-  styles: [
-    `
-      #chart {
-        max-width: 100%;
-        max-height: 100%;
-        margin: 0 auto;
-      }
-    `,
-  ],
   imports: [NgApexchartsModule],
 })
 export class ChartTypeComponent implements OnDestroy {
-  @ViewChild('chart') chart!: ChartComponent;
   public chartOptions: ApexOptions;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);

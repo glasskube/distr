@@ -1,25 +1,15 @@
-import {Component, inject, OnInit, ViewChild} from '@angular/core';
-import {ApexOptions, ChartComponent, NgApexchartsModule} from 'ng-apexcharts';
-import {MetricsService} from '../../../services/metrics.service';
+import {Component, inject, OnInit} from '@angular/core';
+import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
-import {EMPTY, filter, first, firstValueFrom, lastValueFrom, map, switchMap} from 'rxjs';
+import {MetricsService} from '../../../services/metrics.service';
 
 @Component({
   selector: 'app-chart-uptime',
   templateUrl: './chart-uptime.component.html',
-  styles: [
-    `
-      #chart {
-        max-width: 100%;
-        max-height: 100%;
-        margin: 0 auto;
-      }
-    `,
-  ],
   imports: [NgApexchartsModule],
 })
 export class ChartUptimeComponent implements OnInit {
-  @ViewChild('chart') chart!: ChartComponent;
   public chartOptions?: ApexOptions;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
