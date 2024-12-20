@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, first} from 'rxjs';
@@ -33,7 +33,7 @@ import {UsersService} from '../../services/users.service';
   ],
   templateUrl: './dashboard-placeholder.component.html',
 })
-export class DashboardPlaceholderComponent implements OnInit {
+export class DashboardPlaceholderComponent implements AfterViewInit {
   private overlay = inject(OverlayService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   public readonly deploymentTargets$ = this.deploymentTargets.list();
@@ -49,7 +49,7 @@ export class DashboardPlaceholderComponent implements OnInit {
 
   protected readonly faPlus = faPlus;
 
-  ngOnInit() {
+  ngAfterViewInit() {
     combineLatest([this.applications$])
       .pipe(first())
       .subscribe(([apps]) => {
