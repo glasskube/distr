@@ -1,0 +1,25 @@
+name: Build application and upload sourcemaps
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install tools
+        uses: jdx/mise-action@5bb8f8c1911837cf42064e6490e7634fc842ee7e # v2.1.8
+      - name: Install frontend dependencies with npm
+        run: npm ci
+      - name: Build application with source maps
+        run: npm run build:prod -- --source-map=true
+      - name: Generate Sentry Release
+        run: npm run sentry-upload
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          VERSION: ${{ github.ref_name }}
