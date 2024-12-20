@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.8.0](https://github.com/glasskube/cloud/compare/v0.7.0...v0.8.0) (2024-12-20)
+
+
+### Features
+
+* add email verify resend ([#182](https://github.com/glasskube/cloud/issues/182)) ([7c15950](https://github.com/glasskube/cloud/commit/7c15950b8d366a6cbb30bd3a2f4a711897ba98c4))
+* deployment charts ([#194](https://github.com/glasskube/cloud/issues/194)) ([5e63e9b](https://github.com/glasskube/cloud/commit/5e63e9b312e7a075dff20542f19ee31c599035a6))
+* release info and sentry sourcemaps ([#200](https://github.com/glasskube/cloud/issues/200)) ([9e942fa](https://github.com/glasskube/cloud/commit/9e942fa0f18e418be3d6e416337c079893c9e793))
+* **ui:** add closing overlay with escape ([#191](https://github.com/glasskube/cloud/issues/191)) ([eeb6fca](https://github.com/glasskube/cloud/commit/eeb6fca59198ccc9d15aa73b3b01a1e6e89aa529))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.0.5 ([#184](https://github.com/glasskube/cloud/issues/184)) ([e64c739](https://github.com/glasskube/cloud/commit/e64c73990a5efbea056eef75f3a5e82dfdb3b99d))
+* **deps:** update aws-sdk-go-v2 monorepo ([#197](https://github.com/glasskube/cloud/issues/197)) ([91d4fc6](https://github.com/glasskube/cloud/commit/91d4fc6cf73b8d49ed4a8beed338b7783450f8a9))
+* **deps:** update dependency @angular/cdk to v19.0.4 ([#185](https://github.com/glasskube/cloud/issues/185)) ([fa2768d](https://github.com/glasskube/cloud/commit/fa2768ddb82645f527eb74782fbd7d03bf1cc83c))
+* **deps:** update dependency @sentry/angular to v8.47.0 ([#183](https://github.com/glasskube/cloud/issues/183)) ([001d07f](https://github.com/glasskube/cloud/commit/001d07face4bf6c9b37763b07309af106ff17acc))
+* **deps:** update dependency apexcharts to v4.3.0 ([#196](https://github.com/glasskube/cloud/issues/196)) ([4c49508](https://github.com/glasskube/cloud/commit/4c49508ff37d849feb51a446805a6c77ab99469b))
+* **deps:** update dependency globe.gl to v2.34.5 ([#188](https://github.com/glasskube/cloud/issues/188)) ([53a217a](https://github.com/glasskube/cloud/commit/53a217ac8defee826f6e4039401e37dbaed79134))
+* **deps:** update dependency posthog-js to v1.202.5 ([#195](https://github.com/glasskube/cloud/issues/195)) ([3713ca4](https://github.com/glasskube/cloud/commit/3713ca4ff3c257d56898d8db224cc9e351f33f80))
+* **deps:** update dependency posthog-js to v1.203.1 ([#199](https://github.com/glasskube/cloud/issues/199)) ([0dd46b4](https://github.com/glasskube/cloud/commit/0dd46b48b28eafc868354a67a0fd9de618f6101e))
+* **deps:** update module golang.org/x/net to v0.33.0 [security] ([#190](https://github.com/glasskube/cloud/issues/190)) ([a6813d9](https://github.com/glasskube/cloud/commit/a6813d937e66db8f555f47eb2ef8ecd68c99024e))
+* sort deployment targets by createdBy ([#189](https://github.com/glasskube/cloud/issues/189)) ([eb3f7d5](https://github.com/glasskube/cloud/commit/eb3f7d5fcb571ce1096a54a1645392705aab0b54))
+* **ui:** add height to charts ([#202](https://github.com/glasskube/cloud/issues/202)) ([81311db](https://github.com/glasskube/cloud/commit/81311db0f217d5b7f17568acb26c837e6e53cfed))
+* **ui:** fix alignment issue in deployment targets table ([#192](https://github.com/glasskube/cloud/issues/192)) ([be9f450](https://github.com/glasskube/cloud/commit/be9f4506569686827f0929f0d6567426a86c84d1))
+* **ui:** fix close animation not shown for some overlays ([#193](https://github.com/glasskube/cloud/issues/193)) ([8ca3f4f](https://github.com/glasskube/cloud/commit/8ca3f4f430910150792cec77e6c6f282fd7a92f3))
+* user account update syntax error and error logging ([#201](https://github.com/glasskube/cloud/issues/201)) ([d1665fe](https://github.com/glasskube/cloud/commit/d1665fe227ad07aec10d8b52738d9dbbe3a58753))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.0.6 ([#187](https://github.com/glasskube/cloud/issues/187)) ([a5f23bf](https://github.com/glasskube/cloud/commit/a5f23bfa379438e4295ca787e6e4806e4ff1ba63))
+* **deps:** update axllent/mailpit docker tag to v1.21.8 ([#198](https://github.com/glasskube/cloud/issues/198)) ([11f76c7](https://github.com/glasskube/cloud/commit/11f76c73cf69be2e1146f99bab2217e8a0317d5a))
+* **deps:** update cgr.dev/chainguard/static:latest docker digest to f5fe67a ([#140](https://github.com/glasskube/cloud/issues/140)) ([266bd00](https://github.com/glasskube/cloud/commit/266bd003e60f2017ba1b5d165d823a5b9c104b1d))
+
 ## [0.7.0](https://github.com/glasskube/cloud/compare/v0.6.1...v0.7.0) (2024-12-18)
 
 
