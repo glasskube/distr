@@ -49,7 +49,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := db.UpateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
+	if err := db.UpdateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)

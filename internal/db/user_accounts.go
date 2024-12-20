@@ -70,7 +70,7 @@ func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 	}
 }
 
-func UpateUserAccount(ctx context.Context, userAccount *types.UserAccount) error {
+func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`UPDATE UserAccount AS u
@@ -155,7 +155,8 @@ func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAc
 		"SELECT "+userAccountWithRoleOutputExpr+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
-		WHERE j.organization_id = @orgId`,
+		WHERE j.organization_id = @orgId
+		ORDER BY u.name`,
 		pgx.NamedArgs{"orgId": orgId},
 	)
 	if err != nil {

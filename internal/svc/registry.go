@@ -39,7 +39,7 @@ func NewDefault(ctx context.Context) (*Registry, error) {
 		s.mailer = mailer
 	}
 
-	if db, err := createDBPool(ctx); err != nil {
+	if db, err := createDBPool(ctx, s.logger); err != nil {
 		return nil, err
 	} else {
 		s.dbPool = db
@@ -59,7 +59,25 @@ func (r *Registry) Shutdown() error {
 	}
 }
 
-func createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
+type loggingQueryTracer struct {
+	log *zap.Logger
+}
+
+var _ pgx.QueryTracer = &loggingQueryTracer{}
+
+func (tracer *loggingQueryTracer) TraceQueryStart(
+	ctx context.Context,
+	_ *pgx.Conn,
+	data pgx.TraceQueryStartData,
+) context.Context {
+	tracer.log.Debug("executing query", zap.String("sql", data.SQL), zap.Any("args", data.Args))
+	return ctx
+}
+
+func (tracer *loggingQueryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
+}
+
+func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(env.DatabaseUrl())
 	if err != nil {
 		return nil, err
@@ -72,6 +90,9 @@ func createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 			conn.TypeMap().RegisterTypes(pgTypes)
 			return nil
 		}
+	}
+	if env.EnableQueryLogging() {
+		config.ConnConfig.Tracer = &loggingQueryTracer{log}
 	}
 	db, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {

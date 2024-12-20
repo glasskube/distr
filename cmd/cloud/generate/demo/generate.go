@@ -42,7 +42,7 @@ func main() {
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, lw.ID, org.ID, types.UserRoleVendor))
 
 	appMarsBeta := types.Application{
-		Name: "Fastest way to Mars Calculator (Beta)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
+		Name: "Mars Travel Calc (Beta)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
 	}
 	util.Must(db.CreateApplication(ctx, &appMarsBeta))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
@@ -58,7 +58,7 @@ func main() {
 	util.Must(db.CreateApplicationVersion(ctx, &appMarsBetaV419))
 
 	appMarsStable := types.Application{
-		Name: "Fastest way to Mars Calculator (Stable)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
+		Name: "Mars Travel Calc (Stable)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
 	}
 	util.Must(db.CreateApplication(ctx, &appMarsStable))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
@@ -66,7 +66,7 @@ func main() {
 	}))
 
 	appMarsLTS := types.Application{
-		Name: "Fastest way to Mars Calculator (LTS)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
+		Name: "Mars Travel Calc (LTS)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
 	}
 	util.Must(db.CreateApplication(ctx, &appMarsLTS))
 	appMarsLTSV0299 := types.ApplicationVersion{ApplicationId: appMarsLTS.ID, Name: "v0.29.9"}
@@ -85,7 +85,7 @@ func main() {
 		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Dashboard Testing",
+			Name:           "pmig - Dashboard Testing",
 			Type:           types.DeploymentTypeDocker,
 		},
 	}
@@ -99,7 +99,7 @@ func main() {
 		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
 			OrganizationID: org.ID,
-			Name:           "Calculator Testing",
+			Name:           "pmig - Calculator Testing",
 			Type:           types.DeploymentTypeDocker,
 		},
 	}
