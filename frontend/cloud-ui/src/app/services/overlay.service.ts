@@ -4,15 +4,15 @@ import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainer
 import {map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
 import {ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
 
-type OnClosedHook = (result: T | null) => Promise<void> | void;
+type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
 export class DialogRef<T = void> {
   private readonly result$ = new Subject<T>();
   private readonly dismissed$ = new Subject<null>();
 
-  public onClosed: OnClosedHook[] = [];
+  public onClosed: OnClosedHook<T>[] = [];
 
-  public addOnClosedHook(hook: OnClosedHook) {
+  public addOnClosedHook(hook: OnClosedHook<T>) {
     this.onClosed.push(hook);
   }
 
