@@ -107,6 +107,8 @@ export class OverlayService {
         new TemplatePortal(templateRefOrComponentType, this.viewContainerRef, injector)
       );
       dialogRef.closed().subscribe(() => embeddedViewRef.destroy());
+    } else if (!templateRefOrComponentType) {
+      throw new Error('templateRefOrComponentType is ' + templateRefOrComponentType);
     } else {
       const componentRef = overlayRef.attach(new ComponentPortal(templateRefOrComponentType, null, injector));
       dialogRef.closed().subscribe(() => componentRef.destroy());

@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -43,7 +43,7 @@ import {filteredByFormControl} from '../../util/filter';
   standalone: true,
   animations: [modalFlyInOut, drawerFlyInOut],
 })
-export class DeploymentTargetsComponent implements OnInit, OnDestroy {
+export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   public readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   @Input('fullVersion') fullVersion = false;
@@ -95,14 +95,13 @@ export class DeploymentTargetsComponent implements OnInit, OnDestroy {
     }),
   });
 
-  ngOnInit() {
+  ngAfterViewInit() {
     if (this.fullVersion) {
       const always = false;
-      const isCustomer = this.auth.getClaims().role === 'customer';
       combineLatest([this.applications$, this.deploymentTargets$])
         .pipe(first())
         .subscribe(([apps, dts]) => {
-          if (always || (isCustomer && apps.length > 0 && dts.length === 0)) {
+          if (always || (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0)) {
             this.openWizard();
           }
         });
