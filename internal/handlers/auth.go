@@ -12,8 +12,8 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/cloud/internal/mailsending"
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
@@ -52,7 +52,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
 		}
 		org := orgs[0]
-		if _, tokenString, err := auth.GenerateToken(*user, *org); err != nil {
+		if _, tokenString, err := auth.GenerateDefaultToken(*user, *org); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Warn("token creation failed", zap.Error(err))
 		} else {
@@ -75,14 +75,13 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Email:    request.Email,
 			Password: request.Password,
 		}
-		var org *types.Organization
 
 		if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 			if err := security.HashPassword(&userAccount); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return err
-			} else if org, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
+			} else if _, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
 				if errors.Is(err, apierrors.ErrAlreadyExists) {
 					w.WriteHeader(http.StatusBadRequest)
 				} else {
@@ -97,27 +96,11 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, token, err := auth.GenerateVerificationTokenValidFor(
-			userAccount,
-			types.OrganizationWithUserRole{Organization: *org, UserRole: types.UserRoleVendor},
-			env.InviteTokenValidDuration(),
-		)
-		if err != nil {
-			log.Error("could not generate verification token for welcome mail", zap.Error(err))
+		if err := mailsending.SendUserVerificationMail(ctx, userAccount); err != nil {
+			log.Warn("could not send verification mail", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 		}
 
-		mailer := internalctx.GetMailer(ctx)
-		mail := mail.New(
-			mail.To(userAccount.Email),
-			mail.Subject("Verify your Glasskube Cloud Email"),
-			mail.HtmlBodyTemplate(mailtemplates.VerifyEmail(userAccount, token)),
-		)
-		if err := mailer.Send(ctx, mail); err != nil {
-			log.Error("could not send verification mail",
-				zap.Error(err), zap.String("user", userAccount.Email), zap.String("token", token))
-		} else {
-			log.Info("verification mail has been sent", zap.String("user", userAccount.Email), zap.String("token", token))
-		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

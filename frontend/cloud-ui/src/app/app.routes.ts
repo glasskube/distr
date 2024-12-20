@@ -7,6 +7,7 @@ import {
   RouterStateSnapshot,
   Routes,
 } from '@angular/router';
+import {firstValueFrom} from 'rxjs';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {UsersComponent} from './components/users/users.component';
@@ -17,8 +18,25 @@ import {LoginComponent} from './login/login.component';
 import {PasswordResetComponent} from './password-reset/password-reset.component';
 import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
+import {SettingsService} from './services/settings.service';
+import {ToastService} from './services/toast.service';
 import {UserRole} from './types/user-account';
 import {VerifyComponent} from './verify/verify.component';
+
+const emailVerificationGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const settings = inject(SettingsService);
+  const toast = inject(ToastService);
+  const router = inject(Router);
+  const {email, email_verified} = auth.getClaims();
+  if (email_verified) {
+    await firstValueFrom(settings.confirmEmailVerification());
+    toast.success('Your email has been verified');
+    await firstValueFrom(auth.logout());
+    return router.createUrlTree(['/login'], {queryParams: {email}});
+  }
+  return true;
+};
 
 const jwtParamRedirectGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const auth = inject(AuthService);
@@ -89,7 +107,11 @@ export const routes: Routes = [
         canActivate: [baseRoteRedirectGuard],
         children: [],
       },
-      {path: 'verify', component: VerifyComponent},
+      {
+        path: 'verify',
+        component: VerifyComponent,
+        canActivate: [emailVerificationGuard],
+      },
       {path: 'reset', component: PasswordResetComponent},
       {path: 'join', component: InviteComponent},
       {

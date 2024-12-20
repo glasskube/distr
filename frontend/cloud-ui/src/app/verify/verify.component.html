@@ -11,9 +11,18 @@
           class="text-xl text-center font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
           Thanks for signing up!
         </h1>
-        <p class="text-base font-normal text-gray-500 dark:text-gray-400">
+        <p class="text-base text-center font-normal text-gray-500 dark:text-gray-400">
           We've sent you an email. Please click the link inside of it to confirm your registration.
         </p>
+
+        <div class="flex flex-col items-center">
+          <button
+            type="button"
+            (click)="requestMail()"
+            class="py-2.5 px-5 me-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+            Send again
+          </button>
+        </div>
       </div>
     </div>
   </div>

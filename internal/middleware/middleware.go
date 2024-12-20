@@ -11,6 +11,7 @@ import (
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -86,3 +87,11 @@ func SentryUser(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
+
+var RateLimitPerUser = httprate.Limit(
+	3,
+	10*time.Minute,
+	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
+		return auth.CurrentUserId(r.Context())
+	}),
+)
