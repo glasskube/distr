@@ -4,15 +4,25 @@ import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainer
 import {filter, fromEvent, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
 import {ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
 
+type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
+
 export class DialogRef<T = void> {
   private readonly result$ = new Subject<T>();
   private readonly dismissed$ = new Subject<null>();
 
-  public close(data: T) {
+  public onClosed: OnClosedHook<T>[] = [];
+
+  public addOnClosedHook(hook: OnClosedHook<T>) {
+    this.onClosed.push(hook);
+  }
+
+  public async close(data: T) {
+    await this.waitForOnClosedHooks(data);
     this.result$.next(data);
   }
 
-  public dismiss(): void {
+  public async dismiss() {
+    await this.waitForOnClosedHooks(null);
     this.dismissed$.next(null);
   }
 
@@ -22,6 +32,10 @@ export class DialogRef<T = void> {
 
   public result(): Observable<T | null> {
     return merge(this.result$, this.dismissed$).pipe(take(1));
+  }
+
+  private async waitForOnClosedHooks(data: T | null) {
+    await Promise.all(this.onClosed.map((it) => it(data)));
   }
 }
 
