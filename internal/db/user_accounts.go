@@ -112,10 +112,6 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
 			"id":            userAccount.ID,
-			"email":         userAccount.Email,
-			"password_hash": userAccount.PasswordHash,
-			"password_salt": userAccount.PasswordSalt,
-			"name":          userAccount.Name,
 		},
 	)
 	if err != nil {
