@@ -28,12 +28,14 @@ func SettingsRouter(r chi.Router) {
 
 func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
 	body, err := JsonBody[api.UpdateUserAccountRequest](w, r)
 	if err != nil {
 		return
 	}
 	user, err := db.GetCurrentUser(ctx)
 	if err != nil {
+		log.Error("failed to get current user", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -45,6 +47,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		user.Password = body.Password
 		if err := security.HashPassword(user); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Error("failed to hash password", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -52,6 +55,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if err := db.UpdateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err != nil {
+		log.Error("failed to update user", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
