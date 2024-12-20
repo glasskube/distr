@@ -14,21 +14,18 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`
-		select hours.base_hour, statuses.created_at, statuses.diff_to_prev
-		from (
-			-- generate the last 24 dates where hours, minute, seconds is 0
-			SELECT date_trunc('hour', hour_series) as base_hour
-			FROM generate_series(now() - interval '23 hour', now(), interval '1 hour') AS hour_series
-		) as hours left join (
-			select deployment_id,
-				   date_trunc('hour', created_at) as created_at_hour,
-				   created_at,
-				   created_at - lag(created_at) over (
-					   partition by deployment_id order by created_at) as diff_to_prev
-			from deploymentstatus
-			where created_at > now() - interval '24 hour' and deployment_id = @deploymentId
-			order by deployment_id, created_at
-		) as statuses on hours.base_hour = statuses.created_at_hour;`,
+		SELECT hours.base_hour, statuses.created_at
+		FROM (
+			-- generate the last 24 dates where hours, minute, seconds is 0;
+			-- having a list of all possible hours in the response makes it easier in the go algorithm to handle empty hours
+			SELECT date_trunc('hour', hour_series) AS base_hour
+			FROM generate_series(now() - INTERVAL '23 hour', now(), INTERVAL '1 hour') AS hour_series
+		) AS hours LEFT JOIN (
+			SELECT date_trunc('hour', created_at) AS created_at_hour, created_at
+			FROM DeploymentStatus
+			WHERE created_at > now() - INTERVAL '24 hour' AND deployment_id = @deploymentId
+		) AS statuses ON hours.base_hour = statuses.created_at_hour
+		ORDER BY hours.base_hour, statuses.created_at;`,
 		pgx.NamedArgs{
 			"deploymentId": deploymentId,
 		})
@@ -37,7 +34,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 	}
 	// TODO could be made configurable
 	maxAllowedInterval := 10 * time.Second
-	expectedPerHour := int((1 * time.Hour).Seconds() / maxAllowedInterval.Seconds())
+	expectedPerHour := int(time.Hour / maxAllowedInterval)
 	metricsIdx := 0
 	metrics := make([]types.UptimeMetric, 24)
 	var currentHourMetric types.UptimeMetric
@@ -56,7 +53,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 				// manually check duration between last createdAt of the previous hour to the beginning of the new hour
 				if previousRowCreatedAt != nil && !isLast {
 					lastDiff := currentBaseHour.Sub(*previousRowCreatedAt)
-					missingStatuses := int(lastDiff.Seconds() / maxAllowedInterval.Seconds())
+					missingStatuses := int(lastDiff / maxAllowedInterval)
 					currentHourMetric.Unknown = currentHourMetric.Unknown + missingStatuses
 					// if previousRowCreatedAt is null, the whole previous hour had no status (handled in previous iteration then)
 				}
@@ -75,11 +72,13 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 			// no status at all in that hour
 			currentHourMetric.Unknown = currentHourMetric.Total
 		} else {
-			if hourChanged {
-				// manually calculate diff to start of hour
+			if hourChanged || previousRowCreatedAt == nil {
+				// calculate diff to start of hour
 				diffToPrev = util.PtrTo((*currentCreatedAt).Sub(currentBaseHour))
+			} else {
+				diffToPrev = util.PtrTo((*currentCreatedAt).Sub(*previousRowCreatedAt))
 			}
-			missingStatuses := int(diffToPrev.Seconds() / maxAllowedInterval.Seconds())
+			missingStatuses := int(*diffToPrev / maxAllowedInterval)
 			currentHourMetric.Unknown = currentHourMetric.Unknown + missingStatuses
 		}
 		previousRowBaseHour = currentBaseHour
@@ -87,7 +86,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 	}
 
 	for rows.Next() {
-		if err := rows.Scan(&currentBaseHour, &currentCreatedAt, &diffToPrev); err != nil {
+		if err := rows.Scan(&currentBaseHour, &currentCreatedAt); err != nil {
 			return nil, err
 		}
 		processRow(false)
@@ -105,8 +104,8 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 		}
 		processRow(true)
 		// last row is the current hour until now, so it does not have the complete total/expected, but a reduced one
-		futureSeconds := (time.Until(currentBaseHour.Add(1 * time.Hour))).Seconds()
-		currentHourMetric.Total = currentHourMetric.Total - int(futureSeconds/maxAllowedInterval.Seconds())
+		restOfHour := time.Until(currentBaseHour.Add(1 * time.Hour))
+		currentHourMetric.Total = currentHourMetric.Total - int(restOfHour/maxAllowedInterval)
 		metrics[len(metrics)-1] = currentHourMetric
 		return metrics, nil
 	}

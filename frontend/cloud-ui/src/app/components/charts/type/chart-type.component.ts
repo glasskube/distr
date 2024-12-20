@@ -1,7 +1,7 @@
-import {Component, inject, ViewChild} from '@angular/core';
+import {Component, inject, OnDestroy, ViewChild} from '@angular/core';
 import {ApexOptions, ChartComponent, NgApexchartsModule} from 'ng-apexcharts';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
-import {map} from 'rxjs';
+import {map, Subject, takeUntil} from 'rxjs';
 import {UserAccountWithRole} from '../../../types/user-account';
 
 @Component({
@@ -18,12 +18,14 @@ import {UserAccountWithRole} from '../../../types/user-account';
   ],
   imports: [NgApexchartsModule],
 })
-export class ChartTypeComponent {
+export class ChartTypeComponent implements OnDestroy {
   @ViewChild('chart') chart!: ChartComponent;
   public chartOptions: ApexOptions;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deploymentTargets$ = this.deploymentTargets.list();
+
+  private readonly destroyed$ = new Subject<void>();
 
   constructor() {
     this.chartOptions = {
@@ -67,7 +69,7 @@ export class ChartTypeComponent {
         },
       },
     };
-    this.deploymentTargets$.subscribe((dts) => {
+    this.deploymentTargets$.pipe(takeUntil(this.destroyed$)).subscribe((dts) => {
       const managers: {[key: string]: UserAccountWithRole} = {};
       const counts: {[key: string]: number} = {};
       for (const dt of dts) {
@@ -78,8 +80,12 @@ export class ChartTypeComponent {
           counts[dt.createdBy.id] = counts[dt.createdBy.id] + 1;
         }
       }
-      this.chartOptions.labels = Object.values(managers).map((v) => v.name || v.email);
+      this.chartOptions.labels = Object.values(managers).map((v) => v.name ?? v.email);
       this.chartOptions.series = Object.values(counts);
     });
+  }
+
+  ngOnDestroy() {
+    this.destroyed$.complete();
   }
 }

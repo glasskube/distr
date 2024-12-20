@@ -27,8 +27,6 @@ export class ChartUptimeComponent implements OnInit {
 
   private readonly metrics = inject(MetricsService);
 
-  constructor() {}
-
   async ngOnInit() {
     const dts = await firstValueFrom(this.deploymentTargets$);
     for (const dt of dts) {
