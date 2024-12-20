@@ -111,7 +111,7 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"id":            userAccount.ID,
+			"id": userAccount.ID,
 		},
 	)
 	if err != nil {
