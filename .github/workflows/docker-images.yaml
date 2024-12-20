@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "kosmoz/gk-401-release-version-configuration" # TODO: remove after testing
     tags:
       - "*"
 
