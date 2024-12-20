@@ -11,9 +11,7 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/mail"
-	"github.com/glasskube/cloud/internal/mailtemplates"
+	"github.com/glasskube/cloud/internal/mailsending"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -45,7 +43,6 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 
 func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	mailer := internalctx.GetMailer(ctx)
 	log := internalctx.GetLogger(ctx)
 
 	body, err := JsonBody[api.CreateUserAccountRequest](w, r)
@@ -87,49 +84,26 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
+
+		if err := mailsending.SendUserInviteMail(
+			ctx,
+			userAccount,
+			organization,
+			body.UserRole,
+			body.ApplicationName,
+		); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+
 		return nil
 	}); err != nil {
 		log.Warn("could not create user", zap.Error(err))
 		return
 	}
 
-	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-	_, token, err := auth.GenerateVerificationTokenValidFor(
-		userAccount,
-		types.OrganizationWithUserRole{Organization: organization, UserRole: body.UserRole},
-		env.InviteTokenValidDuration(),
-	)
-	if err != nil {
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	var email mail.Mail
-	if body.UserRole == types.UserRoleCustomer {
-		if currentUser, err := db.GetCurrentUserWithRole(ctx); err != nil {
-			log.Error("failed to generate invite mail", zap.Error(err))
-			return
-		} else {
-			email = mail.New(
-				mail.To(userAccount.Email),
-				mail.Bcc(currentUser.Email),
-				mail.ReplyTo(currentUser.Email),
-				mail.Subject("Welcome to Glasskube Cloud"),
-				mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, token, body.ApplicationName)),
-			)
-		}
-	} else {
-		email = mail.New(
-			mail.To(userAccount.Email),
-			mail.Subject("Welcome to Glasskube Cloud"),
-			mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, token)),
-		)
-	}
-
-	if err := mailer.Send(ctx, email); err != nil {
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		log.Error("failed to send invite mail", zap.Error(err))
-	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {

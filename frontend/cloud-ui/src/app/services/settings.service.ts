@@ -15,4 +15,12 @@ export class SettingsService {
   }): Observable<UserAccount> {
     return this.httpClient.post<UserAccount>(`${this.baseUrl}/user`, request);
   }
+
+  public requestEmailVerification() {
+    return this.httpClient.post<void>(`${this.baseUrl}/verify/request`, undefined);
+  }
+
+  public confirmEmailVerification() {
+    return this.httpClient.post<void>(`${this.baseUrl}/verify/confirm`, undefined);
+  }
 }
