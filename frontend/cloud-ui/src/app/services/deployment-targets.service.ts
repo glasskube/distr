@@ -1,11 +1,16 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {CrudService} from './interfaces';
-import {DeploymentTarget} from '../types/deployment-target';
 import {Observable, tap} from 'rxjs';
-import {DefaultReactiveList} from './cache';
+import {DeploymentTargetAccessResponse} from '../types/base';
 import {DeploymentWithData} from '../types/deployment';
-import {DeploymentTargetAccessResponse, TokenResponse} from '../types/base';
+import {DeploymentTarget} from '../types/deployment-target';
+import {ReactiveList} from './cache';
+import {CrudService} from './interfaces';
+
+class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
+  protected override identify = (dt: DeploymentTarget) => dt.id;
+  protected override sortAttr = (dt: DeploymentTarget) => dt.createdBy?.name ?? dt.createdBy?.email ?? dt.name;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +18,7 @@ import {DeploymentTargetAccessResponse, TokenResponse} from '../types/base';
 export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   private readonly baseUrl = '/api/v1/deployment-targets';
   private readonly httpClient = inject(HttpClient);
-  private readonly cache = new DefaultReactiveList(this.httpClient.get<DeploymentTarget[]>(this.baseUrl));
+  private readonly cache = new DeploymentTargetsReactiveList(this.httpClient.get<DeploymentTarget[]>(this.baseUrl));
 
   list(): Observable<DeploymentTarget[]> {
     return this.cache.get();
