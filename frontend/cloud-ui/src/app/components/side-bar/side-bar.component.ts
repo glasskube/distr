@@ -16,6 +16,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
+import {buildConfig} from '../../../buildconfig';
 
 @Component({
   selector: 'app-side-bar',
@@ -36,6 +37,7 @@ export class SideBarComponent {
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
   protected readonly faAddressBook = faAddressBook;
+  protected readonly buildConfig = buildConfig;
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
 

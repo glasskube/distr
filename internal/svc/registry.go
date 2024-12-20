@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/glasskube/cloud/internal/buildconfig"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/mail/ses"
@@ -31,7 +32,10 @@ func NewDefault(ctx context.Context) (*Registry, error) {
 		logger: createLogger(),
 	}
 
-	s.logger.Info("initializing server")
+	s.logger.Info("initializing server",
+		zap.String("version", buildconfig.Version()),
+		zap.String("commit", buildconfig.Commit()),
+		zap.Bool("release", buildconfig.IsRelease()))
 
 	if mailer, err := createMailer(ctx); err != nil {
 		return nil, err

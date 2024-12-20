@@ -1,4 +1,6 @@
 GOCMD ?= go
+COMMIT = $(shell git rev-parse --short HEAD)
+LDFLAGS ?= -X github.com/glasskube/cloud/internal/buildconfig.version=$(VERSION) -X github.com/glasskube/cloud/internal/buildconfig.commit=$(COMMIT)
 
 .PHONY: tidy
 tidy:
@@ -40,19 +42,19 @@ frontend-prod: node_modules
 
 .PHONY: run
 run: frontend-dev tidy
-	$(GOCMD) run ./cmd/cloud/
+	$(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/cloud/
 
 .PHONY: build
 build: frontend-prod tidy
-	$(GOCMD) build -o dist/cloud ./cmd/cloud/
+	$(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/cloud ./cmd/cloud/
 
 .PHONY: docker-build
 docker-build:
-	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud  --network host .
+	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
 
 .PHONY: docker-build-agent
 docker-build-agent:
-	docker build -f Dockerfile.agent --tag ghcr.io/glasskube/cloud-agent --network host .
+	docker build -f Dockerfile.agent --tag ghcr.io/glasskube/cloud-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
 
 .PHONY: init-db
 init-db:

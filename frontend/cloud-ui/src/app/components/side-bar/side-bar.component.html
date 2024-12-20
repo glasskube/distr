@@ -3,7 +3,7 @@
   class="fixed top-16 left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
   aria-label="Sidebar"
   #asideElement>
-  <div class="h-full flex flex-col px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
+  <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
     <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'vendor'">
       <li>
         <a
@@ -171,5 +171,10 @@
         </a>
       </div>
     }
+    <div class="text-center text-xs text-gray-300 dark:text-gray-600">
+      {{ buildConfig.version }}
+      (<code>{{ buildConfig.commit }}</code
+      >)
+    </div>
   </div>
 </aside>
