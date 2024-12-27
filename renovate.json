@@ -10,7 +10,10 @@
     {
       "matchManagers": [
         "npm",
-        "github-actions"
+        "github-actions",
+        "gomod",
+        "dockerfile",
+        "docker-compose"
       ],
       "matchDepTypes": [
         "devDependencies"
@@ -25,7 +28,10 @@
     {
       "matchManagers": [
         "npm",
-        "github-actions"
+        "github-actions",
+        "gomod",
+        "dockerfile",
+        "docker-compose"
       ],
       "matchUpdateTypes": [
         "patch"
