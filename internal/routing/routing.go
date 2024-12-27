@@ -35,7 +35,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 		middleware.Sentry,
 		middleware.LoggerCtxMiddleware(logger),
 		middleware.LoggingMiddleware,
-		middleware.ContextInjectorMiddelware(db, mailer),
+		middleware.ContextInjectorMiddleware(db, mailer),
 	)
 
 	r.Route("/v1", func(r chi.Router) {

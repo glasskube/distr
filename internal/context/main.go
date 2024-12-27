@@ -57,7 +57,7 @@ func GetMailer(ctx context.Context) mail.Mailer {
 			return mailer
 		}
 	}
-	panic("logger not contained in context")
+	panic("mailer not contained in context")
 }
 
 func WithMailer(ctx context.Context, mailer mail.Mailer) context.Context {

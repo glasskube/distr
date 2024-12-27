@@ -17,7 +17,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func ContextInjectorMiddelware(db *pgxpool.Pool, mailer mail.Mailer) func(next http.Handler) http.Handler {
+func ContextInjectorMiddleware(db *pgxpool.Pool, mailer mail.Mailer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()

@@ -25,7 +25,7 @@ func DeploymentTargetsRouter(r chi.Router) {
 	r.Get("/", getDeploymentTargets)
 	r.Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
-		r.Use(deploymentTargetMiddelware)
+		r.Use(deploymentTargetMiddleware)
 		r.Get("/", getDeploymentTarget)
 		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
@@ -197,7 +197,7 @@ func buildConnectUrl(targetId string, targetSecret string) (string, error) {
 	}
 }
 
-func deploymentTargetMiddelware(wh http.Handler) http.Handler {
+func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id := r.PathValue("deploymentTargetId")
