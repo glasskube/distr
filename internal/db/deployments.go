@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glasskube/cloud/internal/env"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
@@ -155,8 +157,11 @@ func CreateDeploymentStatusWithCreatedAt(
 	}
 }
 
-func CleanupDeploymentStatus(ctx context.Context, deploymentId string, maxAge time.Duration) (int64, error) {
-	minCreatedAt := time.Now().UTC().Add((-1) * maxAge)
+func CleanupDeploymentStatus(ctx context.Context, deploymentId string) (int64, error) {
+	if env.StatusEntriesMaxAge() == nil {
+		return 0, nil
+	}
+	minCreatedAt := time.Now().UTC().Add((-1) * *env.StatusEntriesMaxAge())
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(ctx, `
 		DELETE FROM DeploymentStatus

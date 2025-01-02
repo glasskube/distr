@@ -153,16 +153,14 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 		log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID),
 			zap.String("statusMessage", statusMessage))
-	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, deploymentTarget, env.StatusEntriesMaxAge()); err != nil {
+	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, deploymentTarget); err != nil {
 		log.Error("failed to cleanup old deployment target status", zap.Error(err),
-			zap.String("deploymentTargetId", deploymentTarget.ID),
-			zap.String("statusMessage", statusMessage),
-			zap.Duration("maxAge", env.StatusEntriesMaxAge()))
+			zap.String("deploymentTargetId", deploymentTarget.ID))
 	} else if cnt > 0 {
-		log.Debug("cleaned up old statuses of deployment target",
+		log.Debug("old deployment target statuses deleted",
 			zap.String("deploymentTargetId", deploymentTarget.ID),
 			zap.Int64("count", cnt),
-			zap.Duration("maxAge", env.StatusEntriesMaxAge()))
+			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
 }
 
@@ -178,7 +176,6 @@ func postAgentStatus(w http.ResponseWriter, r *http.Request) {
 		if body, err := io.ReadAll(r.Body); err != nil {
 			log.Error("failed to read status body", zap.Error(err))
 		} else {
-			// not in a TX because insertion should not be rolled back when the cleanup fails
 			if err := db.CreateDeploymentStatus(ctx, correlationID, string(body)); err != nil {
 				log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 					zap.String("deploymentId", correlationID),
@@ -190,16 +187,14 @@ func postAgentStatus(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			}
 
-			if cnt, err := db.CleanupDeploymentStatus(ctx, correlationID, env.StatusEntriesMaxAge()); err != nil {
-				log.Error("failed to cleanup old deployment status", zap.Error(err),
-					zap.String("deploymentId", correlationID),
-					zap.String("statusMessage", string(body)),
-					zap.Duration("maxAge", env.StatusEntriesMaxAge()))
+			// not in a TX because insertion should not be rolled back when the cleanup fails
+			if cnt, err := db.CleanupDeploymentStatus(ctx, correlationID); err != nil {
+				log.Error("failed to cleanup old deployment status", zap.Error(err), zap.String("deploymentId", correlationID))
 			} else if cnt > 0 {
-				log.Debug("cleaned up old statuses of deployment",
+				log.Debug("old deployment statuses deleted",
 					zap.String("deploymentId", correlationID),
 					zap.Int64("count", cnt),
-					zap.Duration("maxAge", env.StatusEntriesMaxAge()))
+					zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 			}
 		}
 	}

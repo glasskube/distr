@@ -26,6 +26,7 @@ var (
 	resetTokenValidDuration    = 1 * time.Hour
 	agentTokenMaxValidDuration = 24 * time.Hour
 	agentInterval              = 5 * time.Second
+	statusEntriesMaxAge        *time.Duration
 	sentryDSN                  string
 	sentryDebug                bool
 	enableQueryLogging         bool
@@ -74,16 +75,19 @@ func init() {
 	mailerConfig.FromAddress = os.Getenv("MAILER_FROM_ADDRESS")
 
 	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
-		inviteTokenValidDuration = util.Require(time.ParseDuration(d))
+		inviteTokenValidDuration = requirePositiveDuration(d)
 	}
 	if d, ok := os.LookupEnv("RESET_TOKEN_VALID_DURATION"); ok {
-		resetTokenValidDuration = util.Require(time.ParseDuration(d))
+		resetTokenValidDuration = requirePositiveDuration(d)
 	}
 	if d, ok := os.LookupEnv("AGENT_TOKEN_MAX_VALID_DURATION"); ok {
-		agentTokenMaxValidDuration = util.Require(time.ParseDuration(d))
+		agentTokenMaxValidDuration = requirePositiveDuration(d)
 	}
 	if d, ok := os.LookupEnv("AGENT_INTERVAL"); ok {
-		agentInterval = util.Require(time.ParseDuration(d))
+		agentInterval = requirePositiveDuration(d)
+	}
+	if d, ok := os.LookupEnv("STATUS_ENTRIES_MAX_AGE"); ok {
+		statusEntriesMaxAge = util.PtrTo(requirePositiveDuration(d))
 	}
 
 	sentryDSN = os.Getenv("SENTRY_DSN")
@@ -94,6 +98,14 @@ func init() {
 	if value, ok := os.LookupEnv("ENABLE_QUERY_LOGGING"); ok {
 		enableQueryLogging = util.Require(strconv.ParseBool(value))
 	}
+}
+
+func requirePositiveDuration(val string) time.Duration {
+	d := util.Require(time.ParseDuration(val))
+	if d.Nanoseconds() <= 0 {
+		panic("duration must be positive")
+	}
+	return d
 }
 
 func DatabaseUrl() string {
@@ -142,6 +154,6 @@ func EnableQueryLogging() bool {
 	return enableQueryLogging
 }
 
-func StatusEntriesMaxAge() time.Duration {
-	return time.Hour // * 24 * 7 // TODO configurable
+func StatusEntriesMaxAge() *time.Duration {
+	return statusEntriesMaxAge
 }

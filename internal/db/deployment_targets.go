@@ -7,6 +7,8 @@ import (
 	"maps"
 	"time"
 
+	"github.com/glasskube/cloud/internal/env"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -230,12 +232,11 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 	}
 }
 
-func CleanupDeploymentTargetStatus(
-	ctx context.Context,
-	dt *types.DeploymentTarget,
-	maxAge time.Duration,
-) (int64, error) {
-	minCreatedAt := time.Now().UTC().Add((-1) * maxAge)
+func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget) (int64, error) {
+	if env.StatusEntriesMaxAge() == nil {
+		return 0, nil
+	}
+	minCreatedAt := time.Now().UTC().Add((-1) * *env.StatusEntriesMaxAge())
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(ctx, `
 		DELETE FROM DeploymentTargetStatus
