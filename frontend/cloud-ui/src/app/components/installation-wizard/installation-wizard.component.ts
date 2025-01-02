@@ -5,7 +5,7 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {modalFlyInOut} from '../../animations/modal';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {ApplicationsService} from '../../services/applications.service';
-import {firstValueFrom, Subject, takeUntil, tap} from 'rxjs';
+import {EMPTY, firstValueFrom, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -64,8 +64,19 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.deployForm.controls.applicationId.valueChanges
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe((it) => this.updatedSelectedApplication(it!));
+      .pipe(
+        takeUntil(this.destroyed$),
+        withLatestFrom(this.applications$),
+        tap(([selected, apps]) => this.updatedSelectedApplication(apps, selected))
+      )
+      .subscribe(() => {
+        if (this.selectedApplication && (this.selectedApplication.versions ?? []).length > 0) {
+          const versions = this.selectedApplication.versions!;
+          this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
+        } else {
+          this.deployForm.controls.applicationVersionId.reset();
+        }
+      });
     this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
       if (s === 'VALID') {
         this.deployForm.controls.applicationVersionId.enable();
@@ -140,10 +151,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     }
   }
 
-  async updatedSelectedApplication(applicationId: string) {
-    let applications = await firstValueFrom(this.applications$);
+  updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
     this.selectedApplication = applications.find((a) => a.id === applicationId);
   }
-
-  protected readonly faShip = faShip;
 }
