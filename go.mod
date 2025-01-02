@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.32.7
 	github.com/aws/aws-sdk-go-v2/config v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.2
-	github.com/getsentry/sentry-go v0.31.0
+	github.com/getsentry/sentry-go v0.31.1
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/httprate v0.14.1
 	github.com/go-chi/jwtauth/v5 v5.3.2
