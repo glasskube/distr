@@ -2,6 +2,6 @@
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM cgr.dev/chainguard/static:latest@sha256:f5fe67ab41c65f55766d824a2d857a7f56c9058b8e077c43d4d809c467f28df8
 WORKDIR /
-COPY dist/cloud .
+COPY ./dist/cloud .
 USER 65532:65532
 ENTRYPOINT ["/cloud"]
