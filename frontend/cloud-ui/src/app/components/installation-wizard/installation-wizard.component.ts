@@ -63,9 +63,13 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
 
   ngOnInit() {
-    this.deployForm.controls.applicationId.valueChanges
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe((it) => this.updatedSelectedApplication(it!));
+    this.deployForm.controls.applicationId.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(async (it) => {
+      await this.updatedSelectedApplication(it!);
+      if (this.selectedApplication && (this.selectedApplication.versions || []).length > 0) {
+        const versions = this.selectedApplication.versions!;
+        this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
+      }
+    });
     this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
       if (s === 'VALID') {
         this.deployForm.controls.applicationVersionId.enable();
@@ -144,6 +148,4 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     let applications = await firstValueFrom(this.applications$);
     this.selectedApplication = applications.find((a) => a.id === applicationId);
   }
-
-  protected readonly faShip = faShip;
 }

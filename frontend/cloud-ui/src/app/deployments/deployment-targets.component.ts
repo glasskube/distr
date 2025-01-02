@@ -43,7 +43,7 @@ import {filteredByFormControl} from '../../util/filter';
   standalone: true,
   animations: [modalFlyInOut, drawerFlyInOut],
 })
-export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
+export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   @Input('fullVersion') fullVersion = false;
@@ -95,6 +95,10 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     }),
   });
 
+  ngOnInit() {
+    this.registerDeployFormChanges();
+  }
+
   ngAfterViewInit() {
     if (this.fullVersion) {
       const always = false;
@@ -106,6 +110,10 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
           }
         });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed$.complete();
   }
 
   openDrawer(templateRef: TemplateRef<unknown>, deploymentTarget: DeploymentTarget) {
@@ -211,13 +219,21 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   readonly deployments = inject(DeploymentService);
 
-  private readonly applicationIdChange$ = this.deployForm.controls.applicationId.valueChanges.subscribe((it) =>
-    this.updatedSelectedApplication(it!!)
-  );
-
-  ngOnDestroy(): void {
-    this.applicationIdChange$.unsubscribe();
-    this.destroyed$.complete();
+  private registerDeployFormChanges() {
+    this.deployForm.controls.applicationId.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(async (it) => {
+      await this.updatedSelectedApplication(it!!);
+      if (this.selectedApplication && (this.selectedApplication.versions || []).length > 0) {
+        const versions = this.selectedApplication.versions!;
+        this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
+      }
+    });
+    this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
+      if (s === 'VALID') {
+        this.deployForm.controls.applicationVersionId.enable();
+      } else {
+        this.deployForm.controls.applicationVersionId.disable();
+      }
+    });
   }
 
   async newDeployment(dt: DeploymentTargetViewModel, deploymentModal: TemplateRef<any>) {
