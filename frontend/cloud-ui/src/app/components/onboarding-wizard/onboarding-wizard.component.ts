@@ -7,7 +7,19 @@ import {modalFlyInOut} from '../../animations/modal';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {ApplicationsService} from '../../services/applications.service';
-import {Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
+import {
+  combineLatest,
+  first,
+  firstValueFrom,
+  from,
+  last,
+  Subject,
+  switchMap,
+  take,
+  takeUntil,
+  tap,
+  withLatestFrom,
+} from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
 import {Application} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
@@ -118,15 +130,16 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     if (this.stepper.selectedIndex === 0) {
       this.loading = true;
 
-      this.applications.list().subscribe((apps) => {
-        if (apps.length === 0) {
+      this.applications
+        .list()
+        .pipe(first())
+        .subscribe((apps) => {
           this.nextStep();
-        } else {
-          this.nextStep();
-          this.app = apps[0];
-          this.nextStep();
-        }
-      });
+          if (apps.length > 0) {
+            this.app = apps[0];
+            this.nextStep();
+          }
+        });
     } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
         if (this.applicationForm.controls.type.value === 'sample') {
