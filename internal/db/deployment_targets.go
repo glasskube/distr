@@ -236,13 +236,12 @@ func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarg
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
-	minCreatedAt := time.Now().UTC().Add((-1) * *env.StatusEntriesMaxAge())
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(ctx, `
 		DELETE FROM DeploymentTargetStatus
 		       WHERE deployment_target_id = @deploymentTargetId AND
-		             created_at < @minCreatedAt`,
-		pgx.NamedArgs{"deploymentTargetId": dt.ID, "minCreatedAt": minCreatedAt}); err != nil {
+		             current_timestamp - created_at > @statusEntriesMaxAge`,
+		pgx.NamedArgs{"deploymentTargetId": dt.ID, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
