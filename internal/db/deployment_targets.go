@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"maps"
 
+	"github.com/glasskube/cloud/internal/env"
+
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
@@ -226,5 +228,21 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 	} else {
 		rows.Close()
 		return nil
+	}
+}
+
+func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget) (int64, error) {
+	if env.StatusEntriesMaxAge() == nil {
+		return 0, nil
+	}
+	db := internalctx.GetDb(ctx)
+	if cmd, err := db.Exec(ctx, `
+		DELETE FROM DeploymentTargetStatus
+		       WHERE deployment_target_id = @deploymentTargetId AND
+		             current_timestamp - created_at > @statusEntriesMaxAge`,
+		pgx.NamedArgs{"deploymentTargetId": dt.ID, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
+		return 0, err
+	} else {
+		return cmd.RowsAffected(), nil
 	}
 }
