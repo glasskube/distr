@@ -154,3 +154,17 @@ func CreateDeploymentStatusWithCreatedAt(
 		return nil
 	}
 }
+
+func CleanupDeploymentStatus(ctx context.Context, deploymentId string, maxAge time.Duration) (int64, error) {
+	minCreatedAt := time.Now().UTC().Add((-1) * maxAge)
+	db := internalctx.GetDb(ctx)
+	if cmd, err := db.Exec(ctx, `
+		DELETE FROM DeploymentStatus
+		       WHERE deployment_id = @deploymentId AND
+		             created_at < @minCreatedAt`,
+		pgx.NamedArgs{"deploymentId": deploymentId, "minCreatedAt": minCreatedAt}); err != nil {
+		return 0, err
+	} else {
+		return cmd.RowsAffected(), nil
+	}
+}

@@ -141,3 +141,7 @@ func SentryDebug() bool {
 func EnableQueryLogging() bool {
 	return enableQueryLogging
 }
+
+func StatusEntriesMaxAge() time.Duration {
+	return time.Hour // * 24 * 7 // TODO configurable
+}
