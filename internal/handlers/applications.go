@@ -76,7 +76,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	existing := internalctx.GetApplication(r.Context())
 	if application.ID == "" {
 		application.ID = existing.ID
-	} else if application.ID != existing.ID {
+	} else if application.ID != existing.ID || application.Type != existing.Type {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

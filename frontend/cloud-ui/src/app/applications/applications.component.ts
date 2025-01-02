@@ -103,8 +103,10 @@ export class ApplicationsComponent implements OnDestroy {
     this.selectedApplication = application;
     this.editForm.patchValue({
       id: application.id,
+      type: application.type,
       name: application.name,
     });
+    this.editForm.controls.type.disable();
     this.resetVersionForm();
   }
 
@@ -127,6 +129,7 @@ export class ApplicationsComponent implements OnDestroy {
   private resetEditForm() {
     this.editForm.reset();
     this.editForm.patchValue({type: 'docker'});
+    this.editForm.controls.type.enable();
   }
 
   private resetVersionForm() {
