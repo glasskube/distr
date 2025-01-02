@@ -4,7 +4,20 @@ import {AfterViewInit, Component, inject, Input, OnDestroy, OnInit, TemplateRef,
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, filter, first, firstValueFrom, lastValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
+import {
+  combineLatest,
+  EMPTY,
+  filter,
+  first,
+  firstValueFrom,
+  lastValueFrom,
+  map,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+  withLatestFrom,
+} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -220,13 +233,20 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   readonly deployments = inject(DeploymentService);
 
   private registerDeployFormChanges() {
-    this.deployForm.controls.applicationId.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(async (it) => {
-      await this.updatedSelectedApplication(it!!);
-      if (this.selectedApplication && (this.selectedApplication.versions || []).length > 0) {
-        const versions = this.selectedApplication.versions!;
-        this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
-      }
-    });
+    this.deployForm.controls.applicationId.valueChanges
+      .pipe(
+        takeUntil(this.destroyed$),
+        withLatestFrom(this.applications$),
+        tap(([selected, apps]) => this.updatedSelectedApplication(apps, selected))
+      )
+      .subscribe(() => {
+        if (this.selectedApplication && (this.selectedApplication.versions ?? []).length > 0) {
+          const versions = this.selectedApplication.versions!;
+          this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
+        } else {
+          this.deployForm.controls.applicationVersionId.reset();
+        }
+      });
     this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
       if (s === 'VALID') {
         this.deployForm.controls.applicationVersionId.enable();
@@ -243,13 +263,16 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.deployForm.patchValue({
       deploymentTargetId: dt.id,
     });
-    this.deploymentTargets.latestDeploymentFor(dt.id!!).subscribe((d) => {
-      this.deployForm.patchValue({
-        applicationId: d.applicationId,
-        applicationVersionId: d.applicationVersionId,
+    this.deploymentTargets
+      .latestDeploymentFor(dt.id!!)
+      .pipe(withLatestFrom(this.applications$))
+      .subscribe(([d, apps]) => {
+        this.deployForm.patchValue({
+          applicationId: d.applicationId,
+          applicationVersionId: d.applicationVersionId,
+        });
+        this.updatedSelectedApplication(apps, d.applicationId);
       });
-      this.updatedSelectedApplication(d.applicationId);
-    });
   }
 
   async saveDeployment() {
@@ -266,8 +289,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
-  async updatedSelectedApplication(applicationId: string) {
-    let applications = await firstValueFrom(this.applications$);
+  updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
     this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
   }
 }
