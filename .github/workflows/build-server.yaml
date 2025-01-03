@@ -45,6 +45,7 @@ jobs:
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/cloud ./cmd/cloud/
         env:
+          CGO_ENABLED: '0'
           LDFLAGS: >-
             -X github.com/glasskube/cloud/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/cloud/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
