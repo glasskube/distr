@@ -16,15 +16,17 @@ import (
 
 const (
 	deploymentOutputExpr = `
-		id, created_at, deployment_target_id, application_version_id
+		d.id, d.created_at, d.deployment_target_id, d.application_version_id, d.release_name, d.values_yaml
 	`
 )
 
 func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetId string) ([]types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+deploymentOutputExpr+" FROM Deployment WHERE deployment_target_id = @deploymentTargetId"+
-			" ORDER BY created_at DESC",
+		"SELECT"+deploymentOutputExpr+
+			"FROM Deployment d "+
+			"WHERE d.deployment_target_id = @deploymentTargetId "+
+			"ORDER BY d.created_at DESC",
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
@@ -38,7 +40,9 @@ func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetId s
 func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+deploymentOutputExpr+" FROM Deployment WHERE id = @id",
+		"SELECT"+deploymentOutputExpr+
+			"FROM Deployment d "+
+			"WHERE d.id = @id",
 		pgx.NamedArgs{"id": id})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
@@ -58,11 +62,12 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	// TODO all these methods also need the orgId criteria
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		`select d.id, d.created_at, d.deployment_target_id, d.application_version_id,
-       			a.id as application_id, a.name as application_name, av.name as application_version_name
-			from deployment d join applicationversion av on(d.application_version_id=av.id)
-				join application a on (av.application_id=a.id)
-			where deployment_target_id = @deploymentTargetId
+		`SELECT`+deploymentOutputExpr+`,
+				a.id AS application_id, a.name AS application_name, av.name AS application_version_name
+			FROM Deployment d
+				JOIN ApplicationVersion av ON d.application_version_id = av.id
+				JOIN Application a ON av.application_id = a.id
+			WHERE d.deployment_target_id = @deploymentTargetId
 			ORDER BY d.created_at DESC LIMIT 1`,
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})
 	if err != nil {
@@ -110,7 +115,7 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{"deployment_target_id": d.DeploymentTargetId, "application_version_id": d.ApplicationVersionId}
 	rows, err := db.Query(ctx,
-		`INSERT INTO Deployment (deployment_target_id, application_version_id)
+		`INSERT INTO Deployment AS d (deployment_target_id, application_version_id)
 			VALUES (@deployment_target_id, @application_version_id) RETURNING `+deploymentOutputExpr,
 		args)
 	if err != nil {

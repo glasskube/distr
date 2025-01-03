@@ -135,6 +135,41 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 	}
 }
 
+func GetApplicationForApplicationVersionID(ctx context.Context, id string) (*types.Application, error) {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	db := internalctx.GetDb(ctx)
+	if rows, err := db.Query(ctx, `
+			SELECT
+			    a.id,
+			    a.created_at,
+				a.organization_id,
+			    a.name,
+			    a.type,
+			    coalesce((
+			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
+			    	FROM applicationversion av
+			    	WHERE av.application_id = a.id
+			    ), array[]::record[]) as versions
+			FROM AplicationVersion v
+				LEFT JOIN Application a ON a.id = v.application_id
+			WHERE v.id = @id AND a.organization_id = @orgId
+		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
+		return nil, fmt.Errorf("failed to query application: %w", err)
+	} else if application, err :=
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get application: %w", err)
+	} else {
+		return &application, nil
+	}
+}
+
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{

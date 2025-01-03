@@ -59,8 +59,10 @@ func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 
 type Deployment struct {
 	Base
-	DeploymentTargetId   string `db:"deployment_target_id" json:"deploymentTargetId"`
-	ApplicationVersionId string `db:"application_version_id" json:"applicationVersionId"`
+	DeploymentTargetId   string  `db:"deployment_target_id" json:"deploymentTargetId"`
+	ApplicationVersionId string  `db:"application_version_id" json:"applicationVersionId"`
+	ReleaseName          *string `db:"release_name" json:"releaseName"`
+	ValuesYaml           []byte  `db:"values_yaml" json:"valuesYaml"`
 }
 
 type DeploymentWithData struct {
@@ -78,8 +80,18 @@ type DeploymentTarget struct {
 	AccessKeySalt          *[]byte                 `db:"access_key_salt" json:"-"`
 	AccessKeyHash          *[]byte                 `db:"access_key_hash" json:"-"`
 	CurrentStatus          *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
+	Namespace              *string                 `db:"namespace" json:"namespace"`
 	OrganizationID         string                  `db:"organization_id" json:"-"`
 	CreatedByUserAccountID string                  `db:"created_by_user_account_id" json:"-"`
+}
+
+func (dt *DeploymentTarget) Validate() error {
+	if dt.Type == DepolymentTypeKubernetes {
+		if dt.Namespace == nil || *dt.Namespace == "" {
+			return errors.New("DeploymentTarget with type \"kubernetes\" must not have empty namespace")
+		}
+	}
+	return nil
 }
 
 type DeploymentTargetWithCreatedBy struct {
