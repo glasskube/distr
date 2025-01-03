@@ -142,9 +142,16 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	if applicationVersion.ComposeFileData != nil {
 		args["composeFileData"] = *applicationVersion.ComposeFileData
 	}
+	if applicationVersion.ValuesFileData != nil {
+		args["valuesFileData"] = *applicationVersion.ValuesFileData
+	}
+	if applicationVersion.TemplateFileData != nil {
+		args["templateFileData"] = *applicationVersion.TemplateFileData
+	}
 	row := db.QueryRow(ctx,
-		`INSERT INTO ApplicationVersion (name, application_id, compose_file_data)
-					VALUES (@name, @applicationId, @composeFileData::bytea) RETURNING id, created_at`, args)
+		`INSERT INTO ApplicationVersion (name, application_id, compose_file_data, values_file_data, template_file_data)
+					VALUES (@name, @applicationId, @composeFileData::bytea, @valuesFileData::bytea, @templateFileData::bytea)
+					RETURNING id, created_at`, args)
 	if err := row.Scan(&applicationVersion.ID, &applicationVersion.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
 	}

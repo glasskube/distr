@@ -253,9 +253,17 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           });
         } else if (fileUploadValid) {
           this.loading = true;
+          let name, versionName;
+          if (this.applicationForm.controls.type.value === 'docker') {
+            name = this.applicationForm.controls.docker.controls.name.value!;
+            versionName = this.applicationForm.controls.docker.controls.versionName.value!;
+          } else {
+            name = this.applicationForm.controls.kubernetes.controls.name.value!;
+            versionName = this.applicationForm.controls.kubernetes.controls.versionName.value!;
+          }
           this.applications
             .create({
-              name: this.applicationForm.controls.docker.controls.name.value!,
+              name: name,
               type: this.applicationForm.controls.type.value!,
             })
             .pipe(
@@ -264,7 +272,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
                   return this.applications.createApplicationVersionForDocker(
                     application,
                     {
-                      name: this.applicationForm.controls.docker.controls.versionName.value!,
+                      name: versionName,
                     },
                     this.dockerComposeFile!
                   )
@@ -272,7 +280,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
                   return this.applications.createApplicationVersionForKubernetes(
                     application,
                     {
-                      name: this.applicationForm.controls.docker.controls.versionName.value!,
+                      name: versionName,
                     },
                     this.baseValuesFile, this.templateFile
                   )

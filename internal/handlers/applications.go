@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/internal/contenttype"
 	"io"
 	"net/http"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/contenttype"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
@@ -155,35 +155,24 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if file, head, err := r.FormFile("file"); err != nil {
-		if !errors.Is(err, http.ErrMissingFile) {
-			log.Error("failed to get file from upload", zap.Error(err))
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-	} else {
-		log.Sugar().Debugf("got file %v with type %v and size %v", head.Filename, head.Header, head.Size)
-		// max file size is 100KiB
-		if head.Size > 102400 {
-			log.Debug("large body was rejected")
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
-			fmt.Fprintln(w, "file too large (max 100 KiB)")
-			return
-		} else if err := contenttype.IsYaml(head.Header); err != nil {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
-			fmt.Fprint(w, err)
-			return
-		} else if data, err := io.ReadAll(file); err != nil {
-			log.Error("failed to read file from upload", zap.Error(err))
-			w.WriteHeader(http.StatusBadRequest)
+	application := internalctx.GetApplication(ctx)
+	applicationVersion.ApplicationId = application.ID
+
+	if application.Type == types.DeploymentTypeDocker {
+		if data := readFile(w, r, "composefile", true); data == nil {
 			return
 		} else {
-			applicationVersion.ComposeFileData = &data
+			applicationVersion.ComposeFileData = data
+		}
+	} else {
+		if data := readFile(w, r, "valuesfile", false); data != nil {
+			applicationVersion.ValuesFileData = data
+		}
+		if data := readFile(w, r, "templatefile", false); data != nil {
+			applicationVersion.TemplateFileData = data
 		}
 	}
 
-	application := internalctx.GetApplication(ctx)
-	applicationVersion.ApplicationId = application.ID
 	if err := db.CreateApplicationVersion(ctx, &applicationVersion); err != nil {
 		log.Warn("could not create applicationversion", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
@@ -194,6 +183,41 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	} else if err = json.NewEncoder(w).Encode(applicationVersion); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
+}
+
+func readFile(w http.ResponseWriter, r *http.Request, formKey string, required bool) *[]byte {
+	log := internalctx.GetLogger(r.Context())
+	if file, head, err := r.FormFile(formKey); err != nil {
+		if !errors.Is(err, http.ErrMissingFile) {
+			log.Error("failed to get file from upload", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return nil
+		} else if required {
+			log.Error("required file not given", zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return nil
+		}
+	} else {
+		log.Sugar().Debugf("got file %v with type %v and size %v", head.Filename, head.Header, head.Size)
+		// max file size is 100KiB
+		if head.Size > 102400 {
+			log.Debug("large body was rejected")
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			fmt.Fprintln(w, "file too large (max 100 KiB)")
+			return nil
+		} else if err := contenttype.IsYaml(head.Header); err != nil {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			fmt.Fprint(w, err)
+			return nil
+		} else if data, err := io.ReadAll(file); err != nil {
+			log.Error("failed to read file from upload", zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return nil
+		} else {
+			return &data
+		}
+	}
+	return nil
 }
 
 func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {

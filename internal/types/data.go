@@ -12,11 +12,20 @@ type Application struct {
 
 type ApplicationVersion struct {
 	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
-	ID              string    `db:"id" json:"id"`
-	CreatedAt       time.Time `db:"created_at" json:"createdAt"`
-	Name            string    `db:"name" json:"name"`
-	ComposeFileData *[]byte   `db:"compose_file_data" json:"-"`
-	ApplicationId   string    `db:"application_id" json:"applicationId"`
+	ID        string    `db:"id" json:"id"`
+	CreatedAt time.Time `db:"created_at" json:"createdAt"`
+	Name      string    `db:"name" json:"name"`
+
+	ComposeFileData *[]byte `db:"compose_file_data" json:"-"`
+
+	ChartType        HelmChartType `db:"chart_type" json:"chartType"`
+	ChartName        *string       `db:"chart_name" json:"chartName"`
+	ChartUrl         string        `db:"chart_url" json:"chartUrl"`
+	ChartVersion     *string       `db:"chart_version" json:"chartVersion"`
+	ValuesFileData   *[]byte       `db:"values_file_data" json:"-"`
+	TemplateFileData *[]byte       `db:"template_file_data" json:"-"`
+
+	ApplicationId string `db:"application_id" json:"applicationId"`
 }
 
 type Deployment struct {
