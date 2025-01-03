@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/glasskube/cloud/compare/v0.8.1...v0.8.2) (2025-01-03)
+
+
+### Other
+
+* force new release (no changes) ([ba0d2ed](https://github.com/glasskube/cloud/commit/ba0d2ed95a82d7c255c84b2d60a803ab32294745))
+
 ## [0.8.1](https://github.com/glasskube/cloud/compare/v0.8.0...v0.8.1) (2025-01-03)
 
 
