@@ -5,6 +5,7 @@ import {UserAccountWithRole} from './user-account';
 export interface DeploymentTarget extends BaseModel, Named {
   name: string;
   type: string;
+  namespace?: string;
   geolocation?: Geolocation;
   createdBy?: UserAccountWithRole;
 

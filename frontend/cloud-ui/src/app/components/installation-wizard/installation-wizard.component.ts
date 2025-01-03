@@ -15,6 +15,7 @@ import {Deployment} from '../../types/deployment';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
 import {ToastService} from '../../services/toast.service';
+import {DeploymentTarget} from '../../types/deployment-target';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -43,8 +44,9 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   @Output('closed') readonly closed = new EventEmitter<void>();
 
   readonly deploymentTargetForm = new FormGroup({
-    type: new FormControl<string>('docker', Validators.required),
-    name: new FormControl<string>('', Validators.required),
+    type: new FormControl('docker', Validators.required),
+    name: new FormControl('', Validators.required),
+    namespace: new FormControl({value: '', disabled: true}, Validators.required),
   });
 
   readonly agentForm = new FormGroup({});
@@ -84,6 +86,13 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         this.deployForm.controls.applicationVersionId.disable();
       }
     });
+    this.deploymentTargetForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
+      if (s === 'kubernetes') {
+        this.deploymentTargetForm.controls.namespace.enable();
+      } else {
+        this.deploymentTargetForm.controls.namespace.disable();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -106,6 +115,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         this.deploymentTargets.create({
           name: this.deploymentTargetForm.value.name!,
           type: this.deploymentTargetForm.value.type!,
+          namespace: this.deploymentTargetForm.value.namespace!,
         })
       );
       this.selectedDeploymentTarget = created as DeploymentTargetViewModel;

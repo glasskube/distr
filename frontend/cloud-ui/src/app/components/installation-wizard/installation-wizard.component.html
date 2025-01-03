@@ -27,61 +27,66 @@
                 <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Type</h3>
 
                 <div class="mb-2 grid grid-cols-2 gap-4">
-                  <div
+                  <label
+                    for="dt-type-docker"
                     class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
                     <div class="flex items-start">
                       <div class="flex h-5 items-center">
                         <input
-                          id="sample-app-radio"
+                          id="dt-type-docker"
                           [formControl]="deploymentTargetForm.controls.type"
-                          aria-describedby="sample-app-radio-text"
+                          aria-labelledby="dt-type-docker-label"
+                          aria-describedby="dt-type-docker-description"
                           type="radio"
                           name="type"
                           value="docker"
-                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
-                        <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"
-                          >Docker via docker-compose</label
-                        >
-                        <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        <div id="dt-type-docker-label" class="font-bold leading-none text-gray-900 dark:text-white">
+                          Docker via docker-compose
+                        </div>
+                        <p
+                          id="dt-type-docker-description"
+                          class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I already have a virtual machine running with docker and docker-composed installed.
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </label>
 
-                  <div
+                  <label
+                    for="dt-type-kubernetes"
                     class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
                     <div class="flex items-start">
                       <div class="flex h-5 items-center">
                         <input
-                          id="custom-app-radio"
+                          id="dt-type-kubernetes"
                           [formControl]="deploymentTargetForm.controls.type"
-                          aria-describedby="custom-app-radio-text"
+                          aria-labelledby="dt-type-kubernetes-label"
+                          aria-describedby="dt-type-kubernetes-description"
                           type="radio"
                           name="type"
                           value="kubernetes"
-                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
-                          [attr.disabled]="true" />
+                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
-                        <label for="custom-app-radio" class="font-bold leading-none text-gray-900 dark:text-white">
+                        <div id="dt-type-kubernetes-label" class="font-bold leading-none text-gray-900 dark:text-white">
                           Kubernetes via Helm Chart
-                        </label>
-                        <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        </div>
+                        <p
+                          id="dt-type-kubernetes-description"
+                          class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I have access to a fresh namespace in a Kubernetes cluster and have the permissions to install
                           charts.
                         </p>
-                        <p class="text-xs font-normal text-gray-500 dark:text-gray-300">
-                          Helm deployments are not yet supported.
-                        </p>
                       </div>
                     </div>
-                  </div>
-                  <div class="flex pl-1">
+                  </label>
+
+                  <div class="flex px-4">
                     <div class="flex items-center h-5">
                       <input
                         disabled
@@ -89,9 +94,9 @@
                         aria-describedby="helper-checkbox-text"
                         type="checkbox"
                         value=""
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                        class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                     </div>
-                    <div class="ms-2 text-sm">
+                    <div class="ms-4 text-sm">
                       <label for="helper-checkbox" class="text-sm font-medium text-gray-400 dark:text-gray-500">
                         My deployment target is air-gapped or has limited internet access
                       </label>
@@ -101,7 +106,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="w-full">
+
+                <div>
                   <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Deployment Name
                   </label>
@@ -118,6 +124,31 @@
                   }
                 </div>
 
+                @if (deploymentTargetForm.controls.namespace.enabled) {
+                  <div>
+                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Kubernetes Namespace
+                    </label>
+                    <input
+                      [formControl]="deploymentTargetForm.controls.namespace"
+                      type="text"
+                      name="name"
+                      id="name"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      required
+                      autocomplete="off" />
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Please enter the name of the namespace where the agent and application will be deployed inside
+                      your Kubernetes cluster.
+                    </div>
+                    @if (
+                      deploymentTargetForm.controls.namespace.invalid && deploymentTargetForm.controls.namespace.touched
+                    ) {
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                    }
+                  </div>
+                }
+
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
               </div>
             </div>
@@ -126,15 +157,28 @@
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
                 <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                  <div class="">
-                    <h3 class="font-normal text-gray-900 dark:text-white">Download and run installation agent</h3>
+                  <div>
+                    <h3 class="font-normal text-gray-900 dark:text-white">
+                      @if (selectedDeploymentTarget?.type === 'docker') {
+                        Download and run installation agent
+                      } @else {
+                        Deploy Glasskube agent in cluster
+                      }
+                    </h3>
                     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                      To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
-                      Simply connect to the target (e.g. via SSH) and execute the following:
+                      @if (selectedDeploymentTarget?.type === 'docker') {
+                        To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
+                        Simply connect to the target (e.g. via SSH) and execute the following:
+                      } @else {
+                        To setup this Deployment, the Glasskube Cloud Agent must be installed in the target cluster.
+                        With
+                        <code>kubectl</code> installed and a <code>kubeconfig</code> that allows you to deploy
+                        applications in the {{ selectedDeploymentTarget?.namespace }} namespace, simply run:
+                      }
                     </p>
                     @if (selectedDeploymentTarget) {
-                      <app-connect-instructions
-                        [deploymentTargetId]="selectedDeploymentTarget.id"></app-connect-instructions>
+                      <app-connect-instructions [deploymentTarget]="selectedDeploymentTarget">
+                      </app-connect-instructions>
                     }
                   </div>
                 </div>
