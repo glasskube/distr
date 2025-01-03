@@ -43,10 +43,7 @@ jobs:
           VERSION: ${{ github.ref_name }}
 
       - name: Build application
-        run: |
-          echo "$LDFLAGS"
-          go build -ldflags="$LDFLAGS" -o dist/cloud ./cmd/cloud/
-          ls -la dist
+        run: go build -ldflags="$LDFLAGS" -o dist/cloud ./cmd/cloud/
         env:
           LDFLAGS: >-
             -X github.com/glasskube/cloud/internal/buildconfig.version=${{ github.ref_name }}
