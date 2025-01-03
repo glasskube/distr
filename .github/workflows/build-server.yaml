@@ -3,9 +3,9 @@ name: Build server
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Build frontend
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: npm run build:prod -- --source-map=true
+        run: npm run build:prod
       - name: Build frontend and upload source maps (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
