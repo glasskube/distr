@@ -2,7 +2,7 @@ import {Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, 
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Form, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {modalFlyInOut} from '../../animations/modal';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
@@ -58,8 +58,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   introForm = new FormGroup({});
 
   applicationForm = new FormGroup({
-    type: new FormControl<string>('sample', Validators.required),
-    custom: new FormGroup({
+    sampleApplication: new FormControl<boolean>(false),
+    type: new FormControl<'docker' | 'kubernetes' | undefined>(undefined, Validators.required),
+    docker: new FormGroup({
       name: new FormControl<string>(
         {
           value: '',
@@ -75,10 +76,59 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         Validators.required
       ),
     }),
+    kubernetes: new FormGroup({
+      name: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      versionName: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      chartType: new FormControl<'repository' | 'oci'>({
+        value: 'repository',
+        disabled: true,
+      }, Validators.required),
+      chartName: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      chartUrl: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      chartVersion: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+    }),
   });
-  fileToUpload: File | null = null;
-  @ViewChild('fileInput')
-  fileInput?: ElementRef;
+  dockerComposeFile: File | null = null;
+  @ViewChild('dockerComposeFileInput')
+  dockerComposeFileInput?: ElementRef;
+
+  baseValuesFile: File | null = null;
+  @ViewChild('baseValuesFileInput')
+  baseValuesFileInput?: ElementRef;
+
+  templateFile: File | null = null;
+  @ViewChild('templateFileInput')
+  templateFileInput?: ElementRef;
 
   deploymentTargetForm = new FormGroup({
     customerName: new FormControl<string>('', Validators.required),
@@ -92,16 +142,23 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private loading = false;
 
   ngOnInit() {
+    this.applicationForm.controls.sampleApplication.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((selected) => {
+        if (selected) {
+          this.applicationForm.controls.type.disable();
+          this.toggleTypeSpecificFields(undefined);
+        } else {
+          this.applicationForm.controls.type.enable();
+          this.toggleTypeSpecificFields(this.applicationForm.controls.type.value ?? undefined);
+        }
+      });
+
     this.applicationForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
-      if (type === 'sample') {
-        // disable validators
-        this.applicationForm.controls.custom.controls.name.disable();
-        this.applicationForm.controls.custom.controls.versionName.disable();
-      } else {
-        this.applicationForm.controls.custom.controls.name.enable();
-        this.applicationForm.controls.custom.controls.versionName.enable();
-      }
+      // TODO why is it even nullable
+      this.toggleTypeSpecificFields(type ?? undefined);
     });
+
     this.deploymentTargetForm.controls.accessType.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
       if (type === 'full') {
         // disable validators
@@ -112,14 +169,58 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // TODO proper type
+  private toggleTypeSpecificFields(type?: 'docker' | 'kubernetes') {
+    switch (type) {
+      case 'docker':
+        this.enableControls(this.applicationForm.controls.docker);
+        this.disableControls(this.applicationForm.controls.kubernetes);
+        break;
+      case 'kubernetes':
+        this.disableControls(this.applicationForm.controls.docker);
+        this.enableControls(this.applicationForm.controls.kubernetes);
+        break;
+      default:
+        this.disableControls(this.applicationForm.controls.docker);
+        this.disableControls(this.applicationForm.controls.kubernetes);
+    }
+  }
+
+  // TODO utils
+  private enableControls(formGroup: FormGroup) {
+    this.toggleControls(formGroup, true);
+  }
+
+  private disableControls(formGroup: FormGroup) {
+    this.toggleControls(formGroup, false);
+  }
+
+  private toggleControls(formGroup: FormGroup, enabled: boolean) {
+    for (let controlsKey in formGroup.controls) {
+      if (enabled) {
+        formGroup.controls[controlsKey].enable();
+      } else {
+        formGroup.controls[controlsKey].disable();
+      }
+    }
+  }
+
   private destroyed$: Subject<void> = new Subject();
 
   ngOnDestroy() {
     this.destroyed$.complete();
   }
 
-  onFileSelected(event: Event) {
-    this.fileToUpload = (event.target as HTMLInputElement).files?.[0] ?? null;
+  onDockerComposeFileSelected(event: Event) {
+    this.dockerComposeFile = (event.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  onBaseValuesFileSelected(event: Event) {
+    this.baseValuesFile = (event.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  onTemplateFileSelected(event: Event) {
+    this.templateFile = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
   attemptContinue() {
@@ -142,29 +243,41 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         });
     } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
-        if (this.applicationForm.controls.type.value === 'sample') {
+        const fileUploadValid = this.applicationForm.controls.type.value === 'kubernetes'
+          || (this.applicationForm.controls.type.value === 'docker' && this.dockerComposeFile != null);
+        if (this.applicationForm.controls.sampleApplication.value) {
           this.loading = true;
           this.applications.createSample().subscribe((app) => {
             this.app = app;
             this.nextStep();
           });
-        } else if (this.fileToUpload != null) {
+        } else if (fileUploadValid) {
           this.loading = true;
           this.applications
             .create({
-              name: this.applicationForm.controls.custom.controls.name.value!,
-              type: 'docker',
+              name: this.applicationForm.controls.docker.controls.name.value!,
+              type: this.applicationForm.controls.type.value!,
             })
             .pipe(
-              switchMap((application) =>
-                this.applications.createApplicationVersion(
-                  application,
-                  {
-                    name: this.applicationForm.controls.custom.controls.versionName.value!,
-                  },
-                  this.fileToUpload!
-                )
-              ),
+              switchMap((application) => {
+                if(application.type === 'docker') {
+                  return this.applications.createApplicationVersionForDocker(
+                    application,
+                    {
+                      name: this.applicationForm.controls.docker.controls.versionName.value!,
+                    },
+                    this.dockerComposeFile!
+                  )
+                } else {
+                  return this.applications.createApplicationVersionForKubernetes(
+                    application,
+                    {
+                      name: this.applicationForm.controls.docker.controls.versionName.value!,
+                    },
+                    this.baseValuesFile, this.templateFile
+                  )
+                }
+              }),
               withLatestFrom(this.applications.list())
             )
             .subscribe(([version, apps]) => {

@@ -36,13 +36,37 @@ export class ApplicationsService implements CrudService<Application> {
       .pipe(tap(() => this.cache.remove(application)));
   }
 
-  createApplicationVersion(
+  createApplicationVersionForDocker(
     application: Application,
     applicationVersion: ApplicationVersion,
     file: File
   ): Observable<ApplicationVersion> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('applicationversion', JSON.stringify(applicationVersion));
+    return this.httpClient
+      .post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData)
+      .pipe(
+        tap((it) => {
+          application.versions = [it, ...(application.versions || [])];
+          this.cache.save(application);
+        })
+      );
+  }
+
+  createApplicationVersionForKubernetes(
+    application: Application,
+    applicationVersion: ApplicationVersion,
+    valuesFile: File | null,
+    templateFile: File | null,
+  ): Observable<ApplicationVersion> {
+    const formData = new FormData();
+    if(valuesFile) {
+      formData.append('valuesfile', valuesFile);
+    }
+    if(templateFile) {
+      formData.append('templatefile', templateFile);
+    }
     formData.append('applicationversion', JSON.stringify(applicationVersion));
     return this.httpClient
       .post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData)

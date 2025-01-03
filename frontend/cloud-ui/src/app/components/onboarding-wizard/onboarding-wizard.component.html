@@ -27,6 +27,321 @@
           <cdk-step [stepControl]="applicationForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
+                <h3 class="font-normal text-gray-900 dark:text-white">How do you distribute your application?</h3>
+
+                <div class="flex pl-1">
+                  <div class="flex items-center h-5">
+                    <input
+                      [formControl]="applicationForm.controls.sampleApplication"
+                      id="process-type-checkbox"
+                      type="checkbox"
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                  </div>
+                  <div class="ms-2 text-sm">
+                    <label for="process-type-checkbox" class="text-sm font-medium text-gray-900 dark:text-white">
+                      I don't know yet, please just let me test!
+                    </label>
+                    <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                      Show me how to deploy some sample app.<br />
+                      This will create a docker compose application named
+                      <a href="https://github.com/go-shiori/shiori" target="_blank">Shiori</a>.
+                    </p>
+                  </div>
+                </div>
+
+                @if (!applicationForm.controls.sampleApplication.value) {
+                  <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    <div
+                      class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                      <div class="flex items-start">
+                        <div class="flex h-5 items-center">
+                          <input
+                            id="app-type-docker-radio"
+                            [formControl]="applicationForm.controls.type"
+                            aria-describedby="app-type-docker-radio-text"
+                            type="radio"
+                            name="appType"
+                            value="docker"
+                            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                        </div>
+
+                        <div class="ms-4 text-sm">
+                          <label
+                            for="app-type-docker-radio"
+                            class="font-bold leading-none text-gray-900 dark:text-white"
+                            >Docker Compose</label
+                          >
+                          <p
+                            id="app-type-docker-radio-text"
+                            class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                            I have a docker compose file.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                      <div class="flex items-start">
+                        <div class="flex h-5 items-center">
+                          <input
+                            id="app-type-kubernetes-radio"
+                            [formControl]="applicationForm.controls.type"
+                            aria-describedby="app-type-kubernetes-radio-text"
+                            type="radio"
+                            name="appType"
+                            value="kubernetes"
+                            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                            checked />
+                        </div>
+
+                        <div class="ms-4 text-sm">
+                          <label
+                            for="app-type-kubernetes-radio"
+                            class="font-bold leading-none text-gray-900 dark:text-white">
+                            Helm / Kubernetes
+                          </label>
+                          <p
+                            id="app-type-kubernetes-radio-text"
+                            class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                            I have a Helm chart.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  @if (applicationForm.controls.type.invalid && applicationForm.controls.type.touched) {
+                    <p class="text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                  }
+
+                  @if (applicationForm.controls.type.value === 'kubernetes') {
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="kubernetesApplicationName"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Application Name</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.kubernetes.controls.name"
+                          type="text"
+                          name="name"
+                          id="kubernetesApplicationName"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="Security Scanner"
+                          required />
+                        @if (
+                          applicationForm.controls.kubernetes.controls.name.invalid &&
+                          applicationForm.controls.kubernetes.controls.name.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        <label
+                          for="kubernetesApplicationVersion"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Version</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.kubernetes.controls.versionName"
+                          type="text"
+                          name="breadth"
+                          id="kubernetesApplicationVersion"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="v4.2.0"
+                          required />
+                        @if (
+                          applicationForm.controls.kubernetes.controls.versionName.invalid &&
+                          applicationForm.controls.kubernetes.controls.versionName.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label for="chartTypeSelect" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Chart Type</label>
+                        <select
+                          [formControl]="applicationForm.controls.kubernetes.controls.chartType"
+                          id="chartTypeSelect"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                          <option value="repository">Repository</option>
+                          <option value="oci">OCI</option>
+                        </select>
+                        @if (
+                          applicationForm.controls.kubernetes.controls.chartType.invalid &&
+                          applicationForm.controls.kubernetes.controls.chartType.touched
+                          ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        <label
+                          for="kubernetesChartName"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Chart Name</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.kubernetes.controls.chartName"
+                          type="text"
+                          name="chartName"
+                          id="kubernetesChartName"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                        @if (
+                          applicationForm.controls.kubernetes.controls.chartName.invalid &&
+                          applicationForm.controls.kubernetes.controls.chartName.touched
+                          ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="kubernetesChartUrl"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Chart URL</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.kubernetes.controls.chartUrl"
+                          type="text"
+                          name="chartUrl"
+                          id="kubernetesChartUrl"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                        @if (
+                          applicationForm.controls.kubernetes.controls.chartUrl.invalid &&
+                          applicationForm.controls.kubernetes.controls.chartUrl.touched
+                          ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        <label
+                          for="kubernetesChartVersion"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Chart Version</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.kubernetes.controls.chartVersion"
+                          type="text"
+                          name="chartVersion"
+                          id="kubernetesChartVersion"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                        @if (
+                          applicationForm.controls.kubernetes.controls.chartVersion.invalid &&
+                          applicationForm.controls.kubernetes.controls.chartVersion.touched
+                          ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="base_values_file_input"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Base Values</label
+                        >
+                        <input
+                          id="base_values_file_input"
+                          type="file"
+                          accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
+                          #baseValuesFileInput
+                          (change)="onBaseValuesFileSelected($event)"
+                          class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+                      </div>
+
+                      <div class="w-full">
+                        <label
+                          for="template_file_input"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Template</label
+                        >
+                        <input
+                          id="template_file_input"
+                          type="file"
+                          accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
+                          #templateFileInput
+                          (change)="onTemplateFileSelected($event)"
+                          class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+                      </div>
+                    </div>
+
+                  } @else if (applicationForm.controls.type.value === 'docker') {
+
+                    <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="applicationName"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Application Name</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.docker.controls.name"
+                          type="text"
+                          name="name"
+                          id="applicationName"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="Security Scanner"
+                          required />
+                        @if (
+                          applicationForm.controls.docker.controls.name.invalid &&
+                          applicationForm.controls.docker.controls.name.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        <label
+                          for="applicationVersion"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Version</label
+                        >
+                        <input
+                          [formControl]="applicationForm.controls.docker.controls.versionName"
+                          type="text"
+                          name="breadth"
+                          id="applicationVersion"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="v4.2.0"
+                          required />
+                        @if (
+                          applicationForm.controls.docker.controls.versionName.invalid &&
+                          applicationForm.controls.docker.controls.versionName.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Docker Compose File</label
+                        >
+                        <input
+                          id="file_input"
+                          type="file"
+                          accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
+                          #dockerComposeFileInput
+                          (change)="onDockerComposeFileSelected($event)"
+                          class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                          aria-describedby="file_input_help" />
+                        @if (dockerComposeFile == null && applicationForm.controls.docker.touched) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">File is required.</p>
+                        }
+                      </div>
+                    </div>
+
+                  } @else {
+                    <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
+                  }
+                }
+
+                <!--
+
                 <h3 class="font-normal text-gray-900 dark:text-white">Choose An Application</h3>
                 <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <div
@@ -35,7 +350,7 @@
                       <div class="flex h-5 items-center">
                         <input
                           id="sample-app-radio"
-                          [formControl]="applicationForm.controls.type"
+                          [formControl]="applicationForm.controls.processType"
                           aria-describedby="sample-app-radio-text"
                           type="radio"
                           name="appType"
@@ -49,7 +364,7 @@
                         >
                         <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
                           I'm just testing – Show me how to deploy some sample app.<br />
-                          This will create an application named
+                          This will create a docker compose application named
                           <a href="https://github.com/go-shiori/shiori" target="_blank">Shiori</a>.
                         </p>
                       </div>
@@ -62,7 +377,7 @@
                       <div class="flex h-5 items-center">
                         <input
                           id="custom-app-radio"
-                          [formControl]="applicationForm.controls.type"
+                          [formControl]="applicationForm.controls.processType"
                           aria-describedby="custom-app-radio-text"
                           type="radio"
                           name="appType"
@@ -76,75 +391,12 @@
                           My Own Application
                         </label>
                         <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          I have my own docker compose file and want to deploy it.
+                          I have my own application and want to deploy it.
                         </p>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                @if (applicationForm.controls.type.value === 'sample') {
-                  <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
-                } @else {
-                  <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                    <div class="w-full">
-                      <label for="applicationName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Application Name</label
-                      >
-                      <input
-                        [formControl]="applicationForm.controls.custom.controls.name"
-                        type="text"
-                        name="name"
-                        id="applicationName"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="Security Scanner"
-                        required />
-                      @if (
-                        applicationForm.controls.custom.controls.name.invalid &&
-                        applicationForm.controls.custom.controls.name.touched
-                      ) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
-                    </div>
-                    <div class="w-full">
-                      <label
-                        for="applicationVersion"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Version</label
-                      >
-                      <input
-                        [formControl]="applicationForm.controls.custom.controls.versionName"
-                        type="text"
-                        name="breadth"
-                        id="applicationVersion"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="v4.2.0"
-                        required />
-                      @if (
-                        applicationForm.controls.custom.controls.versionName.invalid &&
-                        applicationForm.controls.custom.controls.versionName.touched
-                      ) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
-                    </div>
-                    <div class="w-full">
-                      <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Docker Compose File</label
-                      >
-                      <input
-                        id="file_input"
-                        type="file"
-                        accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
-                        #fileInput
-                        (change)="onFileSelected($event)"
-                        class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                        aria-describedby="file_input_help" />
-                      @if (fileToUpload == null && applicationForm.controls.custom.touched) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">File is required.</p>
-                      }
-                    </div>
-                  </div>
-                }
+                </div> -->
               </div>
             </div>
           </cdk-step>

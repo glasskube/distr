@@ -175,7 +175,7 @@ export class ApplicationsComponent implements OnDestroy {
   createVersion() {
     if (this.newVersionForm.valid && this.fileToUpload != null && this.selectedApplication) {
       this.applications
-        .createApplicationVersion(
+        .createApplicationVersionForDocker(
           this.selectedApplication,
           {
             name: this.newVersionForm.controls.versionName.value!,
