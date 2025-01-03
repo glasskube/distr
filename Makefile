@@ -49,8 +49,8 @@ build: frontend-prod tidy
 	$(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/cloud ./cmd/cloud/
 
 .PHONY: docker-build
-docker-build:
-	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+docker-build: build
+	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud .
 
 .PHONY: docker-build-agent
 docker-build-agent:
