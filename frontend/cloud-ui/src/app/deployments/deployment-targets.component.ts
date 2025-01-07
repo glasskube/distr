@@ -49,7 +49,6 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {Deployment, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
-import {DeploymentTargetViewModel} from './deployment-target-view-model';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -95,7 +94,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
 
-  private selectedDeploymentTarget = signal<DeploymentTargetViewModel | null>(null);
+  private selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
   selectedApplication?: Application | null;
 
   readonly filterForm = new FormGroup({
@@ -121,18 +120,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     notes: new FormControl<string | undefined>(undefined),
   });
 
-  readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
-    shareReplay(1),
-    map((dts) =>
-      dts.map((dt) => {
-        let dtView = dt as DeploymentTargetViewModel;
-        if (dtView.id) {
-          dtView.latestDeployment = this.deploymentTargets.latestDeploymentFor(dtView.id);
-        }
-        return dtView;
-      })
-    )
-  );
+  readonly deploymentTargets$ = this.deploymentTargets.list();
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
@@ -298,19 +286,16 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  async newDeployment(deploymentTarget: DeploymentTargetViewModel, modalTemplate: TemplateRef<any>) {
+  async newDeployment(deploymentTarget: DeploymentTarget, modalTemplate: TemplateRef<any>) {
     const apps = await firstValueFrom(this.applications$);
-    const latestDeployment = await firstValueFrom(
-      deploymentTarget.latestDeployment?.pipe(catchError(() => of(null))) ?? of(null)
-    );
     this.selectedDeploymentTarget.set(deploymentTarget);
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
-      applicationId: latestDeployment?.applicationId,
-      applicationVersionId: latestDeployment?.applicationVersionId,
+      applicationId: deploymentTarget.latestDeployment?.applicationId,
+      applicationVersionId: deploymentTarget.latestDeployment?.applicationVersionId,
     });
-    if (latestDeployment) {
-      this.updatedSelectedApplication(apps, latestDeployment.applicationId);
+    if (deploymentTarget.latestDeployment) {
+      this.updatedSelectedApplication(apps, deploymentTarget.latestDeployment.applicationId);
     }
     this.showModal(modalTemplate);
   }
@@ -319,9 +304,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     if (this.deployForm.valid) {
       const deployment = this.deployForm.value;
       await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.selectedDeploymentTarget()!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
-        this.selectedDeploymentTarget()!.id!
-      );
       this.toast.success('Deployment saved successfully');
       this.hideModal();
     } else {

@@ -96,7 +96,8 @@ func (dt *DeploymentTarget) Validate() error {
 
 type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
-	CreatedBy *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
+	CreatedBy        *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
+	LatestDeployment *DeploymentWithData      `db:"-" json:"latestDeployment,omitempty"`
 }
 
 type DeploymentTargetStatus struct {

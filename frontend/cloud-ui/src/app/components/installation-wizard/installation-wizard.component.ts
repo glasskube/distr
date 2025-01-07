@@ -1,21 +1,21 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {AsyncPipe} from '@angular/common';
 import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, signal, ViewChild} from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, firstValueFrom, map, of, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
-import {DeploymentTargetViewModel} from '../../deployments/deployment-target-view-model';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
 import {Application} from '../../types/application';
 import {Deployment, DeploymentType} from '../../types/deployment';
+import {DeploymentTarget} from '../../types/deployment-target';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
-import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -61,7 +61,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   });
 
   protected selectedApplication?: Application;
-  protected selectedDeploymentTarget = signal<DeploymentTargetViewModel | null>(null);
+  protected selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
   readonly applications$ = combineLatest([this.applications.list(), toObservable(this.selectedDeploymentTarget)]).pipe(
     map(([apps, dt]) => apps.filter((app) => app.type === dt?.type))
   );
@@ -147,7 +147,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
           namespace: this.deploymentTargetForm.value.namespace!,
         })
       );
-      this.selectedDeploymentTarget.set(created as DeploymentTargetViewModel);
+      this.selectedDeploymentTarget.set(created as DeploymentTarget);
       this.nextStep();
     } else if (this.stepper?.selectedIndex === 1) {
       this.loading = true;
@@ -189,9 +189,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         deployment.valuesYaml = undefined;
       }
       await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.selectedDeploymentTarget()!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
-        this.selectedDeploymentTarget()!.id!
-      );
     }
   }
 
