@@ -3,6 +3,7 @@ import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {
   AfterViewInit,
   Component,
+  effect,
   inject,
   Input,
   OnDestroy,
@@ -251,7 +252,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.deployForm.controls.applicationId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        withLatestFrom(this.filteredApplications$),
+        withLatestFrom(this.applications$),
         tap(([selected, apps]) => this.updatedSelectedApplication(apps, selected))
       )
       .subscribe(() => {
@@ -260,6 +261,25 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
           this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
         } else {
           this.deployForm.controls.applicationVersionId.reset();
+        }
+      });
+    this.deployForm.controls.applicationVersionId.valueChanges
+      .pipe(
+        takeUntil(this.destroyed$),
+        switchMap((id) =>
+          this.selectedApplication?.type === 'kubernetes'
+            ? this.applications
+                .getTemplateFile(this.selectedApplication?.id!, id!)
+                .pipe(map((data) => [this.selectedApplication?.type, data]))
+            : of([this.selectedApplication?.type, null])
+        )
+      )
+      .subscribe(([type, valuesYaml]) => {
+        if (type === 'kubernetes') {
+          this.deployForm.controls.valuesYaml.enable();
+          this.deployForm.patchValue({valuesYaml});
+        } else {
+          this.deployForm.controls.valuesYaml.disable();
         }
       });
     this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
