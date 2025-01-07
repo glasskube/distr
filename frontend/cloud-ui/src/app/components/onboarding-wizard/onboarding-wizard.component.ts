@@ -26,6 +26,7 @@ import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {UsersService} from '../../services/users.service';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
+import {disableControls, enableControls} from '../../../util/forms';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -186,38 +187,19 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private toggleTypeSpecificFields(type?: 'docker' | 'kubernetes') {
     switch (type) {
       case 'docker':
-        this.enableControls(this.applicationForm.controls.docker);
-        this.disableControls(this.applicationForm.controls.kubernetes);
+        enableControls(this.applicationForm.controls.docker);
+        disableControls(this.applicationForm.controls.kubernetes);
         break;
       case 'kubernetes':
-        this.disableControls(this.applicationForm.controls.docker);
-        this.enableControls(this.applicationForm.controls.kubernetes);
+        disableControls(this.applicationForm.controls.docker);
+        enableControls(this.applicationForm.controls.kubernetes);
         if (this.applicationForm.controls.kubernetes.controls.chartType.value !== 'repository') {
           this.applicationForm.controls.kubernetes.controls.chartName.disable();
         }
         break;
       default:
-        this.disableControls(this.applicationForm.controls.docker);
-        this.disableControls(this.applicationForm.controls.kubernetes);
-    }
-  }
-
-  // TODO utils
-  private enableControls(formGroup: FormGroup) {
-    this.toggleControls(formGroup, true);
-  }
-
-  private disableControls(formGroup: FormGroup) {
-    this.toggleControls(formGroup, false);
-  }
-
-  private toggleControls(formGroup: FormGroup, enabled: boolean) {
-    for (let controlsKey in formGroup.controls) {
-      if (enabled) {
-        formGroup.controls[controlsKey].enable();
-      } else {
-        formGroup.controls[controlsKey].disable();
-      }
+        disableControls(this.applicationForm.controls.docker);
+        disableControls(this.applicationForm.controls.kubernetes);
     }
   }
 
@@ -258,6 +240,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           }
         });
     } else if (this.stepper.selectedIndex === 1) {
+      console.log(this.applicationForm);
       if (this.applicationForm.valid) {
         const isDocker = this.applicationForm.controls.type.value === 'docker';
         const fileUploadValid = !isDocker || (isDocker && this.dockerComposeFile != null);

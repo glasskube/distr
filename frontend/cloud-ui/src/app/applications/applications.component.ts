@@ -1,6 +1,6 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, Input, OnDestroy, TemplateRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -14,6 +14,7 @@ import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
+import {disableControls, enableControls} from '../../util/forms';
 
 @Component({
   selector: 'app-applications',
@@ -29,7 +30,7 @@ import {filteredByFormControl} from '../../util/filter';
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ApplicationsComponent implements OnDestroy {
+export class ApplicationsComponent implements OnInit, OnDestroy {
   @Input('fullVersion') fullVersion: boolean = false;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faPlus = faPlus;
@@ -57,17 +58,67 @@ export class ApplicationsComponent implements OnDestroy {
   });
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
+    kubernetes: new FormGroup({
+      chartType: new FormControl<'repository' | 'oci'>(
+        {
+          value: 'repository',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      chartName: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      chartUrl: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+      chartVersion: new FormControl<string>(
+        {
+          value: '',
+          disabled: true,
+        },
+        Validators.required
+      ),
+    }),
   });
-  fileToUpload: File | null = null;
+  dockerComposeFile: File | null = null;
+  @ViewChild('dockerComposeFileInput')
+  dockerComposeFileInput?: ElementRef;
 
-  @ViewChild('fileInput')
-  fileInput?: ElementRef;
   private manageApplicationDrawerRef?: DialogRef;
   private applicationVersionModalRef?: DialogRef;
+
+  baseValuesFile: File | null = null;
+  @ViewChild('baseValuesFileInput')
+  baseValuesFileInput?: ElementRef;
+
+  templateFile: File | null = null;
+  @ViewChild('templateFileInput')
+  templateFileInput?: ElementRef;
 
   private readonly overlay = inject(OverlayService);
 
   private readonly toast = inject(ToastService);
+
+  ngOnInit() {
+    this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((type) => {
+        if (type === 'repository') {
+          this.newVersionForm.controls.kubernetes.controls.chartName.enable();
+        } else {
+          this.newVersionForm.controls.kubernetes.controls.chartName.disable();
+        }
+      });
+  }
 
   ngOnDestroy() {
     this.destroyed$.complete();
@@ -108,6 +159,11 @@ export class ApplicationsComponent implements OnDestroy {
     });
     this.editForm.controls.type.disable();
     this.resetVersionForm();
+    if (this.selectedApplication?.type === 'kubernetes') {
+      enableControls(this.newVersionForm.controls.kubernetes);
+    } else {
+      disableControls(this.newVersionForm.controls.kubernetes);
+    }
   }
 
   reset() {
@@ -134,9 +190,17 @@ export class ApplicationsComponent implements OnDestroy {
 
   private resetVersionForm() {
     this.newVersionForm.reset();
-    this.fileToUpload = null;
-    if (this.fileInput) {
-      this.fileInput.nativeElement.value = '';
+    this.dockerComposeFile = null;
+    if (this.dockerComposeFileInput) {
+      this.dockerComposeFileInput.nativeElement.value = '';
+    }
+    this.baseValuesFile = null;
+    if (this.baseValuesFileInput) {
+      this.baseValuesFileInput.nativeElement.value = '';
+    }
+    this.templateFile = null;
+    if (this.templateFileInput) {
+      this.templateFileInput.nativeElement.value = '';
     }
   }
 
@@ -168,24 +232,53 @@ export class ApplicationsComponent implements OnDestroy {
     }
   }
 
-  onFileSelected(event: any) {
-    this.fileToUpload = event.target.files[0];
+  onDockerComposeSelected(event: any) {
+    this.dockerComposeFile = event.target.files[0];
+  }
+
+  onBaseValuesFileSelected(event: Event) {
+    this.baseValuesFile = (event.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  onTemplateFileSelected(event: Event) {
+    this.templateFile = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
   createVersion() {
-    if (this.newVersionForm.valid && this.fileToUpload != null && this.selectedApplication) {
-      this.applications
-        .createApplicationVersionForDocker(
+    const isDocker = this.selectedApplication?.type === 'docker';
+    const fileValid = !isDocker || (isDocker && this.dockerComposeFile != null);
+    console.log(this.newVersionForm);
+    if (this.newVersionForm.valid && fileValid && this.selectedApplication) {
+      let res;
+      if (isDocker) {
+        res = this.applications.createApplicationVersionForDocker(
           this.selectedApplication,
           {
             name: this.newVersionForm.controls.versionName.value!,
           },
-          this.fileToUpload
-        )
-        .subscribe((value) => {
-          this.toast.success(`${value.name} created successfully`);
-          this.hideVersionModal();
-        });
+          this.dockerComposeFile!
+        );
+      } else {
+        res = this.applications.createApplicationVersionForKubernetes(
+          this.selectedApplication,
+          {
+            name: this.newVersionForm.controls.versionName.value!,
+            chartType: this.newVersionForm.controls.kubernetes.controls.chartType.value!,
+            chartName:
+              this.newVersionForm.controls.kubernetes.controls.chartType.value === 'repository'
+                ? this.newVersionForm.controls.kubernetes.controls.chartName.value!
+                : undefined,
+            chartUrl: this.newVersionForm.controls.kubernetes.controls.chartUrl.value!,
+            chartVersion: this.newVersionForm.controls.kubernetes.controls.chartVersion.value!,
+          },
+          this.baseValuesFile,
+          this.templateFile
+        );
+      }
+      res.subscribe((value) => {
+        this.toast.success(`${value.name} created successfully`);
+        this.hideVersionModal();
+      });
     } else {
       this.newVersionForm.markAllAsTouched();
     }
