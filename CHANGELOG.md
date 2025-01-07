@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.8.2](https://github.com/glasskube/cloud/compare/v0.8.1...v0.8.2) (2025-01-03)
+
+
+### Other
+
+* force new release (no changes) ([ba0d2ed](https://github.com/glasskube/cloud/commit/ba0d2ed95a82d7c255c84b2d60a803ab32294745))
+
+## [0.8.1](https://github.com/glasskube/cloud/compare/v0.8.0...v0.8.1) (2025-01-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency globe.gl to v2.34.6 ([#210](https://github.com/glasskube/cloud/issues/210)) ([e3ca127](https://github.com/glasskube/cloud/commit/e3ca1276c2feb75b062476010336bcfab8211fd2))
+* **deps:** update dependency posthog-js to v1.203.2 ([#208](https://github.com/glasskube/cloud/issues/208)) ([87ecf27](https://github.com/glasskube/cloud/commit/87ecf275b72f22d98fa909c45f2efa1d9bf5bd47))
+* **deps:** update fontsource monorepo to v5.1.1 ([#211](https://github.com/glasskube/cloud/issues/211)) ([32eeec3](https://github.com/glasskube/cloud/commit/32eeec389d145bc71928d6e4bdccad68944253d2))
+* **deps:** update module github.com/getsentry/sentry-go to v0.31.0 ([#219](https://github.com/glasskube/cloud/issues/219)) ([b43ff6e](https://github.com/glasskube/cloud/commit/b43ff6e340ac47be4b1e96c4a1ba2b0624bd6f79))
+* **deps:** update module github.com/getsentry/sentry-go to v0.31.1 ([#222](https://github.com/glasskube/cloud/issues/222)) ([6c1cc75](https://github.com/glasskube/cloud/commit/6c1cc75c4c57282337083c8d5c45fc15d8f860d5))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.2 ([#205](https://github.com/glasskube/cloud/issues/205)) ([7af02c4](https://github.com/glasskube/cloud/commit/7af02c447796807d3f1bc9021ddb5303e6c6ba68))
+* **deps:** update module github.com/onsi/gomega to v1.36.2 ([#207](https://github.com/glasskube/cloud/issues/207)) ([5a9eab6](https://github.com/glasskube/cloud/commit/5a9eab6ea4e8f2e6e04a0f2605fe4d3784b826da))
+* **ui:** correct step sequence on onboarding wizard ([#214](https://github.com/glasskube/cloud/issues/214)) ([9953db5](https://github.com/glasskube/cloud/commit/9953db52f4d1b06b6380e686354080994cbd571c))
+* **ui:** put wizard showing in AfterViewInit to prevent undefined error ([#203](https://github.com/glasskube/cloud/issues/203)) ([3176dae](https://github.com/glasskube/cloud/commit/3176daeefd8dd13a903affb40b63500680554d82))
+* **ui:** use correct application version in deploy form ([#215](https://github.com/glasskube/cloud/issues/215)) ([1474d4d](https://github.com/glasskube/cloud/commit/1474d4d97168b192d61be8b3b558684123ac7b70))
+
+
+### Other
+
+* cleanup obsolete deployment and deployment target statuses ([#216](https://github.com/glasskube/cloud/issues/216)) ([c64bb2e](https://github.com/glasskube/cloud/commit/c64bb2ebaf2f25abe352ec13d892c45b4dc9f8a3))
+* **deps:** update dependency @sentry/cli to v2.40.0 ([#218](https://github.com/glasskube/cloud/issues/218)) ([ed26a2a](https://github.com/glasskube/cloud/commit/ed26a2a268fa3697e9717ea67969a7d736f30b1a))
+* **deps:** update dependency golangci-lint to v1.63.1 ([#213](https://github.com/glasskube/cloud/issues/213)) ([00704c3](https://github.com/glasskube/cloud/commit/00704c3b813c1cc9b641e48b9ba204034935c3fb))
+* **deps:** update dependency golangci-lint to v1.63.2 ([#217](https://github.com/glasskube/cloud/issues/217)) ([c6ddbce](https://github.com/glasskube/cloud/commit/c6ddbcee77080e374fd6ea43ff07b885124d0521))
+* **deps:** update dependency golangci-lint to v1.63.3 ([#221](https://github.com/glasskube/cloud/issues/221)) ([112c8f1](https://github.com/glasskube/cloud/commit/112c8f19f3f50cf8ba779cb186317a098f357bcd))
+* **deps:** update jdx/mise-action action to v2.1.10 ([#206](https://github.com/glasskube/cloud/issues/206)) ([81ed617](https://github.com/glasskube/cloud/commit/81ed6173170ae27889e6c12d4b374882e0da0b14))
+* **deps:** update jdx/mise-action action to v2.1.11 ([#212](https://github.com/glasskube/cloud/issues/212)) ([e2a0526](https://github.com/glasskube/cloud/commit/e2a0526c1a275ad3e19c60e6df2e54e12f79fd1e))
+* fix typos in context and middleware naming ([#209](https://github.com/glasskube/cloud/issues/209)) ([18bd9fb](https://github.com/glasskube/cloud/commit/18bd9fb7b0477bf62d84cbd0b00fa3ae16c3bc13))
+
 ## [0.8.0](https://github.com/glasskube/cloud/compare/v0.7.0...v0.8.0) (2024-12-20)
 
 

@@ -42,15 +42,15 @@ frontend-prod: node_modules
 
 .PHONY: run
 run: frontend-dev tidy
-	$(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/cloud/
+	CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/cloud/
 
 .PHONY: build
 build: frontend-prod tidy
-	$(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/cloud ./cmd/cloud/
+	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/cloud ./cmd/cloud/
 
 .PHONY: docker-build
-docker-build:
-	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+docker-build: build
+	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud .
 
 .PHONY: docker-build-agent
 docker-build-agent:
