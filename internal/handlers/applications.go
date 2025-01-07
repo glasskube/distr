@@ -174,6 +174,12 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if err := applicationVersion.Validate(application.Type); err != nil {
+		log.Error("invalid application version", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	if err := db.CreateApplicationVersion(ctx, &applicationVersion); err != nil {
 		log.Warn("could not create applicationversion", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)

@@ -43,7 +43,6 @@ export class ApplicationsService implements CrudService<Application> {
   ): Observable<ApplicationVersion> {
     const formData = new FormData();
     formData.append('composefile', file);
-    formData.append('applicationversion', JSON.stringify(applicationVersion));
     return this.doCreateVersion(application, applicationVersion, formData);
   }
 

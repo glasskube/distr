@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Application struct {
 	Base
@@ -29,6 +32,28 @@ type ApplicationVersion struct {
 	ComposeFileData  *[]byte `db:"compose_file_data" json:"-"`
 
 	ApplicationId string `db:"application_id" json:"applicationId"`
+}
+
+func (av ApplicationVersion) Validate(deplType DeploymentType) error {
+	if deplType == DeploymentTypeDocker {
+		if av.ComposeFileData == nil {
+			return errors.New("missing compose file")
+		} else if av.ChartType != nil || av.ChartName != nil || av.ChartUrl != nil || av.ChartVersion != nil ||
+			av.ValuesFileData != nil || av.TemplateFileData != nil {
+			return errors.New("unexpected kubernetes specifics in docker application")
+		}
+	} else if deplType == DepolymentTypeKubernetes {
+		if av.ChartType == nil || *av.ChartType == "" ||
+			av.ChartUrl == nil || *av.ChartUrl == "" ||
+			av.ChartVersion == nil || *av.ChartVersion == "" {
+			return errors.New("not all of chart type, url and version are given")
+		} else if *av.ChartType == HelmChartTypeRepository && (av.ChartName == nil || *av.ChartName == "") {
+			return errors.New("missing chart name")
+		} else if av.ComposeFileData != nil {
+			return errors.New("unexpected docker file in kubernetes application")
+		}
+	}
+	return nil
 }
 
 type Deployment struct {
