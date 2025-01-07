@@ -26,7 +26,7 @@ import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {UsersService} from '../../services/users.service';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
-import {disableControls, enableControls} from '../../../util/forms';
+import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../../util/forms';
 import {DeploymentType, HelmChartType} from '../../types/deployment';
 
 @Component({
@@ -63,67 +63,19 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     sampleApplication: new FormControl<boolean>(false, {nonNullable: true}),
     type: new FormControl<DeploymentType | null>(null, Validators.required),
     docker: new FormGroup({
-      name: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      versionName: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
+      name: new FormControl<string>('', Validators.required),
+      versionName: new FormControl<string>('', Validators.required),
     }),
     kubernetes: new FormGroup({
-      name: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      versionName: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      chartType: new FormControl<HelmChartType>(
-        {
-          value: 'repository',
-          disabled: true,
-        },
-        {
-          nonNullable: true,
-          validators: Validators.required,
-        }
-      ),
-      chartName: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      chartUrl: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      chartVersion: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
+      name: new FormControl<string>('', Validators.required),
+      versionName: new FormControl<string>('', Validators.required),
+      chartType: new FormControl<HelmChartType>('repository', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      chartName: new FormControl<string>('', Validators.required),
+      chartUrl: new FormControl<string>('', Validators.required),
+      chartVersion: new FormControl<string>('', Validators.required),
     }),
   });
   dockerComposeFile: File | null = null;
@@ -150,6 +102,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private loading = false;
 
   ngOnInit() {
+    this.toggleTypeSpecificFields(null);
+
     this.applicationForm.controls.sampleApplication.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((selected) => {
@@ -189,19 +143,19 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private toggleTypeSpecificFields(type: DeploymentType | null) {
     switch (type) {
       case 'docker':
-        enableControls(this.applicationForm.controls.docker);
-        disableControls(this.applicationForm.controls.kubernetes);
+        enableControlsWithoutEvent(this.applicationForm.controls.docker);
+        disableControlsWithoutEvent(this.applicationForm.controls.kubernetes);
         break;
       case 'kubernetes':
-        disableControls(this.applicationForm.controls.docker);
-        enableControls(this.applicationForm.controls.kubernetes);
+        disableControlsWithoutEvent(this.applicationForm.controls.docker);
+        enableControlsWithoutEvent(this.applicationForm.controls.kubernetes);
         if (this.applicationForm.controls.kubernetes.controls.chartType.value === 'oci') {
           this.applicationForm.controls.kubernetes.controls.chartName.disable();
         }
         break;
       default:
-        disableControls(this.applicationForm.controls.docker);
-        disableControls(this.applicationForm.controls.kubernetes);
+        disableControlsWithoutEvent(this.applicationForm.controls.docker);
+        disableControlsWithoutEvent(this.applicationForm.controls.kubernetes);
     }
   }
 

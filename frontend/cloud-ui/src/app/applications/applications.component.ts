@@ -14,7 +14,7 @@ import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
-import {disableControls, enableControls} from '../../util/forms';
+import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
 
 @Component({
@@ -60,37 +60,13 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
     kubernetes: new FormGroup({
-      chartType: new FormControl<HelmChartType>(
-        {
-          value: 'repository',
-          disabled: true,
-        },
-        {
-          nonNullable: true,
-          validators: Validators.required,
-        }
-      ),
-      chartName: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      chartUrl: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
-      chartVersion: new FormControl<string>(
-        {
-          value: '',
-          disabled: true,
-        },
-        Validators.required
-      ),
+      chartType: new FormControl<HelmChartType>('repository', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      chartName: new FormControl<string>('', Validators.required),
+      chartUrl: new FormControl<string>('', Validators.required),
+      chartVersion: new FormControl<string>('', Validators.required),
     }),
   });
   dockerComposeFile: File | null = null;
@@ -164,9 +140,9 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.editForm.controls.type.disable();
     this.resetVersionForm();
     if (this.selectedApplication?.type === 'kubernetes') {
-      enableControls(this.newVersionForm.controls.kubernetes);
+      enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
     } else {
-      disableControls(this.newVersionForm.controls.kubernetes);
+      disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
     }
   }
 
@@ -262,18 +238,17 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           this.dockerComposeFile!
         );
       } else {
+        const versionFormVal = this.newVersionForm.controls.kubernetes.value;
+        const version = {
+          name: this.newVersionForm.controls.versionName.value!,
+          chartType: versionFormVal.chartType!,
+          chartName: versionFormVal.chartName ?? undefined,
+          chartUrl: versionFormVal.chartUrl!,
+          chartVersion: versionFormVal.chartVersion!,
+        };
         res = this.applications.createApplicationVersionForKubernetes(
           this.selectedApplication,
-          {
-            name: this.newVersionForm.controls.versionName.value!,
-            chartType: this.newVersionForm.controls.kubernetes.controls.chartType.value,
-            chartName:
-              this.newVersionForm.controls.kubernetes.controls.chartType.value === 'repository'
-                ? this.newVersionForm.controls.kubernetes.controls.chartName.value!
-                : undefined,
-            chartUrl: this.newVersionForm.controls.kubernetes.controls.chartUrl.value!,
-            chartVersion: this.newVersionForm.controls.kubernetes.controls.chartVersion.value!,
-          },
+          version,
           this.baseValuesFile,
           this.templateFile
         );

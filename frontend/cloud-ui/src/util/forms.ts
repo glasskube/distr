@@ -1,19 +1,17 @@
 import {FormGroup} from '@angular/forms';
 
-export function enableControls(formGroup: FormGroup) {
-  toggleControls(formGroup, true);
+export function enableControlsWithoutEvent(formGroup: FormGroup) {
+  toggleControlsWithoutEvent(formGroup, true);
 }
 
-export function disableControls(formGroup: FormGroup) {
-  toggleControls(formGroup, false);
+export function disableControlsWithoutEvent(formGroup: FormGroup) {
+  toggleControlsWithoutEvent(formGroup, false);
 }
 
-export function toggleControls(formGroup: FormGroup, enabled: boolean) {
-  for (let controlsKey in formGroup.controls) {
-    if (enabled) {
-      formGroup.controls[controlsKey].enable();
-    } else {
-      formGroup.controls[controlsKey].disable();
-    }
+export function toggleControlsWithoutEvent(formGroup: FormGroup, enabled: boolean) {
+  if (enabled) {
+    formGroup.enable({emitEvent: false});
+  } else {
+    formGroup.disable({emitEvent: false});
   }
 }
