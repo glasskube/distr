@@ -65,7 +65,10 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           value: 'repository',
           disabled: true,
         },
-        Validators.required
+        {
+          nonNullable: true,
+          validators: Validators.required,
+        }
       ),
       chartName: new FormControl<string>(
         {
@@ -248,7 +251,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   createVersion() {
     const isDocker = this.selectedApplication?.type === 'docker';
     const fileValid = !isDocker || (isDocker && this.dockerComposeFile != null);
-    console.log(this.newVersionForm);
     if (this.newVersionForm.valid && fileValid && this.selectedApplication) {
       let res;
       if (isDocker) {
@@ -264,7 +266,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           this.selectedApplication,
           {
             name: this.newVersionForm.controls.versionName.value!,
-            chartType: this.newVersionForm.controls.kubernetes.controls.chartType.value!,
+            chartType: this.newVersionForm.controls.kubernetes.controls.chartType.value,
             chartName:
               this.newVersionForm.controls.kubernetes.controls.chartType.value === 'repository'
                 ? this.newVersionForm.controls.kubernetes.controls.chartName.value!

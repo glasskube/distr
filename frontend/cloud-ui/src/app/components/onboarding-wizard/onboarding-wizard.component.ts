@@ -60,8 +60,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   introForm = new FormGroup({});
 
   applicationForm = new FormGroup({
-    sampleApplication: new FormControl<boolean>(false),
-    type: new FormControl<DeploymentType | undefined>(undefined, Validators.required),
+    sampleApplication: new FormControl<boolean>(false, {nonNullable: true}),
+    type: new FormControl<DeploymentType | null>(null, Validators.required),
     docker: new FormGroup({
       name: new FormControl<string>(
         {
@@ -98,7 +98,10 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           value: 'repository',
           disabled: true,
         },
-        Validators.required
+        {
+          nonNullable: true,
+          validators: Validators.required,
+        }
       ),
       chartName: new FormControl<string>(
         {
@@ -152,16 +155,15 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       .subscribe((selected) => {
         if (selected) {
           this.applicationForm.controls.type.disable();
-          this.toggleTypeSpecificFields(undefined);
+          this.toggleTypeSpecificFields(null);
         } else {
           this.applicationForm.controls.type.enable();
-          this.toggleTypeSpecificFields(this.applicationForm.controls.type.value ?? undefined);
+          this.toggleTypeSpecificFields(this.applicationForm.controls.type.value);
         }
       });
 
     this.applicationForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
-      // TODO why is it even nullable
-      this.toggleTypeSpecificFields(type ?? undefined);
+      this.toggleTypeSpecificFields(type);
     });
 
     this.applicationForm.controls.kubernetes.controls.chartType.valueChanges
@@ -184,7 +186,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private toggleTypeSpecificFields(type?: DeploymentType) {
+  private toggleTypeSpecificFields(type: DeploymentType | null) {
     switch (type) {
       case 'docker':
         enableControls(this.applicationForm.controls.docker);
@@ -193,7 +195,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       case 'kubernetes':
         disableControls(this.applicationForm.controls.docker);
         enableControls(this.applicationForm.controls.kubernetes);
-        if (this.applicationForm.controls.kubernetes.controls.chartType.value !== 'repository') {
+        if (this.applicationForm.controls.kubernetes.controls.chartType.value === 'oci') {
           this.applicationForm.controls.kubernetes.controls.chartName.disable();
         }
         break;
