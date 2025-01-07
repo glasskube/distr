@@ -163,7 +163,11 @@
 
                     <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                       <div class="w-full">
-                        <label for="chartTypeSelect" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Chart Type</label>
+                        <label
+                          for="chartTypeSelect"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Chart Type</label
+                        >
                         <select
                           [formControl]="applicationForm.controls.kubernetes.controls.chartType"
                           id="chartTypeSelect"
@@ -174,7 +178,7 @@
                         @if (
                           applicationForm.controls.kubernetes.controls.chartType.invalid &&
                           applicationForm.controls.kubernetes.controls.chartType.touched
-                          ) {
+                        ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
                       </div>
@@ -182,7 +186,7 @@
                         <label
                           for="kubernetesChartName"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart Name</label
+                          >Chart Name</label
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.chartName"
@@ -193,7 +197,7 @@
                         @if (
                           applicationForm.controls.kubernetes.controls.chartName.invalid &&
                           applicationForm.controls.kubernetes.controls.chartName.touched
-                          ) {
+                        ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
                       </div>
@@ -204,7 +208,7 @@
                         <label
                           for="kubernetesChartUrl"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart URL</label
+                          >Chart URL</label
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.chartUrl"
@@ -215,7 +219,7 @@
                         @if (
                           applicationForm.controls.kubernetes.controls.chartUrl.invalid &&
                           applicationForm.controls.kubernetes.controls.chartUrl.touched
-                          ) {
+                        ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
                       </div>
@@ -223,7 +227,7 @@
                         <label
                           for="kubernetesChartVersion"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart Version</label
+                          >Chart Version</label
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.chartVersion"
@@ -234,7 +238,7 @@
                         @if (
                           applicationForm.controls.kubernetes.controls.chartVersion.invalid &&
                           applicationForm.controls.kubernetes.controls.chartVersion.touched
-                          ) {
+                        ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
                       </div>
@@ -245,7 +249,7 @@
                         <label
                           for="base_values_file_input"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Base Values</label
+                          >Base Values</label
                         >
                         <input
                           id="base_values_file_input"
@@ -260,7 +264,7 @@
                         <label
                           for="template_file_input"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Template</label
+                          >Template</label
                         >
                         <input
                           id="template_file_input"
@@ -271,9 +275,7 @@
                           class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
                       </div>
                     </div>
-
                   } @else if (applicationForm.controls.type.value === 'docker') {
-
                     <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                       <div class="w-full">
                         <label
@@ -334,7 +336,6 @@
                         }
                       </div>
                     </div>
-
                   } @else {
                     <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
                   }

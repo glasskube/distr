@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glasskube/cloud/internal/contenttype"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/glasskube/cloud/internal/contenttype"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"

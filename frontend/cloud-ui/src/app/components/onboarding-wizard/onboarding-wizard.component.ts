@@ -91,10 +91,13 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         },
         Validators.required
       ),
-      chartType: new FormControl<'repository' | 'oci'>({
-        value: 'repository',
-        disabled: true,
-      }, Validators.required),
+      chartType: new FormControl<'repository' | 'oci'>(
+        {
+          value: 'repository',
+          disabled: true,
+        },
+        Validators.required
+      ),
       chartName: new FormControl<string>(
         {
           value: '',
@@ -243,7 +246,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         });
     } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
-        const isDocker = this.applicationForm.controls.type.value === 'docker'
+        const isDocker = this.applicationForm.controls.type.value === 'docker';
         const fileUploadValid = !isDocker || (isDocker && this.dockerComposeFile != null);
         if (this.applicationForm.controls.sampleApplication.value) {
           this.loading = true;
@@ -268,7 +271,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
               chartName: this.applicationForm.controls.kubernetes.controls.chartName.value!,
               chartUrl: this.applicationForm.controls.kubernetes.controls.chartUrl.value!,
               chartVersion: this.applicationForm.controls.kubernetes.controls.chartVersion.value!,
-            }
+            };
           }
           this.applications
             .create({
@@ -277,10 +280,19 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
             })
             .pipe(
               switchMap((application) => {
-                if(isDocker) {
-                  return this.applications.createApplicationVersionForDocker(application, version, this.dockerComposeFile!)
+                if (isDocker) {
+                  return this.applications.createApplicationVersionForDocker(
+                    application,
+                    version,
+                    this.dockerComposeFile!
+                  );
                 } else {
-                  return this.applications.createApplicationVersionForKubernetes(application, version, this.baseValuesFile, this.templateFile)
+                  return this.applications.createApplicationVersionForKubernetes(
+                    application,
+                    version,
+                    this.baseValuesFile,
+                    this.templateFile
+                  );
                 }
               }),
               withLatestFrom(this.applications.list())

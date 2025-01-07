@@ -58,13 +58,13 @@ export class ApplicationsService implements CrudService<Application> {
     application: Application,
     applicationVersion: ApplicationVersion,
     valuesFile: File | null,
-    templateFile: File | null,
+    templateFile: File | null
   ): Observable<ApplicationVersion> {
     const formData = new FormData();
-    if(valuesFile) {
+    if (valuesFile) {
       formData.append('valuesfile', valuesFile);
     }
-    if(templateFile) {
+    if (templateFile) {
       formData.append('templatefile', templateFile);
     }
     formData.append('applicationversion', JSON.stringify(applicationVersion));
