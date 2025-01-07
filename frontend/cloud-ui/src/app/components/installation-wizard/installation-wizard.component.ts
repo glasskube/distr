@@ -7,7 +7,7 @@ import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, map, of, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
-import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
+import {DeploymentTargetViewModel} from '../../deployments/deployment-target-view-model';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentService} from '../../services/deployment.service';

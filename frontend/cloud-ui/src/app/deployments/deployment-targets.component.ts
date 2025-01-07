@@ -34,7 +34,7 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {Deployment} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
-import {DeploymentTargetViewModel} from './DeploymentTargetViewModel';
+import {DeploymentTargetViewModel} from './deployment-target-view-model';
 import {filteredByFormControl} from '../../util/filter';
 
 @Component({
