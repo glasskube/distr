@@ -44,14 +44,7 @@ export class ApplicationsService implements CrudService<Application> {
     const formData = new FormData();
     formData.append('composefile', file);
     formData.append('applicationversion', JSON.stringify(applicationVersion));
-    return this.httpClient
-      .post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData)
-      .pipe(
-        tap((it) => {
-          application.versions = [it, ...(application.versions || [])];
-          this.cache.save(application);
-        })
-      );
+    return this.doCreateVersion(application, applicationVersion, formData);
   }
 
   createApplicationVersionForKubernetes(
@@ -67,6 +60,10 @@ export class ApplicationsService implements CrudService<Application> {
     if (templateFile) {
       formData.append('templatefile', templateFile);
     }
+    return this.doCreateVersion(application, applicationVersion, formData);
+  }
+
+  private doCreateVersion(application: Application, applicationVersion: ApplicationVersion, formData: FormData) {
     formData.append('applicationversion', JSON.stringify(applicationVersion));
     return this.httpClient
       .post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData)
