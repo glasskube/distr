@@ -160,16 +160,20 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	applicationVersion.ApplicationId = application.ID
 
 	if application.Type == types.DeploymentTypeDocker {
-		if data := readFile(w, r, "composefile", true); data == nil {
+		if data, ok := readFile(w, r, "composefile"); !ok {
 			return
 		} else {
 			applicationVersion.ComposeFileData = data
 		}
 	} else {
-		if data := readFile(w, r, "valuesfile", false); data != nil {
+		if data, ok := readFile(w, r, "valuesfile"); !ok {
+			return
+		} else {
 			applicationVersion.ValuesFileData = data
 		}
-		if data := readFile(w, r, "templatefile", false); data != nil {
+		if data, ok := readFile(w, r, "templatefile"); !ok {
+			return
+		} else {
 			applicationVersion.TemplateFileData = data
 		}
 	}
@@ -192,17 +196,16 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func readFile(w http.ResponseWriter, r *http.Request, formKey string, required bool) *[]byte {
+func readFile(w http.ResponseWriter, r *http.Request, formKey string) (*[]byte, bool) {
 	log := internalctx.GetLogger(r.Context())
 	if file, head, err := r.FormFile(formKey); err != nil {
 		if !errors.Is(err, http.ErrMissingFile) {
 			log.Error("failed to get file from upload", zap.Error(err))
+			sentry.GetHubFromContext(r.Context()).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
-			return nil
-		} else if required {
-			log.Error("required file not given", zap.Error(err))
-			w.WriteHeader(http.StatusBadRequest)
-			return nil
+			return nil, false
+		} else {
+			return nil, true
 		}
 	} else {
 		log.Sugar().Debugf("got file %v with type %v and size %v", head.Filename, head.Header, head.Size)
@@ -211,20 +214,20 @@ func readFile(w http.ResponseWriter, r *http.Request, formKey string, required b
 			log.Debug("large body was rejected")
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			fmt.Fprintln(w, "file too large (max 100 KiB)")
-			return nil
+			return nil, false
 		} else if err := contenttype.IsYaml(head.Header); err != nil {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			fmt.Fprint(w, err)
-			return nil
+			return nil, false
 		} else if data, err := io.ReadAll(file); err != nil {
 			log.Error("failed to read file from upload", zap.Error(err))
-			w.WriteHeader(http.StatusBadRequest)
-			return nil
+			sentry.GetHubFromContext(r.Context()).CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return nil, false
 		} else {
-			return &data
+			return &data, true
 		}
 	}
-	return nil
 }
 
 func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
