@@ -27,6 +27,7 @@ import {ConnectInstructionsComponent} from '../connect-instructions/connect-inst
 import {UsersService} from '../../services/users.service';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
 import {disableControls, enableControls} from '../../../util/forms';
+import {DeploymentType, HelmChartType} from '../../types/deployment';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -60,7 +61,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   applicationForm = new FormGroup({
     sampleApplication: new FormControl<boolean>(false),
-    type: new FormControl<'docker' | 'kubernetes' | undefined>(undefined, Validators.required),
+    type: new FormControl<DeploymentType | undefined>(undefined, Validators.required),
     docker: new FormGroup({
       name: new FormControl<string>(
         {
@@ -92,7 +93,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         },
         Validators.required
       ),
-      chartType: new FormControl<'repository' | 'oci'>(
+      chartType: new FormControl<HelmChartType>(
         {
           value: 'repository',
           disabled: true,
@@ -183,8 +184,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // TODO proper type
-  private toggleTypeSpecificFields(type?: 'docker' | 'kubernetes') {
+  private toggleTypeSpecificFields(type?: DeploymentType) {
     switch (type) {
       case 'docker':
         enableControls(this.applicationForm.controls.docker);

@@ -15,6 +15,7 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
 import {disableControls, enableControls} from '../../util/forms';
+import {DeploymentType, HelmChartType} from '../types/deployment';
 
 @Component({
   selector: 'app-applications',
@@ -54,12 +55,12 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   editForm = new FormGroup({
     id: new FormControl(''),
     name: new FormControl('', Validators.required),
-    type: new FormControl('docker', Validators.required),
+    type: new FormControl<DeploymentType>('docker', Validators.required),
   });
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
     kubernetes: new FormGroup({
-      chartType: new FormControl<'repository' | 'oci'>(
+      chartType: new FormControl<HelmChartType>(
         {
           value: 'repository',
           disabled: true,
@@ -206,7 +207,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   saveApplication() {
     if (this.editForm.valid) {
-      const val = this.editForm.value;
+      const val = this.editForm.getRawValue();
       let result: Observable<Application>;
       if (!val.id) {
         result = this.applications.create({

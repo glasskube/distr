@@ -1,7 +1,8 @@
 import {BaseModel, Named} from './base';
+import {DeploymentType} from './deployment';
 
 export interface Application extends BaseModel, Named {
-  type: string;
+  type: DeploymentType;
   versions?: ApplicationVersion[];
 }
 
