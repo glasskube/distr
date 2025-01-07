@@ -1,6 +1,6 @@
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Observable, tap} from 'rxjs';
+import {catchError, Observable, of, tap, throwError} from 'rxjs';
 import {Application, ApplicationVersion} from '../types/application';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
@@ -34,6 +34,20 @@ export class ApplicationsService implements CrudService<Application> {
     return this.httpClient
       .delete<void>(`${this.applicationsUrl}/${application.id}`)
       .pipe(tap(() => this.cache.remove(application)));
+  }
+
+  getTemplateFile(applicationId: string, versionId: string): Observable<string | null> {
+    return this.httpClient
+      .get(`${this.applicationsUrl}/${applicationId}/versions/${versionId}/template-file`, {responseType: 'text'})
+      .pipe(
+        catchError((e) => {
+          if (e instanceof HttpErrorResponse && e.status == 404) {
+            return of(null);
+          } else {
+            return throwError(() => e);
+          }
+        })
+      );
   }
 
   createApplicationVersionForDocker(

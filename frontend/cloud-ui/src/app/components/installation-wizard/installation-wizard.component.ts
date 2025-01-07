@@ -4,7 +4,7 @@ import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} f
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, map, Subject, takeUntil, tap, withLatestFrom} from 'rxjs';
+import {firstValueFrom, map, of, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
@@ -82,15 +82,18 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     this.deployForm.controls.applicationVersionId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        map((id) => [this.selectedApplication?.type, this.selectedApplication?.versions?.find((it) => it.id === id)])
+        switchMap((id) =>
+          this.selectedApplication?.type === 'kubernetes'
+            ? this.applications
+                .getTemplateFile(this.selectedApplication?.id!, id!)
+                .pipe(map((data) => [this.selectedApplication?.type, data]))
+            : of([this.selectedApplication?.type, null])
+        )
       )
-      .subscribe(([type, version]) => {
+      .subscribe(([type, valuesYaml]) => {
         if (type === 'kubernetes') {
           this.deployForm.controls.valuesYaml.enable();
-          if (true) {
-            // TODO: use template from version
-            this.deployForm.patchValue({valuesYaml: ''});
-          }
+          this.deployForm.patchValue({valuesYaml});
         } else {
           this.deployForm.controls.valuesYaml.disable();
         }
@@ -170,6 +173,9 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   async saveDeployment() {
     if (this.deployForm.valid) {
       const deployment = this.deployForm.value;
+      if (deployment.valuesYaml) {
+        deployment.valuesYaml = btoa(deployment.valuesYaml);
+      }
       await firstValueFrom(this.deployments.create(deployment as Deployment));
       this.selectedDeploymentTarget!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
         this.selectedDeploymentTarget!.id!

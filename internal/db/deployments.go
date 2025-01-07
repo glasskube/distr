@@ -113,11 +113,19 @@ func GetLatestDeploymentComposeFile(
 
 func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	db := internalctx.GetDb(ctx)
-	args := pgx.NamedArgs{"deployment_target_id": d.DeploymentTargetId, "application_version_id": d.ApplicationVersionId}
-	rows, err := db.Query(ctx,
-		`INSERT INTO Deployment AS d (deployment_target_id, application_version_id)
-			VALUES (@deployment_target_id, @application_version_id) RETURNING `+deploymentOutputExpr,
-		args)
+	rows, err := db.Query(
+		ctx,
+		`INSERT INTO Deployment AS d
+			(deployment_target_id, application_version_id, release_name, values_yaml)
+			VALUES (@deploymentTargetId, @applicationVersionId, @releaseName, @valuesYaml)
+			RETURNING`+deploymentOutputExpr,
+		pgx.NamedArgs{
+			"deploymentTargetId":   d.DeploymentTargetId,
+			"applicationVersionId": d.ApplicationVersionId,
+			"releaseName":          d.ReleaseName,
+			"valuesYaml":           d.ValuesYaml,
+		},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to query Deployments: %w", err)
 	}
