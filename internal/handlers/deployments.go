@@ -41,12 +41,14 @@ func createDeployment(w http.ResponseWriter, r *http.Request) {
 	); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, "application does not exist", http.StatusBadRequest)
 	} else if err != nil {
-		http.Error(w, "an inernal error occurred", http.StatusInternalServerError)
+		log.Warn("could not get application version", zap.Error(err))
+		http.Error(w, "an internal error occurred", http.StatusInternalServerError)
 	} else if deploymentTarget, err := db.GetDeploymentTarget(
 		ctx, deployment.DeploymentTargetId, &orgId,
 	); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, "deployment target does not exist", http.StatusBadRequest)
 	} else if err != nil {
+		log.Warn("could not get deployment target", zap.Error(err))
 		http.Error(w, "an inernal error occurred", http.StatusInternalServerError)
 	} else if deploymentTarget.Type != application.Type {
 		http.Error(w, "application and deployment target must have the same type", http.StatusBadRequest)
