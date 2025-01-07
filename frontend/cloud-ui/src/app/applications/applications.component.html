@@ -236,6 +236,11 @@
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
                     <th scope="col" class="px-6 py-3">Version</th>
+                    @if (selectedApplication?.type === 'kubernetes') {
+                      <th scope="col" class="px-6 py-3">Chart URL</th>
+                      <th scope="col" class="px-6 py-3">Chart Name</th>
+                      <th scope="col" class="px-6 py-3">Chart Version</th>
+                    }
                     <th scope="col" class="px-6 py-3">Created At</th>
                     <th scope="col" class="px-6 py-3"></th>
                   </tr>
@@ -247,6 +252,17 @@
                       <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                         {{ version.name }}
                       </th>
+                      @if (selectedApplication?.type === 'kubernetes') {
+                        <td class="px-6 py-4">
+                          {{ version.chartUrl }}
+                        </td>
+                        <td class="px-6 py-4">
+                          {{ version.chartName }}
+                        </td>
+                        <td class="px-6 py-4">
+                          {{ version.chartVersion }}
+                        </td>
+                      }
                       <td class="px-6 py-4">
                         {{ version.createdAt | date: 'short' }}
                       </td>
