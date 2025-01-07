@@ -263,15 +263,13 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
             };
           } else {
             name = this.applicationForm.controls.kubernetes.controls.name.value!;
+            const versionFormVal = this.applicationForm.controls.kubernetes.value;
             version = {
-              name: this.applicationForm.controls.kubernetes.controls.versionName.value!,
-              chartType: this.applicationForm.controls.kubernetes.controls.chartType.value!,
-              chartName:
-                this.applicationForm.controls.kubernetes.controls.chartType.value === 'repository'
-                  ? this.applicationForm.controls.kubernetes.controls.chartName.value!
-                  : undefined,
-              chartUrl: this.applicationForm.controls.kubernetes.controls.chartUrl.value!,
-              chartVersion: this.applicationForm.controls.kubernetes.controls.chartVersion.value!,
+              name: versionFormVal.versionName!,
+              chartType: versionFormVal.chartType!,
+              chartName: versionFormVal.chartName ?? undefined,
+              chartUrl: versionFormVal.chartUrl!,
+              chartVersion: versionFormVal.chartVersion!,
             };
           }
           this.applications
