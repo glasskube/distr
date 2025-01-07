@@ -10,4 +10,8 @@ export interface ApplicationVersion {
   name?: string;
   createdAt?: string;
   applicationId?: string;
+  chartType?: string;
+  chartName?: string;
+  chartUrl?: string;
+  chartVersion?: string;
 }

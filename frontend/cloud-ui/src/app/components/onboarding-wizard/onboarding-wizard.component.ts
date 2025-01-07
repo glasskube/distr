@@ -21,7 +21,7 @@ import {
   withLatestFrom,
 } from 'rxjs';
 import {DeploymentService} from '../../services/deployment.service';
-import {Application} from '../../types/application';
+import {Application, ApplicationVersion} from '../../types/application';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {UsersService} from '../../services/users.service';
@@ -243,8 +243,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         });
     } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
-        const fileUploadValid = this.applicationForm.controls.type.value === 'kubernetes'
-          || (this.applicationForm.controls.type.value === 'docker' && this.dockerComposeFile != null);
+        const isDocker = this.applicationForm.controls.type.value === 'docker'
+        const fileUploadValid = !isDocker || (isDocker && this.dockerComposeFile != null);
         if (this.applicationForm.controls.sampleApplication.value) {
           this.loading = true;
           this.applications.createSample().subscribe((app) => {
@@ -253,13 +253,22 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           });
         } else if (fileUploadValid) {
           this.loading = true;
-          let name, versionName;
-          if (this.applicationForm.controls.type.value === 'docker') {
+          let name;
+          let version: ApplicationVersion;
+          if (isDocker) {
             name = this.applicationForm.controls.docker.controls.name.value!;
-            versionName = this.applicationForm.controls.docker.controls.versionName.value!;
+            version = {
+              name: this.applicationForm.controls.docker.controls.versionName.value!,
+            };
           } else {
             name = this.applicationForm.controls.kubernetes.controls.name.value!;
-            versionName = this.applicationForm.controls.kubernetes.controls.versionName.value!;
+            version = {
+              name: this.applicationForm.controls.kubernetes.controls.versionName.value!,
+              chartType: this.applicationForm.controls.kubernetes.controls.chartType.value!,
+              chartName: this.applicationForm.controls.kubernetes.controls.chartName.value!,
+              chartUrl: this.applicationForm.controls.kubernetes.controls.chartUrl.value!,
+              chartVersion: this.applicationForm.controls.kubernetes.controls.chartVersion.value!,
+            }
           }
           this.applications
             .create({
@@ -268,22 +277,10 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
             })
             .pipe(
               switchMap((application) => {
-                if(application.type === 'docker') {
-                  return this.applications.createApplicationVersionForDocker(
-                    application,
-                    {
-                      name: versionName,
-                    },
-                    this.dockerComposeFile!
-                  )
+                if(isDocker) {
+                  return this.applications.createApplicationVersionForDocker(application, version, this.dockerComposeFile!)
                 } else {
-                  return this.applications.createApplicationVersionForKubernetes(
-                    application,
-                    {
-                      name: versionName,
-                    },
-                    this.baseValuesFile, this.templateFile
-                  )
+                  return this.applications.createApplicationVersionForKubernetes(application, version, this.baseValuesFile, this.templateFile)
                 }
               }),
               withLatestFrom(this.applications.list())

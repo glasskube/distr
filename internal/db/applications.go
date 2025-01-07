@@ -82,7 +82,8 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			    a.name,
 			    a.type,
 			    coalesce((
-			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
+			    	SELECT array_agg(row(av.id, av.created_at, av.name,
+			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at DESC)
 			    	FROM applicationversion av
 			    	WHERE av.application_id = a.id
 			    ), array[]::record[]) as versions
@@ -114,7 +115,8 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			    a.name,
 			    a.type,
 			    coalesce((
-			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at DESC)
+			    	SELECT array_agg(row(av.id, av.created_at, av.name,
+			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at DESC)
 			    	FROM applicationversion av
 			    	WHERE av.application_id = a.id
 			    ), array[]::record[]) as versions
@@ -138,6 +140,10 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
 		"applicationId": applicationVersion.ApplicationId,
+		"chartType":     applicationVersion.ChartType,
+		"chartName":     applicationVersion.ChartName,
+		"chartUrl":      applicationVersion.ChartUrl,
+		"chartVersion":  applicationVersion.ChartVersion,
 	}
 	if applicationVersion.ComposeFileData != nil {
 		args["composeFileData"] = *applicationVersion.ComposeFileData
@@ -149,8 +155,12 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 		args["templateFileData"] = *applicationVersion.TemplateFileData
 	}
 	row := db.QueryRow(ctx,
-		`INSERT INTO ApplicationVersion (name, application_id, compose_file_data, values_file_data, template_file_data)
-					VALUES (@name, @applicationId, @composeFileData::bytea, @valuesFileData::bytea, @templateFileData::bytea)
+		`INSERT INTO ApplicationVersion (name, application_id,
+                                chart_type, chart_name, chart_url, chart_version,
+                                compose_file_data, values_file_data, template_file_data)
+					VALUES (@name, @applicationId,
+					        @chartType, @chartName, @chartUrl, @chartVersion,
+					        @composeFileData::bytea, @valuesFileData::bytea, @templateFileData::bytea)
 					RETURNING id, created_at`, args)
 	if err := row.Scan(&applicationVersion.ID, &applicationVersion.CreatedAt); err != nil {
 		return fmt.Errorf("could not save application: %w", err)
