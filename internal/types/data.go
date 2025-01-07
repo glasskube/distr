@@ -27,6 +27,7 @@ type ApplicationVersion struct {
 	// awful but relevant: the following must be defined after the ChartType, because somehow order matters
 	// for pgx at collecting the subrows (relevant at getting application + list of its versions with these
 	// array aggregations) – long term it should probably be refactored because this is such a pitfall
+	// https://github.com/jackc/pgx/issues/1585#issuecomment-1528810634
 	ValuesFileData   *[]byte `db:"values_file_data" json:"-"`
 	TemplateFileData *[]byte `db:"template_file_data" json:"-"`
 	ComposeFileData  *[]byte `db:"compose_file_data" json:"-"`
