@@ -43,6 +43,8 @@ func ApplicationsRouter(r chi.Router) {
 				r.Get("/", getApplicationVersion)
 				r.With(requireUserRoleVendor).Put("/", updateApplicationVersion)
 				r.Get("/compose-file", getApplicationVersionComposeFile)
+				r.Get("/template-file", getApplicationVersionTemplateFile)
+				r.Get("/values-file", getApplicationVersionValuesFile)
 			})
 		})
 	})
@@ -196,7 +198,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func readFile(w http.ResponseWriter, r *http.Request, formKey string) (*[]byte, bool) {
+func readFile(w http.ResponseWriter, r *http.Request, formKey string) ([]byte, bool) {
 	log := internalctx.GetLogger(r.Context())
 	if file, head, err := r.FormFile(formKey); err != nil {
 		if !errors.Is(err, http.ErrMissingFile) {
@@ -225,7 +227,7 @@ func readFile(w http.ResponseWriter, r *http.Request, formKey string) (*[]byte, 
 			w.WriteHeader(http.StatusInternalServerError)
 			return nil, false
 		} else {
-			return &data, true
+			return data, true
 		}
 	}
 }
@@ -263,29 +265,36 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getApplicationVersionComposeFile(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
-	application := internalctx.GetApplication(ctx)
-	applicationVersionId := r.PathValue("applicationVersionId")
-	// once performance becomes more important, do not load the whole application but only the requested version
-	for _, applicationVersion := range application.Versions {
-		if applicationVersion.ID == applicationVersionId {
-			if data, err := db.GetApplicationVersionComposeFile(ctx, applicationVersionId); err != nil {
-				log.Error("failed to get compose file from DB", zap.Error(err))
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintln(w, err)
-			} else if data == nil {
-				break
-			} else {
-				w.Header().Add("Content-Type", "application/yaml")
-				if _, err := w.Write(data); err != nil {
-					log.Error("failed to write compose file to response", zap.Error(err))
-				}
+var getApplicationVersionComposeFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+	return av.ComposeFileData
+})
+var getApplicationVersionValuesFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+	return av.ValuesFileData
+})
+var getApplicationVersionTemplateFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+	return av.TemplateFileData
+})
+
+func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion) []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		applicationVersionId := r.PathValue("applicationVersionId")
+		if v, err := db.GetApplicationVersion(ctx, applicationVersionId); errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+		} else if err != nil {
+			log.Error("failed to get ApplicationVersion from DB", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else if data := fileAccessor(*v); data == nil {
+			http.NotFound(w, r)
+		} else {
+			w.Header().Add("Content-Type", "application/yaml")
+			w.Header().Add("Cache-Control", "max-age=300, private")
+			if _, err := w.Write(data); err != nil {
+				log.Warn("failed to write file to response", zap.Error(err))
 			}
 		}
 	}
-	w.WriteHeader(http.StatusNotFound)
 }
 
 func createSampleApplication(w http.ResponseWriter, r *http.Request) {
@@ -307,7 +316,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 
 	version := types.ApplicationVersion{
 		Name:            "v1.7.1",
-		ComposeFileData: &composeFileData,
+		ComposeFileData: composeFileData,
 	}
 
 	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
