@@ -16,14 +16,17 @@ type ApplicationVersion struct {
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	Name      string    `db:"name" json:"name"`
 
-	ComposeFileData *[]byte `db:"compose_file_data" json:"-"`
+	ChartType    *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
+	ChartName    *string        `db:"chart_name" json:"chartName,omitempty"`
+	ChartUrl     *string        `db:"chart_url" json:"chartUrl,omitempty"`
+	ChartVersion *string        `db:"chart_version" json:"chartVersion,omitempty"`
 
-	ChartType        *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
-	ChartName        *string        `db:"chart_name" json:"chartName,omitempty"`
-	ChartUrl         *string        `db:"chart_url" json:"chartUrl,omitempty"`
-	ChartVersion     *string        `db:"chart_version" json:"chartVersion,omitempty"`
-	ValuesFileData   *[]byte        `db:"values_file_data" json:"-"`
-	TemplateFileData *[]byte        `db:"template_file_data" json:"-"`
+	// awful but relevant: the following must be defined after the ChartType, because somehow order matters
+	// for pgx at collecting the subrows (relevant at getting application + list of its versions with these
+	// array aggregations) – long term it should probably be refactored because this is such a pitfall
+	ValuesFileData   *[]byte `db:"values_file_data" json:"-"`
+	TemplateFileData *[]byte `db:"template_file_data" json:"-"`
+	ComposeFileData  *[]byte `db:"compose_file_data" json:"-"`
 
 	ApplicationId string `db:"application_id" json:"applicationId"`
 }

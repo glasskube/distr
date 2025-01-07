@@ -162,6 +162,16 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       this.toggleTypeSpecificFields(type ?? undefined);
     });
 
+    this.applicationForm.controls.kubernetes.controls.chartType.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((type) => {
+        if (type === 'repository') {
+          this.applicationForm.controls.kubernetes.controls.chartName.enable();
+        } else {
+          this.applicationForm.controls.kubernetes.controls.chartName.disable();
+        }
+      });
+
     this.deploymentTargetForm.controls.accessType.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
       if (type === 'full') {
         // disable validators
@@ -182,6 +192,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       case 'kubernetes':
         this.disableControls(this.applicationForm.controls.docker);
         this.enableControls(this.applicationForm.controls.kubernetes);
+        if (this.applicationForm.controls.kubernetes.controls.chartType.value !== 'repository') {
+          this.applicationForm.controls.kubernetes.controls.chartName.disable();
+        }
         break;
       default:
         this.disableControls(this.applicationForm.controls.docker);
@@ -268,7 +281,10 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
             version = {
               name: this.applicationForm.controls.kubernetes.controls.versionName.value!,
               chartType: this.applicationForm.controls.kubernetes.controls.chartType.value!,
-              chartName: this.applicationForm.controls.kubernetes.controls.chartName.value!,
+              chartName:
+                this.applicationForm.controls.kubernetes.controls.chartType.value === 'repository'
+                  ? this.applicationForm.controls.kubernetes.controls.chartName.value!
+                  : undefined,
               chartUrl: this.applicationForm.controls.kubernetes.controls.chartUrl.value!,
               chartVersion: this.applicationForm.controls.kubernetes.controls.chartVersion.value!,
             };
