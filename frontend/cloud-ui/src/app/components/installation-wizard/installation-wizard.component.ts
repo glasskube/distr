@@ -1,10 +1,10 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {AsyncPipe} from '@angular/common';
-import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, map, of, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
+import {combineLatest, firstValueFrom, map, of, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {DeploymentTargetViewModel} from '../../deployments/deployment-target-view-model';
@@ -15,6 +15,7 @@ import {ToastService} from '../../services/toast.service';
 import {Application} from '../../types/application';
 import {Deployment} from '../../types/deployment';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
+import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -58,9 +59,11 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     notes: new FormControl<string | undefined>(undefined),
   });
 
-  readonly applications$ = this.applications.list();
   protected selectedApplication?: Application;
-  protected selectedDeploymentTarget?: DeploymentTargetViewModel;
+  protected selectedDeploymentTarget = signal<DeploymentTargetViewModel | null>(null);
+  readonly applications$ = combineLatest([this.applications.list(), toObservable(this.selectedDeploymentTarget)]).pipe(
+    map(([apps, dt]) => apps.filter((app) => app.type === dt?.type))
+  );
   private loading = false;
   private readonly destroyed$ = new Subject<void>();
 
@@ -137,14 +140,14 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
           namespace: this.deploymentTargetForm.value.namespace!,
         })
       );
-      this.selectedDeploymentTarget = created as DeploymentTargetViewModel;
+      this.selectedDeploymentTarget.set(created as DeploymentTargetViewModel);
       this.nextStep();
     } else if (this.stepper?.selectedIndex === 1) {
       this.loading = true;
       this.nextStep();
     } else if (this.stepper?.selectedIndex == 2) {
       this.deployForm.patchValue({
-        deploymentTargetId: this.selectedDeploymentTarget!.id,
+        deploymentTargetId: this.selectedDeploymentTarget()!.id,
       });
 
       if (!this.deployForm.valid) {
@@ -177,8 +180,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
       }
       await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.selectedDeploymentTarget!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
-        this.selectedDeploymentTarget!.id!
+      this.selectedDeploymentTarget()!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
+        this.selectedDeploymentTarget()!.id!
       );
     }
   }

@@ -159,26 +159,25 @@
                 <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                   <div>
                     <h3 class="font-normal text-gray-900 dark:text-white">
-                      @if (selectedDeploymentTarget?.type === 'docker') {
+                      @if (selectedDeploymentTarget()?.type === 'docker') {
                         Download and run installation agent
                       } @else {
                         Deploy Glasskube agent in cluster
                       }
                     </h3>
                     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                      @if (selectedDeploymentTarget?.type === 'docker') {
+                      @if (selectedDeploymentTarget()?.type === 'docker') {
                         To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
                         Simply connect to the target (e.g. via SSH) and execute the following:
                       } @else {
                         To setup this Deployment, the Glasskube Cloud Agent must be installed in the target cluster.
                         With
                         <code>kubectl</code> installed and a <code>kubeconfig</code> that allows you to deploy
-                        applications in the {{ selectedDeploymentTarget?.namespace }} namespace, simply run:
+                        applications in the {{ selectedDeploymentTarget()?.namespace }} namespace, simply run:
                       }
                     </p>
-                    @if (selectedDeploymentTarget) {
-                      <app-connect-instructions [deploymentTarget]="selectedDeploymentTarget">
-                      </app-connect-instructions>
+                    @if (selectedDeploymentTarget(); as dt) {
+                      <app-connect-instructions [deploymentTarget]="dt"></app-connect-instructions>
                     }
                   </div>
                 </div>

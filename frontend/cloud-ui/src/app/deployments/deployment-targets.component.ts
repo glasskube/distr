@@ -1,6 +1,16 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {AfterViewInit, Component, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  signal,
+  TemplateRef,
+  ViewChild,
+} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -36,6 +46,7 @@ import {Deployment} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {DeploymentTargetViewModel} from './deployment-target-view-model';
 import {filteredByFormControl} from '../../util/filter';
+import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -101,7 +112,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
     name: new FormControl('', Validators.required),
-    type: new FormControl('', Validators.required),
+    type: new FormControl({value: '', disabled: true}, Validators.required),
     geolocation: new FormGroup({
       lat: new FormControl<number | undefined>(undefined),
       lon: new FormControl<number | undefined>(undefined),
@@ -218,9 +229,11 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
-  private selectedDeploymentTarget?: DeploymentTargetViewModel | null;
+  private selectedDeploymentTarget = signal<DeploymentTargetViewModel | null>(null);
   private readonly applications = inject(ApplicationsService);
-  readonly applications$ = this.applications.list();
+  readonly applications$ = combineLatest([this.applications.list(), toObservable(this.selectedDeploymentTarget)]).pipe(
+    map(([apps, dt]) => apps.filter((app) => app.type === dt?.type))
+  );
   selectedApplication?: Application | null;
 
   deployForm = new FormGroup({
@@ -259,7 +272,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   async newDeployment(dt: DeploymentTargetViewModel, deploymentModal: TemplateRef<any>) {
     this.showDeploymentModal(deploymentModal);
     this.deployForm.reset();
-    this.selectedDeploymentTarget = dt;
+    this.selectedDeploymentTarget.set(dt);
     this.deployForm.patchValue({
       deploymentTargetId: dt.id,
     });
@@ -279,8 +292,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     if (this.deployForm.valid) {
       const deployment = this.deployForm.value;
       await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.selectedDeploymentTarget!!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
-        this.selectedDeploymentTarget!!.id!!
+      this.selectedDeploymentTarget()!.latestDeployment = this.deploymentTargets.latestDeploymentFor(
+        this.selectedDeploymentTarget()!.id!
       );
       this.toast.success('Deployment saved successfully');
       this.hideModal();
