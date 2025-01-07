@@ -11,17 +11,20 @@ import {
   TemplateRef,
   ViewChild,
 } from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
+  catchError,
   combineLatest,
-  EMPTY,
   filter,
   first,
   firstValueFrom,
   lastValueFrom,
   map,
+  of,
+  shareReplay,
   Subject,
   switchMap,
   takeUntil,
@@ -29,6 +32,7 @@ import {
   withLatestFrom,
 } from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
+import {filteredByFormControl} from '../../util/filter';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
@@ -45,8 +49,6 @@ import {Application} from '../types/application';
 import {Deployment} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {DeploymentTargetViewModel} from './deployment-target-view-model';
-import {filteredByFormControl} from '../../util/filter';
-import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -68,9 +70,15 @@ import {toObservable} from '@angular/core/rxjs-interop';
   animations: [modalFlyInOut, drawerFlyInOut],
 })
 export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input('fullVersion') fullVersion = false;
+
   public readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
-  @Input('fullVersion') fullVersion = false;
+  private readonly overlay = inject(OverlayService);
+  private readonly applications = inject(ApplicationsService);
+  private readonly deploymentTargets = inject(DeploymentTargetsService);
+  private readonly deployments = inject(DeploymentService);
+
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
   readonly penIcon = faPen;
@@ -78,20 +86,41 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   readonly xmarkIcon = faXmark;
   protected readonly faTrash = faTrash;
 
-  private modal?: DialogRef;
-  private manageDeploymentTargetRef?: DialogRef;
-  private readonly overlay = inject(OverlayService);
   private destroyed$ = new Subject();
 
-  @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
+  private modal?: DialogRef;
+  private manageDeploymentTargetRef?: DialogRef;
   private deploymentWizardOverlayRef?: DialogRef;
 
-  private readonly deploymentTargets = inject(DeploymentTargetsService);
-  filterForm = new FormGroup({
+  @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
+
+  private selectedDeploymentTarget = signal<DeploymentTargetViewModel | null>(null);
+  selectedApplication?: Application | null;
+
+  readonly filterForm = new FormGroup({
     search: new FormControl(''),
   });
 
+  readonly editForm = new FormGroup({
+    id: new FormControl<string | undefined>(undefined),
+    name: new FormControl('', Validators.required),
+    type: new FormControl({value: '', disabled: true}, Validators.required),
+    geolocation: new FormGroup({
+      lat: new FormControl<number | undefined>(undefined),
+      lon: new FormControl<number | undefined>(undefined),
+    }),
+  });
+
+  readonly deployForm = new FormGroup({
+    deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
+    applicationId: new FormControl<string | undefined>(undefined, Validators.required),
+    applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
+    valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
+    notes: new FormControl<string | undefined>(undefined),
+  });
+
   readonly deploymentTargets$ = this.deploymentTargets.list().pipe(
+    shareReplay(1),
     map((dts) =>
       dts.map((dt) => {
         let dtView = dt as DeploymentTargetViewModel;
@@ -102,22 +131,17 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       })
     )
   );
-
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
-  ).pipe(takeUntil(this.destroyed$));
+  );
 
-  editForm = new FormGroup({
-    id: new FormControl<string | undefined>(undefined),
-    name: new FormControl('', Validators.required),
-    type: new FormControl({value: '', disabled: true}, Validators.required),
-    geolocation: new FormGroup({
-      lat: new FormControl<number | undefined>(undefined),
-      lon: new FormControl<number | undefined>(undefined),
-    }),
-  });
+  private readonly applications$ = this.applications.list();
+  readonly filteredApplications$ = combineLatest([
+    this.applications$,
+    toObservable(this.selectedDeploymentTarget),
+  ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
 
   ngOnInit() {
     this.registerDeployFormChanges();
@@ -125,11 +149,10 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   ngAfterViewInit() {
     if (this.fullVersion) {
-      const always = false;
-      combineLatest([this.applications$, this.deploymentTargets$])
+      combineLatest([this.filteredApplications$, this.deploymentTargets$])
         .pipe(first())
         .subscribe(([apps, dts]) => {
-          if (always || (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0)) {
+          if (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0) {
             this.openWizard();
           }
         });
@@ -150,7 +173,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   hideDrawer() {
     this.manageDeploymentTargetRef?.close();
-    this.reset();
+    this.resetEditForm();
   }
 
   openWizard() {
@@ -166,7 +189,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.deploymentWizardOverlayRef?.close();
   }
 
-  reset() {
+  resetEditForm() {
     this.editForm.reset();
     this.editForm.patchValue({type: 'docker'});
   }
@@ -189,12 +212,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  showDeploymentModal(templateRef: TemplateRef<unknown>) {
-    this.hideModal();
-    this.modal = this.overlay.showModal(templateRef);
-  }
-
-  async showInstructionsModal(templateRef: TemplateRef<unknown>, dt: DeploymentTarget) {
+  showModal(templateRef: TemplateRef<unknown>) {
     this.hideModal();
     this.modal = this.overlay.showModal(templateRef);
   }
@@ -229,27 +247,11 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
-  private selectedDeploymentTarget = signal<DeploymentTargetViewModel | null>(null);
-  private readonly applications = inject(ApplicationsService);
-  readonly applications$ = combineLatest([this.applications.list(), toObservable(this.selectedDeploymentTarget)]).pipe(
-    map(([apps, dt]) => apps.filter((app) => app.type === dt?.type))
-  );
-  selectedApplication?: Application | null;
-
-  deployForm = new FormGroup({
-    deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationVersionId: new FormControl<string | undefined>(undefined, Validators.required),
-    notes: new FormControl<string | undefined>(undefined),
-  });
-
-  readonly deployments = inject(DeploymentService);
-
   private registerDeployFormChanges() {
     this.deployForm.controls.applicationId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        withLatestFrom(this.applications$),
+        withLatestFrom(this.filteredApplications$),
         tap(([selected, apps]) => this.updatedSelectedApplication(apps, selected))
       )
       .subscribe(() => {
@@ -269,23 +271,21 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  async newDeployment(dt: DeploymentTargetViewModel, deploymentModal: TemplateRef<any>) {
-    this.showDeploymentModal(deploymentModal);
-    this.deployForm.reset();
-    this.selectedDeploymentTarget.set(dt);
-    this.deployForm.patchValue({
-      deploymentTargetId: dt.id,
+  async newDeployment(deploymentTarget: DeploymentTargetViewModel, modalTemplate: TemplateRef<any>) {
+    const apps = await firstValueFrom(this.applications$);
+    const latestDeployment = await firstValueFrom(
+      deploymentTarget.latestDeployment?.pipe(catchError(() => of(null))) ?? of(null)
+    );
+    this.selectedDeploymentTarget.set(deploymentTarget);
+    this.deployForm.reset({
+      deploymentTargetId: deploymentTarget.id,
+      applicationId: latestDeployment?.applicationId,
+      applicationVersionId: latestDeployment?.applicationVersionId,
     });
-    this.deploymentTargets
-      .latestDeploymentFor(dt.id!!)
-      .pipe(withLatestFrom(this.applications$))
-      .subscribe(([d, apps]) => {
-        this.deployForm.patchValue({
-          applicationId: d.applicationId,
-          applicationVersionId: d.applicationVersionId,
-        });
-        this.updatedSelectedApplication(apps, d.applicationId);
-      });
+    if (latestDeployment) {
+      this.updatedSelectedApplication(apps, latestDeployment.applicationId);
+    }
+    this.showModal(modalTemplate);
   }
 
   async saveDeployment() {
