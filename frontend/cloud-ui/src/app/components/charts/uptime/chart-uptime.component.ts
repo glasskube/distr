@@ -17,6 +17,8 @@ export class ChartUptimeComponent implements OnInit {
 
   private readonly metrics = inject(MetricsService);
 
+  loading = true;
+
   async ngOnInit() {
     const dts = await firstValueFrom(this.deploymentTargets$);
     for (const dt of dts) {
@@ -29,6 +31,7 @@ export class ChartUptimeComponent implements OnInit {
           continue;
         }
         this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
+          this.loading = false;
           this.chartOptions = {
             series: [
               {
