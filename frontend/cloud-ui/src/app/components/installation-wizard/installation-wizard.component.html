@@ -233,10 +233,23 @@
                         <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                       }
                     </div>
+                    @if (deployForm.controls.valuesYaml.enabled) {
+                      <div class="col-span-2">
+                        <label for="helm-values" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                          Helm values
+                        </label>
+                        <textarea
+                          id="helm-values"
+                          rows="10"
+                          formControlName="valuesYaml"
+                          class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          placeholder="Add helm values for this deployment"></textarea>
+                      </div>
+                    }
                     <div class="col-span-2">
                       <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                        Deployment notes</label
-                      >
+                        Deployment notes
+                      </label>
                       <textarea
                         id="description"
                         rows="4"

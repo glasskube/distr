@@ -1,21 +1,20 @@
-import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
-import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {modalFlyInOut} from '../../animations/modal';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
-import {ApplicationsService} from '../../services/applications.service';
-import {EMPTY, firstValueFrom, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
-import {DeploymentService} from '../../services/deployment.service';
-import {Application} from '../../types/application';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {AsyncPipe} from '@angular/common';
-import {Deployment} from '../../types/deployment';
+import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {firstValueFrom, map, Subject, takeUntil, tap, withLatestFrom} from 'rxjs';
+import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {DeploymentTargetViewModel} from '../../deployments/DeploymentTargetViewModel';
+import {ApplicationsService} from '../../services/applications.service';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
+import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
-import {DeploymentTarget} from '../../types/deployment-target';
+import {Application} from '../../types/application';
+import {Deployment} from '../../types/deployment';
+import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -55,6 +54,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
+    valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
     notes: new FormControl<string | undefined>(undefined),
   });
 
@@ -77,6 +77,22 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
           this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
         } else {
           this.deployForm.controls.applicationVersionId.reset();
+        }
+      });
+    this.deployForm.controls.applicationVersionId.valueChanges
+      .pipe(
+        takeUntil(this.destroyed$),
+        map((id) => [this.selectedApplication?.type, this.selectedApplication?.versions?.find((it) => it.id === id)])
+      )
+      .subscribe(([type, version]) => {
+        if (type === 'kubernetes') {
+          this.deployForm.controls.valuesYaml.enable();
+          if (true) {
+            // TODO: use template from version
+            this.deployForm.patchValue({valuesYaml: ''});
+          }
+        } else {
+          this.deployForm.controls.valuesYaml.disable();
         }
       });
     this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
