@@ -46,7 +46,9 @@ export class ChartUptimeComponent implements OnInit {
               },
             ],
             chart: {
-              height: 220,
+              offsetY: 20,
+              //width: '100%',
+              //height: '80%',
               type: 'bar',
               stacked: true,
               sparkline: {
@@ -67,18 +69,11 @@ export class ChartUptimeComponent implements OnInit {
               show: true,
               position: 'top',
               fontFamily: 'Inter',
-              offsetY: -18,
+              offsetY: -5,
+              floating: true,
               labels: {
                 colors: 'rgb(156, 163, 175)',
                 useSeriesColors: false,
-              },
-            },
-            title: {
-              text: `${dt.name}`,
-              align: 'center',
-              style: {
-                color: 'rgb(156, 163, 175)',
-                fontFamily: 'Poppins',
               },
             },
           };
