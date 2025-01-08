@@ -151,7 +151,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   ngAfterViewInit() {
     if (this.fullVersion) {
-      combineLatest([this.filteredApplications$, this.deploymentTargets$])
+      combineLatest([this.applications$, this.deploymentTargets$])
         .pipe(first())
         .subscribe(([apps, dts]) => {
           if (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0) {
