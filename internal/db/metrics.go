@@ -105,8 +105,9 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 		processRow(true)
 		// last row is the current hour until now, so it does not have the complete total/expected, but a reduced one
 		restOfHour := time.Until(currentBaseHour.Add(1 * time.Hour))
-		metrics[len(metrics)-1].Total = currentHourMetric.Total - int(restOfHour/maxAllowedInterval)
-		metrics[len(metrics)-1].Unknown = metrics[len(metrics)-1].Unknown + currentHourMetric.Unknown
+		lastHourMetric := &metrics[len(metrics)-1]
+		lastHourMetric.Total = lastHourMetric.Total - int(restOfHour/maxAllowedInterval)
+		lastHourMetric.Unknown = lastHourMetric.Unknown + currentHourMetric.Unknown
 		return metrics, nil
 	}
 }
