@@ -29,9 +29,10 @@ export class InviteComponent {
     if (this.form.valid) {
       this.submitted = true;
       const value = this.form.value;
-      await firstValueFrom(
-        this.settings.updateUserSettings({name: value.name, password: value.password, emailVerified: true})
-      );
+      await firstValueFrom(this.settings.updateUserSettings({name: value.name, password: value.password}));
+      if (this.auth.getClaims().email_verified) {
+        await firstValueFrom(this.settings.confirmEmailVerification());
+      }
       this.auth.logout();
       location.assign(`/login?email=${encodeURIComponent(this.email)}`);
     }
