@@ -21,14 +21,11 @@ export class ChartUptimeComponent implements OnInit {
     const dts = await firstValueFrom(this.deploymentTargets$);
     for (const dt of dts) {
       if (dt.currentStatus) {
-        let deployment;
-        try {
-          // temporarily: simply show uptime of the first deployment target with a status and a deployment
-          deployment = await lastValueFrom(this.deploymentTargets.latestDeploymentFor(dt.id!));
-        } catch (e) {
+        // temporarily: simply show uptime of the first deployment target with a status and a deployment
+        if (!dt.latestDeployment) {
           continue;
         }
-        this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
+        this.metrics.getUptimeForDeployment(dt.latestDeployment.id!).subscribe((uptimes) => {
           this.chartOptions = {
             series: [
               {

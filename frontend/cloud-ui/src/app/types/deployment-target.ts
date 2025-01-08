@@ -1,5 +1,5 @@
 import {BaseModel, Named} from './base';
-import {DeploymentType} from './deployment';
+import {DeploymentType, DeploymentWithData} from './deployment';
 import {Geolocation} from './geolocation';
 import {UserAccountWithRole} from './user-account';
 
@@ -9,8 +9,8 @@ export interface DeploymentTarget extends BaseModel, Named {
   namespace?: string;
   geolocation?: Geolocation;
   createdBy?: UserAccountWithRole;
-
   currentStatus?: DeploymentTargetStatus;
+  latestDeployment?: DeploymentWithData;
 }
 
 export interface DeploymentTargetStatus extends BaseModel {
