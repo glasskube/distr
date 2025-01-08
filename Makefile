@@ -44,17 +44,28 @@ frontend-prod: node_modules
 run: frontend-dev tidy
 	CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/cloud/
 
+.PHONY: run-kubernetes-agent
+run-kubernetes-agent: tidy
+	CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/agent/kubernetes
+
 .PHONY: build
 build: frontend-prod tidy
 	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/cloud ./cmd/cloud/
 
-.PHONY: docker-build
-docker-build: build
+.PHONY: docker-build-server
+docker-build-server: build
 	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud .
 
-.PHONY: docker-build-agent
-docker-build-agent:
-	docker build -f Dockerfile.agent --tag ghcr.io/glasskube/cloud-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+.PHONY: docker-build-docker-agent
+docker-build-docker-agent:
+	docker build -f Dockerfile.docker-agent --tag ghcr.io/glasskube/cloud/docker-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+
+.PHONY: docker-build-kubernetes-agent
+docker-build-kubernetes-agent:
+	docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/cloud/kubernetes-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+
+.PHONY: docker-build-kubernetes-agent
+docker-build: docker-build-server docker-build-docker-agent docker-build-kubernetes-agent
 
 .PHONY: init-db
 init-db:
