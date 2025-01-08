@@ -1,14 +1,16 @@
 <div class="relative">
-  <h1 class="inline-flex self-center font-semibold text-sm text-gray-700 dark:text-gray-400">Deployment Uptime</h1>
+  <h1 class="inline-flex self-center font-semibold text-sm text-gray-700 dark:text-gray-400">
+    Uptime{{ selectedDeploymentTarget ? ': ' + selectedDeploymentTarget.name : '' }}
+  </h1>
 
-  <button cdkOverlayOrigin
-          #dropdownTrigger="cdkOverlayOrigin"
-          (click)="showDropdown = !showDropdown"
-          class="inline-block absolute top-0 right-0 p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-          type="button">
+  <button
+    cdkOverlayOrigin
+    #dropdownTrigger="cdkOverlayOrigin"
+    (click)="showDropdown = !showDropdown"
+    class="inline-block absolute top-0 right-0 p-1 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+    type="button">
     <fa-icon [icon]="faEllipsis"></fa-icon>
   </button>
-
 </div>
 
 <ng-template
@@ -23,7 +25,7 @@
     style="transform-origin: top center"
     class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
     <ul class="py-1" role="none">
-      @for (dt of deploymentTargets$ | async; track dt.id ) {
+      @for (dt of deploymentTargets$ | async; track dt.id) {
         <li>
           <button
             type="button"
@@ -48,9 +50,6 @@
     [xaxis]="chartOptions.xaxis!"
     [legend]="chartOptions.legend!">
   </apx-chart>
-} @else if (loading) {
-  <p class="block h-52 max-w-full max-h-full overflow-hidden">Loading...</p>
 } @else {
-  <p class="block h-52 max-w-full max-h-full overflow-hidden">Nothing to display right now.</p>
+  <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">Nothing to display right now.</p>
 }
-

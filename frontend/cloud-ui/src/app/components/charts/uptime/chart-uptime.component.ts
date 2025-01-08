@@ -1,6 +1,6 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
-import {firstValueFrom, lastValueFrom} from 'rxjs';
+import {catchError, EMPTY, filter, firstValueFrom, lastValueFrom, of, switchMap} from 'rxjs';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
 import {MetricsService} from '../../../services/metrics.service';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -9,6 +9,8 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../../../animations/dropdown';
 import {AsyncPipe} from '@angular/common';
 import {DeploymentTarget} from '../../../types/deployment-target';
+import {HttpErrorResponse} from '@angular/common/http';
+import {Deployment} from '../../../types/deployment';
 
 @Component({
   selector: 'app-chart-uptime',
@@ -17,6 +19,7 @@ import {DeploymentTarget} from '../../../types/deployment-target';
   animations: [dropdownAnimation],
 })
 export class ChartUptimeComponent implements OnInit {
+  private readonly LOCAL_STORAGE_KEY = 'dashboard_uptime_deployment_target_id';
   public chartOptions?: ApexOptions;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
@@ -24,126 +27,78 @@ export class ChartUptimeComponent implements OnInit {
 
   private readonly metrics = inject(MetricsService);
 
-  loading = true;
   showDropdown = false;
+  storedDeploymentTargetId?: string;
+  selectedDeploymentTarget?: DeploymentTarget;
 
-  protected readonly faEllipsisVertical = faEllipsisVertical;
   protected readonly faEllipsis = faEllipsis;
 
   async ngOnInit() {
+    this.storedDeploymentTargetId = window.localStorage[this.LOCAL_STORAGE_KEY];
     const dts = await firstValueFrom(this.deploymentTargets$);
-    /*for (const dt of dts) {
-      if (dt.currentStatus) {
-        let deployment;
-        try {
-          // temporarily: simply show uptime of the first deployment target with a status and a deployment
-          deployment = await lastValueFrom(this.deploymentTargets.latestDeploymentFor(dt.id!));
-        } catch (e) {
-          continue;
-        }
-        this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
-          this.loading = false;
-          this.chartOptions = {
-            series: [
-              {
-                name: 'available',
-                data: uptimes.map((ut) => ut.total - ut.unknown),
-                color: '#00bfa5',
-              },
-              {
-                name: 'unknown',
-                data: uptimes.map((ut) => ut.unknown),
-                color: '#feb019',
-              },
-            ],
-            chart: {
-              offsetY: 10,
-              //width: '100%',
-              //height: '80%',
-              type: 'bar',
-              stacked: true,
-              sparkline: {
-                enabled: true,
-              },
-            },
-            stroke: {
-              curve: 'smooth',
-            },
-            tooltip: {
-              enabled: false,
-            },
-            xaxis: {
-              type: 'datetime',
-              categories: uptimes.map((ut) => ut.hour),
-            },
-            legend: {
-              show: true,
-              position: 'top',
-              fontFamily: 'Inter',
-              offsetY: -5,
-              floating: true,
-              labels: {
-                colors: 'rgb(156, 163, 175)',
-                useSeriesColors: false,
-              },
-            },
-          };
-        });
-        return;
-      }
-    }*/
+    const stored = dts.find((dt) => dt.id === this.storedDeploymentTargetId);
+    if (stored) {
+      this.selectDeploymentTarget(stored);
+    }
   }
 
-  async selectDeploymentTarget(dt: DeploymentTarget) {
+  selectDeploymentTarget(dt: DeploymentTarget) {
     this.showDropdown = false;
-    const deployment = await lastValueFrom(this.deploymentTargets.latestDeploymentFor(dt.id!));
-    this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
-      this.loading = false;
-      this.chartOptions = {
-        series: [
-          {
-            name: 'available',
-            data: uptimes.map((ut) => ut.total - ut.unknown),
-            color: '#00bfa5',
+    this.selectedDeploymentTarget = dt;
+    window.localStorage[this.LOCAL_STORAGE_KEY] = dt.id;
+    this.chartOptions = undefined;
+    this.deploymentTargets
+      .latestDeploymentFor(dt.id!)
+      .pipe(
+        catchError(() => EMPTY),
+        switchMap((deployment) => (deployment?.id ? this.metrics.getUptimeForDeployment(deployment.id) : of([])))
+      )
+      .subscribe((uptimes) => {
+        this.chartOptions = {
+          series: [
+            {
+              name: 'available',
+              data: uptimes.map((ut) => ut.total - ut.unknown),
+              color: '#00bfa5',
+            },
+            {
+              name: 'unknown',
+              data: uptimes.map((ut) => ut.unknown),
+              color: '#feb019',
+            },
+          ],
+          chart: {
+            offsetY: 10,
+            //width: '100%',
+            //height: '80%',
+            type: 'bar',
+            stacked: true,
+            sparkline: {
+              enabled: true,
+            },
           },
-          {
-            name: 'unknown',
-            data: uptimes.map((ut) => ut.unknown),
-            color: '#feb019',
+          stroke: {
+            curve: 'smooth',
           },
-        ],
-        chart: {
-          offsetY: 10,
-          //width: '100%',
-          //height: '80%',
-          type: 'bar',
-          stacked: true,
-          sparkline: {
-            enabled: true,
+          tooltip: {
+            enabled: false,
           },
-        },
-        stroke: {
-          curve: 'smooth',
-        },
-        tooltip: {
-          enabled: false,
-        },
-        xaxis: {
-          type: 'datetime',
-          categories: uptimes.map((ut) => ut.hour),
-        },
-        legend: {
-          show: true,
-          position: 'top',
-          fontFamily: 'Inter',
-          offsetY: -5,
-          floating: true,
-          labels: {
-            colors: 'rgb(156, 163, 175)',
-            useSeriesColors: false,
+          xaxis: {
+            type: 'datetime',
+            categories: uptimes.map((ut) => ut.hour),
           },
-        },
-      };
-    });
+          legend: {
+            show: true,
+            position: 'top',
+            fontFamily: 'Inter',
+            offsetY: -5,
+            floating: true,
+            labels: {
+              colors: 'rgb(156, 163, 175)',
+              useSeriesColors: false,
+            },
+          },
+        };
+      });
   }
 }
