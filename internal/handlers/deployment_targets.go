@@ -74,16 +74,16 @@ func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
-	var dt types.DeploymentTargetWithCreatedBy
-	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, err)
-	} else if err = db.CreateDeploymentTarget(r.Context(), &dt); err != nil {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	if dt, err := JsonBody[types.DeploymentTargetWithCreatedBy](w, r); err != nil {
+		return
+	} else if err = dt.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if err = db.CreateDeploymentTarget(ctx, &dt); err != nil {
 		log.Warn("could not create DeploymentTarget", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}

@@ -17,8 +17,8 @@ import (
 
 const (
 	deploymentTargetOutputExprBase = `
-		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.organization_id,
-		dt.created_by_user_account_id,
+		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.namespace,
+		dt.organization_id, dt.created_by_user_account_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation
 	`
@@ -78,6 +78,11 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCrea
 	); err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTargets: %w", err)
 	} else {
+		for i := range result {
+			if err := addLatestDeploymentToTarget(ctx, &result[i]); err != nil {
+				return nil, err
+			}
+		}
 		return result, nil
 	}
 }
@@ -102,7 +107,7 @@ func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
-		return &result, nil
+		return &result, addLatestDeploymentToTarget(ctx, &result)
 	}
 }
 
@@ -152,7 +157,7 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return fmt.Errorf("could not save DeploymentTarget: %w", err)
 	} else {
 		*dt = result
-		return nil
+		return addLatestDeploymentToTarget(ctx, dt)
 	}
 }
 
@@ -181,7 +186,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
-		return nil
+		return addLatestDeploymentToTarget(ctx, dt)
 	}
 }
 
@@ -244,5 +249,16 @@ func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarg
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
+	}
+}
+
+func addLatestDeploymentToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
+	if latest, err := GetLatestDeploymentForDeploymentTarget(ctx, dt.ID); errors.Is(err, apierrors.ErrNotFound) {
+		return nil
+	} else if err != nil {
+		return err
+	} else {
+		dt.LatestDeployment = latest
+		return nil
 	}
 }

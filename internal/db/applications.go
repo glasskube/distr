@@ -83,7 +83,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			    a.type,
 			    coalesce((
 			    	SELECT array_agg(row(av.id, av.created_at, av.name,
-			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at DESC)
+			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			    	FROM applicationversion av
 			    	WHERE av.application_id = a.id
 			    ), array[]::record[]) as versions
@@ -116,12 +116,47 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			    a.type,
 			    coalesce((
 			    	SELECT array_agg(row(av.id, av.created_at, av.name,
-			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at DESC)
+			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			    	FROM applicationversion av
 			    	WHERE av.application_id = a.id
 			    ), array[]::record[]) as versions
 			FROM Application a
 			WHERE a.id = @id AND a.organization_id = @orgId
+		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
+		return nil, fmt.Errorf("failed to query application: %w", err)
+	} else if application, err :=
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get application: %w", err)
+	} else {
+		return &application, nil
+	}
+}
+
+func GetApplicationForApplicationVersionID(ctx context.Context, id string) (*types.Application, error) {
+	orgId, err := auth.CurrentOrgId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	db := internalctx.GetDb(ctx)
+	if rows, err := db.Query(ctx, `
+			SELECT
+			    a.id,
+			    a.created_at,
+				a.organization_id,
+			    a.name,
+			    a.type,
+			    coalesce((
+			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at ASC)
+			    	FROM applicationversion av
+			    	WHERE av.application_id = a.id
+			    ), array[]::record[]) as versions
+			FROM ApplicationVersion v
+				LEFT JOIN Application a ON a.id = v.application_id
+			WHERE v.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err :=
@@ -146,13 +181,13 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 		"chartVersion":  applicationVersion.ChartVersion,
 	}
 	if applicationVersion.ComposeFileData != nil {
-		args["composeFileData"] = *applicationVersion.ComposeFileData
+		args["composeFileData"] = applicationVersion.ComposeFileData
 	}
 	if applicationVersion.ValuesFileData != nil {
-		args["valuesFileData"] = *applicationVersion.ValuesFileData
+		args["valuesFileData"] = applicationVersion.ValuesFileData
 	}
 	if applicationVersion.TemplateFileData != nil {
-		args["templateFileData"] = *applicationVersion.TemplateFileData
+		args["templateFileData"] = applicationVersion.TemplateFileData
 	}
 	row := db.QueryRow(ctx,
 		`INSERT INTO ApplicationVersion (name, application_id,
@@ -183,18 +218,25 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	}
 }
 
-func GetApplicationVersionComposeFile(ctx context.Context, applicationVersionId string) ([]byte, error) {
+func GetApplicationVersion(ctx context.Context, applicationVersionId string) (*types.ApplicationVersion, error) {
 	db := internalctx.GetDb(ctx)
-	if rows, err := db.Query(ctx, "SELECT compose_file_data FROM ApplicationVersion WHERE id = @id", pgx.NamedArgs{
-		"id": applicationVersionId,
-	}); err != nil {
-		return nil, fmt.Errorf("could not get applicationversion: %w", err)
-	} else if data, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[[]byte]); err != nil {
+	rows, err := db.Query(
+		ctx,
+		`SELECT av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
+			av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id
+		FROM ApplicationVersion av
+		WHERE id = @id`,
+		pgx.NamedArgs{"id": applicationVersionId},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not get ApplicationVersion: %w", err)
+	} else if data, err := pgx.CollectExactlyOneRow(rows,
+		pgx.RowToStructByName[types.ApplicationVersion]); err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, nil
+			return nil, apierrors.ErrNotFound
 		}
 		return nil, err
 	} else {
-		return data, nil
+		return &data, nil
 	}
 }
