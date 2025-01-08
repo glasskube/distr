@@ -54,17 +54,17 @@ func main() {
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId:   app2.ID,
 		Name:            "v1",
-		ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId:   app2.ID,
 		Name:            "v2",
-		ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId:   app2.ID,
 		Name:            "v3",
-		ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 
 	app3 := types.Application{Name: "Wizard Security Graph", OrganizationID: org.ID, Type: types.DeploymentTypeDocker}
@@ -72,7 +72,7 @@ func main() {
 	av := types.ApplicationVersion{
 		ApplicationId:   app3.ID,
 		Name:            "v1",
-		ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ComposeFileData: []byte("name: Hello World!\n"),
 	}
 	util.Must(db.CreateApplicationVersion(ctx, &av))
 
