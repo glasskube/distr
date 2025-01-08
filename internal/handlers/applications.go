@@ -29,15 +29,17 @@ func ApplicationsRouter(r chi.Router) {
 	r.With(requireUserRoleVendor).Post("/", createApplication)
 	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
-		r.Use(applicationMiddleware)
-		r.Get("/", getApplication)
-		r.With(requireUserRoleVendor).Delete("/", deleteApplication)
-		r.With(requireUserRoleVendor).Put("/", updateApplication)
+		r.With(applicationMiddleware).Group(func(r chi.Router) {
+			r.Get("/", getApplication)
+			r.With(requireUserRoleVendor).Delete("/", deleteApplication)
+			r.With(requireUserRoleVendor).Put("/", updateApplication)
+		})
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
-			r.Get("/", getApplicationVersions)
+			r.With(applicationMiddleware).
+				Get("/", getApplicationVersions)
 			r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
@@ -131,19 +133,16 @@ func getApplicationVersions(w http.ResponseWriter, r *http.Request) {
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
-	application := internalctx.GetApplication(r.Context())
 	applicationVersionId := r.PathValue("applicationVersionId")
-	// once performance becomes more important, do not load the whole application but only the requested version
-	for _, applicationVersion := range application.Versions {
-		if applicationVersion.ID == applicationVersionId {
-			err := json.NewEncoder(w).Encode(applicationVersion)
-			if err != nil {
-				internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-			}
-			return
+	if applicationVersion, err := db.GetApplicationVersion(r.Context(), applicationVersionId); err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
 		}
+	} else {
+		RespondJSON(w, applicationVersion)
 	}
-	w.WriteHeader(http.StatusNotFound)
 }
 
 func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
