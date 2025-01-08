@@ -3,6 +3,13 @@ import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {UserAccount, UserAccountWithRole, UserRole} from '../types/user-account';
 
+export interface CreateUserAccountRequest {
+  email: string;
+  name?: string;
+  userRole: UserRole;
+  applicationName?: string;
+}
+
 @Injectable({providedIn: 'root'})
 export class UsersService {
   private readonly httpClient = inject(HttpClient);
@@ -12,12 +19,7 @@ export class UsersService {
     return this.httpClient.get<UserAccountWithRole[]>(this.baseUrl);
   }
 
-  public addUser(request: {
-    email: string;
-    name?: string;
-    userRole: UserRole;
-    applicationName?: string;
-  }): Observable<void> {
+  public addUser(request: CreateUserAccountRequest): Observable<void> {
     return this.httpClient.post<void>(this.baseUrl, request);
   }
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
@@ -25,11 +26,32 @@ func DeploymentsRouter(r chi.Router) {
 }
 
 func createDeployment(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
-	var deployment types.Deployment
-	if err := json.NewDecoder(r.Body).Decode(&deployment); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+
+	deployment, err := JsonBody[types.Deployment](w, r)
+	if err != nil {
 		return
+	}
+
+	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if application, err := db.GetApplicationForApplicationVersionID(
+		ctx, deployment.ApplicationVersionId,
+	); errors.Is(err, apierrors.ErrNotFound) {
+		http.Error(w, "application does not exist", http.StatusBadRequest)
+	} else if err != nil {
+		log.Warn("could not get application version", zap.Error(err))
+		http.Error(w, "an internal error occurred", http.StatusInternalServerError)
+	} else if deploymentTarget, err := db.GetDeploymentTarget(
+		ctx, deployment.DeploymentTargetId, &orgId,
+	); errors.Is(err, apierrors.ErrNotFound) {
+		http.Error(w, "deployment target does not exist", http.StatusBadRequest)
+	} else if err != nil {
+		log.Warn("could not get deployment target", zap.Error(err))
+		http.Error(w, "an inernal error occurred", http.StatusInternalServerError)
+	} else if deploymentTarget.Type != application.Type {
+		http.Error(w, "application and deployment target must have the same type", http.StatusBadRequest)
 	} else if err = db.CreateDeployment(r.Context(), &deployment); err != nil {
 		log.Warn("could not create deployment", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)

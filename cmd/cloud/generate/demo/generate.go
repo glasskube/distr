@@ -46,13 +46,13 @@ func main() {
 	}
 	util.Must(db.CreateApplication(ctx, &appMarsBeta))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId: appMarsBeta.ID, Name: "v0.1.0", ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ApplicationId: appMarsBeta.ID, Name: "v0.1.0", ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId: appMarsBeta.ID, Name: "v0.2.0", ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ApplicationId: appMarsBeta.ID, Name: "v0.2.0", ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId: appMarsBeta.ID, Name: "v0.3.0", ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ApplicationId: appMarsBeta.ID, Name: "v0.3.0", ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	appMarsBetaV419 := types.ApplicationVersion{ApplicationId: appMarsBeta.ID, Name: "v4.1.9"}
 	util.Must(db.CreateApplicationVersion(ctx, &appMarsBetaV419))
@@ -62,7 +62,7 @@ func main() {
 	}
 	util.Must(db.CreateApplication(ctx, &appMarsStable))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId: appMarsStable.ID, Name: "v0.3.1", ComposeFileData: util.PtrTo([]byte("name: Hello World!\n")),
+		ApplicationId: appMarsStable.ID, Name: "v0.3.1", ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 
 	appMarsLTS := types.Application{
