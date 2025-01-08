@@ -38,9 +38,10 @@ func ApplicationsRouter(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
-			r.With(applicationMiddleware).
-				Get("/", getApplicationVersions)
-			r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
+			r.With(applicationMiddleware).Group(func(r chi.Router) {
+				r.Get("/", getApplicationVersions)
+				r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
+			})
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
 				r.With(requireUserRoleVendor).Put("/", updateApplicationVersion)
