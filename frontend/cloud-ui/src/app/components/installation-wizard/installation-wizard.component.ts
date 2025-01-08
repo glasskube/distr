@@ -13,7 +13,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
 import {Application} from '../../types/application';
-import {Deployment} from '../../types/deployment';
+import {Deployment, DeploymentType} from '../../types/deployment';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {toObservable} from '@angular/core/rxjs-interop';
 
@@ -44,7 +44,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   @Output('closed') readonly closed = new EventEmitter<void>();
 
   readonly deploymentTargetForm = new FormGroup({
-    type: new FormControl('docker', Validators.required),
+    type: new FormControl<DeploymentType>('docker', Validators.required),
     name: new FormControl('', Validators.required),
     namespace: new FormControl({value: '', disabled: true}, Validators.required),
   });

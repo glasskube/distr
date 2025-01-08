@@ -47,7 +47,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {Deployment} from '../types/deployment';
+import {Deployment, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {DeploymentTargetViewModel} from './deployment-target-view-model';
 
@@ -105,7 +105,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   readonly editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
     name: new FormControl('', Validators.required),
-    type: new FormControl({value: '', disabled: true}, Validators.required),
+    type: new FormControl<DeploymentType | undefined>({value: undefined, disabled: true}, Validators.required),
     geolocation: new FormGroup({
       lat: new FormControl<number | undefined>(undefined),
       lon: new FormControl<number | undefined>(undefined),
