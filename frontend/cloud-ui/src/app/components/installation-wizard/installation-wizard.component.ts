@@ -55,7 +55,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
-    valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
+    valuesYaml: new FormControl<string>({value: '', disabled: true}),
+    releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
     notes: new FormControl<string | undefined>(undefined),
   });
 
@@ -95,9 +96,15 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       )
       .subscribe(([type, valuesYaml]) => {
         if (type === 'kubernetes') {
+          this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
           this.deployForm.patchValue({valuesYaml});
+          if (!this.deployForm.value.releaseName) {
+            const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
+            this.deployForm.patchValue({releaseName});
+          }
         } else {
+          this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
         }
       });
@@ -178,6 +185,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       const deployment = this.deployForm.value;
       if (deployment.valuesYaml) {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
+      } else {
+        deployment.valuesYaml = undefined;
       }
       await firstValueFrom(this.deployments.create(deployment as Deployment));
       this.selectedDeploymentTarget()!.latestDeployment = this.deploymentTargets.latestDeploymentFor(

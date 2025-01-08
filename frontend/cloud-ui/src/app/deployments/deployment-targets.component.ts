@@ -117,6 +117,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
+    releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
     notes: new FormControl<string | undefined>(undefined),
   });
 
@@ -276,9 +277,15 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       )
       .subscribe(([type, valuesYaml]) => {
         if (type === 'kubernetes') {
+          this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
           this.deployForm.patchValue({valuesYaml});
+          if (!this.deployForm.value.releaseName) {
+            const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
+            this.deployForm.patchValue({releaseName});
+          }
         } else {
+          this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
         }
       });
