@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
+
+	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
@@ -23,6 +26,11 @@ import (
 )
 
 func AuthRouter(r chi.Router) {
+	r.Use(httprate.Limit(
+		10,
+		1*time.Minute,
+		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
+	))
 	r.Post("/login", authLoginHandler)
 	r.Post("/register", authRegisterHandler)
 	r.Post("/reset", authResetPasswordHandler)
