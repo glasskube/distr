@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"text/template"
+	"time"
+
+	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
@@ -43,6 +46,7 @@ func AgentRouter(r chi.Router) {
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
 			r.Use(middleware.SentryUser)
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
+			r.Use(rateLimitPerAgent)
 			r.Get("/resources", downloadResources)
 			r.Post("/status", postAgentStatus)
 		})
@@ -101,6 +105,8 @@ func agentLogin(w http.ResponseWriter, r *http.Request) {
 	if targetId, targetSecret, ok := r.BasicAuth(); !ok {
 		log.Error("invalid Basic Auth")
 		w.WriteHeader(http.StatusUnauthorized)
+	} else if agentLoginPerTargetIdRateLimiter.RespondOnLimit(w, r, targetId) {
+		return
 	} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
 		log.Error("failed to get deployment target from query auth", zap.Error(err))
 		w.WriteHeader(http.StatusUnauthorized)
@@ -207,7 +213,9 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		targetId := r.URL.Query().Get("targetId")
 		targetSecret := r.URL.Query().Get("targetSecret")
 
-		if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
+		if agentConnectPerTargetIdRateLimiter.RespondOnLimit(w, r, targetId) {
+			return
+		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
 			log.Error("failed to get deployment target from query auth", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
@@ -255,3 +263,14 @@ func getVerifiedDeploymentTarget(
 		return &deploymentTarget.DeploymentTarget, nil
 	}
 }
+
+var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+
+var rateLimitPerAgent = httprate.Limit(
+	2*12, // as long as we have 5 sec interval: 12 resources, 12 status requests
+	1*time.Minute,
+	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
+		return auth.CurrentUserId(r.Context())
+	}),
+)
