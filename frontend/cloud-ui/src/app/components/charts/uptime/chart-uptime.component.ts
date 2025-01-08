@@ -3,11 +3,16 @@ import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
 import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
 import {MetricsService} from '../../../services/metrics.service';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faEllipsis, faEllipsisVertical} from '@fortawesome/free-solid-svg-icons';
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {dropdownAnimation} from '../../../animations/dropdown';
 
 @Component({
   selector: 'app-chart-uptime',
   templateUrl: './chart-uptime.component.html',
-  imports: [NgApexchartsModule],
+  imports: [NgApexchartsModule, FaIconComponent, CdkOverlayOrigin, CdkConnectedOverlay],
+  animations: [dropdownAnimation],
 })
 export class ChartUptimeComponent implements OnInit {
   public chartOptions?: ApexOptions;
@@ -18,6 +23,10 @@ export class ChartUptimeComponent implements OnInit {
   private readonly metrics = inject(MetricsService);
 
   loading = true;
+  showDropdown = false;
+
+  protected readonly faEllipsisVertical = faEllipsisVertical;
+  protected readonly faEllipsis = faEllipsis;
 
   async ngOnInit() {
     const dts = await firstValueFrom(this.deploymentTargets$);
@@ -46,7 +55,7 @@ export class ChartUptimeComponent implements OnInit {
               },
             ],
             chart: {
-              offsetY: 20,
+              offsetY: 10,
               //width: '100%',
               //height: '80%',
               type: 'bar',
@@ -81,5 +90,10 @@ export class ChartUptimeComponent implements OnInit {
         return;
       }
     }
+  }
+
+  selectDeploymentTarget() {
+    // TODO
+    this.showDropdown = false;
   }
 }
