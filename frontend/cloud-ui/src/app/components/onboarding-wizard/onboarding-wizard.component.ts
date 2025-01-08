@@ -1,33 +1,21 @@
-import {Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
-import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {faXmark} from '@fortawesome/free-solid-svg-icons';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {Form, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {modalFlyInOut} from '../../animations/modal';
-import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
+import {Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faXmark} from '@fortawesome/free-solid-svg-icons';
+import {first, Subject, switchMap, takeUntil, tap} from 'rxjs';
+import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../../util/forms';
+import {modalFlyInOut} from '../../animations/modal';
 import {ApplicationsService} from '../../services/applications.service';
-import {
-  combineLatest,
-  first,
-  firstValueFrom,
-  from,
-  last,
-  Subject,
-  switchMap,
-  take,
-  takeUntil,
-  tap,
-  withLatestFrom,
-} from 'rxjs';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentService} from '../../services/deployment.service';
+import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
 import {Application, ApplicationVersion} from '../../types/application';
+import {Deployment, DeploymentType, HelmChartType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
-import {UsersService} from '../../services/users.service';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
-import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../../util/forms';
-import {DeploymentType, HelmChartType} from '../../types/deployment';
+import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -73,7 +61,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         nonNullable: true,
         validators: Validators.required,
       }),
-      chartName: new FormControl<string>('', Validators.required),
+      chartName: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
       chartUrl: new FormControl<string>('', Validators.required),
       chartVersion: new FormControl<string>('', Validators.required),
     }),
@@ -97,6 +85,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       Validators.required,
       Validators.email,
     ]),
+    namespace: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
   });
 
   private loading = false;
@@ -196,7 +185,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           }
         });
     } else if (this.stepper.selectedIndex === 1) {
-      console.log(this.applicationForm);
       if (this.applicationForm.valid) {
         const isDocker = this.applicationForm.controls.type.value === 'docker';
         const fileUploadValid = !isDocker || (isDocker && this.dockerComposeFile != null);
@@ -208,51 +196,32 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           });
         } else if (fileUploadValid) {
           this.loading = true;
-          let name;
-          let version: ApplicationVersion;
-          if (isDocker) {
-            name = this.applicationForm.controls.docker.controls.name.value!;
-            version = {
-              name: this.applicationForm.controls.docker.controls.versionName.value!,
-            };
-          } else {
-            name = this.applicationForm.controls.kubernetes.controls.name.value!;
-            const versionFormVal = this.applicationForm.controls.kubernetes.value;
-            version = {
-              name: versionFormVal.versionName!,
-              chartType: versionFormVal.chartType!,
-              chartName: versionFormVal.chartName ?? undefined,
-              chartUrl: versionFormVal.chartUrl!,
-              chartVersion: versionFormVal.chartVersion!,
-            };
-          }
           this.applications
-            .create({
-              name: name,
-              type: this.applicationForm.controls.type.value!,
-            })
+            .create(this.getApplicationForSubmit())
             .pipe(
+              tap((application) => (this.app = application)),
               switchMap((application) => {
                 if (isDocker) {
                   return this.applications.createApplicationVersionForDocker(
                     application,
-                    version,
+                    this.getApplicationVersionForSubmit(),
                     this.dockerComposeFile!
                   );
                 } else {
                   return this.applications.createApplicationVersionForKubernetes(
                     application,
-                    version,
+                    this.getApplicationVersionForSubmit(),
                     this.baseValuesFile,
                     this.templateFile
                   );
                 }
-              }),
-              withLatestFrom(this.applications.list())
+              })
             )
-            .subscribe(([version, apps]) => {
-              this.app = apps.find((a) => a.id === version.applicationId);
+            .subscribe(() => {
               this.nextStep();
+              if (!isDocker) {
+                this.deploymentTargetForm.controls.namespace.disable();
+              }
             });
         }
       } else {
@@ -263,33 +232,14 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         this.loading = true;
         if (this.deploymentTargetForm.value.accessType === 'full') {
           this.deploymentTargets
-            .create({
-              name: this.deploymentTargetForm.controls.customerName.value! + ' (staging)',
-              type: 'docker',
-              geolocation: {
-                lat: 48.1956026,
-                lon: 16.3633028,
-              },
-            })
+            .create(this.getDeploymentTargetForSubmit())
             .pipe(
               tap((dt) => (this.createdDeploymentTarget = dt)),
-              switchMap((dt) =>
-                this.deployments.create({
-                  applicationVersionId: this.app!.versions![0].id!,
-                  deploymentTargetId: dt.id!,
-                })
-              )
+              switchMap(() => this.deployments.create(this.getDeploymentForSubmit()))
             )
             .subscribe(() => this.nextStep());
         } else {
-          this.users
-            .addUser({
-              email: this.deploymentTargetForm.value.technicalContactEmail!,
-              name: this.deploymentTargetForm.value.customerName!,
-              userRole: 'customer',
-              applicationName: this.app?.name,
-            })
-            .subscribe(() => this.nextStep());
+          this.users.addUser(this.getUserAccountForSubmit()).subscribe(() => this.nextStep());
         }
       } else {
         this.deploymentTargetForm.markAllAsTouched();
@@ -297,6 +247,61 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     } else if (this.stepper.selectedIndex == 3) {
       this.close();
     }
+  }
+
+  getApplicationForSubmit(): Application {
+    return {
+      name:
+        this.applicationForm.value.type === 'docker'
+          ? this.applicationForm.controls.docker.controls.name.value!
+          : this.applicationForm.controls.kubernetes.controls.name.value!,
+      type: this.applicationForm.controls.type.value!,
+    };
+  }
+
+  getApplicationVersionForSubmit(): ApplicationVersion {
+    if (this.app?.type === 'docker') {
+      return {
+        name: this.applicationForm.controls.docker.controls.versionName.value!,
+      };
+    } else {
+      const versionFormVal = this.applicationForm.controls.kubernetes.value;
+      return {
+        name: versionFormVal.versionName!,
+        chartType: versionFormVal.chartType!,
+        chartName: versionFormVal.chartName,
+        chartUrl: versionFormVal.chartUrl!,
+        chartVersion: versionFormVal.chartVersion!,
+      };
+    }
+  }
+
+  getDeploymentTargetForSubmit(): DeploymentTarget {
+    return {
+      name: this.deploymentTargetForm.value.customerName! + ' (staging)',
+      type: this.app!.type,
+      namespace: this.deploymentTargetForm.value.namespace,
+      geolocation: {
+        lat: 48.1956026,
+        lon: 16.3633028,
+      },
+    };
+  }
+
+  getDeploymentForSubmit(): Deployment {
+    return {
+      applicationVersionId: this.app!.versions![0].id!,
+      deploymentTargetId: this.createdDeploymentTarget!.id!,
+    };
+  }
+
+  getUserAccountForSubmit(): CreateUserAccountRequest {
+    return {
+      email: this.deploymentTargetForm.value.technicalContactEmail!,
+      name: this.deploymentTargetForm.value.customerName!,
+      userRole: 'customer',
+      applicationName: this.app?.name,
+    };
   }
 
   close() {
