@@ -13,6 +13,8 @@ export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
             case 429:
               toast.error('Rate limited! Please try again later.');
               break;
+            case 404:
+              break;
             default:
               toast.error('An error occurred');
           }

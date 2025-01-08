@@ -1,9 +1,10 @@
-import {BaseModel, Named} from './base';
-import {Geolocation} from './geolocation';
+import {BaseModel} from './base';
 
 export interface Deployment extends BaseModel {
   applicationVersionId: string;
   deploymentTargetId: string;
+  releaseName?: string;
+  valuesYaml?: string;
   note?: string;
 }
 

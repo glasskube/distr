@@ -2,7 +2,6 @@ import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable, tap} from 'rxjs';
 import {DeploymentTargetAccessResponse} from '../types/base';
-import {DeploymentWithData} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {ReactiveList} from './cache';
 import {CrudService} from './interfaces';
@@ -36,10 +35,6 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
 
   delete(request: DeploymentTarget): Observable<void> {
     return this.httpClient.delete<void>(`${this.baseUrl}/${request.id}`).pipe(tap(() => this.cache.remove(request)));
-  }
-
-  latestDeploymentFor(deploymentTargetId: string): Observable<DeploymentWithData> {
-    return this.httpClient.get<DeploymentWithData>(`${this.baseUrl}/${deploymentTargetId}/latest-deployment`);
   }
 
   requestAccess(deploymentTargetId: string) {
