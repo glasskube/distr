@@ -12,3 +12,7 @@ export interface DeploymentWithData extends Deployment {
   applicationName: string;
   applicationVersionName: string;
 }
+
+export type DeploymentType = 'docker' | 'kubernetes';
+
+export type HelmChartType = 'repository' | 'oci';
