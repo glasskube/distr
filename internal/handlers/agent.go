@@ -268,7 +268,7 @@ var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 
 var rateLimitPerAgent = httprate.Limit(
-	2*12, // as long as we have 5 sec interval: 12 resources, 12 status requests
+	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
 	1*time.Minute,
 	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
 		return auth.CurrentUserId(r.Context())
