@@ -53,7 +53,7 @@ export class DashboardPlaceholderComponent implements AfterViewInit {
     combineLatest([this.applications$])
       .pipe(first())
       .subscribe(([apps]) => {
-        if (this.auth.hasRole('vendor') && apps.length === 0) {
+        if (true || (this.auth.hasRole('vendor') && apps.length === 0)) {
           this.closeWizard();
           this.openWizard();
         }

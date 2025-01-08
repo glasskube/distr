@@ -3,7 +3,7 @@ import {Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, 
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
-import {first, Subject, switchMap, takeUntil, tap} from 'rxjs';
+import {firstValueFrom, Subject, takeUntil} from 'rxjs';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../../util/forms';
 import {modalFlyInOut} from '../../animations/modal';
 import {ApplicationsService} from '../../services/applications.service';
@@ -85,7 +85,18 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       Validators.required,
       Validators.email,
     ]),
-    namespace: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
+    namespace: new FormControl<string>(
+      {value: '', disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
+    releaseName: new FormControl<string>(
+      {value: '', disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
+    valuesYaml: new FormControl<string>(
+      {value: '', disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
   });
 
   private loading = false;
@@ -123,8 +134,16 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       if (type === 'full') {
         // disable validators
         this.deploymentTargetForm.controls.technicalContactEmail.disable();
+        if (this.app?.type === 'kubernetes') {
+          this.deploymentTargetForm.controls.namespace.enable();
+          this.deploymentTargetForm.controls.releaseName.enable();
+          this.deploymentTargetForm.controls.valuesYaml.enable();
+        }
       } else {
         this.deploymentTargetForm.controls.technicalContactEmail.enable();
+        this.deploymentTargetForm.controls.namespace.disable();
+        this.deploymentTargetForm.controls.releaseName.disable();
+        this.deploymentTargetForm.controls.valuesYaml.disable();
       }
     });
   }
@@ -166,63 +185,47 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.templateFile = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
-  attemptContinue() {
+  async attemptContinue() {
     if (this.loading) {
       return;
     }
 
     if (this.stepper.selectedIndex === 0) {
       this.loading = true;
-
-      this.applications
-        .list()
-        .pipe(first())
-        .subscribe((apps) => {
-          this.nextStep();
-          if (apps.length > 0) {
-            this.app = apps[0];
-            this.nextStep();
-          }
-        });
+      const apps = await firstValueFrom(this.applications.list());
+      this.nextStep();
+      if ((apps.length > 0 && apps[0].versions?.length) ?? 0 > 0) {
+        this.app = apps[0];
+        await this.prepareFormAfterApplicationCreated(this.app, this.app.versions![0]);
+        this.nextStep();
+      }
     } else if (this.stepper.selectedIndex === 1) {
       if (this.applicationForm.valid) {
         const isDocker = this.applicationForm.controls.type.value === 'docker';
-        const fileUploadValid = !isDocker || (isDocker && this.dockerComposeFile != null);
+        const fileUploadValid = !isDocker || this.dockerComposeFile !== null;
         if (this.applicationForm.controls.sampleApplication.value) {
           this.loading = true;
-          this.applications.createSample().subscribe((app) => {
-            this.app = app;
-            this.nextStep();
-          });
+          this.app = await firstValueFrom(this.applications.createSample());
+          this.nextStep();
         } else if (fileUploadValid) {
           this.loading = true;
-          this.applications
-            .create(this.getApplicationForSubmit())
-            .pipe(
-              tap((application) => (this.app = application)),
-              switchMap((application) => {
-                if (isDocker) {
-                  return this.applications.createApplicationVersionForDocker(
-                    application,
-                    this.getApplicationVersionForSubmit(),
-                    this.dockerComposeFile!
-                  );
-                } else {
-                  return this.applications.createApplicationVersionForKubernetes(
-                    application,
-                    this.getApplicationVersionForSubmit(),
-                    this.baseValuesFile,
-                    this.templateFile
-                  );
-                }
-              })
-            )
-            .subscribe(() => {
-              this.nextStep();
-              if (!isDocker) {
-                this.deploymentTargetForm.controls.namespace.disable();
-              }
-            });
+          this.app = await firstValueFrom(this.applications.create(this.getApplicationForSubmit()));
+          const createdVersion = await firstValueFrom(
+            isDocker
+              ? this.applications.createApplicationVersionForDocker(
+                  this.app,
+                  this.getApplicationVersionForSubmit(),
+                  this.dockerComposeFile!
+                )
+              : this.applications.createApplicationVersionForKubernetes(
+                  this.app,
+                  this.getApplicationVersionForSubmit(),
+                  this.baseValuesFile,
+                  this.templateFile
+                )
+          );
+          await this.prepareFormAfterApplicationCreated(this.app, createdVersion);
+          this.nextStep();
         }
       } else {
         this.applicationForm.markAllAsTouched();
@@ -231,25 +234,35 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       if (this.deploymentTargetForm.valid) {
         this.loading = true;
         if (this.deploymentTargetForm.value.accessType === 'full') {
-          this.deploymentTargets
-            .create(this.getDeploymentTargetForSubmit())
-            .pipe(
-              tap((dt) => (this.createdDeploymentTarget = dt)),
-              switchMap(() => this.deployments.create(this.getDeploymentForSubmit()))
-            )
-            .subscribe(() => this.nextStep());
+          this.createdDeploymentTarget = await firstValueFrom(
+            this.deploymentTargets.create(this.getDeploymentTargetForSubmit())
+          );
+          await firstValueFrom(this.deployments.create(this.getDeploymentForSubmit()));
+          this.nextStep();
         } else {
-          this.users.addUser(this.getUserAccountForSubmit()).subscribe(() => this.nextStep());
+          await firstValueFrom(this.users.addUser(this.getUserAccountForSubmit()));
+          this.nextStep();
         }
       } else {
         this.deploymentTargetForm.markAllAsTouched();
       }
-    } else if (this.stepper.selectedIndex == 3) {
+    } else if (this.stepper.selectedIndex === 3) {
       this.close();
     }
   }
 
-  getApplicationForSubmit(): Application {
+  private async prepareFormAfterApplicationCreated(app: Application, version: ApplicationVersion) {
+    if (app.type === 'kubernetes') {
+      this.deploymentTargetForm.controls.namespace.enable();
+      this.deploymentTargetForm.controls.valuesYaml.enable();
+      this.deploymentTargetForm.controls.releaseName.enable();
+      const valuesYaml = (await firstValueFrom(this.applications.getTemplateFile(app.id!, version.id!))) ?? undefined;
+      const releaseName = app.name!.trim().toLowerCase().replace(/\W+/g, '-');
+      this.deploymentTargetForm.patchValue({valuesYaml, releaseName});
+    }
+  }
+
+  private getApplicationForSubmit(): Application {
     return {
       name:
         this.applicationForm.value.type === 'docker'
@@ -259,7 +272,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     };
   }
 
-  getApplicationVersionForSubmit(): ApplicationVersion {
+  private getApplicationVersionForSubmit(): ApplicationVersion {
     if (this.app?.type === 'docker') {
       return {
         name: this.applicationForm.controls.docker.controls.versionName.value!,
@@ -276,7 +289,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getDeploymentTargetForSubmit(): DeploymentTarget {
+  private getDeploymentTargetForSubmit(): DeploymentTarget {
     return {
       name: this.deploymentTargetForm.value.customerName! + ' (staging)',
       type: this.app!.type,
@@ -288,14 +301,18 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     };
   }
 
-  getDeploymentForSubmit(): Deployment {
+  private getDeploymentForSubmit(): Deployment {
     return {
       applicationVersionId: this.app!.versions![0].id!,
       deploymentTargetId: this.createdDeploymentTarget!.id!,
+      releaseName: this.deploymentTargetForm.value.releaseName,
+      valuesYaml: this.deploymentTargetForm.value.valuesYaml
+        ? btoa(this.deploymentTargetForm.value.valuesYaml)
+        : undefined,
     };
   }
 
-  getUserAccountForSubmit(): CreateUserAccountRequest {
+  private getUserAccountForSubmit(): CreateUserAccountRequest {
     return {
       email: this.deploymentTargetForm.value.technicalContactEmail!,
       name: this.deploymentTargetForm.value.customerName!,
