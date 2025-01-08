@@ -7,18 +7,20 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faEllipsis, faEllipsisVertical} from '@fortawesome/free-solid-svg-icons';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../../../animations/dropdown';
+import {AsyncPipe} from '@angular/common';
+import {DeploymentTarget} from '../../../types/deployment-target';
 
 @Component({
   selector: 'app-chart-uptime',
   templateUrl: './chart-uptime.component.html',
-  imports: [NgApexchartsModule, FaIconComponent, CdkOverlayOrigin, CdkConnectedOverlay],
+  imports: [NgApexchartsModule, FaIconComponent, CdkOverlayOrigin, CdkConnectedOverlay, AsyncPipe],
   animations: [dropdownAnimation],
 })
 export class ChartUptimeComponent implements OnInit {
   public chartOptions?: ApexOptions;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deploymentTargets$ = this.deploymentTargets.list();
+  readonly deploymentTargets$ = this.deploymentTargets.list();
 
   private readonly metrics = inject(MetricsService);
 
@@ -30,7 +32,7 @@ export class ChartUptimeComponent implements OnInit {
 
   async ngOnInit() {
     const dts = await firstValueFrom(this.deploymentTargets$);
-    for (const dt of dts) {
+    /*for (const dt of dts) {
       if (dt.currentStatus) {
         let deployment;
         try {
@@ -89,11 +91,59 @@ export class ChartUptimeComponent implements OnInit {
         });
         return;
       }
-    }
+    }*/
   }
 
-  selectDeploymentTarget() {
-    // TODO
+  async selectDeploymentTarget(dt: DeploymentTarget) {
     this.showDropdown = false;
+    const deployment = await lastValueFrom(this.deploymentTargets.latestDeploymentFor(dt.id!));
+    this.metrics.getUptimeForDeployment(deployment.id!).subscribe((uptimes) => {
+      this.loading = false;
+      this.chartOptions = {
+        series: [
+          {
+            name: 'available',
+            data: uptimes.map((ut) => ut.total - ut.unknown),
+            color: '#00bfa5',
+          },
+          {
+            name: 'unknown',
+            data: uptimes.map((ut) => ut.unknown),
+            color: '#feb019',
+          },
+        ],
+        chart: {
+          offsetY: 10,
+          //width: '100%',
+          //height: '80%',
+          type: 'bar',
+          stacked: true,
+          sparkline: {
+            enabled: true,
+          },
+        },
+        stroke: {
+          curve: 'smooth',
+        },
+        tooltip: {
+          enabled: false,
+        },
+        xaxis: {
+          type: 'datetime',
+          categories: uptimes.map((ut) => ut.hour),
+        },
+        legend: {
+          show: true,
+          position: 'top',
+          fontFamily: 'Inter',
+          offsetY: -5,
+          floating: true,
+          labels: {
+            colors: 'rgb(156, 163, 175)',
+            useSeriesColors: false,
+          },
+        },
+      };
+    });
   }
 }
