@@ -39,6 +39,7 @@ export class PasswordResetComponent {
         location.assign(`/login?email=${encodeURIComponent(this.email)}`);
       } catch (e) {
         this.errorMessage = getFormDisplayedError(e);
+        // TODO maybe check for 429 again and disable the button for some time? (but how long then?)
       } finally {
         this.loading = false;
       }
