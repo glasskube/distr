@@ -101,6 +101,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroyed$.next();
     this.destroyed$.complete();
   }
 

@@ -86,7 +86,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   readonly xmarkIcon = faXmark;
   protected readonly faTrash = faTrash;
 
-  private destroyed$ = new Subject();
+  private destroyed$ = new Subject<void>();
 
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
@@ -150,6 +150,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   ngOnDestroy(): void {
+    this.destroyed$.next();
     this.destroyed$.complete();
   }
 

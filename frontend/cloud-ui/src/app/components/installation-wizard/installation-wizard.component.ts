@@ -126,6 +126,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   async attemptContinue() {

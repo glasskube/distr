@@ -78,6 +78,7 @@ export class UsersComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroyed$.next();
     this.destroyed$.complete();
   }
 

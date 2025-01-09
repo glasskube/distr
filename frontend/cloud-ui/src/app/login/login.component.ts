@@ -38,6 +38,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   public async submit(): Promise<void> {

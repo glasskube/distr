@@ -170,6 +170,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private destroyed$: Subject<void> = new Subject();
 
   ngOnDestroy() {
+    this.destroyed$.next();
     this.destroyed$.complete();
   }
 
