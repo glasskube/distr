@@ -4,7 +4,7 @@ import {Component, ElementRef, inject, Input, OnDestroy, OnInit, TemplateRef, Vi
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {filter, Observable, Subject, switchMap, takeUntil} from 'rxjs';
+import {catchError, EMPTY, filter, firstValueFrom, Observable, of, Subject, switchMap, takeUntil} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
@@ -16,6 +16,7 @@ import {Application} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
+import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-applications',
@@ -57,6 +58,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     name: new FormControl('', Validators.required),
     type: new FormControl<DeploymentType>('docker', Validators.required),
   });
+  editFormLoading = false;
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
     kubernetes: new FormGroup({
@@ -69,6 +71,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       chartVersion: new FormControl<string>('', Validators.required),
     }),
   });
+  newVersionFormLoading = false;
   dockerComposeFile: File | null = null;
   @ViewChild('dockerComposeFileInput')
   dockerComposeFileInput?: ElementRef;
@@ -158,7 +161,14 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       .confirm(`Really delete ${application.name} and all related deployments?`)
       .pipe(
         filter((result) => result === true),
-        switchMap(() => this.applications.delete(application))
+        switchMap(() => this.applications.delete(application)),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return EMPTY;
+        })
       )
       .subscribe();
   }
@@ -185,8 +195,10 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  saveApplication() {
+  async saveApplication() {
+    this.editForm.markAllAsTouched();
     if (this.editForm.valid) {
+      this.editFormLoading = true;
       const val = this.editForm.getRawValue();
       let result: Observable<Application>;
       if (!val.id) {
@@ -201,15 +213,18 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           type: val.type!,
         });
       }
-      result.subscribe({
-        next: (application) => {
-          this.hideDrawer();
-          this.toast.success(`${application.name} saved successfully`);
-        },
-        error: () => this.toast.error(`An error occurred`),
-      });
-    } else {
-      this.editForm.markAllAsTouched();
+      try {
+        const application = await firstValueFrom(result);
+        this.hideDrawer();
+        this.toast.success(`${application.name} saved successfully`);
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editFormLoading = false;
+      }
     }
   }
 
@@ -225,10 +240,12 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.templateFile = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
-  createVersion() {
+  async createVersion() {
+    this.newVersionForm.markAllAsTouched();
     const isDocker = this.selectedApplication?.type === 'docker';
-    const fileValid = !isDocker || (isDocker && this.dockerComposeFile != null);
+    const fileValid = !isDocker || this.dockerComposeFile != null;
     if (this.newVersionForm.valid && fileValid && this.selectedApplication) {
+      this.newVersionFormLoading = true;
       let res;
       if (isDocker) {
         res = this.applications.createApplicationVersionForDocker(
@@ -254,12 +271,19 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           this.templateFile
         );
       }
-      res.subscribe((value) => {
-        this.toast.success(`${value.name} created successfully`);
+
+      try {
+        const av = await firstValueFrom(res);
+        this.toast.success(`${av.name} created successfully`);
         this.hideVersionModal();
-      });
-    } else {
-      this.newVersionForm.markAllAsTouched();
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.newVersionFormLoading = false;
+      }
     }
   }
 }
