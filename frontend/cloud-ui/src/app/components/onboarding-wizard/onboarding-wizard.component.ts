@@ -16,6 +16,7 @@ import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
+import {ToastService} from '../../services/toast.service';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -37,6 +38,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deployments = inject(DeploymentService);
   private readonly users = inject(UsersService);
+  private readonly toast = inject(ToastService);
 
   @ViewChild('stepper') stepper!: CdkStepper;
 
@@ -191,25 +193,51 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.stepper.selectedIndex === 0) {
-      this.loading = true;
-      const apps = await firstValueFrom(this.applications.list());
+    switch (this.stepper.selectedIndex) {
+      case 0:
+        await this.continueFromIntro();
+        break;
+      case 1:
+        await this.continueFromApplication();
+        break;
+      case 2:
+        await this.continueFromCustomer();
+        break;
+      case 3:
+        this.close();
+        break;
+    }
+  }
+
+  private async continueFromIntro() {
+    this.loading = true;
+    const apps = await firstValueFrom(this.applications.list());
+    this.nextStep();
+    if ((apps.length > 0 && apps[0].versions?.length) ?? 0 > 0) {
+      this.app = apps[0];
+      await this.prepareFormAfterApplicationCreated(this.app, this.app.versions![0]);
       this.nextStep();
-      if ((apps.length > 0 && apps[0].versions?.length) ?? 0 > 0) {
-        this.app = apps[0];
-        await this.prepareFormAfterApplicationCreated(this.app, this.app.versions![0]);
-        this.nextStep();
-      }
-    } else if (this.stepper.selectedIndex === 1) {
-      if (this.applicationForm.valid) {
-        const isDocker = this.applicationForm.controls.type.value === 'docker';
-        const fileUploadValid = !isDocker || this.dockerComposeFile !== null;
-        if (this.applicationForm.controls.sampleApplication.value) {
-          this.loading = true;
+    }
+  }
+
+  private async continueFromApplication() {
+    this.applicationForm.markAllAsTouched();
+    if (this.applicationForm.valid) {
+      const isDocker = this.applicationForm.controls.type.value === 'docker';
+      const fileUploadValid = !isDocker || this.dockerComposeFile !== null;
+      if (this.applicationForm.controls.sampleApplication.value) {
+        this.loading = true;
+        try {
           this.app = await firstValueFrom(this.applications.createSample());
           this.nextStep();
-        } else if (fileUploadValid) {
-          this.loading = true;
+        } catch (e) {
+          this.toast.error('Something went wrong, please try again.');
+        } finally {
+          this.loading = false;
+        }
+      } else if (fileUploadValid) {
+        this.loading = true;
+        try {
           this.app = await firstValueFrom(this.applications.create(this.getApplicationForSubmit()));
           const createdVersion = await firstValueFrom(
             isDocker
@@ -227,13 +255,20 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           );
           await this.prepareFormAfterApplicationCreated(this.app, createdVersion);
           this.nextStep();
+        } catch (e) {
+          this.toast.error('Something went wrong, please try again.');
+        } finally {
+          this.loading = false;
         }
-      } else {
-        this.applicationForm.markAllAsTouched();
       }
-    } else if (this.stepper.selectedIndex === 2) {
-      if (this.deploymentTargetForm.valid) {
-        this.loading = true;
+    }
+  }
+
+  private async continueFromCustomer() {
+    this.deploymentTargetForm.markAllAsTouched();
+    if (this.deploymentTargetForm.valid) {
+      this.loading = true;
+      try {
         if (this.deploymentTargetForm.value.accessType === 'full') {
           this.createdDeploymentTarget = await firstValueFrom(
             this.deploymentTargets.create(this.getDeploymentTargetForSubmit())
@@ -244,11 +279,11 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           await firstValueFrom(this.users.addUser(this.getUserAccountForSubmit()));
           this.nextStep();
         }
-      } else {
-        this.deploymentTargetForm.markAllAsTouched();
+      } catch (e) {
+        this.toast.error('Something went wrong, please try again.');
+      } finally {
+        this.loading = false;
       }
-    } else if (this.stepper.selectedIndex === 3) {
-      this.close();
     }
   }
 
@@ -257,9 +292,14 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       this.deploymentTargetForm.controls.namespace.enable();
       this.deploymentTargetForm.controls.valuesYaml.enable();
       this.deploymentTargetForm.controls.releaseName.enable();
-      const valuesYaml = (await firstValueFrom(this.applications.getTemplateFile(app.id!, version.id!))) ?? undefined;
       const releaseName = app.name!.trim().toLowerCase().replace(/\W+/g, '-');
-      this.deploymentTargetForm.patchValue({valuesYaml, releaseName});
+      let valuesYaml;
+      try {
+        valuesYaml = (await firstValueFrom(this.applications.getTemplateFile(app.id!, version.id!))) ?? undefined;
+      } catch (e) {
+      } finally {
+        this.deploymentTargetForm.patchValue({valuesYaml, releaseName});
+      }
     }
   }
 

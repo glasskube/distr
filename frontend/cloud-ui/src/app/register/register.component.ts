@@ -37,12 +37,11 @@ export class RegisterComponent {
       try {
         await firstValueFrom(this.auth.register(value.email!, value.name, value.password!));
         await this.router.navigate(['/login'], {queryParams: {email: value.email!}});
-      } catch(e) {
+      } catch (e) {
         this.errorMessage = getFormDisplayedError(e);
       } finally {
         this.loading = false;
       }
     }
   }
-
 }
