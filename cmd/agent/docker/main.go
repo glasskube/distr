@@ -31,7 +31,13 @@ func main() {
 	}()
 	tick := time.Tick(interval)
 loop:
-	for {
+	for ctx.Err() == nil {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			break loop
+		}
+
 		if correlationID, resource, err := client.Resource(ctx); err != nil {
 			logger.Error("failed to get resource", zap.Error(err))
 		} else {
@@ -46,11 +52,6 @@ loop:
 			}
 		}
 
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			break loop
-		}
 	}
 	logger.Info("shutting down")
 }

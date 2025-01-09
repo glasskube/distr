@@ -16,15 +16,17 @@ import (
 )
 
 type Client struct {
-	AuthTarget       string
-	AuthSecret       string
+	AuthTarget string
+	AuthSecret string
+
 	LoginEndpoint    string
 	ResourceEndpoint string
 	StatusEndpoint   string
-	httpClient       *http.Client
-	logger           *zap.Logger
-	token            jwt.Token
-	rawToken         string
+
+	httpClient *http.Client
+	logger     *zap.Logger
+	token      jwt.Token
+	rawToken   string
 }
 
 func (c *Client) Resource(ctx context.Context) (string, io.Reader, error) {
@@ -36,6 +38,22 @@ func (c *Client) Resource(ctx context.Context) (string, io.Reader, error) {
 		return "", nil, err
 	} else {
 		return getCorrelationID(resp), bytes.NewBuffer(data), nil
+	}
+}
+
+func (c *Client) KubernetesResource(ctx context.Context) (*api.KubernetesAgentResource, error) {
+	var result api.KubernetesAgentResource
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
+		return nil, err
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		if resp, err := c.doAuthenticated(ctx, req); err != nil {
+			return nil, err
+		} else if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			return nil, err
+		} else {
+			return &result, nil
+		}
 	}
 }
 
@@ -78,22 +96,33 @@ func (c *Client) Login(ctx context.Context) error {
 		} else {
 			c.rawToken = loginResponse.Token
 			c.token = parsedToken
-			c.logger.Info("token refreshed")
 			return nil
 		}
 	}
 }
 
 func (c *Client) EnsureToken(ctx context.Context) error {
-	if c.HasValidToken() {
-		return nil
+	if c.HasTokenExpiredAfter(time.Now().Add(30 * time.Second)) {
+		c.logger.Info("token has expired or is about to expire")
+		if err := c.Login(ctx); err != nil {
+			if c.HasTokenExpired() {
+				return err
+			} else {
+				c.logger.Warn("token refresh failed but previous token is still valid", zap.Error(err))
+			}
+		} else {
+			c.logger.Info("token refreshed")
+		}
 	}
-	c.logger.Info("token has expired or is about to expire")
-	return c.Login(ctx)
+	return nil
 }
 
-func (c *Client) HasValidToken() bool {
-	return c.token != nil && c.token.Expiration().After(time.Now().Add(10*time.Second))
+func (c *Client) HasTokenExpired() bool {
+	return c.HasTokenExpiredAfter(time.Now())
+}
+
+func (c *Client) HasTokenExpiredAfter(t time.Time) bool {
+	return c.token == nil || c.token.Expiration().After(t)
 }
 
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
