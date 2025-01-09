@@ -4,6 +4,7 @@ import {Router, ActivatedRoute, RouterLink} from '@angular/router';
 import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-forgot',
@@ -16,6 +17,7 @@ export class ForgotComponent implements OnInit, OnDestroy {
   });
   public errorMessage?: string;
   public success = false;
+  loading = false;
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -36,25 +38,23 @@ export class ForgotComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   public async submit(): Promise<void> {
     this.formGroup.markAllAsTouched();
     this.errorMessage = undefined;
     if (this.formGroup.valid) {
+      this.loading = true;
       const value = this.formGroup.value;
       try {
         await lastValueFrom(this.auth.resetPassword(value.email!));
+        this.success = true;
       } catch (e) {
-        if (e instanceof HttpErrorResponse && e.status < 500 && typeof e.error === 'string') {
-          this.errorMessage = e.error;
-        } else {
-          console.error(e);
-          this.errorMessage = 'something went wrong';
-        }
-        return;
+        this.errorMessage = getFormDisplayedError(e);
+      } finally {
+        this.loading = false;
       }
-      this.success = true;
     }
   }
 }
