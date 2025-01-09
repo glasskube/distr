@@ -1,6 +1,6 @@
 GOCMD ?= go
 COMMIT = $(shell git rev-parse --short HEAD)
-LDFLAGS ?= -X github.com/glasskube/cloud/internal/buildconfig.version=$(VERSION) -X github.com/glasskube/cloud/internal/buildconfig.commit=$(COMMIT)
+LDFLAGS ?= -s -w -X github.com/glasskube/cloud/internal/buildconfig.version=$(VERSION) -X github.com/glasskube/cloud/internal/buildconfig.commit=$(COMMIT)
 
 .PHONY: tidy
 tidy:
@@ -51,6 +51,10 @@ run-kubernetes-agent: tidy
 .PHONY: build
 build: frontend-prod tidy
 	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/cloud ./cmd/cloud/
+
+.PHONY: run-kubernetes-agent
+build-kubernetes-agent: tidy
+	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/kubernetes-agent ./cmd/agent/kubernetes
 
 .PHONY: docker-build-server
 docker-build-server: build
