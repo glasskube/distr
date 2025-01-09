@@ -8,30 +8,28 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"text/template"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/go-chi/jwtauth/v5"
-
-	"github.com/glasskube/cloud/internal/types"
-
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/resources"
 	"github.com/glasskube/cloud/internal/security"
+	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
 
 func AgentRouter(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(queryAuthDeploymentTargetCtxMiddleware)
-		r.Get("/connect", connect)
+		r.Get("/connect", connectHandler())
 	})
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
@@ -49,38 +47,36 @@ func AgentRouter(r chi.Router) {
 	})
 }
 
-func connect(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
-	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-	if deploymentTarget.CurrentStatus != nil {
-		log.Warn("deployment target has already been connected")
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		w.Header().Add("Content-Type", "application/yaml")
-		if yamlTemplate, err := resources.Get("embedded/agent-base.yaml"); err != nil {
-			log.Error("failed to get agent yaml template", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if tmpl, err := template.New("agent").Parse(string(yamlTemplate)); err != nil {
-			log.Error("failed to get parse yaml template", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints(); err != nil {
-			log.Error("failed to build resources url", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if err := tmpl.Execute(w, map[string]string{
-			"loginEndpoint":     loginEndpoint,
-			"resourcesEndpoint": resourcesEndpoint,
-			"statusEndpoint":    statusEndpoint,
-			"targetId":          r.URL.Query().Get("targetId"),
-			"targetSecret":      r.URL.Query().Get("targetSecret"),
-			"agentInterval":     env.AgentInterval().String(),
-		}); err != nil {
-			log.Error("failed to execute yaml template", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+func connectHandler() http.HandlerFunc {
+	tmpl := util.Require(resources.GetTemplate("embedded/agent-base.yaml"))
+	loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints()
+	util.Must(err)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+		if deploymentTarget.CurrentStatus != nil {
+			log.Warn("deployment target has already been connected")
+			w.WriteHeader(http.StatusBadRequest)
+		} else if deploymentTarget.Type == types.DeploymentTypeDocker {
+			w.Header().Add("Content-Type", "application/yaml")
+			if err := tmpl.Execute(w, map[string]any{
+				"loginEndpoint":     loginEndpoint,
+				"resourcesEndpoint": resourcesEndpoint,
+				"statusEndpoint":    statusEndpoint,
+				"targetId":          r.URL.Query().Get("targetId"),
+				"targetSecret":      r.URL.Query().Get("targetSecret"),
+				"agentInterval":     env.AgentInterval(),
+			}); err != nil {
+				log.Error("failed to execute yaml template", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		} else {
+			log.Warn("not implemented")
+			http.Error(w, "not implemented", http.StatusInternalServerError)
+			// TODO: Implement connect for kubernetes agent
 		}
 	}
 }
