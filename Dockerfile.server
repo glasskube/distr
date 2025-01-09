@@ -1,6 +1,6 @@
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM cgr.dev/chainguard/static:latest@sha256:7e1e8a0ed6ebd521f2acfb326a4ae61c2f9b91e5c209dcd0f0e4a5934418a5ec
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:5c7e2b465ac6a2a4e5f4f7f722ce43b147dabe87cb21ac6c4007ae5178a1fa58
 WORKDIR /
 COPY dist/cloud /cloud
 USER 65532:65532

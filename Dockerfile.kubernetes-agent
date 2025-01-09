@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
   -ldflags="-s -w -X github.com/glasskube/cloud/internal/buildconfig.version=${VERSION:-snapshot} -X github.com/glasskube/cloud/internal/buildconfig.commit=${COMMIT}" \
   ./cmd/agent/kubernetes/
 
-FROM docker:27.3.1-alpine3.20
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:5c7e2b465ac6a2a4e5f4f7f722ce43b147dabe87cb21ac6c4007ae5178a1fa58
 WORKDIR /
 COPY --from=builder /workspace/agent .
 
