@@ -15,8 +15,11 @@ import (
 	"github.com/glasskube/cloud/internal/util"
 	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -26,13 +29,13 @@ import (
 )
 
 var (
-	interval           = 5 * time.Second
-	helmUpgradeTimeout = 1 * time.Minute
-	logger             = util.Require(zap.NewDevelopment())
-	agentClient        = util.Require(agentclient.NewFromEnv(logger))
-	helmConfigFlags    = genericclioptions.NewConfigFlags(true)
-	helmEnvSettings    = cli.New()
-	k8sClientConfig    = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+	interval              = 5 * time.Second
+	logger                = util.Require(zap.NewDevelopment())
+	agentClient           = util.Require(agentclient.NewFromEnv(logger))
+	helmConfigFlags       = genericclioptions.NewConfigFlags(true)
+	helmEnvSettings       = cli.New()
+	helmActionConfigCache = make(map[string]*action.Configuration)
+	k8sClientConfig       = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		nil,
 	)
@@ -43,6 +46,10 @@ type AgentDeployment struct {
 	ReleaseName  string `json:"releaseName"`
 	RevisionID   string `json:"revisionId"`
 	HelmRevision int    `json:"helmRevision"`
+}
+
+func (d *AgentDeployment) SecretName() string {
+	return fmt.Sprintf("cloud.glasskube.agent.v1.%v", d.ReleaseName)
 }
 
 func init() {
@@ -69,7 +76,7 @@ func main() {
 			continue
 		}
 
-		res, err := agentClient.KubernetesResource(ctx)
+		correlationID, res, err := agentClient.KubernetesResource(ctx)
 		if err != nil {
 			logger.Error("could not get resource", zap.Error(err))
 			continue
@@ -80,6 +87,18 @@ func main() {
 			continue
 		}
 
+		pushStatus := func(ctx context.Context, status string) {
+			if err := agentClient.Status(ctx, correlationID, status, nil); err != nil {
+				logger.Warn("status push failed", zap.Error(err))
+			}
+		}
+		pushErrorStatus := func(ctx context.Context, error any) {
+			if err := agentClient.Status(ctx, correlationID, "", error); err != nil {
+				logger.Warn("status push failed", zap.Error(err))
+			}
+		}
+
+		installRequired := true
 		upgradeRequired := true
 		var currentDeployment *AgentDeployment
 		if deployments, err := GetExistingDeployments(ctx, res.Namespace); err != nil {
@@ -97,7 +116,7 @@ func main() {
 			}
 		}
 
-		latestRevision, err := GetLatestHelmRevision(res.Namespace, res.Deployment.ReleaseName)
+		latestRelease, err := GetLatestHelmRelease(res.Namespace, res.Deployment.ReleaseName)
 		if err != nil {
 			if errors.Is(err, driver.ErrReleaseNotFound) {
 				logger.Info("current helm release does not exist")
@@ -106,35 +125,49 @@ func main() {
 				continue
 			}
 		} else if currentDeployment != nil {
-			if currentDeployment.HelmRevision != latestRevision {
-				logger.Warn("helm revision is different from latest deployment. bailing out")
-				// TODO: Send status to backend
+			if currentDeployment.HelmRevision != latestRelease.Version {
+				msg := "helm revision is different from latest deployment. bailing out"
+				logger.Warn(msg)
+				pushErrorStatus(ctx, msg)
 				continue
+			} else {
+				installRequired = false
 			}
 		} else {
-			logger.Warn("helm release already exists but was not created by the agent. bailing out")
-			// TODO: Send status to backend
+			msg := "helm release already exists but was not created by the agent. bailing out"
+			logger.Warn(msg)
+			pushErrorStatus(ctx, msg)
 			continue
 		}
 
-		if !upgradeRequired {
-			logger.Info("no update required")
-			// TODO: Send status to backend
-			continue
-		}
-
-		upgradeCtx, upgradeCancel := context.WithTimeout(ctx, helmUpgradeTimeout)
-		if deployment, err := RunHelmUpgrade(upgradeCtx, res.Namespace, *res.Deployment); err != nil {
-			logger.Error("helm upgrade failed", zap.Error(err))
-			// TODO: Send status to backend
-		} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
-			logger.Error("could not save latest deployment", zap.Error(err))
-			// TODO: Send status to backend
+		if installRequired {
+			if deployment, err := RunHelmInstall(ctx, res.Namespace, *res.Deployment); err != nil {
+				logger.Error("helm upgrade failed", zap.Error(err))
+				pushErrorStatus(ctx, fmt.Sprintf("helm upgrade failed: %v", err))
+			} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
+				logger.Error("could not save latest deployment", zap.Error(err))
+				pushErrorStatus(ctx, fmt.Sprintf("could not save latest deployment: %v", err))
+			} else {
+				logger.Info("helm install succeeded")
+				pushStatus(ctx, "helm install succeeded")
+			}
+		} else if upgradeRequired {
+			if deployment, err := RunHelmUpgrade(ctx, res.Namespace, *res.Deployment); err != nil {
+				logger.Error("helm install failed", zap.Error(err))
+				pushErrorStatus(ctx, fmt.Sprintf("helm install failed: %v", err))
+			} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
+				logger.Error("could not save latest deployment", zap.Error(err))
+				pushErrorStatus(ctx, fmt.Sprintf("could not save latest deployment: %v", err))
+			} else {
+				logger.Info("helm upgrade succeeded")
+				pushStatus(ctx, "helm upgrade succeeded")
+			}
 		} else {
-			// TODO: Send status to backend
-			logger.Info("helm upgrade succeeded")
+			logger.Info("no action required")
+			// TODO: Inspect release to determine deployment health for status
+			pushStatus(ctx, "OK")
 		}
-		upgradeCancel()
+
 	}
 
 	logger.Info("shutting down")
@@ -143,8 +176,17 @@ func main() {
 const LabelDeplyoment = "agent.glasskube.cloud/deployment"
 
 func GetHelmActionConfig(namespace string) (*action.Configuration, error) {
-	var configuration action.Configuration
-	if err := configuration.Init(
+	if cfg, ok := helmActionConfigCache[namespace]; ok {
+		return cfg, nil
+	}
+
+	var cfg action.Configuration
+	if rc, err := registry.NewClient(); err != nil {
+		return nil, err
+	} else {
+		cfg.RegistryClient = rc
+	}
+	if err := cfg.Init(
 		helmConfigFlags,
 		namespace,
 		"secret",
@@ -152,27 +194,45 @@ func GetHelmActionConfig(namespace string) (*action.Configuration, error) {
 	); err != nil {
 		return nil, err
 	} else {
-		return &configuration, nil
+		return &cfg, nil
 	}
 }
 
-func GetLatestHelmRevision(namespace, releaseName string) (int, error) {
-	if config, err := GetHelmActionConfig(namespace); err != nil {
-		return 0, err
-	} else if releases, err := action.NewHistory(config).Run(releaseName); err != nil {
-		return 0, err
+func GetLatestHelmRelease(namespace, releaseName string) (*release.Release, error) {
+	cfg, err := GetHelmActionConfig(namespace)
+	if err != nil {
+		return nil, err
+	}
+	historyAction := action.NewHistory(cfg)
+	historyAction.Max = 1
+	if releases, err := historyAction.Run(releaseName); err != nil {
+		return nil, err
 	} else {
-		var latestVersion int
-		for _, release := range releases {
-			if latestVersion < release.Version {
-				latestVersion = release.Version
-			}
-		}
-		return latestVersion, nil
+		return releases[0], nil
 	}
 }
 
-func RunHelmUpgrade(
+func RunHelmPreflight(
+	action *action.ChartPathOptions,
+	deployment api.KubernetesAgentDeployment,
+) (*chart.Chart, error) {
+	chartName := deployment.ChartName
+	if registry.IsOCI(deployment.ChartUrl) {
+		chartName = deployment.ChartUrl
+	} else {
+		action.RepoURL = deployment.ChartUrl
+		action.Version = deployment.ChartVersion
+	}
+	if chartPath, err := action.LocateChart(chartName, helmEnvSettings); err != nil {
+		return nil, fmt.Errorf("could not locate chart: %w", err)
+	} else if chart, err := loader.Load(chartPath); err != nil {
+		return nil, fmt.Errorf("chart loading failed: %w", err)
+	} else {
+		return chart, nil
+	}
+}
+
+func RunHelmInstall(
 	ctx context.Context,
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
@@ -182,25 +242,46 @@ func RunHelmUpgrade(
 		return nil, err
 	}
 
-	upgrade := action.NewUpgrade(config)
-	upgrade.Install = true
-	upgrade.Wait = true
-	upgrade.Atomic = true
-	upgrade.CleanupOnFail = true
-	upgrade.Namespace = namespace
-	chartName := deployment.ChartName
-	if chartName == "" {
-		chartName = deployment.ChartUrl
+	installAction := action.NewInstall(config)
+	installAction.ReleaseName = deployment.ReleaseName
+
+	installAction.Timeout = 5 * time.Minute
+	installAction.Wait = true
+	installAction.Atomic = true
+	installAction.Namespace = namespace
+	if chart, err := RunHelmPreflight(&installAction.ChartPathOptions, deployment); err != nil {
+		return nil, fmt.Errorf("helm preflight failed: %w", err)
+	} else if release, err := installAction.RunWithContext(ctx, chart, deployment.Values); err != nil {
+		return nil, fmt.Errorf("helm install failed: %w", err)
 	} else {
-		upgrade.RepoURL = deployment.ChartUrl
-		upgrade.Version = deployment.ChartVersion
+		return &AgentDeployment{
+			ReleaseName:  release.Name,
+			HelmRevision: release.Version,
+			RevisionID:   deployment.RevisionID,
+		}, nil
+	}
+}
+
+func RunHelmUpgrade(
+	ctx context.Context,
+	namespace string,
+	deployment api.KubernetesAgentDeployment,
+) (*AgentDeployment, error) {
+	cfg, err := GetHelmActionConfig(namespace)
+	if err != nil {
+		return nil, err
 	}
 
-	if chartPath, err := upgrade.LocateChart(chartName, helmEnvSettings); err != nil {
-		return nil, fmt.Errorf("could not locate chart: %w", err)
-	} else if chart, err := loader.Load(chartPath); err != nil {
-		return nil, fmt.Errorf("chart loading failed: %w", err)
-	} else if release, err := upgrade.RunWithContext(
+	upgradeAction := action.NewUpgrade(cfg)
+	upgradeAction.CleanupOnFail = true
+
+	upgradeAction.Timeout = 5 * time.Minute
+	upgradeAction.Wait = true
+	upgradeAction.Atomic = true
+	upgradeAction.Namespace = namespace
+	if chart, err := RunHelmPreflight(&upgradeAction.ChartPathOptions, deployment); err != nil {
+		return nil, fmt.Errorf("helm preflight failed: %w", err)
+	} else if release, err := upgradeAction.RunWithContext(
 		ctx, deployment.ReleaseName, chart, deployment.Values); err != nil {
 		return nil, fmt.Errorf("helm upgrade failed: %w", err)
 	} else {
@@ -231,7 +312,7 @@ func GetExistingDeployments(ctx context.Context, namespace string) ([]AgentDeplo
 }
 
 func SaveDeployment(ctx context.Context, namespace string, deployment AgentDeployment) error {
-	cfg := applyconfigurationscorev1.Secret(deployment.ReleaseName, namespace)
+	cfg := applyconfigurationscorev1.Secret(deployment.SecretName(), namespace)
 	cfg.WithLabels(map[string]string{LabelDeplyoment: deployment.ReleaseName})
 	if data, err := json.Marshal(deployment); err != nil {
 		return err

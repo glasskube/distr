@@ -41,18 +41,18 @@ func (c *Client) Resource(ctx context.Context) (string, io.Reader, error) {
 	}
 }
 
-func (c *Client) KubernetesResource(ctx context.Context) (*api.KubernetesAgentResource, error) {
+func (c *Client) KubernetesResource(ctx context.Context) (string, *api.KubernetesAgentResource, error) {
 	var result api.KubernetesAgentResource
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
-		return nil, err
+		return "", nil, err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 		if resp, err := c.doAuthenticated(ctx, req); err != nil {
-			return nil, err
+			return "", nil, err
 		} else if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			return nil, err
+			return "", nil, err
 		} else {
-			return &result, nil
+			return getCorrelationID(resp), &result, nil
 		}
 	}
 }
@@ -122,7 +122,7 @@ func (c *Client) HasTokenExpired() bool {
 }
 
 func (c *Client) HasTokenExpiredAfter(t time.Time) bool {
-	return c.token == nil || c.token.Expiration().After(t)
+	return c.token == nil || c.token.Expiration().Before(t)
 }
 
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
