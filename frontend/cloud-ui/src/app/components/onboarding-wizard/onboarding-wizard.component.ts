@@ -17,6 +17,7 @@ import {ConnectInstructionsComponent} from '../connect-instructions/connect-inst
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {ToastService} from '../../services/toast.service';
+import {getFormDisplayedError} from '../../../util/errors';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -256,7 +257,10 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           await this.prepareFormAfterApplicationCreated(this.app, createdVersion);
           this.nextStep();
         } catch (e) {
-          this.toast.error('Something went wrong, please try again.');
+          const msg = getFormDisplayedError(e);
+          if(msg) {
+            this.toast.error(msg);
+          }
         } finally {
           this.loading = false;
         }
@@ -280,7 +284,10 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           this.nextStep();
         }
       } catch (e) {
-        this.toast.error('Something went wrong, please try again.');
+        const msg = getFormDisplayedError(e);
+        if(msg) {
+          this.toast.error(msg);
+        }
       } finally {
         this.loading = false;
       }
