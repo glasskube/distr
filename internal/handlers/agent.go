@@ -121,38 +121,59 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
+
 	var statusMessage string
+	var appVersion *types.ApplicationVersion
+	deployment, err := db.GetLatestDeploymentForDeploymentTarget(ctx, deploymentTarget.ID)
+	if errors.Is(err, apierrors.ErrNotFound) {
+		log.Info("latest deployment not found", zap.Error(err))
+		statusMessage = "EMPTY"
+	} else if err != nil {
+		msg := "failed to get latest Deployment from DB"
+		log.Error(msg, zap.Error(err))
+		statusMessage = fmt.Sprintf("%v: %v", msg, err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else if av, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionId); err != nil {
+		msg := "failed to get ApplicationVersion from DB"
+		log.Error(msg, zap.Error(err))
+		statusMessage = fmt.Sprintf("%v: %v", msg, err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		statusMessage = "OK"
+		appVersion = av
+	}
+
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
-		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-			msg := "failed to get compose file from DB"
-			statusMessage = fmt.Sprintf("%v: %v", msg, err)
-			log.Error(msg, zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if deploymentId, composeFileData, err := db.GetLatestDeploymentComposeFile(
-			ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
-			msg := "failed to get compose file from DB"
-			statusMessage = fmt.Sprintf("%v: %v", msg, err)
-			log.Error(msg, zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			if errors.Is(err, apierrors.ErrNotFound) {
-				statusMessage = "EMPTY"
-			} else {
-				statusMessage = "OK"
-			}
+		if deployment != nil && appVersion != nil {
 			w.Header().Add("Content-Type", "application/yaml")
-			w.Header().Add("X-Resource-Correlation-ID", deploymentId)
-			if _, err := w.Write(composeFileData); err != nil {
+			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
+			if _, err := w.Write(appVersion.ComposeFileData); err != nil {
 				msg := "failed to write compose file"
 				statusMessage = fmt.Sprintf("%v: %v", msg, err)
 				log.Error(msg, zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 			}
+		} else {
+			// it the status wasn't previously set to something else send a 204 code
+			w.WriteHeader(http.StatusNoContent)
 		}
 	} else {
-		log.Warn("not implemented")
-		http.Error(w, "not implemented", http.StatusInternalServerError)
-		// TODO: Implement resources handler for kubernetes agent
+		respose := api.KubernetesAgentResource{
+			Namespace: *deploymentTarget.Namespace,
+		}
+		if deployment != nil && appVersion != nil {
+			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
+			respose.Deployment = &api.KubernetesAgentDeployment{
+				RevisionID:  deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
+				ReleaseName: *deployment.ReleaseName,
+				ChartUrl:    *appVersion.ChartUrl,
+			}
+			if *appVersion.ChartType == types.HelmChartTypeRepository {
+				respose.Deployment.ChartName = *appVersion.ChartName
+				respose.Deployment.ChartVersion = *appVersion.ChartVersion
+			}
+		}
+		RespondJSON(w, respose)
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
