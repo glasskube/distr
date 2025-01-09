@@ -6,6 +6,7 @@ on:
       - 'main'
     tags:
       - '*'
+  pull_request:
 
 jobs:
   build-agent:
@@ -13,6 +14,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        agent:
+          - docker-agent
+          - kubernetes-agent
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -30,7 +36,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
-          images: ghcr.io/glasskube/cloud-agent
+          images: ghcr.io/glasskube/cloud/${{ matrix.agent }}
           tags: |
             type=ref,event=branch
             type=sha,event=branch
@@ -41,7 +47,7 @@ jobs:
       - name: Docker build (push only for tag)
         uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc # v6.11.0
         with:
-          file: Dockerfile.agent
+          file: Dockerfile.${{ matrix.agent }}
           build-args: |
             COMMIT=${{ steps.generate.outputs.sha_short }}
             VERSION=${{ github.ref_name }}
