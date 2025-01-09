@@ -33,7 +33,7 @@ func AgentRouter(r chi.Router) {
 	})
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
-		r.Post("/login", agentLogin)
+		r.Post("/login", agentLoginHandler)
 
 		r.Group(func(r chi.Router) {
 			// agent routes, authenticated via token
@@ -41,8 +41,8 @@ func AgentRouter(r chi.Router) {
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
 			r.Use(middleware.SentryUser)
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
-			r.Get("/resources", downloadResources)
-			r.Post("/status", postAgentStatus)
+			r.Get("/resources", agentResourcesHandler)
+			r.Post("/status", angentPostStatusHandler)
 		})
 	})
 }
@@ -90,7 +90,7 @@ func buildEndpoints() (string, string, string, error) {
 	}
 }
 
-func agentLogin(w http.ResponseWriter, r *http.Request) {
+func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
@@ -112,36 +112,42 @@ func agentLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func downloadResources(w http.ResponseWriter, r *http.Request) {
+func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
 	var statusMessage string
-	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-		msg := "failed to get compose file from DB"
-		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
-		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
-		w.WriteHeader(http.StatusInternalServerError)
-	} else if deploymentId, composeFileData, err := db.GetLatestDeploymentComposeFile(
-		ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
-		msg := "failed to get compose file from DB"
-		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
-		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		if errors.Is(err, apierrors.ErrNotFound) {
-			statusMessage = "EMPTY"
-		} else {
-			statusMessage = "OK"
-		}
-		w.Header().Add("Content-Type", "application/yaml")
-		w.Header().Add("X-Resource-Correlation-ID", deploymentId)
-		if _, err := w.Write(composeFileData); err != nil {
-			msg := "failed to write compose file"
-			statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
+	if deploymentTarget.Type == types.DeploymentTypeDocker {
+		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
+			msg := "failed to get compose file from DB"
+			statusMessage = fmt.Sprintf("%v: %v", msg, err)
 			log.Error(msg, zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
+		} else if deploymentId, composeFileData, err := db.GetLatestDeploymentComposeFile(
+			ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
+			msg := "failed to get compose file from DB"
+			statusMessage = fmt.Sprintf("%v: %v", msg, err)
+			log.Error(msg, zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				statusMessage = "EMPTY"
+			} else {
+				statusMessage = "OK"
+			}
+			w.Header().Add("Content-Type", "application/yaml")
+			w.Header().Add("X-Resource-Correlation-ID", deploymentId)
+			if _, err := w.Write(composeFileData); err != nil {
+				msg := "failed to write compose file"
+				statusMessage = fmt.Sprintf("%v: %v", msg, err)
+				log.Error(msg, zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
+	} else {
+		log.Warn("not implemented")
+		http.Error(w, "not implemented", http.StatusInternalServerError)
+		// TODO: Implement resources handler for kubernetes agent
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
@@ -160,7 +166,7 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func postAgentStatus(w http.ResponseWriter, r *http.Request) {
+func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	correlationID := r.Header.Get("X-Resource-Correlation-ID")
