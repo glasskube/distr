@@ -162,6 +162,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			Namespace: *deploymentTarget.Namespace,
 		}
 		if deployment != nil && appVersion != nil {
+			// TODO: parse values yaml and merge
 			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
 			respose.Deployment = &api.KubernetesAgentDeployment{
 				RevisionID:  deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
