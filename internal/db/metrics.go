@@ -37,6 +37,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 	expectedPerHour := int(time.Hour / maxAllowedInterval)
 	metricsIdx := 0
 	metrics := make([]types.UptimeMetric, 24)
+	nowBaseHour := time.Now().Truncate(1 * time.Hour)
 	var currentHourMetric types.UptimeMetric
 	var previousRowBaseHour time.Time
 	var previousRowCreatedAt *time.Time
@@ -61,16 +62,22 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 				metrics[metricsIdx] = currentHourMetric
 				metricsIdx = metricsIdx + 1
 			}
-			currentHourMetric = types.UptimeMetric{
-				Hour:    currentBaseHour,
-				Total:   expectedPerHour,
-				Unknown: 0,
+			if isLast {
+				currentHourMetric = metrics[len(metrics)-1]
+			} else {
+				currentHourMetric = types.UptimeMetric{
+					Hour:    currentBaseHour,
+					Total:   expectedPerHour,
+					Unknown: 0,
+				}
 			}
 		}
 
 		if currentCreatedAt == nil {
-			// no status at all in that hour
-			currentHourMetric.Unknown = currentHourMetric.Total
+			// no status at all in that whole hour (except the actual current hour)
+			if currentBaseHour != nowBaseHour {
+				currentHourMetric.Unknown = currentHourMetric.Total
+			}
 		} else {
 			if hourChanged || previousRowCreatedAt == nil {
 				// calculate diff to start of hour
@@ -105,7 +112,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 		processRow(true)
 		// last row is the current hour until now, so it does not have the complete total/expected, but a reduced one
 		restOfHour := time.Until(currentBaseHour.Add(1 * time.Hour))
-		currentHourMetric.Total = currentHourMetric.Total - int(restOfHour/maxAllowedInterval)
+		currentHourMetric.Total = currentHourMetric.Total - int(restOfHour/maxAllowedInterval) - 1
 		metrics[len(metrics)-1] = currentHourMetric
 		return metrics, nil
 	}

@@ -1,6 +1,7 @@
+<h1 class="text-center font-semibold text-sm text-gray-700 dark:text-gray-400">Deployments per Manager</h1>
 @if (chartOptions) {
   <apx-chart
-    class="block h-60 max-w-full max-h-full overflow-hidden"
+    class="block h-52 max-w-full max-h-full overflow-hidden"
     [series]="chartOptions.series!"
     [labels]="chartOptions.labels!"
     [colors]="chartOptions.colors!"
@@ -8,7 +9,8 @@
     [stroke]="chartOptions.stroke!"
     [tooltip]="chartOptions.tooltip!"
     [xaxis]="chartOptions.xaxis!"
-    [legend]="chartOptions.legend!"
-    [title]="chartOptions.title!">
+    [legend]="chartOptions.legend!">
   </apx-chart>
+} @else {
+  <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">Nothing to display right now.</p>
 }

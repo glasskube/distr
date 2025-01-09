@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
@@ -22,6 +23,7 @@ import (
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
@@ -41,6 +43,7 @@ func AgentRouter(r chi.Router) {
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
 			r.Use(middleware.SentryUser)
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
+			r.Use(rateLimitPerAgent)
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
 		})
@@ -97,6 +100,8 @@ func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if targetId, targetSecret, ok := r.BasicAuth(); !ok {
 		log.Error("invalid Basic Auth")
 		w.WriteHeader(http.StatusUnauthorized)
+	} else if agentLoginPerTargetIdRateLimiter.RespondOnLimit(w, r, targetId) {
+		return
 	} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
 		log.Error("failed to get deployment target from query auth", zap.Error(err))
 		w.WriteHeader(http.StatusUnauthorized)
@@ -209,7 +214,9 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		targetId := r.URL.Query().Get("targetId")
 		targetSecret := r.URL.Query().Get("targetSecret")
 
-		if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
+		if agentConnectPerTargetIdRateLimiter.RespondOnLimit(w, r, targetId) {
+			return
+		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
 			log.Error("failed to get deployment target from query auth", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
@@ -257,3 +264,14 @@ func getVerifiedDeploymentTarget(
 		return &deploymentTarget.DeploymentTarget, nil
 	}
 }
+
+var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+
+var rateLimitPerAgent = httprate.Limit(
+	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
+	1*time.Minute,
+	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
+		return auth.CurrentUserId(r.Context())
+	}),
+)
