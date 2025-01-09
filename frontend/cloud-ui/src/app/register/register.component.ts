@@ -3,6 +3,8 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {Router, RouterLink} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
+import {HttpErrorResponse} from '@angular/common/http';
+import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-register',
@@ -13,6 +15,8 @@ export class RegisterComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
+  errorMessage?: string;
+  loading = false;
   public readonly form = new FormGroup(
     {
       email: new FormControl('', [Validators.required, Validators.email]),
@@ -26,10 +30,19 @@ export class RegisterComponent {
 
   public async submit(): Promise<void> {
     this.form.markAllAsTouched();
+    this.errorMessage = undefined;
     if (this.form.valid) {
+      this.loading = true;
       const value = this.form.value;
-      await firstValueFrom(this.auth.register(value.email!, value.name, value.password!));
-      await this.router.navigate(['/login'], {queryParams: {email: value.email!}});
+      try {
+        await firstValueFrom(this.auth.register(value.email!, value.name, value.password!));
+        await this.router.navigate(['/login'], {queryParams: {email: value.email!}});
+      } catch(e) {
+        this.errorMessage = getFormDisplayedError(e);
+      } finally {
+        this.loading = false;
+      }
     }
   }
+
 }

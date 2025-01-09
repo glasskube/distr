@@ -2,29 +2,28 @@ import {HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common
 import {tap} from 'rxjs';
 import {inject} from '@angular/core';
 import {ToastService} from './toast.service';
+import {displayedInToast} from '../../util/errors';
 
 export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
   return next(req).pipe(
     tap({
       error: (err) => {
-        if (err instanceof HttpErrorResponse && !ignoreError(req, err)) {
-          switch (err.status) {
-            case 429:
-              toast.error('Rate limited! Please try again later.');
-              break;
-            case 404:
-              break;
-            default:
-              toast.error('An error occurred');
-          }
+        const msg = getToastDisplayedError(err);
+        if(msg) {
+          toast.error(msg);
         }
       },
     })
   );
 };
 
-function ignoreError(req: HttpRequest<any>, err: HttpErrorResponse) {
-  // TODO remove this; join latest deployment into the response in GET /deployments and don't do these follow up requests
-  return err.status === 404 && req.url.endsWith('latest-deployment');
+function getToastDisplayedError(err: any): string | undefined {
+  if (displayedInToast(err) && err instanceof HttpErrorResponse) {
+    switch(err.status) {
+      case 429: return 'Rate limited! Please try again later.';
+      default: return 'An unexpected technical error occurred';
+    }
+  }
+  return;
 }

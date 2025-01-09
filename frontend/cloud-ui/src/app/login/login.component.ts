@@ -4,6 +4,7 @@ import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required]),
   });
+  loading = false;
   public errorMessage?: string;
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -42,21 +44,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.formGroup.markAllAsTouched();
     this.errorMessage = undefined;
     if (this.formGroup.valid) {
+      this.loading = true;
       const value = this.formGroup.value;
       try {
         await lastValueFrom(this.auth.login(value.email!, value.password!));
-      } catch (e) {
-        if (e instanceof HttpErrorResponse && e.status < 500 && typeof e.error === 'string') {
-          this.errorMessage = e.error;
+        if (this.auth.hasRole('customer')) {
+          await this.router.navigate(['/deployments']);
         } else {
-          this.errorMessage = 'something went wrong';
+          await this.router.navigate(['/dashboard']);
         }
-        return;
-      }
-      if (this.auth.hasRole('customer')) {
-        await this.router.navigate(['/deployments']);
-      } else {
-        await this.router.navigate(['/dashboard']);
+      } catch (e) {
+        this.errorMessage = getFormDisplayedError(e);
+      } finally {
+        this.loading = false;
       }
     }
   }
