@@ -19,6 +19,7 @@ import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@forta
 import {
   catchError,
   combineLatest,
+  EMPTY,
   filter,
   first,
   firstValueFrom,
@@ -49,6 +50,7 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {Deployment, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
+import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -110,6 +112,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       lon: new FormControl<number | undefined>(undefined),
     }),
   });
+  editFormLoading = false;
 
   readonly deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
@@ -119,6 +122,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
     notes: new FormControl<string | undefined>(undefined),
   });
+  deployFormLoading = false;
 
   readonly deploymentTargets$ = this.deploymentTargets.list();
   readonly filteredDeploymentTargets$ = filteredByFormControl(
@@ -190,7 +194,14 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       .confirm(`Really delete ${dt.name}? This action can not be undone.`)
       .pipe(
         filter((result) => result === true),
-        switchMap(() => this.deploymentTargets.delete(dt))
+        switchMap(() => this.deploymentTargets.delete(dt)),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return EMPTY;
+        })
       )
       .subscribe();
   }
@@ -213,7 +224,9 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   async saveDeploymentTarget() {
+    this.editForm.markAllAsTouched();
     if (this.editForm.valid) {
+      this.editFormLoading = true;
       const val = this.editForm.value;
       const dt: DeploymentTarget = {
         id: val.id!,
@@ -228,13 +241,20 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         };
       }
 
-      this.loadDeploymentTarget(
-        await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
-      );
-      this.toast.success(`${dt.name} saved successfully`);
-      this.hideDrawer();
-    } else {
-      this.editForm.markAllAsTouched();
+      try {
+        this.loadDeploymentTarget(
+          await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
+        );
+        this.toast.success(`${dt.name} saved successfully`);
+        this.hideDrawer();
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editFormLoading = false;
+      }
     }
   }
 
@@ -302,13 +322,22 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   async saveDeployment() {
+    this.deployForm.markAllAsTouched();
     if (this.deployForm.valid) {
+      this.deployFormLoading = true;
       const deployment = this.deployForm.value;
-      await firstValueFrom(this.deployments.create(deployment as Deployment));
-      this.toast.success('Deployment saved successfully');
-      this.hideModal();
-    } else {
-      this.deployForm.markAllAsTouched();
+      try {
+        await firstValueFrom(this.deployments.create(deployment as Deployment));
+        this.toast.success('Deployment saved successfully');
+        this.hideModal();
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.deployFormLoading = false;
+      }
     }
   }
 
