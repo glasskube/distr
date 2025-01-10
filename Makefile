@@ -68,7 +68,7 @@ docker-build-docker-agent:
 docker-build-kubernetes-agent:
 	docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/cloud/kubernetes-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
 
-.PHONY: docker-build-kubernetes-agent
+.PHONY: docker-build
 docker-build: docker-build-server docker-build-docker-agent docker-build-kubernetes-agent
 
 .PHONY: init-db
