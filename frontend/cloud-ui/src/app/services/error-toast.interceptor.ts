@@ -22,6 +22,11 @@ function getToastDisplayedError(err: any): string | undefined {
   if (displayedInToast(err) && err instanceof HttpErrorResponse) {
     switch (err.status) {
       case 429:
+        const retryAfter = parseInt(err.headers.get('Retry-After') ?? '');
+        if (!Number.isNaN(retryAfter)) {
+          const minutes = Math.ceil(retryAfter / 60);
+          return `Rate limited! Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`;
+        }
         return 'Rate limited! Please try again later.';
       default:
         return 'An unexpected technical error occurred';
