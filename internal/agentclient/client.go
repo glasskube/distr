@@ -58,9 +58,9 @@ func (c *Client) KubernetesResource(ctx context.Context) (string, *api.Kubernete
 }
 
 func (c *Client) Status(ctx context.Context, correlationID, status string, error any) error {
-	body := map[string]string{
-		"status": status,
-		"error":  fmt.Sprint(error),
+	body := map[string]string{"status": status}
+	if error != nil {
+		body["error"] = fmt.Sprint(error)
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
