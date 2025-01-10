@@ -5,6 +5,7 @@ import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} fr
 import {AuthService} from '../services/auth.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {getFormDisplayedError} from '../../util/errors';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -22,6 +23,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyed$ = new Subject<void>();
+  private readonly toast = inject(ToastService);
 
   public ngOnInit(): void {
     this.route.queryParams
@@ -33,6 +35,18 @@ export class LoginComponent implements OnInit, OnDestroy {
       )
       .subscribe((email) => {
         this.formGroup.patchValue({email});
+      });
+    this.route.queryParams
+      .pipe(
+        map((params) => params['inviteSuccess']),
+        filter((inviteSuccess) => inviteSuccess),
+        distinctUntilChanged(),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((inviteSuccess) => {
+        if (inviteSuccess === 'true') {
+          this.toast.success('Account activated successfully. You can now log in!');
+        }
       });
   }
 
