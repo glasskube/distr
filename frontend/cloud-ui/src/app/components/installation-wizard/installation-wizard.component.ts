@@ -168,7 +168,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       this.nextStep();
     } catch (e) {
       const msg = getFormDisplayedError(e);
-      if(msg) {
+      if (msg) {
         this.toast.error(msg);
       }
     } finally {
@@ -188,12 +188,18 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
     try {
       this.loading = true;
-      await this.saveDeployment();
+      const deployment = this.deployForm.value;
+      if (deployment.valuesYaml) {
+        deployment.valuesYaml = btoa(deployment.valuesYaml);
+      } else {
+        deployment.valuesYaml = undefined;
+      }
+      await firstValueFrom(this.deployments.create(deployment as Deployment));
       this.toast.success('Deployment saved successfully');
       this.close();
     } catch (e) {
       const msg = getFormDisplayedError(e);
-      if(msg) {
+      if (msg) {
         this.toast.error(msg);
       }
     } finally {
@@ -208,18 +214,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   private nextStep() {
     this.loading = false;
     this.stepper?.next();
-  }
-
-  async saveDeployment() {
-    if (this.deployForm.valid) {
-      const deployment = this.deployForm.value;
-      if (deployment.valuesYaml) {
-        deployment.valuesYaml = btoa(deployment.valuesYaml);
-      } else {
-        deployment.valuesYaml = undefined;
-      }
-      await firstValueFrom(this.deployments.create(deployment as Deployment));
-    }
   }
 
   updatedSelectedApplication(applications: Application[], applicationId?: string | null) {

@@ -258,7 +258,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           this.nextStep();
         } catch (e) {
           const msg = getFormDisplayedError(e);
-          if(msg) {
+          if (msg) {
             this.toast.error(msg);
           }
         } finally {
@@ -285,7 +285,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         }
       } catch (e) {
         const msg = getFormDisplayedError(e);
-        if(msg) {
+        if (msg) {
           this.toast.error(msg);
         }
       } finally {
