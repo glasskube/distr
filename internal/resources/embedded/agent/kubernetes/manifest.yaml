@@ -3,7 +3,7 @@ kind: Secret
 metadata:
   name: glasskube-cloud-agent-env
 type: Opaque
-data:
+stringData:
   GK_TARGET_ID: "{{ .targetId }}"
   GK_TARGET_SECRET: "{{ .targetSecret }}"
   GK_LOGIN_ENDPOINT: "{{ .loginEndpoint }}"
@@ -29,10 +29,6 @@ rules:
       - "*"
     verbs:
       - "*"
-  - nonResourceURLs:
-      - "*"
-    verbs:
-      - "*"
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -40,8 +36,7 @@ kind: RoleBinding
 metadata:
   name: glasskube-cloud-agent
 subjects:
-  - apiGroup: v1
-    kind: ServiceAccount
+  - kind: ServiceAccount
     name: glasskube-cloud-agent
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -70,7 +65,7 @@ spec:
           image: ghcr.io/glasskube/cloud/kubernetes-agent:latest # TODO: use version tag
           imagePullPolicy: IfNotPresent
           envFrom:
-            - configMapRef:
+            - secretRef:
                 name: glasskube-cloud-agent-env
           resources:
             limits:
