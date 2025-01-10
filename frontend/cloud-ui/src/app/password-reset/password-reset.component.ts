@@ -5,6 +5,7 @@ import {Router} from '@angular/router';
 import {lastValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {SettingsService} from '../services/settings.service';
+import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-password-reset',
@@ -25,23 +26,22 @@ export class PasswordResetComponent {
   );
   public readonly email = this.auth.getClaims().email;
   public errorMessage?: string;
+  loading = false;
 
   public async submit() {
     this.form.markAllAsTouched();
     this.errorMessage = undefined;
     if (this.form.valid) {
+      this.loading = true;
       try {
         await lastValueFrom(this.settings.updateUserSettings({password: this.form.value.password!}));
+        await lastValueFrom(this.auth.logout());
+        location.assign(`/login?email=${encodeURIComponent(this.email)}`);
       } catch (e) {
-        if (e instanceof HttpErrorResponse && e.status < 500 && typeof e.error === 'string') {
-          this.errorMessage = e.error;
-        } else {
-          this.errorMessage = 'something went wrong';
-        }
-        console.error(e);
+        this.errorMessage = getFormDisplayedError(e);
+      } finally {
+        this.loading = false;
       }
-      await lastValueFrom(this.auth.logout());
-      location.assign(`/login?email=${encodeURIComponent(this.email)}`);
     }
   }
 }

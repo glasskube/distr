@@ -24,6 +24,7 @@ import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
 import {filteredByFormControl} from '../../../util/filter';
+import {getFormDisplayedError} from '../../../util/errors';
 
 @Component({
   selector: 'app-users',
@@ -52,6 +53,7 @@ export class UsersComponent implements OnDestroy {
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
   });
+  inviteFormLoading = false;
 
   filterForm = new FormGroup({
     search: new FormControl(''),
@@ -78,6 +80,8 @@ export class UsersComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.refresh$.complete();
+    this.destroyed$.next();
     this.destroyed$.complete();
   }
 
@@ -89,22 +93,32 @@ export class UsersComponent implements OnDestroy {
   public async submitInviteForm(): Promise<void> {
     this.inviteForm.markAllAsTouched();
     if (this.inviteForm.valid) {
-      await firstValueFrom(
-        this.users.addUser({
-          email: this.inviteForm.value.email!,
-          name: this.inviteForm.value.name || undefined,
-          userRole: this.userRole(),
-        })
-      );
-      this.closeInviteDialog();
-      switch (this.userRole()) {
-        case 'customer':
-          this.toast.success('Customer has been invited to the organization');
-          break;
-        case 'vendor':
-          this.toast.success('User has been invited to the organization');
+      this.inviteFormLoading = true;
+      try {
+        await firstValueFrom(
+          this.users.addUser({
+            email: this.inviteForm.value.email!,
+            name: this.inviteForm.value.name || undefined,
+            userRole: this.userRole(),
+          })
+        );
+        this.closeInviteDialog();
+        switch (this.userRole()) {
+          case 'customer':
+            this.toast.success('Customer has been invited to the organization');
+            break;
+          case 'vendor':
+            this.toast.success('User has been invited to the organization');
+        }
+        this.refresh$.next();
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.inviteFormLoading = false;
       }
-      this.refresh$.next();
     }
   }
 

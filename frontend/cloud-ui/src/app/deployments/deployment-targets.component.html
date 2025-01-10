@@ -285,6 +285,7 @@
       <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
         <button
           type="submit"
+          [disabled]="editFormLoading"
           class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
           <fa-icon [icon]="penIcon" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
           Update
@@ -400,6 +401,7 @@
           </div>
           <button
             type="submit"
+            [disabled]="deployFormLoading"
             class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
             <fa-icon [icon]="shipIcon" class="h-5 w-5 mr-2 -ml-0.5 dark:text-gray-400"></fa-icon>
             Deploy

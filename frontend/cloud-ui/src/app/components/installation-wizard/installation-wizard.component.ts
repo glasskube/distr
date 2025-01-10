@@ -16,6 +16,7 @@ import {Application} from '../../types/application';
 import {Deployment, DeploymentType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
+import {getFormDisplayedError} from '../../../util/errors';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -126,6 +127,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   async attemptContinue() {
@@ -133,13 +135,28 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.stepper?.selectedIndex === 0) {
-      if (!this.deploymentTargetForm.valid) {
-        this.deploymentTargetForm.markAllAsTouched();
-        return;
-      }
+    switch (this.stepper?.selectedIndex) {
+      case 0:
+        await this.continueFromDeploymentType();
+        break;
+      case 1:
+        this.loading = true;
+        this.nextStep();
+        break;
+      case 2:
+        await this.continueFromDeployStep();
+        break;
+    }
+  }
 
-      this.loading = true;
+  private async continueFromDeploymentType() {
+    this.deploymentTargetForm.markAllAsTouched();
+    if (!this.deploymentTargetForm.valid || this.loading) {
+      return;
+    }
+
+    this.loading = true;
+    try {
       const created = await firstValueFrom(
         this.deploymentTargets.create({
           name: this.deploymentTargetForm.value.name!,
@@ -149,25 +166,44 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       );
       this.selectedDeploymentTarget.set(created as DeploymentTarget);
       this.nextStep();
-    } else if (this.stepper?.selectedIndex === 1) {
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private async continueFromDeployStep() {
+    this.deployForm.patchValue({
+      deploymentTargetId: this.selectedDeploymentTarget()!.id,
+    });
+
+    this.deployForm.markAllAsTouched();
+    if (!this.deployForm.valid || this.loading) {
+      return;
+    }
+
+    try {
       this.loading = true;
-      this.nextStep();
-    } else if (this.stepper?.selectedIndex == 2) {
-      this.deployForm.patchValue({
-        deploymentTargetId: this.selectedDeploymentTarget()!.id,
-      });
-
-      if (!this.deployForm.valid) {
-        this.deployForm.markAllAsTouched();
-        return;
+      const deployment = this.deployForm.value;
+      if (deployment.valuesYaml) {
+        deployment.valuesYaml = btoa(deployment.valuesYaml);
+      } else {
+        deployment.valuesYaml = undefined;
       }
-
-      if (this.deployForm.valid) {
-        this.loading = true;
-        await this.saveDeployment();
-        this.toast.success('Deployment saved successfully');
-        this.close();
+      await firstValueFrom(this.deployments.create(deployment as Deployment));
+      this.toast.success('Deployment saved successfully');
+      this.close();
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
       }
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -178,18 +214,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   private nextStep() {
     this.loading = false;
     this.stepper?.next();
-  }
-
-  async saveDeployment() {
-    if (this.deployForm.valid) {
-      const deployment = this.deployForm.value;
-      if (deployment.valuesYaml) {
-        deployment.valuesYaml = btoa(deployment.valuesYaml);
-      } else {
-        deployment.valuesYaml = undefined;
-      }
-      await firstValueFrom(this.deployments.create(deployment as Deployment));
-    }
   }
 
   updatedSelectedApplication(applications: Application[], applicationId?: string | null) {

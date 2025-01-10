@@ -189,6 +189,7 @@
         <div class="flex justify-center w-full pb-4 space-x-4 sm:mt-0">
           <button
             type="submit"
+            [disabled]="editFormLoading"
             class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
             @if (selectedApplication?.id) {
               <fa-icon [icon]="faPen" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
@@ -439,6 +440,7 @@
               <div class="flex justify-stretch sm:justify-end mt-5 space-x-2.5">
                 <button
                   type="submit"
+                  [disabled]="newVersionFormLoading"
                   class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                   Create New Version
                 </button>

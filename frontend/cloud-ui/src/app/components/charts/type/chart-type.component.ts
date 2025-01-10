@@ -74,6 +74,7 @@ export class ChartTypeComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroyed$.next();
     this.destroyed$.complete();
   }
 }
