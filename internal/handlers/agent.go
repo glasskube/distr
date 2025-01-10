@@ -51,7 +51,8 @@ func AgentRouter(r chi.Router) {
 }
 
 func connectHandler() http.HandlerFunc {
-	tmpl := util.Require(resources.GetTemplate("embedded/agent-base.yaml"))
+	dockerTempl := util.Require(resources.GetTemplate("embedded/agent/docker/docker-compose.yaml"))
+	kubernetesTempl := util.Require(resources.GetTemplate("embedded/agent/kubernetes/manifest.yaml"))
 	loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints()
 	util.Must(err)
 
@@ -59,27 +60,31 @@ func connectHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+		templateData := map[string]any{
+			"loginEndpoint":     loginEndpoint,
+			"resourcesEndpoint": resourcesEndpoint,
+			"statusEndpoint":    statusEndpoint,
+			"targetId":          r.URL.Query().Get("targetId"),
+			"targetSecret":      r.URL.Query().Get("targetSecret"),
+			"agentInterval":     env.AgentInterval(),
+		}
 		if deploymentTarget.CurrentStatus != nil {
 			log.Warn("deployment target has already been connected")
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "deployment target has already been connected", http.StatusBadRequest)
 		} else if deploymentTarget.Type == types.DeploymentTypeDocker {
 			w.Header().Add("Content-Type", "application/yaml")
-			if err := tmpl.Execute(w, map[string]any{
-				"loginEndpoint":     loginEndpoint,
-				"resourcesEndpoint": resourcesEndpoint,
-				"statusEndpoint":    statusEndpoint,
-				"targetId":          r.URL.Query().Get("targetId"),
-				"targetSecret":      r.URL.Query().Get("targetSecret"),
-				"agentInterval":     env.AgentInterval(),
-			}); err != nil {
+			if err := dockerTempl.Execute(w, templateData); err != nil {
 				log.Error("failed to execute yaml template", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		} else {
-			log.Warn("not implemented")
-			http.Error(w, "not implemented", http.StatusInternalServerError)
-			// TODO: Implement connect for kubernetes agent
+			w.Header().Add("Content-Type", "application/yaml")
+			if err := kubernetesTempl.Execute(w, templateData); err != nil {
+				log.Error("failed to execute yaml template", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 	}
 }
