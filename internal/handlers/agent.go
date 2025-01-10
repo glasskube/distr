@@ -168,7 +168,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				RevisionID:   deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
 				ReleaseName:  *deployment.ReleaseName,
 				ChartUrl:     *appVersion.ChartUrl,
-				ChartVersion: *appVersion.ChartName,
+				ChartVersion: *appVersion.ChartVersion,
 			}
 			if *appVersion.ChartType == types.HelmChartTypeRepository {
 				respose.Deployment.ChartName = *appVersion.ChartName
