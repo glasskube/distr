@@ -165,13 +165,13 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: parse values yaml and merge
 			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
 			respose.Deployment = &api.KubernetesAgentDeployment{
-				RevisionID:  deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
-				ReleaseName: *deployment.ReleaseName,
-				ChartUrl:    *appVersion.ChartUrl,
+				RevisionID:   deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
+				ReleaseName:  *deployment.ReleaseName,
+				ChartUrl:     *appVersion.ChartUrl,
+				ChartVersion: *appVersion.ChartName,
 			}
 			if *appVersion.ChartType == types.HelmChartTypeRepository {
 				respose.Deployment.ChartName = *appVersion.ChartName
-				respose.Deployment.ChartVersion = *appVersion.ChartVersion
 			}
 		}
 		RespondJSON(w, respose)
