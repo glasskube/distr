@@ -14,10 +14,10 @@ func Get(filename string) ([]byte, error) {
 }
 
 func GetTemplate(filename string) (*template.Template, error) {
-	if bytes, err := Get("embedded/agent-base.yaml"); err != nil {
-		return nil, fmt.Errorf("failed to read template file: %w", err)
-	} else if tmpl, err := template.New("agent").Parse(string(bytes)); err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
+	if bytes, err := Get(filename); err != nil {
+		return nil, fmt.Errorf("failed to read template file %v: %w", filename, err)
+	} else if tmpl, err := template.New("").Parse(string(bytes)); err != nil {
+		return nil, fmt.Errorf("failed to parse template %v: %w", filename, err)
 	} else {
 		return tmpl, nil
 	}
