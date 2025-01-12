@@ -22,6 +22,7 @@ import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {UserRole} from './types/user-account';
 import {VerifyComponent} from './verify/verify.component';
+import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -136,6 +137,12 @@ export const routes: Routes = [
           {
             path: 'users',
             component: UsersComponent,
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor')],
+          },
+          {
+            path: 'branding',
+            component: OrganizationBrandingComponent,
             data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor')],
           },
