@@ -148,8 +148,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/wneessen/go-mail v0.6.0 h1:wO7EeJ8RL6DD+aycFGntil6b11g3FNQpQQQC1gkm97Y=
-github.com/wneessen/go-mail v0.6.0/go.mod h1:G702XlFhzHV0Z4w9j2VsH5K9dJDvj0hx+yOOp1oX9vc=
+github.com/wneessen/go-mail v0.6.1 h1:cDGqlGuEEhdILRe53VFzmM9WBk8Xh/QMvbO0oxrNJB4=
+github.com/wneessen/go-mail v0.6.1/go.mod h1:G702XlFhzHV0Z4w9j2VsH5K9dJDvj0hx+yOOp1oX9vc=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 h1:TT4fX+nBOA/+LUkobKGW1ydGcn+G3vRw9+g5HwCphpk=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0/go.mod h1:L7UH0GbB0p47T4Rri3uHjbpCFYrVrwc1I25QhNPiGK8=
