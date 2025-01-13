@@ -1,20 +1,25 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {OrganizationBrandingService} from '../services/organization-branding.service';
-import {lastValueFrom} from 'rxjs';
+import {lastValueFrom, Observable} from 'rxjs';
+import {OrganizationBranding} from "../types/organization-branding";
+import {HttpErrorResponse} from "@angular/common/http";
+import {getFormDisplayedError} from "../../util/errors";
+import {ToastService} from "../services/toast.service";
 
 @Component({
   selector: 'app-organization-branding',
   templateUrl: './organization-branding.component.html',
   imports: [FaIconComponent, ReactiveFormsModule],
 })
-export class OrganizationBrandingComponent {
+export class OrganizationBrandingComponent implements OnInit {
   protected readonly faFloppyDisk = faFloppyDisk;
 
-  private readonly organizationBranding = inject(OrganizationBrandingService);
-  private readonly organizationBranding$ = this.organizationBranding.get();
+  private readonly organizationBrandingService = inject(OrganizationBrandingService);
+  private organizationBranding?: OrganizationBranding;
+  private toast = inject(ToastService);
 
   protected readonly form = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -22,34 +27,52 @@ export class OrganizationBrandingComponent {
     logo: new FormControl<Blob | null>(null),
   });
 
-  constructor() {
-    this.organizationBranding$.subscribe((branding) => {
+  async ngOnInit() {
+    try {
+      this.organizationBranding = await lastValueFrom(this.organizationBrandingService.get());
       this.form.patchValue({
-        title: branding.title,
-        description: branding.description,
-        logo: this.base64ToBlob(branding.logo!!, branding.logoContentType),
+        title: this.organizationBranding.title,
+        description: this.organizationBranding.description,
+        logo: this.base64ToBlob(this.organizationBranding.logo!!, this.organizationBranding.logoContentType),
       });
-    });
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if(msg && (e instanceof HttpErrorResponse && e.status !== 404)) {
+        // its valid for an organization to have no branding (hence 404 is not shown in toast)
+        this.toast.error(msg);
+      }
+    }
   }
 
   async save() {
     this.form.markAllAsTouched();
     if (this.form.valid) {
       const formData = new FormData();
-
-      const id = (await lastValueFrom(this.organizationBranding$))?.id;
+      formData.set('title', this.form.value.title!!);
+      formData.set('description', this.form.value.description!!);
 
       if (this.form.value.logo) {
-        formData.set('title', this.form.value.title!!);
-        formData.set('description', this.form.value.description!!);
         formData.set('logo', this.form.value.logo as File);
+      } else {
+        // TODO formData.set('logo', new File());
       }
 
+      const id = this.organizationBranding?.id;
+      let req: Observable<OrganizationBranding>;
       if (id) {
         formData.set('id', id);
-        await lastValueFrom(this.organizationBranding.update(formData));
+        req = this.organizationBrandingService.update(formData);
       } else {
-        await lastValueFrom(this.organizationBranding.create(formData));
+        req = this.organizationBrandingService.create(formData);
+      }
+
+      try {
+        await lastValueFrom(req);
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if(msg){
+          this.toast.error(msg);
+        }
       }
     }
   }

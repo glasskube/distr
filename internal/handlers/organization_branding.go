@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/internal/apierrors"
 	"io"
 	"net/http"
 	"time"
@@ -29,15 +30,14 @@ func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 
 	if orgID, err := auth.CurrentOrgId(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if organizationBranding, err := db.GetOrganizationBranding(r.Context(), orgID); err != nil {
+	} else if organizationBranding, err := db.GetOrganizationBranding(r.Context(), orgID); errors.Is(err, apierrors.ErrNotFound) {
+		w.WriteHeader(http.StatusNotFound)
+	} else if err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		err := json.NewEncoder(w).Encode(organizationBranding)
-		if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-		}
+		RespondJSON(w, organizationBranding)
 	}
 }
 

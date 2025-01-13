@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/internal/apierrors"
 
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
@@ -29,7 +30,7 @@ func GetOrganizationBranding(ctx context.Context, organizationId string) (*types
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.OrganizationBranding])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return &types.OrganizationBranding{}, nil // return empty OrganizationBranding if not found
+		return nil, apierrors.ErrNotFound
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get OrganizationBranding: %w", err)
 	} else {
