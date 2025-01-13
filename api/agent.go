@@ -1,5 +1,7 @@
 package api
 
+import "github.com/glasskube/cloud/internal/types"
+
 type KubernetesAgentResource struct {
 	Namespace  string                     `json:"namespace"`
 	Deployment *KubernetesAgentDeployment `json:"deployment"`
@@ -12,4 +14,9 @@ type KubernetesAgentDeployment struct {
 	ChartName    string         `json:"chartName"`
 	ChartVersion string         `json:"chartVersion"`
 	Values       map[string]any `json:"values"`
+}
+
+type AgentDeploymentStatus struct {
+	Type    types.DeploymentStatusType `json:"type"`
+	Message string                     `json:"message"`
 }

@@ -5,6 +5,7 @@ import "time"
 type DeploymentType string
 type UserRole string
 type HelmChartType string
+type DeploymentStatusType string
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
@@ -15,6 +16,9 @@ const (
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
+
+	DeploymentStatusTypeOK    = "ok"
+	DeploymentStatusTypeError = "error"
 )
 
 type Base struct {

@@ -23,6 +23,7 @@ func DeploymentsRouter(r chi.Router) {
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
 		r.Get("/", getDeployment)
+		r.Get("/status", getDeploymentStatus)
 	})
 }
 
@@ -89,6 +90,17 @@ func getDeployment(w http.ResponseWriter, r *http.Request) {
 	err := json.NewEncoder(w).Encode(deployment)
 	if err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
+	}
+}
+
+func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
+	deployment := internalctx.GetDeployment(r.Context())
+	if deploymentStatus, err := db.GetDeploymentStatus(r.Context(), deployment.ID, 100); err != nil {
+		internalctx.GetLogger(r.Context()).Error("failed to get deploymentstatus", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, deploymentStatus)
 	}
 }
 

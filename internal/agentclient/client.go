@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/glasskube/cloud/internal/types"
+
 	"github.com/glasskube/cloud/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"go.uber.org/zap"
@@ -57,13 +59,17 @@ func (c *Client) KubernetesResource(ctx context.Context) (string, *api.Kubernete
 	}
 }
 
-func (c *Client) Status(ctx context.Context, correlationID, status string, error any) error {
-	body := map[string]string{"status": status}
+func (c *Client) Status(ctx context.Context, correlationID, status string, error error) error {
+	deploymentStatus := api.AgentDeploymentStatus{}
 	if error != nil {
-		body["error"] = fmt.Sprint(error)
+		deploymentStatus.Type = types.DeploymentStatusTypeError
+		deploymentStatus.Message = error.Error()
+	} else {
+		deploymentStatus.Type = types.DeploymentStatusTypeOK
+		deploymentStatus.Message = status
 	}
 	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(body); err != nil {
+	if err := json.NewEncoder(&buf).Encode(deploymentStatus); err != nil {
 		return err
 	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.StatusEndpoint, &buf); err != nil {
 		return err

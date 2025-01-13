@@ -1,5 +1,5 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
+import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -15,7 +15,15 @@ import {
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faHeartPulse,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faShip,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
   combineLatest,
@@ -25,6 +33,7 @@ import {
   firstValueFrom,
   lastValueFrom,
   map,
+  Observable,
   of,
   shareReplay,
   Subject,
@@ -48,7 +57,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {Deployment, DeploymentType} from '../types/deployment';
+import {Deployment, DeploymentStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {getFormDisplayedError} from '../../util/errors';
 
@@ -66,6 +75,7 @@ import {getFormDisplayedError} from '../../util/errors';
     StatusDotComponent,
     ConnectInstructionsComponent,
     InstallationWizardComponent,
+    UpperCasePipe,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -86,23 +96,23 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   readonly penIcon = faPen;
   readonly shipIcon = faShip;
   readonly xmarkIcon = faXmark;
+  protected readonly faHeartPulse = faHeartPulse;
   protected readonly faTrash = faTrash;
 
   private destroyed$ = new Subject<void>();
-
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
+
   private deploymentWizardOverlayRef?: DialogRef;
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
+  selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
 
-  private selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
   selectedApplication?: Application | null;
 
   readonly filterForm = new FormGroup({
     search: new FormControl(''),
   });
-
   readonly editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
     name: new FormControl('', Validators.required),
@@ -112,8 +122,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       lon: new FormControl<number | undefined>(undefined),
     }),
   });
-  editFormLoading = false;
 
+  editFormLoading = false;
   readonly deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
@@ -122,20 +132,23 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
     notes: new FormControl<string | undefined>(undefined),
   });
-  deployFormLoading = false;
 
+  deployFormLoading = false;
   readonly deploymentTargets$ = this.deploymentTargets.list();
+
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   );
-
   private readonly applications$ = this.applications.list();
+
   readonly filteredApplications$ = combineLatest([
     this.applications$,
     toObservable(this.selectedDeploymentTarget),
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
+
+  statuses: Observable<DeploymentStatus[]> = EMPTY;
 
   ngOnInit() {
     this.registerDeployFormChanges();
@@ -346,5 +359,13 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
     this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
+  }
+
+  openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
+    if (deploymentTarget.latestDeployment?.id) {
+      this.selectedDeploymentTarget.set(deploymentTarget);
+      this.statuses = this.deployments.getStatuses(deploymentTarget.latestDeployment);
+      this.showModal(modal);
+    }
   }
 }
