@@ -18,15 +18,20 @@ import (
 const (
 	deploymentTargetOutputExprBase = `
 		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.namespace,
-		dt.organization_id, dt.created_by_user_account_id,
+		dt.organization_id, dt.created_by_user_account_id, dt.agent_version_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
-		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END AS geolocation
+		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
+			AS geolocation
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
 		", (" + userAccountWithRoleOutputExpr + ") as created_by"
 	deploymentTargetWithStatusOutputExpr = deploymentTargetOutputExpr + `,
 		CASE WHEN status.id IS NOT NULL
-			THEN (status.id, status.created_at, status.message) END AS current_status
+			THEN (status.id, status.created_at, status.message) END
+			AS current_status,
+		CASE WHEN agv.id IS NOT NULL
+			THEN (agv.id, agv.created_at, agv.name, agv.manifest_file_revision, agv.compose_file_revision) END
+			AS agent_version
 	`
 	deploymentTargetJoinExpr = `
 		LEFT JOIN (
@@ -39,6 +44,8 @@ const (
 		LEFT JOIN DeploymentTargetStatus status
 			ON dt.id = status.deployment_target_id
 			AND status.created_at = status_max.max_created_at
+		LEFT JOIN AgentVersion agv
+			ON dt.agent_version_id = agv.id
 		LEFT JOIN UserAccount u
 			ON dt.created_by_user_account_id = u.id
 		LEFT JOIN Organization_UserAccount j

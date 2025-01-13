@@ -129,6 +129,7 @@ type DeploymentTarget struct {
 	Namespace              *string                 `db:"namespace" json:"namespace"`
 	OrganizationID         string                  `db:"organization_id" json:"-"`
 	CreatedByUserAccountID string                  `db:"created_by_user_account_id" json:"-"`
+	AgentVersionID         *string                 `db:"agent_version_id" json:"-"`
 }
 
 func (dt *DeploymentTarget) Validate() error {
@@ -144,6 +145,7 @@ type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
 	CreatedBy        *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
 	LatestDeployment *DeploymentWithData      `db:"-" json:"latestDeployment,omitempty"`
+	AgentVersion     *AgentVersion            `db:"agent_version" json:"agentVersion,omitempty"`
 }
 
 type DeploymentTargetStatus struct {
@@ -192,4 +194,11 @@ type UptimeMetric struct {
 	Hour    time.Time `json:"hour"`
 	Total   int       `json:"total"`
 	Unknown int       `json:"unknown"`
+}
+
+type AgentVersion struct {
+	Base
+	Name                 string `db:"name" json:"name"`
+	ManifestFileRevision string `db:"manifest_file_revision" json:"-"`
+	ComposeFileRevision  string `db:"compose_file_revision" json:"-"`
 }

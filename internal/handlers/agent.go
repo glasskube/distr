@@ -50,8 +50,8 @@ func AgentRouter(r chi.Router) {
 }
 
 func connectHandler() http.HandlerFunc {
-	dockerTempl := util.Require(resources.GetTemplate("embedded/agent/docker/docker-compose.yaml"))
-	kubernetesTempl := util.Require(resources.GetTemplate("embedded/agent/kubernetes/manifest.yaml"))
+	dockerTempl := util.Require(resources.GetTemplate("embedded/agent/docker/v1/docker-compose.yaml"))
+	kubernetesTempl := util.Require(resources.GetTemplate("embedded/agent/kubernetes/v1/manifest.yaml"))
 	loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints()
 	util.Must(err)
 
