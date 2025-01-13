@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/glasskube/cloud/internal/buildconfig"
 	"github.com/glasskube/cloud/internal/types"
 
 	"github.com/glasskube/cloud/api"
@@ -141,6 +142,7 @@ func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Re
 }
 
 func (c *Client) do(r *http.Request) (*http.Response, error) {
+	r.Header.Set("User-Agent", fmt.Sprintf("GlasskubeAgentClient/%v", buildconfig.Version()))
 	return checkStatus(c.httpClient.Do(r))
 }
 
