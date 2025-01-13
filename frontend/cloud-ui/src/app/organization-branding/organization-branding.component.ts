@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
-import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {OrganizationBrandingService} from '../services/organization-branding.service';
 import {lastValueFrom} from 'rxjs';
 
@@ -17,8 +17,8 @@ export class OrganizationBrandingComponent {
   private readonly organizationBranding$ = this.organizationBranding.get();
 
   protected readonly form = new FormGroup({
-    title: new FormControl(''),
-    description: new FormControl(''),
+    title: new FormControl('', Validators.required),
+    description: new FormControl('', Validators.required),
     logo: new FormControl<Blob | null>(null),
   });
 
@@ -33,6 +33,7 @@ export class OrganizationBrandingComponent {
   }
 
   async save() {
+    this.form.markAllAsTouched();
     if (this.form.valid) {
       const formData = new FormData();
 

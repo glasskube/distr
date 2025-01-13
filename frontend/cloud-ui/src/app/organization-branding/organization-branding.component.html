@@ -49,10 +49,11 @@
               type="text"
               name="title"
               id="title"
-              value="The 4th Digital Tranformation"
               class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-              placeholder="Ex. Meeting with Adam"
-              required="" />
+              placeholder="Ex. Meeting with Adam" />
+            @if (form.controls.title.invalid && form.controls.title.touched) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+            }
           </div>
           <div>
             <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -66,12 +67,12 @@
                   id="description"
                   rows="8"
                   class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"
-                  placeholder="Write event description..."
-                  required="">
-The 4th Digital Transformation and Industry 4.0 Free Online Conference Organized by Flowbite and Themesberg, Live on Saturday 26th Nov at 02:00 pm GMT | 04:00 pm EET on Zoom Webinars</textarea
-                >
+                  placeholder="Write event description..."></textarea>
               </div>
             </div>
+            @if (form.controls.description.invalid && form.controls.description.touched) {
+              <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+            }
           </div>
           <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
             <button
