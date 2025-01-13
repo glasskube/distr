@@ -87,14 +87,16 @@
                   Initial
                 </div>
               } @else if (dt.currentStatus | isStale) {
-                <div (click)="openStatusModal(dt, deploymentStatusModal)"
+                <div
+                  (click)="openStatusModal(dt, deploymentStatusModal)"
                   class="flex items-center"
                   [title]="'Last status is ' + (dt.currentStatus.createdAt | relativeDate: true) + ' old'">
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   Stale
                 </div>
               } @else {
-                <a (click)="openStatusModal(dt, deploymentStatusModal)"
+                <a
+                  (click)="openStatusModal(dt, deploymentStatusModal)"
                   class="flex items-center"
                   [title]="'Last status: ' + (dt.currentStatus.createdAt | date: 'medium')">
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
@@ -427,17 +429,16 @@
 </ng-template>
 
 <ng-template #deploymentStatusModal>
-  <div
-    @modalFlyInOut
-    class="z-50 w-full m-4 overflow-x-hidden">
+  <div @modalFlyInOut class="z-50 w-full m-4 overflow-x-hidden">
     <div class="relative w-full max-h-full">
       <!-- Modal content -->
       <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
         <!-- Modal header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Status History: {{ selectedDeploymentTarget()?.name }}
-            @if(selectedDeploymentTarget()?.latestDeployment; as deployment) {
-              ({{deployment.applicationName}}&#64;{{deployment.applicationVersionName}})
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Status History: {{ selectedDeploymentTarget()?.name }}
+            @if (selectedDeploymentTarget()?.latestDeployment; as deployment) {
+              ({{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }})
             }
           </h3>
           <button
@@ -460,11 +461,11 @@
           <div class="mb-5 relative overflow-x-auto shadow-md sm:rounded-lg">
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
               <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
-              <tr>
-                <th scope="col" class="px-6 py-3">Date</th>
-                <th scope="col" class="px-6 py-3">Status</th>
-                <th scope="col" class="px-6 py-3">Details</th>
-              </tr>
+                <tr>
+                  <th scope="col" class="px-6 py-3">Date</th>
+                  <th scope="col" class="px-6 py-3">Status</th>
+                  <th scope="col" class="px-6 py-3">Details</th>
+                </tr>
               </thead>
               <tbody>
                 @for (status of statuses | async; track status.id) {
@@ -474,7 +475,7 @@
                       {{ status.createdAt | date: 'medium' }}
                     </th>
                     <td class="px-6 py-4">
-                      {{ status.type }}
+                      {{ status.type | uppercase }}
                     </td>
                     <td class="px-6 py-4">
                       {{ status.message }}

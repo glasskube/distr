@@ -1,5 +1,5 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
+import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -24,7 +24,8 @@ import {
   first,
   firstValueFrom,
   lastValueFrom,
-  map, Observable,
+  map,
+  Observable,
   of,
   shareReplay,
   Subject,
@@ -66,6 +67,7 @@ import {getFormDisplayedError} from '../../util/errors';
     StatusDotComponent,
     ConnectInstructionsComponent,
     InstallationWizardComponent,
+    UpperCasePipe,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -348,11 +350,10 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
-    if(deploymentTarget.latestDeployment?.id) {
+    if (deploymentTarget.latestDeployment?.id) {
       this.selectedDeploymentTarget.set(deploymentTarget);
       this.statuses = this.deployments.getStatuses(deploymentTarget.latestDeployment);
       this.showModal(modal);
     }
   }
-
 }
