@@ -15,7 +15,15 @@ import {
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faShip, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faHeartPulse,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faShip,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
   combineLatest,
@@ -88,23 +96,23 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   readonly penIcon = faPen;
   readonly shipIcon = faShip;
   readonly xmarkIcon = faXmark;
+  protected readonly faHeartPulse = faHeartPulse;
   protected readonly faTrash = faTrash;
 
   private destroyed$ = new Subject<void>();
-
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
+
   private deploymentWizardOverlayRef?: DialogRef;
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
-
   selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
+
   selectedApplication?: Application | null;
 
   readonly filterForm = new FormGroup({
     search: new FormControl(''),
   });
-
   readonly editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
     name: new FormControl('', Validators.required),
@@ -114,8 +122,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       lon: new FormControl<number | undefined>(undefined),
     }),
   });
-  editFormLoading = false;
 
+  editFormLoading = false;
   readonly deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
@@ -124,16 +132,17 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
     notes: new FormControl<string | undefined>(undefined),
   });
-  deployFormLoading = false;
 
+  deployFormLoading = false;
   readonly deploymentTargets$ = this.deploymentTargets.list();
+
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   );
-
   private readonly applications$ = this.applications.list();
+
   readonly filteredApplications$ = combineLatest([
     this.applications$,
     toObservable(this.selectedDeploymentTarget),
