@@ -12,6 +12,7 @@ import (
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -44,6 +45,10 @@ func createDeployment(w http.ResponseWriter, r *http.Request) {
 	} else if err != nil {
 		log.Warn("could not get application version", zap.Error(err))
 		http.Error(w, "an internal error occurred", http.StatusInternalServerError)
+	} else if appVersion, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionId); err != nil {
+		http.Error(w, "application version does not exist", http.StatusBadRequest)
+	} else if appVersionValues, err := appVersion.ParsedValuesFile(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else if deploymentTarget, err := db.GetDeploymentTarget(
 		ctx, deployment.DeploymentTargetId, &orgId,
 	); errors.Is(err, apierrors.ErrNotFound) {
@@ -53,15 +58,16 @@ func createDeployment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "an inernal error occurred", http.StatusInternalServerError)
 	} else if deploymentTarget.Type != application.Type {
 		http.Error(w, "application and deployment target must have the same type", http.StatusBadRequest)
+	} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if _, err := util.MergeAllRecursive(appVersionValues, deploymentValues); err != nil {
+		http.Error(w, fmt.Sprintf("values cannot be merged with base: %v", err), http.StatusBadRequest)
 	} else if err = db.CreateDeployment(r.Context(), &deployment); err != nil {
 		log.Warn("could not create deployment", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = fmt.Fprintln(w, err); err != nil {
-			log.Error("failed to write error to response", zap.Error(err))
-		}
-	} else if err = json.NewEncoder(w).Encode(deployment); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, deployment)
 	}
 }
 

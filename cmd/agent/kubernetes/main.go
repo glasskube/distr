@@ -126,7 +126,8 @@ func main() {
 			}
 		} else if currentDeployment != nil {
 			if currentDeployment.HelmRevision != latestRelease.Version {
-				msg := "helm revision is different from latest deployment. bailing out"
+				msg := fmt.Sprintf("actual helm revision (%v) is different from latest deployed by agent (%v). bailing out",
+					latestRelease.Version, currentDeployment.HelmRevision)
 				logger.Warn(msg)
 				pushErrorStatus(ctx, errors.New(msg))
 				continue
@@ -204,11 +205,10 @@ func GetLatestHelmRelease(namespace, releaseName string) (*release.Release, erro
 		return nil, err
 	}
 	historyAction := action.NewHistory(cfg)
-	historyAction.Max = 1
 	if releases, err := historyAction.Run(releaseName); err != nil {
 		return nil, err
 	} else {
-		return releases[0], nil
+		return releases[len(releases)-1], nil
 	}
 }
 
