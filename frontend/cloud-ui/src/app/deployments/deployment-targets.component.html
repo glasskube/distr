@@ -87,21 +87,21 @@
                   Initial
                 </div>
               } @else if (dt.currentStatus | isStale) {
-                <div
+                <button
                   (click)="openStatusModal(dt, deploymentStatusModal)"
                   class="flex items-center"
                   [title]="'Last status is ' + (dt.currentStatus.createdAt | relativeDate: true) + ' old'">
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   Stale
-                </div>
+                </button>
               } @else {
-                <a
+                <button
                   (click)="openStatusModal(dt, deploymentStatusModal)"
                   class="flex items-center"
                   [title]="'Last status: ' + (dt.currentStatus.createdAt | date: 'medium')">
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   OK
-                </a>
+                </button>
               }
             </td>
             @if (fullVersion) {
