@@ -166,16 +166,26 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			applicationVersion.ComposeFileData = data
+			if _, err := applicationVersion.ParsedComposeFile(); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 		}
 	} else {
 		if data, ok := readFile(w, r, "valuesfile"); !ok {
 			return
 		} else {
 			applicationVersion.ValuesFileData = data
+			if _, err := applicationVersion.ParsedValuesFile(); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 		}
 		if data, ok := readFile(w, r, "templatefile"); !ok {
 			return
 		} else {
+			// Template file is taken without parsing on purpose.
+			// Some uses might use a non-yaml template here.
 			applicationVersion.TemplateFileData = data
 		}
 	}
