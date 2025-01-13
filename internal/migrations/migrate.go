@@ -19,15 +19,15 @@ import (
 var fs embed.FS
 
 type Logger struct {
-	*zap.Logger
+	*zap.SugaredLogger
 }
 
 // Printf implements migrate.Logger.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	if strings.HasPrefix(format, "error") {
-		l.Sugar().Errorf(format, v...)
+		l.Errorf(format, v...)
 	} else {
-		l.Sugar().Infof(format, v...)
+		l.Debugf(format, v...)
 	}
 }
 
@@ -69,6 +69,23 @@ func Down(log *zap.Logger) (err error) {
 	return nil
 }
 
+func Migrate(log *zap.Logger, to uint) (err error) {
+	db, err := sql.Open("pgx", env.DatabaseUrl())
+	if err != nil {
+		return err
+	}
+	defer func() { multierr.AppendInto(&err, db.Close()) }()
+	if instance, err := getInstance(db, log); err != nil {
+		return err
+	} else if err := instance.Migrate(to); err != nil {
+		if !errors.Is(err, migrate.ErrNoChange) {
+			return err
+		}
+		log.Info("migrations completed", zap.Error(err))
+	}
+	return nil
+}
+
 func getInstance(db *sql.DB, log *zap.Logger) (*migrate.Migrate, error) {
 	if driver, err := postgres.WithInstance(db, &postgres.Config{}); err != nil {
 		return nil, err
@@ -77,7 +94,7 @@ func getInstance(db *sql.DB, log *zap.Logger) (*migrate.Migrate, error) {
 	} else if instance, err := migrate.NewWithInstance("", sourceInstance, "cloud", driver); err != nil {
 		return nil, err
 	} else {
-		instance.Log = &Logger{log}
+		instance.Log = &Logger{log.Sugar()}
 		return instance, nil
 	}
 }

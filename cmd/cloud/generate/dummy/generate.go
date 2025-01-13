@@ -76,6 +76,24 @@ func main() {
 	}
 	util.Must(db.CreateApplicationVersion(ctx, &av))
 
+	podinfoApp := types.Application{Name: "Podinfo", OrganizationID: org.ID, Type: types.DepolymentTypeKubernetes}
+	util.Must(db.CreateApplication(ctx, &podinfoApp))
+	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
+		ApplicationId: podinfoApp.ID,
+		Name:          "6.7.1",
+		ChartType:     util.PtrTo(types.HelmChartTypeOCI),
+		ChartUrl:      util.PtrTo("oci://ghcr.io/stefanprodan/charts/podinfo"),
+		ChartVersion:  util.PtrTo("6.7.1"),
+		ValuesFileData: []byte(
+			"redis:\n  enabled: true\n" +
+				"serviceAccount:\n  enabled: true\n",
+		),
+		TemplateFileData: []byte(
+			"replicaCount: 1 # change this if needed\n" +
+				"podDisruptionBudget:\n  # only applied if replicaCount > 1\n  maxUnavailable: 1\n",
+		),
+	}))
+
 	dt1 := types.DeploymentTargetWithCreatedBy{
 		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
