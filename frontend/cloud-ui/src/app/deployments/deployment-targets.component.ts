@@ -326,6 +326,9 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     if (this.deployForm.valid) {
       this.deployFormLoading = true;
       const deployment = this.deployForm.value;
+      if (deployment.valuesYaml) {
+        deployment.valuesYaml = btoa(deployment.valuesYaml);
+      }
       try {
         await firstValueFrom(this.deployments.create(deployment as Deployment));
         this.toast.success('Deployment saved successfully');
