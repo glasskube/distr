@@ -83,34 +83,6 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func GetLatestDeploymentComposeFile(
-	ctx context.Context,
-	deploymentTargetId string,
-	orgId string,
-) (string, []byte, error) {
-	db := internalctx.GetDb(ctx)
-	var deploymentId string
-	var file []byte
-	rows := db.QueryRow(ctx, `
-		SELECT d.id, av.compose_file_data
-		FROM Deployment d
-		INNER JOIN ApplicationVersion av ON d.application_version_id = av.id
-		INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id
-		WHERE d.deployment_target_id = @deploymentTargetId AND dt.organization_id = @orgId
-		ORDER BY d.created_at DESC LIMIT 1`, pgx.NamedArgs{
-		"deploymentTargetId": deploymentTargetId,
-		"orgId":              orgId,
-	})
-	if err := rows.Scan(&deploymentId, &file); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return "", nil, apierrors.ErrNotFound
-		}
-		return "", nil, fmt.Errorf("failed to get latest deployment: %w", err)
-	} else {
-		return deploymentId, file, nil
-	}
-}
-
 func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
@@ -138,12 +110,17 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	}
 }
 
-func CreateDeploymentStatus(ctx context.Context, deploymentID string, message string) error {
+func CreateDeploymentStatus(
+	ctx context.Context,
+	deploymentID string,
+	statusType types.DeploymentStatusType,
+	message string,
+) error {
 	db := internalctx.GetDb(ctx)
 	var id string
 	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentStatus (deployment_id, message) VALUES (@deploymentId, @message) RETURNING id",
-		pgx.NamedArgs{"deploymentId": deploymentID, "message": message})
+		"INSERT INTO DeploymentStatus (deployment_id, message, type) VALUES (@deploymentId, @message, @type) RETURNING id",
+		pgx.NamedArgs{"deploymentId": deploymentID, "message": message, "type": statusType})
 	if err := rows.Scan(&id); err != nil {
 		return err
 	} else {
@@ -183,5 +160,23 @@ func CleanupDeploymentStatus(ctx context.Context, deploymentId string) (int64, e
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
+	}
+}
+
+func GetDeploymentStatus(ctx context.Context, deploymentId string, maxRows int) ([]types.DeploymentStatus, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT id, created_at, deployment_id, type, message
+		FROM DeploymentStatus
+		WHERE deployment_id = @deploymentId
+		ORDER BY created_at DESC
+		LIMIT @maxRows`,
+		pgx.NamedArgs{"deploymentId": deploymentId, "maxRows": maxRows})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DeploymentStatus: %w", err)
+	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentStatus]); err != nil {
+		return nil, fmt.Errorf("failed to get DeploymentStatus: %w", err)
+	} else {
+		return result, nil
 	}
 }

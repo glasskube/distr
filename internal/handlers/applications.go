@@ -166,16 +166,26 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			applicationVersion.ComposeFileData = data
+			if _, err := applicationVersion.ParsedComposeFile(); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 		}
 	} else {
 		if data, ok := readFile(w, r, "valuesfile"); !ok {
 			return
 		} else {
 			applicationVersion.ValuesFileData = data
+			if _, err := applicationVersion.ParsedValuesFile(); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 		}
 		if data, ok := readFile(w, r, "templatefile"); !ok {
 			return
 		} else {
+			// Template file is taken without parsing on purpose.
+			// Some uses might use a non-yaml template here.
 			applicationVersion.TemplateFileData = data
 		}
 	}
@@ -308,7 +318,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var composeFileData []byte
-	if composeFile, err := resources.Get("embedded/shiori-compose.yaml"); err != nil {
+	if composeFile, err := resources.Get("embedded/apps/shiori/docker-compose.yaml"); err != nil {
 		log.Warn("failed to read shiori compose file", zap.Error(err))
 	} else {
 		composeFileData = composeFile

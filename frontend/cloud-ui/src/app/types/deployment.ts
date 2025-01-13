@@ -14,6 +14,13 @@ export interface DeploymentWithData extends Deployment {
   applicationVersionName: string;
 }
 
+export interface DeploymentStatus extends BaseModel {
+  type: DeploymentStatusType;
+  message: string;
+}
+
 export type DeploymentType = 'docker' | 'kubernetes';
 
 export type HelmChartType = 'repository' | 'oci';
+
+export type DeploymentStatusType = 'ok' | 'error';

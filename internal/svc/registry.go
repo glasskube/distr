@@ -87,7 +87,7 @@ func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		typeNames := []string{"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE"}
+		typeNames := []string{"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE", "DEPLOYMENT_STATUS_TYPE"}
 		if pgTypes, err := conn.LoadTypes(ctx, typeNames); err != nil {
 			return err
 		} else {

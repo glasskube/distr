@@ -22,7 +22,7 @@ export class ConnectInstructionsComponent {
       this.modalConnectCommand =
         this.deploymentTarget.type === 'docker'
           ? `curl "${response.connectUrl}" | docker compose -f - up -d`
-          : `kubectl apply -f "${response.connectUrl}`;
+          : `kubectl apply -n ${this.deploymentTarget.namespace} -f "${response.connectUrl}"`;
       this.modalTargetId = response.targetId;
       this.modalTargetSecret = response.targetSecret;
     });

@@ -2,7 +2,10 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Application struct {
@@ -33,6 +36,33 @@ type ApplicationVersion struct {
 	ComposeFileData  []byte `db:"compose_file_data" json:"-"`
 
 	ApplicationId string `db:"application_id" json:"applicationId"`
+}
+
+func (av ApplicationVersion) ParsedValuesFile() (result map[string]any, err error) {
+	if av.ValuesFileData != nil {
+		if err = yaml.Unmarshal(av.ValuesFileData, &result); err != nil {
+			err = fmt.Errorf("cannot parse ApplicationVersion values file: %w", err)
+		}
+	}
+	return
+}
+
+func (av ApplicationVersion) ParsedTemplateFile() (result map[string]any, err error) {
+	if av.TemplateFileData != nil {
+		if err = yaml.Unmarshal(av.TemplateFileData, &result); err != nil {
+			err = fmt.Errorf("cannot parse ApplicationVersion values template: %w", err)
+		}
+	}
+	return
+}
+
+func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err error) {
+	if av.ComposeFileData != nil {
+		if err = yaml.Unmarshal(av.ComposeFileData, &result); err != nil {
+			err = fmt.Errorf("cannot parse ApplicationVersion compose file: %w", err)
+		}
+	}
+	return
 }
 
 func (av ApplicationVersion) Validate(deplType DeploymentType) error {
@@ -77,11 +107,27 @@ type Deployment struct {
 	ValuesYaml           []byte  `db:"values_yaml" json:"valuesYaml"`
 }
 
+func (d Deployment) ParsedValuesFile() (result map[string]any, err error) {
+	if d.ValuesYaml != nil {
+		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
+			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
+		}
+	}
+	return
+}
+
 type DeploymentWithData struct {
 	Deployment
 	ApplicationId          string `db:"application_id" json:"applicationId"`
 	ApplicationName        string `db:"application_name" json:"applicationName"`
 	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
+}
+
+type DeploymentStatus struct {
+	Base
+	DeploymentId string               `db:"deployment_id" json:"deploymentId"`
+	Type         DeploymentStatusType `db:"type" json:"type"`
+	Message      string               `db:"message" json:"message"`
 }
 
 type DeploymentTarget struct {
