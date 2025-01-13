@@ -28,7 +28,7 @@ export class OrganizationBrandingComponent implements OnInit {
     logo: new FormControl<Blob | null>(null),
   });
   protected readonly logoSrc: Observable<string | null> = this.form.controls.logo.valueChanges.pipe(
-      map((logo) => (logo ? URL.createObjectURL(logo) : null)));
+      map((logo) => logo ? URL.createObjectURL(logo) : null));
 
   async ngOnInit() {
     try {
@@ -36,7 +36,8 @@ export class OrganizationBrandingComponent implements OnInit {
       this.form.patchValue({
         title: this.organizationBranding.title,
         description: this.organizationBranding.description,
-        logo: this.base64ToBlob(this.organizationBranding.logo!!, this.organizationBranding.logoContentType),
+        logo: this.organizationBranding.logo ?
+            this.base64ToBlob(this.organizationBranding.logo, this.organizationBranding.logoContentType) : null,
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -51,14 +52,9 @@ export class OrganizationBrandingComponent implements OnInit {
     this.form.markAllAsTouched();
     if (this.form.valid) {
       const formData = new FormData();
-      formData.set('title', this.form.value.title!!);
-      formData.set('description', this.form.value.description!!);
-
-      if (this.form.value.logo) {
-        formData.set('logo', this.form.value.logo as File);
-      } else {
-        // TODO formData.set('logo', new File());
-      }
+      formData.set('title', this.form.value.title!);
+      formData.set('description', this.form.value.description!);
+      formData.set('logo', this.form.value.logo ? this.form.value.logo as File : '');
 
       const id = this.organizationBranding?.id;
       let req: Observable<OrganizationBranding>;

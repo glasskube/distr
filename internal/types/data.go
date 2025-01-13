@@ -95,8 +95,8 @@ type OrganizationBranding struct {
 	Title                  string    `db:"title" json:"title"`
 	Description            string    `db:"description" json:"description"`
 	Logo                   []byte    `db:"logo" json:"logo"`
-	LogoFileName           string    `db:"logo_file_name" json:"logoFileName"`
-	LogoContentType        string    `db:"logo_content_type" json:"logoContentType"`
+	LogoFileName           *string   `db:"logo_file_name" json:"logoFileName"`
+	LogoContentType        *string   `db:"logo_content_type" json:"logoContentType"`
 }
 
 type Deployment struct {

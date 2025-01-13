@@ -80,7 +80,7 @@ func UpdateOrganizationBranding(ctx context.Context, b *types.OrganizationBrandi
 			updated_by_user_account_id = @updated_by_user_account_id,
 			title = @title,
 			description = @description,
-			logo = COALESCE(@logo, b.logo),
+			logo = @logo,
 			logo_file_name = @logo_file_name,
 			logo_content_type = @logo_content_type
 		WHERE id = @id

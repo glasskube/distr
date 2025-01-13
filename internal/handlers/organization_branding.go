@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/util"
 	"io"
 	"net/http"
 	"time"
@@ -95,6 +96,11 @@ func parseRequest(r *http.Request) (*types.OrganizationBranding, error) {
 	if file, head, err := r.FormFile("logo"); err != nil {
 		if !errors.Is(err, http.ErrMissingFile) {
 			return nil, err
+		} else {
+			// no logo uploaded
+			organizationBranding.Logo = nil
+			organizationBranding.LogoFileName = nil
+			organizationBranding.LogoContentType = nil
 		}
 	} else if head.Size > 102400 {
 		return nil, errors.New("file too large (max 100 KiB)")
@@ -102,8 +108,8 @@ func parseRequest(r *http.Request) (*types.OrganizationBranding, error) {
 		return nil, err
 	} else {
 		organizationBranding.Logo = data
-		organizationBranding.LogoFileName = head.Filename
-		organizationBranding.LogoContentType = head.Header.Get("Content-Type")
+		organizationBranding.LogoFileName = &head.Filename
+		organizationBranding.LogoContentType = util.PtrTo(head.Header.Get("Content-Type"))
 	}
 
 	return &organizationBranding, nil
