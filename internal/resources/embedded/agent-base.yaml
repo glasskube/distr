@@ -1,9 +1,10 @@
 name: glasskube-agent
+
 services:
   agent:
     network_mode: host
     restart: unless-stopped
-    image: 'ghcr.io/glasskube/cloud-agent:0.8.2' # x-release-please-version
+    image: 'ghcr.io/glasskube/cloud/docker-agent:0.8.2' # x-release-please-version
     environment:
       GK_TARGET_ID: '{{ .targetId }}'
       GK_TARGET_SECRET: '{{ .targetSecret }}'
