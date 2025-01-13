@@ -47,9 +47,9 @@ func createOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 
 	if organizationBranding, err := parseRequest(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err := setMetadata(&organizationBranding, ctx); err != nil {
+	} else if err := setMetadata(organizationBranding, ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err = db.CreateOrganizationBranding(r.Context(), &organizationBranding); err != nil {
+	} else if err = db.CreateOrganizationBranding(r.Context(), organizationBranding); err != nil {
 		log.Warn("could not create organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -67,9 +67,9 @@ func updateOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 
 	if organizationBranding, err := parseRequest(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err := setMetadata(&organizationBranding, ctx); err != nil {
+	} else if err := setMetadata(organizationBranding, ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err = db.UpdateOrganizationBranding(r.Context(), &organizationBranding); err != nil {
+	} else if err = db.UpdateOrganizationBranding(r.Context(), organizationBranding); err != nil {
 		log.Warn("could not create organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -81,32 +81,32 @@ func updateOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func parseRequest(r *http.Request) (types.OrganizationBranding, error) {
+func parseRequest(r *http.Request) (*types.OrganizationBranding, error) {
 	if err := r.ParseMultipartForm(102400); err != nil {
-		return types.OrganizationBranding{}, errors.New("could not parse form")
+		return nil, fmt.Errorf("failed to parse form: %w", err)
 	}
 	organizationBranding := types.OrganizationBranding{
 		Title:       r.Form.Get("title"),
 		Description: r.Form.Get("description"),
 	}
 
-	organizationBranding.ID = chi.URLParam(r, "organizationBrandingId")
+	organizationBranding.ID = r.PathValue("organizationBrandingId")
 
 	if file, head, err := r.FormFile("logo"); err != nil {
 		if !errors.Is(err, http.ErrMissingFile) {
-			return types.OrganizationBranding{}, err
+			return nil, err
 		}
 	} else if head.Size > 102400 {
-		return types.OrganizationBranding{}, errors.New("file too large (max 100 KiB)")
+		return nil, errors.New("file too large (max 100 KiB)")
 	} else if data, err := io.ReadAll(file); err != nil {
-		return types.OrganizationBranding{}, err
+		return nil, err
 	} else {
 		organizationBranding.Logo = data
 		organizationBranding.LogoFileName = head.Filename
 		organizationBranding.LogoContentType = head.Header.Get("Content-Type")
 	}
 
-	return organizationBranding, nil
+	return &organizationBranding, nil
 }
 
 func setMetadata(t *types.OrganizationBranding, ctx context.Context) error {
