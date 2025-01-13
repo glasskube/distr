@@ -8,37 +8,34 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"text/template"
 	"time"
-
-	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/go-chi/jwtauth/v5"
-
-	"github.com/glasskube/cloud/internal/types"
-
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/resources"
 	"github.com/glasskube/cloud/internal/security"
+	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
+	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
 
 func AgentRouter(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(queryAuthDeploymentTargetCtxMiddleware)
-		r.Get("/connect", connect)
+		r.Get("/connect", connectHandler())
 	})
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
-		r.Post("/login", agentLogin)
+		r.Post("/login", agentLoginHandler)
 
 		r.Group(func(r chi.Router) {
 			// agent routes, authenticated via token
@@ -47,44 +44,47 @@ func AgentRouter(r chi.Router) {
 			r.Use(middleware.SentryUser)
 			r.Use(agentAuthDeploymentTargetCtxMiddleware)
 			r.Use(rateLimitPerAgent)
-			r.Get("/resources", downloadResources)
-			r.Post("/status", postAgentStatus)
+			r.Get("/resources", agentResourcesHandler)
+			r.Post("/status", angentPostStatusHandler)
 		})
 	})
 }
 
-func connect(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
-	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-	if deploymentTarget.CurrentStatus != nil {
-		log.Warn("deployment target has already been connected")
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		w.Header().Add("Content-Type", "application/yaml")
-		if yamlTemplate, err := resources.Get("embedded/agent-base.yaml"); err != nil {
-			log.Error("failed to get agent yaml template", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if tmpl, err := template.New("agent").Parse(string(yamlTemplate)); err != nil {
-			log.Error("failed to get parse yaml template", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints(); err != nil {
-			log.Error("failed to build resources url", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if err := tmpl.Execute(w, map[string]string{
+func connectHandler() http.HandlerFunc {
+	dockerTempl := util.Require(resources.GetTemplate("embedded/agent/docker/docker-compose.yaml"))
+	kubernetesTempl := util.Require(resources.GetTemplate("embedded/agent/kubernetes/manifest.yaml"))
+	loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints()
+	util.Must(err)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+		templateData := map[string]any{
 			"loginEndpoint":     loginEndpoint,
 			"resourcesEndpoint": resourcesEndpoint,
 			"statusEndpoint":    statusEndpoint,
 			"targetId":          r.URL.Query().Get("targetId"),
 			"targetSecret":      r.URL.Query().Get("targetSecret"),
-			"agentInterval":     env.AgentInterval().String(),
-		}); err != nil {
-			log.Error("failed to execute yaml template", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			"agentInterval":     env.AgentInterval(),
+		}
+		if deploymentTarget.CurrentStatus != nil {
+			log.Warn("deployment target has already been connected")
+			http.Error(w, "deployment target has already been connected", http.StatusBadRequest)
+		} else if deploymentTarget.Type == types.DeploymentTypeDocker {
+			w.Header().Add("Content-Type", "application/yaml")
+			if err := dockerTempl.Execute(w, templateData); err != nil {
+				log.Error("failed to execute yaml template", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		} else {
+			w.Header().Add("Content-Type", "application/yaml")
+			if err := kubernetesTempl.Execute(w, templateData); err != nil {
+				log.Error("failed to execute yaml template", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 	}
 }
@@ -98,7 +98,7 @@ func buildEndpoints() (string, string, string, error) {
 	}
 }
 
-func agentLogin(w http.ResponseWriter, r *http.Request) {
+func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
@@ -122,36 +122,64 @@ func agentLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func downloadResources(w http.ResponseWriter, r *http.Request) {
+func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
+
 	var statusMessage string
-	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-		msg := "failed to get compose file from DB"
-		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
-		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
+	var appVersion *types.ApplicationVersion
+	deployment, err := db.GetLatestDeploymentForDeploymentTarget(ctx, deploymentTarget.ID)
+	if errors.Is(err, apierrors.ErrNotFound) {
+		log.Info("latest deployment not found", zap.Error(err))
+		statusMessage = "EMPTY"
+	} else if err != nil {
+		msg := "failed to get latest Deployment from DB"
+		log.Error(msg, zap.Error(err))
+		statusMessage = fmt.Sprintf("%v: %v", msg, err)
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if deploymentId, composeFileData, err := db.GetLatestDeploymentComposeFile(
-		ctx, deploymentTarget.ID, orgId); err != nil && !errors.Is(err, apierrors.ErrNotFound) {
-		msg := "failed to get compose file from DB"
-		statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
-		log.Error(msg, zap.Error(err), zap.String("deploymentTargetId", deploymentTarget.ID))
+	} else if av, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionId); err != nil {
+		msg := "failed to get ApplicationVersion from DB"
+		log.Error(msg, zap.Error(err))
+		statusMessage = fmt.Sprintf("%v: %v", msg, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		if errors.Is(err, apierrors.ErrNotFound) {
-			statusMessage = "EMPTY"
+		statusMessage = "OK"
+		appVersion = av
+	}
+
+	if deploymentTarget.Type == types.DeploymentTypeDocker {
+		if deployment != nil && appVersion != nil {
+			w.Header().Add("Content-Type", "application/yaml")
+			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
+			if _, err := w.Write(appVersion.ComposeFileData); err != nil {
+				msg := "failed to write compose file"
+				statusMessage = fmt.Sprintf("%v: %v", msg, err)
+				log.Error(msg, zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		} else {
-			statusMessage = "OK"
+			// it the status wasn't previously set to something else send a 204 code
+			w.WriteHeader(http.StatusNoContent)
 		}
-		w.Header().Add("Content-Type", "application/yaml")
-		w.Header().Add("X-Resource-Correlation-ID", deploymentId)
-		if _, err := w.Write(composeFileData); err != nil {
-			msg := "failed to write compose file"
-			statusMessage = fmt.Sprintf("%v: %v", msg, err.Error())
-			log.Error(msg, zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		respose := api.KubernetesAgentResource{
+			Namespace: *deploymentTarget.Namespace,
 		}
+		if deployment != nil && appVersion != nil {
+			// TODO: parse values yaml and merge
+			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
+			respose.Deployment = &api.KubernetesAgentDeployment{
+				RevisionID:   deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
+				ReleaseName:  *deployment.ReleaseName,
+				ChartUrl:     *appVersion.ChartUrl,
+				ChartVersion: *appVersion.ChartVersion,
+			}
+			if *appVersion.ChartType == types.HelmChartTypeRepository {
+				respose.Deployment.ChartName = *appVersion.ChartName
+			}
+		}
+		RespondJSON(w, respose)
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
@@ -170,7 +198,7 @@ func downloadResources(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func postAgentStatus(w http.ResponseWriter, r *http.Request) {
+func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	correlationID := r.Header.Get("X-Resource-Correlation-ID")

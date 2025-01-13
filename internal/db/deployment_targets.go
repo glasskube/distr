@@ -129,12 +129,13 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
-		"name":   dt.Name,
-		"type":   dt.Type,
-		"orgId":  dt.OrganizationID,
-		"userId": dt.CreatedBy.ID,
-		"lat":    nil,
-		"lon":    nil,
+		"name":      dt.Name,
+		"type":      dt.Type,
+		"orgId":     dt.OrganizationID,
+		"userId":    dt.CreatedBy.ID,
+		"namespace": dt.Namespace,
+		"lat":       nil,
+		"lon":       nil,
 	}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
@@ -143,8 +144,8 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
-			(name, type, organization_id, created_by_user_account_id, geolocation_lat, geolocation_lon)
-			VALUES (@name, @type, @orgId, @userId, @lat, @lon) RETURNING *
+			(name, type, organization_id, created_by_user_account_id, namespace, geolocation_lat, geolocation_lon)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @lat, @lon) RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
 		args,

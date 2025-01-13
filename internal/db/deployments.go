@@ -83,34 +83,6 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func GetLatestDeploymentComposeFile(
-	ctx context.Context,
-	deploymentTargetId string,
-	orgId string,
-) (string, []byte, error) {
-	db := internalctx.GetDb(ctx)
-	var deploymentId string
-	var file []byte
-	rows := db.QueryRow(ctx, `
-		SELECT d.id, av.compose_file_data
-		FROM Deployment d
-		INNER JOIN ApplicationVersion av ON d.application_version_id = av.id
-		INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id
-		WHERE d.deployment_target_id = @deploymentTargetId AND dt.organization_id = @orgId
-		ORDER BY d.created_at DESC LIMIT 1`, pgx.NamedArgs{
-		"deploymentTargetId": deploymentTargetId,
-		"orgId":              orgId,
-	})
-	if err := rows.Scan(&deploymentId, &file); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return "", nil, apierrors.ErrNotFound
-		}
-		return "", nil, fmt.Errorf("failed to get latest deployment: %w", err)
-	} else {
-		return deploymentId, file, nil
-	}
-}
-
 func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(

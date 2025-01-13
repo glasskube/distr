@@ -8,12 +8,14 @@ type HelmChartType string
 type DeploymentStatusType string
 
 const (
-	DeploymentTypeDocker     = "docker"
-	DepolymentTypeKubernetes = "kubernetes"
-	UserRoleVendor           = "vendor"
-	UserRoleCustomer         = "customer"
-	HelmChartTypeRepository  = "repository"
-	HelmChartTypeOCI         = "oci"
+	DeploymentTypeDocker     DeploymentType = "docker"
+	DepolymentTypeKubernetes DeploymentType = "kubernetes"
+
+	UserRoleVendor   UserRole = "vendor"
+	UserRoleCustomer UserRole = "customer"
+
+	HelmChartTypeRepository HelmChartType = "repository"
+	HelmChartTypeOCI        HelmChartType = "oci"
 
 	DeploymentStatusTypeOK    = "ok"
 	DeploymentStatusTypeError = "error"
