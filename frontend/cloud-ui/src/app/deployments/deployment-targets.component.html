@@ -146,14 +146,16 @@
                       Connection instructions
                     </button>
                   }
-                  <button
-                    type="button"
-                    (click)="openStatusModal(dt, deploymentStatusModal)"
-                    aria-controls="manage-deployment-target-drawer"
-                    class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                    <fa-icon [icon]="penIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-                    Status
-                  </button>
+                  @if (dt.latestDeployment) {
+                    <button
+                      type="button"
+                      (click)="openStatusModal(dt, deploymentStatusModal)"
+                      aria-controls="manage-deployment-target-drawer"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                      <fa-icon [icon]="penIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                      Status
+                    </button>
+                  }
                   <button
                     type="button"
                     (click)="openDrawer(manageDeploymentTargetDrawer, dt)"
@@ -427,13 +429,17 @@
 <ng-template #deploymentStatusModal>
   <div
     @modalFlyInOut
-    class="z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full origin-top">
-    <div class="relative p-4 w-full max-w-md max-h-full">
+    class="z-50 w-full m-4 overflow-x-hidden">
+    <div class="relative w-full max-h-full">
       <!-- Modal content -->
       <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
         <!-- Modal header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">TODO</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Status History: {{ selectedDeploymentTarget()?.name }}
+            @if(selectedDeploymentTarget()?.latestDeployment; as deployment) {
+              ({{deployment.applicationName}}&#64;{{deployment.applicationVersionName}})
+            }
+          </h3>
           <button
             type="button"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -465,7 +471,7 @@
                   <tr
                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                      {{ status.createdAt | date: 'short' }}
+                      {{ status.createdAt | date: 'medium' }}
                     </th>
                     <td class="px-6 py-4">
                       {{ status.type }}

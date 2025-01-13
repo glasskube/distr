@@ -96,7 +96,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
 
-  private selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
+  selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
   selectedApplication?: Application | null;
 
   readonly filterForm = new FormGroup({
@@ -349,6 +349,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
     if(deploymentTarget.latestDeployment?.id) {
+      this.selectedDeploymentTarget.set(deploymentTarget);
       this.statuses = this.deployments.getStatuses(deploymentTarget.latestDeployment);
       this.showModal(modal);
     }
