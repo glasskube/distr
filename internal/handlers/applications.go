@@ -308,7 +308,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var composeFileData []byte
-	if composeFile, err := resources.Get("embedded/shiori-compose.yaml"); err != nil {
+	if composeFile, err := resources.Get("embedded/apps/shiori/docker-compose.yaml"); err != nil {
 		log.Warn("failed to read shiori compose file", zap.Error(err))
 	} else {
 		composeFileData = composeFile

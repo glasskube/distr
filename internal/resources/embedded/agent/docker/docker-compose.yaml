@@ -1,5 +1,4 @@
 name: glasskube-agent
-
 services:
   agent:
     network_mode: host
