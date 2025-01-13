@@ -2,59 +2,28 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/agentclient"
 	"github.com/glasskube/cloud/internal/util"
 	"go.uber.org/zap"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
-	interval              = 5 * time.Second
-	logger                = util.Require(zap.NewDevelopment())
-	agentClient           = util.Require(agentclient.NewFromEnv(logger))
-	helmConfigFlags       = genericclioptions.NewConfigFlags(true)
-	helmEnvSettings       = cli.New()
-	helmActionConfigCache = make(map[string]*action.Configuration)
-	k8sClientConfig       = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		nil,
-	)
-	k8sClient = util.Require(kubernetes.NewForConfig(util.Require(k8sClientConfig.ClientConfig())))
+	interval       = 5 * time.Second
+	logger         = util.Require(zap.NewDevelopment())
+	agentClient    = util.Require(agentclient.NewFromEnv(logger))
+	k8sConfigFlags = genericclioptions.NewConfigFlags(true)
+	k8sClient      = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 )
-
-type AgentDeployment struct {
-	ReleaseName  string `json:"releaseName"`
-	RevisionID   string `json:"revisionId"`
-	HelmRevision int    `json:"helmRevision"`
-}
-
-func (d *AgentDeployment) SecretName() string {
-	return fmt.Sprintf("cloud.glasskube.agent.v1.%v", d.ReleaseName)
-}
 
 func init() {
 	if intervalStr, ok := os.LookupEnv("GK_INTERVAL"); ok {
@@ -193,223 +162,4 @@ func main() {
 	}
 
 	logger.Info("shutting down")
-}
-
-const LabelDeplyoment = "agent.glasskube.cloud/deployment"
-
-func GetHelmActionConfig(namespace string) (*action.Configuration, error) {
-	if cfg, ok := helmActionConfigCache[namespace]; ok {
-		return cfg, nil
-	}
-
-	var cfg action.Configuration
-	if rc, err := registry.NewClient(); err != nil {
-		return nil, err
-	} else {
-		cfg.RegistryClient = rc
-	}
-	if err := cfg.Init(
-		helmConfigFlags,
-		namespace,
-		"secret",
-		func(format string, v ...interface{}) { logger.Sugar().Debugf(format, v...) },
-	); err != nil {
-		return nil, err
-	} else {
-		return &cfg, nil
-	}
-}
-
-func GetLatestHelmRelease(namespace, releaseName string) (*release.Release, error) {
-	cfg, err := GetHelmActionConfig(namespace)
-	if err != nil {
-		return nil, err
-	}
-	historyAction := action.NewHistory(cfg)
-	if releases, err := historyAction.Run(releaseName); err != nil {
-		return nil, err
-	} else {
-		return releases[len(releases)-1], nil
-	}
-}
-
-func RunHelmPreflight(
-	action *action.ChartPathOptions,
-	deployment api.KubernetesAgentDeployment,
-) (*chart.Chart, error) {
-	chartName := deployment.ChartName
-	if registry.IsOCI(deployment.ChartUrl) {
-		chartName = deployment.ChartUrl
-	} else {
-		action.RepoURL = deployment.ChartUrl
-		action.Version = deployment.ChartVersion
-	}
-	if chartPath, err := action.LocateChart(chartName, helmEnvSettings); err != nil {
-		return nil, fmt.Errorf("could not locate chart: %w", err)
-	} else if chart, err := loader.Load(chartPath); err != nil {
-		return nil, fmt.Errorf("chart loading failed: %w", err)
-	} else {
-		return chart, nil
-	}
-}
-
-func RunHelmInstall(
-	ctx context.Context,
-	namespace string,
-	deployment api.KubernetesAgentDeployment,
-) (*AgentDeployment, error) {
-	config, err := GetHelmActionConfig(namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	installAction := action.NewInstall(config)
-	installAction.ReleaseName = deployment.ReleaseName
-
-	installAction.Timeout = 5 * time.Minute
-	installAction.Wait = true
-	installAction.Atomic = true
-	installAction.Namespace = namespace
-	if chart, err := RunHelmPreflight(&installAction.ChartPathOptions, deployment); err != nil {
-		return nil, fmt.Errorf("helm preflight failed: %w", err)
-	} else if release, err := installAction.RunWithContext(ctx, chart, deployment.Values); err != nil {
-		return nil, fmt.Errorf("helm install failed: %w", err)
-	} else {
-		return &AgentDeployment{
-			ReleaseName:  release.Name,
-			HelmRevision: release.Version,
-			RevisionID:   deployment.RevisionID,
-		}, nil
-	}
-}
-
-func RunHelmUpgrade(
-	ctx context.Context,
-	namespace string,
-	deployment api.KubernetesAgentDeployment,
-) (*AgentDeployment, error) {
-	cfg, err := GetHelmActionConfig(namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	upgradeAction := action.NewUpgrade(cfg)
-	upgradeAction.CleanupOnFail = true
-
-	upgradeAction.Timeout = 5 * time.Minute
-	upgradeAction.Wait = true
-	upgradeAction.Atomic = true
-	upgradeAction.Namespace = namespace
-	if chart, err := RunHelmPreflight(&upgradeAction.ChartPathOptions, deployment); err != nil {
-		return nil, fmt.Errorf("helm preflight failed: %w", err)
-	} else if release, err := upgradeAction.RunWithContext(
-		ctx, deployment.ReleaseName, chart, deployment.Values); err != nil {
-		return nil, fmt.Errorf("helm upgrade failed: %w", err)
-	} else {
-		return &AgentDeployment{
-			ReleaseName:  release.Name,
-			HelmRevision: release.Version,
-			RevisionID:   deployment.RevisionID,
-		}, nil
-	}
-}
-
-func GetHelmManifest(namespace, releaseName string) ([]*unstructured.Unstructured, error) {
-	cfg, err := GetHelmActionConfig(namespace)
-	if err != nil {
-		return nil, err
-	}
-	getAction := action.NewGet(cfg)
-	if release, err := getAction.Run(releaseName); err != nil {
-		return nil, err
-	} else {
-		// decode the release manifests which is represented as multi-document YAML
-		return DecodeResourceYaml(strings.NewReader(release.Manifest))
-	}
-}
-
-func DecodeResourceYaml(reader io.Reader) ([]*unstructured.Unstructured, error) {
-	decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
-	var result []*unstructured.Unstructured
-	for {
-		var object unstructured.Unstructured
-		if err := decoder.Decode(&object); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return nil, err
-		} else if len(object.Object) > 0 {
-			result = append(result, &object)
-		}
-	}
-	return result, nil
-}
-
-func CheckStatus(ctx context.Context, namespace string, resource *unstructured.Unstructured) error {
-	switch resource.GetKind() {
-	case "Deployment":
-		if deployment, err := k8sClient.AppsV1().Deployments(namespace).
-			Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
-			return err
-		} else if deployment.Status.ReadyReplicas < *deployment.Spec.Replicas {
-			return ReplicasError(resource, deployment.Status.ReadyReplicas, *deployment.Spec.Replicas)
-		}
-	case "StatefulSet":
-		if statefulSet, err := k8sClient.AppsV1().StatefulSets(namespace).
-			Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
-			return err
-		} else if statefulSet.Status.ReadyReplicas < *statefulSet.Spec.Replicas {
-			return ReplicasError(resource, statefulSet.Status.ReadyReplicas, *statefulSet.Spec.Replicas)
-		}
-	case "DaemonSet":
-		if daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).
-			Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
-			return err
-		} else if daemonSet.Status.NumberUnavailable > 0 {
-			return ReplicasError(resource, daemonSet.Status.DesiredNumberScheduled, daemonSet.Status.NumberReady)
-		}
-	}
-	return nil
-}
-
-func ReplicasError(resource *unstructured.Unstructured, ready, desired int32) error {
-	return ResourceStatusError(resource, fmt.Sprintf("ReadyReplicas (%v) is less than desired (%v)", ready, desired))
-}
-
-func ResourceStatusError(resource *unstructured.Unstructured, msg string) error {
-	return fmt.Errorf("%v %v status check failed: %v", resource.GetKind(), resource.GetName(), msg)
-}
-
-func GetExistingDeployments(ctx context.Context, namespace string) ([]AgentDeployment, error) {
-	if secrets, err := k8sClient.CoreV1().Secrets(namespace).
-		List(ctx, metav1.ListOptions{LabelSelector: LabelDeplyoment}); err != nil {
-		return nil, err
-	} else {
-		deployments := make([]AgentDeployment, len(secrets.Items))
-		for i, secret := range secrets.Items {
-			var deployment AgentDeployment
-			if err := json.Unmarshal(secret.Data["release"], &deployment); err != nil {
-				return nil, err
-			} else {
-				deployments[i] = deployment
-			}
-		}
-		return deployments, nil
-	}
-}
-
-func SaveDeployment(ctx context.Context, namespace string, deployment AgentDeployment) error {
-	cfg := applyconfigurationscorev1.Secret(deployment.SecretName(), namespace)
-	cfg.WithLabels(map[string]string{LabelDeplyoment: deployment.ReleaseName})
-	if data, err := json.Marshal(deployment); err != nil {
-		return err
-	} else {
-		cfg.WithData(map[string][]byte{"release": data})
-	}
-	_, err := k8sClient.CoreV1().Secrets(namespace).Apply(
-		ctx,
-		cfg,
-		metav1.ApplyOptions{Force: true, FieldManager: "glasskube-cloud-agent"},
-	)
-	return err
 }
