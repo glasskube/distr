@@ -110,8 +110,12 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	}
 }
 
-func CreateDeploymentStatus(ctx context.Context, deploymentID string, message string) error {
-	statusType := types.DeploymentStatusTypeOK // TODO get type
+func CreateDeploymentStatus(
+	ctx context.Context,
+	deploymentID string,
+	statusType types.DeploymentStatusType,
+	message string,
+) error {
 	db := internalctx.GetDb(ctx)
 	var id string
 	rows := db.QueryRow(ctx,

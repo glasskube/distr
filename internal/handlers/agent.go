@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -207,14 +206,15 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-		if body, err := io.ReadAll(r.Body); err != nil {
-			log.Error("failed to read status body", zap.Error(err))
+		if status, err := JsonBody[api.AgentDeploymentStatus](w, r); err != nil {
+			return
 		} else {
-			if err := db.CreateDeploymentStatus(ctx, correlationID, string(body)); err != nil {
+			if err := db.CreateDeploymentStatus(ctx, correlationID, status.Type, status.Message); err != nil {
 				log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 					zap.String("deploymentId", correlationID),
 					zap.String("deploymentTargetId", deploymentTarget.ID),
-					zap.String("statusMessage", string(body)))
+					zap.String("statusType", string(status.Type)),
+					zap.String("statusMessage", status.Message))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			} else {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -44,9 +45,18 @@ loop:
 			cmd := exec.CommandContext(ctx, "docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
 			cmd.Stdin = resource
 			out, cmdErr := cmd.CombinedOutput()
-			logger.Debug("docker compose returned", zap.String("output", string(out)), zap.Error(cmdErr))
+			outStr := string(out)
+			logger.Debug("docker compose returned", zap.String("output", outStr), zap.Error(cmdErr))
 			if correlationID != "" {
-				if err := client.Status(ctx, correlationID, string(out), cmdErr); err != nil {
+				var reportedStatus string
+				var reportedErr error
+				if cmdErr != nil {
+					reportedStatus = ""
+					reportedErr = errors.New(outStr)
+				} else {
+					reportedStatus = outStr
+				}
+				if err := client.Status(ctx, correlationID, reportedStatus, reportedErr); err != nil {
 					logger.Error("failed to send status", zap.Error(err))
 				}
 			}

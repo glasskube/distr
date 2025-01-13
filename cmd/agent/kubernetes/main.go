@@ -92,7 +92,7 @@ func main() {
 				logger.Warn("status push failed", zap.Error(err))
 			}
 		}
-		pushErrorStatus := func(ctx context.Context, error any) {
+		pushErrorStatus := func(ctx context.Context, error error) {
 			if err := agentClient.Status(ctx, correlationID, "", error); err != nil {
 				logger.Warn("status push failed", zap.Error(err))
 			}
@@ -128,7 +128,7 @@ func main() {
 			if currentDeployment.HelmRevision != latestRelease.Version {
 				msg := "helm revision is different from latest deployment. bailing out"
 				logger.Warn(msg)
-				pushErrorStatus(ctx, msg)
+				pushErrorStatus(ctx, errors.New(msg))
 				continue
 			} else {
 				installRequired = false
@@ -136,17 +136,17 @@ func main() {
 		} else {
 			msg := "helm release already exists but was not created by the agent. bailing out"
 			logger.Warn(msg)
-			pushErrorStatus(ctx, msg)
+			pushErrorStatus(ctx, errors.New(msg))
 			continue
 		}
 
 		if installRequired {
 			if deployment, err := RunHelmInstall(ctx, res.Namespace, *res.Deployment); err != nil {
 				logger.Error("helm upgrade failed", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Sprintf("helm upgrade failed: %v", err))
+				pushErrorStatus(ctx, fmt.Errorf("helm upgrade failed: %w", err))
 			} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
 				logger.Error("could not save latest deployment", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Sprintf("could not save latest deployment: %v", err))
+				pushErrorStatus(ctx, fmt.Errorf("could not save latest deployment: %w", err))
 			} else {
 				logger.Info("helm install succeeded")
 				pushStatus(ctx, "helm install succeeded")
@@ -154,10 +154,10 @@ func main() {
 		} else if upgradeRequired {
 			if deployment, err := RunHelmUpgrade(ctx, res.Namespace, *res.Deployment); err != nil {
 				logger.Error("helm install failed", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Sprintf("helm install failed: %v", err))
+				pushErrorStatus(ctx, fmt.Errorf("helm install failed: %w", err))
 			} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
 				logger.Error("could not save latest deployment", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Sprintf("could not save latest deployment: %v", err))
+				pushErrorStatus(ctx, fmt.Errorf("could not save latest deployment: %w", err))
 			} else {
 				logger.Info("helm upgrade succeeded")
 				pushStatus(ctx, "helm upgrade succeeded")
