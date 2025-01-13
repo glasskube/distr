@@ -4,12 +4,12 @@ metadata:
   name: glasskube-cloud-agent-env
 type: Opaque
 stringData:
-  GK_TARGET_ID: "{{ .targetId }}"
-  GK_TARGET_SECRET: "{{ .targetSecret }}"
-  GK_LOGIN_ENDPOINT: "{{ .loginEndpoint }}"
-  GK_RESOURCE_ENDPOINT: "{{ .resourcesEndpoint }}"
-  GK_STATUS_ENDPOINT: "{{ .statusEndpoint }}"
-  GK_INTERVAL: "{{ .agentInterval }}"
+  GK_TARGET_ID: '{{ .targetId }}'
+  GK_TARGET_SECRET: '{{ .targetSecret }}'
+  GK_LOGIN_ENDPOINT: '{{ .loginEndpoint }}'
+  GK_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
+  GK_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
+  GK_INTERVAL: '{{ .agentInterval }}'
 
 ---
 apiVersion: v1
@@ -24,11 +24,11 @@ metadata:
   name: namespace-admin
 rules:
   - apiGroups:
-      - "*"
+      - '*'
     resources:
-      - "*"
+      - '*'
     verbs:
-      - "*"
+      - '*'
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -69,5 +69,5 @@ spec:
                 name: glasskube-cloud-agent-env
           resources:
             limits:
-              memory: "128Mi"
-              cpu: "500m"
+              memory: '128Mi'
+              cpu: '500m'
