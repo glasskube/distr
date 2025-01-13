@@ -22,8 +22,10 @@ import (
 
 func OrganizationBrandingRouter(r chi.Router) {
 	r.Get("/", getOrganizationBranding)
-	r.Post("/", createOrganizationBranding)
-	r.Put("/{organizationBrandingId}", updateOrganizationBranding)
+	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
+		r.Post("/", createOrganizationBranding)
+		r.Put("/{organizationBrandingId}", updateOrganizationBranding)
+	})
 }
 
 func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
