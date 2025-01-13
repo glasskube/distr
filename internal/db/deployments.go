@@ -147,6 +147,23 @@ func CreateDeploymentStatusWithCreatedAt(
 	}
 }
 
+func BulkCreateDeploymentStatusWithCreatedAt(
+	ctx context.Context,
+	deploymentID string,
+	statuses []types.DeploymentStatus,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.CopyFrom(
+		ctx,
+		pgx.Identifier{"deploymentstatus"},
+		[]string{"deployment_id", "message", "created_at"},
+		pgx.CopyFromSlice(len(statuses), func(i int) ([]any, error) {
+			return []any{deploymentID, statuses[i].Message, statuses[i].CreatedAt}, nil
+		}),
+	)
+	return err
+}
+
 func CleanupDeploymentStatus(ctx context.Context, deploymentId string) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
