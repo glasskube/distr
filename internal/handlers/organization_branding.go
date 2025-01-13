@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/util"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/util"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
@@ -33,7 +34,8 @@ func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 
 	if orgID, err := auth.CurrentOrgId(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if organizationBranding, err := db.GetOrganizationBranding(r.Context(), orgID); errors.Is(err, apierrors.ErrNotFound) {
+	} else if organizationBranding, err :=
+		db.GetOrganizationBranding(r.Context(), orgID); errors.Is(err, apierrors.ErrNotFound) {
 		w.WriteHeader(http.StatusNotFound)
 	} else if err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get organizationBranding", zap.Error(err))

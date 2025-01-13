@@ -4,11 +4,11 @@ import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {OrganizationBrandingService} from '../services/organization-branding.service';
 import {lastValueFrom, map, Observable} from 'rxjs';
-import {OrganizationBranding} from "../types/organization-branding";
-import {HttpErrorResponse} from "@angular/common/http";
-import {getFormDisplayedError} from "../../util/errors";
-import {ToastService} from "../services/toast.service";
-import {AsyncPipe} from "@angular/common";
+import {OrganizationBranding} from '../types/organization-branding';
+import {HttpErrorResponse} from '@angular/common/http';
+import {getFormDisplayedError} from '../../util/errors';
+import {ToastService} from '../services/toast.service';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-organization-branding',
@@ -28,7 +28,8 @@ export class OrganizationBrandingComponent implements OnInit {
     logo: new FormControl<Blob | null>(null),
   });
   protected readonly logoSrc: Observable<string | null> = this.form.controls.logo.valueChanges.pipe(
-      map((logo) => logo ? URL.createObjectURL(logo) : null));
+    map((logo) => (logo ? URL.createObjectURL(logo) : null))
+  );
 
   async ngOnInit() {
     try {
@@ -36,8 +37,9 @@ export class OrganizationBrandingComponent implements OnInit {
       this.form.patchValue({
         title: this.organizationBranding.title,
         description: this.organizationBranding.description,
-        logo: this.organizationBranding.logo ?
-            this.base64ToBlob(this.organizationBranding.logo, this.organizationBranding.logoContentType) : null,
+        logo: this.organizationBranding.logo
+          ? this.base64ToBlob(this.organizationBranding.logo, this.organizationBranding.logoContentType)
+          : null,
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -54,7 +56,7 @@ export class OrganizationBrandingComponent implements OnInit {
       const formData = new FormData();
       formData.set('title', this.form.value.title!);
       formData.set('description', this.form.value.description!);
-      formData.set('logo', this.form.value.logo ? this.form.value.logo as File : '');
+      formData.set('logo', this.form.value.logo ? (this.form.value.logo as File) : '');
 
       const id = this.organizationBranding?.id;
       let req: Observable<OrganizationBranding>;
@@ -67,7 +69,7 @@ export class OrganizationBrandingComponent implements OnInit {
 
       try {
         await lastValueFrom(req);
-        this.toast.success("Branding saved successfully")
+        this.toast.success('Branding saved successfully');
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
