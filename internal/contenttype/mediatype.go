@@ -38,6 +38,6 @@ func HasMediaType(header textproto.MIMEHeader, acceptedContentTypes ...string) e
 			return nil
 		}
 	}
-	return fmt.Errorf("response has unacceptable media type: %v (acceptable media types are %v)",
+	return fmt.Errorf("unacceptable media type: %v (acceptable media types are %v)",
 		contentType.MediaType, strings.Join(acceptedContentTypes, ", "))
 }

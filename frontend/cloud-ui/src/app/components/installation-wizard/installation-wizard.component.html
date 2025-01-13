@@ -188,89 +188,84 @@
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
                 <h3 class="font-normal text-gray-900 dark:text-white">Deploy</h3>
-
-                <form [formGroup]="deployForm" (ngSubmit)="saveDeployment()">
-                  <div class="grid gap-4 mb-4 grid-cols-2">
-                    <div class="col-span-2 sm:col-span-1">
-                      <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Application</label
-                      >
-                      <select
-                        id="applicationId"
-                        formControlName="applicationId"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                        @for (app of applications$ | async; track app.id) {
-                          <option [value]="app.id">{{ app.name }}</option>
-                        }
-                      </select>
-                      @if (deployForm.controls.applicationId.invalid && deployForm.controls.applicationId.touched) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                <div class="grid gap-4 mb-4 grid-cols-2">
+                  <div class="col-span-2 sm:col-span-1">
+                    <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      >Application</label
+                    >
+                    <select
+                      id="applicationId"
+                      [formControl]="deployForm.controls.applicationId"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                      @for (app of applications$ | async; track app.id) {
+                        <option [value]="app.id">{{ app.name }}</option>
                       }
-                    </div>
-                    <div class="col-span-2 sm:col-span-1">
-                      <label
-                        for="applicationVersion"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Version</label
-                      >
-                      <select
-                        id="applicationVersion"
-                        formControlName="applicationVersionId"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                        @if (selectedApplication?.versions) {
-                          @for (version of selectedApplication?.versions; track version.id) {
-                            <option [value]="version.id">{{ version.name }}</option>
-                          }
-                        }
-                      </select>
-                      @if (
-                        deployForm.controls.applicationVersionId.invalid &&
-                        deployForm.controls.applicationVersionId.touched
-                      ) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
-                    </div>
-                    @if (deployForm.controls.releaseName.enabled) {
-                      <div class="col-span-2">
-                        <label for="release-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                          Helm relase name
-                        </label>
-                        <input
-                          type="text"
-                          id="release-name"
-                          formControlName="releaseName"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                      </div>
-                      @if (deployForm.controls.releaseName.invalid && deployForm.controls.releaseName.touched) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
+                    </select>
+                    @if (deployForm.controls.applicationId.invalid && deployForm.controls.applicationId.touched) {
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                     }
-                    @if (deployForm.controls.valuesYaml.enabled) {
-                      <div class="col-span-2">
-                        <label for="helm-values" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                          Helm values
-                        </label>
-                        <textarea
-                          id="helm-values"
-                          rows="10"
-                          formControlName="valuesYaml"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          placeholder="Add helm values for this deployment"></textarea>
-                      </div>
+                  </div>
+                  <div class="col-span-2 sm:col-span-1">
+                    <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      >Version</label
+                    >
+                    <select
+                      id="applicationVersion"
+                      [formControl]="deployForm.controls.applicationVersionId"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                      @if (selectedApplication?.versions) {
+                        @for (version of selectedApplication?.versions; track version.id) {
+                          <option [value]="version.id">{{ version.name }}</option>
+                        }
+                      }
+                    </select>
+                    @if (
+                      deployForm.controls.applicationVersionId.invalid &&
+                      deployForm.controls.applicationVersionId.touched
+                    ) {
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                     }
+                  </div>
+                  @if (deployForm.controls.releaseName.enabled) {
                     <div class="col-span-2">
-                      <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                        Deployment notes
+                      <label for="release-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Helm relase name
+                      </label>
+                      <input
+                        type="text"
+                        id="release-name"
+                        [formControl]="deployForm.controls.releaseName"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                    </div>
+                    @if (deployForm.controls.releaseName.invalid && deployForm.controls.releaseName.touched) {
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                    }
+                  }
+                  @if (deployForm.controls.valuesYaml.enabled) {
+                    <div class="col-span-2">
+                      <label for="helm-values" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Helm values
                       </label>
                       <textarea
-                        id="description"
-                        rows="4"
-                        formControlName="notes"
-                        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="Add deployment notes"></textarea>
+                        id="helm-values"
+                        rows="10"
+                        [formControl]="deployForm.controls.valuesYaml"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Add helm values for this deployment"></textarea>
                     </div>
+                  }
+                  <div class="col-span-2">
+                    <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Deployment notes
+                    </label>
+                    <textarea
+                      id="description"
+                      rows="4"
+                      [formControl]="deployForm.controls.notes"
+                      class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Add deployment notes"></textarea>
                   </div>
-                </form>
+                </div>
                 <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                   <div class="w-full"></div>
                 </div>

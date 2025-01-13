@@ -4,6 +4,8 @@ import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {getFormDisplayedError} from '../../util/errors';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -15,11 +17,13 @@ export class LoginComponent implements OnInit, OnDestroy {
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required]),
   });
+  loading = false;
   public errorMessage?: string;
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyed$ = new Subject<void>();
+  private readonly toast = inject(ToastService);
 
   public ngOnInit(): void {
     this.route.queryParams
@@ -32,31 +36,42 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe((email) => {
         this.formGroup.patchValue({email});
       });
+    this.route.queryParams
+      .pipe(
+        map((params) => params['inviteSuccess']),
+        filter((inviteSuccess) => inviteSuccess),
+        distinctUntilChanged(),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((inviteSuccess) => {
+        if (inviteSuccess === 'true') {
+          this.toast.success('Account activated successfully. You can now log in!');
+        }
+      });
   }
 
   public ngOnDestroy(): void {
     this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   public async submit(): Promise<void> {
     this.formGroup.markAllAsTouched();
     this.errorMessage = undefined;
     if (this.formGroup.valid) {
+      this.loading = true;
       const value = this.formGroup.value;
       try {
         await lastValueFrom(this.auth.login(value.email!, value.password!));
-      } catch (e) {
-        if (e instanceof HttpErrorResponse && e.status < 500 && typeof e.error === 'string') {
-          this.errorMessage = e.error;
+        if (this.auth.hasRole('customer')) {
+          await this.router.navigate(['/deployments']);
         } else {
-          this.errorMessage = 'something went wrong';
+          await this.router.navigate(['/dashboard']);
         }
-        return;
-      }
-      if (this.auth.hasRole('customer')) {
-        await this.router.navigate(['/deployments']);
-      } else {
-        await this.router.navigate(['/dashboard']);
+      } catch (e) {
+        this.errorMessage = getFormDisplayedError(e);
+      } finally {
+        this.loading = false;
       }
     }
   }
