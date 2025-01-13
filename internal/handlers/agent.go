@@ -167,14 +167,25 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			Namespace: *deploymentTarget.Namespace,
 		}
 		if deployment != nil && appVersion != nil {
-			// TODO: parse values yaml and merge
-			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
 			respose.Deployment = &api.KubernetesAgentDeployment{
 				RevisionID:   deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
 				ReleaseName:  *deployment.ReleaseName,
 				ChartUrl:     *appVersion.ChartUrl,
 				ChartVersion: *appVersion.ChartVersion,
 			}
+			if versionValues, err := appVersion.ParsedValuesFile(); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else if merged, err := util.MergeAllRecursive(versionValues, deploymentValues); err != nil {
+				http.Error(w, fmt.Sprintf("error merging values files: %v", err), http.StatusInternalServerError)
+				return
+			} else {
+				respose.Deployment.Values = merged
+			}
+			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
 			if *appVersion.ChartType == types.HelmChartTypeRepository {
 				respose.Deployment.ChartName = *appVersion.ChartName
 			}

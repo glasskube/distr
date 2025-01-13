@@ -2,7 +2,10 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Application struct {
@@ -35,6 +38,33 @@ type ApplicationVersion struct {
 	ApplicationId string `db:"application_id" json:"applicationId"`
 }
 
+func (av ApplicationVersion) ParsedValuesFile() (result map[string]any, err error) {
+	if av.ValuesFileData != nil {
+		if err = yaml.Unmarshal(av.ValuesFileData, &result); err != nil {
+			err = fmt.Errorf("cannot parse ApplicationVersion values file: %w", err)
+		}
+	}
+	return
+}
+
+func (av ApplicationVersion) ParsedTemplateFile() (result map[string]any, err error) {
+	if av.TemplateFileData != nil {
+		if err = yaml.Unmarshal(av.TemplateFileData, &result); err != nil {
+			err = fmt.Errorf("cannot parse ApplicationVersion values template: %w", err)
+		}
+	}
+	return
+}
+
+func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err error) {
+	if av.ComposeFileData != nil {
+		if err = yaml.Unmarshal(av.ComposeFileData, &result); err != nil {
+			err = fmt.Errorf("cannot parse ApplicationVersion compose file: %w", err)
+		}
+	}
+	return
+}
+
 func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 	if deplType == DeploymentTypeDocker {
 		if av.ComposeFileData == nil {
@@ -63,6 +93,15 @@ type Deployment struct {
 	ApplicationVersionId string  `db:"application_version_id" json:"applicationVersionId"`
 	ReleaseName          *string `db:"release_name" json:"releaseName"`
 	ValuesYaml           []byte  `db:"values_yaml" json:"valuesYaml"`
+}
+
+func (d Deployment) ParsedValuesFile() (result map[string]any, err error) {
+	if d.ValuesYaml != nil {
+		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
+			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
+		}
+	}
+	return
 }
 
 type DeploymentWithData struct {
