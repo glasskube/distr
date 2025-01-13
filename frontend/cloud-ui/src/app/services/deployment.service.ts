@@ -1,7 +1,7 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {Deployment} from '../types/deployment';
+import {Deployment, DeploymentStatus} from '../types/deployment';
 
 @Injectable({
   providedIn: 'root',
@@ -12,5 +12,9 @@ export class DeploymentService {
 
   create(request: Deployment): Observable<Deployment> {
     return this.httpClient.post<Deployment>(this.baseUrl, request);
+  }
+
+  getStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
+    return this.httpClient.get<DeploymentStatus[]>(`${this.baseUrl}/${depl.id}/status`);
   }
 }

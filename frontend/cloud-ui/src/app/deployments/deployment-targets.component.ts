@@ -24,7 +24,7 @@ import {
   first,
   firstValueFrom,
   lastValueFrom,
-  map,
+  map, Observable,
   of,
   shareReplay,
   Subject,
@@ -48,7 +48,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {Deployment, DeploymentType} from '../types/deployment';
+import {Deployment, DeploymentStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {getFormDisplayedError} from '../../util/errors';
 
@@ -136,6 +136,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.applications$,
     toObservable(this.selectedDeploymentTarget),
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
+
+  statuses: Observable<DeploymentStatus[]> = EMPTY;
 
   ngOnInit() {
     this.registerDeployFormChanges();
@@ -344,4 +346,12 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
     this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
   }
+
+  openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
+    if(deploymentTarget.latestDeployment?.id) {
+      this.statuses = this.deployments.getStatuses(deploymentTarget.latestDeployment);
+      this.showModal(modal);
+    }
+  }
+
 }

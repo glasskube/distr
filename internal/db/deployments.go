@@ -139,11 +139,12 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 }
 
 func CreateDeploymentStatus(ctx context.Context, deploymentID string, message string) error {
+	statusType := types.DeploymentStatusTypeOK // TODO get type
 	db := internalctx.GetDb(ctx)
 	var id string
 	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentStatus (deployment_id, message) VALUES (@deploymentId, @message) RETURNING id",
-		pgx.NamedArgs{"deploymentId": deploymentID, "message": message})
+		"INSERT INTO DeploymentStatus (deployment_id, message, type) VALUES (@deploymentId, @message, @type) RETURNING id",
+		pgx.NamedArgs{"deploymentId": deploymentID, "message": message, "type": statusType})
 	if err := rows.Scan(&id); err != nil {
 		return err
 	} else {
@@ -183,5 +184,23 @@ func CleanupDeploymentStatus(ctx context.Context, deploymentId string) (int64, e
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
+	}
+}
+
+func GetDeploymentStatus(ctx context.Context, deploymentId string, maxRows int) ([]types.DeploymentStatus, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT id, created_at, deployment_id, type, message
+		FROM DeploymentStatus
+		WHERE deployment_id = @deploymentId
+		ORDER BY created_at DESC
+		LIMIT @maxRows`,
+		pgx.NamedArgs{"deploymentId": deploymentId, "maxRows": maxRows})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DeploymentStatus: %w", err)
+	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentStatus]); err != nil {
+		return nil, fmt.Errorf("failed to get DeploymentStatus: %w", err)
+	} else {
+		return result, nil
 	}
 }
