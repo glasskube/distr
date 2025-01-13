@@ -51,7 +51,6 @@ loop:
 				var reportedStatus string
 				var reportedErr error
 				if cmdErr != nil {
-					reportedStatus = ""
 					reportedErr = errors.New(outStr)
 				} else {
 					reportedStatus = outStr

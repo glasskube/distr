@@ -73,8 +73,8 @@ docker-build: docker-build-server docker-build-docker-agent docker-build-kuberne
 
 .PHONY: init-db
 init-db:
-	 go run ./cmd/cloud/migrate/main.go
+	 go run ./cmd/cloud/migrate/
 
 .PHONY: purge-db
 purge-db:
-	 go run ./cmd/cloud/migrate/main.go --down
+	 go run ./cmd/cloud/migrate/ --down
