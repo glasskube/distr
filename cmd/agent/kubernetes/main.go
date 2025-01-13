@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -21,7 +23,9 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -164,9 +168,26 @@ func main() {
 				pushStatus(ctx, "helm upgrade succeeded")
 			}
 		} else {
-			logger.Info("no action required")
-			// TODO: Inspect release to determine deployment health for status
-			pushStatus(ctx, "OK")
+			logger.Info("no action required. running status check")
+			if resources, err := GetHelmManifest(res.Namespace, res.Deployment.ReleaseName); err != nil {
+				logger.Warn("could not get helm manifest", zap.Error(err))
+				pushErrorStatus(ctx, fmt.Errorf("could not get helm manifest: %w", err))
+			} else {
+				var err error
+				for _, resource := range resources {
+					logger.Sugar().Debugf("check status for %v %v", resource.GetKind(), resource.GetName())
+					if err = CheckStatus(ctx, res.Namespace, resource); err != nil {
+						break
+					}
+				}
+				if err != nil {
+					logger.Warn("resource status error", zap.Error(err))
+					pushErrorStatus(ctx, fmt.Errorf("resource status error: %w", err))
+				} else {
+					logger.Info("status check passed")
+					pushStatus(ctx, fmt.Sprintf("status check passed. %v resources", len(resources)))
+				}
+			}
 		}
 
 	}
@@ -293,9 +314,75 @@ func RunHelmUpgrade(
 	}
 }
 
+func GetHelmManifest(namespace, releaseName string) ([]*unstructured.Unstructured, error) {
+	cfg, err := GetHelmActionConfig(namespace)
+	if err != nil {
+		return nil, err
+	}
+	getAction := action.NewGet(cfg)
+	if release, err := getAction.Run(releaseName); err != nil {
+		return nil, err
+	} else {
+		// decode the release manifests which is represented as multi-document YAML
+		return DecodeResourceYaml(strings.NewReader(release.Manifest))
+	}
+}
+
+func DecodeResourceYaml(reader io.Reader) ([]*unstructured.Unstructured, error) {
+	decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
+	var result []*unstructured.Unstructured
+	for {
+		var object unstructured.Unstructured
+		if err := decoder.Decode(&object); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, err
+		} else if len(object.Object) > 0 {
+			result = append(result, &object)
+		}
+	}
+	return result, nil
+}
+
+func CheckStatus(ctx context.Context, namespace string, resource *unstructured.Unstructured) error {
+	switch resource.GetKind() {
+	case "Deployment":
+		if deployment, err := k8sClient.AppsV1().Deployments(namespace).
+			Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
+			return err
+		} else if deployment.Status.ReadyReplicas < *deployment.Spec.Replicas {
+			return ReplicasError(resource, deployment.Status.ReadyReplicas, *deployment.Spec.Replicas)
+		}
+	case "StatefulSet":
+		if statefulSet, err := k8sClient.AppsV1().StatefulSets(namespace).
+			Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
+			return err
+		} else if statefulSet.Status.ReadyReplicas < *statefulSet.Spec.Replicas {
+			return ReplicasError(resource, statefulSet.Status.ReadyReplicas, *statefulSet.Spec.Replicas)
+		}
+	case "DaemonSet":
+		if daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).
+			Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
+			return err
+		} else if daemonSet.Status.NumberUnavailable > 0 {
+			return ReplicasError(resource, daemonSet.Status.DesiredNumberScheduled, daemonSet.Status.NumberReady)
+		}
+	}
+	return nil
+}
+
+func ReplicasError(resource *unstructured.Unstructured, ready, desired int32) error {
+	return ResourceStatusError(resource, fmt.Sprintf("ReadyReplicas (%v) is less than desired (%v)", ready, desired))
+}
+
+func ResourceStatusError(resource *unstructured.Unstructured, msg string) error {
+	return fmt.Errorf("%v %v status check failed: %v", resource.GetKind(), resource.GetName(), msg)
+}
+
 func GetExistingDeployments(ctx context.Context, namespace string) ([]AgentDeployment, error) {
 	if secrets, err := k8sClient.CoreV1().Secrets(namespace).
-		List(ctx, v1.ListOptions{LabelSelector: LabelDeplyoment}); err != nil {
+		List(ctx, metav1.ListOptions{LabelSelector: LabelDeplyoment}); err != nil {
 		return nil, err
 	} else {
 		deployments := make([]AgentDeployment, len(secrets.Items))
@@ -322,7 +409,7 @@ func SaveDeployment(ctx context.Context, namespace string, deployment AgentDeplo
 	_, err := k8sClient.CoreV1().Secrets(namespace).Apply(
 		ctx,
 		cfg,
-		v1.ApplyOptions{Force: true, FieldManager: "glasskube-cloud-agent"},
+		metav1.ApplyOptions{Force: true, FieldManager: "glasskube-cloud-agent"},
 	)
 	return err
 }
