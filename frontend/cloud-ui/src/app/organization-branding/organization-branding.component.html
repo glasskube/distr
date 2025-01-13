@@ -15,8 +15,8 @@
           <div>
             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"> Logo </label>
             <div>
-              @if (this.form.value.logo !== null) {
-                <img class="h-8 mb-4" [src]="getLogoString()" alt="Logo" />
+              @if (logoSrc | async; as logo) {
+                <img class="h-8 mb-4" [src]="logo" alt="Logo" />
                 <button
                   type="button"
                   (click)="deleteLogo()"

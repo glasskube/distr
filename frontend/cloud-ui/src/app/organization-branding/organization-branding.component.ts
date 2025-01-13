@@ -3,16 +3,17 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {OrganizationBrandingService} from '../services/organization-branding.service';
-import {lastValueFrom, Observable} from 'rxjs';
+import {lastValueFrom, map, Observable} from 'rxjs';
 import {OrganizationBranding} from "../types/organization-branding";
 import {HttpErrorResponse} from "@angular/common/http";
 import {getFormDisplayedError} from "../../util/errors";
 import {ToastService} from "../services/toast.service";
+import {AsyncPipe} from "@angular/common";
 
 @Component({
   selector: 'app-organization-branding',
   templateUrl: './organization-branding.component.html',
-  imports: [FaIconComponent, ReactiveFormsModule],
+  imports: [FaIconComponent, ReactiveFormsModule, AsyncPipe],
 })
 export class OrganizationBrandingComponent implements OnInit {
   protected readonly faFloppyDisk = faFloppyDisk;
@@ -26,6 +27,8 @@ export class OrganizationBrandingComponent implements OnInit {
     description: new FormControl('', Validators.required),
     logo: new FormControl<Blob | null>(null),
   });
+  protected readonly logoSrc: Observable<string | null> = this.form.controls.logo.valueChanges.pipe(
+      map((logo) => (logo ? URL.createObjectURL(logo) : null)));
 
   async ngOnInit() {
     try {
@@ -37,7 +40,7 @@ export class OrganizationBrandingComponent implements OnInit {
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
-      if(msg && (e instanceof HttpErrorResponse && e.status !== 404)) {
+      if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
         // its valid for an organization to have no branding (hence 404 is not shown in toast)
         this.toast.error(msg);
       }
@@ -68,9 +71,10 @@ export class OrganizationBrandingComponent implements OnInit {
 
       try {
         await lastValueFrom(req);
+        this.toast.success("Branding saved successfully")
       } catch (e) {
         const msg = getFormDisplayedError(e);
-        if(msg){
+        if (msg) {
           this.toast.error(msg);
         }
       }
@@ -84,10 +88,6 @@ export class OrganizationBrandingComponent implements OnInit {
 
   deleteLogo() {
     this.form.patchValue({logo: null});
-  }
-
-  getLogoString(): string | null {
-    return this.form.value.logo ? URL.createObjectURL(this.form.value.logo) : null;
   }
 
   private base64ToBlob(base64String: string, contentType = ''): Blob {
