@@ -16,7 +16,7 @@ import (
 
 const (
 	deploymentOutputExpr = `
-		d.id, d.created_at, d.deployment_target_id, d.application_version_id, d.release_name, d.values_yaml
+		d.id, d.created_at, d.deployment_target_id, d.release_name
 	`
 )
 
@@ -58,22 +58,25 @@ func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
 }
 
 func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetId string) (
-	*types.DeploymentWithData, error) {
+	*types.DeploymentWithLatestRevision, error) {
 	// TODO all these methods also need the orgId criteria
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`SELECT`+deploymentOutputExpr+`,
+				dr.application_version_id as application_version_id, dr.values_yaml as values_yaml,
+				dr.id as deployment_revision_id,
 				a.id AS application_id, a.name AS application_name, av.name AS application_version_name
 			FROM Deployment d
-				JOIN ApplicationVersion av ON d.application_version_id = av.id
+				JOIN DeploymentRevision dr ON d.id = dr.deployment_id
+				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
 			WHERE d.deployment_target_id = @deploymentTargetId
-			ORDER BY d.created_at DESC LIMIT 1`,
+			ORDER BY d.created_at DESC, dr.created_at DESC LIMIT 1`,
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentWithData])
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentWithLatestRevision])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, apierrors.ErrNotFound
 	} else if err != nil {
@@ -83,19 +86,17 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func CreateDeployment(ctx context.Context, d *types.Deployment) error {
+func CreateDeployment(ctx context.Context, d *types.DeploymentRequest) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO Deployment AS d
-			(deployment_target_id, application_version_id, release_name, values_yaml)
-			VALUES (@deploymentTargetId, @applicationVersionId, @releaseName, @valuesYaml)
+			(deployment_target_id, release_name)
+			VALUES (@deploymentTargetId, @releaseName)
 			RETURNING`+deploymentOutputExpr,
 		pgx.NamedArgs{
-			"deploymentTargetId":   d.DeploymentTargetId,
-			"applicationVersionId": d.ApplicationVersionId,
-			"releaseName":          d.ReleaseName,
-			"valuesYaml":           d.ValuesYaml,
+			"deploymentTargetId": d.DeploymentTargetId,
+			"releaseName":        d.ReleaseName,
 		},
 	)
 	if err != nil {
@@ -105,8 +106,33 @@ func CreateDeployment(ctx context.Context, d *types.Deployment) error {
 	if err != nil {
 		return fmt.Errorf("could not save Deployment: %w", err)
 	} else {
-		*d = result
+		d.ID = result.ID
 		return nil
+	}
+}
+
+func CreateDeploymentRevision(ctx context.Context, d *types.DeploymentRequest) (*types.DeploymentRevision, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`INSERT INTO DeploymentRevision AS d
+			(deployment_id, application_version_id, values_yaml)
+			VALUES (@deploymentId, @applicationVersionId, @valuesYaml)
+			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id`,
+		pgx.NamedArgs{
+			"deploymentId":         d.ID,
+			"applicationVersionId": d.ApplicationVersionId,
+			"valuesYaml":           d.ValuesYaml,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DeploymentRevision: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentRevision])
+	if err != nil {
+		return nil, fmt.Errorf("could not save DeploymentRevision: %w", err)
+	} else {
+		return &result, nil
 	}
 }
 

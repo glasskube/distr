@@ -89,13 +89,28 @@ func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 
 type Deployment struct {
 	Base
-	DeploymentTargetId   string  `db:"deployment_target_id" json:"deploymentTargetId"`
-	ApplicationVersionId string  `db:"application_version_id" json:"applicationVersionId"`
-	ReleaseName          *string `db:"release_name" json:"releaseName"`
-	ValuesYaml           []byte  `db:"values_yaml" json:"valuesYaml"`
+	DeploymentTargetId string  `db:"deployment_target_id" json:"deploymentTargetId"`
+	ReleaseName        *string `db:"release_name" json:"releaseName"`
 }
 
-func (d Deployment) ParsedValuesFile() (result map[string]any, err error) {
+type DeploymentRevision struct {
+	Base
+	DeploymentID         string `db:"deployment_id" json:"deploymentId"`
+	ApplicationVersionId string `db:"application_version_id" json:"applicationVersionId"`
+	ValuesYaml           []byte `db:"-" json:"valuesYaml"`
+}
+
+// TODO maybe move to api
+type DeploymentRequest struct {
+	ID                   string  `json:"deploymentId"`
+	DeploymentTargetId   string  `json:"deploymentTargetId"`
+	ApplicationVersionId string  `json:"applicationVersionId"`
+	ReleaseName          *string `json:"releaseName"`
+	ValuesYaml           []byte  `json:"valuesYaml"`
+}
+
+func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {
+	// TODO deduplicate
 	if d.ValuesYaml != nil {
 		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
 			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
@@ -104,11 +119,23 @@ func (d Deployment) ParsedValuesFile() (result map[string]any, err error) {
 	return
 }
 
-type DeploymentWithData struct {
+type DeploymentWithLatestRevision struct {
 	Deployment
+	DeploymentRevisionID   string `db:"deployment_revision_id" json:"deploymentRevisionId"`
 	ApplicationId          string `db:"application_id" json:"applicationId"`
 	ApplicationName        string `db:"application_name" json:"applicationName"`
+	ApplicationVersionId   string `db:"application_version_id" json:"applicationVersionId"`
 	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
+	ValuesYaml             []byte `db:"values_yaml" json:"valuesYaml"` // TODO not sure yet if we need to transfer it in json?
+}
+
+func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {
+	if d.ValuesYaml != nil {
+		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
+			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
+		}
+	}
+	return
 }
 
 type DeploymentStatus struct {
@@ -142,8 +169,8 @@ func (dt *DeploymentTarget) Validate() error {
 
 type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
-	CreatedBy        *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
-	LatestDeployment *DeploymentWithData      `db:"-" json:"latestDeployment,omitempty"`
+	CreatedBy  *UserAccountWithUserRole      `db:"created_by" json:"createdBy"`
+	Deployment *DeploymentWithLatestRevision `db:"-" json:"deployment,omitempty"`
 }
 
 type DeploymentTargetStatus struct {

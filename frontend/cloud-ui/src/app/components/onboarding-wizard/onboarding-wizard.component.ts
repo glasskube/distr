@@ -11,7 +11,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
 import {Application, ApplicationVersion} from '../../types/application';
-import {Deployment, DeploymentType, HelmChartType} from '../../types/deployment';
+import {Deployment, DeploymentRequest, DeploymentType, HelmChartType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
@@ -277,7 +277,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           this.createdDeploymentTarget = await firstValueFrom(
             this.deploymentTargets.create(this.getDeploymentTargetForSubmit())
           );
-          await firstValueFrom(this.deployments.create(this.getDeploymentForSubmit()));
+          await firstValueFrom(this.deployments.createOrUpdate(this.getDeploymentForSubmit()));
           this.nextStep();
         } else {
           await firstValueFrom(this.users.addUser(this.getUserAccountForSubmit()));
@@ -349,7 +349,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     };
   }
 
-  private getDeploymentForSubmit(): Deployment {
+  private getDeploymentForSubmit(): DeploymentRequest {
     return {
       applicationVersionId: this.app!.versions![0].id!,
       deploymentTargetId: this.createdDeploymentTarget!.id!,

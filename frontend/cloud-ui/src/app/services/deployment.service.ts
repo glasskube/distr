@@ -1,7 +1,7 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {Deployment, DeploymentStatus} from '../types/deployment';
+import {Deployment, DeploymentRequest, DeploymentStatus} from '../types/deployment';
 
 @Injectable({
   providedIn: 'root',
@@ -10,8 +10,8 @@ export class DeploymentService {
   private readonly baseUrl = '/api/v1/deployments';
   private readonly httpClient = inject(HttpClient);
 
-  create(request: Deployment): Observable<Deployment> {
-    return this.httpClient.post<Deployment>(this.baseUrl, request);
+  createOrUpdate(request: DeploymentRequest): Observable<Deployment> {
+    return this.httpClient.put<Deployment>(this.baseUrl, request);
   }
 
   getStatuses(depl: Deployment): Observable<DeploymentStatus[]> {

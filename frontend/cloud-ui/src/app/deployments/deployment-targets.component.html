@@ -112,14 +112,14 @@
               </td>
               <td
                 class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                @if (dt.latestDeployment; as deployment) {
+                @if (dt.deployment; as deployment) {
                   {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
                 }
               </td>
               <td
                 class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
                 @if (!(auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer')) {
-                  @if (dt.currentStatus) {
+                  @if (true || dt.currentStatus) {
                     <button
                       type="button"
                       (click)="newDeployment(dt, deploymentModal)"
@@ -148,7 +148,7 @@
                       Connection instructions
                     </button>
                   }
-                  @if (dt.latestDeployment) {
+                  @if (dt.deployment) {
                     <button
                       type="button"
                       (click)="openStatusModal(dt, deploymentStatusModal)"
@@ -439,7 +439,7 @@
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Status History: {{ selectedDeploymentTarget()?.name }}
-            @if (selectedDeploymentTarget()?.latestDeployment; as deployment) {
+            @if (selectedDeploymentTarget()?.deployment; as deployment) {
               ({{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }})
             }
           </h3>
