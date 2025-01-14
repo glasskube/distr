@@ -15,12 +15,12 @@ export class OrganizationBrandingService {
   constructor(private readonly httpClient: HttpClient) {}
 
   get(): Observable<OrganizationBrandingWithAuthor> {
-    if(this.cache) {
+    if (this.cache) {
       return of(this.cache);
     }
-    return this.httpClient.get<OrganizationBrandingWithAuthor>(this.organizationBrandingUrl).pipe(
-      tap(branding => this.cache = branding)
-    )
+    return this.httpClient
+      .get<OrganizationBrandingWithAuthor>(this.organizationBrandingUrl)
+      .pipe(tap((branding) => (this.cache = branding)));
   }
 
   create(organizationBranding: FormData): Observable<OrganizationBranding> {

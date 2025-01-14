@@ -47,13 +47,13 @@ export class NavBarComponent implements OnInit {
   }
 
   private async initBranding() {
-    if(this.auth.hasRole('customer')) {
+    if (this.auth.hasRole('customer')) {
       try {
         const branding = await lastValueFrom(this.organizationBranding.get());
-        if(branding.logo) {
+        if (branding.logo) {
           this.logoUrl = URL.createObjectURL(base64ToBlob(branding.logo, branding.logoContentType));
         }
-        if(branding.title) {
+        if (branding.title) {
           this.customerSubtitle = branding.title;
         }
       } catch (e) {

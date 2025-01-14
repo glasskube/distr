@@ -88,5 +88,4 @@ export class OrganizationBrandingComponent implements OnInit {
   deleteLogo() {
     this.form.patchValue({logo: null});
   }
-
 }
