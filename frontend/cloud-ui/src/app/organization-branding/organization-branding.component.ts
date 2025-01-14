@@ -1,7 +1,7 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {OrganizationBrandingService} from '../services/organization-branding.service';
 import {lastValueFrom, map, Observable} from 'rxjs';
 import {OrganizationBranding} from '../types/organization-branding';
@@ -69,7 +69,7 @@ export class OrganizationBrandingComponent implements OnInit {
       }
 
       try {
-        await lastValueFrom(req);
+        this.organizationBranding = await lastValueFrom(req);
         this.toast.success('Branding saved successfully');
       } catch (e) {
         const msg = getFormDisplayedError(e);
