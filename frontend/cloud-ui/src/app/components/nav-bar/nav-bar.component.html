@@ -13,14 +13,16 @@
           <fa-icon [icon]="faBarsStaggered" size="xl" class="h-6 w-6"></fa-icon>
         </button>
         <a routerLink="/" class="flex ms-2 md:me-24">
-          <img src="/glasskube-logo.svg" class="h-8 me-3" alt="Glasskube Logo" />
+          <img [src]="logoUrl" class="h-8 me-3" alt="Glasskube Logo" />
           <h1 class="font-display self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">
-            Glasskube
+            @if (role === 'vendor') {
+              Glasskube
+            }
             <small class="ms-2 font-semibold text-gray-500 dark:text-gray-400">
               @if (role === 'vendor') {
                 Vendor Platform
               } @else {
-                Customer Portal
+                {{ customerSubtitle }}
               }
             </small>
           </h1>

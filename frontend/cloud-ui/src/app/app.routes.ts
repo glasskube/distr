@@ -126,6 +126,11 @@ export const routes: Routes = [
                 .DashboardPlaceholderComponent,
             canActivate: [requiredRoleGuard('vendor')],
           },
+          {
+            path: 'home',
+            loadComponent: async () => (await import('./components/home/home.component')).HomeComponent,
+            canActivate: [requiredRoleGuard('customer')],
+          },
           {path: 'applications', component: ApplicationsPageComponent, canActivate: [requiredRoleGuard('vendor')]},
           {path: 'deployments', component: DeploymentsPageComponent},
           {

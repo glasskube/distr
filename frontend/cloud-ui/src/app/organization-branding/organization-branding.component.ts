@@ -9,6 +9,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {AsyncPipe} from '@angular/common';
+import {base64ToBlob} from '../../util/blob';
 
 @Component({
   selector: 'app-organization-branding',
@@ -38,7 +39,7 @@ export class OrganizationBrandingComponent implements OnInit {
         title: this.organizationBranding.title,
         description: this.organizationBranding.description,
         logo: this.organizationBranding.logo
-          ? this.base64ToBlob(this.organizationBranding.logo, this.organizationBranding.logoContentType)
+          ? base64ToBlob(this.organizationBranding.logo, this.organizationBranding.logoContentType)
           : null,
       });
     } catch (e) {
@@ -88,15 +89,4 @@ export class OrganizationBrandingComponent implements OnInit {
     this.form.patchValue({logo: null});
   }
 
-  private base64ToBlob(base64String: string, contentType = ''): Blob {
-    const byteCharacters = atob(base64String);
-    const byteArrays = [];
-
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteArrays.push(byteCharacters.charCodeAt(i));
-    }
-
-    const byteArray = new Uint8Array(byteArrays);
-    return new Blob([byteArray], {type: contentType});
-  }
 }
