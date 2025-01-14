@@ -80,12 +80,19 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err = dt.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err = db.CreateDeploymentTarget(ctx, &dt); err != nil {
-		log.Warn("could not create DeploymentTarget", zap.Error(err))
+	} else if agentVersion, err := db.GetCurrentAgentVersion(ctx); err != nil {
+		log.Warn("could not get current agent version", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+	} else {
+		dt.AgentVersionID = agentVersion.ID
+		if err = db.CreateDeploymentTarget(ctx, &dt); err != nil {
+			log.Warn("could not create DeploymentTarget", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, dt)
+		}
 	}
 }
 

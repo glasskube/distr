@@ -129,7 +129,8 @@ type DeploymentTarget struct {
 	Namespace              *string                 `db:"namespace" json:"namespace"`
 	OrganizationID         string                  `db:"organization_id" json:"-"`
 	CreatedByUserAccountID string                  `db:"created_by_user_account_id" json:"-"`
-	AgentVersionID         *string                 `db:"agent_version_id" json:"-"`
+	AgentVersionID         string                  `db:"agent_version_id" json:"-"`
+	ReportedAgentVersionID *string                 `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"`
 }
 
 func (dt *DeploymentTarget) Validate() error {
@@ -145,7 +146,7 @@ type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
 	CreatedBy        *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
 	LatestDeployment *DeploymentWithData      `db:"-" json:"latestDeployment,omitempty"`
-	AgentVersion     *AgentVersion            `db:"agent_version" json:"agentVersion,omitempty"`
+	AgentVersion     *AgentVersion            `db:"agent_version" json:"agentVersion"`
 }
 
 type DeploymentTargetStatus struct {
@@ -197,8 +198,9 @@ type UptimeMetric struct {
 }
 
 type AgentVersion struct {
-	Base
-	Name                 string `db:"name" json:"name"`
-	ManifestFileRevision string `db:"manifest_file_revision" json:"-"`
-	ComposeFileRevision  string `db:"compose_file_revision" json:"-"`
+	ID                   string    `db:"id" json:"id"`
+	CreatedAt            time.Time `db:"created_at" json:"createdAt"`
+	Name                 string    `db:"name" json:"name"`
+	ManifestFileRevision string    `db:"manifest_file_revision" json:"-"`
+	ComposeFileRevision  string    `db:"compose_file_revision" json:"-"`
 }

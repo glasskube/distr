@@ -23,6 +23,28 @@ func CreateAgentVersion(ctx context.Context) error {
 	return err
 }
 
+func GetCurrentAgentVersion(ctx context.Context) (*types.AgentVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT av.id, av.created_at, av.name, av.manifest_file_revision, av.compose_file_revision
+		FROM AgentVersion av
+		WHERE av.name = @name`,
+		pgx.NamedArgs{"name": buildconfig.Version()},
+	)
+	if err != nil {
+		return nil, err
+	} else if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.AgentVersion]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		} else {
+			return nil, err
+		}
+	} else {
+		return result, nil
+	}
+}
+
 func GetAgentVersionForDeploymentTargetID(ctx context.Context, id string) (*types.AgentVersion, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
@@ -31,6 +53,27 @@ func GetAgentVersionForDeploymentTargetID(ctx context.Context, id string) (*type
 		INNER JOIN AgentVersion av ON dt.agent_version_id = av.id
 		WHERE dt.id = @id`,
 		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, err
+	} else if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.AgentVersion]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		} else {
+			return nil, err
+		}
+	} else {
+		return &result, nil
+	}
+}
+
+func GetAgentVersionWithName(ctx context.Context, name string) (*types.AgentVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		`SELECT av.id, av.created_at, av.name, av.manifest_file_revision, av.compose_file_revision
+		FROM AgentVersion av
+		WHERE av.name = @name`,
+		pgx.NamedArgs{"name": name},
 	)
 	if err != nil {
 		return nil, err

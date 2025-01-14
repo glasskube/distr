@@ -18,7 +18,7 @@ import (
 const (
 	deploymentTargetOutputExprBase = `
 		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.namespace,
-		dt.organization_id, dt.created_by_user_account_id, dt.agent_version_id,
+		dt.organization_id, dt.created_by_user_account_id, dt.agent_version_id, dt.reported_agent_version_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
 			AS geolocation
@@ -136,13 +136,14 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
-		"name":      dt.Name,
-		"type":      dt.Type,
-		"orgId":     dt.OrganizationID,
-		"userId":    dt.CreatedBy.ID,
-		"namespace": dt.Namespace,
-		"lat":       nil,
-		"lon":       nil,
+		"name":           dt.Name,
+		"type":           dt.Type,
+		"orgId":          dt.OrganizationID,
+		"userId":         dt.CreatedBy.ID,
+		"namespace":      dt.Namespace,
+		"lat":            nil,
+		"lon":            nil,
+		"agentVersionId": dt.AgentVersionID,
 	}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
@@ -151,8 +152,9 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
-			(name, type, organization_id, created_by_user_account_id, namespace, geolocation_lat, geolocation_lon)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @lat, @lon) RETURNING *
+			(name, type, organization_id, created_by_user_account_id, namespace, geolocation_lat, geolocation_lon,
+				agent_version_id)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @lat, @lon, @agentVersionId) RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
 		args,
@@ -227,6 +229,34 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
+		return nil
+	}
+}
+
+func UpdateDeploymentTargetReportedAgentVersionID(
+	ctx context.Context,
+	dt *types.DeploymentTarget,
+	agentVersionID string,
+) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`WITH updated AS (
+			UPDATE DeploymentTarget AS dt
+			SET reported_agent_version_id = @agentVersionId
+			WHERE id = @id
+			RETURNING *
+		)
+		SELECT`+deploymentTargetWithStatusOutputExpr+`FROM updated dt`+deploymentTargetJoinExpr,
+		pgx.NamedArgs{"id": dt.ID, "agentVersionId": agentVersionID},
+	)
+	if err != nil {
+		return err
+	} else if updated, err := pgx.CollectExactlyOneRow(rows,
+		pgx.RowToAddrOfStructByName[types.DeploymentTarget]); err != nil {
+		return err
+	} else {
+		*dt = *updated
 		return nil
 	}
 }

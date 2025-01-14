@@ -5,19 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/cloud/internal/agentmanifest"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/glasskube/cloud/internal/resources"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
@@ -50,50 +51,28 @@ func AgentRouter(r chi.Router) {
 }
 
 func connectHandler() http.HandlerFunc {
-	dockerTempl := util.Require(resources.GetTemplate("embedded/agent/docker/v1/docker-compose.yaml"))
-	kubernetesTempl := util.Require(resources.GetTemplate("embedded/agent/kubernetes/v1/manifest.yaml"))
-	loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints()
-	util.Must(err)
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-		templateData := map[string]any{
-			"loginEndpoint":     loginEndpoint,
-			"resourcesEndpoint": resourcesEndpoint,
-			"statusEndpoint":    statusEndpoint,
-			"targetId":          r.URL.Query().Get("targetId"),
-			"targetSecret":      r.URL.Query().Get("targetSecret"),
-			"agentInterval":     env.AgentInterval(),
-		}
+
 		if deploymentTarget.CurrentStatus != nil {
 			log.Warn("deployment target has already been connected")
 			http.Error(w, "deployment target has already been connected", http.StatusBadRequest)
-		} else if deploymentTarget.Type == types.DeploymentTypeDocker {
-			w.Header().Add("Content-Type", "application/yaml")
-			if err := dockerTempl.Execute(w, templateData); err != nil {
-				log.Error("failed to execute yaml template", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+			return
+		}
+
+		secret := r.URL.Query().Get("targetSecret")
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, &secret); err != nil {
+			log.Error("could not get agent manifest", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.Header().Add("Content-Type", "application/yaml")
-			if err := kubernetesTempl.Execute(w, templateData); err != nil {
-				log.Error("failed to execute yaml template", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
+			if _, err := io.Copy(w, manifest); err != nil {
+				log.Warn("writing to client failed", zap.Error(err))
 			}
 		}
-	}
-}
-
-func buildEndpoints() (string, string, string, error) {
-	if u, err := url.Parse(env.Host()); err != nil {
-		return "", "", "", err
-	} else {
-		u = u.JoinPath("/api/v1/agent")
-		return u.JoinPath("login").String(), u.JoinPath("resources").String(), u.JoinPath("status").String(), nil
 	}
 }
 
@@ -270,19 +249,34 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
 		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get orgId from token", zap.Error(err))
+			log.Error("failed to get orgId from token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if targetId, err := auth.CurrentSubject(ctx); err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get subject from token", zap.Error(err))
+			log.Error("failed to get subject from token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if deploymentTarget, err :=
 			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
+			log.Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
+			if ua := r.UserAgent(); strings.HasPrefix(ua, "GlasskubeAgentClient/") {
+				reportedVersionName := strings.TrimPrefix(ua, "GlasskubeAgentClient/")
+				if reportedVersion, err := db.GetAgentVersionWithName(ctx, reportedVersionName); err != nil {
+					log.Error("could not get reported agent version", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+				} else if deploymentTarget.ReportedAgentVersionID == nil ||
+					reportedVersion.ID != *deploymentTarget.ReportedAgentVersionID {
+					if err := db.UpdateDeploymentTargetReportedAgentVersionID(
+						ctx, &deploymentTarget.DeploymentTarget, reportedVersion.ID); err != nil {
+						log.Error("could not update reported agent version", zap.Error(err))
+						sentry.GetHubFromContext(ctx).CaptureException(err)
+					}
+				}
+			}
 			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
