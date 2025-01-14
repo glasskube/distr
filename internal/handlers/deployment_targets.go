@@ -99,10 +99,14 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
 	var dt types.DeploymentTargetWithCreatedBy
-	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)
 		return
+	}
+
+	if dt.AgentVersion != nil {
+		dt.AgentVersionID = dt.AgentVersion.ID
 	}
 
 	existing := internalctx.GetDeploymentTarget(r.Context())

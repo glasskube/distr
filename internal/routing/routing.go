@@ -50,6 +50,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			r.Use(jwtauth.Authenticator(auth.JWTAuth))
 			r.Use(middleware.SentryUser)
 			r.Route("/applications", handlers.ApplicationsRouter)
+			r.Route("/agent-versions", handlers.AgentVersionsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
 			r.Route("/user-accounts", handlers.UserAccountsRouter)

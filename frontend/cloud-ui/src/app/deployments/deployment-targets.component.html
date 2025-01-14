@@ -42,6 +42,9 @@
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
             <th scope="col" class="p-4">Deployed application</th>
+            @if (showAgentUpdateColumn$ | async) {
+              <th scope="col" class="p-4">Agent update</th>
+            }
             <th scope="col" class="p-4"></th>
           }
         </tr>
@@ -116,6 +119,26 @@
                   {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
                 }
               </td>
+
+              @if (showAgentUpdateColumn$ | async) {
+                <td
+                  class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  @if (agentVersions$ | async; as agentVersions) {
+                    @if (dt.agentVersion?.id !== agentVersions[agentVersions.length - 1].id) {
+                      <button
+                        type="button"
+                        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        (click)="updateDeploymentTargetAgent(dt)">
+                        Install update
+                      </button>
+                    } @else if (dt.agentVersion?.id !== dt.reportedAgentVersionId) {
+                      Update pending…
+                    } @else {
+                      Up to date
+                    }
+                  }
+                </td>
+              }
               <td
                 class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
                 @if (!(auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer')) {

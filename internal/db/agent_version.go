@@ -23,6 +23,21 @@ func CreateAgentVersion(ctx context.Context) error {
 	return err
 }
 
+func GetAgentVersions(ctx context.Context) ([]types.AgentVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT av.id, av.created_at, av.name, av.manifest_file_revision, av.compose_file_revision
+		FROM AgentVersion av
+		ORDER BY av.created_at`,
+	)
+	if err != nil {
+		return nil, err
+	} else {
+		return pgx.CollectRows(rows, pgx.RowToStructByName[types.AgentVersion])
+	}
+}
+
 func GetCurrentAgentVersion(ctx context.Context) (*types.AgentVersion, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
@@ -34,14 +49,14 @@ func GetCurrentAgentVersion(ctx context.Context) (*types.AgentVersion, error) {
 	)
 	if err != nil {
 		return nil, err
-	} else if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.AgentVersion]); err != nil {
+	} else if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.AgentVersion]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		} else {
 			return nil, err
 		}
 	} else {
-		return result, nil
+		return &result, nil
 	}
 }
 

@@ -178,16 +178,27 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	}
 
 	db := internalctx.GetDb(ctx)
-	args := pgx.NamedArgs{"id": dt.ID, "name": dt.Name, "orgId": orgId, "lat": nil, "lon": nil}
+	args := pgx.NamedArgs{
+		"id":             dt.ID,
+		"name":           dt.Name,
+		"orgId":          orgId,
+		"lat":            nil,
+		"lon":            nil,
+		"agentVersionId": dt.AgentVersionID,
+	}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
 	}
 	rows, err := db.Query(ctx,
 		`WITH updated AS (
-			UPDATE DeploymentTarget AS dt SET name = @name, geolocation_lat = @lat, geolocation_lon = @lon
+			UPDATE DeploymentTarget AS dt SET
+				name = @name,
+				geolocation_lat = @lat,
+				geolocation_lon = @lon,
+				agent_version_id = @agentVersionId
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
-		SELECT `+deploymentTargetOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
+		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
