@@ -23,8 +23,8 @@ export class OrganizationBrandingComponent implements OnInit {
   private toast = inject(ToastService);
 
   protected readonly form = new FormGroup({
-    title: new FormControl('', Validators.required),
-    description: new FormControl('', Validators.required),
+    title: new FormControl(''),
+    description: new FormControl(''),
     logo: new FormControl<Blob | null>(null),
   });
   protected readonly logoSrc: Observable<string | null> = this.form.controls.logo.valueChanges.pipe(
@@ -54,8 +54,8 @@ export class OrganizationBrandingComponent implements OnInit {
     this.form.markAllAsTouched();
     if (this.form.valid) {
       const formData = new FormData();
-      formData.set('title', this.form.value.title!);
-      formData.set('description', this.form.value.description!);
+      formData.set('title', this.form.value.title ?? '');
+      formData.set('description', this.form.value.description ?? '');
       formData.set('logo', this.form.value.logo ? (this.form.value.logo as File) : '');
 
       const id = this.organizationBranding?.id;

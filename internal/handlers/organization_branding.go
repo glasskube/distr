@@ -91,8 +91,8 @@ func parseRequest(r *http.Request) (*types.OrganizationBranding, error) {
 		return nil, fmt.Errorf("failed to parse form: %w", err)
 	}
 	organizationBranding := types.OrganizationBranding{
-		Title:       r.Form.Get("title"),
-		Description: r.Form.Get("description"),
+		Title:       util.PtrTo(r.Form.Get("title")),
+		Description: util.PtrTo(r.Form.Get("description")),
 	}
 
 	organizationBranding.ID = r.PathValue("organizationBrandingId")
@@ -126,7 +126,7 @@ func setMetadata(t *types.OrganizationBranding, ctx context.Context) error {
 		return err
 	} else {
 		t.OrganizationID = orgID
-		t.UpdatedByUserAccountID = id
+		t.UpdatedByUserAccountID = util.PtrTo(id)
 		t.UpdatedAt = time.Now()
 	}
 	return nil
