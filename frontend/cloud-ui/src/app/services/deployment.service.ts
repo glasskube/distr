@@ -1,6 +1,6 @@
-import {HttpClient, HttpParams} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {interval, Observable, startWith, switchMap} from 'rxjs';
+import {Observable, switchMap, timer} from 'rxjs';
 import {Deployment, DeploymentStatus} from '../types/deployment';
 
 @Injectable({
@@ -19,8 +19,6 @@ export class DeploymentService {
   }
 
   pollStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
-    return timer(0, 5000).pipe(
-      switchMap(() => this.getStatuses(depl))
-    );
+    return timer(0, 5000).pipe(switchMap(() => this.getStatuses(depl)));
   }
 }
