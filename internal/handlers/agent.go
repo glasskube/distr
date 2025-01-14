@@ -63,7 +63,7 @@ func connectHandler() http.HandlerFunc {
 		}
 
 		secret := r.URL.Query().Get("targetSecret")
-		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, &secret); err != nil {
+		if manifest, err := agentmanifest.Get(ctx, deploymentTarget.DeploymentTarget, &secret); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -143,6 +143,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		respose := api.KubernetesAgentResource{
 			Namespace: *deploymentTarget.Namespace,
+			Version:   deploymentTarget.AgentVersion,
 		}
 		if deployment != nil && appVersion != nil {
 			respose.Deployment = &api.KubernetesAgentDeployment{
@@ -175,11 +176,11 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
-	if err := db.CreateDeploymentTargetStatus(ctx, deploymentTarget, statusMessage); err != nil {
+	if err := db.CreateDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget, statusMessage); err != nil {
 		log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID),
 			zap.String("statusMessage", statusMessage))
-	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, deploymentTarget); err != nil {
+	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget); err != nil {
 		log.Error("failed to cleanup old deployment target status", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID))
 	} else if cnt > 0 {
@@ -277,7 +278,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 					}
 				}
 			}
-			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
@@ -287,7 +288,7 @@ func getVerifiedDeploymentTarget(
 	ctx context.Context,
 	targetId string,
 	targetSecret string,
-) (*types.DeploymentTarget, error) {
+) (*types.DeploymentTargetWithCreatedBy, error) {
 	if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, nil); err != nil {
 		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
@@ -296,7 +297,7 @@ func getVerifiedDeploymentTarget(
 		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, targetSecret); err != nil {
 		return nil, fmt.Errorf("failed to verify access: %w", err)
 	} else {
-		return &deploymentTarget.DeploymentTarget, nil
+		return deploymentTarget, nil
 	}
 }
 

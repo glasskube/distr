@@ -105,9 +105,7 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if dt.AgentVersion != nil {
-		dt.AgentVersionID = dt.AgentVersion.ID
-	}
+	dt.AgentVersionID = dt.AgentVersion.ID
 
 	existing := internalctx.GetDeploymentTarget(r.Context())
 	if dt.ID == "" {
@@ -178,7 +176,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		deploymentTarget.AccessKeyHash = &hash
 	}
 
-	if err := db.UpdateDeploymentTargetAccess(ctx, deploymentTarget); err != nil {
+	if err := db.UpdateDeploymentTargetAccess(ctx, &deploymentTarget.DeploymentTarget); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -223,7 +221,7 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
 			wh.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})

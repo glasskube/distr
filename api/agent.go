@@ -5,6 +5,7 @@ import "github.com/glasskube/cloud/internal/types"
 type KubernetesAgentResource struct {
 	Namespace  string                     `json:"namespace"`
 	Deployment *KubernetesAgentDeployment `json:"deployment"`
+	Version    types.AgentVersion         `json:"version"`
 }
 
 type KubernetesAgentDeployment struct {

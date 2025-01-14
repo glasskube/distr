@@ -146,7 +146,7 @@ type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
 	CreatedBy        *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
 	LatestDeployment *DeploymentWithData      `db:"-" json:"latestDeployment,omitempty"`
-	AgentVersion     *AgentVersion            `db:"agent_version" json:"agentVersion"`
+	AgentVersion     AgentVersion             `db:"agent_version" json:"agentVersion"`
 }
 
 type DeploymentTargetStatus struct {
