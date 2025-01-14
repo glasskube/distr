@@ -19,8 +19,7 @@ export class DeploymentService {
   }
 
   pollStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
-    return interval(5000).pipe(
-      startWith(0),
+    return timer(0, 5000).pipe(
       switchMap(() => this.getStatuses(depl))
     );
   }
