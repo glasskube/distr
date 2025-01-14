@@ -1,6 +1,6 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
+import {interval, Observable, startWith, switchMap} from 'rxjs';
 import {Deployment, DeploymentStatus} from '../types/deployment';
 
 @Injectable({
@@ -16,5 +16,12 @@ export class DeploymentService {
 
   getStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
     return this.httpClient.get<DeploymentStatus[]>(`${this.baseUrl}/${depl.id}/status`);
+  }
+
+  pollStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
+    return interval(5000).pipe(
+      startWith(0),
+      switchMap(() => this.getStatuses(depl))
+    );
   }
 }

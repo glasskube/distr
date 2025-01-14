@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable, tap} from 'rxjs';
+import {interval, Observable, startWith, switchMap, tap} from 'rxjs';
 import {DeploymentTargetAccessResponse} from '../types/base';
 import {DeploymentTarget} from '../types/deployment-target';
 import {ReactiveList} from './cache';
@@ -21,6 +21,13 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
 
   list(): Observable<DeploymentTarget[]> {
     return this.cache.get();
+  }
+
+  poll(): Observable<DeploymentTarget[]> {
+    return interval(5000).pipe(
+      startWith(0),
+      switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.baseUrl))
+    );
   }
 
   create(request: DeploymentTarget): Observable<DeploymentTarget> {
