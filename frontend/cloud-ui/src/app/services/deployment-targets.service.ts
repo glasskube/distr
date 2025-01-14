@@ -24,8 +24,7 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   }
 
   poll(): Observable<DeploymentTarget[]> {
-    return interval(5000).pipe(
-      startWith(0),
+    return timer(0, 5000).pipe(
       switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.baseUrl))
     );
   }
