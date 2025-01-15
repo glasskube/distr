@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/glasskube/cloud/api"
 	"github.com/jackc/pgx/v5"
-	"net/http"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/apierrors"

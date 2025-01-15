@@ -17,7 +17,7 @@ type Application struct {
 }
 
 type ApplicationVersion struct {
-	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
 	ID        string    `db:"id" json:"id"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	Name      string    `db:"name" json:"name"`
@@ -107,7 +107,7 @@ type DeploymentWithLatestRevision struct {
 	ApplicationName        string `db:"application_name" json:"applicationName"`
 	ApplicationVersionId   string `db:"application_version_id" json:"applicationVersionId"`
 	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
-	ValuesYaml             []byte `db:"values_yaml" json:"valuesYaml"` // TODO not sure yet if we need to transfer it in json?
+	ValuesYaml             []byte `db:"values_yaml" json:"valuesYaml"`
 }
 
 func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {
@@ -155,7 +155,7 @@ type DeploymentTargetWithCreatedBy struct {
 }
 
 type DeploymentTargetStatus struct {
-	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
 	ID                 string    `db:"id" json:"id"`
 	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
 	Message            string    `db:"message" json:"message"`

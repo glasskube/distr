@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glasskube/cloud/api"
+
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/security"
@@ -138,7 +140,7 @@ func main() {
 		}
 		util.Must(db.CreateDeploymentTarget(ctx, &dt))
 		util.Must(db.CreateDeploymentTargetStatus(ctx, &dt.DeploymentTarget, "running"))
-		deployment := types.Deployment{
+		deployment := api.DeploymentRequest{
 			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,
 		}
 		util.Must(db.CreateDeployment(ctx, &deployment))
