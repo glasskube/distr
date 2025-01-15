@@ -214,7 +214,8 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	correlationID := r.Header.Get("X-Resource-Correlation-ID")
+
+	correlationID := r.Header.Get("X-Resource-Correlation-ID") // TODO maybe still useful?
 	if correlationID == "" {
 		log.Info("received status without correlation ID")
 		w.WriteHeader(http.StatusBadRequest)
@@ -222,8 +223,12 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 		if status, err := JsonBody[api.AgentDeploymentStatus](w, r); err != nil {
 			return
+		} else if deployment, err := db.GetLatestDeploymentForDeploymentTarget(ctx, deploymentTarget.ID); err != nil {
+			log.Error("failed to get latest deployment for target", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			if err := db.CreateDeploymentStatus(ctx, correlationID, status.Type, status.Message); err != nil {
+			// TODO connect status to deployment revision ??
+			if err := db.CreateDeploymentStatus(ctx, deployment.ID, status.Type, status.Message); err != nil {
 				log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 					zap.String("deploymentId", correlationID),
 					zap.String("deploymentTargetId", deploymentTarget.ID),
