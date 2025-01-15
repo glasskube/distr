@@ -3,6 +3,7 @@ import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/com
 import {
   AfterViewInit,
   Component,
+  ElementRef,
   inject,
   Input,
   OnDestroy,
@@ -58,6 +59,7 @@ import {Application} from '../types/application';
 import {Deployment, DeploymentStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {getFormDisplayedError} from '../../util/errors';
+import {YamlEditorComponent} from '../components/yaml-editor.component';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -74,6 +76,7 @@ import {getFormDisplayedError} from '../../util/errors';
     ConnectInstructionsComponent,
     InstallationWizardComponent,
     UpperCasePipe,
+    YamlEditorComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
