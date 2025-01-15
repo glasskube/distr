@@ -160,11 +160,11 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		response := api.KubernetesAgentResource{
-			Namespace: *deploymentTarget.Namespace,
+			AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
+			Namespace:     *deploymentTarget.Namespace,
 		}
 		if deployment != nil && appVersion != nil {
 			response.Deployment = &api.KubernetesAgentDeployment{
-				RevisionID:   deployment.DeploymentRevisionID,
 				ReleaseName:  *deployment.ReleaseName,
 				ChartUrl:     *appVersion.ChartUrl,
 				ChartVersion: *appVersion.ChartVersion,
