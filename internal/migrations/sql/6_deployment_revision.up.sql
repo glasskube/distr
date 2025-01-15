@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS DeploymentRevisionStatus (
     message TEXT NOT NULL
 );
 
--- TODO here: migrate by deleting all records of the deployment table or truncating
+DELETE FROM Deployment;
 
 DROP TABLE DeploymentStatus;
 
