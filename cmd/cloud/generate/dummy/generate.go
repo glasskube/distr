@@ -144,7 +144,7 @@ func main() {
 			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,
 		}
 		util.Must(db.CreateDeployment(ctx, &deployment))
-		_, err := db.CreateDeploymentRevision(ctx, &deployment)
+		revision, err := db.CreateDeploymentRevision(ctx, &deployment)
 		util.Must(err)
 		now := time.Now().UTC()
 		createdAt := now.Add(-1*24*time.Hour - 30*time.Minute)
@@ -152,7 +152,7 @@ func main() {
 			createdAt = createdAt.Add(12 * time.Hour)
 		}
 		for createdAt.Before(now) {
-			util.Must(db.CreateDeploymentStatusWithCreatedAt(ctx, deployment.ID, "demo status", createdAt))
+			util.Must(db.CreateDeploymentRevisionStatusWithCreatedAt(ctx, revision.ID, "demo status", createdAt))
 			if idx == 0 && createdAt.Hour() == 15 && createdAt.Minute() > 50 {
 				createdAt = createdAt.Add(15 * time.Minute)
 			} else if idx == 1 && createdAt.Hour() == 22 {

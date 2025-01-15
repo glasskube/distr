@@ -1,16 +1,24 @@
+-- NOTE: this migration drops all deployments and corresponding statuses that have existed, this cannot be undone!
+
 CREATE TABLE DeploymentRevision (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMP DEFAULT current_timestamp,
-  deployment_id UUID NOT NULL REFERENCES Deployment (id) ON DELETE CASCADE,
-  application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id) ON DELETE CASCADE,
-  values_yaml BYTEA
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP DEFAULT current_timestamp,
+    deployment_id UUID NOT NULL REFERENCES Deployment (id) ON DELETE CASCADE,
+    application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id) ON DELETE CASCADE,
+    values_yaml BYTEA
 );
 
--- TODO here: migrate
--- for each deployment target:
---    for each deployment: create a deployment revision, and delete the deployment if its not the very first one of the target
+CREATE TABLE IF NOT EXISTS DeploymentRevisionStatus (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP DEFAULT current_timestamp,
+    deployment_revision_id UUID NOT NULL REFERENCES DeploymentRevision (id) ON DELETE CASCADE,
+    type DEPLOYMENT_STATUS_TYPE NOT NULL,
+    message TEXT NOT NULL
+);
 
--- alternative to migration logic: simply truncate the deployment table and don't migrate deployments
+-- TODO here: migrate by deleting all records of the deployment table or truncating
+
+DROP TABLE DeploymentStatus;
 
 ALTER TABLE Deployment
   DROP COLUMN application_version_id,

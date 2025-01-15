@@ -119,11 +119,11 @@ func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any,
 	return
 }
 
-type DeploymentStatus struct {
+type DeploymentRevisionStatus struct {
 	Base
-	DeploymentId string               `db:"deployment_id" json:"deploymentId"`
-	Type         DeploymentStatusType `db:"type" json:"type"`
-	Message      string               `db:"message" json:"message"`
+	DeploymentRevisionID string               `db:"deployment_revision_id" json:"deploymentRevisionId"`
+	Type                 DeploymentStatusType `db:"type" json:"type"`
+	Message              string               `db:"message" json:"message"`
 }
 
 type DeploymentTarget struct {

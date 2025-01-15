@@ -138,17 +138,19 @@ func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*t
 	}
 }
 
-func CreateDeploymentStatus(
+func CreateDeploymentRevisionStatus(
 	ctx context.Context,
-	deploymentID string,
+	revisionID string,
 	statusType types.DeploymentStatusType,
 	message string,
 ) error {
 	db := internalctx.GetDb(ctx)
 	var id string
-	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentStatus (deployment_id, message, type) VALUES (@deploymentId, @message, @type) RETURNING id",
-		pgx.NamedArgs{"deploymentId": deploymentID, "message": message, "type": statusType})
+	rows := db.QueryRow(ctx, `
+		INSERT INTO DeploymentRevisionStatus (deployment_revision_id, message, type)
+		VALUES (@deploymentRevisionId, @message, @type)
+		RETURNING id`,
+		pgx.NamedArgs{"deploymentRevisionId": revisionID, "message": message, "type": statusType})
 	if err := rows.Scan(&id); err != nil {
 		return err
 	} else {
@@ -156,7 +158,7 @@ func CreateDeploymentStatus(
 	}
 }
 
-func CreateDeploymentStatusWithCreatedAt(
+func CreateDeploymentRevisionStatusWithCreatedAt(
 	ctx context.Context,
 	deploymentID string,
 	message string,
@@ -165,7 +167,7 @@ func CreateDeploymentStatusWithCreatedAt(
 	db := internalctx.GetDb(ctx)
 	var id string
 	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentStatus (deployment_id, message, created_at) "+
+		"INSERT INTO DeploymentRevisionStatus (deployment_id, message, created_at) "+
 			"VALUES (@deploymentId, @message, @createdAt) RETURNING id",
 		pgx.NamedArgs{"deploymentId": deploymentID, "message": message, "createdAt": createdAt})
 	if err := rows.Scan(&id); err != nil {
@@ -175,35 +177,36 @@ func CreateDeploymentStatusWithCreatedAt(
 	}
 }
 
-func CleanupDeploymentStatus(ctx context.Context, deploymentId string) (int64, error) {
+func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID string) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(ctx, `
-		DELETE FROM DeploymentStatus
-		       WHERE deployment_id = @deploymentId AND
+		DELETE FROM DeploymentRevisionStatus
+		       WHERE deployment_revision_id = @deploymentRevisionId AND
 		             current_timestamp - created_at > @statusEntriesMaxAge`,
-		pgx.NamedArgs{"deploymentId": deploymentId, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
+		pgx.NamedArgs{"deploymentRevisionId": revisionID, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
 	}
 }
 
-func GetDeploymentStatus(ctx context.Context, deploymentId string, maxRows int) ([]types.DeploymentStatus, error) {
+func GetDeploymentStatus(ctx context.Context, deploymentId string, maxRows int) ([]types.DeploymentRevisionStatus, error) {
 	db := internalctx.GetDb(ctx)
+	// TODO fix
 	rows, err := db.Query(ctx, `
 		SELECT id, created_at, deployment_id, type, message
-		FROM DeploymentStatus
+		FROM DeploymentRevisionStatus
 		WHERE deployment_id = @deploymentId
 		ORDER BY created_at DESC
 		LIMIT @maxRows`,
 		pgx.NamedArgs{"deploymentId": deploymentId, "maxRows": maxRows})
 	if err != nil {
-		return nil, fmt.Errorf("failed to query DeploymentStatus: %w", err)
-	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentStatus]); err != nil {
-		return nil, fmt.Errorf("failed to get DeploymentStatus: %w", err)
+		return nil, fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
+	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentRevisionStatus]); err != nil {
+		return nil, fmt.Errorf("failed to get DeploymentRevisionStatus: %w", err)
 	} else {
 		return result, nil
 	}
