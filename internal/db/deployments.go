@@ -204,11 +204,11 @@ func GetDeploymentStatus(
 	maxRows int,
 ) ([]types.DeploymentRevisionStatus, error) {
 	db := internalctx.GetDb(ctx)
-	// TODO fix
 	rows, err := db.Query(ctx, `
-		SELECT id, created_at, deployment_id, type, message
-		FROM DeploymentRevisionStatus
-		WHERE deployment_id = @deploymentId
+		SELECT drs.id, drs.created_at, drs.deployment_revision_id, drs.type, drs.message
+		FROM DeploymentRevisionStatus drs
+			INNER JOIN DeploymentRevision dr ON dr.id = drs.deployment_revision_id
+		WHERE dr.deployment_id = @deploymentId
 		ORDER BY created_at DESC
 		LIMIT @maxRows`,
 		pgx.NamedArgs{"deploymentId": deploymentId, "maxRows": maxRows})

@@ -117,11 +117,11 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
-	deployment := internalctx.GetDeployment(r.Context())
-	// TODO add information of each revision (i.e. app version) to the response and display on client
-	if deploymentStatus, err := db.GetDeploymentStatus(r.Context(), deployment.ID, 100); err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to get deploymentstatus", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+	ctx := r.Context()
+	deployment := internalctx.GetDeployment(ctx)
+	if deploymentStatus, err := db.GetDeploymentStatus(ctx, deployment.ID, 100); err != nil {
+		internalctx.GetLogger(ctx).Error("failed to get deploymentstatus", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, deploymentStatus)
