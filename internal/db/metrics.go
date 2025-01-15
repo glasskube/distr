@@ -12,6 +12,7 @@ import (
 
 func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.UptimeMetric, error) {
 	db := internalctx.GetDb(ctx)
+	// TODO fix
 	rows, err := db.Query(ctx,
 		`
 		SELECT hours.base_hour, statuses.created_at
