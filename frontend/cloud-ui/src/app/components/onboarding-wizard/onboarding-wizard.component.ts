@@ -11,7 +11,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
 import {Application, ApplicationVersion} from '../../types/application';
-import {Deployment, DeploymentRequest, DeploymentType, HelmChartType} from '../../types/deployment';
+import {DeploymentRequest, DeploymentType, HelmChartType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';

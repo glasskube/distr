@@ -102,14 +102,14 @@ type OrganizationBranding struct {
 type Deployment struct {
 	Base
 	DeploymentTargetId string  `db:"deployment_target_id" json:"deploymentTargetId"`
-	ReleaseName        *string `db:"release_name" json:"releaseName"`
+	ReleaseName        *string `db:"release_name" json:"releaseName,omitempty"`
 }
 
 type DeploymentRevision struct {
 	Base
 	DeploymentID         string `db:"deployment_id" json:"deploymentId"`
 	ApplicationVersionId string `db:"application_version_id" json:"applicationVersionId"`
-	ValuesYaml           []byte `db:"-" json:"valuesYaml"`
+	ValuesYaml           []byte `db:"-" json:"valuesYaml,omitempty"`
 }
 
 type DeploymentWithLatestRevision struct {
@@ -119,7 +119,7 @@ type DeploymentWithLatestRevision struct {
 	ApplicationName        string `db:"application_name" json:"applicationName"`
 	ApplicationVersionId   string `db:"application_version_id" json:"applicationVersionId"`
 	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
-	ValuesYaml             []byte `db:"values_yaml" json:"valuesYaml"`
+	ValuesYaml             []byte `db:"values_yaml" json:"valuesYaml,omitempty"`
 }
 
 func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {

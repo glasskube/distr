@@ -55,7 +55,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {Deployment, DeploymentRequest, DeploymentStatus, DeploymentType} from '../types/deployment';
+import {DeploymentRequest, DeploymentStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {getFormDisplayedError} from '../../util/errors';
 

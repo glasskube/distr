@@ -13,7 +13,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
 import {Application} from '../../types/application';
-import {Deployment, DeploymentRequest, DeploymentType} from '../../types/deployment';
+import {DeploymentRequest, DeploymentType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {getFormDisplayedError} from '../../../util/errors';
