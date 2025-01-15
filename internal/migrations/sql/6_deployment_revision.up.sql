@@ -29,5 +29,4 @@ ALTER TABLE Deployment
   DROP COLUMN application_version_id,
   DROP COLUMN values_yaml;
 -- release_name stays in deployment and the constraint can be added again
--- TODO re-check null handling in unique constraint
 ALTER TABLE Deployment ADD CONSTRAINT release_name_unique UNIQUE (deployment_target_id, release_name);
