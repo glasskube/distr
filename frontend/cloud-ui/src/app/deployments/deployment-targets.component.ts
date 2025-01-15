@@ -56,7 +56,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {Deployment, DeploymentStatus, DeploymentType} from '../types/deployment';
+import {DeploymentRequest, DeploymentRevisionStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {getFormDisplayedError} from '../../util/errors';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
@@ -127,6 +127,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   editFormLoading = false;
   readonly deployForm = new FormGroup({
     deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
+    deploymentId: new FormControl<string | undefined>(undefined),
     applicationId: new FormControl<string | undefined>(undefined, Validators.required),
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
@@ -149,7 +150,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     toObservable(this.selectedDeploymentTarget),
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
 
-  statuses: Observable<DeploymentStatus[]> = EMPTY;
+  statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
 
   ngOnInit() {
     this.registerDeployFormChanges();
@@ -326,11 +327,12 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.selectedDeploymentTarget.set(deploymentTarget);
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
-      applicationId: deploymentTarget.latestDeployment?.applicationId,
-      applicationVersionId: deploymentTarget.latestDeployment?.applicationVersionId,
+      deploymentId: deploymentTarget.deployment?.id,
+      applicationId: deploymentTarget.deployment?.applicationId,
+      applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
     });
-    if (deploymentTarget.latestDeployment) {
-      this.updatedSelectedApplication(apps, deploymentTarget.latestDeployment.applicationId);
+    if (deploymentTarget.deployment) {
+      this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
     }
     this.showModal(modalTemplate);
   }
@@ -344,7 +346,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         deployment.valuesYaml = btoa(deployment.valuesYaml);
       }
       try {
-        await firstValueFrom(this.deployments.create(deployment as Deployment));
+        await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));
         this.toast.success('Deployment saved successfully');
         this.hideModal();
       } catch (e) {
@@ -363,11 +365,13 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
-    const latestDeployment = deploymentTarget.latestDeployment;
-    if (latestDeployment?.id) {
-      this.selectedDeploymentTarget.set(deploymentTarget);
-      this.statuses = this.deployments.pollStatuses(latestDeployment);
-      this.showModal(modal);
+    if (!(this.auth.hasRole('vendor') && deploymentTarget.createdBy?.userRole === 'customer')) {
+      const deployment = deploymentTarget.deployment;
+      if (deployment?.id) {
+        this.selectedDeploymentTarget.set(deploymentTarget);
+        this.statuses = this.deployments.pollStatuses(deployment);
+        this.showModal(modal);
+      }
     }
   }
 }

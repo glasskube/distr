@@ -21,9 +21,10 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 			SELECT date_trunc('hour', hour_series) AS base_hour
 			FROM generate_series(now() - INTERVAL '23 hour', now(), INTERVAL '1 hour') AS hour_series
 		) AS hours LEFT JOIN (
-			SELECT date_trunc('hour', created_at) AS created_at_hour, created_at
-			FROM DeploymentStatus
-			WHERE created_at > now() - INTERVAL '24 hour' AND deployment_id = @deploymentId
+			SELECT date_trunc('hour', drs.created_at) AS created_at_hour, drs.created_at
+			FROM DeploymentRevisionStatus drs
+			INNER JOIN DeploymentRevision dr ON drs.deployment_revision_id = dr.id
+			WHERE drs.created_at > now() - INTERVAL '24 hour' AND dr.deployment_id = @deploymentId
 		) AS statuses ON hours.base_hour = statuses.created_at_hour
 		ORDER BY hours.base_hour, statuses.created_at;`,
 		pgx.NamedArgs{

@@ -50,8 +50,8 @@ export class ChartUptimeComponent implements OnInit {
     this.selectedDeploymentTarget = dt;
     window.localStorage[this.LOCAL_STORAGE_KEY] = dt.id;
     this.chartOptions = undefined;
-    if (dt.latestDeployment?.id) {
-      const uptimes = await firstValueFrom(this.metrics.getUptimeForDeployment(dt.latestDeployment.id));
+    if (dt.deployment?.id) {
+      const uptimes = await firstValueFrom(this.metrics.getUptimeForDeployment(dt.deployment.id));
       this.chartOptions = {
         series: [
           {
