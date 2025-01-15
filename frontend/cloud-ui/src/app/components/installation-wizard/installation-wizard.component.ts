@@ -17,6 +17,7 @@ import {Deployment, DeploymentType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {getFormDisplayedError} from '../../../util/errors';
+import {YamlEditorComponent} from '../yaml-editor.component';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -28,6 +29,7 @@ import {getFormDisplayedError} from '../../../util/errors';
     CdkStep,
     AsyncPipe,
     ConnectInstructionsComponent,
+    YamlEditorComponent,
   ],
   animations: [modalFlyInOut],
 })
