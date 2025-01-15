@@ -65,13 +65,29 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`SELECT`+deploymentOutputExpr+`,
-				dr.application_version_id as application_version_id, dr.values_yaml as values_yaml,
+				dr.application_version_id as application_version_id,
+				dr.values_yaml as values_yaml,
 				dr.id as deployment_revision_id,
-				a.id AS application_id, a.name AS application_name, av.name AS application_version_name
+				a.id AS application_id,
+				a.name AS application_name,
+				av.name AS application_version_name,
+				CASE WHEN drs.id IS NOT NULL THEN (
+					drs.id,
+					drs.created_at,
+					drs.deployment_revision_id,
+					drs.type, drs.message
+				) END AS latest_status
 			FROM Deployment d
 				JOIN DeploymentRevision dr ON d.id = dr.deployment_id
 				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
+				LEFT JOIN (
+					SELECT deployment_revision_id, max(created_at) AS max_created_at
+					FROM DeploymentRevisionStatus
+					GROUP BY deployment_revision_id
+				) status_max ON dr.id = status_max.deployment_revision_id
+				LEFT JOIN DeploymentRevisionStatus drs
+					ON dr.id = drs.deployment_revision_id AND drs.created_at = status_max.max_created_at
 			WHERE d.deployment_target_id = @deploymentTargetId
 			ORDER BY d.created_at DESC, dr.created_at DESC LIMIT 1`,
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})

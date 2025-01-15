@@ -86,21 +86,27 @@
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   Initial
                 </div>
-              } @else if (dt.currentStatus | isStale) {
-                <button
-                  (click)="openStatusModal(dt, deploymentStatusModal)"
-                  class="flex items-center"
-                  [title]="'Last status is ' + (dt.currentStatus.createdAt | relativeDate: true) + ' old'">
-                  <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
-                  Stale
-                </button>
               } @else {
                 <button
                   (click)="openStatusModal(dt, deploymentStatusModal)"
                   class="flex items-center"
                   [title]="'Last status: ' + (dt.currentStatus.createdAt | date: 'medium')">
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
-                  OK
+                  @if (dt.deployment?.latestStatus; as drs) {
+                    @if (drs.type === 'error') {
+                      Error
+                    } @else if (drs | isStale) {
+                      Stale
+                    } @else {
+                      OK
+                    }
+                  } @else {
+                    @if (dt.currentStatus | isStale) {
+                      Connected, stale
+                    } @else {
+                      Connected
+                    }
+                  }
                 </button>
               }
             </td>

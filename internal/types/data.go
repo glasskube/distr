@@ -114,12 +114,13 @@ type DeploymentRevision struct {
 
 type DeploymentWithLatestRevision struct {
 	Deployment
-	DeploymentRevisionID   string `db:"deployment_revision_id" json:"deploymentRevisionId"`
-	ApplicationId          string `db:"application_id" json:"applicationId"`
-	ApplicationName        string `db:"application_name" json:"applicationName"`
-	ApplicationVersionId   string `db:"application_version_id" json:"applicationVersionId"`
-	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
-	ValuesYaml             []byte `db:"values_yaml" json:"valuesYaml,omitempty"`
+	DeploymentRevisionID   string                    `db:"deployment_revision_id" json:"deploymentRevisionId"`
+	ApplicationId          string                    `db:"application_id" json:"applicationId"`
+	ApplicationName        string                    `db:"application_name" json:"applicationName"`
+	ApplicationVersionId   string                    `db:"application_version_id" json:"applicationVersionId"`
+	ApplicationVersionName string                    `db:"application_version_name" json:"applicationVersionName"`
+	ValuesYaml             []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
+	LatestStatus           *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
 }
 
 func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {
@@ -132,7 +133,8 @@ func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any,
 }
 
 type DeploymentRevisionStatus struct {
-	Base
+	ID                   string               `db:"id" json:"id"`
+	CreatedAt            time.Time            `db:"created_at" json:"createdAt"`
 	DeploymentRevisionID string               `db:"deployment_revision_id" json:"deploymentRevisionId"`
 	Type                 DeploymentStatusType `db:"type" json:"type"`
 	Message              string               `db:"message" json:"message"`
