@@ -103,6 +103,7 @@ func main() {
 			Name:           "Space Center Austria",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.1956026, Lon: 16.3633028},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt1))
@@ -113,6 +114,7 @@ func main() {
 			OrganizationID: org.ID,
 			Name:           "Edge Location",
 			Type:           types.DeploymentTypeDocker,
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt2))
@@ -124,6 +126,7 @@ func main() {
 			Name:           "580 Founders Café",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.758781, Lon: -122.396882},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt3))
@@ -136,6 +139,7 @@ func main() {
 				OrganizationID: org.ID,
 				Name:           fmt.Sprintf("Deployment Target %v", idx),
 				Type:           types.DeploymentTypeDocker,
+				AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 			},
 		}
 		util.Must(db.CreateDeploymentTarget(ctx, &dt))

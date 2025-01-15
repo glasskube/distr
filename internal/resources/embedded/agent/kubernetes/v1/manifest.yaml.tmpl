@@ -1,15 +1,26 @@
+{{ if .targetSecret }}
 apiVersion: v1
 kind: Secret
 metadata:
-  name: glasskube-cloud-agent-env
+  name: glasskube-cloud-agent-auth
 type: Opaque
 stringData:
-  GK_TARGET_ID: '{{ .targetId }}'
-  GK_TARGET_SECRET: '{{ .targetSecret }}'
-  GK_LOGIN_ENDPOINT: '{{ .loginEndpoint }}'
-  GK_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
-  GK_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
-  GK_INTERVAL: '{{ .agentInterval }}'
+  GK_TARGET_SECRET: "{{ .targetSecret }}"
+
+---
+{{ end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glasskube-cloud-agent-env
+data:
+  GK_TARGET_ID: "{{ .targetId }}"
+  GK_LOGIN_ENDPOINT: "{{ .loginEndpoint }}"
+  GK_MANIFEST_ENDPOINT: "{{ .manifestEndpoint }}"
+  GK_RESOURCE_ENDPOINT: "{{ .resourcesEndpoint }}"
+  GK_STATUS_ENDPOINT: "{{ .statusEndpoint }}"
+  GK_INTERVAL: "{{ .agentInterval }}"
+  GK_AGENT_VERSION_ID: "{{ .agentVersionId }}"
 
 ---
 apiVersion: v1
@@ -24,11 +35,11 @@ metadata:
   name: namespace-admin
 rules:
   - apiGroups:
-      - '*'
+      - "*"
     resources:
-      - '*'
+      - "*"
     verbs:
-      - '*'
+      - "*"
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -52,6 +63,8 @@ spec:
   selector:
     matchLabels:
       app: glasskube-cloud-agent
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -62,12 +75,14 @@ spec:
         runAsNonRoot: true
       containers:
         - name: glasskube-cloud-agent
-          image: ghcr.io/glasskube/cloud/kubernetes-agent:latest # TODO: use version tag
+          image: 'ghcr.io/glasskube/cloud/kubernetes-agent:{{ .agentVersion }}'
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
+                name: glasskube-cloud-agent-auth
+            - configMapRef:
                 name: glasskube-cloud-agent-env
           resources:
             limits:
-              memory: '128Mi'
-              cpu: '500m'
+              memory: "128Mi"
+              cpu: "500m"

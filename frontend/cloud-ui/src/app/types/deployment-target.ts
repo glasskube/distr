@@ -1,3 +1,4 @@
+import {AgentVersion} from './agent-version';
 import {BaseModel, Named} from './base';
 import {DeploymentType, DeploymentWithLatestRevision} from './deployment';
 import {Geolocation} from './geolocation';
@@ -11,6 +12,8 @@ export interface DeploymentTarget extends BaseModel, Named {
   createdBy?: UserAccountWithRole;
   currentStatus?: DeploymentTargetStatus;
   deployment?: DeploymentWithLatestRevision;
+  agentVersion?: AgentVersion;
+  reportedAgentVersionId?: string;
 }
 
 export interface DeploymentTargetStatus extends BaseModel {
