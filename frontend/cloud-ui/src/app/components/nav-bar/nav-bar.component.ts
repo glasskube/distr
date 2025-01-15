@@ -6,11 +6,10 @@ import {AuthService} from '../../services/auth.service';
 import {SidebarService} from '../../services/sidebar.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
+import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '../../types/user-account';
 import {RouterLink} from '@angular/router';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
-import {base64ToBlob} from '../../../util/blob';
 
 @Component({
   selector: 'app-nav-bar',
@@ -51,7 +50,7 @@ export class NavBarComponent implements OnInit {
       try {
         const branding = await lastValueFrom(this.organizationBranding.get());
         if (branding.logo) {
-          this.logoUrl = URL.createObjectURL(base64ToBlob(branding.logo, branding.logoContentType));
+          this.logoUrl = `data:${branding.logoContentType};base64,${branding.logo}`;
         }
         if (branding.title) {
           this.customerSubtitle = branding.title;

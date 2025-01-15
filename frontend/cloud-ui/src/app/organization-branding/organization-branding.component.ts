@@ -45,7 +45,7 @@ export class OrganizationBrandingComponent implements OnInit {
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
-        // its valid for an organization to have no branding (hence 404 is not shown in toast)
+        // it's a valid use case for an organization to have no branding (hence 404 is not shown in toast)
         this.toast.error(msg);
       }
     }
