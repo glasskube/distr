@@ -19,6 +19,10 @@ export function markedOptionsFactory(): MarkedOptions {
         </pre>`;
   };
 
+  renderer.link = (link) => {
+    return `<a href="${link.href}" class="text-primary-600 underline" target="_blank">${link.text}</a>`;
+  };
+
   return {
     renderer: renderer,
   };
