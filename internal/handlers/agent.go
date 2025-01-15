@@ -211,32 +211,27 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
-	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-	if status, err := JsonBody[api.AgentDeploymentStatus](w, r); err != nil {
+	status, err := JsonBody[api.AgentDeploymentStatus](w, r)
+	if err != nil {
 		return
-	} else if deployment, err := db.GetLatestDeploymentForDeploymentTarget(ctx, deploymentTarget.ID); err != nil {
-		log.Error("failed to get latest deployment for target", zap.Error(err))
+	}
+	if err := db.CreateDeploymentRevisionStatus(ctx, status.RevisionID, status.Type, status.Message); err != nil {
+		log.Error("failed to create deployment revision status – skipping cleanup of old statuses", zap.Error(err),
+			zap.Reflect("status", status))
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	} else {
-		// TODO connect status to deployment revision
-		if err := db.CreateDeploymentRevisionStatus(ctx, deployment.ID, status.Type, status.Message); err != nil {
-			log.Error("failed to create deployment revision status – skipping cleanup of old statuses", zap.Error(err),
-				zap.Reflect("status", status))
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
+		w.WriteHeader(http.StatusOK)
+	}
 
-		// not in a TX because insertion should not be rolled back when the cleanup fails
-		if cnt, err := db.CleanupDeploymentRevisionStatus(ctx, status.RevisionID); err != nil {
-			log.Error("failed to cleanup old deployment revision status", zap.Error(err), zap.String("deploymentRevisionId", status.RevisionID))
-		} else if cnt > 0 {
-			log.Debug("old deployment revision statuses deleted",
-				zap.String("deploymentRevisionId", status.RevisionID),
-				zap.Int64("count", cnt),
-				zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
-		}
+	// not in a TX because insertion should not be rolled back when the cleanup fails
+	if cnt, err := db.CleanupDeploymentRevisionStatus(ctx, status.RevisionID); err != nil {
+		log.Error("failed to cleanup old deployment revision status", zap.Error(err), zap.Reflect("status", status))
+	} else if cnt > 0 {
+		log.Debug("old deployment revision statuses deleted",
+			zap.String("deploymentRevisionId", status.RevisionID),
+			zap.Int64("count", cnt),
+			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
 }
 

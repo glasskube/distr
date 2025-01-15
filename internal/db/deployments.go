@@ -198,7 +198,11 @@ func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID string) (in
 	}
 }
 
-func GetDeploymentStatus(ctx context.Context, deploymentId string, maxRows int) ([]types.DeploymentRevisionStatus, error) {
+func GetDeploymentStatus(
+	ctx context.Context,
+	deploymentId string,
+	maxRows int,
+) ([]types.DeploymentRevisionStatus, error) {
 	db := internalctx.GetDb(ctx)
 	// TODO fix
 	rows, err := db.Query(ctx, `
