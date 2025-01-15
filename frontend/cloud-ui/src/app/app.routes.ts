@@ -86,7 +86,7 @@ const baseRoteRedirectGuard: CanActivateFn = () => {
   const router = inject(Router);
   switch (auth.getClaims().role) {
     case 'customer':
-      return router.createUrlTree(['/deployments']);
+      return router.createUrlTree(['/home']);
     case 'vendor':
       return router.createUrlTree(['/dashboard']);
     default:
