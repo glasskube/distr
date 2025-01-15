@@ -55,7 +55,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {DeploymentRequest, DeploymentStatus, DeploymentType} from '../types/deployment';
+import {DeploymentRequest, DeploymentRevisionStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {getFormDisplayedError} from '../../util/errors';
 
@@ -147,7 +147,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     toObservable(this.selectedDeploymentTarget),
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
 
-  statuses: Observable<DeploymentStatus[]> = EMPTY;
+  statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
 
   ngOnInit() {
     this.registerDeployFormChanges();

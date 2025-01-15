@@ -24,7 +24,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   deploymentRevisionId?: string;
 }
 
-export interface DeploymentStatus extends BaseModel {
+export interface DeploymentRevisionStatus extends BaseModel {
   type: DeploymentStatusType;
   message: string;
 }
