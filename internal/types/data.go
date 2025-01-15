@@ -17,7 +17,7 @@ type Application struct {
 }
 
 type ApplicationVersion struct {
-	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
 	ID        string    `db:"id" json:"id"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	Name      string    `db:"name" json:"name"`
@@ -87,15 +87,43 @@ func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 	return nil
 }
 
-type Deployment struct {
+type OrganizationBranding struct {
 	Base
-	DeploymentTargetId   string  `db:"deployment_target_id" json:"deploymentTargetId"`
-	ApplicationVersionId string  `db:"application_version_id" json:"applicationVersionId"`
-	ReleaseName          *string `db:"release_name" json:"releaseName"`
-	ValuesYaml           []byte  `db:"values_yaml" json:"valuesYaml"`
+	OrganizationID         string    `db:"organization_id" json:"-"`
+	UpdatedAt              time.Time `db:"updated_at" json:"updatedAt"`
+	UpdatedByUserAccountID *string   `db:"updated_by_user_account_id" json:"-"`
+	Title                  *string   `db:"title" json:"title"`
+	Description            *string   `db:"description" json:"description"`
+	Logo                   []byte    `db:"logo" json:"logo"`
+	LogoFileName           *string   `db:"logo_file_name" json:"logoFileName"`
+	LogoContentType        *string   `db:"logo_content_type" json:"logoContentType"`
 }
 
-func (d Deployment) ParsedValuesFile() (result map[string]any, err error) {
+type Deployment struct {
+	Base
+	DeploymentTargetId string  `db:"deployment_target_id" json:"deploymentTargetId"`
+	ReleaseName        *string `db:"release_name" json:"releaseName,omitempty"`
+}
+
+type DeploymentRevision struct {
+	Base
+	DeploymentID         string `db:"deployment_id" json:"deploymentId"`
+	ApplicationVersionId string `db:"application_version_id" json:"applicationVersionId"`
+	ValuesYaml           []byte `db:"-" json:"valuesYaml,omitempty"`
+}
+
+type DeploymentWithLatestRevision struct {
+	Deployment
+	DeploymentRevisionID   string                    `db:"deployment_revision_id" json:"deploymentRevisionId"`
+	ApplicationId          string                    `db:"application_id" json:"applicationId"`
+	ApplicationName        string                    `db:"application_name" json:"applicationName"`
+	ApplicationVersionId   string                    `db:"application_version_id" json:"applicationVersionId"`
+	ApplicationVersionName string                    `db:"application_version_name" json:"applicationVersionName"`
+	ValuesYaml             []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
+	LatestStatus           *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
+}
+
+func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {
 	if d.ValuesYaml != nil {
 		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
 			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
@@ -104,18 +132,12 @@ func (d Deployment) ParsedValuesFile() (result map[string]any, err error) {
 	return
 }
 
-type DeploymentWithData struct {
-	Deployment
-	ApplicationId          string `db:"application_id" json:"applicationId"`
-	ApplicationName        string `db:"application_name" json:"applicationName"`
-	ApplicationVersionName string `db:"application_version_name" json:"applicationVersionName"`
-}
-
-type DeploymentStatus struct {
-	Base
-	DeploymentId string               `db:"deployment_id" json:"deploymentId"`
-	Type         DeploymentStatusType `db:"type" json:"type"`
-	Message      string               `db:"message" json:"message"`
+type DeploymentRevisionStatus struct {
+	ID                   string               `db:"id" json:"id"`
+	CreatedAt            time.Time            `db:"created_at" json:"createdAt"`
+	DeploymentRevisionID string               `db:"deployment_revision_id" json:"deploymentRevisionId"`
+	Type                 DeploymentStatusType `db:"type" json:"type"`
+	Message              string               `db:"message" json:"message"`
 }
 
 type DeploymentTarget struct {
@@ -142,12 +164,12 @@ func (dt *DeploymentTarget) Validate() error {
 
 type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
-	CreatedBy        *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
-	LatestDeployment *DeploymentWithData      `db:"-" json:"latestDeployment,omitempty"`
+	CreatedBy  *UserAccountWithUserRole      `db:"created_by" json:"createdBy"`
+	Deployment *DeploymentWithLatestRevision `db:"-" json:"deployment,omitempty"`
 }
 
 type DeploymentTargetStatus struct {
-	// TODO unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
+	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
 	ID                 string    `db:"id" json:"id"`
 	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
 	Message            string    `db:"message" json:"message"`

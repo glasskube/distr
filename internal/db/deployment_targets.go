@@ -79,7 +79,7 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCrea
 		return nil, fmt.Errorf("failed to get DeploymentTargets: %w", err)
 	} else {
 		for i := range result {
-			if err := addLatestDeploymentToTarget(ctx, &result[i]); err != nil {
+			if err := addDeploymentToTarget(ctx, &result[i]); err != nil {
 				return nil, err
 			}
 		}
@@ -107,7 +107,7 @@ func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
-		return &result, addLatestDeploymentToTarget(ctx, &result)
+		return &result, addDeploymentToTarget(ctx, &result)
 	}
 }
 
@@ -158,7 +158,7 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return fmt.Errorf("could not save DeploymentTarget: %w", err)
 	} else {
 		*dt = result
-		return addLatestDeploymentToTarget(ctx, dt)
+		return addDeploymentToTarget(ctx, dt)
 	}
 }
 
@@ -187,7 +187,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
-		return addLatestDeploymentToTarget(ctx, dt)
+		return addDeploymentToTarget(ctx, dt)
 	}
 }
 
@@ -253,13 +253,13 @@ func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarg
 	}
 }
 
-func addLatestDeploymentToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
+func addDeploymentToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
 	if latest, err := GetLatestDeploymentForDeploymentTarget(ctx, dt.ID); errors.Is(err, apierrors.ErrNotFound) {
 		return nil
 	} else if err != nil {
 		return err
 	} else {
-		dt.LatestDeployment = latest
+		dt.Deployment = latest
 		return nil
 	}
 }

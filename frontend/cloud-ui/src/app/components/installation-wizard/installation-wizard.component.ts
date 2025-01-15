@@ -13,10 +13,11 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
 import {Application} from '../../types/application';
-import {Deployment, DeploymentType} from '../../types/deployment';
+import {DeploymentRequest, DeploymentType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {getFormDisplayedError} from '../../../util/errors';
+import {YamlEditorComponent} from '../yaml-editor.component';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -28,6 +29,7 @@ import {getFormDisplayedError} from '../../../util/errors';
     CdkStep,
     AsyncPipe,
     ConnectInstructionsComponent,
+    YamlEditorComponent,
   ],
   animations: [modalFlyInOut],
 })
@@ -194,7 +196,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       } else {
         deployment.valuesYaml = undefined;
       }
-      await firstValueFrom(this.deployments.create(deployment as Deployment));
+      await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));
       this.toast.success('Deployment saved successfully');
       this.close();
     } catch (e) {

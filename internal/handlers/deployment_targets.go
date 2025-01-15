@@ -27,29 +27,10 @@ func DeploymentTargetsRouter(r chi.Router) {
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
 		r.Use(deploymentTargetMiddleware)
 		r.Get("/", getDeploymentTarget)
-		r.Get("/latest-deployment", getLatestDeployment)
 		r.Put("/", updateDeploymentTarget)
 		r.Delete("/", deleteDeploymentTarget)
 		r.Post("/access-request", createAccessForDeploymentTarget)
 	})
-}
-
-func getLatestDeployment(w http.ResponseWriter, r *http.Request) {
-	dt := internalctx.GetDeploymentTarget(r.Context())
-	if deployment, err := db.GetLatestDeploymentForDeploymentTarget(r.Context(), dt.ID); err != nil {
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			internalctx.GetLogger(r.Context()).Error("failed to get latest deployment", zap.Error(err))
-			sentry.GetHubFromContext(r.Context()).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	} else {
-		err := json.NewEncoder(w).Encode(deployment)
-		if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-		}
-	}
 }
 
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
@@ -58,10 +39,7 @@ func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		err := json.NewEncoder(w).Encode(deploymentTargets)
-		if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-		}
+		RespondJSON(w, deploymentTargets)
 	}
 }
 

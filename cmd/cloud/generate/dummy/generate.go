@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glasskube/cloud/api"
+
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/security"
@@ -138,18 +140,20 @@ func main() {
 		}
 		util.Must(db.CreateDeploymentTarget(ctx, &dt))
 		util.Must(db.CreateDeploymentTargetStatus(ctx, &dt.DeploymentTarget, "running"))
-		deployment := types.Deployment{
+		deployment := api.DeploymentRequest{
 			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,
 		}
 		util.Must(db.CreateDeployment(ctx, &deployment))
+		revision, err := db.CreateDeploymentRevision(ctx, &deployment)
+		util.Must(err)
 		now := time.Now().UTC()
 		createdAt := now.Add(-1*24*time.Hour - 30*time.Minute)
 		if idx == 2 {
 			createdAt = createdAt.Add(12 * time.Hour)
 		}
-		var ds []types.DeploymentStatus
+		var ds []types.DeploymentRevisionStatus
 		for createdAt.Before(now) {
-			ds = append(ds, types.DeploymentStatus{Base: types.Base{CreatedAt: createdAt}, Message: "demo status"})
+			ds = append(ds, types.DeploymentRevisionStatus{CreatedAt: createdAt, Message: "demo status"})
 			if idx == 0 && createdAt.Hour() == 15 && createdAt.Minute() > 50 {
 				createdAt = createdAt.Add(15 * time.Minute)
 			} else if idx == 1 && createdAt.Hour() == 22 {
@@ -158,6 +162,6 @@ func main() {
 				createdAt = createdAt.Add(5 * time.Second)
 			}
 		}
-		util.Must(db.BulkCreateDeploymentStatusWithCreatedAt(ctx, deployment.ID, ds))
+		util.Must(db.BulkCreateDeploymentRevisionStatusWithCreatedAt(ctx, revision.ID, ds))
 	}
 }
