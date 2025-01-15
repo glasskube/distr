@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/glasskube/cloud/api"
 
@@ -174,28 +173,26 @@ func CreateDeploymentRevisionStatus(
 	}
 }
 
-func CreateDeploymentRevisionStatusWithCreatedAt(
+func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 	ctx context.Context,
-	revisionID string,
-	message string,
-	createdAt time.Time,
+	deploymentRevisionID string,
+	statuses []types.DeploymentRevisionStatus,
 ) error {
 	db := internalctx.GetDb(ctx)
-	var id string
-	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentRevisionStatus (deployment_revision_id, message, type, created_at) "+
-			"VALUES (@deploymentRevisionId, @message, @type, @createdAt) RETURNING id",
-		pgx.NamedArgs{
-			"deploymentRevisionId": revisionID,
-			"message":              message,
-			"type":                 types.DeploymentStatusTypeOK,
-			"createdAt":            createdAt,
-		})
-	if err := rows.Scan(&id); err != nil {
-		return err
-	} else {
-		return nil
-	}
+	_, err := db.CopyFrom(
+		ctx,
+		pgx.Identifier{"deploymentrevisionstatus"},
+		[]string{"deployment_revision_id", "type", "message", "created_at"},
+		pgx.CopyFromSlice(len(statuses), func(i int) ([]any, error) {
+			return []any{
+				deploymentRevisionID,
+				types.DeploymentStatusTypeOK,
+				statuses[i].Message,
+				statuses[i].CreatedAt,
+			}, nil
+		}),
+	)
+	return err
 }
 
 func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID string) (int64, error) {

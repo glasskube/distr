@@ -155,8 +155,9 @@ func main() {
 		if idx == 2 {
 			createdAt = createdAt.Add(12 * time.Hour)
 		}
+		var ds []types.DeploymentRevisionStatus
 		for createdAt.Before(now) {
-			util.Must(db.CreateDeploymentRevisionStatusWithCreatedAt(ctx, revision.ID, "demo status", createdAt))
+			ds = append(ds, types.DeploymentRevisionStatus{CreatedAt: createdAt, Message: "demo status"})
 			if idx == 0 && createdAt.Hour() == 15 && createdAt.Minute() > 50 {
 				createdAt = createdAt.Add(15 * time.Minute)
 			} else if idx == 1 && createdAt.Hour() == 22 {
@@ -165,5 +166,6 @@ func main() {
 				createdAt = createdAt.Add(5 * time.Second)
 			}
 		}
+		util.Must(db.BulkCreateDeploymentRevisionStatusWithCreatedAt(ctx, revision.ID, ds))
 	}
 }
