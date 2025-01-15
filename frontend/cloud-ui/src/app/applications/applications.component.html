@@ -268,11 +268,12 @@
                         {{ version.createdAt | date: 'short' }}
                       </td>
                       <td class="px-6 py-4 text-right">
-                        <a
-                          title="Not available yet"
-                          class="cursor-not-allowed font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                          >View File</a
-                        >
+                        <button
+                          type="button"
+                          class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                          (click)="fillVersionFormWith(selectedApplication, version)">
+                          Copy from
+                        </button>
                       </td>
                     </tr>
                   }

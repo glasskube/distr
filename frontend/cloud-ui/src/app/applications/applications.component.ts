@@ -12,7 +12,7 @@ import {RequireRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {Application} from '../types/application';
+import {Application, ApplicationVersion} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
@@ -284,6 +284,22 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       } finally {
         this.newVersionFormLoading = false;
       }
+    }
+  }
+
+  fillVersionFormWith(selectedApplication: Application | undefined, version: ApplicationVersion) {
+    this.newVersionForm.patchValue({
+      versionName: version.name,
+    });
+    if (selectedApplication?.type === 'kubernetes') {
+      this.newVersionForm.patchValue({
+        kubernetes: {
+          chartType: version.chartType,
+          chartName: version.chartName,
+          chartUrl: version.chartUrl,
+          chartVersion: version.chartVersion,
+        },
+      });
     }
   }
 }
