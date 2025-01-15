@@ -31,23 +31,15 @@ type Client struct {
 }
 
 func (c *Client) Resource(ctx context.Context) (*api.DockerAgentResource, error) {
-	var result api.DockerAgentResource
-	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
-		return nil, err
-	} else {
-		req.Header.Set("Content-Type", "application/json")
-		if resp, err := c.doAuthenticated(ctx, req); err != nil {
-			return nil, err
-		} else if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			return nil, err
-		} else {
-			return &result, nil
-		}
-	}
+	return resource[api.DockerAgentResource](ctx, c)
 }
 
 func (c *Client) KubernetesResource(ctx context.Context) (*api.KubernetesAgentResource, error) {
-	var result api.KubernetesAgentResource
+	return resource[api.KubernetesAgentResource](ctx, c)
+}
+
+func resource[T any](ctx context.Context, c *Client) (*T, error) {
+	var result T
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
 		return nil, err
 	} else {
