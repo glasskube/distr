@@ -3,7 +3,6 @@ import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/com
 import {
   AfterViewInit,
   Component,
-  effect,
   inject,
   Input,
   OnDestroy,
@@ -35,7 +34,6 @@ import {
   map,
   Observable,
   of,
-  shareReplay,
   Subject,
   switchMap,
   takeUntil,
@@ -135,7 +133,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   });
 
   deployFormLoading = false;
-  readonly deploymentTargets$ = this.deploymentTargets.list();
+  readonly deploymentTargets$ = this.deploymentTargets.poll();
 
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
