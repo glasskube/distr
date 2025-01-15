@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/api"
 	"github.com/jackc/pgx/v5"
 	"net/http"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -33,7 +33,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
-	deploymentRequest, err := JsonBody[types.DeploymentRequest](w, r)
+	deploymentRequest, err := JsonBody[api.DeploymentRequest](w, r)
 	if err != nil {
 		return
 	}

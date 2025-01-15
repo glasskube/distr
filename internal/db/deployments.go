@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/glasskube/cloud/api"
 	"time"
 
 	"github.com/glasskube/cloud/internal/env"
@@ -86,7 +87,7 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func CreateDeployment(ctx context.Context, d *types.DeploymentRequest) error {
+func CreateDeployment(ctx context.Context, d *api.DeploymentRequest) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -111,7 +112,7 @@ func CreateDeployment(ctx context.Context, d *types.DeploymentRequest) error {
 	}
 }
 
-func CreateDeploymentRevision(ctx context.Context, d *types.DeploymentRequest) (*types.DeploymentRevision, error) {
+func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*types.DeploymentRevision, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,

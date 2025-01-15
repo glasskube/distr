@@ -100,25 +100,6 @@ type DeploymentRevision struct {
 	ValuesYaml           []byte `db:"-" json:"valuesYaml"`
 }
 
-// TODO maybe move to api
-type DeploymentRequest struct {
-	ID                   string  `json:"deploymentId"`
-	DeploymentTargetId   string  `json:"deploymentTargetId"`
-	ApplicationVersionId string  `json:"applicationVersionId"`
-	ReleaseName          *string `json:"releaseName"`
-	ValuesYaml           []byte  `json:"valuesYaml"`
-}
-
-func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {
-	// TODO deduplicate
-	if d.ValuesYaml != nil {
-		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
-			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
-		}
-	}
-	return
-}
-
 type DeploymentWithLatestRevision struct {
 	Deployment
 	DeploymentRevisionID   string `db:"deployment_revision_id" json:"deploymentRevisionId"`
