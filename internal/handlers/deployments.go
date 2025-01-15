@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -21,11 +20,9 @@ import (
 )
 
 func DeploymentsRouter(r chi.Router) {
-	// r.Get("/", getDeployments) // TODO not even used yet, could be removed
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
-		//r.Get("/", getDeployment) // TODO not even used yet, could be removed
 		r.Get("/status", getDeploymentStatus)
 	})
 }
@@ -117,28 +114,6 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 	})
-}
-
-func getDeployments(w http.ResponseWriter, r *http.Request) {
-	deploymentTargetId := r.URL.Query().Get("deploymentTargetId")
-	if deployments, err := db.GetDeploymentsForDeploymentTarget(r.Context(), deploymentTargetId); err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to get deployments", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		err := json.NewEncoder(w).Encode(deployments)
-		if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-		}
-	}
-}
-
-func getDeployment(w http.ResponseWriter, r *http.Request) {
-	deployment := internalctx.GetDeployment(r.Context())
-	err := json.NewEncoder(w).Encode(deployment)
-	if err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-	}
 }
 
 func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
