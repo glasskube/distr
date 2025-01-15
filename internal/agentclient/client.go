@@ -19,12 +19,13 @@ import (
 )
 
 type Client struct {
-	AuthTarget string
-	AuthSecret string
+	authTarget string
+	authSecret string
 
-	LoginEndpoint    string
-	ResourceEndpoint string
-	StatusEndpoint   string
+	loginEndpoint    string
+	manifestEndpoint string
+	resourceEndpoint string
+	statusEndpoint   string
 
 	httpClient *http.Client
 	logger     *zap.Logger
@@ -32,8 +33,8 @@ type Client struct {
 	rawToken   string
 }
 
-func (c *Client) Resource(ctx context.Context) (string, io.Reader, error) {
-	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
+func (c *Client) DockerResource(ctx context.Context) (string, io.Reader, error) {
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.resourceEndpoint, nil); err != nil {
 		return "", nil, err
 	} else if resp, err := c.doAuthenticated(ctx, req); err != nil {
 		return "", nil, err
@@ -46,7 +47,7 @@ func (c *Client) Resource(ctx context.Context) (string, io.Reader, error) {
 
 func (c *Client) KubernetesResource(ctx context.Context) (string, *api.KubernetesAgentResource, error) {
 	var result api.KubernetesAgentResource
-	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.resourceEndpoint, nil); err != nil {
 		return "", nil, err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
@@ -57,6 +58,18 @@ func (c *Client) KubernetesResource(ctx context.Context) (string, *api.Kubernete
 		} else {
 			return getCorrelationID(resp), &result, nil
 		}
+	}
+}
+
+func (c *Client) Manifest(ctx context.Context) (io.Reader, error) {
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.manifestEndpoint, nil); err != nil {
+		return nil, err
+	} else if resp, err := c.doAuthenticated(ctx, req); err != nil {
+		return nil, err
+	} else if data, err := io.ReadAll(resp.Body); err != nil {
+		return nil, err
+	} else {
+		return bytes.NewBuffer(data), nil
 	}
 }
 
@@ -72,7 +85,7 @@ func (c *Client) Status(ctx context.Context, correlationID, status string, error
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(deploymentStatus); err != nil {
 		return err
-	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.StatusEndpoint, &buf); err != nil {
+	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.statusEndpoint, &buf); err != nil {
 		return err
 	} else {
 		setCorrelationID(req, correlationID)
@@ -86,11 +99,11 @@ func (c *Client) Status(ctx context.Context, correlationID, status string, error
 }
 
 func (c *Client) Login(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.LoginEndpoint, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.loginEndpoint, nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(c.AuthTarget, c.AuthSecret)
+	req.SetBasicAuth(c.authTarget, c.authSecret)
 	if resp, err := c.do(req); err != nil {
 		return err
 	} else {
@@ -152,19 +165,22 @@ func NewFromEnv(logger *zap.Logger) (*Client, error) {
 		logger:     logger,
 	}
 	var err error
-	if client.AuthTarget, err = readEnvVar("GK_TARGET_ID"); err != nil {
+	if client.authTarget, err = readEnvVar("GK_TARGET_ID"); err != nil {
 		return nil, err
 	}
-	if client.AuthSecret, err = readEnvVar("GK_TARGET_SECRET"); err != nil {
+	if client.authSecret, err = readEnvVar("GK_TARGET_SECRET"); err != nil {
 		return nil, err
 	}
-	if client.LoginEndpoint, err = readEnvVar("GK_LOGIN_ENDPOINT"); err != nil {
+	if client.loginEndpoint, err = readEnvVar("GK_LOGIN_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.ResourceEndpoint, err = readEnvVar("GK_RESOURCE_ENDPOINT"); err != nil {
+	if client.manifestEndpoint, err = readEnvVar("GK_MANIFEST_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.StatusEndpoint, err = readEnvVar("GK_STATUS_ENDPOINT"); err != nil {
+	if client.resourceEndpoint, err = readEnvVar("GK_RESOURCE_ENDPOINT"); err != nil {
+		return nil, err
+	}
+	if client.statusEndpoint, err = readEnvVar("GK_STATUS_ENDPOINT"); err != nil {
 		return nil, err
 	}
 	return &client, nil

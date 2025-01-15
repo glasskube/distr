@@ -8,7 +8,6 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/resources"
 	"github.com/glasskube/cloud/internal/types"
@@ -16,6 +15,7 @@ import (
 
 var (
 	loginEndpoint     string
+	manifestEndpoint  string
 	resourcesEndpoint string
 	statusEndpoint    string
 )
@@ -26,42 +26,50 @@ func init() {
 	} else {
 		u = u.JoinPath("api/v1/agent")
 		loginEndpoint = u.JoinPath("login").String()
+		manifestEndpoint = u.JoinPath("manifest").String()
 		resourcesEndpoint = u.JoinPath("resources").String()
 		statusEndpoint = u.JoinPath("status").String()
 	}
 }
 
-func Get(ctx context.Context, deploymentTarget types.DeploymentTarget, secret *string) (io.Reader, error) {
-	if agentVersion, err := db.GetAgentVersionForDeploymentTargetID(ctx, deploymentTarget.ID); err != nil {
-		return nil, err
-	} else if tmpl, err := getTemplate(deploymentTarget, *agentVersion); err != nil {
+func Get(ctx context.Context, deploymentTarget types.DeploymentTargetWithCreatedBy, secret *string) (io.Reader, error) {
+	if tmpl, err := getTemplate(deploymentTarget); err != nil {
 		return nil, err
 	} else {
 		var buf bytes.Buffer
-		return &buf, tmpl.Execute(&buf, getTemplateData(deploymentTarget, *agentVersion, secret))
+		return &buf, tmpl.Execute(&buf, getTemplateData(deploymentTarget, secret))
 	}
 }
 
 func getTemplateData(
-	deploymentTarget types.DeploymentTarget,
-	agentVersion types.AgentVersion,
+	deploymentTarget types.DeploymentTargetWithCreatedBy,
 	secret *string,
 ) map[string]any {
 	return map[string]any{
-		"loginEndpoint":     loginEndpoint,
-		"resourcesEndpoint": resourcesEndpoint,
-		"statusEndpoint":    statusEndpoint,
+		"agentInterval":     env.AgentInterval(),
+		"agentVersion":      deploymentTarget.AgentVersion.Name,
+		"agentVersionId":    deploymentTarget.AgentVersion.ID,
 		"targetId":          deploymentTarget.ID,
 		"targetSecret":      secret,
-		"agentInterval":     env.AgentInterval(),
-		"agentVersion":      agentVersion.Name,
+		"loginEndpoint":     loginEndpoint,
+		"manifestEndpoint":  manifestEndpoint,
+		"resourcesEndpoint": resourcesEndpoint,
+		"statusEndpoint":    statusEndpoint,
 	}
 }
 
-func getTemplate(deploymentTarget types.DeploymentTarget, agentVersion types.AgentVersion) (*template.Template, error) {
+func getTemplate(deploymentTarget types.DeploymentTargetWithCreatedBy) (*template.Template, error) {
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
-		return resources.GetTemplate(path.Join("agent/docker", agentVersion.ComposeFileRevision, "docker-compose.yaml"))
+		return resources.GetTemplate(path.Join(
+			"agent/docker",
+			deploymentTarget.AgentVersion.ComposeFileRevision,
+			"docker-compose.yaml",
+		))
 	} else {
-		return resources.GetTemplate(path.Join("agent/kubernetes", agentVersion.ManifestFileRevision, "manifest.yaml.tmpl"))
+		return resources.GetTemplate(path.Join(
+			"agent/kubernetes",
+			deploymentTarget.AgentVersion.ManifestFileRevision,
+			"manifest.yaml.tmpl",
+		))
 	}
 }

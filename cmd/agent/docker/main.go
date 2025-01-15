@@ -15,13 +15,23 @@ import (
 	"go.uber.org/zap"
 )
 
-func main() {
-	interval := 5 * time.Second
+var (
+	interval       = 5 * time.Second
+	logger         = util.Require(zap.NewDevelopment())
+	client         = util.Require(agentclient.NewFromEnv(logger))
+	agentVersionId = os.Getenv("GK_AGENT_VERSION_ID")
+)
+
+func init() {
 	if intervalStr, ok := os.LookupEnv("GK_INTERVAL"); ok {
 		interval = util.Require(time.ParseDuration(intervalStr))
 	}
-	logger := util.Require(zap.NewDevelopment())
-	client := util.Require(agentclient.NewFromEnv(logger))
+	if agentVersionId == "" {
+		logger.Warn("GK_AGENT_VERSION_ID is not set. self updates will be disabled")
+	}
+}
+
+func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		sigint := make(chan os.Signal, 1)
@@ -39,9 +49,11 @@ loop:
 			break loop
 		}
 
-		if correlationID, resource, err := client.Resource(ctx); err != nil {
+		if correlationID, resource, err := client.DockerResource(ctx); err != nil {
 			logger.Error("failed to get resource", zap.Error(err))
 		} else {
+			// TODO: Implement docker agent self update
+
 			cmd := exec.CommandContext(ctx, "docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
 			cmd.Stdin = resource
 			out, cmdErr := cmd.CombinedOutput()

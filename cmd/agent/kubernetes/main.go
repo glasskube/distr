@@ -14,20 +14,27 @@ import (
 	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
 
 var (
-	interval       = 5 * time.Second
-	logger         = util.Require(zap.NewDevelopment())
-	agentClient    = util.Require(agentclient.NewFromEnv(logger))
-	k8sConfigFlags = genericclioptions.NewConfigFlags(true)
-	k8sClient      = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	interval         = 5 * time.Second
+	logger           = util.Require(zap.NewDevelopment())
+	agentClient      = util.Require(agentclient.NewFromEnv(logger))
+	k8sConfigFlags   = genericclioptions.NewConfigFlags(true)
+	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
+	agentVersionId   = os.Getenv("GK_AGENT_VERSION_ID")
 )
 
 func init() {
 	if intervalStr, ok := os.LookupEnv("GK_INTERVAL"); ok {
 		interval = util.Require(time.ParseDuration(intervalStr))
+	}
+	if agentVersionId == "" {
+		logger.Warn("GK_AGENT_VERSION_ID is not set. self updates will be disabled")
 	}
 }
 
@@ -54,6 +61,25 @@ func main() {
 			logger.Error("could not get resource", zap.Error(err))
 			continue
 		}
+
+		if agentVersionId != "" {
+			if agentVersionId != res.Version.ID {
+				logger.Info("agent version has changed. starting self-update")
+				if manifest, err := agentClient.Manifest(ctx); err != nil {
+					logger.Error("error fetching agent manifest", zap.Error(err))
+				} else if parsedManifest, err := DecodeResourceYaml(manifest); err != nil {
+					logger.Error("error parsing agent manifest", zap.Error(err))
+				} else if err := ApplyResources(ctx, res.Namespace, parsedManifest); err != nil {
+					logger.Error("error applying agent manifest", zap.Error(err))
+				} else {
+					logger.Info("self-update has been applied")
+				}
+				continue
+			} else {
+				logger.Debug("agent version is up to date")
+			}
+		}
+
 		if res.Deployment == nil {
 			// TODO: delete previous deployment if it exists?
 			logger.Info("no deployment in resource response")

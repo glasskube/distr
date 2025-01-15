@@ -29,21 +29,24 @@ import (
 )
 
 func AgentRouter(r chi.Router) {
-	r.Group(func(r chi.Router) {
-		r.Use(queryAuthDeploymentTargetCtxMiddleware)
+	r.With(
+		queryAuthDeploymentTargetCtxMiddleware,
+	).Group(func(r chi.Router) {
 		r.Get("/connect", connectHandler())
 	})
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
 		r.Post("/login", agentLoginHandler)
 
-		r.Group(func(r chi.Router) {
+		r.With(
+			jwtauth.Verifier(auth.JWTAuth),
+			jwtauth.Authenticator(auth.JWTAuth),
+			middleware.SentryUser,
+			agentAuthDeploymentTargetCtxMiddleware,
+			rateLimitPerAgent,
+		).Group(func(r chi.Router) {
 			// agent routes, authenticated via token
-			r.Use(jwtauth.Verifier(auth.JWTAuth))
-			r.Use(jwtauth.Authenticator(auth.JWTAuth))
-			r.Use(middleware.SentryUser)
-			r.Use(agentAuthDeploymentTargetCtxMiddleware)
-			r.Use(rateLimitPerAgent)
+			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
 		})
@@ -63,7 +66,7 @@ func connectHandler() http.HandlerFunc {
 		}
 
 		secret := r.URL.Query().Get("targetSecret")
-		if manifest, err := agentmanifest.Get(ctx, deploymentTarget.DeploymentTarget, &secret); err != nil {
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, &secret); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -126,11 +129,13 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		appVersion = av
 	}
 
+	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
 		if deployment != nil && appVersion != nil {
 			w.Header().Add("Content-Type", "application/yaml")
 			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
 			if _, err := w.Write(appVersion.ComposeFileData); err != nil {
+				// TODO: Send deploymentTarget.AgentVersion to agent
 				msg := "failed to write compose file"
 				statusMessage = fmt.Sprintf("%v: %v", msg, err)
 				log.Error(msg, zap.Error(err))
@@ -245,6 +250,25 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
+}
+
+func agentManifestHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+		log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
+
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, nil); err != nil {
+			log.Error("could not get agent manifest", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.Header().Add("Content-Type", "application/yaml")
+			if _, err := io.Copy(w, manifest); err != nil {
+				log.Warn("writing to client failed", zap.Error(err))
+			}
+		}
+	}
 }
 
 func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
