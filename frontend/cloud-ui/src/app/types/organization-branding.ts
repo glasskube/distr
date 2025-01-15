@@ -7,8 +7,3 @@ export interface OrganizationBranding extends BaseModel {
   logoFileName?: string;
   logoContentType?: string;
 }
-
-export interface OrganizationBrandingWithAuthor extends OrganizationBranding {
-  updatedAt: string;
-  updatedBy: string;
-}

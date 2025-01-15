@@ -1,15 +1,13 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable, of, tap} from 'rxjs';
-import {OrganizationBranding, OrganizationBrandingWithAuthor} from '../types/organization-branding';
-import {CrudService} from './interfaces';
-import {DeploymentTarget} from '../types/deployment-target';
+import {OrganizationBranding} from '../types/organization-branding';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrganizationBrandingService {
-  private readonly organizationBrandingUrl = '/api/v1/organization-branding';
+  private readonly organizationBrandingUrl = '/api/v1/organization/branding';
   private cache?: OrganizationBranding;
 
   constructor(private readonly httpClient: HttpClient) {}

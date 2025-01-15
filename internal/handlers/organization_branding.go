@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -50,16 +49,16 @@ func createOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
-	if organizationBranding, err := parseRequest(r); err != nil {
+	if organizationBranding, err := getOrganizationBrandingFromRequest(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err := setMetadata(organizationBranding, ctx); err != nil {
+	} else if err := setMetadataForOrganizationBranding(ctx, organizationBranding); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err = db.CreateOrganizationBranding(r.Context(), organizationBranding); err != nil {
 		log.Warn("could not create organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else if err = json.NewEncoder(w).Encode(organizationBranding); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+	} else {
+		RespondJSON(w, organizationBranding)
 	}
 }
 
@@ -67,20 +66,20 @@ func updateOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
-	if organizationBranding, err := parseRequest(r); err != nil {
+	if organizationBranding, err := getOrganizationBrandingFromRequest(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err := setMetadata(organizationBranding, ctx); err != nil {
+	} else if err := setMetadataForOrganizationBranding(ctx, organizationBranding); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err = db.UpdateOrganizationBranding(r.Context(), organizationBranding); err != nil {
 		log.Warn("could not create organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else if err = json.NewEncoder(w).Encode(organizationBranding); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+	} else {
+		RespondJSON(w, organizationBranding)
 	}
 }
 
-func parseRequest(r *http.Request) (*types.OrganizationBranding, error) {
+func getOrganizationBrandingFromRequest(r *http.Request) (*types.OrganizationBranding, error) {
 	if err := r.ParseMultipartForm(102400); err != nil {
 		return nil, fmt.Errorf("failed to parse form: %w", err)
 	}
@@ -113,7 +112,7 @@ func parseRequest(r *http.Request) (*types.OrganizationBranding, error) {
 	return &organizationBranding, nil
 }
 
-func setMetadata(t *types.OrganizationBranding, ctx context.Context) error {
+func setMetadataForOrganizationBranding(ctx context.Context, t *types.OrganizationBranding) error {
 	if orgID, err := auth.CurrentOrgId(ctx); err != nil {
 		return err
 	} else if id, err := auth.CurrentUserId(ctx); err != nil {
