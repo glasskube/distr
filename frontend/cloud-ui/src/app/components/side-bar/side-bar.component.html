@@ -82,16 +82,6 @@
           >
         </a>
       </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faPalette" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Branding</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
       <hr class="dark:border-gray-600" />
       <li>
         <a
@@ -102,6 +92,17 @@
             size="lg"
             class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
           <span class="ms-3">Manage Users</span>
+        </a>
+      </li>
+      <li>
+        <a
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+          routerLink="/branding">
+          <fa-icon
+            [icon]="faPalette"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+          <span class="ms-3">Branding</span>
         </a>
       </li>
       <li>
@@ -116,6 +117,18 @@
       </li>
     </ul>
     <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'customer'">
+      <li>
+        <a
+          (click)="sidebar.hide()"
+          routerLink="/home"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+          <fa-icon
+            [icon]="faHome"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+          <span class="ms-3">Home</span>
+        </a>
+      </li>
       <li>
         <a
           (click)="sidebar.hide()"

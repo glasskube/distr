@@ -8,6 +8,7 @@ import {
   faCheckDouble,
   faDashboard,
   faGear,
+  faHome,
   faKey,
   faLightbulb,
   faPalette,
@@ -50,4 +51,5 @@ export class SideBarComponent {
   }
 
   protected readonly faArrowRightLong = faArrowRightLong;
+  protected readonly faHome = faHome;
 }

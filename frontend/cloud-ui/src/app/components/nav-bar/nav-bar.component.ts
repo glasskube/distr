@@ -6,9 +6,10 @@ import {AuthService} from '../../services/auth.service';
 import {SidebarService} from '../../services/sidebar.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBars, faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
+import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '../../types/user-account';
 import {RouterLink} from '@angular/router';
+import {OrganizationBrandingService} from '../../services/organization-branding.service';
 
 @Component({
   selector: 'app-nav-bar',
@@ -20,11 +21,14 @@ import {RouterLink} from '@angular/router';
 export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
   public readonly sidebar = inject(SidebarService);
+  private readonly organizationBranding = inject(OrganizationBrandingService);
   showDropdown = false;
   email?: string;
   name?: string;
   role?: UserRole;
   imageUrl?: string;
+  logoUrl = '/glasskube-logo.svg';
+  customerSubtitle = 'Customer Portal';
 
   protected readonly faBarsStaggered = faBarsStaggered;
 
@@ -34,9 +38,26 @@ export class NavBarComponent implements OnInit {
       this.email = email;
       this.name = name;
       this.role = role;
+      this.initBranding();
       this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  private async initBranding() {
+    if (this.auth.hasRole('customer')) {
+      try {
+        const branding = await lastValueFrom(this.organizationBranding.get());
+        if (branding.logo) {
+          this.logoUrl = `data:${branding.logoContentType};base64,${branding.logo}`;
+        }
+        if (branding.title) {
+          this.customerSubtitle = branding.title;
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 

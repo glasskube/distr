@@ -22,6 +22,7 @@ import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {UserRole} from './types/user-account';
 import {VerifyComponent} from './verify/verify.component';
+import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -85,7 +86,7 @@ const baseRoteRedirectGuard: CanActivateFn = () => {
   const router = inject(Router);
   switch (auth.getClaims().role) {
     case 'customer':
-      return router.createUrlTree(['/deployments']);
+      return router.createUrlTree(['/home']);
     case 'vendor':
       return router.createUrlTree(['/dashboard']);
     default:
@@ -125,6 +126,11 @@ export const routes: Routes = [
                 .DashboardPlaceholderComponent,
             canActivate: [requiredRoleGuard('vendor')],
           },
+          {
+            path: 'home',
+            loadComponent: async () => (await import('./components/home/home.component')).HomeComponent,
+            canActivate: [requiredRoleGuard('customer')],
+          },
           {path: 'applications', component: ApplicationsPageComponent, canActivate: [requiredRoleGuard('vendor')]},
           {path: 'deployments', component: DeploymentsPageComponent},
           {
@@ -136,6 +142,12 @@ export const routes: Routes = [
           {
             path: 'users',
             component: UsersComponent,
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor')],
+          },
+          {
+            path: 'branding',
+            component: OrganizationBrandingComponent,
             data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor')],
           },

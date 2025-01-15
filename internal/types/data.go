@@ -87,6 +87,18 @@ func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 	return nil
 }
 
+type OrganizationBranding struct {
+	Base
+	OrganizationID         string    `db:"organization_id" json:"-"`
+	UpdatedAt              time.Time `db:"updated_at" json:"updatedAt"`
+	UpdatedByUserAccountID *string   `db:"updated_by_user_account_id" json:"-"`
+	Title                  *string   `db:"title" json:"title"`
+	Description            *string   `db:"description" json:"description"`
+	Logo                   []byte    `db:"logo" json:"logo"`
+	LogoFileName           *string   `db:"logo_file_name" json:"logoFileName"`
+	LogoContentType        *string   `db:"logo_content_type" json:"logoContentType"`
+}
+
 type Deployment struct {
 	Base
 	DeploymentTargetId   string  `db:"deployment_target_id" json:"deploymentTargetId"`
