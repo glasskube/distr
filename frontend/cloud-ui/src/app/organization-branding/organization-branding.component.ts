@@ -80,7 +80,7 @@ export class OrganizationBrandingComponent implements OnInit {
     }
   }
 
-  onLogoChange(event: any) {
+  onLogoChange(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     this.form.patchValue({logo: file ?? null});
   }

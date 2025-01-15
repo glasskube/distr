@@ -36,7 +36,7 @@ func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if organizationBranding, err :=
 		db.GetOrganizationBranding(r.Context(), orgID); errors.Is(err, apierrors.ErrNotFound) {
-		w.WriteHeader(http.StatusNotFound)
+		http.NotFound(w, r)
 	} else if err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
@@ -57,10 +57,7 @@ func createOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	} else if err = db.CreateOrganizationBranding(r.Context(), organizationBranding); err != nil {
 		log.Warn("could not create organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = fmt.Fprintln(w, err); err != nil {
-			log.Error("failed to write error to response", zap.Error(err))
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(organizationBranding); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
@@ -77,10 +74,7 @@ func updateOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	} else if err = db.UpdateOrganizationBranding(r.Context(), organizationBranding); err != nil {
 		log.Warn("could not create organizationBranding", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = fmt.Fprintln(w, err); err != nil {
-			log.Error("failed to write error to response", zap.Error(err))
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(organizationBranding); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
