@@ -89,6 +89,7 @@ func main() {
 			OrganizationID: org.ID,
 			Name:           "pmig - Dashboard Testing",
 			Type:           types.DeploymentTypeDocker,
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dashboardTest))
@@ -106,6 +107,7 @@ func main() {
 			OrganizationID: org.ID,
 			Name:           "pmig - Calculator Testing",
 			Type:           types.DeploymentTypeDocker,
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &calculatorTest))
@@ -134,6 +136,7 @@ func main() {
 			Name:           "DA - Vienna DC",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.191166, Lon: 16.3717293},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &danubeAerospaceVienna))
@@ -162,6 +165,7 @@ func main() {
 			Name:           "LO - Canadian Cluster",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 47.6349832, Lon: -122.1410062},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &luxOrbitCanada))
@@ -190,6 +194,7 @@ func main() {
 			Name:           "Space K - uk-west-1",
 			Type:           types.DepolymentTypeKubernetes,
 			Geolocation:    &types.Geolocation{Lat: 55.8578177, Lon: -4.3687363},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &spaceKUKWest))
@@ -218,6 +223,7 @@ func main() {
 			Name:           "BSC - Office",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.76078, Lon: -122.3915258},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceOffice))
@@ -236,6 +242,7 @@ func main() {
 			Name:           "BSC - us-central-1",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 39.1929769, Lon: -105.2403348},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceWest))
