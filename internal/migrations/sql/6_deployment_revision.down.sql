@@ -1,8 +1,6 @@
--- TODO
+DROP TABLE DeploymentRevision CASCADE;
+DROP TABLE DeploymentRevisionStatus;
 
-DROP TABLE IF EXISTS DeploymentRevision CASCADE;
-
--- TODO ??
 DELETE FROM Deployment;
 
 ALTER TABLE Deployment
@@ -11,3 +9,11 @@ ALTER TABLE Deployment
 
 ALTER TABLE Deployment
   DROP CONSTRAINT release_name_unique;
+
+CREATE TABLE DeploymentStatus (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMP DEFAULT current_timestamp,
+  deployment_id UUID NOT NULL REFERENCES Deployment (id) ON DELETE CASCADE,
+  message TEXT NOT NULL,
+  type DEPLOYMENT_STATUS_TYPE NOT NULL DEFAULT 'ok'
+);

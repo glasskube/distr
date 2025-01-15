@@ -8,7 +8,10 @@ CREATE TABLE DeploymentRevision (
     values_yaml BYTEA
 );
 
-CREATE TABLE IF NOT EXISTS DeploymentRevisionStatus (
+CREATE INDEX fk_DeploymentRevision_deployment_id ON DeploymentRevision (deployment_id);
+CREATE INDEX fk_DeploymentRevision_application_version_id ON DeploymentRevision (application_version_id);
+
+CREATE TABLE DeploymentRevisionStatus (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP DEFAULT current_timestamp,
     deployment_revision_id UUID NOT NULL REFERENCES DeploymentRevision (id) ON DELETE CASCADE,
@@ -16,9 +19,11 @@ CREATE TABLE IF NOT EXISTS DeploymentRevisionStatus (
     message TEXT NOT NULL
 );
 
+CREATE INDEX fk_DeploymentRevisionStatus_deployment_revision_id ON DeploymentRevisionStatus (deployment_revision_id);
+
 DELETE FROM Deployment;
 
-DROP TABLE DeploymentStatus;
+DROP TABLE IF EXISTS DeploymentStatus;
 
 ALTER TABLE Deployment
   DROP COLUMN application_version_id,
