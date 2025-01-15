@@ -330,7 +330,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       return {
         name: versionFormVal.versionName!,
         chartType: versionFormVal.chartType!,
-        chartName: versionFormVal.chartName,
+        chartName: versionFormVal.chartType === 'repository' ? versionFormVal.chartName : undefined,
         chartUrl: versionFormVal.chartUrl!,
         chartVersion: versionFormVal.chartVersion!,
       };
