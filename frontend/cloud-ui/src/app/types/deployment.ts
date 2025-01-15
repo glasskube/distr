@@ -22,6 +22,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   applicationVersionName: string;
   valuesYaml?: string;
   deploymentRevisionId?: string;
+  latestStatus?: DeploymentRevisionStatus;
 }
 
 export interface DeploymentRevisionStatus extends BaseModel {
