@@ -162,12 +162,12 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		}
 	} else {
-		respose := api.KubernetesAgentResource{
+		response := api.KubernetesAgentResource{
 			Namespace: *deploymentTarget.Namespace,
 		}
 		if deployment != nil && appVersion != nil {
-			respose.Deployment = &api.KubernetesAgentDeployment{
-				RevisionID:   deployment.ID, // TODO: Update to use DeploymentRevision.ID once implemented
+			response.Deployment = &api.KubernetesAgentDeployment{
+				RevisionID:   deployment.DeploymentRevisionID,
 				ReleaseName:  *deployment.ReleaseName,
 				ChartUrl:     *appVersion.ChartUrl,
 				ChartVersion: *appVersion.ChartVersion,
@@ -185,14 +185,14 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, fmt.Sprintf("error merging values files: %v", err), http.StatusInternalServerError)
 				return
 			} else {
-				respose.Deployment.Values = merged
+				response.Deployment.Values = merged
 			}
 			w.Header().Add("X-Resource-Correlation-ID", deployment.ID)
 			if *appVersion.ChartType == types.HelmChartTypeRepository {
-				respose.Deployment.ChartName = *appVersion.ChartName
+				response.Deployment.ChartName = *appVersion.ChartName
 			}
 		}
-		RespondJSON(w, respose)
+		RespondJSON(w, response)
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
