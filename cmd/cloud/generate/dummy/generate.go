@@ -144,6 +144,8 @@ func main() {
 			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,
 		}
 		util.Must(db.CreateDeployment(ctx, &deployment))
+		_, err := db.CreateDeploymentRevision(ctx, &deployment)
+		util.Must(err)
 		now := time.Now().UTC()
 		createdAt := now.Add(-1*24*time.Hour - 30*time.Minute)
 		if idx == 2 {

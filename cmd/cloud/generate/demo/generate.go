@@ -93,9 +93,12 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dashboardTest))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &dashboardTest.DeploymentTarget, "running"))
-	util.Must(db.CreateDeployment(ctx, &api.DeploymentRequest{
+	deplRequest := api.DeploymentRequest{
 		DeploymentTargetId: dashboardTest.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
-	}))
+	}
+	util.Must(db.CreateDeployment(ctx, &deplRequest))
+	_, err := db.CreateDeploymentRevision(ctx, &deplRequest)
+	util.Must(err)
 
 	calculatorTest := types.DeploymentTargetWithCreatedBy{
 		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
@@ -107,9 +110,12 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &calculatorTest))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &calculatorTest.DeploymentTarget, "running"))
-	util.Must(db.CreateDeployment(ctx, &api.DeploymentRequest{
+	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: calculatorTest.ID, ApplicationVersionId: appMarsBetaV419.ID,
-	}))
+	}
+	util.Must(db.CreateDeployment(ctx, &deplRequest))
+	_, err = db.CreateDeploymentRevision(ctx, &deplRequest)
+	util.Must(err)
 
 	danubeAerospace := types.UserAccount{
 		Email:           "devops@danube-aerospace.at",
@@ -132,9 +138,12 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &danubeAerospaceVienna))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &danubeAerospaceVienna.DeploymentTarget, "running"))
-	util.Must(db.CreateDeployment(ctx, &api.DeploymentRequest{
+	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: danubeAerospaceVienna.ID, ApplicationVersionId: appMarsBetaV419.ID,
-	}))
+	}
+	util.Must(db.CreateDeployment(ctx, &deplRequest))
+	_, err = db.CreateDeploymentRevision(ctx, &deplRequest)
+	util.Must(err)
 
 	luxOrbit := types.UserAccount{
 		Email:           "it@lux-orbit.uk",
@@ -157,9 +166,12 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &luxOrbitCanada))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &luxOrbitCanada.DeploymentTarget, "running"))
-	util.Must(db.CreateDeployment(ctx, &api.DeploymentRequest{
+	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: luxOrbitCanada.ID, ApplicationVersionId: appMarsBetaV419.ID,
-	}))
+	}
+	util.Must(db.CreateDeployment(ctx, &deplRequest))
+	_, err = db.CreateDeploymentRevision(ctx, &deplRequest)
+	util.Must(err)
 
 	spaceK := types.UserAccount{
 		Email:           "admin@space-k.uk",
@@ -182,9 +194,12 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &spaceKUKWest))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &spaceKUKWest.DeploymentTarget, "running"))
-	util.Must(db.CreateDeployment(ctx, &api.DeploymentRequest{
+	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: spaceKUKWest.ID, ApplicationVersionId: appMarsLTSV0299.ID,
-	}))
+	}
+	util.Must(db.CreateDeployment(ctx, &deplRequest))
+	_, err = db.CreateDeploymentRevision(ctx, &deplRequest)
+	util.Must(err)
 
 	baySpaceCorp := types.UserAccount{
 		Email:           "admin@bay-space.com",
@@ -207,9 +222,12 @@ func main() {
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceOffice))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &baySpaceOffice.DeploymentTarget, "running"))
-	util.Must(db.CreateDeployment(ctx, &api.DeploymentRequest{
+	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: baySpaceOffice.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
-	}))
+	}
+	util.Must(db.CreateDeployment(ctx, &deplRequest))
+	_, err = db.CreateDeploymentRevision(ctx, &deplRequest)
+	util.Must(err)
 
 	baySpaceWest := types.DeploymentTargetWithCreatedBy{
 		CreatedBy: &types.UserAccountWithUserRole{ID: baySpaceCorp.ID},
