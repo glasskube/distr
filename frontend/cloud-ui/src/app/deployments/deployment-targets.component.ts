@@ -344,7 +344,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       }
       try {
         await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));
-        // TODO deployment targets cache is not updated after a deployment currently
         this.toast.success('Deployment saved successfully');
         this.hideModal();
       } catch (e) {
@@ -363,9 +362,10 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
-    if (deploymentTarget.deployment?.id) {
+    const deployment = deploymentTarget.deployment;
+    if (deployment?.id) {
       this.selectedDeploymentTarget.set(deploymentTarget);
-      this.statuses = this.deployments.getStatuses(deploymentTarget.deployment);
+      this.statuses = this.deployments.pollStatuses(deployment);
       this.showModal(modal);
     }
   }
