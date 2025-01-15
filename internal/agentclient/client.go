@@ -33,30 +33,26 @@ type Client struct {
 	rawToken   string
 }
 
-func (c *Client) DockerResource(ctx context.Context) (string, io.Reader, error) {
-	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.resourceEndpoint, nil); err != nil {
-		return "", nil, err
-	} else if resp, err := c.doAuthenticated(ctx, req); err != nil {
-		return "", nil, err
-	} else if data, err := io.ReadAll(resp.Body); err != nil {
-		return "", nil, err
-	} else {
-		return getCorrelationID(resp), bytes.NewBuffer(data), nil
-	}
+func (c *Client) DockerResource(ctx context.Context) (*api.DockerAgentResource, error) {
+	return resource[api.DockerAgentResource](ctx, c)
 }
 
-func (c *Client) KubernetesResource(ctx context.Context) (string, *api.KubernetesAgentResource, error) {
-	var result api.KubernetesAgentResource
+func (c *Client) KubernetesResource(ctx context.Context) (*api.KubernetesAgentResource, error) {
+	return resource[api.KubernetesAgentResource](ctx, c)
+}
+
+func resource[T any](ctx context.Context, c *Client) (*T, error) {
+	var result T
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.resourceEndpoint, nil); err != nil {
-		return "", nil, err
+		return nil, err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 		if resp, err := c.doAuthenticated(ctx, req); err != nil {
-			return "", nil, err
+			return nil, err
 		} else if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			return "", nil, err
+			return nil, err
 		} else {
-			return getCorrelationID(resp), &result, nil
+			return &result, nil
 		}
 	}
 }
@@ -73,8 +69,10 @@ func (c *Client) Manifest(ctx context.Context) (io.Reader, error) {
 	}
 }
 
-func (c *Client) Status(ctx context.Context, correlationID, status string, error error) error {
-	deploymentStatus := api.AgentDeploymentStatus{}
+func (c *Client) Status(ctx context.Context, revisionID string, status string, error error) error {
+	deploymentStatus := api.AgentDeploymentStatus{
+		RevisionID: revisionID,
+	}
 	if error != nil {
 		deploymentStatus.Type = types.DeploymentStatusTypeError
 		deploymentStatus.Message = error.Error()
@@ -88,7 +86,6 @@ func (c *Client) Status(ctx context.Context, correlationID, status string, error
 	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.statusEndpoint, &buf); err != nil {
 		return err
 	} else {
-		setCorrelationID(req, correlationID)
 		req.Header.Set("Content-Type", "application/json")
 		if _, err := c.doAuthenticated(ctx, req); err != nil {
 			return err

@@ -1,20 +1,30 @@
 import {BaseModel} from './base';
 
 export interface Deployment extends BaseModel {
-  applicationVersionId: string;
   deploymentTargetId: string;
+  releaseName?: string;
+  note?: string;
+}
+
+export interface DeploymentRequest {
+  deploymentTargetId: string;
+  deploymentId?: string;
+  applicationVersionId: string;
   releaseName?: string;
   valuesYaml?: string;
   note?: string;
 }
 
-export interface DeploymentWithData extends Deployment {
+export interface DeploymentWithLatestRevision extends Deployment {
   applicationId: string;
   applicationName: string;
+  applicationVersionId: string;
   applicationVersionName: string;
+  valuesYaml?: string;
+  deploymentRevisionId?: string;
 }
 
-export interface DeploymentStatus extends BaseModel {
+export interface DeploymentRevisionStatus extends BaseModel {
   type: DeploymentStatusType;
   message: string;
 }
