@@ -35,5 +35,18 @@ module.exports = {
       mono: ['monospace'],
     },
   },
+  safelist: [
+    'text-5xl',
+    'my-5',
+    'text-4xl',
+    'my-4',
+    'text-3xl',
+    'my-3',
+    'text-2xl',
+    'my-2',
+    'text-xl',
+    'my-1',
+    'text-lg',
+  ],
   plugins: [require('flowbite/plugin')],
 };

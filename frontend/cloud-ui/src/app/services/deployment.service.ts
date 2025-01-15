@@ -1,6 +1,6 @@
-import {HttpClient, HttpParams} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
+import {Observable, switchMap, timer} from 'rxjs';
 import {Deployment, DeploymentStatus} from '../types/deployment';
 
 @Injectable({
@@ -16,5 +16,9 @@ export class DeploymentService {
 
   getStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
     return this.httpClient.get<DeploymentStatus[]>(`${this.baseUrl}/${depl.id}/status`);
+  }
+
+  pollStatuses(depl: Deployment): Observable<DeploymentStatus[]> {
+    return timer(0, 5000).pipe(switchMap(() => this.getStatuses(depl)));
   }
 }
