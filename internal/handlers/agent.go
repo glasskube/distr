@@ -12,6 +12,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/cloud/internal/agentclient/useragent"
 	"github.com/glasskube/cloud/internal/agentmanifest"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
@@ -274,8 +275,8 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			if ua := r.UserAgent(); strings.HasPrefix(ua, "GlasskubeAgentClient/") {
-				reportedVersionName := strings.TrimPrefix(ua, "GlasskubeAgentClient/")
+			if ua := r.UserAgent(); strings.HasPrefix(ua, fmt.Sprintf("%v/", useragent.GlasskubeAgentUserAgent)) {
+				reportedVersionName := strings.TrimPrefix(ua, fmt.Sprintf("%v/", useragent.GlasskubeAgentUserAgent))
 				if reportedVersion, err := db.GetAgentVersionWithName(ctx, reportedVersionName); err != nil {
 					log.Error("could not get reported agent version", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
