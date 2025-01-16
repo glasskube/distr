@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.2](https://github.com/glasskube/cloud/compare/0.9.1...0.9.2) (2025-01-16)
+
+
+### Bug Fixes
+
+* share polling subscription ([#295](https://github.com/glasskube/cloud/issues/295)) ([3a95449](https://github.com/glasskube/cloud/commit/3a954493d6c17eeedfe554e6a07075ab156a0dc6))
+* update deployment target without agent update ([#294](https://github.com/glasskube/cloud/issues/294)) ([94b5f58](https://github.com/glasskube/cloud/commit/94b5f58cd8292c3b19abdfe139b037ba387c4870))
+
 ## [0.9.1](https://github.com/glasskube/cloud/compare/v0.9.0...0.9.1) (2025-01-16)
 
 
