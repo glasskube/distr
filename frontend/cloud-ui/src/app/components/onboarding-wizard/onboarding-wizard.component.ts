@@ -64,7 +64,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         nonNullable: true,
         validators: Validators.required,
       }),
-      chartName: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
+      chartName: new FormControl<string>('', Validators.required),
       chartUrl: new FormControl<string>('', Validators.required),
       chartVersion: new FormControl<string>('', Validators.required),
     }),
@@ -326,11 +326,12 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         name: this.applicationForm.controls.docker.controls.versionName.value!,
       };
     } else {
+      console.log(this.applicationForm.controls.kubernetes);
       const versionFormVal = this.applicationForm.controls.kubernetes.value;
       return {
         name: versionFormVal.versionName!,
         chartType: versionFormVal.chartType!,
-        chartName: versionFormVal.chartType === 'repository' ? versionFormVal.chartName : undefined,
+        chartName: versionFormVal.chartName ?? undefined,
         chartUrl: versionFormVal.chartUrl!,
         chartVersion: versionFormVal.chartVersion!,
       };
