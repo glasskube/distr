@@ -326,7 +326,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         name: this.applicationForm.controls.docker.controls.versionName.value!,
       };
     } else {
-      console.log(this.applicationForm.controls.kubernetes);
       const versionFormVal = this.applicationForm.controls.kubernetes.value;
       return {
         name: versionFormVal.versionName!,
