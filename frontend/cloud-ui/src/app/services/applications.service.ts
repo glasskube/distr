@@ -63,15 +63,15 @@ export class ApplicationsService implements CrudService<Application> {
   createApplicationVersionForKubernetes(
     application: Application,
     applicationVersion: ApplicationVersion,
-    valuesFile: File | null,
-    templateFile: File | null
+    baseValues?: string | null,
+    template?: string | null
   ): Observable<ApplicationVersion> {
     const formData = new FormData();
-    if (valuesFile) {
-      formData.append('valuesfile', valuesFile);
+    if (baseValues) {
+      formData.append('valuesfile', new Blob([baseValues], {type: 'application/yaml'}));
     }
-    if (templateFile) {
-      formData.append('templatefile', templateFile);
+    if (template) {
+      formData.append('templatefile', new Blob([template], {type: 'application/yaml'}));
     }
     return this.doCreateVersion(application, applicationVersion, formData);
   }

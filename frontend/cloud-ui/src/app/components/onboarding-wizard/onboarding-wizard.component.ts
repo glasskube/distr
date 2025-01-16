@@ -18,6 +18,7 @@ import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.co
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {ToastService} from '../../services/toast.service';
 import {getFormDisplayedError} from '../../../util/errors';
+import {YamlEditorComponent} from '../yaml-editor.component';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -29,6 +30,7 @@ import {getFormDisplayedError} from '../../../util/errors';
     ReactiveFormsModule,
     ConnectInstructionsComponent,
     OnboardingWizardIntroComponent,
+    YamlEditorComponent,
   ],
   animations: [modalFlyInOut],
 })
@@ -67,19 +69,13 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       chartName: new FormControl<string>('', Validators.required),
       chartUrl: new FormControl<string>('', Validators.required),
       chartVersion: new FormControl<string>('', Validators.required),
+      baseValues: new FormControl<string>(''),
+      template: new FormControl<string>(''),
     }),
   });
   dockerComposeFile: File | null = null;
   @ViewChild('dockerComposeFileInput')
   dockerComposeFileInput?: ElementRef;
-
-  baseValuesFile: File | null = null;
-  @ViewChild('baseValuesFileInput')
-  baseValuesFileInput?: ElementRef;
-
-  templateFile: File | null = null;
-  @ViewChild('templateFileInput')
-  templateFileInput?: ElementRef;
 
   deploymentTargetForm = new FormGroup({
     customerName: new FormControl<string>('', Validators.required),
@@ -181,14 +177,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.dockerComposeFile = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
-  onBaseValuesFileSelected(event: Event) {
-    this.baseValuesFile = (event.target as HTMLInputElement).files?.[0] ?? null;
-  }
-
-  onTemplateFileSelected(event: Event) {
-    this.templateFile = (event.target as HTMLInputElement).files?.[0] ?? null;
-  }
-
   async attemptContinue() {
     if (this.loading) {
       return;
@@ -250,8 +238,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
               : this.applications.createApplicationVersionForKubernetes(
                   this.app,
                   this.getApplicationVersionForSubmit(),
-                  this.baseValuesFile,
-                  this.templateFile
+                  this.applicationForm.controls.kubernetes.controls.baseValues.value,
+                  this.applicationForm.controls.kubernetes.controls.template.value
                 )
           );
           await this.prepareFormAfterApplicationCreated(this.app, createdVersion);
