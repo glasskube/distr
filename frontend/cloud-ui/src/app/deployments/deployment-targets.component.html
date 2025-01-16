@@ -147,18 +147,12 @@
               }
               <td
                 class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
-                @if (!(auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer')) {
-                  @if (dt.currentStatus) {
+                @if (auth.hasRole('customer') || dt.createdBy?.userRole === 'vendor') {
+                  @if (dt.currentStatus && !(dt.currentStatus | isStale)) {
                     <button
                       type="button"
                       (click)="newDeployment(dt, deploymentModal)"
-                      aria-controls="manage-deployment-target-drawer"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                      [title]="
-                        auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'
-                          ? 'Must be deployed by customer'
-                          : undefined
-                      ">
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
                       <fa-icon
                         [icon]="shipIcon"
                         class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
@@ -167,14 +161,13 @@
                   } @else {
                     <button
                       type="button"
-                      (click)="showModal(instructionsModal)"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                      [title]="
-                        auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'
-                          ? 'Must be deployed by customer'
-                          : undefined
-                      ">
-                      Connection instructions
+                      (click)="openInstructionsModal(dt, instructionsModal)"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                      @if (dt.currentStatus) {
+                        Reconnect
+                      } @else {
+                        Connection instructions
+                      }
                     </button>
                   }
                   @if (dt.deployment) {

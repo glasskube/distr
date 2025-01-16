@@ -60,9 +60,15 @@ func connectHandler() http.HandlerFunc {
 		log := internalctx.GetLogger(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
-		if deploymentTarget.CurrentStatus != nil {
-			log.Warn("deployment target has already been connected")
-			http.Error(w, "deployment target has already been connected", http.StatusBadRequest)
+		if deploymentTarget.CurrentStatus != nil &&
+			deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
+			http.Error(
+				w,
+				fmt.Sprintf(
+					"deployment target is already connected and appears to be still running (last status %v)",
+					deploymentTarget.CurrentStatus.CreatedAt),
+				http.StatusBadRequest,
+			)
 			return
 		}
 

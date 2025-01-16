@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
@@ -130,9 +131,17 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
-	if deploymentTarget.CurrentStatus != nil {
-		log.Warn("access key cannot be regenerated because deployment target has already been connected")
-		w.WriteHeader(http.StatusBadRequest)
+	if deploymentTarget.CurrentStatus != nil &&
+		deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
+		http.Error(
+			w,
+			fmt.Sprintf(
+				"access key cannot be regenerated because deployment target is already connected "+
+					"and seems to be still running (last connection at %v)",
+				deploymentTarget.CurrentStatus.CreatedAt,
+			),
+			http.StatusBadRequest,
+		)
 		return
 	}
 
