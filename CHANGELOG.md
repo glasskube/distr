@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.1](https://github.com/glasskube/cloud/compare/v0.9.0...0.9.1) (2025-01-16)
+
+
+### Bug Fixes
+
+* also set chart version for oci charts ([#288](https://github.com/glasskube/cloud/issues/288)) ([c21c003](https://github.com/glasskube/cloud/commit/c21c0033b48eefb6e1c06a90afb2b59803354ef3))
+* **deps:** update angular monorepo to v19.1.0 ([#284](https://github.com/glasskube/cloud/issues/284)) ([164ebb4](https://github.com/glasskube/cloud/commit/164ebb4465823de01bf74659cb870e7dfb93146e))
+* **deps:** update aws-sdk-go-v2 monorepo ([#285](https://github.com/glasskube/cloud/issues/285)) ([d4e2490](https://github.com/glasskube/cloud/commit/d4e2490545ba0eb8f883508b5a90244e76599569))
+* **deps:** update dependency @sentry/angular to v8.50.0 ([#281](https://github.com/glasskube/cloud/issues/281)) ([f0044b9](https://github.com/glasskube/cloud/commit/f0044b96c24d6fafb9f0ace70f5e920c23d12d9c))
+* **deps:** update module helm.sh/helm/v3 to v3.17.0 ([#286](https://github.com/glasskube/cloud/issues/286)) ([3141f97](https://github.com/glasskube/cloud/commit/3141f9715d8ccbe0f61a49d6a9c1b68f47898e26))
+* redirect customer to home instead of deployments after login ([122f814](https://github.com/glasskube/cloud/commit/122f81485e4b53f40857ace282ae241412c2b7e0))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.1.0 ([#290](https://github.com/glasskube/cloud/issues/290)) ([a5a8e0f](https://github.com/glasskube/cloud/commit/a5a8e0f13292a0e9a158b9ad524b4cb4db9ba7e7))
+* do not use "v" prefix in version tag ([#292](https://github.com/glasskube/cloud/issues/292)) ([0e38939](https://github.com/glasskube/cloud/commit/0e389397d10f6c626f18d0db25d3d05448bc1ecc))
+* remove unused pipe import ([#291](https://github.com/glasskube/cloud/issues/291)) ([03ffc69](https://github.com/glasskube/cloud/commit/03ffc696ff331be60d93c9354e74aa611e9b2a23))
+
 ## [0.9.0](https://github.com/glasskube/cloud/compare/v0.8.2...v0.9.0) (2025-01-16)
 
 
