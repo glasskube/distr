@@ -62,11 +62,11 @@ func RunHelmPreflight(
 	deployment api.KubernetesAgentDeployment,
 ) (*chart.Chart, error) {
 	chartName := deployment.ChartName
+	action.Version = deployment.ChartVersion
 	if registry.IsOCI(deployment.ChartUrl) {
 		chartName = deployment.ChartUrl
 	} else {
 		action.RepoURL = deployment.ChartUrl
-		action.Version = deployment.ChartVersion
 	}
 	if chartPath, err := action.LocateChart(chartName, helmEnvSettings); err != nil {
 		return nil, fmt.Errorf("could not locate chart: %w", err)
