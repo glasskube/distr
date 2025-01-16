@@ -150,6 +150,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		if deployment != nil && appVersion != nil {
 			response.AgentResource = api.AgentResource{RevisionID: deployment.DeploymentRevisionID}
 			response.Deployment = &api.KubernetesAgentDeployment{
+				RevisionID:   deployment.DeploymentRevisionID,
 				ReleaseName:  *deployment.ReleaseName,
 				ChartUrl:     *appVersion.ChartUrl,
 				ChartVersion: *appVersion.ChartVersion,
