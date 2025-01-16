@@ -4,7 +4,7 @@ import {isOlderThan} from './dates';
 import {Pipe, PipeTransform} from '@angular/core';
 import {Duration} from 'dayjs/plugin/duration';
 
-export function isStale(model: BaseModel, duration: Duration = dayjs.duration({minutes: 5})): boolean {
+export function isStale(model: BaseModel, duration: Duration = dayjs.duration({seconds: 10})): boolean {
   return isOlderThan(model.createdAt, duration);
 }
 
