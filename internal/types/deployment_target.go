@@ -12,7 +12,8 @@ type DeploymentTarget struct {
 	AccessKeySalt          *[]byte                 `db:"access_key_salt" json:"-"`
 	AccessKeyHash          *[]byte                 `db:"access_key_hash" json:"-"`
 	CurrentStatus          *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
-	Namespace              *string                 `db:"namespace" json:"namespace"`
+	Namespace              *string                 `db:"namespace" json:"namespace,omitempty"`
+	Scope                  *DeploymentTargetScope  `db:"scope" json:"scope,omitempty"`
 	OrganizationID         string                  `db:"organization_id" json:"-"`
 	CreatedByUserAccountID string                  `db:"created_by_user_account_id" json:"-"`
 	AgentVersionID         string                  `db:"agent_version_id" json:"-"`
@@ -23,6 +24,9 @@ func (dt *DeploymentTarget) Validate() error {
 	if dt.Type == DepolymentTypeKubernetes {
 		if dt.Namespace == nil || *dt.Namespace == "" {
 			return errors.New("DeploymentTarget with type \"kubernetes\" must not have empty namespace")
+		}
+		if dt.Scope == nil {
+			return errors.New("DeploymentTarget with type \"kubernetes\" must not have empty scope")
 		}
 	}
 	return nil

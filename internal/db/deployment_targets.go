@@ -17,8 +17,18 @@ import (
 
 const (
 	deploymentTargetOutputExprBase = `
-		dt.id, dt.created_at, dt.name, dt.type, dt.access_key_salt, dt.access_key_hash, dt.namespace,
-		dt.organization_id, dt.created_by_user_account_id, dt.agent_version_id, dt.reported_agent_version_id,
+		dt.id,
+		dt.created_at,
+		dt.name,
+		dt.type,
+		dt.access_key_salt,
+		dt.access_key_hash,
+		dt.namespace,
+		dt.scope,
+		dt.organization_id,
+		dt.created_by_user_account_id,
+		dt.agent_version_id,
+		dt.reported_agent_version_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
 			AS geolocation
@@ -141,6 +151,7 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		"orgId":          dt.OrganizationID,
 		"userId":         dt.CreatedBy.ID,
 		"namespace":      dt.Namespace,
+		"scope":          dt.Scope,
 		"lat":            nil,
 		"lon":            nil,
 		"agentVersionId": dt.AgentVersionID,
@@ -152,9 +163,10 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
-			(name, type, organization_id, created_by_user_account_id, namespace, geolocation_lat, geolocation_lon,
-				agent_version_id)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @lat, @lon, @agentVersionId) RETURNING *
+			(name, type, organization_id, created_by_user_account_id, namespace, scope, geolocation_lat,
+				geolocation_lon, agent_version_id)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @lat, @lon, @agentVersionId)
+			RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
 		args,
