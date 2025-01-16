@@ -16,6 +16,7 @@
                 id="simple-search"
                 [placeholder]="userRole() === 'customer' ? 'Search customers' : 'Search users'"
                 [formControl]="filterForm.controls.search"
+                autotrim
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
             </div>
           </form>
@@ -123,6 +124,7 @@
                   type="text"
                   id="name"
                   formControlName="name"
+                  autotrim
                   [placeholder]="userRole() === 'customer' ? 'Sustainable Corp Ltd.' : 'Michael Scott'"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
               </div>
@@ -135,6 +137,7 @@
                   type="email"
                   id="email"
                   formControlName="email"
+                  autotrim
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="firstname.lastname@company.com"
                   required />

@@ -59,6 +59,7 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {DeploymentRequest, DeploymentRevisionStatus, DeploymentTargetScope, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -75,6 +76,7 @@ import {DeploymentTarget} from '../types/deployment-target';
     InstallationWizardComponent,
     UpperCasePipe,
     YamlEditorComponent,
+    AutotrimDirective,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,

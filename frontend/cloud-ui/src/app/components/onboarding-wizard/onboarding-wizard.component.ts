@@ -18,6 +18,7 @@ import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.co
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {ToastService} from '../../services/toast.service';
 import {getFormDisplayedError} from '../../../util/errors';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {YamlEditorComponent} from '../yaml-editor.component';
 
 @Component({
@@ -30,6 +31,7 @@ import {YamlEditorComponent} from '../yaml-editor.component';
     ReactiveFormsModule,
     ConnectInstructionsComponent,
     OnboardingWizardIntroComponent,
+    AutotrimDirective,
     YamlEditorComponent,
   ],
   animations: [modalFlyInOut],

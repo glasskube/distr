@@ -10,11 +10,12 @@ import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {AsyncPipe} from '@angular/common';
 import {base64ToBlob} from '../../util/blob';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 
 @Component({
   selector: 'app-organization-branding',
   templateUrl: './organization-branding.component.html',
-  imports: [FaIconComponent, ReactiveFormsModule, AsyncPipe],
+  imports: [FaIconComponent, ReactiveFormsModule, AsyncPipe, AutotrimDirective],
 })
 export class OrganizationBrandingComponent implements OnInit {
   protected readonly faFloppyDisk = faFloppyDisk;

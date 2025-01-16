@@ -125,6 +125,7 @@
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.name"
+                          autotrim
                           type="text"
                           name="name"
                           id="kubernetesApplicationName"
@@ -146,6 +147,7 @@
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.versionName"
+                          autotrim
                           type="text"
                           name="breadth"
                           id="kubernetesApplicationVersion"
@@ -191,6 +193,7 @@
                           >
                           <input
                             [formControl]="applicationForm.controls.kubernetes.controls.chartName"
+                            autotrim
                             type="text"
                             name="chartName"
                             id="kubernetesChartName"
@@ -214,6 +217,7 @@
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.chartUrl"
+                          autotrim
                           type="text"
                           name="chartUrl"
                           id="kubernetesChartUrl"
@@ -233,6 +237,7 @@
                         >
                         <input
                           [formControl]="applicationForm.controls.kubernetes.controls.chartVersion"
+                          autotrim
                           type="text"
                           name="chartVersion"
                           id="kubernetesChartVersion"
@@ -281,6 +286,7 @@
                         >
                         <input
                           [formControl]="applicationForm.controls.docker.controls.name"
+                          autotrim
                           type="text"
                           name="name"
                           id="applicationName"
@@ -302,6 +308,7 @@
                         >
                         <input
                           [formControl]="applicationForm.controls.docker.controls.versionName"
+                          autotrim
                           type="text"
                           name="breadth"
                           id="applicationVersion"
@@ -407,6 +414,7 @@
                     >
                     <input
                       [formControl]="deploymentTargetForm.controls.customerName"
+                      autotrim
                       type="text"
                       name="name"
                       id="customerName"
@@ -503,6 +511,7 @@
                       >
                       <input
                         [formControl]="deploymentTargetForm.controls.technicalContactEmail"
+                        autotrim
                         type="email"
                         id="techContactEmail"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -528,6 +537,7 @@
                         </p>
                         <input
                           [formControl]="deploymentTargetForm.controls.namespace"
+                          autotrim
                           type="text"
                           id="namespace"
                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
