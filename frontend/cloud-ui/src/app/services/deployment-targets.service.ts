@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable, switchMap, tap, timer} from 'rxjs';
+import {Observable, shareReplay, switchMap, tap, timer} from 'rxjs';
 import {DeploymentTargetAccessResponse} from '../types/base';
 import {DeploymentTarget} from '../types/deployment-target';
 import {ReactiveList} from './cache';
@@ -19,12 +19,17 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   private readonly httpClient = inject(HttpClient);
   private readonly cache = new DeploymentTargetsReactiveList(this.httpClient.get<DeploymentTarget[]>(this.baseUrl));
 
+  private readonly sharedPolling$ = timer(0, 5000).pipe(
+    switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.baseUrl)),
+    shareReplay(1)
+  );
+
   list(): Observable<DeploymentTarget[]> {
     return this.cache.get();
   }
 
   poll(): Observable<DeploymentTarget[]> {
-    return timer(0, 5000).pipe(switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.baseUrl)));
+    return this.sharedPolling$;
   }
 
   create(request: DeploymentTarget): Observable<DeploymentTarget> {
