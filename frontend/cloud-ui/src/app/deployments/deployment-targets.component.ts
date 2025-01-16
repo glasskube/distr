@@ -3,7 +3,6 @@ import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/com
 import {
   AfterViewInit,
   Component,
-  ElementRef,
   inject,
   Input,
   OnDestroy,
@@ -41,7 +40,7 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import {RelativeDatePipe} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -49,6 +48,8 @@ import {modalFlyInOut} from '../animations/modal';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {StatusDotComponent} from '../components/status-dot';
+import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
@@ -58,9 +59,6 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {DeploymentRequest, DeploymentRevisionStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
-import {getFormDisplayedError} from '../../util/errors';
-import {AgentVersionService} from '../services/agent-version.service';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -72,7 +70,6 @@ import {YamlEditorComponent} from '../components/yaml-editor.component';
     ReactiveFormsModule,
     NgOptimizedImage,
     IsStalePipe,
-    RelativeDatePipe,
     StatusDotComponent,
     ConnectInstructionsComponent,
     InstallationWizardComponent,
