@@ -107,7 +107,7 @@ func main() {
 			for _, deployment := range deployments {
 				if deployment.ReleaseName == res.Deployment.ReleaseName {
 					currentDeployment = &deployment
-					upgradeRequired = deployment.RevisionID != res.Deployment.RevisionID
+					upgradeRequired = deployment.RevisionID != res.RevisionID
 				} else {
 					// TODO: existing deployments should probably be handled somehow... for now we just print a warning
 					logger.Sugar().Warnf("found unhandled deployment: %v", deployment.ReleaseName)

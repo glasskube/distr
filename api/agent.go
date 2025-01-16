@@ -19,7 +19,6 @@ type KubernetesAgentResource struct {
 }
 
 type KubernetesAgentDeployment struct {
-	RevisionID   string         `json:"revisionId"`
 	ReleaseName  string         `json:"releaseName"`
 	ChartUrl     string         `json:"chartUrl"`
 	ChartName    string         `json:"chartName"`
