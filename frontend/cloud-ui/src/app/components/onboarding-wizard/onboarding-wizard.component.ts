@@ -64,7 +64,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         nonNullable: true,
         validators: Validators.required,
       }),
-      chartName: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
+      chartName: new FormControl<string>('', Validators.required),
       chartUrl: new FormControl<string>('', Validators.required),
       chartVersion: new FormControl<string>('', Validators.required),
     }),
@@ -330,7 +330,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       return {
         name: versionFormVal.versionName!,
         chartType: versionFormVal.chartType!,
-        chartName: versionFormVal.chartName,
+        chartName: versionFormVal.chartName ?? undefined,
         chartUrl: versionFormVal.chartUrl!,
         chartVersion: versionFormVal.chartVersion!,
       };
