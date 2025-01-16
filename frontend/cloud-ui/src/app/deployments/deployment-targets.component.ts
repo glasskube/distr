@@ -256,7 +256,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         type: val.type!,
       };
 
-      if (val.geolocation?.lat && val.geolocation.lon) {
+      if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
         dt.geolocation = {
           lat: val.geolocation.lat,
           lon: val.geolocation.lon,
