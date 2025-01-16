@@ -177,14 +177,18 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return err
 	}
 
+	agentUpdateStr := ""
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
-		"id":             dt.ID,
-		"name":           dt.Name,
-		"orgId":          orgId,
-		"lat":            nil,
-		"lon":            nil,
-		"agentVersionId": dt.AgentVersionID,
+		"id":    dt.ID,
+		"name":  dt.Name,
+		"orgId": orgId,
+		"lat":   nil,
+		"lon":   nil,
+	}
+	if dt.AgentVersionID != "" {
+		args["agentVersionId"] = dt.AgentVersionID
+		agentUpdateStr = ", agent_version_id = @agentVersionId "
 	}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
@@ -194,8 +198,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 			UPDATE DeploymentTarget AS dt SET
 				name = @name,
 				geolocation_lat = @lat,
-				geolocation_lon = @lon,
-				agent_version_id = @agentVersionId
+				geolocation_lon = @lon `+agentUpdateStr+`
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
 		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
