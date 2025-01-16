@@ -1,14 +1,4 @@
-{{ if .targetSecret }}
-apiVersion: v1
-kind: Secret
-metadata:
-  name: glasskube-cloud-agent-auth
-type: Opaque
-stringData:
-  GK_TARGET_SECRET: "{{ .targetSecret }}"
-
 ---
-{{ end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -22,12 +12,24 @@ data:
   GK_INTERVAL: "{{ .agentInterval }}"
   GK_AGENT_VERSION_ID: "{{ .agentVersionId }}"
 
+{{ if .targetSecret }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: glasskube-cloud-agent-auth
+type: Opaque
+stringData:
+  GK_TARGET_SECRET: "{{ .targetSecret }}"
+
+{{ end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: glasskube-cloud-agent
 
+{{ if eq .targetScope "namespace" }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -54,6 +56,22 @@ roleRef:
   kind: Role
   name: namespace-admin
 
+{{ else }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: glasskube-cloud-agent
+subjects:
+  - kind: ServiceAccount
+    name: glasskube-cloud-agent
+    namespace: {{ .targetNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+
+{{ end }}
 ---
 apiVersion: apps/v1
 kind: Deployment

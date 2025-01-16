@@ -45,7 +45,7 @@ func getTemplateData(
 	deploymentTarget types.DeploymentTargetWithCreatedBy,
 	secret *string,
 ) map[string]any {
-	return map[string]any{
+	result := map[string]any{
 		"agentInterval":     env.AgentInterval(),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
 		"agentVersionId":    deploymentTarget.AgentVersion.ID,
@@ -56,6 +56,13 @@ func getTemplateData(
 		"resourcesEndpoint": resourcesEndpoint,
 		"statusEndpoint":    statusEndpoint,
 	}
+	if deploymentTarget.Namespace != nil {
+		result["targetNamespace"] = *deploymentTarget.Namespace
+	}
+	if deploymentTarget.Scope != nil {
+		result["targetScope"] = *deploymentTarget.Scope
+	}
+	return result
 }
 
 func getTemplate(deploymentTarget types.DeploymentTargetWithCreatedBy) (*template.Template, error) {
