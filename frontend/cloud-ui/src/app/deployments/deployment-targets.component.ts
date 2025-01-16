@@ -57,7 +57,7 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {DeploymentRequest, DeploymentRevisionStatus, DeploymentType} from '../types/deployment';
+import {DeploymentRequest, DeploymentRevisionStatus, DeploymentTargetScope, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 
 @Component({
@@ -121,6 +121,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       lat: new FormControl<number | undefined>(undefined),
       lon: new FormControl<number | undefined>(undefined),
     }),
+    namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
+    scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
   });
 
   editFormLoading = false;
