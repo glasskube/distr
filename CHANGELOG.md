@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.10.0](https://github.com/glasskube/cloud/compare/0.9.2...0.10.0) (2025-01-16)
+
+
+### Features
+
+* add support for cluster scope in  kubernetes agent ([#298](https://github.com/glasskube/cloud/issues/298)) ([c3479ad](https://github.com/glasskube/cloud/commit/c3479adfd0a1579a96b91adaaf570b0fdfbc7e76))
+* **ui:** hide chart name when repo type is oci ([#282](https://github.com/glasskube/cloud/issues/282)) ([55fc754](https://github.com/glasskube/cloud/commit/55fc754b03ca11b3d1a526f2ba97c83aebf6cbcd))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.1.1 ([#300](https://github.com/glasskube/cloud/issues/300)) ([bedc1a3](https://github.com/glasskube/cloud/commit/bedc1a32aa70ed137ab96cec0f04f7c1886c01a9))
+* **deps:** update dependency globe.gl to v2.38.0 ([#301](https://github.com/glasskube/cloud/issues/301)) ([298c0df](https://github.com/glasskube/cloud/commit/298c0dfc3b18e917fd0ec148f97b0b039f0ea957))
+* **ui:** coordinates can be 0 ([#297](https://github.com/glasskube/cloud/issues/297)) ([f952ccf](https://github.com/glasskube/cloud/commit/f952ccff2aa2f88a0c99a5aa9c373c9f0f6c2ee6))
+* use revision id from resource ([#302](https://github.com/glasskube/cloud/issues/302)) ([bc4bd6e](https://github.com/glasskube/cloud/commit/bc4bd6e422715c7c6f02d8dd1053784c4b83517d))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.1.1 ([#293](https://github.com/glasskube/cloud/issues/293)) ([8d9058e](https://github.com/glasskube/cloud/commit/8d9058e0882fe58fa9d73d7278b4a910e51b4fc9))
+* indicate stale deployments as stale after 10 seconds ([215365e](https://github.com/glasskube/cloud/commit/215365eb8c8e451bc502d7595bb73e3f08c58179))
+
 ## [0.9.2](https://github.com/glasskube/cloud/compare/0.9.1...0.9.2) (2025-01-16)
 
 
