@@ -36,13 +36,13 @@ func WithDeployment(ctx context.Context, deployment *types.Deployment) context.C
 	return ctx
 }
 
-func WithDeploymentTarget(ctx context.Context, dt *types.DeploymentTarget) context.Context {
+func WithDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) context.Context {
 	return context.WithValue(ctx, ctxKeyDeploymentTarget, dt)
 }
 
-func GetDeploymentTarget(ctx context.Context) *types.DeploymentTarget {
+func GetDeploymentTarget(ctx context.Context) *types.DeploymentTargetWithCreatedBy {
 	val := ctx.Value(ctxKeyDeploymentTarget)
-	if dt, ok := val.(*types.DeploymentTarget); ok {
+	if dt, ok := val.(*types.DeploymentTargetWithCreatedBy); ok {
 		if dt != nil {
 			return dt
 		}

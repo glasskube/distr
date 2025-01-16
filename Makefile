@@ -1,4 +1,5 @@
 GOCMD ?= go
+VERSION ?= snapshot
 COMMIT = $(shell git rev-parse --short HEAD)
 LDFLAGS ?= -s -w -X github.com/glasskube/cloud/internal/buildconfig.version=$(VERSION) -X github.com/glasskube/cloud/internal/buildconfig.commit=$(COMMIT)
 
@@ -58,15 +59,15 @@ build-kubernetes-agent: tidy
 
 .PHONY: docker-build-server
 docker-build-server: build
-	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud .
+	docker build -f Dockerfile.server --tag ghcr.io/glasskube/cloud:$(VERSION) .
 
 .PHONY: docker-build-docker-agent
 docker-build-docker-agent:
-	docker build -f Dockerfile.docker-agent --tag ghcr.io/glasskube/cloud/docker-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+	docker build -f Dockerfile.docker-agent --tag ghcr.io/glasskube/cloud/docker-agent:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
 
 .PHONY: docker-build-kubernetes-agent
 docker-build-kubernetes-agent:
-	docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/cloud/kubernetes-agent --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+	docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/cloud/kubernetes-agent:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
 
 .PHONY: docker-build
 docker-build: docker-build-server docker-build-docker-agent docker-build-kubernetes-agent

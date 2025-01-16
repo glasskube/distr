@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
-
-	"github.com/glasskube/cloud/internal/contenttype"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
@@ -162,7 +159,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	applicationVersion.ApplicationId = application.ID
 
 	if application.Type == types.DeploymentTypeDocker {
-		if data, ok := readFile(w, r, "composefile"); !ok {
+		if data, ok := readMultipartFile(w, r, "composefile"); !ok {
 			return
 		} else {
 			applicationVersion.ComposeFileData = data
@@ -172,7 +169,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		if data, ok := readFile(w, r, "valuesfile"); !ok {
+		if data, ok := readMultipartFile(w, r, "valuesfile"); !ok {
 			return
 		} else {
 			applicationVersion.ValuesFileData = data
@@ -181,7 +178,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if data, ok := readFile(w, r, "templatefile"); !ok {
+		if data, ok := readMultipartFile(w, r, "templatefile"); !ok {
 			return
 		} else {
 			// Template file is taken without parsing on purpose.
@@ -205,40 +202,6 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if err = json.NewEncoder(w).Encode(applicationVersion); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
-	}
-}
-
-func readFile(w http.ResponseWriter, r *http.Request, formKey string) ([]byte, bool) {
-	log := internalctx.GetLogger(r.Context())
-	if file, head, err := r.FormFile(formKey); err != nil {
-		if !errors.Is(err, http.ErrMissingFile) {
-			log.Error("failed to get file from upload", zap.Error(err))
-			sentry.GetHubFromContext(r.Context()).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return nil, false
-		} else {
-			return nil, true
-		}
-	} else {
-		log.Sugar().Debugf("got file %v with type %v and size %v", head.Filename, head.Header, head.Size)
-		// max file size is 100KiB
-		if head.Size > 102400 {
-			log.Debug("large body was rejected")
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
-			fmt.Fprintln(w, "file too large (max 100 KiB)")
-			return nil, false
-		} else if err := contenttype.IsYaml(head.Header); err != nil {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
-			fmt.Fprint(w, err)
-			return nil, false
-		} else if data, err := io.ReadAll(file); err != nil {
-			log.Error("failed to read file from upload", zap.Error(err))
-			sentry.GetHubFromContext(r.Context()).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return nil, false
-		} else {
-			return data, true
-		}
 	}
 }
 
@@ -318,7 +281,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var composeFileData []byte
-	if composeFile, err := resources.Get("embedded/apps/shiori/docker-compose.yaml"); err != nil {
+	if composeFile, err := resources.Get("apps/shiori/docker-compose.yaml"); err != nil {
 		log.Warn("failed to read shiori compose file", zap.Error(err))
 	} else {
 		composeFileData = composeFile

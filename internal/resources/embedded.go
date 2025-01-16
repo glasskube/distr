@@ -3,22 +3,28 @@ package resources
 import (
 	"embed"
 	"fmt"
+	"io/fs"
 	"text/template"
+
+	"github.com/glasskube/cloud/internal/util"
 )
 
 //go:embed embedded
 var embeddedFs embed.FS
+var fsys = util.Require(fs.Sub(embeddedFs, "embedded"))
+var templates = map[string]*template.Template{}
 
-func Get(filename string) ([]byte, error) {
-	return embeddedFs.ReadFile(filename)
+func Get(name string) ([]byte, error) {
+	return fs.ReadFile(fsys, name)
 }
 
-func GetTemplate(filename string) (*template.Template, error) {
-	if bytes, err := Get(filename); err != nil {
-		return nil, fmt.Errorf("failed to read template file %v: %w", filename, err)
-	} else if tmpl, err := template.New("").Parse(string(bytes)); err != nil {
-		return nil, fmt.Errorf("failed to parse template %v: %w", filename, err)
+func GetTemplate(name string) (*template.Template, error) {
+	if tmpl, ok := templates[name]; ok {
+		return tmpl, nil
+	} else if tmpl, err := template.ParseFS(fsys, name); err != nil {
+		return nil, fmt.Errorf("failed to parse template %v: %w", name, err)
 	} else {
+		templates[name] = tmpl
 		return tmpl, nil
 	}
 }

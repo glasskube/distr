@@ -64,7 +64,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       try {
         await lastValueFrom(this.auth.login(value.email!, value.password!));
         if (this.auth.hasRole('customer')) {
-          await this.router.navigate(['/deployments']);
+          await this.router.navigate(['/home']);
         } else {
           await this.router.navigate(['/dashboard']);
         }

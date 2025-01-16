@@ -3,7 +3,6 @@ import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/com
 import {
   AfterViewInit,
   Component,
-  ElementRef,
   inject,
   Input,
   OnDestroy,
@@ -41,7 +40,7 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import {RelativeDatePipe} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -49,6 +48,8 @@ import {modalFlyInOut} from '../animations/modal';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {StatusDotComponent} from '../components/status-dot';
+import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
@@ -58,8 +59,6 @@ import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
 import {DeploymentRequest, DeploymentRevisionStatus, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
-import {getFormDisplayedError} from '../../util/errors';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -71,7 +70,6 @@ import {YamlEditorComponent} from '../components/yaml-editor.component';
     ReactiveFormsModule,
     NgOptimizedImage,
     IsStalePipe,
-    RelativeDatePipe,
     StatusDotComponent,
     ConnectInstructionsComponent,
     InstallationWizardComponent,
@@ -91,6 +89,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deployments = inject(DeploymentService);
+  private readonly agentVersions = inject(AgentVersionService);
 
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
@@ -144,6 +143,14 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   );
   private readonly applications$ = this.applications.list();
+  public readonly agentVersions$ = this.agentVersions.list();
+
+  readonly showAgentUpdateColumn$ = combineLatest([this.filteredDeploymentTargets$, this.agentVersions$]).pipe(
+    map(
+      ([dts, avs]) =>
+        avs.length !== 0 && dts.some((dt) => dt.agentVersion?.id && dt.agentVersion?.id !== avs[avs.length - 1].id)
+    )
+  );
 
   readonly filteredApplications$ = combineLatest([
     this.applications$,
@@ -373,5 +380,22 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         this.showModal(modal);
       }
     }
+  }
+
+  public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {
+    try {
+      const agentVersions = await firstValueFrom(this.agentVersions$);
+      if (agentVersions.length > 0) {
+        const targetVersion = agentVersions[agentVersions.length - 1];
+        if (
+          await firstValueFrom(
+            this.overlay.confirm(`Update ${dt.name} agent from ${dt.agentVersion?.name} to ${targetVersion.name}?`)
+          )
+        ) {
+          dt.agentVersion = targetVersion;
+          await firstValueFrom(this.deploymentTargets.update(dt));
+        }
+      }
+    } catch (e) {}
   }
 }

@@ -103,6 +103,7 @@ func main() {
 			Name:           "Space Center Austria",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.1956026, Lon: 16.3633028},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt1))
@@ -113,6 +114,7 @@ func main() {
 			OrganizationID: org.ID,
 			Name:           "Edge Location",
 			Type:           types.DeploymentTypeDocker,
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt2))
@@ -124,6 +126,7 @@ func main() {
 			Name:           "580 Founders Café",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.758781, Lon: -122.396882},
+			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt3))
@@ -136,6 +139,7 @@ func main() {
 				OrganizationID: org.ID,
 				Name:           fmt.Sprintf("Deployment Target %v", idx),
 				Type:           types.DeploymentTypeDocker,
+				AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 			},
 		}
 		util.Must(db.CreateDeploymentTarget(ctx, &dt))
@@ -151,8 +155,9 @@ func main() {
 		if idx == 2 {
 			createdAt = createdAt.Add(12 * time.Hour)
 		}
+		var ds []types.DeploymentRevisionStatus
 		for createdAt.Before(now) {
-			util.Must(db.CreateDeploymentRevisionStatusWithCreatedAt(ctx, revision.ID, "demo status", createdAt))
+			ds = append(ds, types.DeploymentRevisionStatus{CreatedAt: createdAt, Message: "demo status"})
 			if idx == 0 && createdAt.Hour() == 15 && createdAt.Minute() > 50 {
 				createdAt = createdAt.Add(15 * time.Minute)
 			} else if idx == 1 && createdAt.Hour() == 22 {
@@ -161,5 +166,6 @@ func main() {
 				createdAt = createdAt.Add(5 * time.Second)
 			}
 		}
+		util.Must(db.BulkCreateDeploymentRevisionStatusWithCreatedAt(ctx, revision.ID, ds))
 	}
 }

@@ -5,10 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/glasskube/cloud/internal/agentclient/useragent"
+	"github.com/glasskube/cloud/internal/buildconfig"
 	"github.com/glasskube/cloud/internal/types"
 
 	"github.com/glasskube/cloud/api"
@@ -17,12 +20,13 @@ import (
 )
 
 type Client struct {
-	AuthTarget string
-	AuthSecret string
+	authTarget string
+	authSecret string
 
-	LoginEndpoint    string
-	ResourceEndpoint string
-	StatusEndpoint   string
+	loginEndpoint    string
+	manifestEndpoint string
+	resourceEndpoint string
+	statusEndpoint   string
 
 	httpClient *http.Client
 	logger     *zap.Logger
@@ -30,7 +34,7 @@ type Client struct {
 	rawToken   string
 }
 
-func (c *Client) Resource(ctx context.Context) (*api.DockerAgentResource, error) {
+func (c *Client) DockerResource(ctx context.Context) (*api.DockerAgentResource, error) {
 	return resource[api.DockerAgentResource](ctx, c)
 }
 
@@ -40,7 +44,7 @@ func (c *Client) KubernetesResource(ctx context.Context) (*api.KubernetesAgentRe
 
 func resource[T any](ctx context.Context, c *Client) (*T, error) {
 	var result T
-	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ResourceEndpoint, nil); err != nil {
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.resourceEndpoint, nil); err != nil {
 		return nil, err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
@@ -51,6 +55,18 @@ func resource[T any](ctx context.Context, c *Client) (*T, error) {
 		} else {
 			return &result, nil
 		}
+	}
+}
+
+func (c *Client) Manifest(ctx context.Context) (io.Reader, error) {
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.manifestEndpoint, nil); err != nil {
+		return nil, err
+	} else if resp, err := c.doAuthenticated(ctx, req); err != nil {
+		return nil, err
+	} else if data, err := io.ReadAll(resp.Body); err != nil {
+		return nil, err
+	} else {
+		return bytes.NewBuffer(data), nil
 	}
 }
 
@@ -68,7 +84,7 @@ func (c *Client) Status(ctx context.Context, revisionID string, status string, e
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(deploymentStatus); err != nil {
 		return err
-	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.StatusEndpoint, &buf); err != nil {
+	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.statusEndpoint, &buf); err != nil {
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
@@ -81,11 +97,11 @@ func (c *Client) Status(ctx context.Context, revisionID string, status string, e
 }
 
 func (c *Client) Login(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.LoginEndpoint, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.loginEndpoint, nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(c.AuthTarget, c.AuthSecret)
+	req.SetBasicAuth(c.authTarget, c.authSecret)
 	if resp, err := c.do(req); err != nil {
 		return err
 	} else {
@@ -137,6 +153,7 @@ func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Re
 }
 
 func (c *Client) do(r *http.Request) (*http.Response, error) {
+	r.Header.Set("User-Agent", fmt.Sprintf("%v/%v", useragent.GlasskubeAgentUserAgent, buildconfig.Version()))
 	return checkStatus(c.httpClient.Do(r))
 }
 
@@ -146,19 +163,22 @@ func NewFromEnv(logger *zap.Logger) (*Client, error) {
 		logger:     logger,
 	}
 	var err error
-	if client.AuthTarget, err = readEnvVar("GK_TARGET_ID"); err != nil {
+	if client.authTarget, err = readEnvVar("GK_TARGET_ID"); err != nil {
 		return nil, err
 	}
-	if client.AuthSecret, err = readEnvVar("GK_TARGET_SECRET"); err != nil {
+	if client.authSecret, err = readEnvVar("GK_TARGET_SECRET"); err != nil {
 		return nil, err
 	}
-	if client.LoginEndpoint, err = readEnvVar("GK_LOGIN_ENDPOINT"); err != nil {
+	if client.loginEndpoint, err = readEnvVar("GK_LOGIN_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.ResourceEndpoint, err = readEnvVar("GK_RESOURCE_ENDPOINT"); err != nil {
+	if client.manifestEndpoint, err = readEnvVar("GK_MANIFEST_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.StatusEndpoint, err = readEnvVar("GK_STATUS_ENDPOINT"); err != nil {
+	if client.resourceEndpoint, err = readEnvVar("GK_RESOURCE_ENDPOINT"); err != nil {
+		return nil, err
+	}
+	if client.statusEndpoint, err = readEnvVar("GK_STATUS_ENDPOINT"); err != nil {
 		return nil, err
 	}
 	return &client, nil

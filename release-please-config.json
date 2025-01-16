@@ -1,6 +1,7 @@
 {
   "packages": {
     ".": {
+      "include-v-in-tag": false,
       "release-type": "go",
       "prerelease": false,
       "draft": false,

@@ -9,6 +9,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/buildconfig"
+	internalctx "github.com/glasskube/cloud/internal/context"
+	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/migrations"
 	"github.com/glasskube/cloud/internal/svc"
@@ -47,6 +49,8 @@ func main() {
 	if cliOptions.Migrate {
 		util.Must(migrations.Up(registry.GetLogger()))
 	}
+
+	util.Must(db.CreateAgentVersion(internalctx.WithDb(ctx, registry.GetDbPool())))
 
 	server := registry.GetServer()
 	go onSigterm(func() {
