@@ -16,7 +16,7 @@ import (
 func SendUserInviteMail(
 	ctx context.Context,
 	userAccount types.UserAccount,
-	organization types.Organization,
+	organization types.OrganizationWithBranding,
 	userRole types.UserRole,
 	applicationName string,
 ) error {
