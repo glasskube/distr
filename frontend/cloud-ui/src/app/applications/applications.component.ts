@@ -17,6 +17,7 @@ import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
 import {getFormDisplayedError} from '../../util/errors';
+import {YamlEditorComponent} from '../components/yaml-editor.component';
 
 @Component({
   selector: 'app-applications',
@@ -28,6 +29,7 @@ import {getFormDisplayedError} from '../../util/errors';
     NgOptimizedImage,
     OverlayModule,
     RequireRoleDirective,
+    YamlEditorComponent,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
@@ -69,6 +71,8 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       chartName: new FormControl<string>('', Validators.required),
       chartUrl: new FormControl<string>('', Validators.required),
       chartVersion: new FormControl<string>('', Validators.required),
+      baseValues: new FormControl<string>(''),
+      template: new FormControl<string>(''),
     }),
   });
   newVersionFormLoading = false;
@@ -78,14 +82,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   private manageApplicationDrawerRef?: DialogRef;
   private applicationVersionModalRef?: DialogRef;
-
-  baseValuesFile: File | null = null;
-  @ViewChild('baseValuesFileInput')
-  baseValuesFileInput?: ElementRef;
-
-  templateFile: File | null = null;
-  @ViewChild('templateFileInput')
-  templateFileInput?: ElementRef;
 
   private readonly overlay = inject(OverlayService);
 
@@ -185,14 +181,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     if (this.dockerComposeFileInput) {
       this.dockerComposeFileInput.nativeElement.value = '';
     }
-    this.baseValuesFile = null;
-    if (this.baseValuesFileInput) {
-      this.baseValuesFileInput.nativeElement.value = '';
-    }
-    this.templateFile = null;
-    if (this.templateFileInput) {
-      this.templateFileInput.nativeElement.value = '';
-    }
   }
 
   async saveApplication() {
@@ -232,14 +220,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.dockerComposeFile = event.target.files[0];
   }
 
-  onBaseValuesFileSelected(event: Event) {
-    this.baseValuesFile = (event.target as HTMLInputElement).files?.[0] ?? null;
-  }
-
-  onTemplateFileSelected(event: Event) {
-    this.templateFile = (event.target as HTMLInputElement).files?.[0] ?? null;
-  }
-
   async createVersion() {
     this.newVersionForm.markAllAsTouched();
     const isDocker = this.selectedApplication?.type === 'docker';
@@ -267,8 +247,8 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
         res = this.applications.createApplicationVersionForKubernetes(
           this.selectedApplication,
           version,
-          this.baseValuesFile,
-          this.templateFile
+          versionFormVal.baseValues,
+          versionFormVal.template
         );
       }
 

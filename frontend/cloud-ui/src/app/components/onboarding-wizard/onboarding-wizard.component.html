@@ -249,32 +249,26 @@
                     <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                       <div class="w-full">
                         <label
-                          for="base_values_file_input"
+                          for="base_values_input"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                           >Base Values</label
                         >
-                        <input
-                          id="base_values_file_input"
-                          type="file"
-                          accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
-                          #baseValuesFileInput
-                          (change)="onBaseValuesFileSelected($event)"
-                          class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+                        <app-yaml-editor
+                          id="base_values_input"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          [formCtrl]="applicationForm.controls.kubernetes.controls.baseValues">
+                        </app-yaml-editor>
                       </div>
 
                       <div class="w-full">
-                        <label
-                          for="template_file_input"
-                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                           >Template</label
                         >
-                        <input
-                          id="template_file_input"
-                          type="file"
-                          accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
-                          #templateFileInput
-                          (change)="onTemplateFileSelected($event)"
-                          class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+                        <app-yaml-editor
+                          id="template_input"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          [formCtrl]="applicationForm.controls.kubernetes.controls.template">
+                        </app-yaml-editor>
                       </div>
                     </div>
                   } @else if (applicationForm.controls.type.value === 'docker') {

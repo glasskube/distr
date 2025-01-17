@@ -339,6 +339,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       deploymentId: deploymentTarget.deployment?.id,
       applicationId: deploymentTarget.deployment?.applicationId,
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
+      releaseName: deploymentTarget.deployment?.releaseName,
     });
     if (deploymentTarget.deployment) {
       this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
