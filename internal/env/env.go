@@ -30,6 +30,7 @@ var (
 	sentryDSN                  string
 	sentryDebug                bool
 	enableQueryLogging         bool
+	agentDockerConfig          []byte
 )
 
 func init() {
@@ -98,6 +99,10 @@ func init() {
 	if value, ok := os.LookupEnv("ENABLE_QUERY_LOGGING"); ok {
 		enableQueryLogging = util.Require(strconv.ParseBool(value))
 	}
+
+	if value, ok := os.LookupEnv("AGENT_DOCKER_CONFIG"); ok {
+		agentDockerConfig = []byte(value)
+	}
 }
 
 func requirePositiveDuration(val string) time.Duration {
@@ -156,4 +161,8 @@ func EnableQueryLogging() bool {
 
 func StatusEntriesMaxAge() *time.Duration {
 	return statusEntriesMaxAge
+}
+
+func AgentDockerConfig() []byte {
+	return agentDockerConfig
 }

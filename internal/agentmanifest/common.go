@@ -3,6 +3,7 @@ package agentmanifest
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 	"net/url"
 	"path"
@@ -47,6 +48,7 @@ func getTemplateData(
 ) map[string]any {
 	result := map[string]any{
 		"agentInterval":     env.AgentInterval(),
+		"agentDockerConfig": base64.StdEncoding.EncodeToString(env.AgentDockerConfig()),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
 		"agentVersionId":    deploymentTarget.AgentVersion.ID,
 		"targetId":          deploymentTarget.ID,

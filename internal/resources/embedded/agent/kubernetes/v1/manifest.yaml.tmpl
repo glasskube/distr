@@ -23,6 +23,17 @@ stringData:
   GK_TARGET_SECRET: "{{ .targetSecret }}"
 
 {{ end }}
+{{ if .agentDockerConfig }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: glasskube-cloud-agent-dockerconfig
+type: Opaque
+data:
+  config.json: {{ .agentDockerConfig }}
+
+{{ end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -93,8 +104,11 @@ spec:
         runAsNonRoot: true
       containers:
         - name: glasskube-cloud-agent
-          image: 'ghcr.io/glasskube/cloud/kubernetes-agent:{{ .agentVersion }}'
+          image: "ghcr.io/glasskube/cloud/kubernetes-agent:{{ .agentVersion }}"
           imagePullPolicy: IfNotPresent
+          env:
+            - name: DOCKER_CONFIG
+              value: /opt/config/.docker/
           envFrom:
             - secretRef:
                 name: glasskube-cloud-agent-auth
@@ -104,3 +118,15 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "500m"
+          volumeMounts:
+            - name: dockerconfig
+              mountPath: /opt/config/.docker/
+            - name: cache
+              mountPath: /.cache/
+      volumes:
+        - name: dockerconfig
+          secret:
+            secretName: glasskube-cloud-agent-dockerconfig
+            optional: true
+        - name: cache
+          emptyDir: {}
