@@ -17,6 +17,7 @@ import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
 import {getFormDisplayedError} from '../../util/errors';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 
 @Component({
@@ -29,6 +30,7 @@ import {YamlEditorComponent} from '../components/yaml-editor.component';
     NgOptimizedImage,
     OverlayModule,
     RequireRoleDirective,
+    AutotrimDirective,
     YamlEditorComponent,
   ],
   templateUrl: './applications.component.html',

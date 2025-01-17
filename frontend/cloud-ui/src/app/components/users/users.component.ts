@@ -17,18 +17,19 @@ import {
   takeUntil,
   tap,
 } from 'rxjs';
+import {getFormDisplayedError} from '../../../util/errors';
+import {filteredByFormControl} from '../../../util/filter';
 import {modalFlyInOut} from '../../animations/modal';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
-import {filteredByFormControl} from '../../../util/filter';
-import {getFormDisplayedError} from '../../../util/errors';
 
 @Component({
   selector: 'app-users',
-  imports: [FaIconComponent, AsyncPipe, DatePipe, ReactiveFormsModule, RequireRoleDirective],
+  imports: [FaIconComponent, AsyncPipe, DatePipe, ReactiveFormsModule, RequireRoleDirective, AutotrimDirective],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
 })

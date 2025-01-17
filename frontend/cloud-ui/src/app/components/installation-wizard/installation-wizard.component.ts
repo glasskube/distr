@@ -18,6 +18,7 @@ import {DeploymentRequest, DeploymentTargetScope, DeploymentType} from '../../ty
 import {DeploymentTarget} from '../../types/deployment-target';
 import {YamlEditorComponent} from '../yaml-editor.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -30,6 +31,7 @@ import {InstallationWizardStepperComponent} from './installation-wizard-stepper.
     AsyncPipe,
     ConnectInstructionsComponent,
     YamlEditorComponent,
+    AutotrimDirective,
   ],
   animations: [modalFlyInOut],
 })

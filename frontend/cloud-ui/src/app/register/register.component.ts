@@ -2,13 +2,13 @@ import {Component, inject} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
-import {AuthService} from '../services/auth.service';
-import {HttpErrorResponse} from '@angular/common/http';
 import {getFormDisplayedError} from '../../util/errors';
+import {AutotrimDirective} from '../directives/autotrim.directive';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-register',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, AutotrimDirective],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {

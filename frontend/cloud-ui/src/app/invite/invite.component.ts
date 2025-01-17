@@ -4,10 +4,11 @@ import {firstValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {SettingsService} from '../services/settings.service';
 import {getFormDisplayedError} from '../../util/errors';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 
 @Component({
   selector: 'app-invite',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AutotrimDirective],
   templateUrl: './invite.component.html',
 })
 export class InviteComponent {
