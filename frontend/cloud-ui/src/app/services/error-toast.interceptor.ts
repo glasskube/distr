@@ -28,6 +28,8 @@ function getToastDisplayedError(err: any): string | undefined {
           return `Rate limited! Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`;
         }
         return 'Rate limited! Please try again later.';
+      case 0:
+        return 'Connection failed';
       default:
         return 'An unexpected technical error occurred';
     }

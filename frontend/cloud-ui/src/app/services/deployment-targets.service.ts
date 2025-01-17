@@ -1,6 +1,6 @@
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable, shareReplay, switchMap, tap, timer} from 'rxjs';
+import {EMPTY, Observable, retry, shareReplay, switchMap, tap, timer} from 'rxjs';
 import {DeploymentTargetAccessResponse} from '../types/base';
 import {DeploymentTarget} from '../types/deployment-target';
 import {ReactiveList} from './cache';
@@ -21,6 +21,12 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
 
   private readonly sharedPolling$ = timer(0, 5000).pipe(
     switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.baseUrl)),
+    retry({
+      delay: (e, c) =>
+        e instanceof HttpErrorResponse && (!e.status || e.status >= 500)
+          ? timer(Math.min(Math.pow(c, 2), 30) * 1000)
+          : EMPTY,
+    }),
     shareReplay(1)
   );
 
