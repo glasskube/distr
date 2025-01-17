@@ -385,6 +385,21 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
+  async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
+    if (deploymentTarget.currentStatus !== undefined) {
+      if (
+        !(await firstValueFrom(
+          this.overlay.confirm(
+            `Warning: If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid. Continue?`
+          )
+        ))
+      ) {
+        return;
+      }
+    }
+    this.showModal(modal);
+  }
+
   public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {
     try {
       const agentVersions = await firstValueFrom(this.agentVersions$);
