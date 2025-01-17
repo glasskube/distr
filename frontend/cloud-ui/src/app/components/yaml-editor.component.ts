@@ -7,7 +7,7 @@ import {HighlightStyle, indentOnInput, syntaxHighlighting} from '@codemirror/lan
 import {Transaction} from '@codemirror/state';
 import {EditorView, highlightSpecialChars, keymap} from '@codemirror/view';
 import {tags} from '@lezer/highlight';
-import {EMPTY, Subject, switchMap, takeUntil} from 'rxjs';
+import {EMPTY, Subject, switchMap, takeUntil, tap} from 'rxjs';
 
 @Component({
   selector: 'app-yaml-editor',
@@ -24,11 +24,14 @@ export class YamlEditorComponent implements OnInit, OnDestroy {
   constructor() {
     toObservable(this.formCtrl)
       .pipe(
+        tap(x => console.log('1 formCtrl', x)),
         takeUntil(this.destroyed$),
         switchMap((fc) => fc?.valueChanges ?? EMPTY)
       )
       .subscribe((value) => {
+        console.log('1.1 formCtrl valueChanges', value);
         this.view.state.update({changes: {from: 0, to: this.view.state.doc.length, insert: value ?? ''}});
+        console.log('1.2 view updated')
       });
   }
 
@@ -51,8 +54,8 @@ export class YamlEditorComponent implements OnInit, OnDestroy {
       ],
       parent: this.host.nativeElement,
       dispatchTransactions: (trs, view) => {
-        view.update(trs);
         this.formCtrl()?.setValue(this.view.state.doc.toString());
+        view.update(trs);
       },
     });
   }
