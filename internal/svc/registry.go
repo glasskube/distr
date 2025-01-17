@@ -120,7 +120,7 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 	case env.MailerTypeSMTP:
 		smtpConfig := smtp.Config{
 			MailerConfig: mail.MailerConfig{
-				FromAddress: config.FromAddress,
+				DefaultFromAddress: config.FromAddress,
 			},
 			Host:      config.SmtpConfig.Host,
 			Port:      config.SmtpConfig.Port,
@@ -130,7 +130,7 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 		}
 		return smtp.New(smtpConfig)
 	case env.MailerTypeSES:
-		sesConfig := ses.Config{MailerConfig: mail.MailerConfig{FromAddress: config.FromAddress}}
+		sesConfig := ses.Config{MailerConfig: mail.MailerConfig{DefaultFromAddress: config.FromAddress}}
 		return ses.NewFromContext(ctx, sesConfig)
 	default:
 		return nil, errors.New("invalid mailer type")

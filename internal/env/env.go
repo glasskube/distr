@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/mail"
 	"os"
 	"strconv"
 	"time"
@@ -73,7 +74,7 @@ func init() {
 	default:
 		panic("invalid MAILER_TYPE")
 	}
-	mailerConfig.FromAddress = os.Getenv("MAILER_FROM_ADDRESS")
+	mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
 
 	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
 		inviteTokenValidDuration = requirePositiveDuration(d)

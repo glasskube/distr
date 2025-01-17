@@ -7,6 +7,7 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/mailtemplates"
 	"github.com/glasskube/cloud/internal/types"
@@ -28,6 +29,8 @@ func SendUserInviteMail(
 		log.Error("could not get current user for invite mail", zap.Error(err))
 		return err
 	} else {
+		from := env.GetMailerConfig().FromAddress
+		from.Name = organization.Name
 		var email mail.Mail
 		switch userRole {
 		case types.UserRoleCustomer:
@@ -37,6 +40,7 @@ func SendUserInviteMail(
 			} else {
 				email = mail.New(
 					mail.To(userAccount.Email),
+					mail.From(from),
 					mail.Bcc(currentUser.Email),
 					mail.ReplyTo(currentUser.Email),
 					mail.Subject("Welcome to Glasskube Cloud"),
@@ -46,6 +50,7 @@ func SendUserInviteMail(
 		case types.UserRoleVendor:
 			email = mail.New(
 				mail.To(userAccount.Email),
+				mail.From(from),
 				mail.Subject("Welcome to Glasskube Cloud"),
 				mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, token)),
 			)
