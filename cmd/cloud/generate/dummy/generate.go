@@ -44,15 +44,15 @@ func main() {
 	util.Must(db.CreateUserAccount(ctx, &kosmoz))
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, kosmoz.ID, org.ID, types.UserRoleCustomer))
 
-	app1 := types.Application{Name: "ASAN Mars Explorer", OrganizationID: org.ID, Type: types.DeploymentTypeDocker}
-	util.Must(db.CreateApplication(ctx, &app1))
+	app1 := types.Application{Name: "ASAN Mars Explorer", Type: types.DeploymentTypeDocker}
+	util.Must(db.CreateApplication(ctx, &app1, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId: app1.ID,
 		Name:          "v4.2.0",
 	}))
 
-	app2 := types.Application{Name: "Genome Graph Database", OrganizationID: org.ID, Type: types.DeploymentTypeDocker}
-	util.Must(db.CreateApplication(ctx, &app2))
+	app2 := types.Application{Name: "Genome Graph Database", Type: types.DeploymentTypeDocker}
+	util.Must(db.CreateApplication(ctx, &app2, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId:   app2.ID,
 		Name:            "v1",
@@ -69,8 +69,8 @@ func main() {
 		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 
-	app3 := types.Application{Name: "Wizard Security Graph", OrganizationID: org.ID, Type: types.DeploymentTypeDocker}
-	util.Must(db.CreateApplication(ctx, &app3))
+	app3 := types.Application{Name: "Wizard Security Graph", Type: types.DeploymentTypeDocker}
+	util.Must(db.CreateApplication(ctx, &app3, org.ID))
 	av := types.ApplicationVersion{
 		ApplicationId:   app3.ID,
 		Name:            "v1",
@@ -78,8 +78,8 @@ func main() {
 	}
 	util.Must(db.CreateApplicationVersion(ctx, &av))
 
-	podinfoApp := types.Application{Name: "Podinfo", OrganizationID: org.ID, Type: types.DepolymentTypeKubernetes}
-	util.Must(db.CreateApplication(ctx, &podinfoApp))
+	podinfoApp := types.Application{Name: "Podinfo", Type: types.DepolymentTypeKubernetes}
+	util.Must(db.CreateApplication(ctx, &podinfoApp, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId: podinfoApp.ID,
 		Name:          "6.7.1",
@@ -97,52 +97,44 @@ func main() {
 	}))
 
 	dt1 := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "Space Center Austria",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.1956026, Lon: 16.3633028},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &dt1))
+	util.Must(db.CreateDeploymentTarget(ctx, &dt1, org.ID, pmig.ID))
 
 	dt2 := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: kosmoz.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "Edge Location",
 			Type:           types.DeploymentTypeDocker,
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &dt2))
+	util.Must(db.CreateDeploymentTarget(ctx, &dt2, org.ID, kosmoz.ID))
 
 	dt3 := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: kosmoz.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "580 Founders Café",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.758781, Lon: -122.396882},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &dt3))
+	util.Must(db.CreateDeploymentTarget(ctx, &dt3, org.ID, kosmoz.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &dt3.DeploymentTarget, "running"))
 
 	for idx := range 3 {
 		dt := types.DeploymentTargetWithCreatedBy{
-			CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 			DeploymentTarget: types.DeploymentTarget{
-				OrganizationID: org.ID,
 				Name:           fmt.Sprintf("Deployment Target %v", idx),
 				Type:           types.DeploymentTypeDocker,
 				AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 			},
 		}
-		util.Must(db.CreateDeploymentTarget(ctx, &dt))
+		util.Must(db.CreateDeploymentTarget(ctx, &dt, org.ID, pmig.ID))
 		util.Must(db.CreateDeploymentTargetStatus(ctx, &dt.DeploymentTarget, "running"))
 		deployment := api.DeploymentRequest{
 			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,

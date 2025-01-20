@@ -9,13 +9,12 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/cloud/internal/auth"
-
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -35,9 +34,17 @@ func DeploymentTargetsRouter(r chi.Router) {
 }
 
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
-	if deploymentTargets, err := db.GetDeploymentTargets(r.Context()); err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTargets", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+	ctx := r.Context()
+	auth := middleware.Authn.Require(ctx)
+	deploymentTargets, err := db.GetDeploymentTargets(
+		ctx,
+		auth.CurrentOrgID(),
+		auth.CurrentUserID(),
+		*auth.CurrentUserRole(),
+	)
+	if err != nil {
+		internalctx.GetLogger(ctx).Error("failed to get DeploymentTargets", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, deploymentTargets)
@@ -55,6 +62,7 @@ func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
+	auth := middleware.Authn.Require(ctx)
 	if dt, err := JsonBody[types.DeploymentTargetWithCreatedBy](w, r); err != nil {
 		return
 	} else if err = dt.Validate(); err != nil {
@@ -65,7 +73,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		dt.AgentVersionID = agentVersion.ID
-		if err = db.CreateDeploymentTarget(ctx, &dt); err != nil {
+		if err = db.CreateDeploymentTarget(ctx, &dt, auth.CurrentOrgID(), auth.CurrentUserID()); err != nil {
 			log.Warn("could not create DeploymentTarget", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -76,7 +84,9 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	auth := middleware.Authn.Require(ctx)
 	var dt types.DeploymentTargetWithCreatedBy
 	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -86,7 +96,7 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 
 	dt.AgentVersionID = dt.AgentVersion.ID
 
-	existing := internalctx.GetDeploymentTarget(r.Context())
+	existing := internalctx.GetDeploymentTarget(ctx)
 	if dt.ID == "" {
 		dt.ID = existing.ID
 	} else if dt.ID != existing.ID {
@@ -95,9 +105,9 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.UpdateDeploymentTarget(r.Context(), &dt); err != nil {
+	if err := db.UpdateDeploymentTarget(ctx, &dt, auth.CurrentOrgID()); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
 	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
@@ -109,11 +119,12 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	dt := internalctx.GetDeploymentTarget(ctx)
-	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if dt.OrganizationID != orgId {
+	auth := middleware.Authn.Require(ctx)
+	if dt.OrganizationID != auth.CurrentOrgID() {
 		http.NotFound(w, r)
-	} else if currentUser, err := db.GetCurrentUserWithRole(ctx); err != nil {
+	} else if currentUser, err := db.GetUserAccountWithRole(
+		ctx, auth.CurrentUserID(), auth.CurrentOrgID(),
+	); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if currentUser.UserRole != types.UserRoleVendor && dt.CreatedByUserAccountID != currentUser.ID {
 		http.Error(w, "must be vendor or creator", http.StatusForbidden)
@@ -130,6 +141,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+	auth := middleware.Authn.Require(ctx)
 
 	if deploymentTarget.CurrentStatus != nil &&
 		deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
@@ -163,7 +175,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		deploymentTarget.AccessKeyHash = &hash
 	}
 
-	if err := db.UpdateDeploymentTargetAccess(ctx, &deploymentTarget.DeploymentTarget); err != nil {
+	if err := db.UpdateDeploymentTargetAccess(ctx, &deploymentTarget.DeploymentTarget, auth.CurrentOrgID()); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -197,11 +209,9 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id := r.PathValue("deploymentTargetId")
-		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get orgId from token", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, &orgId); errors.Is(err, apierrors.ErrNotFound) {
+		auth := middleware.Authn.Require(ctx)
+		orgId := auth.CurrentOrgID()
+		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))

@@ -1,8 +1,6 @@
-package auth
+package authjwt
 
 import (
-	"context"
-	"errors"
 	"maps"
 	"time"
 
@@ -78,46 +76,4 @@ func GenerateAgentTokenValidFor(targetId string, orgId string, validFor time.Dur
 		OrgIdKey:          orgId,
 	}
 	return JWTAuth.Encode(claims)
-}
-
-func CurrentUserId(ctx context.Context) (string, error) {
-	return CurrentSubject(ctx)
-}
-
-func CurrentSubject(ctx context.Context) (string, error) {
-	if token, _, err := jwtauth.FromContext(ctx); err != nil {
-		return "", err
-	} else {
-		return token.Subject(), nil
-	}
-}
-
-func CurrentUserRole(ctx context.Context) (types.UserRole, error) {
-	if token, _, err := jwtauth.FromContext(ctx); err != nil {
-		return "", err
-	} else if userRole, ok := token.Get(UserRoleKey); !ok {
-		return "", errors.New("missing user role in token")
-	} else {
-		return types.UserRole(userRole.(string)), nil
-	}
-}
-
-func CurrentOrgId(ctx context.Context) (string, error) {
-	if token, _, err := jwtauth.FromContext(ctx); err != nil {
-		return "", err
-	} else if orgId, ok := token.Get(OrgIdKey); !ok {
-		return "", errors.New("missing org id in token")
-	} else {
-		return orgId.(string), nil
-	}
-}
-
-func CurrentUserEmailVerified(ctx context.Context) (bool, error) {
-	if token, _, err := jwtauth.FromContext(ctx); err != nil {
-		return false, err
-	} else if verified, ok := token.Get(UserEmailVerifiedKey); !ok {
-		return false, nil
-	} else {
-		return verified.(bool), nil
-	}
 }

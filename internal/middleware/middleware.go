@@ -6,13 +6,11 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
-	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -58,9 +56,9 @@ func UserRoleMiddleware(userRole types.UserRole) func(handler http.Handler) http
 	return func(handler http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			if currentRole, err := auth.CurrentUserRole(ctx); err != nil {
+			if auth, err := Authn.Get(ctx); err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
-			} else if currentRole != userRole {
+			} else if auth.CurrentUserRole() == nil || *auth.CurrentUserRole() != userRole {
 				http.Error(w, "insufficient permissions", http.StatusForbidden)
 			} else {
 				handler.ServeHTTP(w, r)
@@ -76,12 +74,11 @@ func SentryUser(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if hub := sentry.GetHubFromContext(ctx); hub != nil {
-			if token, claims, err := jwtauth.FromContext(ctx); err == nil {
-				user := sentry.User{ID: token.Subject()}
-				if email, ok := claims[auth.UserEmailKey].(string); ok {
-					user.Email = email
-				}
-				hub.Scope().SetUser(user)
+			if auth, err := Authn.Get(ctx); err == nil {
+				hub.Scope().SetUser(sentry.User{
+					ID:    auth.CurrentUserID(),
+					Email: auth.CurrentUserEmail(),
+				})
 			}
 		}
 		h.ServeHTTP(w, r)
@@ -92,6 +89,10 @@ var RateLimitPerUser = httprate.Limit(
 	3,
 	10*time.Minute,
 	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
-		return auth.CurrentUserId(r.Context())
+		if auth, err := Authn.Get(r.Context()); err != nil {
+			return "", err
+		} else {
+			return auth.CurrentUserID(), nil
+		}
 	}),
 )

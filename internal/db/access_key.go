@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/authkey"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
@@ -70,7 +71,7 @@ func GetAccessTokensByUserAccountID(ctx context.Context, id string) ([]types.Acc
 	}
 }
 
-func GetAccessTokenByKey(ctx context.Context, key string) (*types.AccessTokenWithUserAccount, error) {
+func GetAccessTokenByKey(ctx context.Context, key authkey.Key) (*types.AccessTokenWithUserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -78,7 +79,7 @@ func GetAccessTokenByKey(ctx context.Context, key string) (*types.AccessTokenWit
 			`WITH updated AS (
 				UPDATE AccessToken
 				SET last_used_at = now()
-				WHERE key = @key
+				WHERE key = @key AND expires_at > now()
 				RETURNING *
 			)
 			SELECT %v FROM updated tok

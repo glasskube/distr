@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/glasskube/cloud/api"
-	"github.com/jackc/pgx/v5"
-
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -30,21 +29,17 @@ func DeploymentsRouter(r chi.Router) {
 func putDeployment(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
+	auth := middleware.Authn.Require(ctx)
+	orgId := auth.CurrentOrgID()
 
 	deploymentRequest, err := JsonBody[api.DeploymentRequest](w, r)
 	if err != nil {
 		return
 	}
 
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if application, err := db.GetApplicationForApplicationVersionID(
-			ctx, deploymentRequest.ApplicationVersionId,
+			ctx, deploymentRequest.ApplicationVersionId, auth.CurrentOrgID(),
 		); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "application does not exist", http.StatusBadRequest)
 			return err

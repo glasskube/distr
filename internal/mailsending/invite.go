@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/authjwt"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/mailtemplates"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/types"
 	"go.uber.org/zap"
 )
@@ -23,9 +24,10 @@ func SendUserInviteMail(
 ) error {
 	mailer := internalctx.GetMailer(ctx)
 	log := internalctx.GetLogger(ctx)
+	auth := middleware.Authn.Require(ctx)
 
 	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-	if _, token, err := auth.GenerateVerificationTokenValidFor(userAccount); err != nil {
+	if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
 		log.Error("could not get current user for invite mail", zap.Error(err))
 		return err
 	} else {
@@ -34,7 +36,7 @@ func SendUserInviteMail(
 		var email mail.Mail
 		switch userRole {
 		case types.UserRoleCustomer:
-			if currentUser, err := db.GetCurrentUser(ctx); err != nil {
+			if currentUser, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
 				log.Error("could not get current user for invite mail", zap.Error(err))
 				return err
 			} else {

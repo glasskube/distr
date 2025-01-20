@@ -6,22 +6,13 @@ import (
 	"fmt"
 
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
 )
 
-func CreateApplication(ctx context.Context, application *types.Application) error {
-	if application.OrganizationID == "" {
-		orgId, err := auth.CurrentOrgId(ctx)
-		if err != nil {
-			return err
-		} else {
-			application.OrganizationID = orgId
-		}
-	}
-
+func CreateApplication(ctx context.Context, application *types.Application, orgID string) error {
+	application.OrganizationID = orgID
 	db := internalctx.GetDb(ctx)
 	row := db.QueryRow(ctx,
 		"INSERT INTO Application (name, type, organization_id) VALUES (@name, @type, @orgId) RETURNING id, created_at",
@@ -32,16 +23,8 @@ func CreateApplication(ctx context.Context, application *types.Application) erro
 	return nil
 }
 
-func UpdateApplication(ctx context.Context, application *types.Application) error {
-	if application.OrganizationID == "" {
-		orgId, err := auth.CurrentOrgId(ctx)
-		if err != nil {
-			return err
-		} else {
-			application.OrganizationID = orgId
-		}
-	}
-
+func UpdateApplication(ctx context.Context, application *types.Application, orgID string) error {
+	application.OrganizationID = orgID
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE Application SET name = @name WHERE id = @id AND organization_id = @orgId RETURNING *",
@@ -67,12 +50,7 @@ func DeleteApplicationWithID(ctx context.Context, id string) error {
 	}
 }
 
-func GetApplications(ctx context.Context) ([]types.Application, error) {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func GetApplicationsByOrgID(ctx context.Context, orgID string) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -90,7 +68,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 			FROM Application a
 			WHERE a.organization_id = @orgId
 			ORDER BY a.name
-			`, pgx.NamedArgs{"orgId": orgId}); err != nil {
+			`, pgx.NamedArgs{"orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err :=
 		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
@@ -100,12 +78,7 @@ func GetApplications(ctx context.Context) ([]types.Application, error) {
 	}
 }
 
-func GetApplication(ctx context.Context, id string) (*types.Application, error) {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func GetApplication(ctx context.Context, id string, orgID string) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -122,7 +95,7 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 			    ), array[]::record[]) as versions
 			FROM Application a
 			WHERE a.id = @id AND a.organization_id = @orgId
-		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
+		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err :=
 		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
@@ -135,12 +108,7 @@ func GetApplication(ctx context.Context, id string) (*types.Application, error) 
 	}
 }
 
-func GetApplicationForApplicationVersionID(ctx context.Context, id string) (*types.Application, error) {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID string) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -157,7 +125,7 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id string) (*typ
 			FROM ApplicationVersion v
 				LEFT JOIN Application a ON a.id = v.application_id
 			WHERE v.id = @id AND a.organization_id = @orgId
-		`, pgx.NamedArgs{"id": id, "orgId": orgId}); err != nil {
+		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
 	} else if application, err :=
 		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
