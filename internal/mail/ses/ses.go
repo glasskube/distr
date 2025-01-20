@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/cloud/internal/util"
 )
 
 type sesMailer struct {
@@ -41,7 +42,6 @@ func NewFromContext(ctx context.Context, config Config) (*sesMailer, error) {
 // Send implements Mailer.
 func (s *sesMailer) Send(ctx context.Context, mail mail.Mail) error {
 	message := ses.SendEmailInput{
-		Source: &s.config.FromAddress,
 		Destination: &types.Destination{
 			ToAddresses:  mail.To,
 			BccAddresses: mail.Bcc,
@@ -50,6 +50,11 @@ func (s *sesMailer) Send(ctx context.Context, mail mail.Mail) error {
 			Subject: &types.Content{Data: &mail.Subject},
 			Body:    &types.Body{},
 		},
+	}
+	if mail.From != nil {
+		message.Source = util.PtrTo(mail.From.String())
+	} else {
+		message.Source = util.PtrTo(s.config.DefaultFromAddress.String())
 	}
 	if mail.ReplyTo != "" {
 		message.ReplyToAddresses = []string{mail.ReplyTo}
