@@ -34,7 +34,7 @@ func SendUserVerificationMail(ctx context.Context, userAccount types.UserAccount
 			)
 			return err
 		} else {
-			log.Info("verification mail has been sent", zap.String("user", userAccount.Email), zap.String("token", token))
+			log.Info("verification mail has been sent", zap.String("user", userAccount.Email))
 			return nil
 		}
 	}
