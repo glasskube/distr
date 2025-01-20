@@ -60,6 +60,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     docker: new FormGroup({
       name: new FormControl<string>('', Validators.required),
       versionName: new FormControl<string>('', Validators.required),
+      compose: new FormControl<string>('', Validators.required),
     }),
     kubernetes: new FormGroup({
       name: new FormControl<string>('', Validators.required),
@@ -75,9 +76,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       template: new FormControl<string>(''),
     }),
   });
-  dockerComposeFile: File | null = null;
-  @ViewChild('dockerComposeFileInput')
-  dockerComposeFileInput?: ElementRef;
 
   deploymentTargetForm = new FormGroup({
     customerName: new FormControl<string>('', Validators.required),
@@ -175,10 +173,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.destroyed$.complete();
   }
 
-  onDockerComposeFileSelected(event: Event) {
-    this.dockerComposeFile = (event.target as HTMLInputElement).files?.[0] ?? null;
-  }
-
   async attemptContinue() {
     if (this.loading) {
       return;
@@ -215,7 +209,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.applicationForm.markAllAsTouched();
     if (this.applicationForm.valid) {
       const isDocker = this.applicationForm.controls.type.value === 'docker';
-      const fileUploadValid = !isDocker || this.dockerComposeFile !== null;
       if (this.applicationForm.controls.sampleApplication.value) {
         this.loading = true;
         try {
@@ -226,7 +219,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         } finally {
           this.loading = false;
         }
-      } else if (fileUploadValid) {
+      } else {
         this.loading = true;
         try {
           this.app = await firstValueFrom(this.applications.create(this.getApplicationForSubmit()));
@@ -235,7 +228,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
               ? this.applications.createApplicationVersionForDocker(
                   this.app,
                   this.getApplicationVersionForSubmit(),
-                  this.dockerComposeFile!
+                  this.applicationForm.controls.docker.controls.compose.value!
                 )
               : this.applications.createApplicationVersionForKubernetes(
                   this.app,

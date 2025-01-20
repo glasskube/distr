@@ -139,6 +139,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
 		if deployment != nil && appVersion != nil {
+			// TODO patch the compose file with a generated project name (short hash from deployment id)
 			response := api.DockerAgentResource{
 				AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
 				ComposeFile:   appVersion.ComposeFileData,
