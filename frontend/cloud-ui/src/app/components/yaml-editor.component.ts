@@ -1,40 +1,32 @@
-import {Component, ElementRef, inject, input, OnDestroy, OnInit} from '@angular/core';
-import {toObservable} from '@angular/core/rxjs-interop';
-import {FormControl} from '@angular/forms';
+import {Component, ElementRef, forwardRef, inject, OnDestroy, OnInit} from '@angular/core';
+import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {defaultKeymap, history, historyKeymap, indentWithTab} from '@codemirror/commands';
 import {yaml} from '@codemirror/lang-yaml';
 import {HighlightStyle, indentOnInput, syntaxHighlighting} from '@codemirror/language';
-import {Transaction} from '@codemirror/state';
 import {EditorView, highlightSpecialChars, keymap} from '@codemirror/view';
 import {tags} from '@lezer/highlight';
-import {EMPTY, Subject, switchMap, takeUntil} from 'rxjs';
+import {Subject} from 'rxjs';
 
 @Component({
   selector: 'app-yaml-editor',
   template: '',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => YamlEditorComponent),
+      multi: true,
+    },
+  ],
 })
-export class YamlEditorComponent implements OnInit, OnDestroy {
-  // can not be named 'formControl' because of name conflict
-  public readonly formCtrl = input<FormControl>();
-
+export class YamlEditorComponent implements OnInit, OnDestroy, ControlValueAccessor {
   private readonly host = inject(ElementRef);
   private view!: EditorView;
   private readonly destroyed$ = new Subject<void>();
 
-  constructor() {
-    toObservable(this.formCtrl)
-      .pipe(
-        takeUntil(this.destroyed$),
-        switchMap((fc) => fc?.valueChanges ?? EMPTY)
-      )
-      .subscribe((value) => {
-        this.view.state.update({changes: {from: 0, to: this.view.state.doc.length, insert: value ?? ''}});
-      });
-  }
+  disabled = false;
 
   public ngOnInit(): void {
     this.view = new EditorView({
-      doc: this.formCtrl()?.value ?? '',
       extensions: [
         indentOnInput(),
         history(),
@@ -48,18 +40,44 @@ export class YamlEditorComponent implements OnInit, OnDestroy {
         highlightSpecialChars(),
         yaml(),
         keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+        EditorView.updateListener.of((update) => {
+          this.onTouched();
+          if (update.docChanged) {
+            this.onChange(this.view.state.doc.toString());
+          }
+        }),
       ],
       parent: this.host.nativeElement,
-      dispatchTransactions: (trs, view) => {
-        view.update(trs);
-        this.formCtrl()?.setValue(this.view.state.doc.toString());
-      },
     });
   }
 
-  public ngOnDestroy(): void {
+  ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
     this.view.destroy();
   }
+
+  writeValue(value: string) {
+    const tr = this.view.state.update({changes: {from: 0, to: this.view.state.doc.length, insert: value ?? ''}});
+    this.view.dispatch(tr);
+  }
+
+  registerOnChange(fn: (value: string) => void) {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void) {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean) {
+    // TODO implement
+    if (isDisabled) {
+      console.error('setDisabledState not implemented yet');
+    }
+  }
+
+  private onChange = (_: any) => {};
+
+  private onTouched = () => {};
 }
