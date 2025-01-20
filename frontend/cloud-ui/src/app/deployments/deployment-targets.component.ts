@@ -303,7 +303,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.deployForm.controls.applicationVersionId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        tap(x => console.log('version id changed', x)),
+        tap((x) => console.log('version id changed', x)),
         switchMap((id) =>
           this.selectedApplication?.type === 'kubernetes'
             ? this.applications
@@ -313,7 +313,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         )
       )
       .subscribe(([type, valuesYaml]) => {
-        console.log('yeah')
+        console.log('yeah');
         if (type === 'kubernetes') {
           this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
@@ -338,13 +338,13 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     });
     this.deployForm.controls.valuesYaml.valueChanges.subscribe((v) => {
       console.log('--- valuesYaml changed', v);
-    })
+    });
   }
 
   async newDeployment(deploymentTarget: DeploymentTarget, modalTemplate: TemplateRef<any>) {
     const apps = await firstValueFrom(this.applications$);
     this.selectedDeploymentTarget.set(deploymentTarget);
-    console.log('new deployment', this.deployForm.value)
+    console.log('new deployment', this.deployForm.value);
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
       deploymentId: deploymentTarget.deployment?.id,
@@ -352,7 +352,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
       releaseName: deploymentTarget.deployment?.releaseName,
     });
-    console.log('new deployment after reset', this.deployForm.value)
+    console.log('new deployment after reset', this.deployForm.value);
 
     if (deploymentTarget.deployment) {
       this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
