@@ -78,7 +78,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     }),
     docker: new FormGroup({
       compose: new FormControl<string>('', Validators.required),
-    })
+    }),
   });
   newVersionFormLoading = false;
 
@@ -275,13 +275,13 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           template: template,
         },
       });
-    } else if(selectedApplication?.type === 'docker') {
+    } else if (selectedApplication?.type === 'docker') {
       const compose = await firstValueFrom(this.applications.getComposeFile(selectedApplication.id!, version.id!));
       this.newVersionForm.patchValue({
         docker: {
-          compose
-        }
-      })
+          compose,
+        },
+      });
     }
   }
 }

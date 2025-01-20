@@ -65,7 +65,7 @@ export class ApplicationsService implements CrudService<Application> {
   createApplicationVersionForDocker(
     application: Application,
     applicationVersion: ApplicationVersion,
-    compose: string,
+    compose: string
   ): Observable<ApplicationVersion> {
     const formData = new FormData();
     formData.append('composefile', new Blob([compose], {type: 'application/yaml'}));

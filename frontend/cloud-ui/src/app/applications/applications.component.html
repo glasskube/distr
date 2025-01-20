@@ -423,10 +423,8 @@
               } @else {
                 <div class="space-y-4 mt-4">
                   <div class="w-full">
-                    <label
-                      for="compose_input"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Docker Compose</label
+                    <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      >Docker Compose</label
                     >
                     <app-yaml-editor
                       id="compose_input"
@@ -437,8 +435,9 @@
                       Paste your docker compose file here.
                     </div>
                     @if (
-                      newVersionForm.controls.docker.controls.compose.invalid && newVersionForm.controls.docker.controls.compose.touched
-                      ) {
+                      newVersionForm.controls.docker.controls.compose.invalid &&
+                      newVersionForm.controls.docker.controls.compose.touched
+                    ) {
                       <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                     }
                   </div>
