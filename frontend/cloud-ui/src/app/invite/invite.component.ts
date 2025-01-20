@@ -21,7 +21,6 @@ export class InviteComponent {
       name: new FormControl<string | undefined>(this.auth.getClaims().name, {nonNullable: true}),
       password: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.minLength(8)]}),
       passwordConfirm: new FormControl('', [Validators.required]),
-      terms: new FormControl(false, Validators.required),
     },
     (control) => (control.value.password === control.value.passwordConfirm ? null : {passwordMismatch: 'error'})
   );

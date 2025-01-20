@@ -23,7 +23,6 @@ export class RegisterComponent {
       name: new FormControl<string | undefined>(undefined),
       password: new FormControl('', [Validators.required, Validators.minLength(8)]),
       passwordConfirm: new FormControl('', [Validators.required]),
-      terms: new FormControl(false, Validators.required),
     },
     (control) => (control.value.password === control.value.passwordConfirm ? null : {passwordMismatch: 'error'})
   );
