@@ -11,7 +11,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
 import {Application, ApplicationVersion} from '../../types/application';
-import {DeploymentRequest, DeploymentType, HelmChartType} from '../../types/deployment';
+import {DeploymentRequest, DeploymentTargetScope, DeploymentType, HelmChartType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
@@ -90,14 +90,19 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       {value: '', disabled: true},
       {nonNullable: true, validators: [Validators.required]}
     ),
+    clusterScope: new FormControl(
+      {value: false, disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
+    scope: new FormControl<DeploymentTargetScope>(
+      {value: 'namespace', disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
     releaseName: new FormControl<string>(
       {value: '', disabled: true},
       {nonNullable: true, validators: [Validators.required]}
     ),
-    valuesYaml: new FormControl<string>(
-      {value: '', disabled: true},
-      {nonNullable: true, validators: [Validators.required]}
-    ),
+    valuesYaml: new FormControl<string>({value: '', disabled: true}, {nonNullable: true}),
   });
 
   private loading = false;
@@ -137,16 +142,24 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         this.deploymentTargetForm.controls.technicalContactEmail.disable();
         if (this.app?.type === 'kubernetes') {
           this.deploymentTargetForm.controls.namespace.enable();
+          this.deploymentTargetForm.controls.clusterScope.enable();
+          this.deploymentTargetForm.controls.scope.enable();
           this.deploymentTargetForm.controls.releaseName.enable();
           this.deploymentTargetForm.controls.valuesYaml.enable();
         }
       } else {
         this.deploymentTargetForm.controls.technicalContactEmail.enable();
         this.deploymentTargetForm.controls.namespace.disable();
+        this.deploymentTargetForm.controls.clusterScope.disable();
+        this.deploymentTargetForm.controls.scope.disable();
         this.deploymentTargetForm.controls.releaseName.disable();
         this.deploymentTargetForm.controls.valuesYaml.disable();
       }
     });
+
+    this.deploymentTargetForm.controls.clusterScope.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((value) => this.deploymentTargetForm.controls.scope.setValue(value ? 'cluster' : 'namespace'));
   }
 
   private toggleTypeSpecificFields(type: DeploymentType | null) {
@@ -287,6 +300,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private async prepareFormAfterApplicationCreated(app: Application, version: ApplicationVersion) {
     if (app.type === 'kubernetes') {
       this.deploymentTargetForm.controls.namespace.enable();
+      this.deploymentTargetForm.controls.clusterScope.enable();
+      this.deploymentTargetForm.controls.scope.enable();
       this.deploymentTargetForm.controls.valuesYaml.enable();
       this.deploymentTargetForm.controls.releaseName.enable();
       const releaseName = app.name!.trim().toLowerCase().replace(/\W+/g, '-');
@@ -336,6 +351,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         lat: 48.1956026,
         lon: 16.3633028,
       },
+      scope: this.deploymentTargetForm.value.scope,
     };
   }
 

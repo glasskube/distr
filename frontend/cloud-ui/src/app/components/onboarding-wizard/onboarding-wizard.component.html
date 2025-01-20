@@ -343,64 +343,6 @@
                     <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
                   }
                 }
-
-                <!--
-
-                <h3 class="font-normal text-gray-900 dark:text-white">Choose An Application</h3>
-                <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                  <div
-                    class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
-                    <div class="flex items-start">
-                      <div class="flex h-5 items-center">
-                        <input
-                          id="sample-app-radio"
-                          [formControl]="applicationForm.controls.processType"
-                          aria-describedby="sample-app-radio-text"
-                          type="radio"
-                          name="appType"
-                          value="sample"
-                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
-                      </div>
-
-                      <div class="ms-4 text-sm">
-                        <label for="sample-app-radio" class="font-bold leading-none text-gray-900 dark:text-white"
-                          >Sample Bookmarking Application</label
-                        >
-                        <p id="sample-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          I'm just testing – Show me how to deploy some sample app.<br />
-                          This will create a docker compose application named
-                          <a href="https://github.com/go-shiori/shiori" target="_blank">Shiori</a>.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
-                    <div class="flex items-start">
-                      <div class="flex h-5 items-center">
-                        <input
-                          id="custom-app-radio"
-                          [formControl]="applicationForm.controls.processType"
-                          aria-describedby="custom-app-radio-text"
-                          type="radio"
-                          name="appType"
-                          value="custom"
-                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
-                          checked />
-                      </div>
-
-                      <div class="ms-4 text-sm">
-                        <label for="custom-app-radio" class="font-bold leading-none text-gray-900 dark:text-white">
-                          My Own Application
-                        </label>
-                        <p id="custom-app-radio-text" class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          I have my own application and want to deploy it.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div> -->
               </div>
             </div>
           </cdk-step>
@@ -550,6 +492,20 @@
                         }
                       </div>
                     }
+
+                    @if (deploymentTargetForm.controls.clusterScope.enabled) {
+                      <div class="flex items-center">
+                        <input
+                          id="checked-checkbox"
+                          type="checkbox"
+                          [formControl]="deploymentTargetForm.controls.clusterScope"
+                          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                        <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                          Enable cluster-scoped permissions
+                        </label>
+                      </div>
+                    }
+
                     @if (deploymentTargetForm.controls.valuesYaml.enabled) {
                       <div>
                         <label for="values-yaml" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
