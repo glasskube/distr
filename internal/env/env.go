@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/mail"
 	"os"
 	"strconv"
 	"time"
@@ -30,6 +31,7 @@ var (
 	sentryDSN                  string
 	sentryDebug                bool
 	enableQueryLogging         bool
+	agentDockerConfig          []byte
 )
 
 func init() {
@@ -72,7 +74,7 @@ func init() {
 	default:
 		panic("invalid MAILER_TYPE")
 	}
-	mailerConfig.FromAddress = os.Getenv("MAILER_FROM_ADDRESS")
+	mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
 
 	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
 		inviteTokenValidDuration = requirePositiveDuration(d)
@@ -97,6 +99,10 @@ func init() {
 
 	if value, ok := os.LookupEnv("ENABLE_QUERY_LOGGING"); ok {
 		enableQueryLogging = util.Require(strconv.ParseBool(value))
+	}
+
+	if value, ok := os.LookupEnv("AGENT_DOCKER_CONFIG"); ok {
+		agentDockerConfig = []byte(value)
 	}
 }
 
@@ -156,4 +162,8 @@ func EnableQueryLogging() bool {
 
 func StatusEntriesMaxAge() *time.Duration {
 	return statusEntriesMaxAge
+}
+
+func AgentDockerConfig() []byte {
+	return agentDockerConfig
 }

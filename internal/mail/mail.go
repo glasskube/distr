@@ -3,10 +3,12 @@ package mail
 import (
 	"bytes"
 	"html/template"
+	"net/mail"
 )
 
 type Mail struct {
 	To           []string
+	From         *mail.Address
 	Bcc          []string
 	ReplyTo      string
 	Subject      string
@@ -19,6 +21,12 @@ type mailOpt func(mail *Mail)
 func To(to ...string) mailOpt {
 	return func(mail *Mail) {
 		mail.To = append(mail.To, to...)
+	}
+}
+
+func From(from mail.Address) mailOpt {
+	return func(mail *Mail) {
+		mail.From = &from
 	}
 }
 

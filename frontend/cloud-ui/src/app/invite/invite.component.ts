@@ -4,10 +4,11 @@ import {firstValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {SettingsService} from '../services/settings.service';
 import {getFormDisplayedError} from '../../util/errors';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 
 @Component({
   selector: 'app-invite',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AutotrimDirective],
   templateUrl: './invite.component.html',
 })
 export class InviteComponent {
@@ -20,7 +21,6 @@ export class InviteComponent {
       name: new FormControl<string | undefined>(this.auth.getClaims().name, {nonNullable: true}),
       password: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.minLength(8)]}),
       passwordConfirm: new FormControl('', [Validators.required]),
-      terms: new FormControl(false, Validators.required),
     },
     (control) => (control.value.password === control.value.passwordConfirm ? null : {passwordMismatch: 'error'})
   );

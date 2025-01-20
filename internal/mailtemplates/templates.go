@@ -17,7 +17,10 @@ var embeddedFS embed.FS
 
 var templates *template.Template
 var funcMap = template.FuncMap{
-	"QueryEscape": url.QueryEscape,
+	"QueryEscape":    url.QueryEscape,
+	"UnsafeHTMLAttr": func(value string) template.HTMLAttr { return template.HTMLAttr(value) },
+	"UnsafeHTML":     func(value string) template.HTML { return template.HTML(value) },
+	"UnsafeURL":      func(value string) template.URL { return template.URL(value) },
 }
 
 func init() {
@@ -56,7 +59,7 @@ func Welcome() (*template.Template, any) {
 
 func InviteUser(
 	userAccount types.UserAccount,
-	organization types.Organization,
+	organization types.OrganizationWithBranding,
 	token string,
 ) (*template.Template, any) {
 	return templates.Lookup("invite-user.html"),
@@ -70,7 +73,7 @@ func InviteUser(
 
 func InviteCustomer(
 	userAccount types.UserAccount,
-	organization types.Organization,
+	organization types.OrganizationWithBranding,
 	token string,
 	applicationName string,
 ) (*template.Template, any) {

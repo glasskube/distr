@@ -14,6 +14,7 @@
               id="simple-search"
               placeholder="Search for deployments"
               [formControl]="filterForm.controls.search"
+              autotrim
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
           </div>
         </form>
@@ -42,6 +43,9 @@
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
             <th scope="col" class="p-4">Deployed application</th>
+            @if (showAgentUpdateColumn$ | async) {
+              <th scope="col" class="p-4">Agent update</th>
+            }
             <th scope="col" class="p-4"></th>
           }
         </tr>
@@ -86,21 +90,27 @@
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
                   Initial
                 </div>
-              } @else if (dt.currentStatus | isStale) {
-                <button
-                  (click)="openStatusModal(dt, deploymentStatusModal)"
-                  class="flex items-center"
-                  [title]="'Last status is ' + (dt.currentStatus.createdAt | relativeDate: true) + ' old'">
-                  <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
-                  Stale
-                </button>
               } @else {
                 <button
                   (click)="openStatusModal(dt, deploymentStatusModal)"
                   class="flex items-center"
                   [title]="'Last status: ' + (dt.currentStatus.createdAt | date: 'medium')">
                   <app-status-dot class="h-4 w-4 me-1" [deploymentTarget]="dt"></app-status-dot>
-                  OK
+                  @if (dt.deployment?.latestStatus; as drs) {
+                    @if (drs.type === 'error') {
+                      Error
+                    } @else if (drs | isStale) {
+                      Stale
+                    } @else {
+                      OK
+                    }
+                  } @else {
+                    @if (dt.currentStatus | isStale) {
+                      Connected, stale
+                    } @else {
+                      Connected
+                    }
+                  }
                 </button>
               }
             </td>
@@ -116,20 +126,34 @@
                   {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
                 }
               </td>
+
+              @if (showAgentUpdateColumn$ | async) {
+                <td
+                  class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  @if (agentVersions$ | async; as agentVersions) {
+                    @if (dt.agentVersion?.id !== agentVersions[agentVersions.length - 1].id) {
+                      <button
+                        type="button"
+                        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        (click)="updateDeploymentTargetAgent(dt)">
+                        Install update
+                      </button>
+                    } @else if (dt.agentVersion?.id !== dt.reportedAgentVersionId) {
+                      Update pending…
+                    } @else {
+                      Up to date
+                    }
+                  }
+                </td>
+              }
               <td
                 class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
-                @if (!(auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer')) {
-                  @if (dt.currentStatus) {
+                @if (auth.hasRole('customer') || dt.createdBy?.userRole === 'vendor') {
+                  @if (dt.currentStatus && !(dt.currentStatus | isStale)) {
                     <button
                       type="button"
                       (click)="newDeployment(dt, deploymentModal)"
-                      aria-controls="manage-deployment-target-drawer"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                      [title]="
-                        auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'
-                          ? 'Must be deployed by customer'
-                          : undefined
-                      ">
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
                       <fa-icon
                         [icon]="shipIcon"
                         class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
@@ -138,14 +162,13 @@
                   } @else {
                     <button
                       type="button"
-                      (click)="showModal(instructionsModal)"
-                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                      [title]="
-                        auth.hasRole('vendor') && dt.createdBy?.userRole === 'customer'
-                          ? 'Must be deployed by customer'
-                          : undefined
-                      ">
-                      Connection instructions
+                      (click)="openInstructionsModal(dt, instructionsModal)"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                      @if (dt.currentStatus) {
+                        Reconnect
+                      } @else {
+                        Connection instructions
+                      }
                     </button>
                   }
                   @if (dt.deployment) {
@@ -248,6 +271,7 @@
           <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name *</label>
           <input
             formControlName="name"
+            autotrim
             type="text"
             name="title"
             id="name"
@@ -295,6 +319,26 @@
               placeholder="Geolocation longitude" />
           </div>
         </ng-container>
+        @if (editForm.controls.type.value === 'kubernetes') {
+          <div>
+            <label for="namespace" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Namespace
+            </label>
+            <input
+              type="text"
+              id="namespace"
+              formControlName="namespace"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:select-none" />
+          </div>
+          <div>
+            <label for="scope" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Scope</label>
+            <input
+              type="text"
+              id="scope"
+              formControlName="scope"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:select-none" />
+          </div>
+        }
       </div>
       <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
         <button
@@ -382,6 +426,7 @@
                   type="text"
                   id="release-name"
                   formControlName="releaseName"
+                  autotrim
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
               </div>
               @if (deployForm.controls.releaseName.invalid && deployForm.controls.releaseName.touched) {
@@ -395,21 +440,10 @@
                 </label>
                 <app-yaml-editor
                   class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  [formCtrl]="deployForm.controls.valuesYaml">
+                  [formControl]="deployForm.controls.valuesYaml">
                 </app-yaml-editor>
               </div>
             }
-            <div class="col-span-2">
-              <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                Deployment notes
-              </label>
-              <textarea
-                id="description"
-                rows="4"
-                formControlName="notes"
-                class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Add deployment notes"></textarea>
-            </div>
           </div>
           <button
             type="submit"

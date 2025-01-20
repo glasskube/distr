@@ -1,5 +1,7 @@
 package env
 
+import "net/mail"
+
 type MailerTypeString string
 type TLSMode string
 
@@ -10,7 +12,7 @@ const (
 
 type MailerConfig struct {
 	Type        MailerTypeString
-	FromAddress string
+	FromAddress mail.Address
 	SmtpConfig  *MailerSMTPConfig
 }
 

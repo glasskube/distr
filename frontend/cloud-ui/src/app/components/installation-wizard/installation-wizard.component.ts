@@ -6,6 +6,7 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, firstValueFrom, map, of, Subject, switchMap, takeUntil, tap, withLatestFrom} from 'rxjs';
+import {getFormDisplayedError} from '../../../util/errors';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {ApplicationsService} from '../../services/applications.service';
@@ -13,11 +14,11 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
 import {Application} from '../../types/application';
-import {DeploymentRequest, DeploymentType} from '../../types/deployment';
+import {DeploymentRequest, DeploymentTargetScope, DeploymentType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
-import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
-import {getFormDisplayedError} from '../../../util/errors';
 import {YamlEditorComponent} from '../yaml-editor.component';
+import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -30,6 +31,7 @@ import {YamlEditorComponent} from '../yaml-editor.component';
     AsyncPipe,
     ConnectInstructionsComponent,
     YamlEditorComponent,
+    AutotrimDirective,
   ],
   animations: [modalFlyInOut],
 })
@@ -49,7 +51,15 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   readonly deploymentTargetForm = new FormGroup({
     type: new FormControl<DeploymentType>('docker', Validators.required),
     name: new FormControl('', Validators.required),
-    namespace: new FormControl({value: '', disabled: true}, Validators.required),
+    namespace: new FormControl({value: '', disabled: true}, {nonNullable: true, validators: [Validators.required]}),
+    clusterScope: new FormControl(
+      {value: false, disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
+    scope: new FormControl<DeploymentTargetScope>(
+      {value: 'namespace', disabled: true},
+      {nonNullable: true, validators: [Validators.required]}
+    ),
   });
 
   readonly agentForm = new FormGroup({});
@@ -60,7 +70,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string>({value: '', disabled: true}),
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
-    notes: new FormControl<string | undefined>(undefined),
   });
 
   protected selectedApplication?: Application;
@@ -121,10 +130,17 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     this.deploymentTargetForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
       if (s === 'kubernetes') {
         this.deploymentTargetForm.controls.namespace.enable();
+        this.deploymentTargetForm.controls.clusterScope.enable();
+        this.deploymentTargetForm.controls.scope.enable();
       } else {
         this.deploymentTargetForm.controls.namespace.disable();
+        this.deploymentTargetForm.controls.clusterScope.disable();
+        this.deploymentTargetForm.controls.scope.disable();
       }
     });
+    this.deploymentTargetForm.controls.clusterScope.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((value) => this.deploymentTargetForm.controls.scope.setValue(value ? 'cluster' : 'namespace'));
   }
 
   ngOnDestroy() {
@@ -163,7 +179,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         this.deploymentTargets.create({
           name: this.deploymentTargetForm.value.name!,
           type: this.deploymentTargetForm.value.type!,
-          namespace: this.deploymentTargetForm.value.namespace!,
+          namespace: this.deploymentTargetForm.value.namespace,
+          scope: this.deploymentTargetForm.value.scope,
         })
       );
       this.selectedDeploymentTarget.set(created as DeploymentTarget);

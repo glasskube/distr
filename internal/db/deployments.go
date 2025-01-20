@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/glasskube/cloud/api"
 
@@ -65,13 +64,29 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`SELECT`+deploymentOutputExpr+`,
-				dr.application_version_id as application_version_id, dr.values_yaml as values_yaml,
+				dr.application_version_id as application_version_id,
+				dr.values_yaml as values_yaml,
 				dr.id as deployment_revision_id,
-				a.id AS application_id, a.name AS application_name, av.name AS application_version_name
+				a.id AS application_id,
+				a.name AS application_name,
+				av.name AS application_version_name,
+				CASE WHEN drs.id IS NOT NULL THEN (
+					drs.id,
+					drs.created_at,
+					drs.deployment_revision_id,
+					drs.type, drs.message
+				) END AS latest_status
 			FROM Deployment d
 				JOIN DeploymentRevision dr ON d.id = dr.deployment_id
 				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
+				LEFT JOIN (
+					SELECT deployment_revision_id, max(created_at) AS max_created_at
+					FROM DeploymentRevisionStatus
+					GROUP BY deployment_revision_id
+				) status_max ON dr.id = status_max.deployment_revision_id
+				LEFT JOIN DeploymentRevisionStatus drs
+					ON dr.id = drs.deployment_revision_id AND drs.created_at = status_max.max_created_at
 			WHERE d.deployment_target_id = @deploymentTargetId
 			ORDER BY d.created_at DESC, dr.created_at DESC LIMIT 1`,
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})
@@ -158,28 +173,26 @@ func CreateDeploymentRevisionStatus(
 	}
 }
 
-func CreateDeploymentRevisionStatusWithCreatedAt(
+func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 	ctx context.Context,
-	revisionID string,
-	message string,
-	createdAt time.Time,
+	deploymentRevisionID string,
+	statuses []types.DeploymentRevisionStatus,
 ) error {
 	db := internalctx.GetDb(ctx)
-	var id string
-	rows := db.QueryRow(ctx,
-		"INSERT INTO DeploymentRevisionStatus (deployment_revision_id, message, type, created_at) "+
-			"VALUES (@deploymentRevisionId, @message, @type, @createdAt) RETURNING id",
-		pgx.NamedArgs{
-			"deploymentRevisionId": revisionID,
-			"message":              message,
-			"type":                 types.DeploymentStatusTypeOK,
-			"createdAt":            createdAt,
-		})
-	if err := rows.Scan(&id); err != nil {
-		return err
-	} else {
-		return nil
-	}
+	_, err := db.CopyFrom(
+		ctx,
+		pgx.Identifier{"deploymentrevisionstatus"},
+		[]string{"deployment_revision_id", "type", "message", "created_at"},
+		pgx.CopyFromSlice(len(statuses), func(i int) ([]any, error) {
+			return []any{
+				deploymentRevisionID,
+				types.DeploymentStatusTypeOK,
+				statuses[i].Message,
+				statuses[i].CreatedAt,
+			}, nil
+		}),
+	)
+	return err
 }
 
 func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID string) (int64, error) {

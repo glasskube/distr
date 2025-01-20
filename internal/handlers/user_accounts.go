@@ -50,7 +50,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var organization types.Organization
+	var organization types.OrganizationWithBranding
 	userAccount := types.UserAccount{
 		Email: body.Email,
 		Name:  body.Name,

@@ -15,6 +15,7 @@ type KubernetesAgentResource struct {
 	AgentResource
 	Namespace  string                     `json:"namespace"`
 	Deployment *KubernetesAgentDeployment `json:"deployment"`
+	Version    types.AgentVersion         `json:"version"`
 }
 
 type KubernetesAgentDeployment struct {

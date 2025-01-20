@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/auth"
@@ -58,23 +59,32 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err = dt.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err = db.CreateDeploymentTarget(ctx, &dt); err != nil {
-		log.Warn("could not create DeploymentTarget", zap.Error(err))
+	} else if agentVersion, err := db.GetCurrentAgentVersion(ctx); err != nil {
+		log.Warn("could not get current agent version", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else if err = json.NewEncoder(w).Encode(dt); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+	} else {
+		dt.AgentVersionID = agentVersion.ID
+		if err = db.CreateDeploymentTarget(ctx, &dt); err != nil {
+			log.Warn("could not create DeploymentTarget", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, dt)
+		}
 	}
 }
 
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
 	var dt types.DeploymentTargetWithCreatedBy
-	if err := json.NewDecoder(r.Body).Decode(&dt.DeploymentTarget); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)
 		return
 	}
+
+	dt.AgentVersionID = dt.AgentVersion.ID
 
 	existing := internalctx.GetDeploymentTarget(r.Context())
 	if dt.ID == "" {
@@ -121,9 +131,17 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
-	if deploymentTarget.CurrentStatus != nil {
-		log.Warn("access key cannot be regenerated because deployment target has already been connected")
-		w.WriteHeader(http.StatusBadRequest)
+	if deploymentTarget.CurrentStatus != nil &&
+		deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
+		http.Error(
+			w,
+			fmt.Sprintf(
+				"access key cannot be regenerated because deployment target is already connected "+
+					"and seems to be still running (last connection at %v)",
+				deploymentTarget.CurrentStatus.CreatedAt,
+			),
+			http.StatusBadRequest,
+		)
 		return
 	}
 
@@ -145,7 +163,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		deploymentTarget.AccessKeyHash = &hash
 	}
 
-	if err := db.UpdateDeploymentTargetAccess(ctx, deploymentTarget); err != nil {
+	if err := db.UpdateDeploymentTargetAccess(ctx, &deploymentTarget.DeploymentTarget); err != nil {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -190,7 +208,7 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
 			wh.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})

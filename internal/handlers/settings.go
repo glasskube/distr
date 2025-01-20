@@ -33,6 +33,12 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	if err := body.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	user, err := db.GetCurrentUser(ctx)
 	if err != nil {
 		log.Error("failed to get current user", zap.Error(err))
@@ -43,8 +49,8 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	if body.Name != "" {
 		user.Name = body.Name
 	}
-	if body.Password != "" {
-		user.Password = body.Password
+	if body.Password != nil {
+		user.Password = *body.Password
 		if err := security.HashPassword(user); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to hash password", zap.Error(err))

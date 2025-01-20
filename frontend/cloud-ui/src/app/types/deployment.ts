@@ -22,6 +22,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   applicationVersionName: string;
   valuesYaml?: string;
   deploymentRevisionId?: string;
+  latestStatus?: DeploymentRevisionStatus;
 }
 
 export interface DeploymentRevisionStatus extends BaseModel {
@@ -34,3 +35,5 @@ export type DeploymentType = 'docker' | 'kubernetes';
 export type HelmChartType = 'repository' | 'oci';
 
 export type DeploymentStatusType = 'ok' | 'error';
+
+export type DeploymentTargetScope = 'cluster' | 'namespace';

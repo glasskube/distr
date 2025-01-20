@@ -3,7 +3,6 @@ import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/com
 import {
   AfterViewInit,
   Component,
-  ElementRef,
   inject,
   Input,
   OnDestroy,
@@ -41,7 +40,7 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import {RelativeDatePipe} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -49,6 +48,8 @@ import {modalFlyInOut} from '../animations/modal';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {StatusDotComponent} from '../components/status-dot';
+import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
@@ -56,10 +57,9 @@ import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Application} from '../types/application';
-import {DeploymentRequest, DeploymentRevisionStatus, DeploymentType} from '../types/deployment';
+import {DeploymentRequest, DeploymentRevisionStatus, DeploymentTargetScope, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
-import {getFormDisplayedError} from '../../util/errors';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -71,12 +71,12 @@ import {YamlEditorComponent} from '../components/yaml-editor.component';
     ReactiveFormsModule,
     NgOptimizedImage,
     IsStalePipe,
-    RelativeDatePipe,
     StatusDotComponent,
     ConnectInstructionsComponent,
     InstallationWizardComponent,
     UpperCasePipe,
     YamlEditorComponent,
+    AutotrimDirective,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -91,6 +91,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deployments = inject(DeploymentService);
+  private readonly agentVersions = inject(AgentVersionService);
 
   readonly magnifyingGlassIcon = faMagnifyingGlass;
   readonly plusIcon = faPlus;
@@ -122,6 +123,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       lat: new FormControl<number | undefined>(undefined),
       lon: new FormControl<number | undefined>(undefined),
     }),
+    namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
+    scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
   });
 
   editFormLoading = false;
@@ -132,7 +135,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
-    notes: new FormControl<string | undefined>(undefined),
   });
 
   deployFormLoading = false;
@@ -144,6 +146,14 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   );
   private readonly applications$ = this.applications.list();
+  public readonly agentVersions$ = this.agentVersions.list();
+
+  readonly showAgentUpdateColumn$ = combineLatest([this.filteredDeploymentTargets$, this.agentVersions$]).pipe(
+    map(
+      ([dts, avs]) =>
+        avs.length !== 0 && dts.some((dt) => dt.agentVersion?.id && dt.agentVersion?.id !== avs[avs.length - 1].id)
+    )
+  );
 
   readonly filteredApplications$ = combineLatest([
     this.applications$,
@@ -249,7 +259,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         type: val.type!,
       };
 
-      if (val.geolocation?.lat && val.geolocation.lon) {
+      if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
         dt.geolocation = {
           lat: val.geolocation.lat,
           lon: val.geolocation.lon,
@@ -330,7 +340,9 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       deploymentId: deploymentTarget.deployment?.id,
       applicationId: deploymentTarget.deployment?.applicationId,
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
+      releaseName: deploymentTarget.deployment?.releaseName,
     });
+
     if (deploymentTarget.deployment) {
       this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
     }
@@ -373,5 +385,37 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         this.showModal(modal);
       }
     }
+  }
+
+  async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
+    if (deploymentTarget.currentStatus !== undefined) {
+      if (
+        !(await firstValueFrom(
+          this.overlay.confirm(
+            `Warning: If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid. Continue?`
+          )
+        ))
+      ) {
+        return;
+      }
+    }
+    this.showModal(modal);
+  }
+
+  public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {
+    try {
+      const agentVersions = await firstValueFrom(this.agentVersions$);
+      if (agentVersions.length > 0) {
+        const targetVersion = agentVersions[agentVersions.length - 1];
+        if (
+          await firstValueFrom(
+            this.overlay.confirm(`Update ${dt.name} agent from ${dt.agentVersion?.name} to ${targetVersion.name}?`)
+          )
+        ) {
+          dt.agentVersion = targetVersion;
+          await firstValueFrom(this.deploymentTargets.update(dt));
+        }
+      }
+    } catch (e) {}
   }
 }

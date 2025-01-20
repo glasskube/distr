@@ -6,6 +6,7 @@ type DeploymentType string
 type UserRole string
 type HelmChartType string
 type DeploymentStatusType string
+type DeploymentTargetScope string
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
@@ -17,8 +18,11 @@ const (
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
 
-	DeploymentStatusTypeOK    = "ok"
-	DeploymentStatusTypeError = "error"
+	DeploymentStatusTypeOK    DeploymentStatusType = "ok"
+	DeploymentStatusTypeError DeploymentStatusType = "error"
+
+	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
+	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
 )
 
 type Base struct {

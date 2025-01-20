@@ -1,6 +1,8 @@
 package api
 
-import "errors"
+import (
+	"github.com/glasskube/cloud/internal/validation"
+)
 
 type AuthLoginRequest struct {
 	Email    string `json:"email"`
@@ -19,12 +21,11 @@ type AuthRegistrationRequest struct {
 
 func (r *AuthRegistrationRequest) Validate() error {
 	if r.Email == "" {
-		return errors.New("email is empty")
-	} else if len(r.Password) < 8 {
-		return errors.New("password is too short")
-	} else {
-		return nil
+		return validation.NewValidationFailedError("email is empty")
+	} else if err := validation.ValidatePassword(r.Password); err != nil {
+		return err
 	}
+	return nil
 }
 
 type AuthResetPasswordRequest struct {
@@ -33,8 +34,7 @@ type AuthResetPasswordRequest struct {
 
 func (r *AuthResetPasswordRequest) Validate() error {
 	if r.Email == "" {
-		return errors.New("email is empty")
-	} else {
-		return nil
+		return validation.NewValidationFailedError("email is empty")
 	}
+	return nil
 }

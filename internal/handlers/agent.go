@@ -5,19 +5,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/cloud/internal/agentclient/useragent"
+	"github.com/glasskube/cloud/internal/agentmanifest"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/glasskube/cloud/internal/resources"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
@@ -28,21 +30,24 @@ import (
 )
 
 func AgentRouter(r chi.Router) {
-	r.Group(func(r chi.Router) {
-		r.Use(queryAuthDeploymentTargetCtxMiddleware)
+	r.With(
+		queryAuthDeploymentTargetCtxMiddleware,
+	).Group(func(r chi.Router) {
 		r.Get("/connect", connectHandler())
 	})
 	r.Route("/agent", func(r chi.Router) {
 		// agent login (from basic auth to token)
 		r.Post("/login", agentLoginHandler)
 
-		r.Group(func(r chi.Router) {
+		r.With(
+			jwtauth.Verifier(auth.JWTAuth),
+			jwtauth.Authenticator(auth.JWTAuth),
+			middleware.SentryUser,
+			agentAuthDeploymentTargetCtxMiddleware,
+			rateLimitPerAgent,
+		).Group(func(r chi.Router) {
 			// agent routes, authenticated via token
-			r.Use(jwtauth.Verifier(auth.JWTAuth))
-			r.Use(jwtauth.Authenticator(auth.JWTAuth))
-			r.Use(middleware.SentryUser)
-			r.Use(agentAuthDeploymentTargetCtxMiddleware)
-			r.Use(rateLimitPerAgent)
+			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
 		})
@@ -50,50 +55,34 @@ func AgentRouter(r chi.Router) {
 }
 
 func connectHandler() http.HandlerFunc {
-	dockerTempl := util.Require(resources.GetTemplate("embedded/agent/docker/docker-compose.yaml"))
-	kubernetesTempl := util.Require(resources.GetTemplate("embedded/agent/kubernetes/manifest.yaml"))
-	loginEndpoint, resourcesEndpoint, statusEndpoint, err := buildEndpoints()
-	util.Must(err)
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-		templateData := map[string]any{
-			"loginEndpoint":     loginEndpoint,
-			"resourcesEndpoint": resourcesEndpoint,
-			"statusEndpoint":    statusEndpoint,
-			"targetId":          r.URL.Query().Get("targetId"),
-			"targetSecret":      r.URL.Query().Get("targetSecret"),
-			"agentInterval":     env.AgentInterval(),
+
+		if deploymentTarget.CurrentStatus != nil &&
+			deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
+			http.Error(
+				w,
+				fmt.Sprintf(
+					"deployment target is already connected and appears to be still running (last status %v)",
+					deploymentTarget.CurrentStatus.CreatedAt),
+				http.StatusBadRequest,
+			)
+			return
 		}
-		if deploymentTarget.CurrentStatus != nil {
-			log.Warn("deployment target has already been connected")
-			http.Error(w, "deployment target has already been connected", http.StatusBadRequest)
-		} else if deploymentTarget.Type == types.DeploymentTypeDocker {
-			w.Header().Add("Content-Type", "application/yaml")
-			if err := dockerTempl.Execute(w, templateData); err != nil {
-				log.Error("failed to execute yaml template", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
+
+		secret := r.URL.Query().Get("targetSecret")
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, &secret); err != nil {
+			log.Error("could not get agent manifest", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.Header().Add("Content-Type", "application/yaml")
-			if err := kubernetesTempl.Execute(w, templateData); err != nil {
-				log.Error("failed to execute yaml template", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
+			if _, err := io.Copy(w, manifest); err != nil {
+				log.Warn("writing to client failed", zap.Error(err))
 			}
 		}
-	}
-}
-
-func buildEndpoints() (string, string, string, error) {
-	if u, err := url.Parse(env.Host()); err != nil {
-		return "", "", "", err
-	} else {
-		u = u.JoinPath("/api/v1/agent")
-		return u.JoinPath("login").String(), u.JoinPath("resources").String(), u.JoinPath("status").String(), nil
 	}
 }
 
@@ -147,6 +136,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		appVersion = av
 	}
 
+	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
 		if deployment != nil && appVersion != nil {
 			response := api.DockerAgentResource{
@@ -161,10 +151,12 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response := api.KubernetesAgentResource{
 			Namespace: *deploymentTarget.Namespace,
+			Version:   deploymentTarget.AgentVersion,
 		}
 		if deployment != nil && appVersion != nil {
 			response.AgentResource = api.AgentResource{RevisionID: deployment.DeploymentRevisionID}
 			response.Deployment = &api.KubernetesAgentDeployment{
+				RevisionID:   deployment.DeploymentRevisionID,
 				ReleaseName:  *deployment.ReleaseName,
 				ChartUrl:     *appVersion.ChartUrl,
 				ChartVersion: *appVersion.ChartVersion,
@@ -192,11 +184,11 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
-	if err := db.CreateDeploymentTargetStatus(ctx, deploymentTarget, statusMessage); err != nil {
+	if err := db.CreateDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget, statusMessage); err != nil {
 		log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID),
 			zap.String("statusMessage", statusMessage))
-	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, deploymentTarget); err != nil {
+	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget); err != nil {
 		log.Error("failed to cleanup old deployment target status", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID))
 	} else if cnt > 0 {
@@ -254,23 +246,57 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func agentManifestHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+		log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
+
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, nil); err != nil {
+			log.Error("could not get agent manifest", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.Header().Add("Content-Type", "application/yaml")
+			if _, err := io.Copy(w, manifest); err != nil {
+				log.Warn("writing to client failed", zap.Error(err))
+			}
+		}
+	}
+}
+
 func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
 		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get orgId from token", zap.Error(err))
+			log.Error("failed to get orgId from token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if targetId, err := auth.CurrentSubject(ctx); err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get subject from token", zap.Error(err))
+			log.Error("failed to get subject from token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if deploymentTarget, err :=
 			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
+			log.Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			ctx = internalctx.WithDeploymentTarget(ctx, &deploymentTarget.DeploymentTarget)
+			if ua := r.UserAgent(); strings.HasPrefix(ua, fmt.Sprintf("%v/", useragent.GlasskubeAgentUserAgent)) {
+				reportedVersionName := strings.TrimPrefix(ua, fmt.Sprintf("%v/", useragent.GlasskubeAgentUserAgent))
+				if reportedVersion, err := db.GetAgentVersionWithName(ctx, reportedVersionName); err != nil {
+					log.Error("could not get reported agent version", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+				} else if deploymentTarget.ReportedAgentVersionID == nil ||
+					reportedVersion.ID != *deploymentTarget.ReportedAgentVersionID {
+					if err := db.UpdateDeploymentTargetReportedAgentVersionID(
+						ctx, &deploymentTarget.DeploymentTarget, reportedVersion.ID); err != nil {
+						log.Error("could not update reported agent version", zap.Error(err))
+						sentry.GetHubFromContext(ctx).CaptureException(err)
+					}
+				}
+			}
+			ctx = internalctx.WithDeploymentTarget(ctx, deploymentTarget)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
@@ -280,7 +306,7 @@ func getVerifiedDeploymentTarget(
 	ctx context.Context,
 	targetId string,
 	targetSecret string,
-) (*types.DeploymentTarget, error) {
+) (*types.DeploymentTargetWithCreatedBy, error) {
 	if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, nil); err != nil {
 		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
@@ -289,7 +315,7 @@ func getVerifiedDeploymentTarget(
 		*deploymentTarget.AccessKeySalt, *deploymentTarget.AccessKeyHash, targetSecret); err != nil {
 		return nil, fmt.Errorf("failed to verify access: %w", err)
 	} else {
-		return &deploymentTarget.DeploymentTarget, nil
+		return deploymentTarget, nil
 	}
 }
 

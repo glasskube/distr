@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -16,7 +14,6 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/release"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
@@ -65,11 +62,11 @@ func RunHelmPreflight(
 	deployment api.KubernetesAgentDeployment,
 ) (*chart.Chart, error) {
 	chartName := deployment.ChartName
+	action.Version = deployment.ChartVersion
 	if registry.IsOCI(deployment.ChartUrl) {
 		chartName = deployment.ChartUrl
 	} else {
 		action.RepoURL = deployment.ChartUrl
-		action.Version = deployment.ChartVersion
 	}
 	if chartPath, err := action.LocateChart(chartName, helmEnvSettings); err != nil {
 		return nil, fmt.Errorf("could not locate chart: %w", err)
@@ -153,21 +150,4 @@ func GetHelmManifest(namespace, releaseName string) ([]*unstructured.Unstructure
 		// decode the release manifests which is represented as multi-document YAML
 		return DecodeResourceYaml(strings.NewReader(release.Manifest))
 	}
-}
-
-func DecodeResourceYaml(reader io.Reader) ([]*unstructured.Unstructured, error) {
-	decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
-	var result []*unstructured.Unstructured
-	for {
-		var object unstructured.Unstructured
-		if err := decoder.Decode(&object); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return nil, err
-		} else if len(object.Object) > 0 {
-			result = append(result, &object)
-		}
-	}
-	return result, nil
 }
