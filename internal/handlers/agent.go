@@ -139,12 +139,21 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
 		if deployment != nil && appVersion != nil {
-			// TODO patch the compose file with a generated project name (short hash from deployment id)
-			response := api.DockerAgentResource{
-				AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
-				ComposeFile:   appVersion.ComposeFileData,
+			if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
+				log.Warn("parse error", zap.Error(err))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else if err := patchProjectName(composeYaml, deployment.ID); err != nil {
+				log.Warn("failed to patch project name", zap.Error(err))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				response := api.DockerAgentResource{
+					AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
+					Compose:       composeYaml,
+				}
+				RespondJSON(w, response)
 			}
-			RespondJSON(w, response)
 		} else {
 			// it the status wasn't previously set to something else send a 204 code
 			w.WriteHeader(http.StatusNoContent)
@@ -198,6 +207,11 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			zap.Int64("count", cnt),
 			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
+}
+
+func patchProjectName(yaml map[string]any, deploymentId string) error {
+	yaml["name"] = "glasskube-" // TODO
+	return nil
 }
 
 func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
