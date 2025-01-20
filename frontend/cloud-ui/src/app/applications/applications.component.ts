@@ -269,17 +269,18 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  fillVersionFormWith(selectedApplication: Application | undefined, version: ApplicationVersion) {
-    this.newVersionForm.patchValue({
-      versionName: version.name,
-    });
+  async fillVersionFormWith(selectedApplication: Application | undefined, version: ApplicationVersion) {
     if (selectedApplication?.type === 'kubernetes') {
+      const template = await firstValueFrom(this.applications.getTemplateFile(selectedApplication.id!, version.id!));
+      const values = await firstValueFrom(this.applications.getValuesFile(selectedApplication.id!, version.id!));
       this.newVersionForm.patchValue({
         kubernetes: {
           chartType: version.chartType,
           chartName: version.chartName,
           chartUrl: version.chartUrl,
           chartVersion: version.chartVersion,
+          baseValues: values,
+          template: template,
         },
       });
     }

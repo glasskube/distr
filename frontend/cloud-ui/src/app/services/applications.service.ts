@@ -37,8 +37,16 @@ export class ApplicationsService implements CrudService<Application> {
   }
 
   getTemplateFile(applicationId: string, versionId: string): Observable<string | null> {
+    return this.getFile(applicationId, versionId, 'template-file');
+  }
+
+  getValuesFile(applicationId: string, versionId: string): Observable<string | null> {
+    return this.getFile(applicationId, versionId, 'values-file');
+  }
+
+  private getFile(applicationId: string, versionId: string, file: string): Observable<string | null> {
     return this.httpClient
-      .get(`${this.applicationsUrl}/${applicationId}/versions/${versionId}/template-file`, {responseType: 'text'})
+      .get(`${this.applicationsUrl}/${applicationId}/versions/${versionId}/${file}`, {responseType: 'text'})
       .pipe(
         catchError((e) => {
           if (e instanceof HttpErrorResponse && e.status == 404) {
