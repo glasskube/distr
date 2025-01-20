@@ -135,7 +135,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
-    notes: new FormControl<string | undefined>(undefined),
   });
 
   deployFormLoading = false;
