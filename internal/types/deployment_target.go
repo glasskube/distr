@@ -1,7 +1,7 @@
 package types
 
 import (
-	"errors"
+	"github.com/glasskube/cloud/internal/validation"
 )
 
 type DeploymentTarget struct {
@@ -23,10 +23,14 @@ type DeploymentTarget struct {
 func (dt *DeploymentTarget) Validate() error {
 	if dt.Type == DepolymentTypeKubernetes {
 		if dt.Namespace == nil || *dt.Namespace == "" {
-			return errors.New("DeploymentTarget with type \"kubernetes\" must not have empty namespace")
+			return validation.NewValidationFailedError(
+				"DeploymentTarget with type \"kubernetes\" must not have empty namespace",
+			)
 		}
 		if dt.Scope == nil {
-			return errors.New("DeploymentTarget with type \"kubernetes\" must not have empty scope")
+			return validation.NewValidationFailedError(
+				"DeploymentTarget with type \"kubernetes\" must not have empty scope",
+			)
 		}
 	}
 	return nil
