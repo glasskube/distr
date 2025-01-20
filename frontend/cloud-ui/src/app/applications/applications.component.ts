@@ -143,7 +143,9 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.resetVersionForm();
     if (this.selectedApplication?.type === 'kubernetes') {
       enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
+      disableControlsWithoutEvent(this.newVersionForm.controls.docker);
     } else {
+      enableControlsWithoutEvent(this.newVersionForm.controls.docker);
       disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
     }
   }
@@ -262,26 +264,39 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   async fillVersionFormWith(selectedApplication: Application | undefined, version: ApplicationVersion) {
     if (selectedApplication?.type === 'kubernetes') {
-      // TODO error handling
-      const template = await firstValueFrom(this.applications.getTemplateFile(selectedApplication.id!, version.id!));
-      const values = await firstValueFrom(this.applications.getValuesFile(selectedApplication.id!, version.id!));
-      this.newVersionForm.patchValue({
-        kubernetes: {
-          chartType: version.chartType,
-          chartName: version.chartName,
-          chartUrl: version.chartUrl,
-          chartVersion: version.chartVersion,
-          baseValues: values,
-          template: template,
-        },
-      });
+      try {
+        const template = await firstValueFrom(this.applications.getTemplateFile(selectedApplication.id!, version.id!));
+        const values = await firstValueFrom(this.applications.getValuesFile(selectedApplication.id!, version.id!));
+        this.newVersionForm.patchValue({
+          kubernetes: {
+            chartType: version.chartType,
+            chartName: version.chartName,
+            chartUrl: version.chartUrl,
+            chartVersion: version.chartVersion,
+            baseValues: values,
+            template: template,
+          },
+        });
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      }
     } else if (selectedApplication?.type === 'docker') {
-      const compose = await firstValueFrom(this.applications.getComposeFile(selectedApplication.id!, version.id!));
-      this.newVersionForm.patchValue({
-        docker: {
-          compose,
-        },
-      });
+      try {
+        const compose = await firstValueFrom(this.applications.getComposeFile(selectedApplication.id!, version.id!));
+        this.newVersionForm.patchValue({
+          docker: {
+            compose,
+          },
+        });
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      }
     }
   }
 }
