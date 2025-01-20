@@ -62,7 +62,7 @@ func SendUserInviteMail(
 			)
 			return err
 		} else {
-			log.Info("invite mail has been sent", zap.String("user", userAccount.Email), zap.String("token", token))
+			log.Info("invite mail has been sent", zap.String("user", userAccount.Email))
 			return nil
 		}
 	}
