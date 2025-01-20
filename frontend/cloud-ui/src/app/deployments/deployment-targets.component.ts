@@ -294,7 +294,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       .subscribe(() => {
         if (this.selectedApplication && (this.selectedApplication.versions ?? []).length > 0) {
           const versions = this.selectedApplication.versions!;
-          console.log('patching version id');
           this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
         } else {
           this.deployForm.controls.applicationVersionId.reset();
@@ -303,7 +302,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.deployForm.controls.applicationVersionId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        tap((x) => console.log('version id changed', x)),
         switchMap((id) =>
           this.selectedApplication?.type === 'kubernetes'
             ? this.applications
@@ -313,13 +311,10 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         )
       )
       .subscribe(([type, valuesYaml]) => {
-        console.log('yeah');
         if (type === 'kubernetes') {
           this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
-          console.log('0 patching deployForm ', valuesYaml);
           this.deployForm.patchValue({valuesYaml});
-          console.log('0 DONE patching deployForm ', valuesYaml);
           if (!this.deployForm.value.releaseName) {
             const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
             this.deployForm.patchValue({releaseName});
@@ -336,15 +331,11 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         this.deployForm.controls.applicationVersionId.disable();
       }
     });
-    this.deployForm.controls.valuesYaml.valueChanges.subscribe((v) => {
-      console.log('--- valuesYaml changed', v);
-    });
   }
 
   async newDeployment(deploymentTarget: DeploymentTarget, modalTemplate: TemplateRef<any>) {
     const apps = await firstValueFrom(this.applications$);
     this.selectedDeploymentTarget.set(deploymentTarget);
-    console.log('new deployment', this.deployForm.value);
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
       deploymentId: deploymentTarget.deployment?.id,
@@ -352,7 +343,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
       releaseName: deploymentTarget.deployment?.releaseName,
     });
-    console.log('new deployment after reset', this.deployForm.value);
 
     if (deploymentTarget.deployment) {
       this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
