@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
@@ -139,12 +142,21 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
 		if deployment != nil && appVersion != nil {
-			// TODO patch the compose file with a generated project name (short hash from deployment id)
-			response := api.DockerAgentResource{
-				AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
-				ComposeFile:   appVersion.ComposeFileData,
+			if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
+				log.Warn("parse error", zap.Error(err))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else if patchedComposeFile, err := patchProjectName(composeYaml, deployment.ID); err != nil {
+				log.Warn("failed to patch project name", zap.Error(err))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				response := api.DockerAgentResource{
+					AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
+					ComposeFile:   patchedComposeFile,
+				}
+				RespondJSON(w, response)
 			}
-			RespondJSON(w, response)
 		} else {
 			// it the status wasn't previously set to something else send a 204 code
 			w.WriteHeader(http.StatusNoContent)
@@ -198,6 +210,16 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			zap.Int64("count", cnt),
 			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
+}
+
+func patchProjectName(data map[string]any, deploymentId string) ([]byte, error) {
+	data["name"] = fmt.Sprintf("glasskube-%v", deploymentId[:8])
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	if err := enc.Encode(data); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
