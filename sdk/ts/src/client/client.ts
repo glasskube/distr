@@ -1,4 +1,10 @@
-import {Application, ApplicationVersion, DeploymentRequest, DeploymentTarget} from '../types';
+import {
+  Application,
+  ApplicationVersion,
+  DeploymentRequest,
+  DeploymentTarget,
+  DeploymentTargetAccessResponse,
+} from '../types';
 
 export type ClientConfig = {
   apiBase: string;
@@ -74,6 +80,10 @@ export class Client {
     return this.put<DeploymentRequest>('deployments', deploymentRequest);
   }
 
+  public async createAccessForDeploymentTarget(deploymentTargetId: string): Promise<DeploymentTargetAccessResponse> {
+    return this.post<DeploymentTargetAccessResponse>(`deployment-targets/${deploymentTargetId}/access-request`);
+  }
+
   private async get<T>(path: string): Promise<T> {
     const response = await fetch(`${this.config.apiBase}/${path}`, {
       method: 'GET',
@@ -85,7 +95,7 @@ export class Client {
     return await this.handleResponse<T>(response, 'GET', path);
   }
 
-  private async post<T>(path: string, body: T): Promise<T> {
+  private async post<T>(path: string, body?: T): Promise<T> {
     const response = await fetch(`${this.config.apiBase}/${path}`, {
       method: 'POST',
       headers: {
