@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -58,23 +57,17 @@ loop:
 		} else {
 			// TODO: Implement docker agent self update
 
+			cmd := exec.CommandContext(ctx, "docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
+			cmd.Stdin = bytes.NewReader(resource.ComposeFile)
+			out, cmdErr := cmd.CombinedOutput()
+			outStr := string(out)
+			logger.Debug("docker compose returned", zap.String("output", outStr), zap.Error(cmdErr))
 			var reportedStatus string
 			var reportedErr error
-			cmd := exec.CommandContext(ctx, "docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
-			buf, err := encodeYaml(resource.Compose)
-			if err != nil {
-				logger.Error("failed to encode yaml", zap.Error(err))
-				reportedErr = fmt.Errorf("failed to encode yaml: %w", err)
+			if cmdErr != nil {
+				reportedErr = errors.New(outStr)
 			} else {
-				cmd.Stdin = buf
-				out, cmdErr := cmd.CombinedOutput()
-				outStr := string(out)
-				logger.Debug("docker compose returned", zap.String("output", outStr), zap.Error(cmdErr))
-				if cmdErr != nil {
-					reportedErr = errors.New(outStr)
-				} else {
-					reportedStatus = outStr
-				}
+				reportedStatus = outStr
 			}
 
 			if err := client.Status(ctx, resource.RevisionID, reportedStatus, reportedErr); err != nil {

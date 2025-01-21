@@ -1,9 +1,8 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
@@ -145,14 +146,14 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				log.Warn("parse error", zap.Error(err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
-			} else if err := patchProjectName(composeYaml, deployment.ID); err != nil {
+			} else if patchedComposeFile, err := patchProjectName(composeYaml, deployment.ID); err != nil {
 				log.Warn("failed to patch project name", zap.Error(err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			} else {
 				response := api.DockerAgentResource{
 					AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
-					Compose:       composeYaml,
+					ComposeFile:   patchedComposeFile,
 				}
 				RespondJSON(w, response)
 			}
@@ -211,15 +212,14 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func patchProjectName(yaml map[string]any, deploymentId string) error {
-	h := sha256.New()
-	if _, err := h.Write([]byte(deploymentId)); err != nil {
-		return err
-	} else {
-		hsh := hex.EncodeToString(h.Sum(nil))
-		yaml["name"] = fmt.Sprintf("glasskube-%v", hsh[:12])
-		return nil
+func patchProjectName(data map[string]any, deploymentId string) ([]byte, error) {
+	data["name"] = fmt.Sprintf("glasskube-%v", deploymentId[:8])
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	if err := enc.Encode(data); err != nil {
+		return nil, err
 	}
+	return buf.Bytes(), nil
 }
 
 func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {

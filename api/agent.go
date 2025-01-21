@@ -8,7 +8,7 @@ type AgentResource struct {
 
 type DockerAgentResource struct {
 	AgentResource
-	Compose map[string]any `json:"compose"`
+	ComposeFile []byte `json:"composeFile"`
 }
 
 type KubernetesAgentResource struct {
