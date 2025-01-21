@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.11.0](https://github.com/glasskube/cloud/compare/0.10.0...0.11.0) (2025-01-21)
+
+
+### Features
+
+* add agent docker config for kubernetes agent ([#304](https://github.com/glasskube/cloud/issues/304)) ([c1b4c0a](https://github.com/glasskube/cloud/commit/c1b4c0ac9e3825af82dff75cf5b5865fc1e8b3b2))
+* add connecting deployment target again ([#307](https://github.com/glasskube/cloud/issues/307)) ([fb18211](https://github.com/glasskube/cloud/commit/fb1821112ed8f9b59e40643b2c38e39b0b25ab64))
+* add organization branding in invite emails ([#312](https://github.com/glasskube/cloud/issues/312)) ([fbd014a](https://github.com/glasskube/cloud/commit/fbd014a54117b663e5d719f583ebf9cac5ec6f34))
+* **ui:** add application version copy ([#283](https://github.com/glasskube/cloud/issues/283)) ([97de1f3](https://github.com/glasskube/cloud/commit/97de1f3bcddeca1c40aacad785c5e95b44940462))
+* **ui:** add autotrim on blur ([#310](https://github.com/glasskube/cloud/issues/310)) ([34a1632](https://github.com/glasskube/cloud/commit/34a1632746cd3aac0373fd022055480b41aa560d))
+* **ui:** add backoff-retry for deployment target polling ([#311](https://github.com/glasskube/cloud/issues/311)) ([d734f09](https://github.com/glasskube/cloud/commit/d734f091d4de3ee5285e7733d4109528e091c6e1))
+* **ui:** use text input for helm values and template ([#308](https://github.com/glasskube/cloud/issues/308)) ([96b6651](https://github.com/glasskube/cloud/commit/96b6651c50790e7565b5ceb72e76957c56f9d602))
+
+
+### Bug Fixes
+
+* add password validation on update settings endpoint ([#318](https://github.com/glasskube/cloud/issues/318)) ([3176f50](https://github.com/glasskube/cloud/commit/3176f50c0c537df0f54fce29d1d31c3133ac422a))
+* **backend:** improve sorting of deployment targets ([#305](https://github.com/glasskube/cloud/issues/305)) ([a597b14](https://github.com/glasskube/cloud/commit/a597b1444fe91f94ade0eb38712c20778ed309a2))
+* **deps:** update angular monorepo to v19.1.2 ([#326](https://github.com/glasskube/cloud/issues/326)) ([2a0d0ae](https://github.com/glasskube/cloud/commit/2a0d0ae50a8b6e0c43c80c6d04ebfd379eb21610))
+* **deps:** update aws-sdk-go-v2 monorepo ([#313](https://github.com/glasskube/cloud/issues/313)) ([0af2600](https://github.com/glasskube/cloud/commit/0af26004eb715cd46bdc8f9663a4dd7671a42ed7))
+* **deps:** update dependency @angular/cdk to v19.1.0 ([#303](https://github.com/glasskube/cloud/issues/303)) ([f09e767](https://github.com/glasskube/cloud/commit/f09e767ab0ae4f65afcd1f55bebca75dd78bb771))
+* **deps:** update dependency globe.gl to v2.38.1 ([#316](https://github.com/glasskube/cloud/issues/316)) ([6573b45](https://github.com/glasskube/cloud/commit/6573b45e45ac69e9d441416b85a77c0ab414ad1c))
+* **deps:** update dependency globe.gl to v2.39.0 ([#317](https://github.com/glasskube/cloud/issues/317)) ([d95a122](https://github.com/glasskube/cloud/commit/d95a122f628ec842f4f519e778a28b22c03ae89d))
+* **deps:** update dependency posthog-js to v1.207.0 ([#309](https://github.com/glasskube/cloud/issues/309)) ([5569b9f](https://github.com/glasskube/cloud/commit/5569b9facd6085f7104444ef3cb846baf09a6c20))
+* **ui:** yaml editor respects changes ([#322](https://github.com/glasskube/cloud/issues/322)) ([7fafdfa](https://github.com/glasskube/cloud/commit/7fafdfa0a4108ddada158d86f346fbb37323a06c))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.1.2 ([#314](https://github.com/glasskube/cloud/issues/314)) ([8759eed](https://github.com/glasskube/cloud/commit/8759eed79cf1cce2e32f0eb421701452757346a6))
+* **deps:** update dependency @sentry/cli to v2.41.0 ([#324](https://github.com/glasskube/cloud/issues/324)) ([adb46fb](https://github.com/glasskube/cloud/commit/adb46fbb63ef4c1aeccdd69b3ef575f0bdef9714))
+* remove API Keys from side bar as they will be in the user dropdown ([8399d6b](https://github.com/glasskube/cloud/commit/8399d6b31859cefb521400352e7066a487d49d02))
+* remove logging of tokens for invites ([#321](https://github.com/glasskube/cloud/issues/321)) ([2741b47](https://github.com/glasskube/cloud/commit/2741b47a1049d3a1e94de251e15170d4c58cbeb9))
+* **ui:** remove "deployment notes" text field ([#320](https://github.com/glasskube/cloud/issues/320)) ([90cd7be](https://github.com/glasskube/cloud/commit/90cd7be74421ab3a48929233d4cd5d7840d1d72b))
+* **ui:** remove "terms & conditions" checkboxes ([#319](https://github.com/glasskube/cloud/issues/319)) ([859a784](https://github.com/glasskube/cloud/commit/859a784ed4c58fc28d2cee3466b4e0b0af722b6b))
+* **ui:** support scope in onboarding wizard ([#323](https://github.com/glasskube/cloud/issues/323)) ([ae914ec](https://github.com/glasskube/cloud/commit/ae914ec282cd0f8b583440d6f4cc064eccc42aae))
+
 ## [0.10.0](https://github.com/glasskube/cloud/compare/0.9.2...0.10.0) (2025-01-16)
 
 
