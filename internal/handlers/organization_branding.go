@@ -10,9 +10,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -29,7 +29,7 @@ func OrganizationBrandingRouter(r chi.Router) {
 
 func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 
 	if organizationBranding, err :=
 		db.GetOrganizationBranding(r.Context(), auth.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
@@ -111,7 +111,7 @@ func getOrganizationBrandingFromRequest(r *http.Request) (*types.OrganizationBra
 }
 
 func setMetadataForOrganizationBranding(ctx context.Context, t *types.OrganizationBranding) error {
-	if auth, err := middleware.Authn.Get(ctx); err != nil {
+	if auth, err := auth.Authentication.Get(ctx); err != nil {
 		return err
 	} else {
 		t.OrganizationID = auth.CurrentOrgID()

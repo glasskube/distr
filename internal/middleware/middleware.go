@@ -6,6 +6,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/types"
@@ -56,7 +57,7 @@ func UserRoleMiddleware(userRole types.UserRole) func(handler http.Handler) http
 	return func(handler http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			if auth, err := Authn.Get(ctx); err != nil {
+			if auth, err := auth.Authentication.Get(ctx); err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
 			} else if auth.CurrentUserRole() == nil || *auth.CurrentUserRole() != userRole {
 				http.Error(w, "insufficient permissions", http.StatusForbidden)
@@ -74,7 +75,7 @@ func SentryUser(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if hub := sentry.GetHubFromContext(ctx); hub != nil {
-			if auth, err := Authn.Get(ctx); err == nil {
+			if auth, err := auth.Authentication.Get(ctx); err == nil {
 				hub.Scope().SetUser(sentry.User{
 					ID:    auth.CurrentUserID(),
 					Email: auth.CurrentUserEmail(),
@@ -89,7 +90,7 @@ var RateLimitPerUser = httprate.Limit(
 	3,
 	10*time.Minute,
 	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
-		if auth, err := Authn.Get(r.Context()); err != nil {
+		if auth, err := auth.Authentication.Get(r.Context()); err != nil {
 			return "", err
 		} else {
 			return auth.CurrentUserID(), nil

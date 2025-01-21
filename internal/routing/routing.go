@@ -3,6 +3,7 @@ package routing
 import (
 	"net/http"
 
+	"github.com/glasskube/cloud/internal/auth"
 	"github.com/glasskube/cloud/internal/frontend"
 	"github.com/glasskube/cloud/internal/handlers"
 	"github.com/glasskube/cloud/internal/mail"
@@ -46,7 +47,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 		r.Group(func(r chi.Router) {
 			r.Use(
 				middleware.SentryUser,
-				middleware.Authn.Middleware,
+				auth.Authentication.Middleware,
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)

@@ -7,6 +7,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	"github.com/glasskube/cloud/internal/authkey"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
@@ -37,7 +38,7 @@ func SettingsRouter(r chi.Router) {
 func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	body, err := JsonBody[api.UpdateUserAccountRequest](w, r)
 	if err != nil {
 		return
@@ -80,7 +81,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 func userSettingsVerifyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -97,7 +98,7 @@ func userSettingsVerifyRequestHandler(w http.ResponseWriter, r *http.Request) {
 func userSettingsVerifyConfirmHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if !auth.CurrentUserEmailVerified() {
@@ -119,7 +120,7 @@ func getAccessTokensHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		auth := middleware.Authn.Require(ctx)
+		auth := auth.Authentication.Require(ctx)
 		tokens, err := db.GetAccessTokensByUserAccountID(ctx, auth.CurrentUserID())
 		if err != nil {
 			log.Warn("error getting tokens", zap.Error(err))
@@ -134,7 +135,7 @@ func createAccessTokenHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		auth := middleware.Authn.Require(ctx)
+		auth := auth.Authentication.Require(ctx)
 		request, err := JsonBody[api.CreateAccessTokenRequest](w, r)
 		if err != nil {
 			return
@@ -167,7 +168,7 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		tokenID := r.PathValue("id")
-		auth := middleware.Authn.Require(ctx)
+		auth := auth.Authentication.Require(ctx)
 		if err := db.DeleteAccessToken(ctx, tokenID, auth.CurrentUserID()); err != nil {
 			log.Warn("error deleting token", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)

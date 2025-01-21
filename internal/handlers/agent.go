@@ -18,6 +18,7 @@ import (
 	"github.com/glasskube/cloud/internal/agentclient/useragent"
 	"github.com/glasskube/cloud/internal/agentmanifest"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	"github.com/glasskube/cloud/internal/authjwt"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
@@ -42,7 +43,7 @@ func AgentRouter(r chi.Router) {
 		r.Post("/login", agentLoginHandler)
 
 		r.With(
-			middleware.Authn.Middleware,
+			auth.Authentication.Middleware,
 			middleware.SentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
@@ -290,7 +291,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		auth := middleware.Authn.Require(ctx)
+		auth := auth.Authentication.Require(ctx)
 		orgId := auth.CurrentOrgID()
 		targetId := auth.CurrentUserID()
 
@@ -345,7 +346,7 @@ var rateLimitPerAgent = httprate.Limit(
 	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
 	1*time.Minute,
 	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
-		if auth, err := middleware.Authn.Get(r.Context()); err != nil {
+		if auth, err := auth.Authentication.Get(r.Context()); err != nil {
 			return "", err
 		} else {
 			return auth.CurrentUserID(), nil

@@ -8,10 +8,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/mailsending"
-	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -31,7 +31,7 @@ func UserAccountsRouter(r chi.Router) {
 
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	if userAccoutns, err := db.GetUserAccountsByOrgID(ctx, auth.CurrentOrgID()); err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -43,7 +43,7 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 
 	body, err := JsonBody[api.CreateUserAccountRequest](w, r)
 	if err != nil {
@@ -110,7 +110,7 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	userAccount := internalctx.GetUserAccount(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.DeleteUserAccountWithID(ctx, userAccount.ID); err != nil {

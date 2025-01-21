@@ -11,10 +11,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/security"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -35,7 +35,7 @@ func DeploymentTargetsRouter(r chi.Router) {
 
 func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	deploymentTargets, err := db.GetDeploymentTargets(
 		ctx,
 		auth.CurrentOrgID(),
@@ -62,7 +62,7 @@ func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	if dt, err := JsonBody[types.DeploymentTargetWithCreatedBy](w, r); err != nil {
 		return
 	} else if err = dt.Validate(); err != nil {
@@ -86,7 +86,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	var dt types.DeploymentTargetWithCreatedBy
 	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -119,7 +119,7 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	dt := internalctx.GetDeploymentTarget(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	if dt.OrganizationID != auth.CurrentOrgID() {
 		http.NotFound(w, r)
 	} else if currentUser, err := db.GetUserAccountWithRole(
@@ -141,7 +141,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 
 	if deploymentTarget.CurrentStatus != nil &&
 		deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
@@ -209,7 +209,7 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id := r.PathValue("deploymentTargetId")
-		auth := middleware.Authn.Require(ctx)
+		auth := auth.Authentication.Require(ctx)
 		orgId := auth.CurrentOrgID()
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)

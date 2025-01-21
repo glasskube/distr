@@ -9,9 +9,9 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -29,7 +29,7 @@ func DeploymentsRouter(r chi.Router) {
 func putDeployment(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := middleware.Authn.Require(ctx)
+	auth := auth.Authentication.Require(ctx)
 	orgId := auth.CurrentOrgID()
 
 	deploymentRequest, err := JsonBody[api.DeploymentRequest](w, r)

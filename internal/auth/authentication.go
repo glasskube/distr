@@ -1,4 +1,4 @@
-package middleware
+package auth
 
 import (
 	"github.com/glasskube/cloud/internal/authjwt"
@@ -9,7 +9,7 @@ import (
 	"github.com/glasskube/cloud/internal/authn/token"
 )
 
-var Authn = authn.New(
+var Authentication = authn.New(
 	authn.Chain(
 		authn.Chain(
 			token.NewTokenExtractor(
