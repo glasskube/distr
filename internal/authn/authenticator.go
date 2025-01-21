@@ -26,7 +26,3 @@ func Chain[IN any, MID any, OUT any](a Authenticator[IN, MID], b Authenticator[M
 		}
 	})
 }
-
-func NoopAuthenticator[T any]() Authenticator[T, T] {
-	return AuthenticatorFunc[T, T](func(ctx context.Context, r T) (T, error) { return r, nil })
-}
