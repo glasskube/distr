@@ -10,7 +10,7 @@ import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentService} from '../../services/deployment.service';
 import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
-import {Application, ApplicationVersion} from '../../types/application';
+import {Application} from '../../types/application';
 import {DeploymentRequest, DeploymentTargetScope, DeploymentType, HelmChartType} from '../../types/deployment';
 import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
@@ -20,6 +20,7 @@ import {ToastService} from '../../services/toast.service';
 import {getFormDisplayedError} from '../../../util/errors';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {YamlEditorComponent} from '../yaml-editor.component';
+import {ApplicationVersion} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-onboarding-wizard',

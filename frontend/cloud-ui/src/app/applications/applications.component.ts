@@ -12,13 +12,14 @@ import {RequireRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {Application, ApplicationVersion} from '../types/application';
+import {Application} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {ApplicationVersion} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-applications',
