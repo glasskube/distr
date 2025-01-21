@@ -14,6 +14,7 @@
     "build": "ng build",
     "build:prod": "npm run build -- --configuration=production",
     "build:dev": "npm run build -- --configuration=development",
+    "build-sdk": "npm --prefix sdk/ts ci && npm --prefix sdk/ts run build",
     "watch": "npm run build -- --watch --configuration=development",
     "pretest": "npm run buildconfig",
     "test": "ng test",
