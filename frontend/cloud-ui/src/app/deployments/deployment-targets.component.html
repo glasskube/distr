@@ -12,7 +12,7 @@
             <input
               type="text"
               id="simple-search"
-              placeholder="Search for deployments"
+              placeholder="Filter deployments"
               [formControl]="filterForm.controls.search"
               autotrim
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
@@ -36,9 +36,11 @@
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
       <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
         <tr>
+          @if (fullVersion) {
+            <th scope="col" class="p-4">Id</th>
+          }
           <th scope="col" class="p-4">Managed By</th>
           <th scope="col" class="p-4">Deployment</th>
-          <th scope="col" class="p-4">Type</th>
           <th scope="col" class="p-4">Status</th>
           @if (fullVersion) {
             <th scope="col" class="p-4">Creation Date</th>
@@ -53,6 +55,11 @@
       <tbody>
         @for (dt of filteredDeploymentTargets$ | async; track dt.id) {
           <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+            @if (fullVersion) {
+              <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <app-uuid [uuid]="dt.id!" />
+              </td>
+            }
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               @if (dt.createdBy) {
                 <span [title]="dt.createdBy.email">
@@ -60,7 +67,7 @@
                 </span>
               }
             </td>
-            <td scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+            <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               <div class="flex items-center gap-3">
                 <div class="relative">
                   <img
@@ -77,12 +84,6 @@
                   {{ dt.name }}
                 </span>
               </div>
-            </td>
-            <td class="px-4 py-3">
-              <span
-                class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                {{ dt.type }}
-              </span>
             </td>
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               @if (!dt.currentStatus) {
@@ -228,7 +229,6 @@
                     To setup this Deployment, the Glasskube Cloud Agent must be installed on the target server/VM.
                     Simply connect to the target (e.g. via SSH) and execute the following:
                   </p>
-
                   <app-connect-instructions [deploymentTarget]="dt!"></app-connect-instructions>
                 </div>
               </div>
@@ -505,7 +505,7 @@
                 @for (status of statuses | async; track status.id) {
                   <tr
                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                    <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                       {{ status.createdAt | date: 'medium' }}
                     </th>
                     <td class="px-6 py-4">
