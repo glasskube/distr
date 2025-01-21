@@ -37,8 +37,20 @@ export class ApplicationsService implements CrudService<Application> {
   }
 
   getTemplateFile(applicationId: string, versionId: string): Observable<string | null> {
+    return this.getFile(applicationId, versionId, 'template-file');
+  }
+
+  getValuesFile(applicationId: string, versionId: string): Observable<string | null> {
+    return this.getFile(applicationId, versionId, 'values-file');
+  }
+
+  getComposeFile(applicationId: string, versionId: string): Observable<string | null> {
+    return this.getFile(applicationId, versionId, 'compose-file');
+  }
+
+  private getFile(applicationId: string, versionId: string, file: string): Observable<string | null> {
     return this.httpClient
-      .get(`${this.applicationsUrl}/${applicationId}/versions/${versionId}/template-file`, {responseType: 'text'})
+      .get(`${this.applicationsUrl}/${applicationId}/versions/${versionId}/${file}`, {responseType: 'text'})
       .pipe(
         catchError((e) => {
           if (e instanceof HttpErrorResponse && e.status == 404) {
@@ -53,10 +65,10 @@ export class ApplicationsService implements CrudService<Application> {
   createApplicationVersionForDocker(
     application: Application,
     applicationVersion: ApplicationVersion,
-    file: File
+    compose: string
   ): Observable<ApplicationVersion> {
     const formData = new FormData();
-    formData.append('composefile', file);
+    formData.append('composefile', new Blob([compose], {type: 'application/yaml'}));
     return this.doCreateVersion(application, applicationVersion, formData);
   }
 
