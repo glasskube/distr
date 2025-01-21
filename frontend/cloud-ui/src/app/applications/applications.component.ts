@@ -1,14 +1,13 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, Input, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, inject, Input, OnDestroy, OnInit, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {catchError, EMPTY, filter, firstValueFrom, Observable, of, Subject, switchMap, takeUntil} from 'rxjs';
+import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap, takeUntil} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
-import {RequireRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
@@ -20,6 +19,8 @@ import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {ApplicationVersion} from '@glasskube/cloud-sdk';
+import {UuidComponent} from '../components/uuid';
+import {RequireRoleDirective} from '../directives/required-role.directive';
 
 @Component({
   selector: 'app-applications',
@@ -33,6 +34,7 @@ import {ApplicationVersion} from '@glasskube/cloud-sdk';
     RequireRoleDirective,
     AutotrimDirective,
     YamlEditorComponent,
+    UuidComponent,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
