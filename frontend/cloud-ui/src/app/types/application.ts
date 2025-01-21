@@ -1,5 +1,5 @@
 import {BaseModel, Named} from './base';
-import {DeploymentType} from './deployment';
+import {DeploymentType, HelmChartType} from './deployment';
 
 export interface Application extends BaseModel, Named {
   type: DeploymentType;
@@ -11,7 +11,7 @@ export interface ApplicationVersion {
   name?: string;
   createdAt?: string;
   applicationId?: string;
-  chartType?: string;
+  chartType?: HelmChartType;
   chartName?: string;
   chartUrl?: string;
   chartVersion?: string;

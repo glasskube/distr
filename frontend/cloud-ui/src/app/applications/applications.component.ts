@@ -12,7 +12,7 @@ import {RequireRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {Application} from '../types/application';
+import {Application, ApplicationVersion} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {DeploymentType, HelmChartType} from '../types/deployment';
@@ -76,11 +76,11 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       baseValues: new FormControl<string>(''),
       template: new FormControl<string>(''),
     }),
+    docker: new FormGroup({
+      compose: new FormControl<string>('', Validators.required),
+    }),
   });
   newVersionFormLoading = false;
-  dockerComposeFile: File | null = null;
-  @ViewChild('dockerComposeFileInput')
-  dockerComposeFileInput?: ElementRef;
 
   private manageApplicationDrawerRef?: DialogRef;
   private applicationVersionModalRef?: DialogRef;
@@ -143,7 +143,9 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.resetVersionForm();
     if (this.selectedApplication?.type === 'kubernetes') {
       enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
+      disableControlsWithoutEvent(this.newVersionForm.controls.docker);
     } else {
+      enableControlsWithoutEvent(this.newVersionForm.controls.docker);
       disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
     }
   }
@@ -179,10 +181,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   private resetVersionForm() {
     this.newVersionForm.reset();
-    this.dockerComposeFile = null;
-    if (this.dockerComposeFileInput) {
-      this.dockerComposeFileInput.nativeElement.value = '';
-    }
   }
 
   async saveApplication() {
@@ -218,15 +216,10 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onDockerComposeSelected(event: any) {
-    this.dockerComposeFile = event.target.files[0];
-  }
-
   async createVersion() {
     this.newVersionForm.markAllAsTouched();
     const isDocker = this.selectedApplication?.type === 'docker';
-    const fileValid = !isDocker || this.dockerComposeFile != null;
-    if (this.newVersionForm.valid && fileValid && this.selectedApplication) {
+    if (this.newVersionForm.valid && this.selectedApplication) {
       this.newVersionFormLoading = true;
       let res;
       if (isDocker) {
@@ -235,7 +228,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           {
             name: this.newVersionForm.controls.versionName.value!,
           },
-          this.dockerComposeFile!
+          this.newVersionForm.controls.docker.controls.compose.value!
         );
       } else {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;
@@ -265,6 +258,44 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
         }
       } finally {
         this.newVersionFormLoading = false;
+      }
+    }
+  }
+
+  async fillVersionFormWith(selectedApplication: Application | undefined, version: ApplicationVersion) {
+    if (selectedApplication?.type === 'kubernetes') {
+      try {
+        const template = await firstValueFrom(this.applications.getTemplateFile(selectedApplication.id!, version.id!));
+        const values = await firstValueFrom(this.applications.getValuesFile(selectedApplication.id!, version.id!));
+        this.newVersionForm.patchValue({
+          kubernetes: {
+            chartType: version.chartType,
+            chartName: version.chartName,
+            chartUrl: version.chartUrl,
+            chartVersion: version.chartVersion,
+            baseValues: values,
+            template: template,
+          },
+        });
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      }
+    } else if (selectedApplication?.type === 'docker') {
+      try {
+        const compose = await firstValueFrom(this.applications.getComposeFile(selectedApplication.id!, version.id!));
+        this.newVersionForm.patchValue({
+          docker: {
+            compose,
+          },
+        });
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
       }
     }
   }
