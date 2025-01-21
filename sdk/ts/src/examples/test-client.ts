@@ -1,4 +1,4 @@
-import {Client} from '../src';
+import {Client} from '../index';
 
 const client = new Client({
   apiBase: 'http://localhost:8080/api/v1',
