@@ -9,6 +9,11 @@ export function isOlderThan(date: dayjs.ConfigType, duration: Duration): boolean
 @Pipe({name: 'relativeDate'})
 export class RelativeDatePipe implements PipeTransform {
   transform(value: dayjs.ConfigType, withoutSuffix: boolean = false): string {
-    return dayjs(value).toNow(withoutSuffix);
+    const d = dayjs(value);
+    if (d.isBefore()) {
+      return dayjs(value).fromNow(withoutSuffix);
+    } else {
+      return dayjs(value).toNow(withoutSuffix);
+    }
   }
 }
