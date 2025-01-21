@@ -60,6 +60,7 @@ import {Application} from '../types/application';
 import {DeploymentRequest, DeploymentRevisionStatus, DeploymentTargetScope, DeploymentType} from '../types/deployment';
 import {DeploymentTarget} from '../types/deployment-target';
 import {AutotrimDirective} from '../directives/autotrim.directive';
+import {UuidComponent} from '../components/uuid';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -77,6 +78,7 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
     UpperCasePipe,
     YamlEditorComponent,
     AutotrimDirective,
+    UuidComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
