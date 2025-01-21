@@ -1,5 +1,5 @@
 {
-  "name": "cloud-sdk",
+  "name": "@glasskube/cloud-sdk",
   "version": "0.10.0",
   "type": "module",
   "description": "Glasskube Cloud SDK",
