@@ -18,7 +18,7 @@ try {
 
   const newDockerVersion = await client.createApplicationVersion(newDockerApp, {
     name: "v1"
-  }, {composeFile: 'hello'}); // TODO this should probably fail in a backend validation (yaml parsing)
+  }, {composeFile: 'hello: world'});
   log(newDockerVersion, 'create docker application version');
 
   let newKubernetesApp = await client.createApplication({
@@ -33,7 +33,7 @@ try {
     chartVersion: "1.0.0",
     chartType: "repository",
     chartUrl: "https://my.chart.repo"
-  }, {templateFile: 'hello: '}); // TODO this should probably fail in a backend validation (yaml parsing)
+  }, {templateFile: 'hello', baseValuesFile: 'base: values'});
   log(newKubernetesVersion, 'create kubernetes application version');
 
   const applications = await client.getApplications()
