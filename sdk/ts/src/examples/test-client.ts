@@ -52,6 +52,27 @@ try {
     log(app, 'get application by id');
   }
 
+  const newDockerDeploymentTarget = await client.createDeploymentTarget({
+    name: 'My New Docker Deployment Target via SDK',
+    type: 'docker',
+  });
+  log(newDockerDeploymentTarget, 'create docker deployment target');
+
+  const newKubernetesDeploymentTarget = await client.createDeploymentTarget({
+    name: 'My New Kubernetes Deployment Target via SDK',
+    type: 'kubernetes',
+    namespace: 'glasskube',
+    scope: 'namespace',
+  });
+  log(newKubernetesDeploymentTarget, 'create kubernetes deployment target');
+
+  await client.createOrUpdateDeployment({
+    applicationVersionId: newDockerVersion.id!,
+    deploymentTargetId: newDockerDeploymentTarget.id!,
+  });
+  const recentlyDeployedTo = await client.getDeploymentTarget(newDockerDeploymentTarget.id!);
+  log(recentlyDeployedTo, 'get recently deployed to');
+
   const deploymentTargets = await client.getDeploymentTargets();
   log(deploymentTargets, 'get deployment targets');
   for (let dt of deploymentTargets) {

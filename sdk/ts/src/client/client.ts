@@ -1,5 +1,6 @@
 import {Application, ApplicationVersion} from '../types/application';
 import {DeploymentTarget} from '../types/deployment-target';
+import {DeploymentRequest} from '../types';
 
 export type ClientConfig = {
   apiBase: string;
@@ -24,7 +25,7 @@ export class Client {
       },
     });
     if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Failed to GET ${path}: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to GET ${path}: ${response.status} ${response.statusText}: "${await response.text()}"`);
     }
     return (await response.json()) as T;
   }
@@ -40,7 +41,7 @@ export class Client {
       body: JSON.stringify(body),
     });
     if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Failed to POST ${path}: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to POST ${path}: ${response.status} ${response.statusText}: "${await response.text()}"`);
     }
     return (await response.json()) as T;
   }
@@ -56,7 +57,7 @@ export class Client {
       body: JSON.stringify(body),
     });
     if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Failed to PUT ${path}: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to PUT ${path}: ${response.status} ${response.statusText}: "${await response.text()}"`);
     }
     return (await response.json()) as T;
   }
@@ -81,7 +82,7 @@ export class Client {
     application: Application,
     version: ApplicationVersion,
     files?: ApplicationVersionFiles
-  ): Promise<Application> {
+  ): Promise<ApplicationVersion> {
     const formData = new FormData();
     formData.append('applicationversion', JSON.stringify(version));
     if (files?.composeFile) {
@@ -106,7 +107,7 @@ export class Client {
         `Failed to create application version: ${response.status} ${response.statusText}: "${await response.text()}"`
       );
     }
-    return (await response.json()) as Application;
+    return (await response.json()) as ApplicationVersion;
   }
 
   public async getDeploymentTargets(): Promise<DeploymentTarget[]> {
@@ -115,5 +116,13 @@ export class Client {
 
   public async getDeploymentTarget(deploymentTargetId: string): Promise<DeploymentTarget> {
     return this.get<DeploymentTarget>(`deployment-targets/${deploymentTargetId}`);
+  }
+
+  public async createDeploymentTarget(deploymentTarget: DeploymentTarget): Promise<DeploymentTarget> {
+    return this.post<DeploymentTarget>('deployment-targets', deploymentTarget);
+  }
+
+  public async createOrUpdateDeployment(deploymentRequest: DeploymentRequest): Promise<DeploymentRequest> {
+    return this.put<DeploymentRequest>('deployments', deploymentRequest); // TODO doesnt respond anything yet
   }
 }
