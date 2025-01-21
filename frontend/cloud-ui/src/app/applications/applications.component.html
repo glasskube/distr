@@ -210,8 +210,8 @@
   <div
     @modalFlyInOut
     style="transform-origin: top center"
-    class="z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative p-4 w-full max-h-full">
+    class="z-50 w-full overflow-x-hidden overflow-y-auto max-h-full">
+    <div class="relative w-full max-h-full">
       <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ selectedApplication?.name }}</h3>
@@ -269,11 +269,12 @@
                         {{ version.createdAt | date: 'short' }}
                       </td>
                       <td class="px-6 py-4 text-right">
-                        <a
-                          title="Not available yet"
-                          class="cursor-not-allowed font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                          >View File</a
-                        >
+                        <button
+                          type="button"
+                          class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                          (click)="fillVersionFormWith(selectedApplication, version)">
+                          Copy from
+                        </button>
                       </td>
                     </tr>
                   }
@@ -303,24 +304,6 @@
                     <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                   }
                 </div>
-                @if (selectedApplication?.type === 'docker') {
-                  <div class="w-full">
-                    <label for="file_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Docker Compose File</label
-                    >
-                    <input
-                      id="file_input"
-                      type="file"
-                      accept=".yaml,.yml,application/yaml,application/x-yaml,text/yaml,text/x-yaml"
-                      #dockerComposeFileInput
-                      (change)="onDockerComposeSelected($event)"
-                      class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                      aria-describedby="file_input_help" />
-                    @if (dockerComposeFile == null && newVersionForm.touched) {
-                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">File is required.</p>
-                    }
-                  </div>
-                }
               </div>
 
               @if (selectedApplication?.type === 'kubernetes') {
@@ -435,6 +418,28 @@
                         [formControl]="newVersionForm.controls.kubernetes.controls.template">
                       </app-yaml-editor>
                     </div>
+                  </div>
+                </div>
+              } @else {
+                <div class="space-y-4 mt-4">
+                  <div class="w-full">
+                    <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      >Docker Compose</label
+                    >
+                    <app-yaml-editor
+                      id="compose_input"
+                      class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      [formControl]="newVersionForm.controls.docker.controls.compose">
+                    </app-yaml-editor>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Paste your docker compose file here.
+                    </div>
+                    @if (
+                      newVersionForm.controls.docker.controls.compose.invalid &&
+                      newVersionForm.controls.docker.controls.compose.touched
+                    ) {
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                    }
                   </div>
                 </div>
               }
