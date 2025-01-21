@@ -25,7 +25,6 @@ import (
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
-	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
 
@@ -40,8 +39,7 @@ func AgentRouter(r chi.Router) {
 		r.Post("/login", agentLoginHandler)
 
 		r.With(
-			jwtauth.Verifier(authjwt.JWTAuth),
-			jwtauth.Authenticator(authjwt.JWTAuth),
+			middleware.Authn.Middleware,
 			middleware.SentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
