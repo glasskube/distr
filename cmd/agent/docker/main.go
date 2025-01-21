@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/glasskube/cloud/internal/agentclient"
 	"github.com/glasskube/cloud/internal/util"

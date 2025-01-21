@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -210,8 +212,14 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func patchProjectName(yaml map[string]any, deploymentId string) error {
-	yaml["name"] = "glasskube-" // TODO
-	return nil
+	h := sha256.New()
+	if _, err := h.Write([]byte(deploymentId)); err != nil {
+		return err
+	} else {
+		hsh := hex.EncodeToString(h.Sum(nil))
+		yaml["name"] = fmt.Sprintf("glasskube-%v", hsh[:12])
+		return nil
+	}
 }
 
 func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
