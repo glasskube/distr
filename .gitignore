@@ -11,6 +11,9 @@
 npm-debug.log
 yarn-error.log
 
+sdk/ts/node_modules
+sdk/ts/dist
+
 # IDEs and editors
 .idea/
 *.iml
