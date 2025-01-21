@@ -12,7 +12,7 @@ export type ApplicationVersionFiles = {
 };
 
 export class Client {
-  constructor(private config: ClientConfig) {}
+  constructor(private readonly config: ClientConfig) {}
 
   public async getApplications(): Promise<Application[]> {
     return this.get<Application[]>('applications');
@@ -31,7 +31,7 @@ export class Client {
   }
 
   public async createApplicationVersion(
-    application: Application,
+    applicationId: string,
     version: ApplicationVersion,
     files?: ApplicationVersionFiles
   ): Promise<ApplicationVersion> {
@@ -46,7 +46,7 @@ export class Client {
     if (files?.templateFile) {
       formData.append('templatefile', new Blob([files.templateFile], {type: 'application/yaml'}));
     }
-    const path = `applications/${application.id}/versions`;
+    const path = `applications/${applicationId}/versions`;
     const response = await fetch(`${this.config.apiBase}/${path}`, {
       method: 'POST',
       headers: {

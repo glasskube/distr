@@ -18,7 +18,7 @@ try {
   log(newDockerApp, 'update docker application');
 
   const newDockerVersion = await client.createApplicationVersion(
-    newDockerApp,
+    newDockerApp.id!,
     {
       name: 'v1',
     },
@@ -33,7 +33,7 @@ try {
   log(newKubernetesApp, 'create kubernetes application');
 
   const newKubernetesVersion = await client.createApplicationVersion(
-    newKubernetesApp,
+    newKubernetesApp.id!,
     {
       name: 'v1',
       chartName: 'my-chart',
