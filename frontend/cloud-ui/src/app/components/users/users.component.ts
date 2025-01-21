@@ -26,10 +26,19 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
+import {UuidComponent} from '../uuid';
 
 @Component({
   selector: 'app-users',
-  imports: [FaIconComponent, AsyncPipe, DatePipe, ReactiveFormsModule, RequireRoleDirective, AutotrimDirective],
+  imports: [
+    FaIconComponent,
+    AsyncPipe,
+    DatePipe,
+    ReactiveFormsModule,
+    RequireRoleDirective,
+    AutotrimDirective,
+    UuidComponent,
+  ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
 })
