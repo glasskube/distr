@@ -10,8 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/glasskube/cloud/internal/agentclient"
 	"github.com/glasskube/cloud/internal/util"
 
@@ -69,7 +67,6 @@ loop:
 			} else {
 				reportedStatus = outStr
 			}
-
 			if err := client.Status(ctx, resource.RevisionID, reportedStatus, reportedErr); err != nil {
 				logger.Error("failed to send status", zap.Error(err))
 			}
@@ -77,13 +74,4 @@ loop:
 
 	}
 	logger.Info("shutting down")
-}
-
-func encodeYaml(data map[string]any) (*bytes.Buffer, error) {
-	var buf bytes.Buffer
-	enc := yaml.NewEncoder(&buf)
-	if err := enc.Encode(data); err != nil {
-		return nil, err
-	}
-	return &buf, nil
 }
