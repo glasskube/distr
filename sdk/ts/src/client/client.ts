@@ -1,6 +1,4 @@
-import {Application, ApplicationVersion} from '../types/application';
-import {DeploymentTarget} from '../types/deployment-target';
-import {DeploymentRequest} from '../types';
+import {Application, ApplicationVersion, DeploymentRequest, DeploymentTarget} from '../types';
 
 export type ClientConfig = {
   apiBase: string;
@@ -15,52 +13,6 @@ export type ApplicationVersionFiles = {
 
 export class Client {
   constructor(private config: ClientConfig) {}
-
-  private async get<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
-      },
-    });
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Failed to GET ${path}: ${response.status} ${response.statusText}: "${await response.text()}"`);
-    }
-    return (await response.json()) as T;
-  }
-
-  private async post<T>(path: string, body: T): Promise<T> {
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Failed to POST ${path}: ${response.status} ${response.statusText}: "${await response.text()}"`);
-    }
-    return (await response.json()) as T;
-  }
-
-  private async put<T>(path: string, body: T): Promise<T> {
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
-      method: 'PUT',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Failed to PUT ${path}: ${response.status} ${response.statusText}: "${await response.text()}"`);
-    }
-    return (await response.json()) as T;
-  }
 
   public async getApplications(): Promise<Application[]> {
     return this.get<Application[]>('applications');
@@ -94,7 +46,8 @@ export class Client {
     if (files?.templateFile) {
       formData.append('templatefile', new Blob([files.templateFile], {type: 'application/yaml'}));
     }
-    const response = await fetch(`${this.config.apiBase}/applications/${application.id}/versions`, {
+    const path = `applications/${application.id}/versions`;
+    const response = await fetch(`${this.config.apiBase}/${path}`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -102,12 +55,7 @@ export class Client {
       },
       body: formData,
     });
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(
-        `Failed to create application version: ${response.status} ${response.statusText}: "${await response.text()}"`
-      );
-    }
-    return (await response.json()) as ApplicationVersion;
+    return this.handleResponse<ApplicationVersion>(response, 'POST', path);
   }
 
   public async getDeploymentTargets(): Promise<DeploymentTarget[]> {
@@ -123,6 +71,50 @@ export class Client {
   }
 
   public async createOrUpdateDeployment(deploymentRequest: DeploymentRequest): Promise<DeploymentRequest> {
-    return this.put<DeploymentRequest>('deployments', deploymentRequest); // TODO doesnt respond anything yet
+    return this.put<DeploymentRequest>('deployments', deploymentRequest);
+  }
+
+  private async get<T>(path: string): Promise<T> {
+    const response = await fetch(`${this.config.apiBase}/${path}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+    });
+    return await this.handleResponse<T>(response, 'GET', path);
+  }
+
+  private async post<T>(path: string, body: T): Promise<T> {
+    const response = await fetch(`${this.config.apiBase}/${path}`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    return await this.handleResponse<T>(response, 'POST', path);
+  }
+
+  private async put<T>(path: string, body: T): Promise<T> {
+    const response = await fetch(`${this.config.apiBase}/${path}`, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    return await this.handleResponse<T>(response, 'PUT', path);
+  }
+
+  private async handleResponse<T>(response: Response, method: string, path: string) {
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`${method} ${path} failed: ${response.status} ${response.statusText} "${await response.text()}"`);
+    }
+    return (await response.json()) as T;
   }
 }
