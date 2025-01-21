@@ -46,7 +46,8 @@ func (a *Authentication[T]) Middleware(next http.Handler) http.Handler {
 				} else if errors.Is(err, ErrNoAuthentication) {
 					continue
 				} else {
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
 				}
 			} else {
 				next.ServeHTTP(w, r.WithContext(a.NewContext(r.Context(), result)))

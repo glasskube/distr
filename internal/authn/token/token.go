@@ -35,8 +35,9 @@ func TokenFromQuery(param string) TokenExtractorFunc {
 func TokenFromHeader(authenticationScheme string) TokenExtractorFunc {
 	prefix := strings.ToUpper(authenticationScheme + " ")
 	return func(r *http.Request) string {
-		if h := r.Header.Get("Authorization"); strings.ToUpper(h[0:len(prefix)]) == prefix {
-			return h[len(prefix):]
+		authorization := r.Header.Get("Authorization")
+		if len(authorization) > len(prefix) && strings.ToUpper(authorization[0:len(prefix)]) == prefix {
+			return authorization[len(prefix):]
 		}
 		return ""
 	}

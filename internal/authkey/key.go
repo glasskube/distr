@@ -33,3 +33,14 @@ func NewKey() (key Key, err error) {
 func (key Key) Serialize() string { return keyPrefix + hex.EncodeToString(key[:]) }
 
 func (key Key) MarshalJSON() ([]byte, error) { return json.Marshal(key.Serialize()) }
+
+func (key *Key) Scan(src any) error {
+	switch v := src.(type) {
+	case []byte:
+		if len(v) == 16 {
+			*key = Key(v[:])
+			return nil
+		}
+	}
+	return errors.New("cannot scan into Key")
+}

@@ -16,7 +16,7 @@ const accessTokenOutputExpr = `
 	tok.id, tok.created_at, tok.expires_at, tok.last_used_at, tok.label, tok.key, tok.user_account_id
 `
 const accessTokenWithUserAccountOutputExpr = accessTokenOutputExpr + `,
-	CASE WHEN ua.id IS NOT NULL THEN (` + userAccountOutputExpr + `) END
+	CASE WHEN u.id IS NOT NULL THEN (` + userAccountOutputExpr + `) END
 		AS user_account
 `
 
@@ -25,11 +25,16 @@ func CreateAccessToken(ctx context.Context, token *types.AccessToken) error {
 	rows, err := db.Query(
 		ctx,
 		fmt.Sprintf(
-			`INSERT INTO AccessToken AS tok (label, key, user_account_id)
-			VALUES (@label, @key, @userAccountId)
+			`INSERT INTO AccessToken AS tok (label, expires_at, key, user_account_id)
+			VALUES (@label, @expiresAt, @key, @userAccountId)
 			RETURNING %v`,
 			accessTokenOutputExpr),
-		pgx.NamedArgs{"label": token.Label, "key": token.Key, "userAccountId": token.UserAccountID},
+		pgx.NamedArgs{
+			"label":         token.Label,
+			"expiresAt":     token.ExpiresAt,
+			"key":           token.Key[:],
+			"userAccountId": token.UserAccountID,
+		},
 	)
 	if err != nil {
 		return fmt.Errorf("could not create access token: %w", err)
@@ -87,7 +92,7 @@ func GetAccessTokenByKey(ctx context.Context, key authkey.Key) (*types.AccessTok
 			`,
 			accessTokenWithUserAccountOutputExpr,
 		),
-		pgx.NamedArgs{"key": key},
+		pgx.NamedArgs{"key": key[:]},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error querying access token: %w", err)

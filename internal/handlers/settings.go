@@ -7,6 +7,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
+	"github.com/glasskube/cloud/internal/authkey"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/mailsending"
@@ -138,10 +139,19 @@ func createAccessTokenHandler() http.HandlerFunc {
 		if err != nil {
 			return
 		}
+
+		key, err := authkey.NewKey()
+		if err != nil {
+			log.Warn("error creating token", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		token := types.AccessToken{
 			ExpiresAt:     request.ExpiresAt,
 			Label:         request.Label,
 			UserAccountID: auth.CurrentUserID(),
+			Key:           key,
 		}
 		if err := db.CreateAccessToken(ctx, &token); err != nil {
 			log.Warn("error creating token", zap.Error(err))
