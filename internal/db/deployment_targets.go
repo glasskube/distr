@@ -64,7 +64,11 @@ const (
 	` + deploymentTargetJoinExpr
 )
 
-func GetDeploymentTargets(ctx context.Context, orgID, userID string, userRole types.UserRole) ([]types.DeploymentTargetWithCreatedBy, error) {
+func GetDeploymentTargets(
+	ctx context.Context,
+	orgID, userID string,
+	userRole types.UserRole,
+) ([]types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
 		"SELECT"+deploymentTargetWithStatusOutputExpr+deploymentTargetFromExpr+
@@ -113,7 +117,11 @@ func GetDeploymentTarget(ctx context.Context, id string, orgID *string) (*types.
 	}
 }
 
-func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy, orgID string, createdByID string) error {
+func CreateDeploymentTarget(
+	ctx context.Context,
+	dt *types.DeploymentTargetWithCreatedBy,
+	orgID, createdByID string,
+) error {
 	dt.OrganizationID = orgID
 	if dt.CreatedBy == nil {
 		dt.CreatedBy = &types.UserAccountWithUserRole{ID: createdByID}
