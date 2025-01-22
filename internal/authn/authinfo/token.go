@@ -25,6 +25,7 @@ func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {
 		org := orgs[0]
 		return &SimpleAuthInfo{
 			userID:         at.UserAccount.ID,
+			userEmail:      at.UserAccount.Email,
 			emailVerified:  at.UserAccount.EmailVerifiedAt != nil,
 			organizationID: org.ID,
 			userRole:       &org.UserRole,
