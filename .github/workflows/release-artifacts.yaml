@@ -1,0 +1,22 @@
+name: Release Artifacts
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    name: Upload deploy-docker.tar.bz2
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Create Archive
+        run: tar -caf deploy-docker.tar.bz2 -C deploy/docker/ .
+      - name: Upload Archive
+        run: gh release upload ${{ github.ref_name }} deploy-docker.tar.bz2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
