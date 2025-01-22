@@ -12,7 +12,7 @@ import (
 )
 
 func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {
-	if at, err := db.GetAccessTokenByKey(ctx, token); err != nil {
+	if at, err := db.GetAccessTokenByKeyUpdatingLastUsed(ctx, token); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			err = fmt.Errorf("%w: %w", authn.ErrBadAuthentication, err)
 		}

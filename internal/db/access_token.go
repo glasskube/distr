@@ -76,7 +76,10 @@ func GetAccessTokensByUserAccountID(ctx context.Context, id string) ([]types.Acc
 	}
 }
 
-func GetAccessTokenByKey(ctx context.Context, key authkey.Key) (*types.AccessTokenWithUserAccount, error) {
+func GetAccessTokenByKeyUpdatingLastUsed(
+	ctx context.Context,
+	key authkey.Key,
+) (*types.AccessTokenWithUserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
