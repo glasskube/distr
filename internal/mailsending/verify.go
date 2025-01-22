@@ -30,7 +30,6 @@ func SendUserVerificationMail(ctx context.Context, userAccount types.UserAccount
 				"could not send verification mail",
 				zap.Error(err),
 				zap.String("user", userAccount.Email),
-				zap.String("token", token),
 			)
 			return err
 		} else {
