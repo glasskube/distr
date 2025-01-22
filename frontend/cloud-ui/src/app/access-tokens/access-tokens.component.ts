@@ -1,19 +1,19 @@
-import {AsyncPipe, DatePipe, JsonPipe} from '@angular/common';
+import {OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, inject, TemplateRef} from '@angular/core';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import dayjs from 'dayjs';
 import {firstValueFrom, startWith, Subject, switchMap} from 'rxjs';
-import {AccessTokensService} from '../services/access-tokens.service';
-import {DialogRef, OverlayService} from '../services/overlay.service';
-import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '../types/access-token';
-import {RequireRoleDirective} from '../directives/required-role.directive';
+import {RelativeDatePipe} from '../../util/dates';
 import {drawerFlyInOut} from '../animations/drawer';
 import {AutotrimDirective} from '../directives/autotrim.directive';
-import {OverlayModule} from '@angular/cdk/overlay';
-import dayjs, {duration} from 'dayjs';
-import {RelativeDatePipe} from '../../util/dates';
+import {RequireRoleDirective} from '../directives/required-role.directive';
+import {AccessTokensService} from '../services/access-tokens.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '../types/access-token';
 
 @Component({
   selector: 'app-access-tokens',
@@ -26,7 +26,6 @@ import {ToastService} from '../services/toast.service';
     AutotrimDirective,
     OverlayModule,
     RelativeDatePipe,
-    JsonPipe,
   ],
   templateUrl: './access-tokens.component.html',
   animations: [drawerFlyInOut],
