@@ -1,12 +1,15 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/authn"
+	"github.com/glasskube/cloud/internal/authn/authinfo"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/types"
@@ -97,3 +100,21 @@ var RateLimitPerUser = httprate.Limit(
 		}
 	}),
 )
+
+var RequireOrgID = auth.Authentication.ValidatorMiddleware(
+	func(ctx context.Context, value authinfo.AuthInfo) error {
+		if value.CurrentOrgID() == nil {
+			return authn.ErrBadAuthentication
+		} else {
+			return nil
+		}
+	})
+
+var RequireUserRole = auth.Authentication.ValidatorMiddleware(
+	func(ctx context.Context, value authinfo.AuthInfo) error {
+		if value.CurrentUserRole() == nil {
+			return authn.ErrBadAuthentication
+		} else {
+			return nil
+		}
+	})

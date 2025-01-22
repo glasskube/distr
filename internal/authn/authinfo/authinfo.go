@@ -6,6 +6,6 @@ type AuthInfo interface {
 	CurrentUserID() string
 	CurrentUserEmail() string
 	CurrentUserRole() *types.UserRole
-	CurrentOrgID() string
+	CurrentOrgID() *string
 	CurrentUserEmailVerified() bool
 }

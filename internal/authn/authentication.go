@@ -57,3 +57,19 @@ func (a *Authentication[T]) Middleware(next http.Handler) http.Handler {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	})
 }
+
+func (a *Authentication[T]) ValidatorMiddleware(
+	fn func(ctx context.Context, value T) error,
+) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if err := fn(r.Context(), a.Require(r.Context())); err != nil {
+				if errors.Is(err, ErrBadAuthentication) {
+					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				} else {
+					next.ServeHTTP(w, r)
+				}
+			}
+		})
+	}
+}

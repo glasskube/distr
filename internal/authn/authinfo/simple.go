@@ -5,13 +5,13 @@ import "github.com/glasskube/cloud/internal/types"
 type SimpleAuthInfo struct {
 	userID         string
 	userEmail      string
-	organizationID string
+	organizationID *string
 	emailVerified  bool
 	userRole       *types.UserRole
 }
 
 // CurrentOrgID implements AuthInfo.
-func (i *SimpleAuthInfo) CurrentOrgID() string { return i.organizationID }
+func (i *SimpleAuthInfo) CurrentOrgID() *string { return i.organizationID }
 
 // CurrentUserEmailVerified implements AuthInfo.
 func (i *SimpleAuthInfo) CurrentUserEmailVerified() bool { return i.emailVerified }

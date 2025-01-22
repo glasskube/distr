@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/resources"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -21,6 +22,7 @@ import (
 )
 
 func ApplicationsRouter(r chi.Router) {
+	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.Get("/", getApplications)
 	r.With(requireUserRoleVendor).Post("/", createApplication)
 	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
@@ -57,7 +59,7 @@ func createApplication(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if err = db.CreateApplication(ctx, &application, auth.CurrentOrgID()); err != nil {
+	} else if err = db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 		log.Warn("could not create application", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -87,7 +89,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.UpdateApplication(ctx, &application, auth.CurrentOrgID()); err != nil {
+	if err := db.UpdateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 		log.Warn("could not update application", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -105,7 +107,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 func getApplications(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if applications, err := db.GetApplicationsByOrgID(r.Context(), auth.CurrentOrgID()); err != nil {
+	if applications, err := db.GetApplicationsByOrgID(r.Context(), *auth.CurrentOrgID()); err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get applications", zap.Error(err))
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -299,7 +301,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-		if err := db.CreateApplication(ctx, &application, auth.CurrentOrgID()); err != nil {
+		if err := db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
@@ -323,7 +325,7 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	application := internalctx.GetApplication(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if application.OrganizationID != auth.CurrentOrgID() {
+	if application.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
 	} else if err := db.DeleteApplicationWithID(ctx, application.ID); err != nil {
 		log.Warn("error deleting application", zap.Error(err))
@@ -338,7 +340,7 @@ func applicationMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		applicationId := r.PathValue("applicationId")
 		auth := auth.Authentication.Require(ctx)
-		application, err := db.GetApplication(ctx, applicationId, auth.CurrentOrgID())
+		application, err := db.GetApplication(ctx, applicationId, *auth.CurrentOrgID())
 		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {

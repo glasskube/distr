@@ -44,6 +44,7 @@ func AgentRouter(r chi.Router) {
 
 		r.With(
 			auth.Authentication.Middleware,
+			middleware.RequireOrgID,
 			middleware.SentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
@@ -296,7 +297,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		targetId := auth.CurrentUserID()
 
 		if deploymentTarget, err :=
-			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
+			db.GetDeploymentTarget(ctx, targetId, orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))

@@ -12,6 +12,7 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -19,6 +20,7 @@ import (
 )
 
 func DeploymentsRouter(r chi.Router) {
+	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
@@ -39,7 +41,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 
 	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if application, err := db.GetApplicationForApplicationVersionID(
-			ctx, deploymentRequest.ApplicationVersionId, auth.CurrentOrgID(),
+			ctx, deploymentRequest.ApplicationVersionId, *auth.CurrentOrgID(),
 		); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "application does not exist", http.StatusBadRequest)
 			return err
@@ -54,7 +56,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		} else if deploymentTarget, err := db.GetDeploymentTarget(
-			ctx, deploymentRequest.DeploymentTargetId, &orgId,
+			ctx, deploymentRequest.DeploymentTargetId, orgId,
 		); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "deployment target does not exist", http.StatusBadRequest)
 			return err

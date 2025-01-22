@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -20,6 +21,7 @@ import (
 )
 
 func OrganizationBrandingRouter(r chi.Router) {
+	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.Get("/", getOrganizationBranding)
 	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
 		r.Post("/", createOrganizationBranding)
@@ -32,7 +34,7 @@ func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 
 	if organizationBranding, err :=
-		db.GetOrganizationBranding(r.Context(), auth.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
+		db.GetOrganizationBranding(r.Context(), *auth.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
 		http.NotFound(w, r)
 	} else if err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get organizationBranding", zap.Error(err))
@@ -114,7 +116,7 @@ func setMetadataForOrganizationBranding(ctx context.Context, t *types.Organizati
 	if auth, err := auth.Authentication.Get(ctx); err != nil {
 		return err
 	} else {
-		t.OrganizationID = auth.CurrentOrgID()
+		t.OrganizationID = *auth.CurrentOrgID()
 		t.UpdatedByUserAccountID = util.PtrTo(auth.CurrentUserID())
 		t.UpdatedAt = time.Now()
 		return nil

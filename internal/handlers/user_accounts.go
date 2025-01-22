@@ -12,6 +12,7 @@ import (
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/mailsending"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -19,6 +20,7 @@ import (
 )
 
 func UserAccountsRouter(r chi.Router) {
+	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
@@ -32,7 +34,7 @@ func UserAccountsRouter(r chi.Router) {
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if userAccoutns, err := db.GetUserAccountsByOrgID(ctx, auth.CurrentOrgID()); err != nil {
+	if userAccoutns, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID()); err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -57,7 +59,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-		if result, err := db.GetOrganizationWithBranding(ctx, auth.CurrentOrgID()); err != nil {
+		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return err
 		} else {
