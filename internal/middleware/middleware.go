@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -101,20 +100,18 @@ var RateLimitPerUser = httprate.Limit(
 	}),
 )
 
-var RequireOrgID = auth.Authentication.ValidatorMiddleware(
-	func(ctx context.Context, value authinfo.AuthInfo) error {
-		if value.CurrentOrgID() == nil {
-			return authn.ErrBadAuthentication
-		} else {
-			return nil
-		}
-	})
+var RequireOrgID = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
+	if value.CurrentOrgID() == nil {
+		return authn.ErrBadAuthentication
+	} else {
+		return nil
+	}
+})
 
-var RequireUserRole = auth.Authentication.ValidatorMiddleware(
-	func(ctx context.Context, value authinfo.AuthInfo) error {
-		if value.CurrentUserRole() == nil {
-			return authn.ErrBadAuthentication
-		} else {
-			return nil
-		}
-	})
+var RequireUserRole = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
+	if value.CurrentUserRole() == nil {
+		return authn.ErrBadAuthentication
+	} else {
+		return nil
+	}
+})

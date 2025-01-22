@@ -9,12 +9,17 @@ import (
 type contextKey struct{}
 
 type Authentication[T any] struct {
-	authenticators []RequestAuthenticator[T]
-	contextKey     contextKey
+	authenticators      []RequestAuthenticator[T]
+	contextKey          contextKey
+	unknownErrorHandler func(w http.ResponseWriter, r *http.Request, err error)
 }
 
 func New[T any](authenticators ...RequestAuthenticator[T]) *Authentication[T] {
 	return &Authentication[T]{authenticators: authenticators, contextKey: contextKey{}}
+}
+
+func (a *Authentication[T]) SetUnknownErrorHandler(handler func(w http.ResponseWriter, r *http.Request, err error)) {
+	a.unknownErrorHandler = handler
 }
 
 func (a *Authentication[T]) NewContext(ctx context.Context, auth T) context.Context {
@@ -39,37 +44,43 @@ func (a *Authentication[T]) Require(ctx context.Context) T {
 
 func (a *Authentication[T]) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		for _, provider := range a.authenticators {
-			if result, err := provider.Authenticate(r.Context(), r); err != nil {
-				if errors.Is(err, ErrBadAuthentication) {
-					break
-				} else if errors.Is(err, ErrNoAuthentication) {
+			var result T
+			if result, err = provider.Authenticate(r.Context(), r); err != nil {
+				if errors.Is(err, ErrNoAuthentication) {
 					continue
 				} else {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
+					break
 				}
 			} else {
 				next.ServeHTTP(w, r.WithContext(a.NewContext(r.Context(), result)))
 				return
 			}
 		}
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
+		a.handleError(w, r, err)
 	})
 }
 
-func (a *Authentication[T]) ValidatorMiddleware(
-	fn func(ctx context.Context, value T) error,
-) func(next http.Handler) http.Handler {
+func (a *Authentication[T]) ValidatorMiddleware(fn func(value T) error) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if err := fn(r.Context(), a.Require(r.Context())); err != nil {
-				if errors.Is(err, ErrBadAuthentication) {
-					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-				} else {
-					next.ServeHTTP(w, r)
-				}
+			if err := fn(a.Require(r.Context())); err != nil {
+				a.handleError(w, r, err)
+			} else {
+				next.ServeHTTP(w, r)
 			}
 		})
+	}
+}
+
+func (a *Authentication[T]) handleError(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, ErrBadAuthentication) || errors.Is(err, ErrNoAuthentication) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	} else if a.unknownErrorHandler == nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	} else {
+		a.unknownErrorHandler(w, r, err)
 	}
 }
