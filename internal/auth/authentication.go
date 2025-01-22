@@ -12,14 +12,14 @@ import (
 var Authentication = authn.New(
 	authn.Chain(
 		authn.Chain(
-			token.NewTokenExtractor(token.TokenFromHeader("Bearer")),
+			token.NewExtractor(token.FromHeader("Bearer")),
 			jwt.Authenticator(authjwt.JWTAuth),
 		),
 		authinfo.JWTAuthenticator(),
 	),
 	authn.Chain(
 		authn.Chain(
-			token.NewTokenExtractor(token.TokenFromHeader("AccessToken")),
+			token.NewExtractor(token.FromHeader("AccessToken")),
 			authkey.Authenticator(),
 		),
 		authinfo.AuthKeyAuthenticator(),

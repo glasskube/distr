@@ -24,15 +24,15 @@ func (fns TokenExtractor) Authenticate(ctx context.Context, r *http.Request) (st
 
 var _ authn.RequestAuthenticator[string] = TokenExtractor{}
 
-func NewTokenExtractor(tokenFuncs ...TokenExtractorFunc) TokenExtractor {
+func NewExtractor(tokenFuncs ...TokenExtractorFunc) TokenExtractor {
 	return TokenExtractor(tokenFuncs)
 }
 
-func TokenFromQuery(param string) TokenExtractorFunc {
+func FromQuery(param string) TokenExtractorFunc {
 	return func(r *http.Request) string { return r.URL.Query().Get(param) }
 }
 
-func TokenFromHeader(authenticationScheme string) TokenExtractorFunc {
+func FromHeader(authenticationScheme string) TokenExtractorFunc {
 	prefix := strings.ToUpper(authenticationScheme + " ")
 	return func(r *http.Request) string {
 		authorization := r.Header.Get("Authorization")
