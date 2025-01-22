@@ -1,6 +1,6 @@
 import {combineLatest, map, Observable, scan, shareReplay, startWith, Subject} from 'rxjs';
 import {compareBy, distinctBy, Predicate} from '../../util/arrays';
-import {BaseModel, Named} from '../types/base';
+import {BaseModel, Named} from '@glasskube/cloud-sdk';
 
 export abstract class ReactiveList<T> {
   protected abstract readonly identify: Predicate<T, unknown>;

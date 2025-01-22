@@ -1,10 +1,9 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {EMPTY, Observable, retry, shareReplay, switchMap, tap, timer} from 'rxjs';
-import {DeploymentTargetAccessResponse} from '../types/base';
-import {DeploymentTarget} from '../types/deployment-target';
 import {ReactiveList} from './cache';
 import {CrudService} from './interfaces';
+import {DeploymentTarget, DeploymentTargetAccessResponse} from '@glasskube/cloud-sdk';
 
 class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   protected override identify = (dt: DeploymentTarget) => dt.id;

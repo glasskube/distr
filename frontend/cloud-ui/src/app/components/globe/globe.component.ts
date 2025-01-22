@@ -8,14 +8,13 @@ import {
   OnDestroy,
   OnInit,
   SimpleChanges,
-  ViewContainerRef,
 } from '@angular/core';
 import Globe from 'globe.gl';
-import {DeploymentTarget} from '../../types/deployment-target';
 import {fromEvent, Subscription} from 'rxjs';
 import {Router} from '@angular/router';
 import {ComponentPortal, DomPortalOutlet} from '@angular/cdk/portal';
 import {StatusDotComponent} from '../status-dot';
+import {DeploymentTarget} from '@glasskube/cloud-sdk';
 
 type ValueOrPredicate<IN, OUT> = OUT | ((arg: IN) => OUT);
 

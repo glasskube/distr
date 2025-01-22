@@ -1,10 +1,9 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {catchError, Observable, of, tap, throwError} from 'rxjs';
-import {Application} from '../types/application';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {ApplicationVersion} from '@glasskube/cloud-sdk';
+import {Application, ApplicationVersion} from '@glasskube/cloud-sdk';
 
 @Injectable({
   providedIn: 'root',

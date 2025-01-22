@@ -7,9 +7,9 @@ import {SidebarService} from '../../services/sidebar.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
-import {UserRole} from '../../types/user-account';
 import {RouterLink} from '@angular/router';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {UserRole} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-nav-bar',

@@ -9,7 +9,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import {AuthService} from '../services/auth.service';
-import {UserRole} from '../types/user-account';
+import {UserRole} from '@glasskube/cloud-sdk';
 
 @Directive({
   selector: '[appRequiredRole]',

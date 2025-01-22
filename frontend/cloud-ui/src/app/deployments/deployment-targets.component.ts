@@ -56,11 +56,16 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {DeploymentService} from '../services/deployment.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {Application} from '../types/application';
-import {DeploymentRequest, DeploymentRevisionStatus, DeploymentTargetScope, DeploymentType} from '../types/deployment';
-import {DeploymentTarget} from '../types/deployment-target';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {UuidComponent} from '../components/uuid';
+import {
+  Application,
+  DeploymentRequest,
+  DeploymentRevisionStatus,
+  DeploymentTarget,
+  DeploymentTargetScope,
+  DeploymentType,
+} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-deployment-targets',
