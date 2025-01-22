@@ -2,7 +2,7 @@ package authinfo
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/glasskube/cloud/internal/authjwt"
 	"github.com/glasskube/cloud/internal/authn"
@@ -15,7 +15,7 @@ func FromJWT(token jwt.Token) (*SimpleAuthInfo, error) {
 	var result SimpleAuthInfo
 	result.userID = token.Subject()
 	if orgId, ok := token.Get(authjwt.OrgIdKey); !ok {
-		return nil, errors.New("missing org id in token")
+		return nil, fmt.Errorf("%w: missing org id in token", authn.ErrBadAuthentication)
 	} else {
 		result.organizationID = orgId.(string)
 	}
