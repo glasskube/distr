@@ -49,7 +49,6 @@ export class AccessTokensComponent {
   private readonly overlay = inject(OverlayService);
   protected drawer: DialogRef<void> | null = null;
 
-  protected readonly filterForm = new FormGroup({search: new FormControl('')});
   protected readonly editForm = new FormGroup({
     label: new FormControl('', {nonNullable: true}),
     expiresAt: new FormControl('', {nonNullable: true}),
