@@ -3,7 +3,7 @@ name: Release Artifacts
 on:
   push:
     tags:
-      - "*"
+      - '*'
 
 jobs:
   build:
