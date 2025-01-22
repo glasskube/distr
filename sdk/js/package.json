@@ -10,7 +10,11 @@
     "build": "rimraf dist && tsc"
   },
   "devDependencies": {
+    "@types/semver": "^7.5.8",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "semver": "^7.6.3"
   }
 }

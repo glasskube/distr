@@ -5,13 +5,13 @@ import {Client} from '../client';
 const clientConfig = {
   apiBase: 'http://localhost:8080/api/v1',
   apiKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhaGFAaGFoYS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNzM3NTMwMzcwLCJpYXQiOjE3Mzc0NDM5NzAsIm5hbWUiOiIiLCJuYmYiOjE3Mzc0NDM5NzAsIm9yZyI6IjkxYmZmMDcxLTRjZjMtNGQ2Ny1hMDMyLWU3YTkzZDRjNGYzMSIsInJvbGUiOiJ2ZW5kb3IiLCJzdWIiOiI1NjI4NTJmZi0xNWFiLTQwMjctOTFjNi1kYTczMmMyNjA2ZGEifQ.KDAQDCUrpUeFI9gkDwcZr5_vP9dPoh-adlv25JK-je8',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhaGFAaGFoYS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNzM3NjI2MDMyLCJpYXQiOjE3Mzc1Mzk2MzIsIm5hbWUiOiIiLCJuYmYiOjE3Mzc1Mzk2MzIsIm9yZyI6IjkxYmZmMDcxLTRjZjMtNGQ2Ny1hMDMyLWU3YTkzZDRjNGYzMSIsInJvbGUiOiJ2ZW5kb3IiLCJzdWIiOiI1NjI4NTJmZi0xNWFiLTQwMjctOTFjNi1kYTczMmMyNjA2ZGEifQ.ZBDa8UlmsRGkrbjaF7DlYi352pom9ramYWdDrETulr0',
 };
 
-const gc = new CloudService(clientConfig, 'semver');
+const gc = new CloudService(clientConfig, 'chronological');
 
 try {
-  const deploymentTargetId = await getSomeDeploymentTargetId(); // this would be replaced by something injected via ENV
+  const deploymentTargetId = 'c555ea88-409a-4ecd-9912-76ff031d39cc'; // await getSomeDeploymentTargetId(); // this would be replaced by something injected via ENV
   await gc.updateDeployment(deploymentTargetId); // update to latest version (according to the given strategy) of application that is already deployed
 } catch (e) {
   console.error(e);

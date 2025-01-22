@@ -11,7 +11,7 @@ const clientConfig = {
 const gc = new CloudService(clientConfig, 'semver');
 
 try {
-  const deploymentTargetId = await getSomeDeploymentTargetId(); // this would be replaced by something injected via ENV
+  const deploymentTargetId = 'c555ea88-409a-4ecd-9912-76ff031d39cc'; // await getSomeDeploymentTargetId(); // this would be replaced by something injected via ENV
   const outdatedRes = await gc.isOutdated(deploymentTargetId);
   console.log(outdatedRes);
 } catch (e) {
