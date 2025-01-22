@@ -5,6 +5,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "declaration": true,
-  }
+    "declaration": true
+  },
+  "exclude": [
+    "src/examples"
+  ]
 }
