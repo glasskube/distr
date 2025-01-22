@@ -18,6 +18,7 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {Application, ApplicationVersion, DeploymentType, HelmChartType} from '@glasskube/cloud-sdk';
 import {UuidComponent} from '../components/uuid';
+import {RequireRoleDirective} from '../directives/required-role.directive';
 
 @Component({
   selector: 'app-applications',
@@ -31,6 +32,7 @@ import {UuidComponent} from '../components/uuid';
     AutotrimDirective,
     YamlEditorComponent,
     UuidComponent,
+    RequireRoleDirective,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
