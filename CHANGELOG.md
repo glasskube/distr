@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.12.0](https://github.com/glasskube/cloud/compare/0.11.0...0.12.0) (2025-01-22)
+
+
+### Features
+
+* add copy id button ([#331](https://github.com/glasskube/cloud/issues/331)) ([4cf2eef](https://github.com/glasskube/cloud/commit/4cf2eefb9b39d5761fa95142908f180323c06a23))
+* always enable status logs for vendors ([#335](https://github.com/glasskube/cloud/issues/335)) ([de7aa33](https://github.com/glasskube/cloud/commit/de7aa33e509337745d50f266f4acf55815feee40))
+* generate docker compose project name  ([#325](https://github.com/glasskube/cloud/issues/325)) ([f8537c9](https://github.com/glasskube/cloud/commit/f8537c9f14717b4b5b4102568fa818a11903a8ec))
+
+
+### Bug Fixes
+
+* **deps:** update dependency posthog-js to v1.207.1 ([#330](https://github.com/glasskube/cloud/issues/330)) ([17a16cf](https://github.com/glasskube/cloud/commit/17a16cfaf08abb39b2d9b44e8b3f1ebf2fbe58c4))
+* **deps:** update dependency posthog-js to v1.207.2 ([#334](https://github.com/glasskube/cloud/issues/334)) ([614db6c](https://github.com/glasskube/cloud/commit/614db6c060af6e88fe2584bcb4f98a848663a54b))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.1.3 ([#327](https://github.com/glasskube/cloud/issues/327)) ([0795b53](https://github.com/glasskube/cloud/commit/0795b53783d24a0f8bae79a613f45ab1b800a521))
+* **deps:** update dependency @sentry/cli to v2.41.1 ([#332](https://github.com/glasskube/cloud/issues/332)) ([7f249b6](https://github.com/glasskube/cloud/commit/7f249b64a38012763569be4dfca293bd9195d4a7))
+
 ## [0.11.0](https://github.com/glasskube/cloud/compare/0.10.0...0.11.0) (2025-01-21)
 
 

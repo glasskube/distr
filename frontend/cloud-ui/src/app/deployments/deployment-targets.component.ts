@@ -379,13 +379,11 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   }
 
   openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
-    if (!(this.auth.hasRole('vendor') && deploymentTarget.createdBy?.userRole === 'customer')) {
-      const deployment = deploymentTarget.deployment;
-      if (deployment?.id) {
-        this.selectedDeploymentTarget.set(deploymentTarget);
-        this.statuses = this.deployments.pollStatuses(deployment);
-        this.showModal(modal);
-      }
+    const deployment = deploymentTarget.deployment;
+    if (deployment?.id) {
+      this.selectedDeploymentTarget.set(deploymentTarget);
+      this.statuses = this.deployments.pollStatuses(deployment);
+      this.showModal(modal);
     }
   }
 
