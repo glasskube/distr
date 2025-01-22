@@ -1,26 +1,23 @@
 import {Client} from '../index';
+import {clientConfig} from './helper';
 
-const client = new Client({
-  apiBase: 'http://localhost:8080/api/v1',
-  apiKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhaGFAaGFoYS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNzM3NjI2MDMyLCJpYXQiOjE3Mzc1Mzk2MzIsIm5hbWUiOiIiLCJuYmYiOjE3Mzc1Mzk2MzIsIm9yZyI6IjkxYmZmMDcxLTRjZjMtNGQ2Ny1hMDMyLWU3YTkzZDRjNGYzMSIsInJvbGUiOiJ2ZW5kb3IiLCJzdWIiOiI1NjI4NTJmZi0xNWFiLTQwMjctOTFjNi1kYTczMmMyNjA2ZGEifQ.ZBDa8UlmsRGkrbjaF7DlYi352pom9ramYWdDrETulr0',
-});
+const client = new Client(clientConfig);
 
 try {
   let newDockerApp = await client.createApplication({
     type: 'docker',
-    name: 'My New Docker App via SDK',
+    name: 'A Docker App',
   });
   log(newDockerApp, 'create docker application');
 
-  newDockerApp.name = 'My Updated Docker App';
+  newDockerApp.name = 'A Docker App (updated)';
   newDockerApp = await client.updateApplication(newDockerApp);
   log(newDockerApp, 'update docker application');
 
   const newDockerVersion = await client.createApplicationVersion(
     newDockerApp.id!,
     {
-      name: 'v1',
+      name: 'v1.0.0',
     },
     {composeFile: 'hello: world'}
   );
@@ -28,14 +25,14 @@ try {
 
   let newKubernetesApp = await client.createApplication({
     type: 'kubernetes',
-    name: 'My New Kubernetes App via SDK',
+    name: 'A Kubernetes App',
   });
   log(newKubernetesApp, 'create kubernetes application');
 
   const newKubernetesVersion = await client.createApplicationVersion(
     newKubernetesApp.id!,
     {
-      name: 'v1',
+      name: 'v1.0.0',
       chartName: 'my-chart',
       chartVersion: '1.0.0',
       chartType: 'repository',
@@ -53,13 +50,13 @@ try {
   }
 
   const newDockerDeploymentTarget = await client.createDeploymentTarget({
-    name: 'My New Docker Deployment Target via SDK',
+    name: 'A Docker Deployment Target',
     type: 'docker',
   });
   log(newDockerDeploymentTarget, 'create docker deployment target');
 
   const newKubernetesDeploymentTarget = await client.createDeploymentTarget({
-    name: 'My New Kubernetes Deployment Target via SDK',
+    name: 'A Kubernetes Deployment Target ',
     type: 'kubernetes',
     namespace: 'glasskube',
     scope: 'namespace',

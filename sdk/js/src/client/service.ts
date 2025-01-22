@@ -4,7 +4,9 @@ import {
   ApplicationVersion,
   DeploymentTarget,
   DeploymentTargetAccessResponse,
+  DeploymentTargetScope,
   DeploymentType,
+  HelmChartType,
 } from '../types';
 import semver from 'semver/preload';
 
@@ -26,7 +28,7 @@ export class CloudService {
   private readonly client: Client;
   constructor(
     clientConfig: ClientConfig,
-    private readonly latestVersionStrategy: LatestVersionStrategy = 'chronological'
+    private readonly latestVersionStrategy: LatestVersionStrategy = 'semver'
   ) {
     this.client = new Client(clientConfig);
   }
@@ -41,15 +43,34 @@ export class CloudService {
 
   public async createKubernetesApplicationVersion(
     applicationId: string,
-    name: string,
-    baseValuesFile?: string,
-    templateFile?: string
+    versionName: string,
+    data: {
+      chartName: string;
+      chartVersion: string;
+      chartType: HelmChartType;
+      chartUrl: string;
+      baseValuesFile?: string;
+      templateFile?: string;
+    }
   ): Promise<ApplicationVersion> {
-    return this.client.createApplicationVersion(applicationId, {name}, {baseValuesFile, templateFile});
+    return this.client.createApplicationVersion(
+      applicationId,
+      {
+        name: versionName,
+        chartName: data.chartName,
+        chartVersion: data.chartVersion,
+        chartType: data.chartType,
+        chartUrl: data.chartUrl,
+      },
+      {
+        baseValuesFile: data.baseValuesFile,
+        templateFile: data.templateFile,
+      }
+    );
   }
 
   public async createDeployment(
-    target: {deploymentName: string; type: DeploymentType; namespace?: string},
+    target: {deploymentName: string; type: DeploymentType; namespace?: string; scope?: DeploymentTargetScope},
     application: {id: string; versionId?: string}
   ): Promise<CreateDeploymentResult> {
     // TODO support kubernetes
@@ -58,6 +79,7 @@ export class CloudService {
       name: target.deploymentName,
       type: target.type,
       namespace: target.namespace,
+      scope: target.scope,
     });
     let versionId = application.versionId;
     if (!versionId) {
@@ -71,10 +93,9 @@ export class CloudService {
       deploymentTargetId: deploymentTarget.id!,
       applicationVersionId: versionId,
     });
-    const access = await this.client.createAccessForDeploymentTarget(deploymentTarget.id!);
     return {
       deploymentTarget: await this.client.getDeploymentTarget(deploymentTarget.id!),
-      access,
+      access: await this.client.createAccessForDeploymentTarget(deploymentTarget.id!),
     };
   }
 
@@ -83,6 +104,7 @@ export class CloudService {
 
     const existing = await this.client.getDeploymentTarget(deploymentTargetId);
     if (!existing.deployment) {
+      // TODO or should we create a new one here? (deploying to an existing target isn't possible yet)
       throw new Error('cannot update deployment, because nothing deployed yet');
     }
     let versionId = applicationVersionId;
