@@ -84,7 +84,7 @@ func GetAccessTokenByKey(ctx context.Context, key authkey.Key) (*types.AccessTok
 			`WITH updated AS (
 				UPDATE AccessToken
 				SET last_used_at = now()
-				WHERE key = @key AND expires_at > now()
+				WHERE key = @key AND (expires_at IS NULL OR expires_at > now())
 				RETURNING *
 			)
 			SELECT %v FROM updated tok
