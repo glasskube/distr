@@ -13,12 +13,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const (
-	envDevelopment = "development"
-)
-
 var (
-	currentEnv                 string
 	databaseUrl                string
 	jwtSecret                  []byte
 	host                       string
@@ -35,13 +30,11 @@ var (
 )
 
 func init() {
-	currentEnv = os.Getenv("GLASSKUBE_ENV")
-	if currentEnv == "" {
-		currentEnv = envDevelopment
-	}
-	fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
-	if err := godotenv.Load(".env." + currentEnv + ".local"); err != nil && IsDev() {
-		fmt.Fprintf(os.Stderr, "environment not loaded: %v\n", err)
+	if currentEnv, ok := os.LookupEnv("GLASSKUBE_ENV"); ok {
+		fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
+		if err := godotenv.Load(currentEnv); err != nil {
+			fmt.Fprintf(os.Stderr, "environment not loaded: %v\n", err)
+		}
 	}
 
 	databaseUrl = os.Getenv("DATABASE_URL")
@@ -123,10 +116,6 @@ func JWTSecret() []byte {
 }
 
 func Host() string { return host }
-
-func IsDev() bool {
-	return currentEnv == envDevelopment
-}
 
 func GetMailerConfig() MailerConfig {
 	return mailerConfig
