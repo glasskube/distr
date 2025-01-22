@@ -3,7 +3,7 @@ import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, inject, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass, faPlus, faTrash, faXmark, faClipboard} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
 import {firstValueFrom, startWith, Subject, switchMap} from 'rxjs';
 import {RelativeDatePipe} from '../../util/dates';
@@ -35,6 +35,7 @@ export class AccessTokensComponent {
   protected readonly faTrash = faTrash;
   protected readonly faPlus = faPlus;
   protected readonly faXmark = faXmark;
+  protected readonly faClipboard = faClipboard;
 
   private readonly accessTokens = inject(AccessTokensService);
   private readonly refresh$ = new Subject<void>();
@@ -100,6 +101,13 @@ export class AccessTokensComponent {
         await firstValueFrom(this.accessTokens.delete(accessToken.id!));
         this.refresh$.next();
       } catch (e) {}
+    }
+  }
+
+  public async clip() {
+    if (this.createdToken) {
+      await navigator.clipboard.writeText(this.createdToken.key);
+      this.toast.success('copied to clipboard');
     }
   }
 }
