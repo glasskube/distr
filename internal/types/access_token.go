@@ -11,7 +11,7 @@ type AccessToken struct {
 	CreatedAt     time.Time   `db:"created_at"`
 	ExpiresAt     *time.Time  `db:"expires_at"`
 	LastUsedAt    *time.Time  `db:"last_used_at"`
-	Label         string      `db:"label"`
+	Label         *string     `db:"label"`
 	Key           authkey.Key `db:"key"`
 	UserAccountID string      `db:"user_account_id"`
 }
