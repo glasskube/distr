@@ -48,7 +48,7 @@ To build the Glasskube Cloud server from source, first ensure that the following
 - Go (Version 1.23)
 - Docker (when building the Docker images)
 
-We recommend that you use mise to install these tools, but you do don't have to.
+We recommend that you use [mise](https://mise.jdx.dev/) to install these tools, but you do don't have to.
 
 All build tasks can be found in the [`Makefile`](Makefile), for example:
 
