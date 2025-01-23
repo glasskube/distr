@@ -24,8 +24,8 @@ Glasskube Cloud is the easiest way to distribute enterprise software to customer
 
 - View all deployments and connected agents via the **intuitive web UI**
 - Let your customers control their deployments via the **white-label customer portal**
-- Access the API using our **rich SDK**
-- Fully open-source and self-hostable
+- Access the API using our [**rich SDK**](#glasskube-cloud-sdk)
+- Fully open-source and [self-hostable](#self-hosting)
 
 Check out the hosted version at https://app.glasskube.cloud/
 
