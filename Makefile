@@ -43,7 +43,7 @@ frontend-prod: node_modules
 
 .PHONY: run
 run: frontend-dev tidy
-	CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/cloud/
+	GLASSKUBE_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/cloud/
 
 .PHONY: run-kubernetes-agent
 run-kubernetes-agent: tidy
