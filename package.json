@@ -45,7 +45,7 @@
     "@sentry/angular": "^8.43.0",
     "apexcharts": "^4.1.0",
     "dayjs": "^1.11.13",
-    "flowbite": "^2.5.2",
+    "flowbite": "^3.0.0",
     "globe.gl": "^2.33.2",
     "jwt-decode": "^4.0.0",
     "ng-apexcharts": "^1.15.0",
