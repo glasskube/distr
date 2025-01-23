@@ -79,7 +79,7 @@ Interact with Glasskube Cloud directly from your application code using our firs
 The Glasskube Cloud SDK is currently available for JavaScript only, but more languages and frameworks are on the roadmap.
 Let us know what you would like to see!
 
-You can install the Glasskube Cloud SDK for Javascript from [npmjs.org](https://npmjs.org/):
+You can install the Glasskube Cloud SDK for JavaScript from [npmjs.org](https://npmjs.org/):
 
 ```shell
 npm install --save @glasskube/cloud-sdk
