@@ -23,3 +23,28 @@ jobs:
         uses: googleapis/release-please-action@7987652d64b4581673a76e33ad5e98e3dd56832f # v4.1.3
         with:
           token: ${{ secrets.GLASSKUBE_BOT_SECRET }}
+
+  publish:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs:
+      - release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Setup node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+        with:
+          node-version: "20"
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+      - name: Install dependencies
+        run: npm --prefix sdk/js ci
+      - name: Build application
+        run: npm --prefix sdk/js run build
+      - name: Publish to npmjs
+        run: npm --prefix sdk/js publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
