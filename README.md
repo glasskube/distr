@@ -33,7 +33,7 @@ Check out the hosted version at https://app.glasskube.cloud/
 
 ### Docker
 
-The Glasskube Cloud backend and UI server is distributed as a Docker image.
+The Glasskube Cloud control plane is distributed as a Docker image.
 Check out [`deploy/docker`](deploy/docker) for our example deployment using Docker Compose.
 To get started quickly, do the following:
 
@@ -51,7 +51,7 @@ The full self-hosting documentation is at https://glasskube.dev/products/cloud/d
 
 ### Building from source
 
-To build the Glasskube Cloud server from source, first ensure that the following build dependencies are installed:
+To build the Glasskube Cloud control plane from source, first ensure that the following build dependencies are installed:
 
 - NodeJS (Version 22)
 - Go (Version 1.23)
@@ -62,7 +62,7 @@ We recommend that you use [mise](https://mise.jdx.dev/) to install these tools, 
 All build tasks can be found in the [`Makefile`](Makefile), for example:
 
 ```shell
-# Build the server
+# Build the control plane
 make build
 # Build all docker images
 make build-docker
