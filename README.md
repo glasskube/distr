@@ -29,6 +29,20 @@ Glasskube Cloud is the easiest way to distribute enterprise software to customer
 
 Check out the hosted version at https://app.glasskube.cloud/
 
+## Architecture overview
+
+```mermaid
+architecture-beta
+    group ctrl(cloud)[Your Cloud]
+    service db(database)[PostgreSQL] in ctrl
+    service server(server)[Control Plane] in ctrl
+    db:T -- B:server
+
+    group customer(cloud)[Customer Cloud]
+    service agent(internet)[Agent] in customer
+    agent:L --> R:server
+```
+
 ## Self-hosting
 
 ### Docker
