@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 name: Release Artifacts
 
 on:
@@ -8,6 +10,7 @@ on:
 jobs:
   build:
     name: Upload deploy-docker.tar.bz2
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     permissions:
       contents: write

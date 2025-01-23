@@ -8,6 +8,7 @@ on:
 
 jobs:
   release-please:
+    timeout-minutes: 1
     runs-on: ubuntu-latest
     permissions:
       contents: write
