@@ -1,3 +1,4 @@
+export * from './access-token';
 export * from './agent-version';
 export * from './application';
 export * from './base';

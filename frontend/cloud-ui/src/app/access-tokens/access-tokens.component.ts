@@ -13,7 +13,7 @@ import {RequireRoleDirective} from '../directives/required-role.directive';
 import {AccessTokensService} from '../services/access-tokens.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '../types/access-token';
+import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-access-tokens',
