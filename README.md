@@ -38,7 +38,7 @@ Check out the hosted version at https://app.glasskube.cloud/
 The Glasskube Cloud backend and UI server is distributed as a Docker image.
 Check out [`deploy/docker`](deploy/docker) for our example deployment using Docker Compose.
 
-The full self-hosting documentation is at https://glasskube.dev/docs/cloud/self-hosting/
+The full self-hosting documentation is at https://glasskube.dev/products/cloud/docs/self-hosting/
 
 ### Building from source
 
@@ -85,4 +85,4 @@ You can install the Glasskube Cloud SDK for JavaScript from [npmjs.org](https://
 npm install --save @glasskube/cloud-sdk
 ```
 
-The full SDK documentation is at https://glasskube.dev/docs/cloud/sdk/
+The full SDK documentation is at https://glasskube.dev/products/cloud/docs/sdk/
