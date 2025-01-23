@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://glasskube.cloud/" target="_blank">
-    <img alt="Glasskube" src="frontend/cloud-ui/public/glasskube-logo.svg" style="height: 6em;">
+    <img alt="Glasskube" src="frontend/cloud-ui/public/glasskube-logo.svg" style="height: 5em;">
   </a>
   <br>
   Glasskube Cloud
