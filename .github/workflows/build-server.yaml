@@ -21,9 +21,6 @@ jobs:
         id: hash
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Build sdk
-        run: npm run build-sdk
-
       - name: Install frontend dependencies with npm
         run: npm ci
 
