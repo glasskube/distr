@@ -42,7 +42,7 @@ To get started quickly, do the following:
 <!-- x-release-please-start-version -->
 
 ```shell
-mkdir cloud && cd cloud && curl -fsSL https://github.com/glasskube/cloud/releases/download/v0.12.0/deploy-docker.tar.bz2 | tar -jx
+mkdir cloud && cd cloud && curl -fsSL https://github.com/glasskube/cloud/releases/download/0.12.0/deploy-docker.tar.bz2 | tar -jx
 # make necessary changes to the .env file
 docker-compose up -d
 ```
