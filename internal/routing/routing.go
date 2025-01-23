@@ -10,7 +10,6 @@ import (
 	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -46,9 +45,10 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 
 		// authenticated routes go here
 		r.Group(func(r chi.Router) {
-			r.Use(jwtauth.Verifier(auth.JWTAuth))
-			r.Use(jwtauth.Authenticator(auth.JWTAuth))
-			r.Use(middleware.SentryUser)
+			r.Use(
+				middleware.SentryUser,
+				auth.Authentication.Middleware,
+			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)

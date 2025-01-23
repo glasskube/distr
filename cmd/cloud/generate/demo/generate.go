@@ -46,7 +46,7 @@ func main() {
 	appMarsBeta := types.Application{
 		Name: "Mars Travel Calc (Beta)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
 	}
-	util.Must(db.CreateApplication(ctx, &appMarsBeta))
+	util.Must(db.CreateApplication(ctx, &appMarsBeta, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId: appMarsBeta.ID, Name: "v0.1.0", ComposeFileData: []byte("name: Hello World!\n"),
 	}))
@@ -60,39 +60,37 @@ func main() {
 	util.Must(db.CreateApplicationVersion(ctx, &appMarsBetaV419))
 
 	appMarsStable := types.Application{
-		Name: "Mars Travel Calc (Stable)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
+		Name: "Mars Travel Calc (Stable)", Type: types.DeploymentTypeDocker,
 	}
-	util.Must(db.CreateApplication(ctx, &appMarsStable))
+	util.Must(db.CreateApplication(ctx, &appMarsStable, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
 		ApplicationId: appMarsStable.ID, Name: "v0.3.1", ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 
 	appMarsLTS := types.Application{
-		Name: "Mars Travel Calc (LTS)", OrganizationID: org.ID, Type: types.DeploymentTypeDocker,
+		Name: "Mars Travel Calc (LTS)", Type: types.DeploymentTypeDocker,
 	}
-	util.Must(db.CreateApplication(ctx, &appMarsLTS))
+	util.Must(db.CreateApplication(ctx, &appMarsLTS, org.ID))
 	appMarsLTSV0299 := types.ApplicationVersion{ApplicationId: appMarsLTS.ID, Name: "v0.29.9"}
 	util.Must(db.CreateApplicationVersion(ctx, &appMarsLTSV0299))
 
 	appLaunchDashboard := types.Application{
-		Name: "Launch Dashboard", OrganizationID: org.ID, Type: types.DepolymentTypeKubernetes,
+		Name: "Launch Dashboard", Type: types.DepolymentTypeKubernetes,
 	}
-	util.Must(db.CreateApplication(ctx, &appLaunchDashboard))
+	util.Must(db.CreateApplication(ctx, &appLaunchDashboard, org.ID))
 	appLaunchDashboardV001 := types.ApplicationVersion{
 		ApplicationId: appLaunchDashboard.ID, Name: "v0.0.1",
 	}
 	util.Must(db.CreateApplicationVersion(ctx, &appLaunchDashboardV001))
 
 	dashboardTest := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "pmig - Dashboard Testing",
 			Type:           types.DeploymentTypeDocker,
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &dashboardTest))
+	util.Must(db.CreateDeploymentTarget(ctx, &dashboardTest, org.ID, pmig.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &dashboardTest.DeploymentTarget, "running"))
 	deplRequest := api.DeploymentRequest{
 		DeploymentTargetId: dashboardTest.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
@@ -102,15 +100,13 @@ func main() {
 	util.Must(err)
 
 	calculatorTest := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: pmig.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "pmig - Calculator Testing",
 			Type:           types.DeploymentTypeDocker,
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &calculatorTest))
+	util.Must(db.CreateDeploymentTarget(ctx, &calculatorTest, org.ID, pmig.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &calculatorTest.DeploymentTarget, "running"))
 	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: calculatorTest.ID, ApplicationVersionId: appMarsBetaV419.ID,
@@ -130,16 +126,14 @@ func main() {
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, danubeAerospace.ID, org.ID, types.UserRoleCustomer))
 
 	danubeAerospaceVienna := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: danubeAerospace.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "DA - Vienna DC",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.191166, Lon: 16.3717293},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &danubeAerospaceVienna))
+	util.Must(db.CreateDeploymentTarget(ctx, &danubeAerospaceVienna, org.ID, danubeAerospace.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &danubeAerospaceVienna.DeploymentTarget, "running"))
 	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: danubeAerospaceVienna.ID, ApplicationVersionId: appMarsBetaV419.ID,
@@ -159,16 +153,14 @@ func main() {
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, luxOrbit.ID, org.ID, types.UserRoleCustomer))
 
 	luxOrbitCanada := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: luxOrbit.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "LO - Canadian Cluster",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 47.6349832, Lon: -122.1410062},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &luxOrbitCanada))
+	util.Must(db.CreateDeploymentTarget(ctx, &luxOrbitCanada, org.ID, luxOrbit.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &luxOrbitCanada.DeploymentTarget, "running"))
 	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: luxOrbitCanada.ID, ApplicationVersionId: appMarsBetaV419.ID,
@@ -188,16 +180,14 @@ func main() {
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, spaceK.ID, org.ID, types.UserRoleCustomer))
 
 	spaceKUKWest := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: spaceK.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "Space K - uk-west-1",
 			Type:           types.DepolymentTypeKubernetes,
 			Geolocation:    &types.Geolocation{Lat: 55.8578177, Lon: -4.3687363},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &spaceKUKWest))
+	util.Must(db.CreateDeploymentTarget(ctx, &spaceKUKWest, org.ID, spaceK.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &spaceKUKWest.DeploymentTarget, "running"))
 	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: spaceKUKWest.ID, ApplicationVersionId: appMarsLTSV0299.ID,
@@ -217,16 +207,14 @@ func main() {
 	util.Must(db.CreateUserAccountOrganizationAssignment(ctx, baySpaceCorp.ID, org.ID, types.UserRoleCustomer))
 
 	baySpaceOffice := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: baySpaceCorp.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "BSC - Office",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.76078, Lon: -122.3915258},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceOffice))
+	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceOffice, org.ID, baySpaceCorp.ID))
 	util.Must(db.CreateDeploymentTargetStatus(ctx, &baySpaceOffice.DeploymentTarget, "running"))
 	deplRequest = api.DeploymentRequest{
 		DeploymentTargetId: baySpaceOffice.ID, ApplicationVersionId: appLaunchDashboardV001.ID,
@@ -236,14 +224,12 @@ func main() {
 	util.Must(err)
 
 	baySpaceWest := types.DeploymentTargetWithCreatedBy{
-		CreatedBy: &types.UserAccountWithUserRole{ID: baySpaceCorp.ID},
 		DeploymentTarget: types.DeploymentTarget{
-			OrganizationID: org.ID,
 			Name:           "BSC - us-central-1",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 39.1929769, Lon: -105.2403348},
 			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
 		},
 	}
-	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceWest))
+	util.Must(db.CreateDeploymentTarget(ctx, &baySpaceWest, org.ID, baySpaceCorp.ID))
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/cloud/api"
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/authjwt"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/mail"
@@ -40,7 +40,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(r.Context())
 	if request, err := JsonBody[api.AuthLoginRequest](w, r); err != nil {
 		return
-	} else if user, err := db.GetUserAccountWithEmail(r.Context(), request.Email); errors.Is(err, apierrors.ErrNotFound) {
+	} else if user, err := db.GetUserAccountByEmail(r.Context(), request.Email); errors.Is(err, apierrors.ErrNotFound) {
 		http.Error(w, "invalid username or password", http.StatusBadRequest)
 	} else if err != nil {
 		sentry.GetHubFromContext(r.Context()).CaptureException(err)
@@ -60,7 +60,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
 		}
 		org := orgs[0]
-		if _, tokenString, err := auth.GenerateDefaultToken(*user, *org); err != nil {
+		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, *org); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Warn("token creation failed", zap.Error(err))
 		} else {
@@ -122,7 +122,7 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	} else if err := request.Validate(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if user, err := db.GetUserAccountWithEmail(ctx, request.Email); err != nil {
+	} else if user, err := db.GetUserAccountByEmail(ctx, request.Email); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			log.Info("password reset for non-existing user", zap.String("email", request.Email))
 			w.WriteHeader(http.StatusNoContent)
@@ -131,7 +131,7 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 		}
-	} else if _, token, err := auth.GenerateResetToken(*user); err != nil {
+	} else if _, token, err := authjwt.GenerateResetToken(*user); err != nil {
 		log.Warn("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
@@ -94,18 +93,5 @@ func GetOrganizationWithBranding(ctx context.Context, orgId string) (*types.Orga
 		return nil, fmt.Errorf("could not get organization: %w", err)
 	} else {
 		return result, nil
-	}
-}
-
-// GetCurrentOrg retrieves the organization_id from the context auth token and returns the corresponding Organization
-//
-// TODO: this function should probably be moved to another module and maybe support some kind of result caching.
-func GetCurrentOrg(ctx context.Context) (*types.OrganizationWithBranding, error) {
-	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-		return nil, err
-	} else if org, err := GetOrganizationWithBranding(ctx, orgId); err != nil {
-		return nil, err
-	} else {
-		return org, nil
 	}
 }
