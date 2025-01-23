@@ -1,4 +1,10 @@
-export type Environment = {
+export interface Environment {
   production: boolean;
-  posthogToken?: string;
-};
+}
+
+export interface RemoteEnvironment {
+  readonly sentryDsn?: string;
+  readonly posthogToken?: string;
+  readonly posthogApiHost?: string;
+  readonly posthogUiHost?: string;
+}

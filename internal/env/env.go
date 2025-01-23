@@ -27,6 +27,10 @@ var (
 	sentryDebug                bool
 	enableQueryLogging         bool
 	agentDockerConfig          []byte
+	frontendSentryDSN          *string
+	frontendPosthogToken       *string
+	frontendPosthogAPIHost     *string
+	frontendPosthogUIHost      *string
 )
 
 func init() {
@@ -97,6 +101,22 @@ func init() {
 	if value, ok := os.LookupEnv("AGENT_DOCKER_CONFIG"); ok {
 		agentDockerConfig = []byte(value)
 	}
+
+	if value, ok := os.LookupEnv("FRONTEND_SENTRY_DSN"); ok {
+		frontendSentryDSN = &value
+	}
+
+	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_TOKEN"); ok {
+		frontendPosthogToken = &value
+	}
+
+	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_API_HOST"); ok {
+		frontendPosthogAPIHost = &value
+	}
+
+	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_UI_HOST"); ok {
+		frontendPosthogUIHost = &value
+	}
 }
 
 func requirePositiveDuration(val string) time.Duration {
@@ -155,4 +175,19 @@ func StatusEntriesMaxAge() *time.Duration {
 
 func AgentDockerConfig() []byte {
 	return agentDockerConfig
+}
+
+func FrontendSentryDSN() *string {
+	return frontendSentryDSN
+}
+
+func FrontendPosthogToken() *string {
+	return frontendPosthogToken
+}
+
+func FrontendPosthogAPIHost() *string {
+	return frontendPosthogAPIHost
+}
+func FrontendPosthogUIHost() *string {
+	return frontendPosthogUIHost
 }
