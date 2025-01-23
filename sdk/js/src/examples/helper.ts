@@ -24,6 +24,5 @@ export async function getSomeDeploymentTargetId(): Promise<string> {
 // this would be injected via ENV
 export const clientConfig = {
   apiBase: 'http://localhost:8080/api/v1',
-  apiKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20yIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImV4cCI6MTczNzY1MTAyMSwiaWF0IjoxNzM3NTY0NjIxLCJuYW1lIjoiIiwibmJmIjoxNzM3NTY0NjIxLCJvcmciOiJiZjdmNGFkZi00YjVjLTQ0YjQtOTJiYS05ZmNhNzVkN2E4NTQiLCJyb2xlIjoidmVuZG9yIiwic3ViIjoiZDJjZDYyNmUtMTA5OC00YWExLTk2NmMtYWJiMjkwZTJjZDRjIn0.dw2NcP_o6u7fdthDMfyepb-iAa5Ad-8crQeaXdgV7L4',
+  apiKey: 'TODO insert your personal access token here',
 };

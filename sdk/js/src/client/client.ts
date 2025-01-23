@@ -57,7 +57,7 @@ export class Client {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
+        Authorization: `AccessToken ${this.config.apiKey}`,
       },
       body: formData,
     });
@@ -89,7 +89,7 @@ export class Client {
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
+        Authorization: `AccessToken ${this.config.apiKey}`,
       },
     });
     return await this.handleResponse<T>(response, 'GET', path);
@@ -100,7 +100,7 @@ export class Client {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
+        Authorization: `AccessToken ${this.config.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
@@ -113,7 +113,7 @@ export class Client {
       method: 'PUT',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
+        Authorization: `AccessToken ${this.config.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
