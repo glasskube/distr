@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 name: Check pull request title
 
 on:
@@ -12,6 +14,7 @@ permissions:
 
 jobs:
   semantic-message:
+    timeout-minutes: 1
     runs-on: ubuntu-latest
     steps:
       - uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017 # v5
