@@ -50,7 +50,7 @@ To build the Glasskube Cloud server from source, first ensure that the following
 
 We recommend that you use mise to install these tools, but you do don't have to.
 
-All build tasks can be found in the `Makefile`, for example:
+All build tasks can be found in the [`Makefile`](Makefile), for example:
 
 ```shell
 # Build the server
