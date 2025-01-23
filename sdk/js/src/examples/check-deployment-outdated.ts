@@ -1,5 +1,5 @@
 import {CloudService} from '../client/service';
-import {clientConfig, getSomeDeploymentTargetId} from './helper';
+import {clientConfig, getSomeDockerDeploymentTargetId} from './helper';
 
 const gc = new CloudService(clientConfig);
 
