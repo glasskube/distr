@@ -37,6 +37,17 @@ Check out the hosted version at https://app.glasskube.cloud/
 
 The Glasskube Cloud backend and UI server is distributed as a Docker image.
 Check out [`deploy/docker`](deploy/docker) for our example deployment using Docker Compose.
+To get started quickly, do the following:
+
+<!-- x-release-please-start-version -->
+
+```shell
+mkdir cloud && cd cloud && curl -fsSL https://github.com/glasskube/cloud/releases/download/v0.12.0/deploy-docker.tar.bz2 | tar -jx
+# make necessary changes to the .env file
+docker-compose up -d
+```
+
+<!-- x-release-please-end -->
 
 The full self-hosting documentation is at https://glasskube.dev/products/cloud/docs/self-hosting/
 
