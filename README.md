@@ -12,13 +12,9 @@
 
 </div>
 
-![](https://img.shields.io/badge/build-passing-brightgreen)
-![](https://img.shields.io/badge/build-passing-brightgreen)
-![](https://img.shields.io/badge/build-passing-brightgreen)
-![](https://img.shields.io/badge/build-passing-brightgreen)
-![](https://img.shields.io/badge/build-passing-brightgreen)
-![](https://img.shields.io/badge/build-passing-brightgreen)
-![](https://img.shields.io/badge/build-passing-brightgreen)
+[![GitHub Repo stars](https://img.shields.io/github/stars/glasskube/cloud?style=flat)](https://github.com/glasskube/cloud)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Docs](https://img.shields.io/badge/docs-glasskube.dev%2Fdocs-blue)](https://glasskube.dev/products/cloud/docs?utm_source=github)
 
 Glasskube Cloud is the easiest way to distribute enterprise software to customer-controlled or shared-responsibility environments.
 
