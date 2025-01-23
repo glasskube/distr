@@ -20,14 +20,12 @@
 ![](https://img.shields.io/badge/build-passing-brightgreen)
 ![](https://img.shields.io/badge/build-passing-brightgreen)
 
-Glasskube Cloud is the easiest way to distribute enterprise software.
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
+Glasskube Cloud is the easiest way to distribute enterprise software to customer-controlled or shared-responsibility environments.
 
-- Praesent pharetra sed lorem ac.
-- Proin gravida lobortis enim, non.
-- Cras quis tellus id sem.
+- View all deployments and connected agents via the **intuitive web UI**
+- Let your customers control their deployments via the **white-label customer portal**
+- Access the API using our **rich SDK**
+- Fully open-source and self-hostable
 
 Check out the hosted version at https://app.glasskube.cloud/
 
