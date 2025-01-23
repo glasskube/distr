@@ -3,7 +3,7 @@ package security
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/base64"
+	"encoding/hex"
 	"errors"
 
 	"github.com/glasskube/cloud/internal/types"
@@ -68,6 +68,9 @@ func generateSalt() ([]byte, error) {
 
 func GenerateAccessKey() (string, error) {
 	key := make([]byte, 16)
-	_, err := rand.Read(key)
-	return base64.URLEncoding.EncodeToString(key), err
+	if _, err := rand.Read(key); err != nil {
+		return "", err
+	} else {
+		return hex.EncodeToString(key), nil
+	}
 }
