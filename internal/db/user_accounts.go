@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgerrcode"
@@ -149,7 +148,7 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId 
 	return err
 }
 
-func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
+func GetUserAccountsByOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountWithRoleOutputExpr+`
@@ -168,7 +167,7 @@ func GetUserAccountsWithOrgID(ctx context.Context, orgId string) ([]types.UserAc
 	}
 }
 
-func GetUserAccountWithID(ctx context.Context, id string) (*types.UserAccount, error) {
+func GetUserAccountByID(ctx context.Context, id string) (*types.UserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountOutputExpr+" FROM UserAccount u WHERE u.id = @id",
@@ -187,7 +186,7 @@ func GetUserAccountWithID(ctx context.Context, id string) (*types.UserAccount, e
 	}
 }
 
-func GetUserAccountWithEmail(ctx context.Context, email string) (*types.UserAccount, error) {
+func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountOutputExpr+" FROM UserAccount u WHERE u.email = @email",
@@ -206,63 +205,26 @@ func GetUserAccountWithEmail(ctx context.Context, email string) (*types.UserAcco
 	}
 }
 
-// GetCurrentUser retrieves the user account ID from the context auth token (subject claim) and returns the
-// corresponding UserAccount
-//
-// TODO: this function should probably be moved to another module and maybe support some kind of result caching.
-func GetCurrentUser(ctx context.Context) (*types.UserAccount, error) {
-	if userId, err := auth.CurrentUserId(ctx); err != nil {
-		return nil, err
-	} else {
-		db := internalctx.GetDb(ctx)
-		rows, err := db.Query(ctx,
-			"SELECT "+userAccountOutputExpr+`
-			FROM UserAccount u
-			WHERE u.id = @id`,
-			pgx.NamedArgs{"id": userId},
-		)
-		if err != nil {
-			return nil, err
-		}
-		userAccount, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, apierrors.ErrNotFound
-			} else {
-				return nil, fmt.Errorf("could not map user: %w", err)
-			}
-		} else {
-			return &userAccount, nil
-		}
-	}
-}
-
-func GetCurrentUserWithRole(ctx context.Context) (*types.UserAccountWithUserRole, error) {
-	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-		return nil, err
-	} else if userId, err := auth.CurrentUserId(ctx); err != nil {
-		return nil, err
-	} else {
-		db := internalctx.GetDb(ctx)
-		rows, err := db.Query(ctx,
-			"SELECT "+userAccountOutputExpr+`, j.user_role
+func GetUserAccountWithRole(ctx context.Context, userID, orgID string) (*types.UserAccountWithUserRole, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT "+userAccountOutputExpr+`, j.user_role
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			WHERE u.id = @id AND j.organization_id = @orgId`,
-			pgx.NamedArgs{"id": userId, "orgId": orgId},
-		)
-		if err != nil {
-			return nil, err
-		}
-		userAccount, err := pgx.CollectExactlyOneRow[types.UserAccountWithUserRole](rows, pgx.RowToStructByName)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, apierrors.ErrNotFound
-			} else {
-				return nil, fmt.Errorf("could not map user: %w", err)
-			}
+		pgx.NamedArgs{"id": userID, "orgId": orgID},
+	)
+	if err != nil {
+		return nil, err
+	}
+	userAccount, err := pgx.CollectExactlyOneRow[types.UserAccountWithUserRole](rows, pgx.RowToStructByName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
 		} else {
-			return &userAccount, nil
+			return nil, fmt.Errorf("could not map user: %w", err)
 		}
+	} else {
+		return &userAccount, nil
 	}
 }

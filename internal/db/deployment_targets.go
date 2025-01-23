@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/glasskube/cloud/internal/env"
-
 	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
 	internalctx "github.com/glasskube/cloud/internal/context"
+	"github.com/glasskube/cloud/internal/env"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/jackc/pgx/v5"
 )
@@ -66,27 +64,18 @@ const (
 	` + deploymentTargetJoinExpr
 )
 
-func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCreatedBy, error) {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return nil, err
-	}
-	userId, err := auth.CurrentUserId(ctx)
-	if err != nil {
-		return nil, err
-	}
-	userRole, err := auth.CurrentUserRole(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func GetDeploymentTargets(
+	ctx context.Context,
+	orgID, userID string,
+	userRole types.UserRole,
+) ([]types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
 		"SELECT"+deploymentTargetWithStatusOutputExpr+deploymentTargetFromExpr+
 			"WHERE dt.organization_id = @orgId "+
 			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor') "+
 			"ORDER BY u.name, u.email, dt.name",
-		pgx.NamedArgs{"orgId": orgId, "userId": userId, "userRole": userRole},
+		pgx.NamedArgs{"orgId": orgID, "userId": userID, "userRole": userRole},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	} else if result, err := pgx.CollectRows(
@@ -104,12 +93,12 @@ func GetDeploymentTargets(ctx context.Context) ([]types.DeploymentTargetWithCrea
 	}
 }
 
-func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.DeploymentTargetWithCreatedBy, error) {
+func GetDeploymentTarget(ctx context.Context, id string, orgID *string) (*types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
 	query := "SELECT" + deploymentTargetWithStatusOutputExpr + deploymentTargetFromExpr + "WHERE dt.id = @id"
-	if orgId != nil {
-		args = pgx.NamedArgs{"id": id, "orgId": *orgId}
+	if orgID != nil {
+		args = pgx.NamedArgs{"id": id, "orgId": *orgID}
 		query = query + " AND dt.organization_id = @orgId"
 	} else {
 		args = pgx.NamedArgs{"id": id}
@@ -128,20 +117,14 @@ func GetDeploymentTarget(ctx context.Context, id string, orgId *string) (*types.
 	}
 }
 
-func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
-	if dt.OrganizationID == "" {
-		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-			return err
-		} else {
-			dt.OrganizationID = orgId
-		}
-	}
+func CreateDeploymentTarget(
+	ctx context.Context,
+	dt *types.DeploymentTargetWithCreatedBy,
+	orgID, createdByID string,
+) error {
+	dt.OrganizationID = orgID
 	if dt.CreatedBy == nil {
-		if userId, err := auth.CurrentUserId(ctx); err != nil {
-			return err
-		} else {
-			dt.CreatedBy = &types.UserAccountWithUserRole{ID: userId}
-		}
+		dt.CreatedBy = &types.UserAccountWithUserRole{ID: createdByID}
 	}
 
 	db := internalctx.GetDb(ctx)
@@ -183,18 +166,13 @@ func CreateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	}
 }
 
-func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return err
-	}
-
+func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy, orgID string) error {
 	agentUpdateStr := ""
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
 		"id":    dt.ID,
 		"name":  dt.Name,
-		"orgId": orgId,
+		"orgId": orgID,
 		"lat":   nil,
 		"lon":   nil,
 	}
@@ -237,17 +215,13 @@ func DeleteDeploymentTargetWithID(ctx context.Context, id string) error {
 	}
 }
 
-func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarget) error {
-	orgId, err := auth.CurrentOrgId(ctx)
-	if err != nil {
-		return err
-	}
+func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarget, orgID string) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE DeploymentTarget AS dt SET access_key_salt = @accessKeySalt, access_key_hash = @accessKeyHash "+
 			"WHERE id = @id AND organization_id = @orgId RETURNING "+
 			deploymentTargetOutputExprBase,
-		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgId})
+		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgID})
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
 	} else if updated, err :=

@@ -3,7 +3,7 @@ package mailsending
 import (
 	"context"
 
-	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/authjwt"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/mailtemplates"
@@ -16,7 +16,7 @@ func SendUserVerificationMail(ctx context.Context, userAccount types.UserAccount
 	log := internalctx.GetLogger(ctx)
 
 	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-	if _, token, err := auth.GenerateVerificationTokenValidFor(userAccount); err != nil {
+	if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
 		log.Error("could not generate verification token for email verification", zap.Error(err))
 		return err
 	} else {

@@ -12,6 +12,7 @@ import (
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/mailsending"
+	"github.com/glasskube/cloud/internal/middleware"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -19,6 +20,7 @@ import (
 )
 
 func UserAccountsRouter(r chi.Router) {
+	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
@@ -31,9 +33,8 @@ func UserAccountsRouter(r chi.Router) {
 
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-	} else if userAccoutns, err := db.GetUserAccountsWithOrgID(ctx, orgId); err != nil {
+	auth := auth.Authentication.Require(ctx)
+	if userAccoutns, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID()); err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -44,6 +45,7 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
+	auth := auth.Authentication.Require(ctx)
 
 	body, err := JsonBody[api.CreateUserAccountRequest](w, r)
 	if err != nil {
@@ -57,7 +59,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-		if result, err := db.GetCurrentOrg(ctx); err != nil {
+		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return err
 		} else {
@@ -110,11 +112,8 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	userAccount := internalctx.GetUserAccount(ctx)
-	if currentUserID, err := auth.CurrentUserId(ctx); err != nil {
-		log.Warn("error getting current user", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else if userAccount.ID == currentUserID {
+	auth := auth.Authentication.Require(ctx)
+	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.DeleteUserAccountWithID(ctx, userAccount.ID); err != nil {
 		log.Warn("error deleting user", zap.Error(err))
@@ -131,7 +130,7 @@ func userAccountMiddleware(h http.Handler) http.Handler {
 		log := internalctx.GetLogger(ctx)
 		if userId := r.PathValue("userId"); userId == "" {
 			http.Error(w, "missing userId", http.StatusBadRequest)
-		} else if userAccount, err := db.GetUserAccountWithID(ctx, userId); err != nil {
+		} else if userAccount, err := db.GetUserAccountByID(ctx, userId); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else {

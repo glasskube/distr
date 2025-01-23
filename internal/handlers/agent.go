@@ -19,6 +19,7 @@ import (
 	"github.com/glasskube/cloud/internal/agentmanifest"
 	"github.com/glasskube/cloud/internal/apierrors"
 	"github.com/glasskube/cloud/internal/auth"
+	"github.com/glasskube/cloud/internal/authjwt"
 	internalctx "github.com/glasskube/cloud/internal/context"
 	"github.com/glasskube/cloud/internal/db"
 	"github.com/glasskube/cloud/internal/env"
@@ -28,7 +29,6 @@ import (
 	"github.com/glasskube/cloud/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
-	"github.com/go-chi/jwtauth/v5"
 	"go.uber.org/zap"
 )
 
@@ -43,8 +43,8 @@ func AgentRouter(r chi.Router) {
 		r.Post("/login", agentLoginHandler)
 
 		r.With(
-			jwtauth.Verifier(auth.JWTAuth),
-			jwtauth.Authenticator(auth.JWTAuth),
+			auth.Authentication.Middleware,
+			middleware.RequireOrgID,
 			middleware.SentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
@@ -103,7 +103,7 @@ func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
 		// TODO maybe even randomize token valid duration
-		if _, token, err := auth.GenerateAgentTokenValidFor(
+		if _, token, err := authjwt.GenerateAgentTokenValidFor(
 			deploymentTarget.ID, deploymentTarget.OrganizationID, env.AgentTokenMaxValidDuration()); err != nil {
 			log.Error("failed to create agent token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -292,14 +292,12 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		if orgId, err := auth.CurrentOrgId(ctx); err != nil {
-			log.Error("failed to get orgId from token", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if targetId, err := auth.CurrentSubject(ctx); err != nil {
-			log.Error("failed to get subject from token", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if deploymentTarget, err :=
-			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
+		auth := auth.Authentication.Require(ctx)
+		orgId := auth.CurrentOrgID()
+		targetId := auth.CurrentUserID()
+
+		if deploymentTarget, err :=
+			db.GetDeploymentTarget(ctx, targetId, orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
@@ -349,6 +347,10 @@ var rateLimitPerAgent = httprate.Limit(
 	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
 	1*time.Minute,
 	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
-		return auth.CurrentUserId(r.Context())
+		if auth, err := auth.Authentication.Get(r.Context()); err != nil {
+			return "", err
+		} else {
+			return auth.CurrentUserID(), nil
+		}
 	}),
 )
