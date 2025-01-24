@@ -17,8 +17,16 @@ export type ApplicationVersionFiles = {
   templateFile?: string;
 };
 
+const defaultClientConfig = {apiBase: 'https://app.glasskube.cloud/api/v1/'};
+
+type ConditionalPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 export class Client {
-  constructor(private readonly config: ClientConfig) {}
+  private readonly config: ClientConfig;
+
+  constructor(config: ConditionalPartial<ClientConfig, keyof typeof defaultClientConfig>) {
+    this.config = {...defaultClientConfig, ...config};
+  }
 
   public async getApplications(): Promise<Application[]> {
     return this.get<Application[]>('applications');
