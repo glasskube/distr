@@ -1,8 +1,8 @@
 import {CloudService} from '../client/service';
-import {clientConfig, getSomeDockerAppId} from './helper';
+import {clientConfig} from './config';
 
 const gc = new CloudService(clientConfig);
-const appId = await getSomeDockerAppId(clientConfig);
+const appId = '<docker-application-id>';
 const newDockerVersion = await gc.createDockerApplicationVersion(
   appId,
   'v7.4.2',

@@ -1,8 +1,8 @@
 import {CloudService} from '../client/service';
-import {clientConfig, getSomeKubernetesAppId} from './helper';
+import {clientConfig} from './config';
 
 const gc = new CloudService(clientConfig);
-const kubernetesAppId = await getSomeKubernetesAppId(clientConfig);
+const kubernetesAppId = '<kubernetes-application-id>';
 const newKubernetesVersion = await gc.createKubernetesApplicationVersion(kubernetesAppId, 'v1.0.1', {
   chartName: 'my-chart',
   chartVersion: '1.0.1',

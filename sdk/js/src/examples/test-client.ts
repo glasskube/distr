@@ -1,5 +1,5 @@
 import {Client} from '../index';
-import {clientConfig} from './helper';
+import {clientConfig} from './config';
 
 const client = new Client(clientConfig);
 
