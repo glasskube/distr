@@ -29,6 +29,7 @@ func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {
 			emailVerified:  at.UserAccount.EmailVerifiedAt != nil,
 			organizationID: &org.ID,
 			userRole:       &org.UserRole,
+			rawToken:       token,
 		}, nil
 	}
 }

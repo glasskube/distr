@@ -1,8 +1,12 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/glasskube/cloud/internal/authkey"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -91,7 +95,14 @@ func RateLimitCurrentUserIdKeyFunc(r *http.Request) (string, error) {
 	if auth, err := auth.Authentication.Get(r.Context()); err != nil {
 		return "", err
 	} else {
-		return auth.CurrentUserID(), nil
+		prefix := ""
+		switch auth.RawToken().(type) {
+		case jwt.Token:
+			prefix = "jwt"
+		case authkey.Key:
+			prefix = "authkey"
+		}
+		return fmt.Sprintf("%v-%v", prefix, auth.CurrentUserID()), nil
 	}
 }
 

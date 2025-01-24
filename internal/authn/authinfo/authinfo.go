@@ -8,4 +8,5 @@ type AuthInfo interface {
 	CurrentUserRole() *types.UserRole
 	CurrentOrgID() *string
 	CurrentUserEmailVerified() bool
+	RawToken() any
 }
