@@ -26,6 +26,7 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 		chimiddleware.RequestSize(1048576),
 	)
 	router.Mount("/api", ApiRouter(logger, db, mailer))
+	router.Mount("/internal", InternalRouter())
 	router.Mount("/", FrontendRouter())
 	return router
 }
@@ -72,6 +73,12 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 	})
 
 	return r
+}
+
+func InternalRouter() http.Handler {
+	router := chi.NewRouter()
+	router.Route("/", handlers.InternalRouter)
+	return router
 }
 
 func FrontendRouter() http.Handler {
