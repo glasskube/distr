@@ -5,6 +5,7 @@ import {
   DeploymentTarget,
   DeploymentTargetAccessResponse,
 } from '../types';
+import {ConditionalPartial, defaultClientConfig} from './config';
 
 export type ClientConfig = {
   apiBase: string;
@@ -17,15 +18,14 @@ export type ApplicationVersionFiles = {
   templateFile?: string;
 };
 
-const defaultClientConfig = {apiBase: 'https://app.glasskube.cloud/api/v1/'};
-
-type ConditionalPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
 export class Client {
   private readonly config: ClientConfig;
 
   constructor(config: ConditionalPartial<ClientConfig, keyof typeof defaultClientConfig>) {
     this.config = {...defaultClientConfig, ...config};
+    if (!this.config.apiBase.endsWith('/')) {
+      this.config.apiBase += '/';
+    }
   }
 
   public async getApplications(): Promise<Application[]> {
@@ -61,7 +61,7 @@ export class Client {
       formData.append('templatefile', new Blob([files.templateFile], {type: 'application/yaml'}));
     }
     const path = `applications/${applicationId}/versions`;
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
+    const response = await fetch(`${this.config.apiBase}${path}`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -93,7 +93,7 @@ export class Client {
   }
 
   private async get<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
+    const response = await fetch(`${this.config.apiBase}${path}`, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -104,7 +104,7 @@ export class Client {
   }
 
   private async post<T>(path: string, body?: T): Promise<T> {
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
+    const response = await fetch(`${this.config.apiBase}${path}`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -117,7 +117,7 @@ export class Client {
   }
 
   private async put<T>(path: string, body: T): Promise<T> {
-    const response = await fetch(`${this.config.apiBase}/${path}`, {
+    const response = await fetch(`${this.config.apiBase}${path}`, {
       method: 'PUT',
       headers: {
         Accept: 'application/json',

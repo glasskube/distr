@@ -9,6 +9,7 @@ import {
   HelmChartType,
 } from '../types';
 import semver from 'semver/preload';
+import {ConditionalPartial, defaultClientConfig} from './config';
 
 export type LatestVersionStrategy = 'semver' | 'chronological';
 
@@ -58,14 +59,14 @@ export class CloudService {
    * Creates a new CloudService instance, which provides a higher-level API for the cloud backend. A client config
    * containing the API base URL and an API key must be provided. Optionally, a strategy for determining the latest
    * version of an application can be specified – the default is semantic versioning.
-   * @param clientConfig
+   * @param config
    * @param latestVersionStrategy
    */
   constructor(
-    clientConfig: ClientConfig,
+    config: ConditionalPartial<ClientConfig, keyof typeof defaultClientConfig>,
     private readonly latestVersionStrategy: LatestVersionStrategy = 'semver'
   ) {
-    this.client = new Client(clientConfig);
+    this.client = new Client(config);
   }
 
   public async createDockerApplicationVersion(
