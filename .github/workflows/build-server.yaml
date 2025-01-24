@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 name: Build server
 
 on:
@@ -11,6 +13,7 @@ on:
 jobs:
   build:
     name: Build
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

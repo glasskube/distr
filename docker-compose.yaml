@@ -1,4 +1,4 @@
-name: cloud
+name: cloud-dev
 
 services:
   postgres:
