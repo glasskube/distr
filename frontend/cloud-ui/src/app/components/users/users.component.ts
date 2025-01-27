@@ -25,8 +25,8 @@ import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
-import {UserAccount, UserAccountWithRole, UserRole} from '../../types/user-account';
 import {UuidComponent} from '../uuid';
+import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-users',

@@ -8,7 +8,7 @@ import {faEllipsis} from '@fortawesome/free-solid-svg-icons';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../../../animations/dropdown';
 import {AsyncPipe} from '@angular/common';
-import {DeploymentTarget} from '../../../types/deployment-target';
+import {DeploymentTarget} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-chart-uptime',

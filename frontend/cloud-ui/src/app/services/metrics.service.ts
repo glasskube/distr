@@ -1,8 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import {UserAccount} from '../types/user-account';
-import {UptimeMetric} from '../types/uptime';
+import {UptimeMetric} from '@glasskube/cloud-sdk';
 
 @Injectable({providedIn: 'root'})
 export class MetricsService {

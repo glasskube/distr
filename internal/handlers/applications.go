@@ -196,7 +196,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 
 	if err := applicationVersion.Validate(application.Type); err != nil {
 		log.Error("invalid application version", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

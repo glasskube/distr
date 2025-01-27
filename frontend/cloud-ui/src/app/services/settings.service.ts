@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {UserAccount} from '../types/user-account';
+import {UserAccount} from '@glasskube/cloud-sdk';
 
 @Injectable({providedIn: 'root'})
 export class SettingsService {
