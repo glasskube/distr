@@ -1,12 +1,12 @@
 [**@glasskube/distr-sdk**](../README.md)
 
-***
+---
 
 [@glasskube/distr-sdk](../README.md) / UserAccountWithRole
 
 # Interface: UserAccountWithRole
 
-Defined in: [types/user-account.ts:10](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L10)
+Defined in: [types/user-account.ts:10](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L10)
 
 ## Extends
 
@@ -18,52 +18,52 @@ Defined in: [types/user-account.ts:10](https://github.com/glasskube/distr/blob/1
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L3)
+Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
 [`UserAccount`](UserAccount.md).[`createdAt`](UserAccount.md#createdat)
 
-***
+---
 
 ### email
 
 > **email**: `string`
 
-Defined in: [types/user-account.ts:6](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L6)
+Defined in: [types/user-account.ts:6](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L6)
 
 #### Inherited from
 
 [`UserAccount`](UserAccount.md).[`email`](UserAccount.md#email)
 
-***
+---
 
 ### id?
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L2)
+Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
 [`UserAccount`](UserAccount.md).[`id`](UserAccount.md#id)
 
-***
+---
 
 ### name?
 
 > `optional` **name**: `string`
 
-Defined in: [types/user-account.ts:7](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L7)
+Defined in: [types/user-account.ts:7](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L7)
 
 #### Inherited from
 
 [`UserAccount`](UserAccount.md).[`name`](UserAccount.md#name)
 
-***
+---
 
 ### userRole
 
 > **userRole**: [`UserRole`](../type-aliases/UserRole.md)
 
-Defined in: [types/user-account.ts:11](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L11)
+Defined in: [types/user-account.ts:11](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L11)

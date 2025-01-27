@@ -1,6 +1,6 @@
 **@glasskube/distr-sdk**
 
-***
+---
 
 # @glasskube/distr-sdk
 

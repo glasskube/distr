@@ -1,6 +1,6 @@
 [**@glasskube/distr-sdk**](../README.md)
 
-***
+---
 
 [@glasskube/distr-sdk](../README.md) / IsOutdatedResult
 
@@ -8,7 +8,7 @@
 
 > **IsOutdatedResult**: `object`
 
-Defined in: [client/service.ts:48](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L48)
+Defined in: [client/service.ts:48](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/service.ts#L48)
 
 ## Type declaration
 
