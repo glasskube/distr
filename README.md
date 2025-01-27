@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://distr.sh/" target="_blank">
-    <img alt="" src="frontend/ui/public/glasskube-logo.svg" style="height: 5em;">
+    <img alt="" src="frontend/ui/public/distr-logo.svg" style="height: 5em;">
   </a>
   <br>
   distr.sh
@@ -50,7 +50,7 @@ To get started quickly, do the following:
 <!-- x-release-please-start-version -->
 
 ```shell
-mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/0.12.0/deploy-docker.tar.bz2 | tar -jx
+mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/0.13.1/deploy-docker.tar.bz2 | tar -jx
 # make necessary changes to the .env file
 docker-compose up -d
 ```
