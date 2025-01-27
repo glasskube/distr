@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.13.0](https://github.com/glasskube/distr/compare/0.12.0...0.13.0) (2025-01-27)
+
+
+### Features
+
+* api token authentication ([#333](https://github.com/glasskube/distr/issues/333)) ([95ff8d0](https://github.com/glasskube/distr/commit/95ff8d08e70225aa39fa6eb5eecffcbc03ac43e2))
+* **js-sdk:** add initial version of the JavaScript SDK ([#329](https://github.com/glasskube/distr/issues/329)) ([a0c9b07](https://github.com/glasskube/distr/commit/a0c9b07ac66073fff794011076a6a521c21245fc))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.1.3 ([#343](https://github.com/glasskube/distr/issues/343)) ([b48d68d](https://github.com/glasskube/distr/commit/b48d68d91c4bd9c01a5686d2520ff514d50b9d7a))
+* **deps:** update aws-sdk-go-v2 monorepo ([#358](https://github.com/glasskube/distr/issues/358)) ([0568a82](https://github.com/glasskube/distr/commit/0568a823461ef4d2a1870db44d854102e1dcd301))
+* **deps:** update dependency @angular/cdk to v19.1.1 ([#341](https://github.com/glasskube/distr/issues/341)) ([a505618](https://github.com/glasskube/distr/commit/a50561810801330a0f5fbcad40fdac3f85f0eb00))
+* **deps:** update dependency @sentry/angular to v8.51.0 ([#342](https://github.com/glasskube/distr/issues/342)) ([4a67853](https://github.com/glasskube/distr/commit/4a67853f9a6dbc35b10b53dd0c267e8fdf63547d))
+* **deps:** update dependency apexcharts to v4.4.0 ([#336](https://github.com/glasskube/distr/issues/336)) ([ec7af06](https://github.com/glasskube/distr/commit/ec7af0678375d551f2ec69ac84f13ff7e7d1845a))
+* **deps:** update dependency globe.gl to v2.39.2 ([#344](https://github.com/glasskube/distr/issues/344)) ([93a7a79](https://github.com/glasskube/distr/commit/93a7a7961abea98e8148f2c5af604d2d9496bd84))
+* **deps:** update dependency posthog-js to v1.207.8 ([#340](https://github.com/glasskube/distr/issues/340)) ([b25ae79](https://github.com/glasskube/distr/commit/b25ae791533b728931cc62be862f8cf37b9d627e))
+* **deps:** update dependency posthog-js to v1.209.0 ([#352](https://github.com/glasskube/distr/issues/352)) ([12dcb72](https://github.com/glasskube/distr/commit/12dcb720d038f6184000111354c102d2b3bd4721))
+* **deps:** update dependency posthog-js to v1.210.2 ([#357](https://github.com/glasskube/distr/issues/357)) ([3cdd140](https://github.com/glasskube/distr/commit/3cdd140ed5951d66cd1d941ada10f1c601c1ad00))
+* **deps:** update module github.com/golang-migrate/migrate/v4 to v4.18.2 ([#360](https://github.com/glasskube/distr/issues/360)) ([0f96a60](https://github.com/glasskube/distr/commit/0f96a607a45090f29a09014f5df380777e21b712))
+* **ui:** customers can create api tokens too ([#349](https://github.com/glasskube/distr/issues/349)) ([ffb8cdb](https://github.com/glasskube/distr/commit/ffb8cdbcf319ffd3ea73c96451baeacb5e40697c))
+
+
+### Other
+
+* add deploy compose file to release please extra files ([#361](https://github.com/glasskube/distr/issues/361)) ([80de58e](https://github.com/glasskube/distr/commit/80de58e6e72221ca696881996e5ae90ce94cd9cf))
+* add docker compose deployment option ([#338](https://github.com/glasskube/distr/issues/338)) ([cf30e4b](https://github.com/glasskube/distr/commit/cf30e4b975750359f61b341c95d60498dbcb5ffd))
+* add LICENSE ([#363](https://github.com/glasskube/distr/issues/363)) ([476f567](https://github.com/glasskube/distr/commit/476f5674caa2112d81e22d6f08f74a77bd2f32a7))
+* additional api request limits ([#355](https://github.com/glasskube/distr/issues/355)) ([43be173](https://github.com/glasskube/distr/commit/43be173aa65fa5c60d29c27c1b1244b25ae6558e))
+* change agent secret encoding from base64 to hex ([#350](https://github.com/glasskube/distr/issues/350)) ([2907357](https://github.com/glasskube/distr/commit/29073576ef5ad7e412e541aa116bf0c912e5188e))
+* **deps:** update actions/setup-node digest to 1d0ff46 ([#362](https://github.com/glasskube/distr/issues/362)) ([f3c28b4](https://github.com/glasskube/distr/commit/f3c28b4143acac92a6c63afd335c4ec933f1c280))
+* **deps:** update angular-cli monorepo to v19.1.4 ([#345](https://github.com/glasskube/distr/issues/345)) ([db9e885](https://github.com/glasskube/distr/commit/db9e8851bf48d461bbb092e7f5e68e4b2c186b1b))
+* **deps:** update axllent/mailpit docker tag to v1.22.0 ([#359](https://github.com/glasskube/distr/issues/359)) ([49fd374](https://github.com/glasskube/distr/commit/49fd3742557baee91ff73aeb9fbd55a7ef1371bf))
+* **deps:** update docker/build-push-action action to v6.13.0 ([#356](https://github.com/glasskube/distr/issues/356)) ([0d8ac4e](https://github.com/glasskube/distr/commit/0d8ac4e8d325356d26528b660b221f786bf97a89))
+* fix logo in readme ([#367](https://github.com/glasskube/distr/issues/367)) ([2226916](https://github.com/glasskube/distr/commit/22269166cb5b26a4f2cb40eca58eaad89c990ff8))
+* rebrand to distr.sh ([#365](https://github.com/glasskube/distr/issues/365)) ([c614f1a](https://github.com/glasskube/distr/commit/c614f1a2529e2809e4effab5a528eb2af423fb20))
+* remove hardcoded sentry dsn and posthog token ([#351](https://github.com/glasskube/distr/issues/351)) ([1ed34c7](https://github.com/glasskube/distr/commit/1ed34c7191c14c71cd381f0393cfbd93a9eedf2c))
+* remove token logging ([#339](https://github.com/glasskube/distr/issues/339)) ([7715f25](https://github.com/glasskube/distr/commit/7715f255c33fe233d486dcefe71918217c8f0667))
+* remove version distribution chart ([#364](https://github.com/glasskube/distr/issues/364)) ([be0a0c0](https://github.com/glasskube/distr/commit/be0a0c078a351b6798faf363e4c8781ea51f49ca))
+
+
+### Docs
+
+* update README.md ([#347](https://github.com/glasskube/distr/issues/347)) ([91e7ae1](https://github.com/glasskube/distr/commit/91e7ae1a000005485140006b7f9f50fb4c55210d))
+
 ## [0.12.0](https://github.com/glasskube/cloud/compare/0.11.0...0.12.0) (2025-01-22)
 
 
