@@ -13,12 +13,16 @@ import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentService} from '../../services/deployment.service';
 import {ToastService} from '../../services/toast.service';
-import {Application} from '../../types/application';
-import {DeploymentRequest, DeploymentTargetScope, DeploymentType} from '../../types/deployment';
-import {DeploymentTarget} from '../../types/deployment-target';
 import {YamlEditorComponent} from '../yaml-editor.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {
+  Application,
+  DeploymentRequest,
+  DeploymentTarget,
+  DeploymentTargetScope,
+  DeploymentType,
+} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-installation-wizard',

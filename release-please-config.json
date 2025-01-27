@@ -14,6 +14,11 @@
           "type": "json",
           "path": "package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "sdk/ts/package.json",
+          "jsonpath": "$.version"
         }
       ],
       "changelog-sections": [

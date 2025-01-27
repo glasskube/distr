@@ -2,7 +2,7 @@ import {Component, inject, OnDestroy} from '@angular/core';
 import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
 import {Subject, takeUntil} from 'rxjs';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
-import {UserAccountWithRole} from '../../../types/user-account';
+import {UserAccountWithRole} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-chart-type',

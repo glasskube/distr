@@ -2,9 +2,8 @@ import {HttpClient, HttpErrorResponse, HttpInterceptorFn} from '@angular/common/
 import {inject, Injectable} from '@angular/core';
 import {jwtDecode} from 'jwt-decode';
 import {map, Observable, of, tap, throwError} from 'rxjs';
-import {TokenResponse} from '../types/base';
 import dayjs from 'dayjs';
-import {UserRole} from '../types/user-account';
+import {TokenResponse, UserRole} from '@glasskube/cloud-sdk';
 
 const tokenStorageKey = 'cloud_token';
 

@@ -20,9 +20,9 @@ import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
-import {UserRole} from './types/user-account';
 import {VerifyComponent} from './verify/verify.component';
 import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
+import {UserRole} from '@glasskube/cloud-sdk';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {

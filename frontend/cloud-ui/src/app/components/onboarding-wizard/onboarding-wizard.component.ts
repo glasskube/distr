@@ -1,5 +1,5 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
-import {Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -10,9 +10,6 @@ import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentService} from '../../services/deployment.service';
 import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
-import {Application, ApplicationVersion} from '../../types/application';
-import {DeploymentRequest, DeploymentTargetScope, DeploymentType, HelmChartType} from '../../types/deployment';
-import {DeploymentTarget} from '../../types/deployment-target';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
@@ -20,6 +17,15 @@ import {ToastService} from '../../services/toast.service';
 import {getFormDisplayedError} from '../../../util/errors';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {YamlEditorComponent} from '../yaml-editor.component';
+import {
+  Application,
+  ApplicationVersion,
+  DeploymentRequest,
+  DeploymentTarget,
+  DeploymentTargetScope,
+  DeploymentType,
+  HelmChartType,
+} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-onboarding-wizard',
