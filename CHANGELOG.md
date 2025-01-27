@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/glasskube/distr/compare/0.13.0...0.13.1) (2025-01-27)
+
+
+### Other
+
+* force new release (no changes) ([826983a](https://github.com/glasskube/distr/commit/826983a716eed866c8eb6a39fda07e421a53a589))
+
 ## [0.13.0](https://github.com/glasskube/distr/compare/0.12.0...0.13.0) (2025-01-27)
 
 
