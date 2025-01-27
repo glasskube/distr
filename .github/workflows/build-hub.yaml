@@ -5,9 +5,9 @@ name: Build Hub
 on:
   push:
     branches:
-      - "main"
+      - 'main'
     tags:
-      - "*"
+      - '*'
   pull_request:
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
-          CGO_ENABLED: "0"
+          CGO_ENABLED: '0'
           LDFLAGS: >-
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
