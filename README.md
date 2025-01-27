@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://distr.sh/" target="_blank">
-    <img alt="" src="frontend/ui/public/glasskube-logo.svg" style="height: 5em;">
+    <img alt="" src="frontend/ui/public/distr-logo.svg" style="height: 5em;">
   </a>
   <br>
   distr.sh
