@@ -96,7 +96,7 @@ func RateLimitCurrentUserIdKeyFunc(r *http.Request) (string, error) {
 		return "", err
 	} else {
 		prefix := ""
-		switch auth.RawToken().(type) {
+		switch auth.Token().(type) {
 		case jwt.Token:
 			prefix = "jwt"
 		case authkey.Key:

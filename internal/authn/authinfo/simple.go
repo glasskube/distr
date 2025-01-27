@@ -26,5 +26,5 @@ func (i *SimpleAuthInfo) CurrentUserEmail() string { return i.userEmail }
 // CurrentUserRole implements AuthInfo.
 func (i *SimpleAuthInfo) CurrentUserRole() *types.UserRole { return i.userRole }
 
-// RawToken implements AuthInfo.
-func (i *SimpleAuthInfo) RawToken() any { return i.rawToken }
+// Token implements AuthInfo.
+func (i *SimpleAuthInfo) Token() any { return i.rawToken }
