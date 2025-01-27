@@ -343,7 +343,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   private getDeploymentTargetForSubmit(): DeploymentTarget {
     return {
-      name: this.deploymentTargetForm.value.customerName! + ' (staging)',
+      name: this.deploymentTargetForm.value.customerName!,
       type: this.app!.type,
       namespace: this.deploymentTargetForm.value.namespace,
       geolocation: {
