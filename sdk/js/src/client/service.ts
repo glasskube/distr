@@ -132,6 +132,7 @@ export class DistrService {
    * * If deployment type is 'kubernetes', the namespace and scope must be provided.
    * * If deployment type is 'kubernetes', the helm release name and values YAML can be provided.
    * * If no application version ID is given, the latest version of the application will be deployed.
+   * test
    * @param params
    */
   public async createDeployment(params: CreateDeploymentParams): Promise<CreateDeploymentResult> {
