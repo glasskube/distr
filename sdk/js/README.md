@@ -17,7 +17,7 @@ Optionally, you can specify the URL of the Distr API you want to communicate wit
 import { DistrService } from '@glasskube/distr-sdk';
 const service = new DistrService({
     // to use your selfhosted instance, set apiBase: 'https://selfhosted-instance.company/api/v1',
-    apiKey: '<your-personal-access-token-here'
+    apiKey: '<your-personal-access-token-here>'
 });
 // do something with the service
 ```
