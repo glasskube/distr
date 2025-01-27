@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, inject, TemplateRef, ViewChild} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, first} from 'rxjs';

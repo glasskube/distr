@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable, switchMap, timer} from 'rxjs';
-import {Deployment, DeploymentRequest, DeploymentRevisionStatus} from '../types/deployment';
+import {Deployment, DeploymentRequest, DeploymentRevisionStatus} from '@glasskube/cloud-sdk';
 
 @Injectable({
   providedIn: 'root',

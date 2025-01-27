@@ -1,7 +1,7 @@
 import {NgClass} from '@angular/common';
 import {Component, Input} from '@angular/core';
 import {isStale} from '../../util/model';
-import {DeploymentTarget} from '../types/deployment-target';
+import {DeploymentTarget} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-status-dot',

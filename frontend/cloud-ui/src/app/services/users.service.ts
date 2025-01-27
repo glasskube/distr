@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {UserAccount, UserAccountWithRole, UserRole} from '../types/user-account';
+import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/cloud-sdk';
 
 export interface CreateUserAccountRequest {
   email: string;

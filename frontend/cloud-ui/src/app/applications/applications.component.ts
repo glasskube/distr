@@ -11,13 +11,12 @@ import {modalFlyInOut} from '../animations/modal';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {Application, ApplicationVersion} from '../types/application';
 import {filteredByFormControl} from '../../util/filter';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
-import {DeploymentType, HelmChartType} from '../types/deployment';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {Application, ApplicationVersion, DeploymentType, HelmChartType} from '@glasskube/cloud-sdk';
 import {UuidComponent} from '../components/uuid';
 import {RequireRoleDirective} from '../directives/required-role.directive';
 
@@ -30,10 +29,10 @@ import {RequireRoleDirective} from '../directives/required-role.directive';
     FaIconComponent,
     NgOptimizedImage,
     OverlayModule,
-    RequireRoleDirective,
     AutotrimDirective,
     YamlEditorComponent,
     UuidComponent,
+    RequireRoleDirective,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],

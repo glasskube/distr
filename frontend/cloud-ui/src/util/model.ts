@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
-import {BaseModel} from '../app/types/base';
 import {isOlderThan} from './dates';
 import {Pipe, PipeTransform} from '@angular/core';
 import {Duration} from 'dayjs/plugin/duration';
+import {BaseModel} from '@glasskube/cloud-sdk';
 
 export function isStale(model: BaseModel, duration: Duration = dayjs.duration({seconds: 10})): boolean {
   return isOlderThan(model.createdAt, duration);

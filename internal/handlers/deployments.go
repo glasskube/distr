@@ -107,6 +107,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
+			RespondJSON(w, make(map[string]any))
 			// TODO might need to send a proper deployment object back, but not sure yet what it looks like
 			return nil
 		}

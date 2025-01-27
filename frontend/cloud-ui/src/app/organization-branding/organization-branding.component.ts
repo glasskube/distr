@@ -4,13 +4,13 @@ import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {OrganizationBrandingService} from '../services/organization-branding.service';
 import {lastValueFrom, map, Observable} from 'rxjs';
-import {OrganizationBranding} from '../types/organization-branding';
 import {HttpErrorResponse} from '@angular/common/http';
 import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {AsyncPipe} from '@angular/common';
 import {base64ToBlob} from '../../util/blob';
 import {AutotrimDirective} from '../directives/autotrim.directive';
+import {OrganizationBranding} from '@glasskube/cloud-sdk';
 
 @Component({
   selector: 'app-organization-branding',
