@@ -13,6 +13,7 @@ import (
 func FromJWT(token jwt.Token) (*SimpleAuthInfo, error) {
 	var result SimpleAuthInfo
 	result.userID = token.Subject()
+	result.rawToken = token
 	if userEmail, ok := token.Get(authjwt.UserEmailKey); ok {
 		result.userEmail = userEmail.(string)
 	}

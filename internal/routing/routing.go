@@ -2,6 +2,9 @@ package routing
 
 import (
 	"net/http"
+	"time"
+
+	"github.com/go-chi/httprate"
 
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/frontend"
@@ -49,6 +52,9 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			r.Use(
 				middleware.SentryUser,
 				auth.Authentication.Middleware,
+				httprate.Limit(5, 1*time.Second, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
+				httprate.Limit(60, 1*time.Minute, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
+				httprate.Limit(2000, 1*time.Hour, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)

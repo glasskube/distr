@@ -3,6 +3,9 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
+
+	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -23,7 +26,7 @@ import (
 func SettingsRouter(r chi.Router) {
 	r.Post("/user", userSettingsUpdateHandler)
 	r.Route("/verify", func(r chi.Router) {
-		r.With(middleware.RateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
+		r.With(requestVerificationMailRateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
 	})
 	r.Route("/tokens", func(r chi.Router) {
@@ -177,3 +180,9 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 		}
 	}
 }
+
+var requestVerificationMailRateLimitPerUser = httprate.Limit(
+	3,
+	10*time.Minute,
+	httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc),
+)
