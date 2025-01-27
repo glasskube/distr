@@ -17,7 +17,7 @@
         },
         {
           "type": "json",
-          "path": "sdk/ts/package.json",
+          "path": "sdk/js/package.json",
           "jsonpath": "$.version"
         }
       ],
