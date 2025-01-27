@@ -6,8 +6,6 @@
 
 # Interface: Application
 
-Defined in: [types/application.ts:4](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/application.ts#L4)
-
 ## Extends
 
 - [`BaseModel`](BaseModel.md).[`Named`](Named.md)
@@ -17,8 +15,6 @@ Defined in: [types/application.ts:4](https://github.com/glasskube/distr/blob/6a3
 ### createdAt?
 
 > `optional` **createdAt**: `string`
-
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,8 +26,6 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L2)
-
 #### Inherited from
 
 [`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
@@ -41,8 +35,6 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6
 ### name?
 
 > `optional` **name**: `string`
-
-Defined in: [types/base.ts:7](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L7)
 
 #### Inherited from
 
@@ -54,12 +46,8 @@ Defined in: [types/base.ts:7](https://github.com/glasskube/distr/blob/6a35007de6
 
 > **type**: [`DeploymentType`](../type-aliases/DeploymentType.md)
 
-Defined in: [types/application.ts:5](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/application.ts#L5)
-
 ---
 
 ### versions?
 
 > `optional` **versions**: [`ApplicationVersion`](ApplicationVersion.md)[]
-
-Defined in: [types/application.ts:6](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/application.ts#L6)

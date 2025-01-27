@@ -6,8 +6,6 @@
 
 # Interface: UserAccount
 
-Defined in: [types/user-account.ts:5](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L5)
-
 ## Extends
 
 - [`BaseModel`](BaseModel.md)
@@ -22,8 +20,6 @@ Defined in: [types/user-account.ts:5](https://github.com/glasskube/distr/blob/6a
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L3)
-
 #### Inherited from
 
 [`BaseModel`](BaseModel.md).[`createdAt`](BaseModel.md#createdat)
@@ -34,15 +30,11 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6
 
 > **email**: `string`
 
-Defined in: [types/user-account.ts:6](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L6)
-
 ---
 
 ### id?
 
 > `optional` **id**: `string`
-
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -53,5 +45,3 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6
 ### name?
 
 > `optional` **name**: `string`
-
-Defined in: [types/user-account.ts:7](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/user-account.ts#L7)

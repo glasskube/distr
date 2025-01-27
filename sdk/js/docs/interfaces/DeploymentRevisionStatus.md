@@ -6,8 +6,6 @@
 
 # Interface: DeploymentRevisionStatus
 
-Defined in: [types/deployment.ts:28](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/deployment.ts#L28)
-
 ## Extends
 
 - [`BaseModel`](BaseModel.md)
@@ -17,8 +15,6 @@ Defined in: [types/deployment.ts:28](https://github.com/glasskube/distr/blob/6a3
 ### createdAt?
 
 > `optional` **createdAt**: `string`
-
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,8 +26,6 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L2)
-
 #### Inherited from
 
 [`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
@@ -42,12 +36,8 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6
 
 > **message**: `string`
 
-Defined in: [types/deployment.ts:30](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/deployment.ts#L30)
-
 ---
 
 ### type
 
 > **type**: [`DeploymentStatusType`](../type-aliases/DeploymentStatusType.md)
-
-Defined in: [types/deployment.ts:29](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/deployment.ts#L29)

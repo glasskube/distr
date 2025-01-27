@@ -6,8 +6,6 @@
 
 # Interface: OrganizationBranding
 
-Defined in: [types/organization-branding.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/organization-branding.ts#L3)
-
 ## Extends
 
 - [`BaseModel`](BaseModel.md)
@@ -17,8 +15,6 @@ Defined in: [types/organization-branding.ts:3](https://github.com/glasskube/dist
 ### createdAt?
 
 > `optional` **createdAt**: `string`
-
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,15 +26,11 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6
 
 > `optional` **description**: `string`
 
-Defined in: [types/organization-branding.ts:5](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/organization-branding.ts#L5)
-
 ---
 
 ### id?
 
 > `optional` **id**: `string`
-
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -50,15 +42,11 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6
 
 > `optional` **logo**: `string`
 
-Defined in: [types/organization-branding.ts:6](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/organization-branding.ts#L6)
-
 ---
 
 ### logoContentType?
 
 > `optional` **logoContentType**: `string`
-
-Defined in: [types/organization-branding.ts:8](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/organization-branding.ts#L8)
 
 ---
 
@@ -66,12 +54,8 @@ Defined in: [types/organization-branding.ts:8](https://github.com/glasskube/dist
 
 > `optional` **logoFileName**: `string`
 
-Defined in: [types/organization-branding.ts:7](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/organization-branding.ts#L7)
-
 ---
 
 ### title?
 
 > `optional` **title**: `string`
-
-Defined in: [types/organization-branding.ts:4](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/organization-branding.ts#L4)

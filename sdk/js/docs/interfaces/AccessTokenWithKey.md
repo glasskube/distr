@@ -6,8 +6,6 @@
 
 # Interface: AccessTokenWithKey
 
-Defined in: [types/access-token.ts:9](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/access-token.ts#L9)
-
 ## Extends
 
 - [`AccessToken`](AccessToken.md)
@@ -17,8 +15,6 @@ Defined in: [types/access-token.ts:9](https://github.com/glasskube/distr/blob/6a
 ### createdAt?
 
 > `optional` **createdAt**: `string`
-
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,8 +26,6 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/6a35007de6
 
 > `optional` **expiresAt**: `string`
 
-Defined in: [types/access-token.ts:4](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/access-token.ts#L4)
-
 #### Inherited from
 
 [`AccessToken`](AccessToken.md).[`expiresAt`](AccessToken.md#expiresat)
@@ -41,8 +35,6 @@ Defined in: [types/access-token.ts:4](https://github.com/glasskube/distr/blob/6a
 ### id?
 
 > `optional` **id**: `string`
-
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -54,15 +46,11 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/6a35007de6
 
 > **key**: `string`
 
-Defined in: [types/access-token.ts:10](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/access-token.ts#L10)
-
 ---
 
 ### label?
 
 > `optional` **label**: `string`
-
-Defined in: [types/access-token.ts:6](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/access-token.ts#L6)
 
 #### Inherited from
 
@@ -73,8 +61,6 @@ Defined in: [types/access-token.ts:6](https://github.com/glasskube/distr/blob/6a
 ### lastUsedAt?
 
 > `optional` **lastUsedAt**: `string`
-
-Defined in: [types/access-token.ts:5](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/types/access-token.ts#L5)
 
 #### Inherited from
 

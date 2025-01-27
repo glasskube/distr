@@ -6,15 +6,11 @@
 
 # Class: Client
 
-Defined in: [client/client.ts:21](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L21)
-
 ## Constructors
 
 ### new Client()
 
 > **new Client**(`config`): [`Client`](Client.md)
-
-Defined in: [client/client.ts:24](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L24)
 
 #### Parameters
 
@@ -32,8 +28,6 @@ Defined in: [client/client.ts:24](https://github.com/glasskube/distr/blob/6a3500
 
 > **createAccessForDeploymentTarget**(`deploymentTargetId`): `Promise`\<[`DeploymentTargetAccessResponse`](../interfaces/DeploymentTargetAccessResponse.md)\>
 
-Defined in: [client/client.ts:91](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L91)
-
 #### Parameters
 
 ##### deploymentTargetId
@@ -50,8 +44,6 @@ Defined in: [client/client.ts:91](https://github.com/glasskube/distr/blob/6a3500
 
 > **createApplication**(`application`): `Promise`\<[`Application`](../interfaces/Application.md)\>
 
-Defined in: [client/client.ts:39](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L39)
-
 #### Parameters
 
 ##### application
@@ -67,8 +59,6 @@ Defined in: [client/client.ts:39](https://github.com/glasskube/distr/blob/6a3500
 ### createApplicationVersion()
 
 > **createApplicationVersion**(`applicationId`, `version`, `files`?): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
-
-Defined in: [client/client.ts:47](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L47)
 
 #### Parameters
 
@@ -94,8 +84,6 @@ Defined in: [client/client.ts:47](https://github.com/glasskube/distr/blob/6a3500
 
 > **createDeploymentTarget**(`deploymentTarget`): `Promise`\<[`DeploymentTarget`](../interfaces/DeploymentTarget.md)\>
 
-Defined in: [client/client.ts:83](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L83)
-
 #### Parameters
 
 ##### deploymentTarget
@@ -111,8 +99,6 @@ Defined in: [client/client.ts:83](https://github.com/glasskube/distr/blob/6a3500
 ### createOrUpdateDeployment()
 
 > **createOrUpdateDeployment**(`deploymentRequest`): `Promise`\<[`DeploymentRequest`](../interfaces/DeploymentRequest.md)\>
-
-Defined in: [client/client.ts:87](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L87)
 
 #### Parameters
 
@@ -130,8 +116,6 @@ Defined in: [client/client.ts:87](https://github.com/glasskube/distr/blob/6a3500
 
 > **getApplication**(`applicationId`): `Promise`\<[`Application`](../interfaces/Application.md)\>
 
-Defined in: [client/client.ts:35](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L35)
-
 #### Parameters
 
 ##### applicationId
@@ -148,8 +132,6 @@ Defined in: [client/client.ts:35](https://github.com/glasskube/distr/blob/6a3500
 
 > **getApplications**(): `Promise`\<[`Application`](../interfaces/Application.md)[]\>
 
-Defined in: [client/client.ts:31](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L31)
-
 #### Returns
 
 `Promise`\<[`Application`](../interfaces/Application.md)[]\>
@@ -159,8 +141,6 @@ Defined in: [client/client.ts:31](https://github.com/glasskube/distr/blob/6a3500
 ### getDeploymentTarget()
 
 > **getDeploymentTarget**(`deploymentTargetId`): `Promise`\<[`DeploymentTarget`](../interfaces/DeploymentTarget.md)\>
-
-Defined in: [client/client.ts:79](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L79)
 
 #### Parameters
 
@@ -178,8 +158,6 @@ Defined in: [client/client.ts:79](https://github.com/glasskube/distr/blob/6a3500
 
 > **getDeploymentTargets**(): `Promise`\<[`DeploymentTarget`](../interfaces/DeploymentTarget.md)[]\>
 
-Defined in: [client/client.ts:75](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L75)
-
 #### Returns
 
 `Promise`\<[`DeploymentTarget`](../interfaces/DeploymentTarget.md)[]\>
@@ -189,8 +167,6 @@ Defined in: [client/client.ts:75](https://github.com/glasskube/distr/blob/6a3500
 ### updateApplication()
 
 > **updateApplication**(`application`): `Promise`\<[`Application`](../interfaces/Application.md)\>
-
-Defined in: [client/client.ts:43](https://github.com/glasskube/distr/blob/6a35007de6a2b1a70636ce4347f91486536bfef5/sdk/js/src/client/client.ts#L43)
 
 #### Parameters
 
