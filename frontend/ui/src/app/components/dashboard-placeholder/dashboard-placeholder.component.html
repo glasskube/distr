@@ -1,0 +1,49 @@
+<div class="p-4 sm:ml-64 bg-gray-50 dark:bg-gray-900">
+  <div class="p-4">
+    @if ((deploymentTargets$ | async)?.length === 0 || (users$ | async)?.length === 0) {
+      <div
+        class="p-4 mb-4 text-sm text-blue-800 max-w-128 mx-auto rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+        role="alert">
+        Click <a class="cursor-pointer underline" (click)="openWizard()">here</a> to continue with the onboarding
+        wizard.
+      </div>
+    }
+    <div class="grid grid-cols-3 mb-4 gap-4 h-60">
+      <div class="flex items-center justify-center rounded bg-white dark:bg-gray-800">
+        <app-chart-type class="block max-w-full max-h-full"></app-chart-type>
+      </div>
+      <div class="flex items-center justify-center rounded bg-white dark:bg-gray-800">
+        <app-chart-uptime class="block max-w-full max-h-full"></app-chart-uptime>
+      </div>
+      <div class="flex items-center justify-center rounded bg-white dark:bg-gray-800">
+        <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">Nothing to display right now.</p>
+      </div>
+    </div>
+    <div class="grid grid-rows-2 grid-flow-col gap-4 mb-4 h-144">
+      <div
+        class="row-span-2 flex justify-stretch items-stretch h-full rounded bg-white dark:bg-gray-800 overflow-hidden">
+        <app-globe
+          [deploymentTargets]="(deploymentTargets$ | async) ?? []"
+          class="flex-1 flex items-center justify-center"></app-globe>
+      </div>
+
+      <div class="rounded overflow-y-auto">
+        <app-applications [fullVersion]="false"></app-applications>
+      </div>
+
+      <div class="rounded overflow-y-auto">
+        <app-deployment-targets [fullVersion]="false"></app-deployment-targets>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center h-48 mb-4 rounded bg-white dark:bg-gray-800">
+      <p class="text-2xl text-gray-400 dark:text-gray-500">
+        <fa-icon [icon]="faPlus" size="xs" class="w-3.5 h-3.5"></fa-icon>
+      </p>
+    </div>
+  </div>
+</div>
+
+<ng-template #onboardingWizard>
+  <app-onboarding-wizard (closed)="closeWizard()"></app-onboarding-wizard>
+</ng-template>

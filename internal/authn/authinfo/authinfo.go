@@ -1,6 +1,6 @@
 package authinfo
 
-import "github.com/glasskube/cloud/internal/types"
+import "github.com/glasskube/distr/internal/types"
 
 type AuthInfo interface {
 	CurrentUserID() string
@@ -8,4 +8,5 @@ type AuthInfo interface {
 	CurrentUserRole() *types.UserRole
 	CurrentOrgID() *string
 	CurrentUserEmailVerified() bool
+	Token() any
 }

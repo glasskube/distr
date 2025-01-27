@@ -4,8 +4,8 @@ import (
 	"maps"
 	"time"
 
-	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )

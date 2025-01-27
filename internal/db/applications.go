@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/glasskube/cloud/internal/apierrors"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/apierrors"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/jackc/pgx/v5"
 )
 

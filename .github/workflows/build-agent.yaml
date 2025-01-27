@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Build agent
+name: Build Agents
 
 on:
   push:
@@ -39,13 +39,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
-          images: ghcr.io/glasskube/cloud/${{ matrix.agent }}
+          images: ghcr.io/glasskube/distr/${{ matrix.agent }}
           tags: |
             type=ref,event=branch
             type=sha,event=branch
             type=semver,pattern={{version}}
           labels: |
-            org.opencontainers.image.description=Agent software for the Glasskube Cloud Software Distribution Platform
+            org.opencontainers.image.description=Distr agent software
             org.opencontainers.image.vendor=Glasskube
       - name: Docker build (push only for tag)
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0

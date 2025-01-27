@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/util"
 )
 
 type Organization struct {

@@ -9,9 +9,9 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/resources"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/resources"
+	"github.com/glasskube/distr/internal/types"
 )
 
 var (

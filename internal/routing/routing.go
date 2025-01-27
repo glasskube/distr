@@ -2,12 +2,15 @@ package routing
 
 import (
 	"net/http"
+	"time"
 
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/frontend"
-	"github.com/glasskube/cloud/internal/handlers"
-	"github.com/glasskube/cloud/internal/mail"
-	"github.com/glasskube/cloud/internal/middleware"
+	"github.com/go-chi/httprate"
+
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/frontend"
+	"github.com/glasskube/distr/internal/handlers"
+	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,6 +52,9 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			r.Use(
 				middleware.SentryUser,
 				auth.Authentication.Middleware,
+				httprate.Limit(5, 1*time.Second, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
+				httprate.Limit(60, 1*time.Minute, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
+				httprate.Limit(2000, 1*time.Hour, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)

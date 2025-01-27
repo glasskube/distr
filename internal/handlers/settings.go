@@ -3,19 +3,22 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
+
+	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/authkey"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/mailsending"
-	"github.com/glasskube/cloud/internal/mapping"
-	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/glasskube/cloud/internal/security"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/authkey"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mailsending"
+	"github.com/glasskube/distr/internal/mapping"
+	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/security"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -23,7 +26,7 @@ import (
 func SettingsRouter(r chi.Router) {
 	r.Post("/user", userSettingsUpdateHandler)
 	r.Route("/verify", func(r chi.Router) {
-		r.With(middleware.RateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
+		r.With(requestVerificationMailRateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
 	})
 	r.Route("/tokens", func(r chi.Router) {
@@ -177,3 +180,9 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 		}
 	}
 }
+
+var requestVerificationMailRateLimitPerUser = httprate.Limit(
+	3,
+	10*time.Minute,
+	httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc),
+)

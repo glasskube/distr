@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )
 
@@ -34,7 +34,7 @@ var (
 )
 
 func init() {
-	if currentEnv, ok := os.LookupEnv("GLASSKUBE_ENV"); ok {
+	if currentEnv, ok := os.LookupEnv("DISTR_ENV"); ok {
 		fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
 		if err := godotenv.Load(currentEnv); err != nil {
 			fmt.Fprintf(os.Stderr, "environment not loaded: %v\n", err)
@@ -48,9 +48,9 @@ func init() {
 	} else {
 		jwtSecret = decoded
 	}
-	host = os.Getenv("GLASSKUBE_HOST")
+	host = os.Getenv("DISTR_HOST")
 	if host == "" {
-		panic(errors.New("can't start, GLASSKUBE_HOST not set"))
+		panic(errors.New("can't start, DISTR_HOST not set"))
 	}
 
 	switch os.Getenv("MAILER_TYPE") {

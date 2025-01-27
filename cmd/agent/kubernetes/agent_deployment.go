@@ -9,7 +9,7 @@ import (
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 )
 
-const LabelDeplyoment = "agent.glasskube.cloud/deployment"
+const LabelDeplyoment = "agent.distr.sh/deployment"
 
 type AgentDeployment struct {
 	ReleaseName  string `json:"releaseName"`
@@ -18,7 +18,7 @@ type AgentDeployment struct {
 }
 
 func (d *AgentDeployment) SecretName() string {
-	return fmt.Sprintf("cloud.glasskube.agent.v1.%v", d.ReleaseName)
+	return fmt.Sprintf("sh.distr.agent.v1.%v", d.ReleaseName)
 }
 
 func GetExistingDeployments(ctx context.Context, namespace string) ([]AgentDeployment, error) {
@@ -50,7 +50,7 @@ func SaveDeployment(ctx context.Context, namespace string, deployment AgentDeplo
 	_, err := k8sClient.CoreV1().Secrets(namespace).Apply(
 		ctx,
 		cfg,
-		metav1.ApplyOptions{Force: true, FieldManager: "glasskube-cloud-agent"},
+		metav1.ApplyOptions{Force: true, FieldManager: "distr-agent"},
 	)
 	return err
 }

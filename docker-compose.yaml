@@ -1,4 +1,4 @@
-name: cloud-dev
+name: distr-dev
 
 services:
   postgres:
@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: local
       POSTGRES_PASSWORD: local
-      POSTGRES_DB: glasskube
+      POSTGRES_DB: distr
     volumes:
       - 'postgres:/var/lib/postgresql/data/'
     ports:

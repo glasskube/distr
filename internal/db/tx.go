@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	internalctx "github.com/glasskube/cloud/internal/context"
+	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/multierr"

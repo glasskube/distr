@@ -4,13 +4,13 @@ import (
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/cloud/internal/authjwt"
-	"github.com/glasskube/cloud/internal/authn"
-	"github.com/glasskube/cloud/internal/authn/authinfo"
-	"github.com/glasskube/cloud/internal/authn/authkey"
-	"github.com/glasskube/cloud/internal/authn/jwt"
-	"github.com/glasskube/cloud/internal/authn/token"
-	internalctx "github.com/glasskube/cloud/internal/context"
+	"github.com/glasskube/distr/internal/authjwt"
+	"github.com/glasskube/distr/internal/authn"
+	"github.com/glasskube/distr/internal/authn/authinfo"
+	"github.com/glasskube/distr/internal/authn/authkey"
+	"github.com/glasskube/distr/internal/authn/jwt"
+	"github.com/glasskube/distr/internal/authn/token"
+	internalctx "github.com/glasskube/distr/internal/context"
 	"go.uber.org/zap"
 )
 

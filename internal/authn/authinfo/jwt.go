@@ -3,16 +3,17 @@ package authinfo
 import (
 	"context"
 
-	"github.com/glasskube/cloud/internal/authjwt"
-	"github.com/glasskube/cloud/internal/authn"
-	"github.com/glasskube/cloud/internal/types"
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/authjwt"
+	"github.com/glasskube/distr/internal/authn"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 func FromJWT(token jwt.Token) (*SimpleAuthInfo, error) {
 	var result SimpleAuthInfo
 	result.userID = token.Subject()
+	result.rawToken = token
 	if userEmail, ok := token.Get(authjwt.UserEmailKey); ok {
 		result.userEmail = userEmail.(string)
 	}
