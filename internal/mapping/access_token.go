@@ -1,8 +1,8 @@
 package mapping
 
 import (
-	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/types"
 )
 
 func AccessTokenToDTO(model types.AccessToken) api.AccessToken {

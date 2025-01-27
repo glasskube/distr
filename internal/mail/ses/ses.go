@@ -7,8 +7,8 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/glasskube/cloud/internal/mail"
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/util"
 )
 
 type sesMailer struct {

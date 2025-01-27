@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/glasskube/cloud/internal/authkey"
+	"github.com/glasskube/distr/internal/authkey"
 )
 
 type AccessToken struct {

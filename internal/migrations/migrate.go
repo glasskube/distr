@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/glasskube/cloud/internal/env"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -91,7 +91,7 @@ func getInstance(db *sql.DB, log *zap.Logger) (*migrate.Migrate, error) {
 		return nil, err
 	} else if sourceInstance, err := iofs.New(fs, "sql"); err != nil {
 		return nil, err
-	} else if instance, err := migrate.NewWithInstance("", sourceInstance, "cloud", driver); err != nil {
+	} else if instance, err := migrate.NewWithInstance("", sourceInstance, "distr", driver); err != nil {
 		return nil, err
 	} else {
 		instance.Log = &Logger{log.Sugar()}

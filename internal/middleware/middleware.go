@@ -5,19 +5,18 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/glasskube/cloud/internal/authkey"
-	"github.com/lestrrat-go/jwx/v2/jwt"
-
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/authn"
-	"github.com/glasskube/cloud/internal/authn/authinfo"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/mail"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/authkey"
+	"github.com/glasskube/distr/internal/authn"
+	"github.com/glasskube/distr/internal/authn/authinfo"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"go.uber.org/zap"
 )
 

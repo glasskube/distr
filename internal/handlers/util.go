@@ -8,10 +8,10 @@ import (
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/cloud/internal/contenttype"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/contenttype"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/zap"
 )
 

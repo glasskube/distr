@@ -1,10 +1,10 @@
 {
-  "name": "@glasskube/cloud",
+  "name": "@glasskube/distr",
   "version": "0.12.0",
   "type": "module",
   "license": "Apache-2.0",
-  "description": "Glasskube cloud",
-  "homepage": "https://glasskube.cloud/",
+  "description": "Distr",
+  "homepage": "https://glasskube.dev/products/distr/",
   "scripts": {
     "ng": "ng",
     "buildconfig": "node hack/update-frontend-version.js",
@@ -43,7 +43,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.7.1",
     "@fortawesome/free-regular-svg-icons": "^6.7.1",
     "@fortawesome/free-solid-svg-icons": "^6.7.1",
-    "@glasskube/cloud-sdk": "file:./sdk/js/src",
+    "@glasskube/distr-sdk": "file:./sdk/js/src",
     "@sentry/angular": "^8.43.0",
     "apexcharts": "^4.1.0",
     "dayjs": "^1.11.13",

@@ -1,4 +1,4 @@
-name: shiori-glasskube-sample
+name: shiori-distr-sample
 
 services:
   shiori:

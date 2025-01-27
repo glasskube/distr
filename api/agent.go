@@ -1,6 +1,6 @@
 package api
 
-import "github.com/glasskube/cloud/internal/types"
+import "github.com/glasskube/distr/internal/types"
 
 type AgentResource struct {
 	RevisionID string `json:"revisionId"`

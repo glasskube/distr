@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/glasskube/cloud/internal/types"
-	"github.com/glasskube/cloud/internal/validation"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/validation"
 )
 
 type CreateUserAccountRequest struct {

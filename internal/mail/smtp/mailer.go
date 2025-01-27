@@ -3,7 +3,7 @@ package smtp
 import (
 	"context"
 
-	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/distr/internal/mail"
 	gomail "github.com/wneessen/go-mail"
 )
 

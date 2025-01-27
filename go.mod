@@ -1,4 +1,4 @@
-module github.com/glasskube/cloud
+module github.com/glasskube/distr
 
 go 1.23.3
 

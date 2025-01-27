@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/db"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/db"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )

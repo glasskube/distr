@@ -1,9 +1,9 @@
-name: glasskube-agent
+name: distr-agent
 services:
   agent:
     network_mode: host
     restart: unless-stopped
-    image: 'ghcr.io/glasskube/cloud/docker-agent:{{ .agentVersion }}'
+    image: 'ghcr.io/glasskube/distr/docker-agent:{{ .agentVersion }}'
     environment:
       GK_TARGET_ID: '{{ .targetId }}'
       GK_TARGET_SECRET: '{{ .targetSecret }}'

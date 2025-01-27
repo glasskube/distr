@@ -9,7 +9,7 @@ import (
 var embeddedFsys embed.FS
 
 func BrowserFS() fs.FS {
-	if fs, err := fs.Sub(embeddedFsys, "dist/cloud-ui/browser"); err != nil {
+	if fs, err := fs.Sub(embeddedFsys, "dist/ui/browser"); err != nil {
 		panic(err)
 	} else {
 		return fs

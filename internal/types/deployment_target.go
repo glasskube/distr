@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/glasskube/cloud/internal/validation"
+	"github.com/glasskube/distr/internal/validation"
 )
 
 type DeploymentTarget struct {

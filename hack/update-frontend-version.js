@@ -21,4 +21,4 @@ const buildconfig = {version, commit, release: version !== 'snapshot'};
 
 console.log(buildconfig);
 
-await writeFile('frontend/cloud-ui/src/buildconfig/version.json', JSON.stringify(buildconfig, null, 2));
+await writeFile('frontend/ui/src/buildconfig/version.json', JSON.stringify(buildconfig, null, 2));

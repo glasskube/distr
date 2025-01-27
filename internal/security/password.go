@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/types"
 	"golang.org/x/crypto/argon2"
 )
 

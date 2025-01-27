@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/authkey"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/glasskube/distr/internal/authkey"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/jackc/pgx/v5"
 )
 

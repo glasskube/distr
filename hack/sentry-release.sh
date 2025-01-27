@@ -15,5 +15,5 @@ export SENTRY_PROJECT="cloud-ui"
 
 npx sentry-cli releases new "$VERSION"
 npx sentry-cli releases set-commits "$VERSION" --auto
-npx sentry-cli sourcemaps upload --release="$VERSION" internal/frontend/dist/cloud-ui/browser
+npx sentry-cli sourcemaps upload --release="$VERSION" internal/frontend/dist/ui/browser
 npx sentry-cli releases finalize "$VERSION"

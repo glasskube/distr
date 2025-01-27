@@ -1,6 +1,6 @@
 package authinfo
 
-import "github.com/glasskube/cloud/internal/types"
+import "github.com/glasskube/distr/internal/types"
 
 type SimpleAuthInfo struct {
 	userID         string

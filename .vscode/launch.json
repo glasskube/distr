@@ -3,11 +3,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Server",
+      "name": "Launch Hub",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cloud",
+      "program": "${workspaceFolder}/cmd/hub",
       "cwd": "${workspaceFolder}"
     },
     {

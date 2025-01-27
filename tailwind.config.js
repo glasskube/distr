@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./frontend/cloud-ui/src/**/*.{html,ts}', './frontend/cloud-ui/node_modules/flowbite/**/*.js'],
+  content: ['./frontend/ui/src/**/*.{html,ts}'],
   darkMode: 'selector',
   theme: {
     extend: {

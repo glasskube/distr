@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/glasskube/cloud/internal/agentclient"
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/agentclient"
+	"github.com/glasskube/distr/internal/util"
 
 	"go.uber.org/zap"
 )

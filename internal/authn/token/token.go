@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/glasskube/cloud/internal/authn"
+	"github.com/glasskube/distr/internal/authn"
 )
 
 type TokenExtractorFunc func(r *http.Request) string
