@@ -18,8 +18,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Install tools
-        uses: jdx/mise-action@5083fe46898c414b2475087cc79da59e7da859e8 # v2.1.11
+      - name: Setup Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version-file: 'go.mod'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+      - name: Setup node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
       - name: Generate commit hash
         id: hash
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
@@ -27,10 +38,12 @@ jobs:
       - name: Install frontend dependencies with npm
         run: npm ci
 
-      - name: Lint frontend
+      - name: Lint with prettier
         run: npm run lint
-      - name: Lint go project
-        run: golangci-lint run --out-format=colored-line-number
+      - name: Lint with golangci-lint
+        uses: golangci/golangci-lint-action@ec5d18412c0aeab7936cb16880d708ba2a64e1ae # v6.2.0
+        with:
+          version: latest
 
       - name: Build frontend
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
@@ -80,3 +93,5 @@ jobs:
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
