@@ -5,11 +5,19 @@
   "license": "Apache-2.0",
   "description": "Distr SDK",
   "homepage": "https://glasskube.dev/products/distr/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glasskube/distr.git",
+    "directory": "sdk/js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc"
   },
+  "files": [
+    "dist/"
+  ],
   "dependencies": {
     "semver": "^7.6.3"
   },
