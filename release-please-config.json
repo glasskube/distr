@@ -9,6 +9,7 @@
       "bump-patch-for-minor-pre-major": false,
       "extra-files": [
         "README.md",
+        "deploy/docker/docker-compose.yaml",
         {
           "type": "json",
           "path": "package.json",
@@ -18,8 +19,7 @@
           "type": "json",
           "path": "sdk/ts/package.json",
           "jsonpath": "$.version"
-        },
-        "internal/resources/embedded/agent-base.yaml"
+        }
       ],
       "changelog-sections": [
         {
