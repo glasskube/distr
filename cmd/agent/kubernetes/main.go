@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/glasskube/cloud/internal/agentclient"
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/agentclient"
+	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/types"
-	"github.com/glasskube/cloud/internal/util"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/jackc/pgx/v5"
 )
 

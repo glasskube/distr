@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Build server
+name: Build Hub
 
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 jobs:
@@ -40,18 +40,18 @@ jobs:
         run: |
           npm run build:prod -- --source-map=true || exit 1
           npm run sentry-upload || exit 1
-          rm internal/frontend/dist/cloud-ui/browser/*.map || exit 1
+          rm internal/frontend/dist/ui/browser/*.map || exit 1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           VERSION: ${{ github.ref_name }}
 
       - name: Build application
-        run: go build -ldflags="$LDFLAGS" -o dist/cloud ./cmd/cloud/
+        run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
-          CGO_ENABLED: '0'
+          CGO_ENABLED: "0"
           LDFLAGS: >-
-            -X github.com/glasskube/cloud/internal/buildconfig.version=${{ github.ref_name }}
-            -X github.com/glasskube/cloud/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
+            -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
 
       - name: Login to GitHub Container Registry (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
@@ -64,13 +64,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
-          images: ghcr.io/glasskube/cloud
+          images: ghcr.io/glasskube/distr
           tags: |
             type=ref,event=branch
             type=sha,event=branch
             type=semver,pattern={{version}}
           labels: |
-            org.opencontainers.image.description=Glasskube Cloud Software Distribution Platform
+            org.opencontainers.image.description=Distr Hub
             org.opencontainers.image.vendor=Glasskube
       - name: Docker build (push on tag only)
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0

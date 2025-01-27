@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/glasskube/cloud/internal/validation"
+	"github.com/glasskube/distr/internal/validation"
 )
 
 type AuthLoginRequest struct {

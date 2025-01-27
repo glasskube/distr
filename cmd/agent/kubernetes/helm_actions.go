@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/distr/api"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"

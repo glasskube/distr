@@ -3,11 +3,11 @@ package routing
 import (
 	"net/http"
 
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/frontend"
-	"github.com/glasskube/cloud/internal/handlers"
-	"github.com/glasskube/cloud/internal/mail"
-	"github.com/glasskube/cloud/internal/middleware"
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/frontend"
+	"github.com/glasskube/distr/internal/handlers"
+	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"

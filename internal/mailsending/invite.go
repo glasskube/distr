@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/authjwt"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/mail"
-	"github.com/glasskube/cloud/internal/mailtemplates"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/authjwt"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/mailtemplates"
+	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +45,7 @@ func SendUserInviteMail(
 					mail.From(from),
 					mail.Bcc(currentUser.Email),
 					mail.ReplyTo(currentUser.Email),
-					mail.Subject("Welcome to Glasskube Cloud"),
+					mail.Subject("Welcome to distr.sh"),
 					mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, token, applicationName)),
 				)
 			}
@@ -53,7 +53,7 @@ func SendUserInviteMail(
 			email = mail.New(
 				mail.To(userAccount.Email),
 				mail.From(from),
-				mail.Subject("Welcome to Glasskube Cloud"),
+				mail.Subject("Welcome to distr.sh"),
 				mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, token)),
 			)
 		default:

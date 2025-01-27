@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Check pull request title
+name: Check Pull Request Title
 
 on:
   pull_request_target:

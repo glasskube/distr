@@ -3,10 +3,10 @@ package authinfo
 import (
 	"context"
 
-	"github.com/glasskube/cloud/internal/authjwt"
-	"github.com/glasskube/cloud/internal/authn"
-	"github.com/glasskube/cloud/internal/types"
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/authjwt"
+	"github.com/glasskube/distr/internal/authn"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 

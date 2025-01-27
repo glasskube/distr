@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"text/template"
 
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/internal/util"
 )
 
 //go:embed embedded

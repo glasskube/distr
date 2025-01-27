@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: glasskube-cloud-agent-env
+  name: distr-agent-env
 data:
   GK_TARGET_ID: "{{ .targetId }}"
   GK_LOGIN_ENDPOINT: "{{ .loginEndpoint }}"
@@ -17,7 +17,7 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: glasskube-cloud-agent-auth
+  name: distr-agent-auth
 type: Opaque
 stringData:
   GK_TARGET_SECRET: "{{ .targetSecret }}"
@@ -28,7 +28,7 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: glasskube-cloud-agent-dockerconfig
+  name: distr-agent-dockerconfig
 type: Opaque
 data:
   config.json: {{ .agentDockerConfig }}
@@ -38,7 +38,7 @@ data:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: glasskube-cloud-agent
+  name: distr-agent
 
 {{ if eq .targetScope "namespace" }}
 ---
@@ -58,10 +58,10 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: glasskube-cloud-agent
+  name: distr-agent
 subjects:
   - kind: ServiceAccount
-    name: glasskube-cloud-agent
+    name: distr-agent
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -72,10 +72,10 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: glasskube-cloud-agent
+  name: distr-agent
 subjects:
   - kind: ServiceAccount
-    name: glasskube-cloud-agent
+    name: distr-agent
     namespace: {{ .targetNamespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -87,34 +87,34 @@ roleRef:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: glasskube-cloud-agent
+  name: distr-agent
 spec:
   selector:
     matchLabels:
-      app: glasskube-cloud-agent
+      app: distr-agent
   replicas: 1
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: glasskube-cloud-agent
+        app: distr-agent
     spec:
-      serviceAccountName: glasskube-cloud-agent
+      serviceAccountName: distr-agent
       securityContext:
         runAsNonRoot: true
       containers:
-        - name: glasskube-cloud-agent
-          image: "ghcr.io/glasskube/cloud/kubernetes-agent:{{ .agentVersion }}"
+        - name: distr-agent
+          image: "ghcr.io/glasskube/distr/kubernetes-agent:{{ .agentVersion }}"
           imagePullPolicy: IfNotPresent
           env:
             - name: DOCKER_CONFIG
               value: /opt/config/.docker/
           envFrom:
             - secretRef:
-                name: glasskube-cloud-agent-auth
+                name: distr-agent-auth
             - configMapRef:
-                name: glasskube-cloud-agent-env
+                name: distr-agent-env
           resources:
             limits:
               memory: "128Mi"
@@ -127,7 +127,7 @@ spec:
       volumes:
         - name: dockerconfig
           secret:
-            secretName: glasskube-cloud-agent-dockerconfig
+            secretName: distr-agent-dockerconfig
             optional: true
         - name: cache
           emptyDir: {}

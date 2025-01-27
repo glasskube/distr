@@ -3,36 +3,36 @@
   "version": 1,
   "newProjectRoot": "frontend",
   "projects": {
-    "cloud-ui": {
+    "ui": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
         }
       },
-      "root": "frontend/cloud-ui",
-      "sourceRoot": "frontend/cloud-ui/src",
+      "root": "frontend/ui",
+      "sourceRoot": "frontend/ui/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "internal/frontend/dist/cloud-ui",
-            "index": "frontend/cloud-ui/src/index.html",
-            "browser": "frontend/cloud-ui/src/main.ts",
+            "outputPath": "internal/frontend/dist/ui",
+            "index": "frontend/ui/src/index.html",
+            "browser": "frontend/ui/src/main.ts",
             "polyfills": [
               "zone.js"
             ],
-            "tsConfig": "frontend/cloud-ui/tsconfig.app.json",
+            "tsConfig": "frontend/ui/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "frontend/cloud-ui/public"
+                "input": "frontend/ui/public"
               }
             ],
             "styles": [
-              "frontend/cloud-ui/src/styles.scss"
+              "frontend/ui/src/styles.scss"
             ],
             "scripts": [
               "node_modules/apexcharts/dist/apexcharts.min.js"
@@ -55,8 +55,8 @@
               "outputHashing": "all",
               "fileReplacements": [
                 {
-                  "replace": "frontend/cloud-ui/src/env/env.ts",
-                  "with": "frontend/cloud-ui/src/env/env.prod.ts"
+                  "replace": "frontend/ui/src/env/env.ts",
+                  "with": "frontend/ui/src/env/env.prod.ts"
                 }
               ]
             },
@@ -71,14 +71,14 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "proxyConfig": "frontend/cloud-ui/src/proxy.conf.json"
+            "proxyConfig": "frontend/ui/src/proxy.conf.json"
           },
           "configurations": {
             "production": {
-              "buildTarget": "cloud-ui:build:production"
+              "buildTarget": "ui:build:production"
             },
             "development": {
-              "buildTarget": "cloud-ui:build:development"
+              "buildTarget": "ui:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -93,16 +93,16 @@
               "zone.js",
               "zone.js/testing"
             ],
-            "tsConfig": "frontend/cloud-ui/tsconfig.spec.json",
+            "tsConfig": "frontend/ui/tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "frontend/cloud-ui/public"
+                "input": "frontend/ui/public"
               }
             ],
             "styles": [
-              "frontend/cloud-ui/src/styles.scss"
+              "frontend/ui/src/styles.scss"
             ],
             "scripts": []
           }

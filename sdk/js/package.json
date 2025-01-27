@@ -1,9 +1,9 @@
 {
-  "name": "@glasskube/cloud-sdk",
+  "name": "@glasskube/distr-sdk",
   "version": "0.11.0",
   "type": "module",
-  "description": "Glasskube Cloud SDK",
-  "homepage": "https://glasskube.cloud/",
+  "description": "Distr SDK",
+  "homepage": "https://glasskube.dev/products/distr/",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

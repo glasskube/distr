@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/types"
 
-	"github.com/glasskube/cloud/internal/env"
+	"github.com/glasskube/distr/internal/env"
 )
 
 //go:embed templates/*

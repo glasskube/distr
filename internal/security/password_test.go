@@ -3,8 +3,8 @@ package security_test
 import (
 	"testing"
 
-	"github.com/glasskube/cloud/internal/security"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/security"
+	"github.com/glasskube/distr/internal/types"
 	. "github.com/onsi/gomega"
 )
 

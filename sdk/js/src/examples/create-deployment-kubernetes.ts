@@ -1,7 +1,7 @@
-import {CloudService} from '../client/service';
+import {DistrService} from '../client/service';
 import {clientConfig} from './config';
 
-const gc = new CloudService(clientConfig);
+const gc = new DistrService(clientConfig);
 
 const appId = '<kubernetes-application-id>';
 const result = await gc.createDeployment({

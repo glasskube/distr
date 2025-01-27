@@ -1,3 +1,3 @@
 package useragent
 
-const GlasskubeAgentUserAgent = "GlasskubeAgentClient"
+const DistrAgentUserAgent = "DistrAgentClient"

@@ -3,8 +3,8 @@ package context
 import (
 	"context"
 
-	"github.com/glasskube/cloud/internal/db/queryable"
-	"github.com/glasskube/cloud/internal/mail"
+	"github.com/glasskube/distr/internal/db/queryable"
+	"github.com/glasskube/distr/internal/mail"
 	"go.uber.org/zap"
 )
 

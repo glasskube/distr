@@ -52,11 +52,11 @@ export type IsOutdatedResult = {
   outdated: boolean;
 };
 
-export class CloudService {
+export class DistrService {
   private readonly client: Client;
 
   /**
-   * Creates a new CloudService instance, which provides a higher-level API for the cloud backend. A client config
+   * Creates a new DistrService instance, which provides a higher-level API for the Distr API. A client config
    * containing the API base URL and an API key must be provided. Optionally, a strategy for determining the latest
    * version of an application can be specified – the default is semantic versioning.
    * @param config

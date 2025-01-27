@@ -1,4 +1,4 @@
-name: cloud
+name: distr
 
 services:
   postgres:
@@ -15,8 +15,8 @@ services:
       start_interval: 1s
       interval: 5s
       retries: 6
-  server:
-    image: ghcr.io/glasskube/cloud:0.11.0 # x-release-please-version
+  hub:
+    image: ghcr.io/glasskube/distr:0.12.0 # x-release-please-version
     depends_on:
       postgres:
         condition: service_healthy

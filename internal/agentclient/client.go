@@ -10,11 +10,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/glasskube/cloud/internal/agentclient/useragent"
-	"github.com/glasskube/cloud/internal/buildconfig"
-	"github.com/glasskube/cloud/internal/types"
+	"github.com/glasskube/distr/internal/agentclient/useragent"
+	"github.com/glasskube/distr/internal/buildconfig"
+	"github.com/glasskube/distr/internal/types"
 
-	"github.com/glasskube/cloud/api"
+	"github.com/glasskube/distr/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"go.uber.org/zap"
 )
@@ -153,7 +153,7 @@ func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Re
 }
 
 func (c *Client) do(r *http.Request) (*http.Response, error) {
-	r.Header.Set("User-Agent", fmt.Sprintf("%v/%v", useragent.GlasskubeAgentUserAgent, buildconfig.Version()))
+	r.Header.Set("User-Agent", fmt.Sprintf("%v/%v", useragent.DistrAgentUserAgent, buildconfig.Version()))
 	return checkStatus(c.httpClient.Do(r))
 }
 

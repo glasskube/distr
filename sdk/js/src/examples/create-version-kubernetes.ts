@@ -1,7 +1,7 @@
-import {CloudService} from '../client/service';
+import {DistrService} from '../client/service';
 import {clientConfig} from './config';
 
-const gc = new CloudService(clientConfig);
+const gc = new DistrService(clientConfig);
 const kubernetesAppId = '<kubernetes-application-id>';
 const newKubernetesVersion = await gc.createKubernetesApplicationVersion(kubernetesAppId, 'v1.0.1', {
   chartName: 'my-chart',

@@ -14,19 +14,19 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/cloud/api"
-	"github.com/glasskube/cloud/internal/agentclient/useragent"
-	"github.com/glasskube/cloud/internal/agentmanifest"
-	"github.com/glasskube/cloud/internal/apierrors"
-	"github.com/glasskube/cloud/internal/auth"
-	"github.com/glasskube/cloud/internal/authjwt"
-	internalctx "github.com/glasskube/cloud/internal/context"
-	"github.com/glasskube/cloud/internal/db"
-	"github.com/glasskube/cloud/internal/env"
-	"github.com/glasskube/cloud/internal/middleware"
-	"github.com/glasskube/cloud/internal/security"
-	"github.com/glasskube/cloud/internal/types"
-	"github.com/glasskube/cloud/internal/util"
+	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentclient/useragent"
+	"github.com/glasskube/distr/internal/agentmanifest"
+	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/authjwt"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/security"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"go.uber.org/zap"
@@ -213,7 +213,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func patchProjectName(data map[string]any, deploymentId string) ([]byte, error) {
-	data["name"] = fmt.Sprintf("glasskube-%v", deploymentId[:8])
+	data["name"] = fmt.Sprintf("distr-%v", deploymentId[:8])
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf)
 	if err := enc.Encode(data); err != nil {
@@ -303,8 +303,8 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			if ua := r.UserAgent(); strings.HasPrefix(ua, fmt.Sprintf("%v/", useragent.GlasskubeAgentUserAgent)) {
-				reportedVersionName := strings.TrimPrefix(ua, fmt.Sprintf("%v/", useragent.GlasskubeAgentUserAgent))
+			if ua := r.UserAgent(); strings.HasPrefix(ua, fmt.Sprintf("%v/", useragent.DistrAgentUserAgent)) {
+				reportedVersionName := strings.TrimPrefix(ua, fmt.Sprintf("%v/", useragent.DistrAgentUserAgent))
 				if reportedVersion, err := db.GetAgentVersionWithName(ctx, reportedVersionName); err != nil {
 					log.Error("could not get reported agent version", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
