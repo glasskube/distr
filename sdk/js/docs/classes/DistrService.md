@@ -6,15 +6,19 @@
 
 # Class: DistrService
 
+The DistrService provides a higher-level API for the Distr API. It allows to create and update deployments, check
+if a deployment is outdated, and get the latest version of an application according to a specified strategy.
+Under the hood it uses the low-level [Client](Client.md).
+
 ## Constructors
 
 ### new DistrService()
 
 > **new DistrService**(`config`, `latestVersionStrategy`): [`DistrService`](DistrService.md)
 
-Creates a new DistrService instance, which provides a higher-level API for the Distr API. A client config
-containing the API base URL and an API key must be provided. Optionally, a strategy for determining the latest
-version of an application can be specified – the default is semantic versioning.
+Creates a new DistrService instance. A client config containing an API key must be provided, optionally the API
+base URL can be set. Optionally, a strategy for determining the latest version of an application can be specified –
+the default is semantic versioning.
 
 #### Parameters
 
@@ -22,9 +26,13 @@ version of an application can be specified – the default is semantic versionin
 
 `ConditionalPartial`\<[`ClientConfig`](../type-aliases/ClientConfig.md), `"apiBase"`\>
 
+ClientConfig containing at least an API key and optionally an API base URL
+
 ##### latestVersionStrategy
 
 [`LatestVersionStrategy`](../type-aliases/LatestVersionStrategy.md) = `'semver'`
+
+Strategy for determining the latest version of an application (default: 'semver')
 
 #### Returns
 
@@ -58,6 +66,8 @@ Creates a new deployment target and deploys the given application version to it.
 
 > **createDockerApplicationVersion**(`applicationId`, `name`, `composeFile`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
+Creates a new application version for the given docker application using a Docker Compose file.
+
 #### Parameters
 
 ##### applicationId
@@ -67,6 +77,8 @@ Creates a new deployment target and deploys the given application version to it.
 ##### name
 
 `string`
+
+Name of the new version
 
 ##### composeFile
 
@@ -81,6 +93,8 @@ Creates a new deployment target and deploys the given application version to it.
 ### createKubernetesApplicationVersion()
 
 > **createKubernetesApplicationVersion**(`applicationId`, `versionName`, `data`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
+
+Creates a new application version for the given Kubernetes application using a Helm chart.
 
 #### Parameters
 

@@ -11,6 +11,11 @@ import {
 import semver from 'semver/preload';
 import {ConditionalPartial, defaultClientConfig} from './config';
 
+/**
+ * The strategy for determining the latest version of an application.
+ * * 'semver' uses semantic versioning to determine the latest version.
+ * * 'chronological' uses the creation date of the versions to determine the latest version.
+ */
 export type LatestVersionStrategy = 'semver' | 'chronological';
 
 export type CreateDeploymentParams = {
@@ -52,15 +57,20 @@ export type IsOutdatedResult = {
   outdated: boolean;
 };
 
+/**
+ * The DistrService provides a higher-level API for the Distr API. It allows to create and update deployments, check
+ * if a deployment is outdated, and get the latest version of an application according to a specified strategy.
+ * Under the hood it uses the low-level {@link Client}.
+ */
 export class DistrService {
   private readonly client: Client;
 
   /**
-   * Creates a new DistrService instance, which provides a higher-level API for the Distr API. A client config
-   * containing the API base URL and an API key must be provided. Optionally, a strategy for determining the latest
-   * version of an application can be specified – the default is semantic versioning.
-   * @param config
-   * @param latestVersionStrategy
+   * Creates a new DistrService instance. A client config containing an API key must be provided, optionally the API
+   * base URL can be set. Optionally, a strategy for determining the latest version of an application can be specified –
+   * the default is semantic versioning.
+   * @param config ClientConfig containing at least an API key and optionally an API base URL
+   * @param latestVersionStrategy Strategy for determining the latest version of an application (default: 'semver')
    */
   constructor(
     config: ConditionalPartial<ClientConfig, keyof typeof defaultClientConfig>,
@@ -69,6 +79,12 @@ export class DistrService {
     this.client = new Client(config);
   }
 
+  /**
+   * Creates a new application version for the given docker application using a Docker Compose file.
+   * @param applicationId
+   * @param name Name of the new version
+   * @param composeFile
+   */
   public async createDockerApplicationVersion(
     applicationId: string,
     name: string,
@@ -77,6 +93,12 @@ export class DistrService {
     return this.client.createApplicationVersion(applicationId, {name}, {composeFile});
   }
 
+  /**
+   * Creates a new application version for the given Kubernetes application using a Helm chart.
+   * @param applicationId
+   * @param versionName
+   * @param data
+   */
   public async createKubernetesApplicationVersion(
     applicationId: string,
     versionName: string,

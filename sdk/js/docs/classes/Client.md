@@ -6,6 +6,8 @@
 
 # Class: Client
 
+The low-level Distr API client. Each method represents on API endpoint.
+
 ## Constructors
 
 ### new Client()
