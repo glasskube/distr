@@ -12,7 +12,6 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ChartTypeComponent} from '../charts/type/chart-type.component';
 import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
-import {ChartVersionComponent} from '../charts/version/chart-version.component';
 import {GlobeComponent} from '../globe/globe.component';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 import {UsersService} from '../../services/users.service';
@@ -26,8 +25,6 @@ import {UsersService} from '../../services/users.service';
     AsyncPipe,
     OnboardingWizardComponent,
     FaIconComponent,
-    ChartVersionComponent,
-    ChartVersionComponent,
     ChartUptimeComponent,
     ChartTypeComponent,
   ],
