@@ -32,11 +32,11 @@ architecture-beta
     group ctrl(cloud)[Your Cloud]
     service db(database)[PostgreSQL] in ctrl
     service hub(server)[Distr Hub] in ctrl
-    db:T -- B:server
+    db:T -- B:hub
 
     group customer(cloud)[Customer Cloud]
     service agent(internet)[Distr Agent] in customer
-    agent:L --> R:server
+    agent:L --> R:hub
 ```
 
 ## Self-hosting

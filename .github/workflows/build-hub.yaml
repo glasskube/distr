@@ -5,9 +5,9 @@ name: Build Hub
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
-          CGO_ENABLED: '0'
+          CGO_ENABLED: "0"
           LDFLAGS: >-
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
@@ -76,7 +76,7 @@ jobs:
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
           context: .
-          file: Dockerfile.server
+          file: Dockerfile.hub
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
