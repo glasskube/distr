@@ -1,8 +1,12 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/glasskube/cloud/internal/authkey"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -13,7 +17,6 @@ import (
 	"github.com/glasskube/cloud/internal/mail"
 	"github.com/glasskube/cloud/internal/types"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -88,17 +91,20 @@ func SentryUser(h http.Handler) http.Handler {
 	})
 }
 
-var RateLimitPerUser = httprate.Limit(
-	3,
-	10*time.Minute,
-	httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
-		if auth, err := auth.Authentication.Get(r.Context()); err != nil {
-			return "", err
-		} else {
-			return auth.CurrentUserID(), nil
+func RateLimitCurrentUserIdKeyFunc(r *http.Request) (string, error) {
+	if auth, err := auth.Authentication.Get(r.Context()); err != nil {
+		return "", err
+	} else {
+		prefix := ""
+		switch auth.Token().(type) {
+		case jwt.Token:
+			prefix = "jwt"
+		case authkey.Key:
+			prefix = "authkey"
 		}
-	}),
-)
+		return fmt.Sprintf("%v-%v", prefix, auth.CurrentUserID()), nil
+	}
+}
 
 var RequireOrgID = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
 	if value.CurrentOrgID() == nil {
