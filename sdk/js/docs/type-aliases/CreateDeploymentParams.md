@@ -1,14 +1,14 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / CreateDeploymentParams
+[@glasskube/distr-sdk](../README.md) / CreateDeploymentParams
 
 # Type Alias: CreateDeploymentParams
 
 > **CreateDeploymentParams**: `object`
 
-Defined in: [client/service.ts:16](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L16)
+Defined in: [client/service.ts:16](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L16)
 
 ## Type declaration
 

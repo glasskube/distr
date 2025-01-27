@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / Application
+[@glasskube/distr-sdk](../README.md) / Application
 
 # Interface: Application
 
-Defined in: [types/application.ts:4](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/application.ts#L4)
+Defined in: [types/application.ts:4](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/application.ts#L4)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [types/application.ts:4](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L3)
+Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,7 +30,7 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L2)
+Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -42,7 +42,7 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **name**: `string`
 
-Defined in: [types/base.ts:7](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L7)
+Defined in: [types/base.ts:7](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L7)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [types/base.ts:7](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > **type**: [`DeploymentType`](../type-aliases/DeploymentType.md)
 
-Defined in: [types/application.ts:5](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/application.ts#L5)
+Defined in: [types/application.ts:5](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/application.ts#L5)
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: [types/application.ts:5](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **versions**: [`ApplicationVersion`](ApplicationVersion.md)[]
 
-Defined in: [types/application.ts:6](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/application.ts#L6)
+Defined in: [types/application.ts:6](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/application.ts#L6)

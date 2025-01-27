@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / DeploymentTargetAccessResponse
+[@glasskube/distr-sdk](../README.md) / DeploymentTargetAccessResponse
 
 # Interface: DeploymentTargetAccessResponse
 
-Defined in: [types/base.ts:14](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L14)
+Defined in: [types/base.ts:14](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L14)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/base.ts:14](https://github.com/glasskube/distr/blob/80de58e6e
 
 > **connectUrl**: `string`
 
-Defined in: [types/base.ts:15](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L15)
+Defined in: [types/base.ts:15](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L15)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/base.ts:15](https://github.com/glasskube/distr/blob/80de58e6e
 
 > **targetId**: `string`
 
-Defined in: [types/base.ts:16](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L16)
+Defined in: [types/base.ts:16](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L16)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [types/base.ts:16](https://github.com/glasskube/distr/blob/80de58e6e
 
 > **targetSecret**: `string`
 
-Defined in: [types/base.ts:17](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L17)
+Defined in: [types/base.ts:17](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L17)

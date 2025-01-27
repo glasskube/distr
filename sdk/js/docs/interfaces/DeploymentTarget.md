@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / DeploymentTarget
+[@glasskube/distr-sdk](../README.md) / DeploymentTarget
 
 # Interface: DeploymentTarget
 
-Defined in: [types/deployment-target.ts:7](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L7)
+Defined in: [types/deployment-target.ts:7](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L7)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [types/deployment-target.ts:7](https://github.com/glasskube/distr/bl
 
 > `optional` **agentVersion**: [`AgentVersion`](AgentVersion.md)
 
-Defined in: [types/deployment-target.ts:16](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L16)
+Defined in: [types/deployment-target.ts:16](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L16)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [types/deployment-target.ts:16](https://github.com/glasskube/distr/b
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L3)
+Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -38,7 +38,7 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **createdBy**: [`UserAccountWithRole`](UserAccountWithRole.md)
 
-Defined in: [types/deployment-target.ts:13](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L13)
+Defined in: [types/deployment-target.ts:13](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L13)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types/deployment-target.ts:13](https://github.com/glasskube/distr/b
 
 > `optional` **currentStatus**: [`DeploymentTargetStatus`](DeploymentTargetStatus.md)
 
-Defined in: [types/deployment-target.ts:14](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L14)
+Defined in: [types/deployment-target.ts:14](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L14)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types/deployment-target.ts:14](https://github.com/glasskube/distr/b
 
 > `optional` **deployment**: [`DeploymentWithLatestRevision`](DeploymentWithLatestRevision.md)
 
-Defined in: [types/deployment-target.ts:15](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L15)
+Defined in: [types/deployment-target.ts:15](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L15)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types/deployment-target.ts:15](https://github.com/glasskube/distr/b
 
 > `optional` **geolocation**: [`Geolocation`](Geolocation.md)
 
-Defined in: [types/deployment-target.ts:12](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L12)
+Defined in: [types/deployment-target.ts:12](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L12)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types/deployment-target.ts:12](https://github.com/glasskube/distr/b
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L2)
+Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -82,7 +82,7 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > **name**: `string`
 
-Defined in: [types/deployment-target.ts:8](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L8)
+Defined in: [types/deployment-target.ts:8](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L8)
 
 #### Overrides
 
@@ -94,7 +94,7 @@ Defined in: [types/deployment-target.ts:8](https://github.com/glasskube/distr/bl
 
 > `optional` **namespace**: `string`
 
-Defined in: [types/deployment-target.ts:10](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L10)
+Defined in: [types/deployment-target.ts:10](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L10)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [types/deployment-target.ts:10](https://github.com/glasskube/distr/b
 
 > `optional` **reportedAgentVersionId**: `string`
 
-Defined in: [types/deployment-target.ts:17](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L17)
+Defined in: [types/deployment-target.ts:17](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L17)
 
 ***
 
@@ -110,7 +110,7 @@ Defined in: [types/deployment-target.ts:17](https://github.com/glasskube/distr/b
 
 > `optional` **scope**: [`DeploymentTargetScope`](../type-aliases/DeploymentTargetScope.md)
 
-Defined in: [types/deployment-target.ts:11](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L11)
+Defined in: [types/deployment-target.ts:11](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L11)
 
 ***
 
@@ -118,4 +118,4 @@ Defined in: [types/deployment-target.ts:11](https://github.com/glasskube/distr/b
 
 > **type**: [`DeploymentType`](../type-aliases/DeploymentType.md)
 
-Defined in: [types/deployment-target.ts:9](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment-target.ts#L9)
+Defined in: [types/deployment-target.ts:9](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment-target.ts#L9)

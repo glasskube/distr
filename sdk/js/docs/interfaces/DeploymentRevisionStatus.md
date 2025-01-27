@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / DeploymentRevisionStatus
+[@glasskube/distr-sdk](../README.md) / DeploymentRevisionStatus
 
 # Interface: DeploymentRevisionStatus
 
-Defined in: [types/deployment.ts:28](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L28)
+Defined in: [types/deployment.ts:28](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L28)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [types/deployment.ts:28](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L3)
+Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,7 +30,7 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L2)
+Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -42,7 +42,7 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > **message**: `string`
 
-Defined in: [types/deployment.ts:30](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L30)
+Defined in: [types/deployment.ts:30](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L30)
 
 ***
 
@@ -50,4 +50,4 @@ Defined in: [types/deployment.ts:30](https://github.com/glasskube/distr/blob/80d
 
 > **type**: [`DeploymentStatusType`](../type-aliases/DeploymentStatusType.md)
 
-Defined in: [types/deployment.ts:29](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L29)
+Defined in: [types/deployment.ts:29](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L29)

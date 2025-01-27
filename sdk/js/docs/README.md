@@ -1,13 +1,13 @@
-**@glasskube/cloud-sdk**
+**@glasskube/distr-sdk**
 
 ***
 
-# @glasskube/cloud-sdk
+# @glasskube/distr-sdk
 
 ## Classes
 
 - [Client](classes/Client.md)
-- [CloudService](classes/CloudService.md)
+- [DistrService](classes/DistrService.md)
 
 ## Interfaces
 

@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / OrganizationBranding
+[@glasskube/distr-sdk](../README.md) / OrganizationBranding
 
 # Interface: OrganizationBranding
 
-Defined in: [types/organization-branding.ts:3](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/organization-branding.ts#L3)
+Defined in: [types/organization-branding.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/organization-branding.ts#L3)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [types/organization-branding.ts:3](https://github.com/glasskube/dist
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L3)
+Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,7 +30,7 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **description**: `string`
 
-Defined in: [types/organization-branding.ts:5](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/organization-branding.ts#L5)
+Defined in: [types/organization-branding.ts:5](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/organization-branding.ts#L5)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/organization-branding.ts:5](https://github.com/glasskube/dist
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L2)
+Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -50,7 +50,7 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **logo**: `string`
 
-Defined in: [types/organization-branding.ts:6](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/organization-branding.ts#L6)
+Defined in: [types/organization-branding.ts:6](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/organization-branding.ts#L6)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [types/organization-branding.ts:6](https://github.com/glasskube/dist
 
 > `optional` **logoContentType**: `string`
 
-Defined in: [types/organization-branding.ts:8](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/organization-branding.ts#L8)
+Defined in: [types/organization-branding.ts:8](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/organization-branding.ts#L8)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [types/organization-branding.ts:8](https://github.com/glasskube/dist
 
 > `optional` **logoFileName**: `string`
 
-Defined in: [types/organization-branding.ts:7](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/organization-branding.ts#L7)
+Defined in: [types/organization-branding.ts:7](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/organization-branding.ts#L7)
 
 ***
 
@@ -74,4 +74,4 @@ Defined in: [types/organization-branding.ts:7](https://github.com/glasskube/dist
 
 > `optional` **title**: `string`
 
-Defined in: [types/organization-branding.ts:4](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/organization-branding.ts#L4)
+Defined in: [types/organization-branding.ts:4](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/organization-branding.ts#L4)

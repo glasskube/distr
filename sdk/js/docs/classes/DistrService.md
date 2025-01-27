@@ -1,22 +1,22 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / CloudService
+[@glasskube/distr-sdk](../README.md) / DistrService
 
-# Class: CloudService
+# Class: DistrService
 
-Defined in: [client/service.ts:55](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L55)
+Defined in: [client/service.ts:55](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L55)
 
 ## Constructors
 
-### new CloudService()
+### new DistrService()
 
-> **new CloudService**(`config`, `latestVersionStrategy`): [`CloudService`](CloudService.md)
+> **new DistrService**(`config`, `latestVersionStrategy`): [`DistrService`](DistrService.md)
 
-Defined in: [client/service.ts:65](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L65)
+Defined in: [client/service.ts:65](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L65)
 
-Creates a new CloudService instance, which provides a higher-level API for the cloud backend. A client config
+Creates a new DistrService instance, which provides a higher-level API for the Distr API. A client config
 containing the API base URL and an API key must be provided. Optionally, a strategy for determining the latest
 version of an application can be specified – the default is semantic versioning.
 
@@ -32,7 +32,7 @@ version of an application can be specified – the default is semantic versionin
 
 #### Returns
 
-[`CloudService`](CloudService.md)
+[`DistrService`](DistrService.md)
 
 ## Methods
 
@@ -40,7 +40,7 @@ version of an application can be specified – the default is semantic versionin
 
 > **createDeployment**(`params`): `Promise`\<[`CreateDeploymentResult`](../type-aliases/CreateDeploymentResult.md)\>
 
-Defined in: [client/service.ts:115](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L115)
+Defined in: [client/service.ts:115](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L115)
 
 Creates a new deployment target and deploys the given application version to it.
 * If deployment type is 'kubernetes', the namespace and scope must be provided.
@@ -63,7 +63,7 @@ Creates a new deployment target and deploys the given application version to it.
 
 > **createDockerApplicationVersion**(`applicationId`, `name`, `composeFile`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
-Defined in: [client/service.ts:72](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L72)
+Defined in: [client/service.ts:72](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L72)
 
 #### Parameters
 
@@ -89,7 +89,7 @@ Defined in: [client/service.ts:72](https://github.com/glasskube/distr/blob/80de5
 
 > **createKubernetesApplicationVersion**(`applicationId`, `versionName`, `data`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
-Defined in: [client/service.ts:80](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L80)
+Defined in: [client/service.ts:80](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L80)
 
 #### Parameters
 
@@ -137,7 +137,7 @@ Defined in: [client/service.ts:80](https://github.com/glasskube/distr/blob/80de5
 
 > **getLatestVersion**(`appId`): `Promise`\<`undefined` \| [`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
-Defined in: [client/service.ts:206](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L206)
+Defined in: [client/service.ts:206](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L206)
 
 Returns the latest version of the given application according to the specified strategy.
 
@@ -157,7 +157,7 @@ Returns the latest version of the given application according to the specified s
 
 > **getNewerVersions**(`appId`, `currentVersionId`?): `Promise`\<\{ `app`: [`Application`](../interfaces/Application.md); `newerVersions`: [`ApplicationVersion`](../interfaces/ApplicationVersion.md)[]; \}\>
 
-Defined in: [client/service.ts:217](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L217)
+Defined in: [client/service.ts:217](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L217)
 
 Returns the application and all versions that are newer than the given version ID. If no version ID is given,
 all versions are considered. The versions are ordered ascending according to the given strategy.
@@ -182,7 +182,7 @@ all versions are considered. The versions are ordered ascending according to the
 
 > **isOutdated**(`deploymentTargetId`): `Promise`\<[`IsOutdatedResult`](../type-aliases/IsOutdatedResult.md)\>
 
-Defined in: [client/service.ts:185](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L185)
+Defined in: [client/service.ts:185](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L185)
 
 Checks if the given deployment target is outdated, i.e. if there is a newer version of the application available.
 The result additionally contains versions that are newer than the currently deployed one, ordered ascending.
@@ -203,7 +203,7 @@ The result additionally contains versions that are newer than the currently depl
 
 > **updateDeployment**(`params`): `Promise`\<`void`\>
 
-Defined in: [client/service.ts:153](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/client/service.ts#L153)
+Defined in: [client/service.ts:153](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/client/service.ts#L153)
 
 Updates the deployment of an existing deployment target. If no application version ID is given, the latest version
 of the already deployed application will be deployed.

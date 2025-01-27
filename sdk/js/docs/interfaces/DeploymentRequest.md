@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / DeploymentRequest
+[@glasskube/distr-sdk](../README.md) / DeploymentRequest
 
 # Interface: DeploymentRequest
 
-Defined in: [types/deployment.ts:9](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L9)
+Defined in: [types/deployment.ts:9](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L9)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types/deployment.ts:9](https://github.com/glasskube/distr/blob/80de
 
 > **applicationVersionId**: `string`
 
-Defined in: [types/deployment.ts:12](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L12)
+Defined in: [types/deployment.ts:12](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L12)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types/deployment.ts:12](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **deploymentId**: `string`
 
-Defined in: [types/deployment.ts:11](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L11)
+Defined in: [types/deployment.ts:11](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L11)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types/deployment.ts:11](https://github.com/glasskube/distr/blob/80d
 
 > **deploymentTargetId**: `string`
 
-Defined in: [types/deployment.ts:10](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L10)
+Defined in: [types/deployment.ts:10](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L10)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types/deployment.ts:10](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **note**: `string`
 
-Defined in: [types/deployment.ts:15](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L15)
+Defined in: [types/deployment.ts:15](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L15)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types/deployment.ts:15](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **releaseName**: `string`
 
-Defined in: [types/deployment.ts:13](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L13)
+Defined in: [types/deployment.ts:13](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L13)
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: [types/deployment.ts:13](https://github.com/glasskube/distr/blob/80d
 
 > `optional` **valuesYaml**: `string`
 
-Defined in: [types/deployment.ts:14](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/deployment.ts#L14)
+Defined in: [types/deployment.ts:14](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/deployment.ts#L14)

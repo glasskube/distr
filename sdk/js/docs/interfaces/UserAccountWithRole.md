@@ -1,12 +1,12 @@
-[**@glasskube/cloud-sdk**](../README.md)
+[**@glasskube/distr-sdk**](../README.md)
 
 ***
 
-[@glasskube/cloud-sdk](../README.md) / UserAccountWithRole
+[@glasskube/distr-sdk](../README.md) / UserAccountWithRole
 
 # Interface: UserAccountWithRole
 
-Defined in: [types/user-account.ts:10](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/user-account.ts#L10)
+Defined in: [types/user-account.ts:10](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L10)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [types/user-account.ts:10](https://github.com/glasskube/distr/blob/8
 
 > `optional` **createdAt**: `string`
 
-Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L3)
+Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L3)
 
 #### Inherited from
 
@@ -30,7 +30,7 @@ Defined in: [types/base.ts:3](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > **email**: `string`
 
-Defined in: [types/user-account.ts:6](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/user-account.ts#L6)
+Defined in: [types/user-account.ts:6](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L6)
 
 #### Inherited from
 
@@ -42,7 +42,7 @@ Defined in: [types/user-account.ts:6](https://github.com/glasskube/distr/blob/80
 
 > `optional` **id**: `string`
 
-Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/base.ts#L2)
+Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/base.ts#L2)
 
 #### Inherited from
 
@@ -54,7 +54,7 @@ Defined in: [types/base.ts:2](https://github.com/glasskube/distr/blob/80de58e6e7
 
 > `optional` **name**: `string`
 
-Defined in: [types/user-account.ts:7](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/user-account.ts#L7)
+Defined in: [types/user-account.ts:7](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L7)
 
 #### Inherited from
 
@@ -66,4 +66,4 @@ Defined in: [types/user-account.ts:7](https://github.com/glasskube/distr/blob/80
 
 > **userRole**: [`UserRole`](../type-aliases/UserRole.md)
 
-Defined in: [types/user-account.ts:11](https://github.com/glasskube/distr/blob/80de58e6e72221ca696881996e5ae90ce94cd9cf/sdk/js/src/types/user-account.ts#L11)
+Defined in: [types/user-account.ts:11](https://github.com/glasskube/distr/blob/1c5d885406264f4301a9de61610438b702cea814/sdk/js/src/types/user-account.ts#L11)
