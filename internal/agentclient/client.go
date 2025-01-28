@@ -163,22 +163,22 @@ func NewFromEnv(logger *zap.Logger) (*Client, error) {
 		logger:     logger,
 	}
 	var err error
-	if client.authTarget, err = readEnvVar("GK_TARGET_ID"); err != nil {
+	if client.authTarget, err = readEnvVar("DISTR_TARGET_ID"); err != nil {
 		return nil, err
 	}
-	if client.authSecret, err = readEnvVar("GK_TARGET_SECRET"); err != nil {
+	if client.authSecret, err = readEnvVar("DISTR_TARGET_SECRET"); err != nil {
 		return nil, err
 	}
-	if client.loginEndpoint, err = readEnvVar("GK_LOGIN_ENDPOINT"); err != nil {
+	if client.loginEndpoint, err = readEnvVar("DISTR_LOGIN_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.manifestEndpoint, err = readEnvVar("GK_MANIFEST_ENDPOINT"); err != nil {
+	if client.manifestEndpoint, err = readEnvVar("DISTR_MANIFEST_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.resourceEndpoint, err = readEnvVar("GK_RESOURCE_ENDPOINT"); err != nil {
+	if client.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
 		return nil, err
 	}
-	if client.statusEndpoint, err = readEnvVar("GK_STATUS_ENDPOINT"); err != nil {
+	if client.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
 		return nil, err
 	}
 	return &client, nil
