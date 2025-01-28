@@ -4,7 +4,7 @@
   "type": "module",
   "license": "Apache-2.0",
   "description": "Distr SDK",
-  "homepage": "https://glasskube.dev/products/distr/",
+  "homepage": "https://distr.sh",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/glasskube/distr.git",

@@ -14,7 +14,7 @@
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/glasskube/distr?style=flat)](https://github.com/glasskube/distr)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/docs-glasskube.dev-blue)](https://glasskube.dev/products/distr/docs/?utm_source=github)
+[![Docs](https://img.shields.io/badge/docs-distr.sh-blue)](https://distr.sh/docs/?utm_source=github)
 
 Distr is the easiest way to distribute enterprise software to customer-controlled or shared-responsibility environments.
 
@@ -59,7 +59,7 @@ docker-compose up -d
 
 <!-- x-release-please-end -->
 
-The full self-hosting documentation is at https://glasskube.dev/products/distr/docs/self-hosting/
+The full self-hosting documentation is at https://distr.sh/docs/self-hosting/self-hosting/
 
 ### Building from source
 
@@ -106,4 +106,4 @@ You can install the Distr SDK for JavaScript from [npmjs.org](https://npmjs.org/
 npm install --save @glasskube/distr-sdk
 ```
 
-The full SDK documentation is at https://glasskube.dev/products/distr/docs/sdk/
+The full SDK documentation is at https://distr.sh/docs/integrations/sdk/
