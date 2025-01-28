@@ -26,15 +26,15 @@ var (
 	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
-	agentVersionId   = os.Getenv("GK_AGENT_VERSION_ID")
+	agentVersionId   = os.Getenv("DISTR_AGENT_VERSION_ID")
 )
 
 func init() {
-	if intervalStr, ok := os.LookupEnv("GK_INTERVAL"); ok {
+	if intervalStr, ok := os.LookupEnv("DISTR_INTERVAL"); ok {
 		interval = util.Require(time.ParseDuration(intervalStr))
 	}
 	if agentVersionId == "" {
-		logger.Warn("GK_AGENT_VERSION_ID is not set. self updates will be disabled")
+		logger.Warn("DISTR_AGENT_VERSION_ID is not set. self updates will be disabled")
 	}
 }
 
