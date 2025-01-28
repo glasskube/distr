@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
-import {lastValueFrom} from 'rxjs';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {AuthService} from '../services/auth.service';
 import {SettingsService} from '../services/settings.service';
 import {getFormDisplayedError} from '../../util/errors';
@@ -42,5 +42,10 @@ export class PasswordResetComponent {
         this.loading = false;
       }
     }
+  }
+
+  public async logoutAndRedirectToLogin() {
+    await firstValueFrom(this.auth.logout());
+    location.assign('/login');
   }
 }
