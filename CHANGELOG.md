@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.2](https://github.com/glasskube/distr/compare/0.13.1...0.13.2) (2025-01-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency posthog-js to v1.211.0 ([#371](https://github.com/glasskube/distr/issues/371)) ([3e3e751](https://github.com/glasskube/distr/commit/3e3e7513547d08e69ea259db49302134ce8b0c10))
+
+
+### Other
+
+* add sdk docs ([#368](https://github.com/glasskube/distr/issues/368)) ([4a93550](https://github.com/glasskube/distr/commit/4a93550dcc36081039fb632ed0110f5505549a47))
+* rename distr docker agent ([#374](https://github.com/glasskube/distr/issues/374)) ([ee7cb07](https://github.com/glasskube/distr/commit/ee7cb071307520377af1cd0427cd1284fca8f22d))
+* replace icons and agent variable names ([#373](https://github.com/glasskube/distr/issues/373)) ([daa4141](https://github.com/glasskube/distr/commit/daa4141eb1011cd38eeb225bf0689fc85a3fa0a8))
+
 ## [0.13.1](https://github.com/glasskube/distr/compare/0.13.0...0.13.1) (2025-01-27)
 
 
