@@ -8,7 +8,9 @@ import {
 import {ConditionalPartial, defaultClientConfig} from './config';
 
 export type ClientConfig = {
+  /** The base URL of the Distr API ending with /api/v1, e.g. https://app.distr.sh/api/v1. */
   apiBase: string;
+  /** The API key to authenticate with the Distr API. */
   apiKey: string;
 };
 
@@ -18,6 +20,9 @@ export type ApplicationVersionFiles = {
   templateFile?: string;
 };
 
+/**
+ * The low-level Distr API client. Each method represents on API endpoint.
+ */
 export class Client {
   private readonly config: ClientConfig;
 
