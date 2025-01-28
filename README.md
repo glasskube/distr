@@ -35,8 +35,10 @@ architecture-beta
     db:T -- B:hub
 
     group customer(cloud)[Customer Cloud]
+    service app(server)[Your Application] in customer
     service agent(internet)[Distr Agent] in customer
     agent:L --> R:hub
+    app:T <-- B:agent
 ```
 
 ## Self-hosting
