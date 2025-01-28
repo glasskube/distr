@@ -23,6 +23,6 @@ const service = new DistrService({
 // do something with the service
 ```
 
-The [src/examples](https://github.com/glasskube/distr/sdk/js/src/examples) directory contains examples of how to use the SDK.
+The [src/examples](https://github.com/glasskube/distr/tree/main/sdk/js/src/examples) directory contains examples of how to use the SDK.
 
-See the [docs](https://github.com/glasskube/distr/sdk/js/docs/README.md) for more information.
+See the [docs](https://github.com/glasskube/distr/tree/main/sdk/js/docs/README.md) for more information.
