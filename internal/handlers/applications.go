@@ -296,7 +296,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	version := types.ApplicationVersion{
-		Name:            "v1.7.1",
+		Name:            "v1.7.4",
 		ComposeFileData: composeFileData,
 	}
 
