@@ -22,7 +22,7 @@ func SendUserVerificationMail(ctx context.Context, userAccount types.UserAccount
 	} else {
 		mail := mail.New(
 			mail.To(userAccount.Email),
-			mail.Subject("Verify your distr.sh Email"),
+			mail.Subject("Verify your Distr account"),
 			mail.HtmlBodyTemplate(mailtemplates.VerifyEmail(userAccount, token)),
 		)
 		if err := mailer.Send(ctx, mail); err != nil {

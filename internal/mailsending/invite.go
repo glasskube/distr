@@ -45,7 +45,7 @@ func SendUserInviteMail(
 					mail.From(from),
 					mail.Bcc(currentUser.Email),
 					mail.ReplyTo(currentUser.Email),
-					mail.Subject("Welcome to distr.sh"),
+					mail.Subject("Welcome to Distr"),
 					mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, token, applicationName)),
 				)
 			}
@@ -53,7 +53,7 @@ func SendUserInviteMail(
 			email = mail.New(
 				mail.To(userAccount.Email),
 				mail.From(from),
-				mail.Subject("Welcome to distr.sh"),
+				mail.Subject("Welcome to Distr"),
 				mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, token)),
 			)
 		default:

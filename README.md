@@ -3,7 +3,7 @@
     <img alt="" src="frontend/ui/public/distr-logo.svg" style="height: 5em;">
   </a>
   <br>
-  distr.sh
+  Distr
 </h1>
 
 <div align="center">
