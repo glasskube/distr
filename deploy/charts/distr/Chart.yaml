@@ -1,0 +1,24 @@
+apiVersion: v2
+name: distr
+description: The easiest way to distribute enterprise software
+keywords:
+  - distr
+  - web
+  - application
+  - enterprise
+  - software
+  - distribution
+maintainers:
+  - name: Glasskube, Inc.
+    url: https://github.com/glasskube
+icon: https://github.com/glasskube/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg
+home: https://distr.sh/docs/
+type: application
+version: "0.13.2"
+appVersion: "0.13.2"
+dependencies:
+  # https://github.com/bitnami/charts/blob/main/bitnami/postgresql
+  - name: postgresql
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 16.x.x
+    condition: postgresql.enabled

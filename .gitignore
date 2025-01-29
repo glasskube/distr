@@ -47,3 +47,5 @@ Thumbs.db
 
 # Sentry Config File
 .sentryclirc
+
+*.tgz
