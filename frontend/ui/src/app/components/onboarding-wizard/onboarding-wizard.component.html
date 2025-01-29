@@ -4,7 +4,7 @@
   class="p-4 w-full my-auto max-h-full overflow-y-auto bg-white rounded-lg shadow dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Welcome to distr.sh</h2>
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Welcome to Distr</h2>
     <button
       type="button"
       (click)="close()"
@@ -480,8 +480,8 @@
                           Kubernetes Namespace
                         </label>
                         <p class="mt-1 mb-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          Please enter the Kubernetes Namespace where your application, as well as the distr.sh Agent
-                          will be installed in the target cluster.
+                          Please enter the Kubernetes Namespace where your application, as well as the Distr Agent will
+                          be installed in the target cluster.
                         </p>
                         <input
                           [formControl]="deploymentTargetForm.controls.namespace"
@@ -538,7 +538,7 @@
                   <p class="mb-6 text-gray-500 dark:text-gray-400">
                     Your application <b class="dark:text-white">{{ app?.name }}</b> will be deployed to
                     <b class="dark:text-white">{{ createdDeploymentTarget?.name }}</b
-                    >, as soon as the distr.sh Agent is installed in that environment.
+                    >, as soon as the Distr Agent is installed in that environment.
                   </p>
                   <p class="mb-3 text-gray-500 dark:text-gray-400">To do so, follow these steps:</p>
                   <div class="p-4 md:p-5 space-y-4 text-base leading-relaxed text-gray-500 dark:text-gray-400">
