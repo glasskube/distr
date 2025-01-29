@@ -1,3 +1,4 @@
 *.json
 **/dist/*
 CHANGELOG.md
+deploy/charts/*/templates/*

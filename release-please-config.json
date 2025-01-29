@@ -19,6 +19,16 @@
           "type": "json",
           "path": "sdk/js/package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "deploy/charts/distr/Chart.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "deploy/charts/distr/Chart.yaml",
+          "jsonpath": "$.appVersion"
         }
       ],
       "changelog-sections": [

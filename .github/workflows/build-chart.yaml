@@ -1,0 +1,45 @@
+name: Build helm chart
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - deploy/charts/**
+    tags:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the helm chart to ghcr.io'
+        type: boolean
+        default: false
+
+jobs:
+  build-chart:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup helm
+        uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4.2.0
+      - name: Build helm chart
+        run: |
+          helm dependency build deploy/charts/distr
+          helm lint deploy/charts/distr
+          helm package deploy/charts/distr
+      - name: Login to GitHub Container Registry (tag or manual only)
+        if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.publish }}
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push helm chart to ghcr.io (tag or manual only)
+        if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.publish }}
+        run: |
+          for chart in distr-*.tgz; do
+              helm push "$chart" oci://ghcr.io/glasskube/charts
+          done
