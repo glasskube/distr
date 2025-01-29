@@ -1,6 +1,6 @@
 {
   "name": "@glasskube/distr",
-  "version": "0.13.2",
+  "version": "1.0.0",
   "type": "module",
   "license": "Apache-2.0",
   "description": "Distr",

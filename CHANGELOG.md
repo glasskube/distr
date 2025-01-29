@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.0.0](https://github.com/glasskube/distr/compare/0.13.2...1.0.0) (2025-01-29)
+
+
+### Features
+
+* **chart:** add initial version of the helm chart ([#383](https://github.com/glasskube/distr/issues/383)) ([78f9d58](https://github.com/glasskube/distr/commit/78f9d5817d40c377c1a116d90e11ec82b2bc8386))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v8.52.0 ([#377](https://github.com/glasskube/distr/issues/377)) ([e80424e](https://github.com/glasskube/distr/commit/e80424ece7dc08a9ec5ac3ea546882453bd2f01e))
+* **deps:** update dependency posthog-js to v1.211.1 ([#376](https://github.com/glasskube/distr/issues/376)) ([567e821](https://github.com/glasskube/distr/commit/567e8211dfc7e20cc0620111b50393b44a043db1))
+* **deps:** update dependency posthog-js to v1.211.2 ([#379](https://github.com/glasskube/distr/issues/379)) ([1fe8839](https://github.com/glasskube/distr/commit/1fe88391f1a5c173453154ba683d7ad3fbb8ff83))
+* **deps:** update dependency posthog-js to v1.211.3 ([#381](https://github.com/glasskube/distr/issues/381)) ([c225ef9](https://github.com/glasskube/distr/commit/c225ef97fd336e0618ce13ce25d72ae159ed73b0))
+* **ui:** link to login at password reset ([#378](https://github.com/glasskube/distr/issues/378)) ([216c7c2](https://github.com/glasskube/distr/commit/216c7c28fc32833149610bd8e81e2996335ce152))
+
+
+### Other
+
+* change homepage url to distr.sh ([77d042b](https://github.com/glasskube/distr/commit/77d042b185206cc91b28148201dc66cc5d38fdd6))
+* rename api key prefix ([7e1e32e](https://github.com/glasskube/distr/commit/7e1e32eb7bb0e9252898e82da32e4f25b60fb6ca))
+* rename from "distr.sh" to "Distr" ([#380](https://github.com/glasskube/distr/issues/380)) ([801c274](https://github.com/glasskube/distr/commit/801c2741c2a65b44f1b28b3a6a7b5f292f64f20f))
+* set next release to 1.0.0 ([719830e](https://github.com/glasskube/distr/commit/719830eb06ecaeb054a8204e75d10fd50aa31e4c))
+* update sample app version ([#382](https://github.com/glasskube/distr/issues/382)) ([bd39bea](https://github.com/glasskube/distr/commit/bd39bea7ef62ac86d5b757e94be0cf62acc8ae3f))
+
+
+### Docs
+
+* add your application to architecture diagram ([df35110](https://github.com/glasskube/distr/commit/df3511050a3b9d8f845e5f40e420776171435322))
+
 ## [0.13.2](https://github.com/glasskube/distr/compare/0.13.1...0.13.2) (2025-01-28)
 
 
