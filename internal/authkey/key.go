@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const keyPrefix = "gkc-"
+const keyPrefix = "distr-"
 
 type Key [16]byte
 
