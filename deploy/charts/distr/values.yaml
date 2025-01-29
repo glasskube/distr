@@ -11,13 +11,13 @@ image:
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: ''
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.
-nameOverride: ""
-fullnameOverride: ""
+nameOverride: ''
+fullnameOverride: ''
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -29,7 +29,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: ''
 
 hub:
   env:
@@ -52,7 +52,7 @@ hub:
     - name: MAILER_SMTP_HOST
       value: smtp.example.local
     - name: MAILER_SMTP_PORT
-      value: "25"
+      value: '25'
     # - name: MAILER_SMTP_USERNAME
     #   value: ""
     # - name: MAILER_SMTP_PASSWORD
@@ -92,7 +92,7 @@ service:
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
   enabled: false
-  className: ""
+  className: ''
   annotations:
     {}
     # kubernetes.io/ingress.class: nginx
@@ -161,15 +161,15 @@ postgresql:
   enabled: false
   auth:
     username: distr
-    password: ""
+    password: ''
     database: distr
-    existingSecret: ""
+    existingSecret: ''
   architecture: standalone
   service:
     ports:
       postgresql: 5432
 
 externalDatabase:
-  uri: ""
-  existingSecret: ""
-  existingSecretUriKey: "uri"
+  uri: ''
+  existingSecret: ''
+  existingSecretUriKey: 'uri'
