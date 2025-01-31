@@ -39,81 +39,82 @@ helm upgrade --install --wait --namespace distr --create-namespace \
 
 ## Requirements
 
-| Repository | Name | Version |
-|------------|------|---------|
-| oci://registry-1.docker.io/bitnamicharts | postgresql | 16.x.x |
+| Repository                               | Name       | Version |
+| ---------------------------------------- | ---------- | ------- |
+| oci://registry-1.docker.io/bitnamicharts | postgresql | 16.x.x  |
 
 ## Values
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| autoscaling.enabled | bool | `false` |  |
-| autoscaling.maxReplicas | int | `10` |  |
-| autoscaling.minReplicas | int | `2` |  |
-| autoscaling.targetCPUUtilizationPercentage | int | `100` |  |
-| externalDatabase.existingSecret | string | `""` |  |
-| externalDatabase.existingSecretUriKey | string | `"uri"` |  |
-| externalDatabase.uri | string | `""` |  |
-| fullnameOverride | string | `""` |  |
-| hub.envFrom | list | `[]` |  |
-| hub.env[0].name | string | `"DISTR_HOST"` |  |
-| hub.env[0].value | string | `"http://distr.local"` |  |
-| hub.env[1].name | string | `"JWT_SECRET"` |  |
-| hub.env[1].value | string | `"WQrGMYx4tZdGwKlt0RTrhMzfQ+j1wr6z7oRWfmGlETk="` |  |
-| hub.env[2].name | string | `"MAILER_FROM_ADDRESS"` |  |
-| hub.env[2].value | string | `"My Distr <noreply@distr.local>"` |  |
-| hub.env[3].name | string | `"MAILER_TYPE"` |  |
-| hub.env[3].value | string | `"smtp"` |  |
-| hub.env[4].name | string | `"MAILER_SMTP_HOST"` |  |
-| hub.env[4].value | string | `"smtp.example.local"` |  |
-| hub.env[5].name | string | `"MAILER_SMTP_PORT"` |  |
-| hub.env[5].value | string | `"25"` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"ghcr.io/glasskube/distr"` |  |
-| image.tag | string | `""` |  |
-| imagePullSecrets | list | `[]` |  |
-| ingress.annotations | object | `{}` |  |
-| ingress.className | string | `""` |  |
-| ingress.enabled | bool | `false` |  |
-| ingress.hosts[0].host | string | `"distr.local"` |  |
-| ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
-| ingress.tls | list | `[]` |  |
-| livenessProbe.httpGet.path | string | `"/"` |  |
-| livenessProbe.httpGet.port | string | `"http"` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| podAnnotations | object | `{}` |  |
-| podLabels | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
-| postgresql.architecture | string | `"standalone"` |  |
-| postgresql.auth.database | string | `"distr"` |  |
-| postgresql.auth.existingSecret | string | `""` |  |
-| postgresql.auth.password | string | `""` |  |
-| postgresql.auth.username | string | `"distr"` |  |
-| postgresql.enabled | bool | `false` |  |
-| postgresql.service.ports.postgresql | int | `5432` |  |
-| readinessProbe.httpGet.path | string | `"/"` |  |
-| readinessProbe.httpGet.port | string | `"http"` |  |
-| replicaCount | int | `2` |  |
-| resources | object | `{}` |  |
-| securityContext | object | `{}` |  |
-| service.port | int | `8080` |  |
-| service.type | string | `"ClusterIP"` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.automount | bool | `true` |  |
-| serviceAccount.create | bool | `true` |  |
-| serviceAccount.name | string | `""` |  |
-| tolerations | list | `[]` |  |
-| volumeMounts | list | `[]` |  |
-| volumes | list | `[]` |  |
+| Key                                        | Type   | Default                                          | Description |
+| ------------------------------------------ | ------ | ------------------------------------------------ | ----------- |
+| affinity                                   | object | `{}`                                             |             |
+| autoscaling.enabled                        | bool   | `false`                                          |             |
+| autoscaling.maxReplicas                    | int    | `10`                                             |             |
+| autoscaling.minReplicas                    | int    | `2`                                              |             |
+| autoscaling.targetCPUUtilizationPercentage | int    | `100`                                            |             |
+| externalDatabase.existingSecret            | string | `""`                                             |             |
+| externalDatabase.existingSecretUriKey      | string | `"uri"`                                          |             |
+| externalDatabase.uri                       | string | `""`                                             |             |
+| fullnameOverride                           | string | `""`                                             |             |
+| hub.envFrom                                | list   | `[]`                                             |             |
+| hub.env[0].name                            | string | `"DISTR_HOST"`                                   |             |
+| hub.env[0].value                           | string | `"http://distr.local"`                           |             |
+| hub.env[1].name                            | string | `"JWT_SECRET"`                                   |             |
+| hub.env[1].value                           | string | `"WQrGMYx4tZdGwKlt0RTrhMzfQ+j1wr6z7oRWfmGlETk="` |             |
+| hub.env[2].name                            | string | `"MAILER_FROM_ADDRESS"`                          |             |
+| hub.env[2].value                           | string | `"My Distr <noreply@distr.local>"`               |             |
+| hub.env[3].name                            | string | `"MAILER_TYPE"`                                  |             |
+| hub.env[3].value                           | string | `"smtp"`                                         |             |
+| hub.env[4].name                            | string | `"MAILER_SMTP_HOST"`                             |             |
+| hub.env[4].value                           | string | `"smtp.example.local"`                           |             |
+| hub.env[5].name                            | string | `"MAILER_SMTP_PORT"`                             |             |
+| hub.env[5].value                           | string | `"25"`                                           |             |
+| image.pullPolicy                           | string | `"IfNotPresent"`                                 |             |
+| image.repository                           | string | `"ghcr.io/glasskube/distr"`                      |             |
+| image.tag                                  | string | `""`                                             |             |
+| imagePullSecrets                           | list   | `[]`                                             |             |
+| ingress.annotations                        | object | `{}`                                             |             |
+| ingress.className                          | string | `""`                                             |             |
+| ingress.enabled                            | bool   | `false`                                          |             |
+| ingress.hosts[0].host                      | string | `"distr.local"`                                  |             |
+| ingress.hosts[0].paths[0].path             | string | `"/"`                                            |             |
+| ingress.hosts[0].paths[0].pathType         | string | `"ImplementationSpecific"`                       |             |
+| ingress.tls                                | list   | `[]`                                             |             |
+| livenessProbe.httpGet.path                 | string | `"/"`                                            |             |
+| livenessProbe.httpGet.port                 | string | `"http"`                                         |             |
+| nameOverride                               | string | `""`                                             |             |
+| nodeSelector                               | object | `{}`                                             |             |
+| podAnnotations                             | object | `{}`                                             |             |
+| podLabels                                  | object | `{}`                                             |             |
+| podSecurityContext                         | object | `{}`                                             |             |
+| postgresql.architecture                    | string | `"standalone"`                                   |             |
+| postgresql.auth.database                   | string | `"distr"`                                        |             |
+| postgresql.auth.existingSecret             | string | `""`                                             |             |
+| postgresql.auth.password                   | string | `""`                                             |             |
+| postgresql.auth.username                   | string | `"distr"`                                        |             |
+| postgresql.enabled                         | bool   | `false`                                          |             |
+| postgresql.service.ports.postgresql        | int    | `5432`                                           |             |
+| readinessProbe.httpGet.path                | string | `"/"`                                            |             |
+| readinessProbe.httpGet.port                | string | `"http"`                                         |             |
+| replicaCount                               | int    | `2`                                              |             |
+| resources                                  | object | `{}`                                             |             |
+| securityContext                            | object | `{}`                                             |             |
+| service.port                               | int    | `8080`                                           |             |
+| service.type                               | string | `"ClusterIP"`                                    |             |
+| serviceAccount.annotations                 | object | `{}`                                             |             |
+| serviceAccount.automount                   | bool   | `true`                                           |             |
+| serviceAccount.create                      | bool   | `true`                                           |             |
+| serviceAccount.name                        | string | `""`                                             |             |
+| tolerations                                | list   | `[]`                                             |             |
+| volumeMounts                               | list   | `[]`                                             |             |
+| volumes                                    | list   | `[]`                                             |             |
 
 ## Maintainers
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| Glasskube |  | <https://github.com/glasskube> |
+| Name      | Email | Url                            |
+| --------- | ----- | ------------------------------ |
+| Glasskube |       | <https://github.com/glasskube> |
 
-----------------------------------------------
+---
+
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
