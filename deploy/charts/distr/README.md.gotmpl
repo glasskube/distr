@@ -1,0 +1,51 @@
+<h1 align="center">
+  <a href="https://distr.sh/" target="_blank">
+    <img alt="" src="https://github.com/glasskube/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg" style="height: 5em;">
+  </a>
+  <br>
+  Distr
+</h1>
+
+<div align="center">
+
+**Software Distribution Platform**
+
+</div>
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+## Prerequisites
+
+[Helm](https://helm.sh) must be installed to use the charts. Please refer to Helm's [documentation](https://helm.sh/docs) to get started.
+
+## Installation
+
+Distr is available as a Helm chart distributed via ghcr.io.
+To install Distr in Kubernetes, simply run:
+
+<!-- x-release-please-start-version -->
+
+
+```shell
+helm upgrade --install --wait --namespace distr --create-namespace \
+  distr oci://ghcr.io/glasskube/charts/distr --version 1.0.0 \
+  --set postgresql.enabled=true
+```
+
+<!-- x-release-please-end -->
+
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}
