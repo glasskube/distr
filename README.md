@@ -18,12 +18,27 @@
 
 Distr is the easiest way to distribute enterprise software to customer-controlled or shared-responsibility environments.
 
+Main features:
+
 - View all deployments and connected agents via the **intuitive web UI**
 - Let your customers control their deployments via the **white-label customer portal**
 - Access the API using our [**rich SDK**](#distr-sdk)
 - Fully open-source and [self-hostable](#self-hosting)
 
 Check out the hosted version at https://app.distr.sh/register/
+
+## About
+
+Distr is an Open Source commercial software distribution platform designed for Independent Software Vendors (ISVs).
+It supports ISVs in delivering their software solutions to end customers operating in complex, customer-controlled environments.
+
+Use cases include:
+
+- On-premises software deployments
+- Bring Your Own Cloud (BYOC) automation
+- Edge & Fleet management
+
+Read more about Distr and our use cases at https://distr.sh/docs/getting-started/about/
 
 ## Architecture overview
 
