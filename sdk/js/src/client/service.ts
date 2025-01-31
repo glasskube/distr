@@ -103,7 +103,7 @@ export class DistrService {
     applicationId: string,
     versionName: string,
     data: {
-      chartName: string;
+      chartName?: string;
       chartVersion: string;
       chartType: HelmChartType;
       chartUrl: string;
