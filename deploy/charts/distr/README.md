@@ -1,4 +1,16 @@
-# Distr
+<h1 align="center">
+  <a href="https://distr.sh/" target="_blank">
+    <img alt="" src="https://github.com/glasskube/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg" style="height: 5em;">
+  </a>
+  <br>
+  Distr
+</h1>
+
+<div align="center">
+
+**Software Distribution Platform**
+
+</div>
 
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
