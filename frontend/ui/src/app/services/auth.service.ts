@@ -24,10 +24,6 @@ export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly baseUrl = '/api/v1/auth';
 
-  public get isAuthenticated(): boolean {
-    return this.token !== null;
-  }
-
   public get token(): string | null {
     return localStorage.getItem(tokenStorageKey);
   }
@@ -64,12 +60,20 @@ export class AuthService {
   }
 
   public getClaims(): JWTClaims | undefined {
+    const {claims} = this.getTokenAndClaims();
+    return claims;
+  }
+
+  public getTokenAndClaims(): {token: string | null; claims: JWTClaims | undefined} {
     const token = this.token;
     if (token !== null) {
-      return jwtDecode(token);
-    } else {
-      return undefined;
+      try {
+        return {token, claims: jwtDecode(token)};
+      } catch (e) {
+        console.error(e);
+      }
     }
+    return {token: null, claims: undefined};
   }
 
   public logout(): Observable<void> {
@@ -81,10 +85,9 @@ export class AuthService {
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   if (!req.url.startsWith('/api/v1/auth/')) {
-    const claims = auth.getClaims();
-    const token = auth.token;
+    const {token, claims} = auth.getTokenAndClaims();
     try {
-      if (!claims || dayjs.unix(parseInt(claims.exp)).isAfter(dayjs())) {
+      if (claims && dayjs.unix(parseInt(claims.exp)).isAfter(dayjs())) {
         return next(req.clone({headers: req.headers.set('Authorization', `Bearer ${token}`)})).pipe(
           tap({
             error: (e) => {

@@ -53,8 +53,7 @@ export class InviteComponent {
           // ignore errors of confirmation (because password has already been set)
         } finally {
           this.auth.logout();
-          const email = this.claims?.email ?? '';
-          location.assign(`/login?email=${encodeURIComponent(email)}&inviteSuccess=true`);
+          location.assign(`/login?email=${encodeURIComponent(this.email ?? '')}&inviteSuccess=true`);
         }
       }
     }

@@ -86,8 +86,7 @@ function requiredRoleGuard(userRole: UserRole): CanActivateFn {
 const baseRouteRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const claims = auth.getClaims();
-  switch (claims?.role) {
+  switch (auth.getClaims()?.role) {
     case 'customer':
       return router.createUrlTree(['/home']);
     case 'vendor':

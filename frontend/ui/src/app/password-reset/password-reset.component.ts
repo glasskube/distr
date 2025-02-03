@@ -23,8 +23,7 @@ export class PasswordResetComponent {
     },
     (control) => (control.value.password === control.value.passwordConfirm ? null : {passwordMismatch: 'error'})
   );
-  private readonly claims = this.auth.getClaims();
-  public readonly email = this.claims?.email;
+  public readonly email = this.auth.getClaims()?.email;
   public errorMessage?: string;
   loading = false;
 
