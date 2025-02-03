@@ -30,8 +30,7 @@ export class AppComponent implements OnInit {
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => {
-      const claims = this.auth.getClaims();
-      const email = claims?.email;
+      const email = this.auth.getClaims()?.email;
       Sentry.setUser({email});
       posthog.setPersonProperties({email});
       posthog.capture('$pageview');
