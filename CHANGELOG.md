@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.0.1](https://github.com/glasskube/distr/compare/1.0.0...1.0.1) (2025-02-03)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.1.4 ([#390](https://github.com/glasskube/distr/issues/390)) ([9f5c90c](https://github.com/glasskube/distr/commit/9f5c90c2c30caabc1cc68145bf5bc4181e1f4f4d))
+* **deps:** update aws-sdk-go-v2 monorepo ([#394](https://github.com/glasskube/distr/issues/394)) ([0a53571](https://github.com/glasskube/distr/commit/0a53571001a683c4b460b544ceb5f0e9696d551b))
+* **deps:** update aws-sdk-go-v2 monorepo ([#402](https://github.com/glasskube/distr/issues/402)) ([d27e2f0](https://github.com/glasskube/distr/commit/d27e2f07f0c3b7577d31e6b8b6e36abf169a42c2))
+* **deps:** update dependency @angular/cdk to v19.1.2 ([#391](https://github.com/glasskube/distr/issues/391)) ([e512198](https://github.com/glasskube/distr/commit/e512198ceea5bc0e3d0a43848e359114358e2414))
+* **deps:** update dependency @sentry/angular to v8.52.1 ([#392](https://github.com/glasskube/distr/issues/392)) ([e93952b](https://github.com/glasskube/distr/commit/e93952bd934e869ba1ecda1bf9b26b52faa6e5e4))
+* **deps:** update dependency @sentry/angular to v8.53.0 ([#398](https://github.com/glasskube/distr/issues/398)) ([2f9b802](https://github.com/glasskube/distr/commit/2f9b8025a9cf4395788c34cdabdf842f8319e536))
+* **deps:** update dependency globe.gl to v2.39.3 ([#403](https://github.com/glasskube/distr/issues/403)) ([4e0f6c2](https://github.com/glasskube/distr/commit/4e0f6c296b2855c464024e13878cfdb112e50dc3))
+* **deps:** update dependency globe.gl to v2.39.5 ([#404](https://github.com/glasskube/distr/issues/404)) ([30d68ec](https://github.com/glasskube/distr/commit/30d68ec1ae3a4b3ece5c5159f3b572698fa2b4bb))
+* **deps:** update dependency posthog-js to v1.212.1 ([#387](https://github.com/glasskube/distr/issues/387)) ([d4436b8](https://github.com/glasskube/distr/commit/d4436b8438dad5c4f2e06da4a2f6a50f23be2f07))
+* **deps:** update dependency posthog-js to v1.214.1 ([#395](https://github.com/glasskube/distr/issues/395)) ([bfac7c2](https://github.com/glasskube/distr/commit/bfac7c23b481cd3894bec65bd36085f4bda51723))
+* **deps:** update dependency posthog-js to v1.215.1 ([#401](https://github.com/glasskube/distr/issues/401)) ([1723795](https://github.com/glasskube/distr/commit/1723795c95d8ce6124b80ca481c984d3b7afb63b))
+* **deps:** update dependency semver to v7.7.0 ([#388](https://github.com/glasskube/distr/issues/388)) ([53ecf08](https://github.com/glasskube/distr/commit/53ecf0813a09200d42ccdc38ad16095c3e6c070a))
+* **deps:** update module github.com/spf13/pflag to v1.0.6 ([#389](https://github.com/glasskube/distr/issues/389)) ([0b185f5](https://github.com/glasskube/distr/commit/0b185f5bae26966f2a23783ef0bd49df1faae243))
+* **sdk/js:** make chartName optional ([#400](https://github.com/glasskube/distr/issues/400)) ([9a49a38](https://github.com/glasskube/distr/commit/9a49a38b4aa22353fe6f009aa4671cded956b239))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.1.5 ([#385](https://github.com/glasskube/distr/issues/385)) ([fca184e](https://github.com/glasskube/distr/commit/fca184e570156b434e4772f6d6e5ed58a829b281))
+
+
+### Docs
+
+* add about section to README.md ([#397](https://github.com/glasskube/distr/issues/397)) ([73a7da6](https://github.com/glasskube/distr/commit/73a7da648cc247cd71ea4b13649b462ae74d0528))
+* add Helm chart README.md ([#399](https://github.com/glasskube/distr/issues/399)) ([0768637](https://github.com/glasskube/distr/commit/07686379c2acdf582863cca578a6fe8712de1d76))
+
 ## [1.0.0](https://github.com/glasskube/distr/compare/0.13.2...1.0.0) (2025-01-29)
 
 
