@@ -14,11 +14,12 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
 export class InviteComponent {
   private readonly auth = inject(AuthService);
   private readonly settings = inject(SettingsService);
-  public readonly email = this.auth.getClaims().email;
+  private readonly claims = this.auth.getClaims();
+  public readonly email = this.claims?.email;
 
   public readonly form = new FormGroup(
     {
-      name: new FormControl<string | undefined>(this.auth.getClaims().name, {nonNullable: true}),
+      name: new FormControl<string | undefined>(this.claims?.name, {nonNullable: true}),
       password: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.minLength(8)]}),
       passwordConfirm: new FormControl('', [Validators.required]),
     },
@@ -45,14 +46,15 @@ export class InviteComponent {
 
       if (updateOk) {
         try {
-          if (this.auth.getClaims().email_verified) {
+          if (this.claims?.email_verified) {
             await firstValueFrom(this.settings.confirmEmailVerification());
           }
         } catch (e) {
           // ignore errors of confirmation (because password has already been set)
         } finally {
           this.auth.logout();
-          location.assign(`/login?email=${encodeURIComponent(this.email)}&inviteSuccess=true`);
+          const email = this.claims?.email ?? '';
+          location.assign(`/login?email=${encodeURIComponent(email)}&inviteSuccess=true`);
         }
       }
     }

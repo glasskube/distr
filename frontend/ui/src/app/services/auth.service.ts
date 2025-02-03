@@ -25,7 +25,7 @@ export class AuthService {
   private readonly baseUrl = '/api/v1/auth';
 
   public get isAuthenticated(): boolean {
-    return this.token != null;
+    return this.token !== null;
   }
 
   public get token(): string | null {
@@ -41,7 +41,7 @@ export class AuthService {
   }
 
   public hasRole(role: UserRole): boolean {
-    return this.getClaims().role === role;
+    return this.getClaims()?.role === role;
   }
 
   public login(email: string, password: string): Observable<void> {
@@ -63,11 +63,12 @@ export class AuthService {
     return this.httpClient.post<void>(`${this.baseUrl}/register`, body);
   }
 
-  public getClaims(): JWTClaims {
-    if (this.token !== null) {
-      return jwtDecode(this.token);
+  public getClaims(): JWTClaims | undefined {
+    const token = this.token;
+    if (token !== null) {
+      return jwtDecode(token);
     } else {
-      throw new Error('token is null');
+      return undefined;
     }
   }
 
@@ -80,9 +81,10 @@ export class AuthService {
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   if (!req.url.startsWith('/api/v1/auth/')) {
+    const claims = auth.getClaims();
     const token = auth.token;
     try {
-      if (dayjs.unix(parseInt(auth.getClaims().exp)).isAfter(dayjs())) {
+      if (!claims || dayjs.unix(parseInt(claims.exp)).isAfter(dayjs())) {
         return next(req.clone({headers: req.headers.set('Authorization', `Bearer ${token}`)})).pipe(
           tap({
             error: (e) => {
@@ -96,7 +98,7 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
       } else {
         auth.logout();
         location.reload();
-        return throwError(() => new Error('token has expired'));
+        return throwError(() => new Error('no token or token has expired'));
       }
     } catch (cause) {
       return throwError(() => new Error('no token', {cause}));

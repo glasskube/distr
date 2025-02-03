@@ -34,12 +34,15 @@ export class NavBarComponent implements OnInit {
 
   public async ngOnInit() {
     try {
-      const {email, name, role} = this.auth.getClaims();
-      this.email = email;
-      this.name = name;
-      this.role = role;
-      this.initBranding();
-      this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
+      const claims = this.auth.getClaims();
+      if (claims) {
+        const {email, name, role} = claims;
+        this.email = email;
+        this.name = name;
+        this.role = role;
+        this.initBranding();
+        this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
+      }
     } catch (e) {
       console.error(e);
     }
