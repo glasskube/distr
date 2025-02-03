@@ -47,7 +47,7 @@ const jwtParamRedirectGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => 
     return true;
   } else {
     // TODO: flush crud service caches
-    auth.token = jwt;
+    auth.actionToken = jwt;
     const newtree = createUrlTreeFromSnapshot(route, [], null, null);
     delete newtree.queryParams['jwt']; // prevent infinite loop
     return newtree;

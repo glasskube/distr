@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
 
 const tokenStorageKey = 'cloud_token';
+const actionTokenStorageKey = 'distr_action_token';
 
 export interface JWTClaims {
   sub: string;
@@ -24,15 +25,27 @@ export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly baseUrl = '/api/v1/auth';
 
-  public get token(): string | null {
+  private get token(): string | null {
     return localStorage.getItem(tokenStorageKey);
   }
 
-  public set token(value: string | null) {
+  private set token(value: string | null) {
     if (value !== null) {
       localStorage.setItem(tokenStorageKey, value);
     } else {
       localStorage.removeItem(tokenStorageKey);
+    }
+  }
+
+  public get actionToken(): string | null {
+    return sessionStorage.getItem(actionTokenStorageKey);
+  }
+
+  public set actionToken(value: string | null) {
+    if(value !== null) {
+      sessionStorage.setItem(actionTokenStorageKey, value);
+    } else {
+      sessionStorage.removeItem(actionTokenStorageKey);
     }
   }
 
@@ -42,7 +55,10 @@ export class AuthService {
 
   public login(email: string, password: string): Observable<void> {
     return this.httpClient.post<TokenResponse>(`${this.baseUrl}/login`, {email, password}).pipe(
-      tap((r) => (this.token = r.token)),
+      tap((r) => {
+        this.token = r.token;
+        this.actionToken = null;
+      }),
       map(() => undefined)
     );
   }
@@ -65,12 +81,23 @@ export class AuthService {
   }
 
   public getTokenAndClaims(): {token: string | null; claims: JWTClaims | undefined} {
-    const token = this.token;
-    if (token !== null) {
+    const actionToken = this.actionToken;
+    if(actionToken !== null) {
+      console.log('actionToken', actionToken)
       try {
-        return {token, claims: jwtDecode(token)};
+        return {token: actionToken, claims: jwtDecode(actionToken)};
       } catch (e) {
         console.error(e);
+      }
+    } else {
+      const token = this.token;
+      console.log('token', token)
+      if (token !== null) {
+        try {
+          return {token, claims: jwtDecode(token)};
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
     return {token: null, claims: undefined};
@@ -78,6 +105,7 @@ export class AuthService {
 
   public logout(): Observable<void> {
     this.token = null;
+    this.actionToken = null;
     return of(undefined);
   }
 }
