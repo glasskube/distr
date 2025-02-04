@@ -142,6 +142,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
+    envFileData: new FormControl<string | undefined>({value: undefined, disabled: true}),
   });
 
   deployFormLoading = false;
@@ -320,12 +321,14 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         if (type === 'kubernetes') {
           this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
+          this.deployForm.controls.envFileData.disable();
           this.deployForm.patchValue({valuesYaml});
           if (!this.deployForm.value.releaseName) {
             const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
             this.deployForm.patchValue({releaseName});
           }
         } else {
+          this.deployForm.controls.envFileData.enable();
           this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
         }
@@ -363,6 +366,9 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       const deployment = this.deployForm.value;
       if (deployment.valuesYaml) {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
+      }
+      if(deployment.envFileData) {
+        deployment.envFileData = btoa(deployment.envFileData);
       }
       try {
         await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));

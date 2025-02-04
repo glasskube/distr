@@ -12,6 +12,7 @@ export interface DeploymentRequest {
   applicationVersionId: string;
   releaseName?: string;
   valuesYaml?: string;
+  envFileData?: string;
   note?: string;
 }
 

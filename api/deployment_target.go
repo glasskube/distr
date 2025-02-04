@@ -18,6 +18,7 @@ type DeploymentRequest struct {
 	ApplicationVersionId string  `json:"applicationVersionId"`
 	ReleaseName          *string `json:"releaseName"`
 	ValuesYaml           []byte  `json:"valuesYaml"`
+	EnvFileData          []byte  `json:"envFileData"`
 }
 
 func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {

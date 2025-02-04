@@ -66,6 +66,7 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 		`SELECT`+deploymentOutputExpr+`,
 				dr.application_version_id as application_version_id,
 				dr.values_yaml as values_yaml,
+				dr.env_file_data as env_file_data,
 				dr.id as deployment_revision_id,
 				a.id AS application_id,
 				a.name AS application_name,
@@ -133,13 +134,14 @@ func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*t
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO DeploymentRevision AS d
-			(deployment_id, application_version_id, values_yaml)
-			VALUES (@deploymentId, @applicationVersionId, @valuesYaml)
+			(deployment_id, application_version_id, values_yaml, env_file_data)
+			VALUES (@deploymentId, @applicationVersionId, @valuesYaml, @envFileData)
 			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id`,
 		pgx.NamedArgs{
 			"deploymentId":         d.ID,
 			"applicationVersionId": d.ApplicationVersionId,
 			"valuesYaml":           d.ValuesYaml,
+			"envFileData":          d.EnvFileData,
 		},
 	)
 	if err != nil {

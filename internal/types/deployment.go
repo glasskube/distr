@@ -20,6 +20,7 @@ type DeploymentWithLatestRevision struct {
 	ApplicationVersionId   string                    `db:"application_version_id" json:"applicationVersionId"`
 	ApplicationVersionName string                    `db:"application_version_name" json:"applicationVersionName"`
 	ValuesYaml             []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
+	EnvFileData            []byte                    `db:"env_file_data" json:"envFileData,omitempty"`
 	LatestStatus           *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
 }
 
