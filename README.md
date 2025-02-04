@@ -106,7 +106,7 @@ docker-compose up -d
 make run
 ```
 
-Open your browser and navigate to [`http://localhost:8080`](http://localhost:8080) to register a user
+Open your browser and navigate to [`http://localhost:8080/register`](http://localhost:8080/register) to register a user
 and receive the E-Mail verification link via Mailpit on [`http://localhost:8025`](http://localhost:8025).
 
 ## Distr SDK
