@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
 
 const tokenStorageKey = 'cloud_token';
+const actionTokenStorageKey = 'distr_action_token';
 
 export interface JWTClaims {
   sub: string;
@@ -24,15 +25,11 @@ export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly baseUrl = '/api/v1/auth';
 
-  public get isAuthenticated(): boolean {
-    return this.token != null;
-  }
-
-  public get token(): string | null {
+  private get token(): string | null {
     return localStorage.getItem(tokenStorageKey);
   }
 
-  public set token(value: string | null) {
+  private set token(value: string | null) {
     if (value !== null) {
       localStorage.setItem(tokenStorageKey, value);
     } else {
@@ -40,13 +37,28 @@ export class AuthService {
     }
   }
 
+  public get actionToken(): string | null {
+    return sessionStorage.getItem(actionTokenStorageKey);
+  }
+
+  public set actionToken(value: string | null) {
+    if (value !== null) {
+      sessionStorage.setItem(actionTokenStorageKey, value);
+    } else {
+      sessionStorage.removeItem(actionTokenStorageKey);
+    }
+  }
+
   public hasRole(role: UserRole): boolean {
-    return this.getClaims().role === role;
+    return this.getClaims()?.role === role;
   }
 
   public login(email: string, password: string): Observable<void> {
     return this.httpClient.post<TokenResponse>(`${this.baseUrl}/login`, {email, password}).pipe(
-      tap((r) => (this.token = r.token)),
+      tap((r) => {
+        this.token = r.token;
+        this.actionToken = null;
+      }),
       map(() => undefined)
     );
   }
@@ -63,16 +75,37 @@ export class AuthService {
     return this.httpClient.post<void>(`${this.baseUrl}/register`, body);
   }
 
-  public getClaims(): JWTClaims {
-    if (this.token !== null) {
-      return jwtDecode(this.token);
+  public getClaims(): JWTClaims | undefined {
+    const {claims} = this.getTokenAndClaims();
+    return claims;
+  }
+
+  public getTokenAndClaims(): {token: string | null; claims: JWTClaims | undefined} {
+    const actionToken = this.actionToken;
+    if (actionToken !== null) {
+      console.log('actionToken', actionToken);
+      try {
+        return {token: actionToken, claims: jwtDecode(actionToken)};
+      } catch (e) {
+        console.error(e);
+      }
     } else {
-      throw new Error('token is null');
+      const token = this.token;
+      console.log('token', token);
+      if (token !== null) {
+        try {
+          return {token, claims: jwtDecode(token)};
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
+    return {token: null, claims: undefined};
   }
 
   public logout(): Observable<void> {
     this.token = null;
+    this.actionToken = null;
     return of(undefined);
   }
 }
@@ -80,9 +113,9 @@ export class AuthService {
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   if (!req.url.startsWith('/api/v1/auth/')) {
-    const token = auth.token;
+    const {token, claims} = auth.getTokenAndClaims();
     try {
-      if (dayjs.unix(parseInt(auth.getClaims().exp)).isAfter(dayjs())) {
+      if (claims && dayjs.unix(parseInt(claims.exp)).isAfter(dayjs())) {
         return next(req.clone({headers: req.headers.set('Authorization', `Bearer ${token}`)})).pipe(
           tap({
             error: (e) => {
@@ -96,7 +129,7 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
       } else {
         auth.logout();
         location.reload();
-        return throwError(() => new Error('token has expired'));
+        return throwError(() => new Error('no token or token has expired'));
       }
     } catch (cause) {
       return throwError(() => new Error('no token', {cause}));

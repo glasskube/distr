@@ -23,7 +23,7 @@ export class PasswordResetComponent {
     },
     (control) => (control.value.password === control.value.passwordConfirm ? null : {passwordMismatch: 'error'})
   );
-  public readonly email = this.auth.getClaims().email;
+  public readonly email = this.auth.getClaims()?.email;
   public errorMessage?: string;
   loading = false;
 
@@ -35,7 +35,7 @@ export class PasswordResetComponent {
       try {
         await lastValueFrom(this.settings.updateUserSettings({password: this.form.value.password!}));
         await lastValueFrom(this.auth.logout());
-        location.assign(`/login?email=${encodeURIComponent(this.email)}`);
+        location.assign(`/login?email=${encodeURIComponent(this.email ?? '')}`);
       } catch (e) {
         this.errorMessage = getFormDisplayedError(e);
       } finally {

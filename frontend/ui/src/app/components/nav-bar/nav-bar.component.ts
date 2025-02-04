@@ -1,6 +1,6 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {Component, inject, OnInit} from '@angular/core';
-import {lastValueFrom} from 'rxjs';
+import {catchError, EMPTY, lastValueFrom} from 'rxjs';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
 import {SidebarService} from '../../services/sidebar.service';
@@ -10,6 +10,9 @@ import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 import {RouterLink} from '@angular/router';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
 import {UserRole} from '@glasskube/distr-sdk';
+import {getFormDisplayedError} from '../../../util/errors';
+import {HttpErrorResponse} from '@angular/common/http';
+import {ToastService} from '../../services/toast.service';
 
 @Component({
   selector: 'app-nav-bar',
@@ -21,6 +24,7 @@ import {UserRole} from '@glasskube/distr-sdk';
 export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
   public readonly sidebar = inject(SidebarService);
+  private readonly toast = inject(ToastService);
   private readonly organizationBranding = inject(OrganizationBrandingService);
   showDropdown = false;
   email?: string;
@@ -34,12 +38,15 @@ export class NavBarComponent implements OnInit {
 
   public async ngOnInit() {
     try {
-      const {email, name, role} = this.auth.getClaims();
-      this.email = email;
-      this.name = name;
-      this.role = role;
-      this.initBranding();
-      this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
+      const claims = this.auth.getClaims();
+      if (claims) {
+        const {email, name, role} = claims;
+        this.email = email;
+        this.name = name;
+        this.role = role;
+        this.initBranding();
+        this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
+      }
     } catch (e) {
       console.error(e);
     }
@@ -56,7 +63,10 @@ export class NavBarComponent implements OnInit {
           this.customerSubtitle = branding.title;
         }
       } catch (e) {
-        console.error(e);
+        const msg = getFormDisplayedError(e);
+        if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
+          this.toast.error(msg);
+        }
       }
     }
   }

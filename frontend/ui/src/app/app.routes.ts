@@ -30,12 +30,12 @@ const emailVerificationGuard: CanActivateFn = async () => {
   const settings = inject(SettingsService);
   const toast = inject(ToastService);
   const router = inject(Router);
-  const {email, email_verified} = auth.getClaims();
-  if (email_verified) {
+  const claims = auth.getClaims();
+  if (claims?.email_verified) {
     await firstValueFrom(settings.confirmEmailVerification());
     toast.success('Your email has been verified');
     await firstValueFrom(auth.logout());
-    return router.createUrlTree(['/login'], {queryParams: {email}});
+    return router.createUrlTree(['/login'], {queryParams: {email: claims.email}});
   }
   return true;
 };
@@ -47,7 +47,7 @@ const jwtParamRedirectGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => 
     return true;
   } else {
     // TODO: flush crud service caches
-    auth.token = jwt;
+    auth.actionToken = jwt;
     const newtree = createUrlTreeFromSnapshot(route, [], null, null);
     delete newtree.queryParams['jwt']; // prevent infinite loop
     return newtree;
@@ -57,14 +57,15 @@ const jwtParamRedirectGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => 
 const jwtAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.isAuthenticated) {
-    if (auth.getClaims().password_reset) {
+  const claims = auth.getClaims();
+  if (claims) {
+    if (claims.password_reset) {
       if (state.url === '/reset') {
         return true;
       } else {
         return router.createUrlTree(['/reset']);
       }
-    } else if (!auth.getClaims().email_verified) {
+    } else if (!claims.email_verified) {
       if (state.url === '/verify') {
         return true;
       } else {
@@ -82,10 +83,10 @@ function requiredRoleGuard(userRole: UserRole): CanActivateFn {
   return () => inject(AuthService).hasRole(userRole);
 }
 
-const baseRoteRedirectGuard: CanActivateFn = () => {
+const baseRouteRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  switch (auth.getClaims().role) {
+  switch (auth.getClaims()?.role) {
     case 'customer':
       return router.createUrlTree(['/home']);
     case 'vendor':
@@ -106,7 +107,7 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        canActivate: [baseRoteRedirectGuard],
+        canActivate: [baseRouteRedirectGuard],
         children: [],
       },
       {
