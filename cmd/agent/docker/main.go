@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -55,7 +56,27 @@ loop:
 		} else {
 			// TODO: Implement docker agent self update
 
-			cmd := exec.CommandContext(ctx, "docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
+			var envFile *os.File
+			if resource.EnvFile != nil {
+				if envFile, err = os.CreateTemp("", "distr-env"); err != nil {
+					logger.Error("failed to create env file", zap.Error(err))
+				} else {
+					if _, err := envFile.Write(resource.EnvFile); err != nil {
+						logger.Error("failed to write env file", zap.Error(err))
+					}
+
+					// TODO handle all the errors
+					_ = envFile.Close()
+				}
+			}
+
+			composeArgs := []string{"compose"}
+			if envFile != nil {
+				composeArgs = append(composeArgs, fmt.Sprintf("--env-file=%v", envFile.Name()))
+			}
+			composeArgs = append(composeArgs, "-f", "-", "up", "-d", "--quiet-pull")
+
+			cmd := exec.CommandContext(ctx, "docker", composeArgs...)
 			cmd.Stdin = bytes.NewReader(resource.ComposeFile)
 			out, cmdErr := cmd.CombinedOutput()
 			outStr := string(out)
@@ -69,6 +90,11 @@ loop:
 			}
 			if err := client.Status(ctx, resource.RevisionID, reportedStatus, reportedErr); err != nil {
 				logger.Error("failed to send status", zap.Error(err))
+			}
+
+			if envFile != nil {
+				// TODO
+				// _ = os.Remove(envFile.Name())
 			}
 		}
 
