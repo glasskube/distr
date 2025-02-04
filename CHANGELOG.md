@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/glasskube/distr/compare/1.0.3...1.0.4) (2025-02-04)
+
+
+### Other
+
+* remove console logs ([#417](https://github.com/glasskube/distr/issues/417)) ([9033385](https://github.com/glasskube/distr/commit/90333858fa34a0d65ed6fb60da49de67d42c45bf))
+
 ## [1.0.3](https://github.com/glasskube/distr/compare/1.0.2...1.0.3) (2025-02-04)
 
 
