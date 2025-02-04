@@ -311,7 +311,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 				} else if deploymentTarget.ReportedAgentVersionID == nil ||
 					reportedVersion.ID != *deploymentTarget.ReportedAgentVersionID {
 					if err := db.UpdateDeploymentTargetReportedAgentVersionID(
-						ctx, &deploymentTarget.DeploymentTarget, reportedVersion.ID); err != nil {
+						ctx, deploymentTarget, reportedVersion.ID); err != nil {
 						log.Error("could not update reported agent version", zap.Error(err))
 						sentry.GetHubFromContext(ctx).CaptureException(err)
 					}
