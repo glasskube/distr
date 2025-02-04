@@ -42,7 +42,7 @@ export class AuthService {
   }
 
   public set actionToken(value: string | null) {
-    if(value !== null) {
+    if (value !== null) {
       sessionStorage.setItem(actionTokenStorageKey, value);
     } else {
       sessionStorage.removeItem(actionTokenStorageKey);
@@ -82,8 +82,8 @@ export class AuthService {
 
   public getTokenAndClaims(): {token: string | null; claims: JWTClaims | undefined} {
     const actionToken = this.actionToken;
-    if(actionToken !== null) {
-      console.log('actionToken', actionToken)
+    if (actionToken !== null) {
+      console.log('actionToken', actionToken);
       try {
         return {token: actionToken, claims: jwtDecode(actionToken)};
       } catch (e) {
@@ -91,7 +91,7 @@ export class AuthService {
       }
     } else {
       const token = this.token;
-      console.log('token', token)
+      console.log('token', token);
       if (token !== null) {
         try {
           return {token, claims: jwtDecode(token)};
