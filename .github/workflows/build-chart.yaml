@@ -31,7 +31,7 @@ jobs:
       - name: Build helm chart
         run: |
           helm dependency build deploy/charts/distr
-          helm lint deploy/charts/distr
+          helm lint --strict deploy/charts/distr
           helm package deploy/charts/distr
       - name: Login to GitHub Container Registry (tag or manual only)
         if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.publish }}
