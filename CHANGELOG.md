@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.3](https://github.com/glasskube/distr/compare/1.0.2...1.0.3) (2025-02-04)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.1 ([#413](https://github.com/glasskube/distr/issues/413)) ([3b7ab5d](https://github.com/glasskube/distr/commit/3b7ab5d53f2f730ee240d67057849d88eb65414a))
+
+
+### Other
+
+* **ci:** fix release build error ([#414](https://github.com/glasskube/distr/issues/414)) ([9bfc472](https://github.com/glasskube/distr/commit/9bfc4729d9259ffcff72bfa6e60271974748d9a4))
+
 ## [1.0.2](https://github.com/glasskube/distr/compare/1.0.1...1.0.2) (2025-02-04)
 
 
