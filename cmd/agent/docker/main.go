@@ -56,44 +56,56 @@ loop:
 		} else {
 			// TODO: Implement docker agent self update
 
+			var err error
+			var statusStr string
+
 			var envFile *os.File
 			if resource.EnvFile != nil {
 				if envFile, err = os.CreateTemp("", "distr-env"); err != nil {
-					logger.Error("failed to create env file", zap.Error(err))
+					msg := "failed to create env file in tmp directory"
+					statusStr = fmt.Sprintf("%v: %v", msg, err)
+					logger.Error(msg, zap.Error(err))
 				} else {
-					if _, err := envFile.Write(resource.EnvFile); err != nil {
+					if _, err = envFile.Write(resource.EnvFile); err != nil {
+						msg := "failed to write env file"
+						statusStr = fmt.Sprintf("%v: %v", msg, err)
 						logger.Error("failed to write env file", zap.Error(err))
 					}
-
-					// TODO handle all the errors
 					_ = envFile.Close()
 				}
 			}
 
-			composeArgs := []string{"compose"}
-			if envFile != nil {
-				composeArgs = append(composeArgs, fmt.Sprintf("--env-file=%v", envFile.Name()))
-			}
-			composeArgs = append(composeArgs, "-f", "-", "up", "-d", "--quiet-pull")
+			if err == nil {
+				composeArgs := []string{"compose"}
+				if envFile != nil {
+					composeArgs = append(composeArgs, fmt.Sprintf("--env-file=%v", envFile.Name()))
+				}
+				composeArgs = append(composeArgs, "-f", "-", "up", "-d", "--quiet-pull")
 
-			cmd := exec.CommandContext(ctx, "docker", composeArgs...)
-			cmd.Stdin = bytes.NewReader(resource.ComposeFile)
-			out, cmdErr := cmd.CombinedOutput()
-			outStr := string(out)
-			logger.Debug("docker compose returned", zap.String("output", outStr), zap.Error(cmdErr))
+				cmd := exec.CommandContext(ctx, "docker", composeArgs...)
+				cmd.Stdin = bytes.NewReader(resource.ComposeFile)
+
+				var cmdOut []byte
+				cmdOut, err = cmd.CombinedOutput()
+				statusStr = string(cmdOut)
+				logger.Debug("docker compose returned", zap.String("output", statusStr), zap.Error(err))
+			}
+
 			var reportedStatus string
 			var reportedErr error
-			if cmdErr != nil {
-				reportedErr = errors.New(outStr)
+			if err != nil {
+				reportedErr = errors.New(statusStr)
 			} else {
-				reportedStatus = outStr
+				reportedStatus = statusStr
 			}
 			if err := client.Status(ctx, resource.RevisionID, reportedStatus, reportedErr); err != nil {
 				logger.Error("failed to send status", zap.Error(err))
 			}
 
 			if envFile != nil {
-				_ = os.Remove(envFile.Name())
+				if err := os.Remove(envFile.Name()); err != nil {
+					logger.Error("failed to remove env file from tmp directory", zap.Error(err))
+				}
 			}
 		}
 
