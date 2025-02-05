@@ -213,6 +213,9 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func patchProjectName(data map[string]any, deploymentId string) ([]byte, error) {
+	if data == nil {
+		data = make(map[string]any)
+	}
 	data["name"] = fmt.Sprintf("distr-%v", deploymentId[:8])
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf)
