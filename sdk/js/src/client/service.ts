@@ -94,10 +94,14 @@ export class DistrService {
       templateFile?: string;
     }
   ): Promise<ApplicationVersion> {
-    return this.client.createApplicationVersion(applicationId, {name}, {
-      composeFile: data.composeFile,
-      templateFile: data.templateFile
-    });
+    return this.client.createApplicationVersion(
+      applicationId,
+      {name},
+      {
+        composeFile: data.composeFile,
+        templateFile: data.templateFile,
+      }
+    );
   }
 
   /**

@@ -19,16 +19,15 @@ services:
 
 volumes:
   postgres-data:
-`
+`;
 
 const templateFile = `
 POSTGRES_USER=some-user # REPLACE THIS
 POSTGRES_PASSWORD=some-password # REPLACE THIS
-POSTGRES_DB=some-db # REPLACE THIS`
+POSTGRES_DB=some-db # REPLACE THIS`;
 
-const newDockerVersion = await gc.createDockerApplicationVersion(
-  appId,
-  '17.2-alpine3.20+2',
-  { composeFile, templateFile }
-);
+const newDockerVersion = await gc.createDockerApplicationVersion(appId, '17.2-alpine3.20+2', {
+  composeFile,
+  templateFile,
+});
 console.log(`* created new version ${newDockerVersion.name} (id: ${newDockerVersion.id}) for docker app ${appId}`);
