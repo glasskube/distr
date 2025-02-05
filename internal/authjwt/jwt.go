@@ -56,7 +56,7 @@ func generateUserToken(
 		jwt.SubjectKey:       user.ID,
 		UserNameKey:          user.Name,
 		UserEmailKey:         user.Email,
-		UserEmailVerifiedKey: user.EmailVerifiedAt != nil,
+		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
 	}
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole

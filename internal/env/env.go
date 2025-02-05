@@ -14,23 +14,24 @@ import (
 )
 
 var (
-	databaseUrl                string
-	jwtSecret                  []byte
-	host                       string
-	mailerConfig               MailerConfig
-	inviteTokenValidDuration   = 24 * time.Hour
-	resetTokenValidDuration    = 1 * time.Hour
-	agentTokenMaxValidDuration = 24 * time.Hour
-	agentInterval              = 5 * time.Second
-	statusEntriesMaxAge        *time.Duration
-	sentryDSN                  string
-	sentryDebug                bool
-	enableQueryLogging         bool
-	agentDockerConfig          []byte
-	frontendSentryDSN          *string
-	frontendPosthogToken       *string
-	frontendPosthogAPIHost     *string
-	frontendPosthogUIHost      *string
+	databaseUrl                   string
+	jwtSecret                     []byte
+	host                          string
+	mailerConfig                  = MailerConfig{Type: MailerTypeUnspecified}
+	inviteTokenValidDuration      = 24 * time.Hour
+	resetTokenValidDuration       = 1 * time.Hour
+	agentTokenMaxValidDuration    = 24 * time.Hour
+	agentInterval                 = 5 * time.Second
+	statusEntriesMaxAge           *time.Duration
+	sentryDSN                     string
+	sentryDebug                   bool
+	enableQueryLogging            bool
+	agentDockerConfig             []byte
+	frontendSentryDSN             *string
+	frontendPosthogToken          *string
+	frontendPosthogAPIHost        *string
+	frontendPosthogUIHost         *string
+	userEmailVerificationRequired = true
 )
 
 func init() {
@@ -53,25 +54,28 @@ func init() {
 		panic(errors.New("can't start, DISTR_HOST not set"))
 	}
 
-	switch os.Getenv("MAILER_TYPE") {
-	case "ses":
-		mailerConfig.Type = MailerTypeSES
-	case "smtp":
-		mailerConfig.Type = MailerTypeSMTP
-		port, err := strconv.Atoi(os.Getenv("MAILER_SMTP_PORT"))
-		if err != nil {
-			panic(fmt.Errorf("could not decode smtp port: %w", err))
+	if value, ok := os.LookupEnv("MAILER_TYPE"); ok {
+		switch value {
+		case string(MailerTypeSES):
+			mailerConfig.Type = MailerTypeSES
+			mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
+		case string(MailerTypeSMTP):
+			mailerConfig.Type = MailerTypeSMTP
+			mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
+			port, err := strconv.Atoi(os.Getenv("MAILER_SMTP_PORT"))
+			if err != nil {
+				panic(fmt.Errorf("could not decode smtp port: %w", err))
+			}
+			mailerConfig.SmtpConfig = &MailerSMTPConfig{
+				Host:     os.Getenv("MAILER_SMTP_HOST"),
+				Port:     port,
+				Username: os.Getenv("MAILER_SMTP_USERNAME"),
+				Password: os.Getenv("MAILER_SMTP_PASSWORD"),
+			}
+		default:
+			panic("invalid MAILER_TYPE")
 		}
-		mailerConfig.SmtpConfig = &MailerSMTPConfig{
-			Host:     os.Getenv("MAILER_SMTP_HOST"),
-			Port:     port,
-			Username: os.Getenv("MAILER_SMTP_USERNAME"),
-			Password: os.Getenv("MAILER_SMTP_PASSWORD"),
-		}
-	default:
-		panic("invalid MAILER_TYPE")
 	}
-	mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
 
 	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
 		inviteTokenValidDuration = requirePositiveDuration(d)
@@ -116,6 +120,10 @@ func init() {
 
 	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_UI_HOST"); ok {
 		frontendPosthogUIHost = &value
+	}
+
+	if value, ok := os.LookupEnv("USER_EMAIL_VERIFICATION_REQUIRED"); ok {
+		userEmailVerificationRequired = util.Require(strconv.ParseBool(value))
 	}
 }
 
@@ -190,4 +198,8 @@ func FrontendPosthogAPIHost() *string {
 }
 func FrontendPosthogUIHost() *string {
 	return frontendPosthogUIHost
+}
+
+func UserEmailVerificationRequired() bool {
+	return userEmailVerificationRequired
 }
