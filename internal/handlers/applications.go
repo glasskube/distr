@@ -294,15 +294,22 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var composeFileData []byte
+	var templateFileData []byte
 	if composeFile, err := resources.Get("apps/shiori/docker-compose.yaml"); err != nil {
 		log.Warn("failed to read shiori compose file", zap.Error(err))
 	} else {
 		composeFileData = composeFile
 	}
+	if templateFile, err := resources.Get("apps/shiori/template.env"); err != nil {
+		log.Warn("failed to read shiori template file", zap.Error(err))
+	} else {
+		templateFileData = templateFile
+	}
 
 	version := types.ApplicationVersion{
-		Name:            "v1.7.4",
-		ComposeFileData: composeFileData,
+		Name:             "v1.7.4",
+		ComposeFileData:  composeFileData,
+		TemplateFileData: templateFileData,
 	}
 
 	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
