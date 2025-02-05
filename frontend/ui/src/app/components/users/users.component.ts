@@ -4,7 +4,7 @@ import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faClipboard, faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
   combineLatest,
   filter,
@@ -51,6 +51,7 @@ export class UsersComponent implements OnDestroy {
   public readonly faPlus = faPlus;
   public readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
+  protected readonly faClipboard = faClipboard;
 
   public readonly userRole: Signal<UserRole>;
   public readonly users$: Observable<UserAccountWithRole[]>;
@@ -64,6 +65,7 @@ export class UsersComponent implements OnDestroy {
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
   });
   inviteFormLoading = false;
+  protected inviteUrl: string | null = null;
 
   filterForm = new FormGroup({
     search: new FormControl(''),
@@ -105,20 +107,24 @@ export class UsersComponent implements OnDestroy {
     if (this.inviteForm.valid) {
       this.inviteFormLoading = true;
       try {
-        await firstValueFrom(
+        const result = await firstValueFrom(
           this.users.addUser({
             email: this.inviteForm.value.email!,
             name: this.inviteForm.value.name || undefined,
             userRole: this.userRole(),
           })
         );
-        this.closeInviteDialog();
-        switch (this.userRole()) {
-          case 'customer':
-            this.toast.success('Customer has been invited to the organization');
-            break;
-          case 'vendor':
-            this.toast.success('User has been invited to the organization');
+        if (result.inviteUrl !== undefined) {
+          this.inviteUrl = result.inviteUrl;
+        } else {
+          this.closeInviteDialog();
+          switch (this.userRole()) {
+            case 'customer':
+              this.toast.success('Customer has been invited to the organization');
+              break;
+            case 'vendor':
+              this.toast.success('User has been invited to the organization');
+          }
         }
         this.refresh$.next();
       } catch (e) {
@@ -144,7 +150,15 @@ export class UsersComponent implements OnDestroy {
   }
 
   public closeInviteDialog(): void {
+    this.inviteUrl = null;
     this.modalRef?.close();
     this.inviteForm.reset();
+  }
+
+  public copyInviteUrl(): void {
+    if (this.inviteUrl) {
+      navigator.clipboard.writeText(this.inviteUrl);
+      this.toast.success('Invite URL has been copied');
+    }
   }
 }

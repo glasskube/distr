@@ -15,14 +15,14 @@
           <a href="{{.Host}}/">Distr</a>.
         </p>
 
-        {{if .Token}}
+        {{ if .InviteURL }}
         <p>
           Since you don't have an account yet, please finish your setup by clicking
-          <a href="{{.Host}}/join?jwt={{.Token | QueryEscape}}">here</a>.
+          <a href="{{ .InviteURL | UnsafeURL }}">here</a>.
         </p>
-        {{else}}
+        {{ else }}
         <p>not supported yet</p>
-        {{end}}
+        {{ end }}
 
         <p>{{template "fragments/signature.html"}}</p>
       </main>
