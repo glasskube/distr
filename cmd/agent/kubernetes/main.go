@@ -87,12 +87,12 @@ func main() {
 		}
 
 		pushStatus := func(ctx context.Context, status string) {
-			if err := agentClient.Status(ctx, res.RevisionID, status, nil); err != nil {
+			if err := agentClient.Status(ctx, res.Deployment.RevisionID, status, nil); err != nil {
 				logger.Warn("status push failed", zap.Error(err))
 			}
 		}
 		pushErrorStatus := func(ctx context.Context, error error) {
-			if err := agentClient.Status(ctx, res.RevisionID, "", error); err != nil {
+			if err := agentClient.Status(ctx, res.Deployment.RevisionID, "", error); err != nil {
 				logger.Warn("status push failed", zap.Error(err))
 			}
 		}

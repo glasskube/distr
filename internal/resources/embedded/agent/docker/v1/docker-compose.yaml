@@ -15,3 +15,6 @@ services:
       DISTR_AGENT_VERSION_ID: '{{ .agentVersionId }}'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - scratch:/scratch
+volumes:
+  scratch:

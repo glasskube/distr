@@ -3,11 +3,20 @@ package api
 import "github.com/glasskube/distr/internal/types"
 
 type AgentResource struct {
+	Version types.AgentVersion `json:"version"`
+}
+
+type AgentDeployment struct {
 	RevisionID string `json:"revisionId"`
 }
 
 type DockerAgentResource struct {
 	AgentResource
+	Deployment *DockerAgentDeployment `json:"deployment"`
+}
+
+type DockerAgentDeployment struct {
+	AgentDeployment
 	ComposeFile []byte `json:"composeFile"`
 }
 
@@ -15,11 +24,10 @@ type KubernetesAgentResource struct {
 	AgentResource
 	Namespace  string                     `json:"namespace"`
 	Deployment *KubernetesAgentDeployment `json:"deployment"`
-	Version    types.AgentVersion         `json:"version"`
 }
 
 type KubernetesAgentDeployment struct {
-	RevisionID   string         `json:"revisionId"`
+	AgentDeployment
 	ReleaseName  string         `json:"releaseName"`
 	ChartUrl     string         `json:"chartUrl"`
 	ChartName    string         `json:"chartName"`
