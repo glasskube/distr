@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient/useragent"
@@ -30,6 +28,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 func AgentRouter(r chi.Router) {
@@ -141,6 +140,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
+		response := api.DockerAgentResource{AgentResource: api.AgentResource{Version: deploymentTarget.AgentVersion}}
 		if deployment != nil && appVersion != nil {
 			if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
 				log.Warn("parse error", zap.Error(err))
@@ -151,28 +151,26 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			} else {
-				response := api.DockerAgentResource{
-					AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
-					ComposeFile:   patchedComposeFile,
+				response.Deployment = &api.DockerAgentDeployment{
+					AgentDeployment: api.AgentDeployment{RevisionID: deployment.DeploymentRevisionID},
+					ComposeFile:     patchedComposeFile,
 				}
-				RespondJSON(w, response)
 			}
 		} else {
-			// it the status wasn't previously set to something else send a 204 code
-			w.WriteHeader(http.StatusNoContent)
+			log.Debug("compose file is empty")
 		}
+		RespondJSON(w, response)
 	} else {
 		response := api.KubernetesAgentResource{
-			Namespace: *deploymentTarget.Namespace,
-			Version:   deploymentTarget.AgentVersion,
+			AgentResource: api.AgentResource{Version: deploymentTarget.AgentVersion},
+			Namespace:     *deploymentTarget.Namespace,
 		}
 		if deployment != nil && appVersion != nil {
-			response.AgentResource = api.AgentResource{RevisionID: deployment.DeploymentRevisionID}
 			response.Deployment = &api.KubernetesAgentDeployment{
-				RevisionID:   deployment.DeploymentRevisionID,
-				ReleaseName:  *deployment.ReleaseName,
-				ChartUrl:     *appVersion.ChartUrl,
-				ChartVersion: *appVersion.ChartVersion,
+				AgentDeployment: api.AgentDeployment{RevisionID: deployment.DeploymentRevisionID},
+				ReleaseName:     *deployment.ReleaseName,
+				ChartUrl:        *appVersion.ChartUrl,
+				ChartVersion:    *appVersion.ChartVersion,
 			}
 			if versionValues, err := appVersion.ParsedValuesFile(); err != nil {
 				log.Warn("parse error", zap.Error(err))
