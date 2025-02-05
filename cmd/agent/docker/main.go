@@ -93,8 +93,7 @@ loop:
 			}
 
 			if envFile != nil {
-				// TODO
-				// _ = os.Remove(envFile.Name())
+				_ = os.Remove(envFile.Name())
 			}
 		}
 
