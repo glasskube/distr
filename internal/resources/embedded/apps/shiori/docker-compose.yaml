@@ -12,15 +12,15 @@ services:
       - shiori-postgres
     environment:
       SHIORI_DIR: /srv/shiori
-      SHIORI_DATABASE_URL: postgres://shiori:shiori@shiori-postgres/shiori?sslmode=disable
+      SHIORI_DATABASE_URL: postgres://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@shiori-postgres/shiori?sslmode=disable
 
   shiori-postgres:
     image: 'postgres:17.2-alpine3.20'
-    environment:
-      POSTGRES_PASSWORD: shiori
-      POSTGRES_USER: shiori
     ports:
       - '5433:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
     volumes:
       - 'shiori-postgres:/var/lib/postgresql/data/'
 

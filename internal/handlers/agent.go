@@ -154,6 +154,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				response := api.DockerAgentResource{
 					AgentResource: api.AgentResource{RevisionID: deployment.DeploymentRevisionID},
 					ComposeFile:   patchedComposeFile,
+					EnvFile:       deployment.EnvFileData,
 				}
 				RespondJSON(w, response)
 			}

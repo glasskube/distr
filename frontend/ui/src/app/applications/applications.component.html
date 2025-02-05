@@ -430,25 +430,43 @@
                 </div>
               } @else {
                 <div class="space-y-4 mt-4">
-                  <div class="w-full">
-                    <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Docker Compose</label
-                    >
-                    <app-yaml-editor
-                      id="compose_input"
-                      class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      [formControl]="newVersionForm.controls.docker.controls.compose">
-                    </app-yaml-editor>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Paste your docker compose file here.
+                  <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                    <div class="w-full">
+                      <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Docker Compose</label
+                      >
+                      <app-yaml-editor
+                        id="compose_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="newVersionForm.controls.docker.controls.compose">
+                      </app-yaml-editor>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Paste your docker compose file here.
+                      </div>
+                      @if (
+                        newVersionForm.controls.docker.controls.compose.invalid &&
+                        newVersionForm.controls.docker.controls.compose.touched
+                      ) {
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
                     </div>
-                    @if (
-                      newVersionForm.controls.docker.controls.compose.invalid &&
-                      newVersionForm.controls.docker.controls.compose.touched
-                    ) {
-                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                    }
+
+                    <div class="w-full">
+                      <label
+                        for="compose_template_input"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Environment Template</label
+                      >
+                      <app-yaml-editor
+                        id="compose_template_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="newVersionForm.controls.docker.controls.template">
+                      </app-yaml-editor>
+                    </div>
                   </div>
+                </div>
+                <div class="space-y-4 mt-4">
+                  <div class="w-full"></div>
                 </div>
               }
               <div class="flex justify-stretch sm:justify-end mt-5 space-x-2.5">

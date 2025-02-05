@@ -74,6 +74,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
     applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
     valuesYaml: new FormControl<string>({value: '', disabled: true}),
     releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
+    envFileData: new FormControl<string>({value: '', disabled: true}),
   });
 
   protected selectedApplication?: Application;
@@ -103,23 +104,24 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroyed$),
         switchMap((id) =>
-          this.selectedApplication?.type === 'kubernetes'
-            ? this.applications
-                .getTemplateFile(this.selectedApplication?.id!, id!)
-                .pipe(map((data) => [this.selectedApplication?.type, data]))
-            : of([this.selectedApplication?.type, null])
+          this.applications
+            .getTemplateFile(this.selectedApplication?.id!, id!)
+            .pipe(map((data) => [this.selectedApplication?.type, data]))
         )
       )
-      .subscribe(([type, valuesYaml]) => {
+      .subscribe(([type, templateFile]) => {
         if (type === 'kubernetes') {
           this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
-          this.deployForm.patchValue({valuesYaml});
+          this.deployForm.controls.envFileData.disable();
+          this.deployForm.patchValue({valuesYaml: templateFile});
           if (!this.deployForm.value.releaseName) {
             const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
             this.deployForm.patchValue({releaseName});
           }
         } else {
+          this.deployForm.controls.envFileData.enable();
+          this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
           this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
         }
@@ -216,6 +218,11 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
       } else {
         deployment.valuesYaml = undefined;
+      }
+      if (deployment.envFileData) {
+        deployment.envFileData = btoa(deployment.envFileData);
+      } else {
+        deployment.envFileData = undefined;
       }
       await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));
       this.toast.success('Deployment saved successfully');
