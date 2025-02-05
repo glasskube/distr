@@ -299,30 +299,36 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         tap(([selected, apps]) => this.updatedSelectedApplication(apps, selected))
       )
       .subscribe(() => {
-        if (this.selectedApplication && (this.selectedApplication.versions ?? []).length > 0) {
-          const versions = this.selectedApplication.versions!;
-          this.deployForm.controls.applicationVersionId.patchValue(versions[versions.length - 1].id);
+        if (this.selectedApplication) {
+          if(this.deployForm.controls.deploymentId.value) {
+            this.deployForm.controls.applicationId.disable({emitEvent: false});
+          }
+          this.deployForm.controls.applicationVersionId.enable({emitEvent: false});
         } else {
-          this.deployForm.controls.applicationVersionId.reset();
+          this.deployForm.controls.applicationId.enable({emitEvent: false});
+          this.deployForm.controls.applicationVersionId.disable({emitEvent: false});
         }
       });
     this.deployForm.controls.applicationVersionId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
+        filter(() => !!this.selectedApplication),
         switchMap((id) =>
-          this.selectedApplication?.type === 'kubernetes'
+          !this.selectedDeploymentTarget()?.deployment?.valuesYaml && !this.selectedDeploymentTarget()?.deployment?.envFileData
             ? this.applications
-                .getTemplateFile(this.selectedApplication?.id!, id!)
-                .pipe(map((data) => [this.selectedApplication?.type, data]))
+              .getTemplateFile(this.selectedApplication?.id!, id!)
+              .pipe(map((data) => [this.selectedApplication?.type, data]))
             : of([this.selectedApplication?.type, null])
         )
       )
-      .subscribe(([type, valuesYaml]) => {
+      .subscribe(([type, templateFile]) => {
         if (type === 'kubernetes') {
           this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
           this.deployForm.controls.envFileData.disable();
-          this.deployForm.patchValue({valuesYaml});
+          if(templateFile) {
+            this.deployForm.patchValue({valuesYaml: templateFile})
+          }
           if (!this.deployForm.value.releaseName) {
             const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
             this.deployForm.patchValue({releaseName});
@@ -331,31 +337,30 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
           this.deployForm.controls.envFileData.enable();
           this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
+          if(templateFile) {
+            this.deployForm.patchValue({envFileData: templateFile})
+          }
         }
       });
-    this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
-      if (s === 'VALID') {
-        this.deployForm.controls.applicationVersionId.enable();
-      } else {
-        this.deployForm.controls.applicationVersionId.disable();
-      }
-    });
   }
 
   async newDeployment(deploymentTarget: DeploymentTarget, modalTemplate: TemplateRef<any>) {
     const apps = await firstValueFrom(this.applications$);
+    if (deploymentTarget.deployment) {
+      this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
+    }
     this.selectedDeploymentTarget.set(deploymentTarget);
+
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
       deploymentId: deploymentTarget.deployment?.id,
       applicationId: deploymentTarget.deployment?.applicationId,
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
       releaseName: deploymentTarget.deployment?.releaseName,
+      valuesYaml: deploymentTarget.deployment?.valuesYaml ? atob(deploymentTarget.deployment.valuesYaml) : undefined,
+      envFileData: deploymentTarget.deployment?.envFileData ? atob(deploymentTarget.deployment.envFileData) : undefined,
     });
 
-    if (deploymentTarget.deployment) {
-      this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
-    }
     this.showModal(modalTemplate);
   }
 
