@@ -80,17 +80,24 @@ export class DistrService {
   }
 
   /**
-   * Creates a new application version for the given docker application using a Docker Compose file.
+   * Creates a new application version for the given docker application using a Docker Compose file and an
+   * optional template file.
    * @param applicationId
    * @param name Name of the new version
-   * @param composeFile
+   * @param data
    */
   public async createDockerApplicationVersion(
     applicationId: string,
     name: string,
-    composeFile: string
+    data: {
+      composeFile: string;
+      templateFile?: string;
+    }
   ): Promise<ApplicationVersion> {
-    return this.client.createApplicationVersion(applicationId, {name}, {composeFile});
+    return this.client.createApplicationVersion(applicationId, {name}, {
+      composeFile: data.composeFile,
+      templateFile: data.templateFile
+    });
   }
 
   /**
