@@ -235,7 +235,7 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 
 func UpdateDeploymentTargetReportedAgentVersionID(
 	ctx context.Context,
-	dt *types.DeploymentTarget,
+	dt *types.DeploymentTargetWithCreatedBy,
 	agentVersionID string,
 ) error {
 	db := internalctx.GetDb(ctx)
@@ -253,7 +253,7 @@ func UpdateDeploymentTargetReportedAgentVersionID(
 	if err != nil {
 		return err
 	} else if updated, err := pgx.CollectExactlyOneRow(rows,
-		pgx.RowToAddrOfStructByName[types.DeploymentTarget]); err != nil {
+		pgx.RowToAddrOfStructByName[types.DeploymentTargetWithCreatedBy]); err != nil {
 		return err
 	} else {
 		*dt = *updated

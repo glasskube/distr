@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.0.4](https://github.com/glasskube/distr/compare/1.0.3...1.0.4) (2025-02-04)
+
+
+### Other
+
+* remove console logs ([#417](https://github.com/glasskube/distr/issues/417)) ([9033385](https://github.com/glasskube/distr/commit/90333858fa34a0d65ed6fb60da49de67d42c45bf))
+
+## [1.0.3](https://github.com/glasskube/distr/compare/1.0.2...1.0.3) (2025-02-04)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.1 ([#413](https://github.com/glasskube/distr/issues/413)) ([3b7ab5d](https://github.com/glasskube/distr/commit/3b7ab5d53f2f730ee240d67057849d88eb65414a))
+
+
+### Other
+
+* **ci:** fix release build error ([#414](https://github.com/glasskube/distr/issues/414)) ([9bfc472](https://github.com/glasskube/distr/commit/9bfc4729d9259ffcff72bfa6e60271974748d9a4))
+
+## [1.0.2](https://github.com/glasskube/distr/compare/1.0.1...1.0.2) (2025-02-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @codemirror/state to v6.5.2 ([#405](https://github.com/glasskube/distr/issues/405)) ([92933ff](https://github.com/glasskube/distr/commit/92933ff34fb110baa7619333b56da1e54ffe9793))
+* **deps:** update dependency @sentry/angular to v8.54.0 ([#406](https://github.com/glasskube/distr/issues/406)) ([d2d4795](https://github.com/glasskube/distr/commit/d2d47959c0639ff7a3fcb89e138c17ec2e6bbcbf))
+* **deps:** update dependency globe.gl to v2.39.6 ([#410](https://github.com/glasskube/distr/issues/410)) ([6df822d](https://github.com/glasskube/distr/commit/6df822de466800298730c4df1c1b2efa97aa25aa))
+* **deps:** update dependency posthog-js to v1.215.2 ([#411](https://github.com/glasskube/distr/issues/411)) ([b6dde86](https://github.com/glasskube/distr/commit/b6dde8680af463e0982e03c05fa417944b544618))
+* **deps:** update dependency semver to v7.7.1 ([#412](https://github.com/glasskube/distr/issues/412)) ([99d46ad](https://github.com/glasskube/distr/commit/99d46ad59864222d285f590d91a6a1ce97039de5))
+* **ui:** improve token handling failures ([#407](https://github.com/glasskube/distr/issues/407)) ([6aeaa56](https://github.com/glasskube/distr/commit/6aeaa56b94247c677deaca21bbf53c0410b18335))
+
+
+### Other
+
+* fix helm chart build error ([#408](https://github.com/glasskube/distr/issues/408)) ([c3a0a8c](https://github.com/glasskube/distr/commit/c3a0a8c391d8a0d8b07c522e243d8ba3d2f729f5))
+
 ## [1.0.1](https://github.com/glasskube/distr/compare/1.0.0...1.0.1) (2025-02-03)
 
 

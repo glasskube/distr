@@ -11,7 +11,7 @@ if [ -z "$VERSION" ]; then
 fi
 
 export SENTRY_ORG="glasskube"
-export SENTRY_PROJECT="cloud-ui"
+export SENTRY_PROJECT="distr-frontend"
 
 npx sentry-cli releases new "$VERSION"
 npx sentry-cli releases set-commits "$VERSION" --auto

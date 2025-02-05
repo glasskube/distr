@@ -67,7 +67,7 @@ To get started quickly, do the following:
 <!-- x-release-please-start-version -->
 
 ```shell
-mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/1.0.1/deploy-docker.tar.bz2 | tar -jx
+mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/1.0.4/deploy-docker.tar.bz2 | tar -jx
 # make necessary changes to the .env file
 docker-compose up -d
 ```
@@ -106,7 +106,7 @@ docker-compose up -d
 make run
 ```
 
-Open your browser and navigate to [`http://localhost:8080`](http://localhost:8080) to register a user
+Open your browser and navigate to [`http://localhost:8080/register`](http://localhost:8080/register) to register a user
 and receive the E-Mail verification link via Mailpit on [`http://localhost:8025`](http://localhost:8025).
 
 ## Distr SDK
