@@ -62,7 +62,7 @@ func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 		if av.ComposeFileData == nil {
 			return errors.New("missing compose file")
 		} else if av.ChartType != nil || av.ChartName != nil || av.ChartUrl != nil || av.ChartVersion != nil ||
-			av.ValuesFileData != nil || av.TemplateFileData != nil {
+			av.ValuesFileData != nil {
 			return errors.New("unexpected kubernetes specifics in docker application")
 		}
 	} else if deplType == DepolymentTypeKubernetes {

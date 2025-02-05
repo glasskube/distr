@@ -175,6 +175,11 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		if data, ok := readMultipartFile(w, r, "templatefile"); !ok {
+			return
+		} else {
+			applicationVersion.TemplateFileData = data
+		}
 	} else {
 		if data, ok := readMultipartFile(w, r, "valuesfile"); !ok {
 			return

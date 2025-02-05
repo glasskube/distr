@@ -300,7 +300,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       )
       .subscribe(() => {
         if (this.selectedApplication) {
-          if(this.deployForm.controls.deploymentId.value) {
+          if (this.deployForm.controls.deploymentId.value) {
             this.deployForm.controls.applicationId.disable({emitEvent: false});
           }
           this.deployForm.controls.applicationVersionId.enable({emitEvent: false});
@@ -314,10 +314,11 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         takeUntil(this.destroyed$),
         filter(() => !!this.selectedApplication),
         switchMap((id) =>
-          !this.selectedDeploymentTarget()?.deployment?.valuesYaml && !this.selectedDeploymentTarget()?.deployment?.envFileData
+          !this.selectedDeploymentTarget()?.deployment?.valuesYaml &&
+          !this.selectedDeploymentTarget()?.deployment?.envFileData
             ? this.applications
-              .getTemplateFile(this.selectedApplication?.id!, id!)
-              .pipe(map((data) => [this.selectedApplication?.type, data]))
+                .getTemplateFile(this.selectedApplication?.id!, id!)
+                .pipe(map((data) => [this.selectedApplication?.type, data]))
             : of([this.selectedApplication?.type, null])
         )
       )
@@ -326,8 +327,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
           this.deployForm.controls.releaseName.enable();
           this.deployForm.controls.valuesYaml.enable();
           this.deployForm.controls.envFileData.disable();
-          if(templateFile) {
-            this.deployForm.patchValue({valuesYaml: templateFile})
+          if (templateFile) {
+            this.deployForm.patchValue({valuesYaml: templateFile});
           }
           if (!this.deployForm.value.releaseName) {
             const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
@@ -337,8 +338,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
           this.deployForm.controls.envFileData.enable();
           this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
-          if(templateFile) {
-            this.deployForm.patchValue({envFileData: templateFile})
+          if (templateFile) {
+            this.deployForm.patchValue({envFileData: templateFile});
           }
         }
       });
@@ -372,7 +373,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       if (deployment.valuesYaml) {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
       }
-      if(deployment.envFileData) {
+      if (deployment.envFileData) {
         deployment.envFileData = btoa(deployment.envFileData);
       }
       try {

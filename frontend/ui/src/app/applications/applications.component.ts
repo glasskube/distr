@@ -79,6 +79,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     }),
     docker: new FormGroup({
       compose: new FormControl<string>('', Validators.required),
+      template: new FormControl<string>(''),
     }),
   });
   newVersionFormLoading = false;
@@ -229,7 +230,8 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
           {
             name: this.newVersionForm.controls.versionName.value!,
           },
-          this.newVersionForm.controls.docker.controls.compose.value!
+          this.newVersionForm.controls.docker.controls.compose.value!,
+          this.newVersionForm.controls.docker.controls.template.value!
         );
       } else {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;
@@ -286,10 +288,12 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       }
     } else if (selectedApplication?.type === 'docker') {
       try {
+        const template = await firstValueFrom(this.applications.getTemplateFile(selectedApplication.id!, version.id!));
         const compose = await firstValueFrom(this.applications.getComposeFile(selectedApplication.id!, version.id!));
         this.newVersionForm.patchValue({
           docker: {
             compose,
+            template: template,
           },
         });
       } catch (e) {

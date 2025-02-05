@@ -242,6 +242,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         this.loading = true;
         try {
           this.app = await firstValueFrom(this.applications.create(this.getApplicationForSubmit()));
+          // TODO support templates here too
           const createdVersion = await firstValueFrom(
             isDocker
               ? this.applications.createApplicationVersionForDocker(

@@ -363,7 +363,7 @@
         <!-- Modal header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            @if(selectedDeploymentTarget()?.deployment?.id) {
+            @if (selectedDeploymentTarget()?.deployment?.id) {
               Update Deployment
             } @else {
               Deploy new application version
@@ -460,7 +460,13 @@
                   [formControl]="deployForm.controls.envFileData">
                 </app-yaml-editor>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Set your environment variables here – Docs: <a target="_blank" class="text-primary-600 underline" href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/#env-file-syntax">Env File Syntax</a>.
+                  Set your environment variables here – Docs:
+                  <a
+                    target="_blank"
+                    class="text-primary-600 underline"
+                    href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/#env-file-syntax"
+                    >Env File Syntax</a
+                  >.
                 </div>
               </div>
             }
