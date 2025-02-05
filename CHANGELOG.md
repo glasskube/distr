@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.5](https://github.com/glasskube/distr/compare/1.0.4...1.0.5) (2025-02-05)
+
+
+### Bug Fixes
+
+* **backend:** avoid struct parsing error after update statement ([#420](https://github.com/glasskube/distr/issues/420)) ([ddf1d44](https://github.com/glasskube/distr/commit/ddf1d4453510bc263c5b5eebd932958404c8200d))
+* **deps:** update dependency posthog-js to v1.215.3 ([#416](https://github.com/glasskube/distr/issues/416)) ([cc8ee90](https://github.com/glasskube/distr/commit/cc8ee900fd78cab791889a697593ded6f8956e98))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/config to v1.29.5 ([#422](https://github.com/glasskube/distr/issues/422)) ([266b56f](https://github.com/glasskube/distr/commit/266b56f91814ead9ca50f711037be65e9325a3ec))
+
+
+### Docs
+
+* link to register endpoint ([fd551b6](https://github.com/glasskube/distr/commit/fd551b64a77a036d3f64182a895c3e4760b860db))
+
 ## [1.0.4](https://github.com/glasskube/distr/compare/1.0.3...1.0.4) (2025-02-04)
 
 
