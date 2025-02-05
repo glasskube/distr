@@ -67,6 +67,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       name: new FormControl<string>('', Validators.required),
       versionName: new FormControl<string>('', Validators.required),
       compose: new FormControl<string>('', Validators.required),
+      template: new FormControl<string>(''),
     }),
     kubernetes: new FormGroup({
       name: new FormControl<string>('', Validators.required),
@@ -107,6 +108,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       {nonNullable: true, validators: [Validators.required]}
     ),
     valuesYaml: new FormControl<string>({value: '', disabled: true}, {nonNullable: true}),
+    envFileData: new FormControl<string>({value: '', disabled: true}),
   });
 
   private loading = false;
@@ -150,6 +152,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           this.deploymentTargetForm.controls.scope.enable();
           this.deploymentTargetForm.controls.releaseName.enable();
           this.deploymentTargetForm.controls.valuesYaml.enable();
+        } else {
+          this.deploymentTargetForm.controls.envFileData.enable();
         }
       } else {
         this.deploymentTargetForm.controls.technicalContactEmail.enable();
@@ -158,6 +162,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         this.deploymentTargetForm.controls.scope.disable();
         this.deploymentTargetForm.controls.releaseName.disable();
         this.deploymentTargetForm.controls.valuesYaml.disable();
+        this.deploymentTargetForm.controls.envFileData.disable();
       }
     });
 
@@ -242,13 +247,13 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         this.loading = true;
         try {
           this.app = await firstValueFrom(this.applications.create(this.getApplicationForSubmit()));
-          // TODO support templates here too
           const createdVersion = await firstValueFrom(
             isDocker
               ? this.applications.createApplicationVersionForDocker(
                   this.app,
                   this.getApplicationVersionForSubmit(),
-                  this.applicationForm.controls.docker.controls.compose.value!
+                  this.applicationForm.controls.docker.controls.compose.value!,
+                  this.applicationForm.controls.docker.controls.template.value
                 )
               : this.applications.createApplicationVersionForKubernetes(
                   this.app,
@@ -298,6 +303,12 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   }
 
   private async prepareFormAfterApplicationCreated(app: Application, version: ApplicationVersion) {
+    let template;
+    try {
+      template = (await firstValueFrom(this.applications.getTemplateFile(app.id!, version.id!))) ?? undefined;
+    } catch (e) {
+      // TODO
+    }
     if (app.type === 'kubernetes') {
       this.deploymentTargetForm.controls.namespace.enable();
       this.deploymentTargetForm.controls.clusterScope.enable();
@@ -305,13 +316,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       this.deploymentTargetForm.controls.valuesYaml.enable();
       this.deploymentTargetForm.controls.releaseName.enable();
       const releaseName = app.name!.trim().toLowerCase().replace(/\W+/g, '-');
-      let valuesYaml;
-      try {
-        valuesYaml = (await firstValueFrom(this.applications.getTemplateFile(app.id!, version.id!))) ?? undefined;
-      } catch (e) {
-      } finally {
-        this.deploymentTargetForm.patchValue({valuesYaml, releaseName});
-      }
+      this.deploymentTargetForm.patchValue({accessType: 'full', valuesYaml: template, releaseName});
+    } else {
+      this.deploymentTargetForm.patchValue({accessType: 'full', envFileData: template});
     }
   }
 
@@ -362,6 +369,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       releaseName: this.deploymentTargetForm.value.releaseName,
       valuesYaml: this.deploymentTargetForm.value.valuesYaml
         ? btoa(this.deploymentTargetForm.value.valuesYaml)
+        : undefined,
+      envFileData: this.deploymentTargetForm.value.envFileData
+        ? btoa(this.deploymentTargetForm.value.envFileData)
         : undefined,
     };
   }

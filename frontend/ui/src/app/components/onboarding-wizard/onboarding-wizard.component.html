@@ -323,7 +323,7 @@
                         }
                       </div>
                     </div>
-                    <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                       <div class="w-full">
                         <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                           >Docker Compose</label
@@ -343,6 +343,22 @@
                         ) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
+                      </div>
+
+                      <div class="w-full">
+                        <label
+                          for="docker_template_input"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Environment Template</label
+                        >
+                        <app-yaml-editor
+                          id="docker_template_input"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          [formControl]="applicationForm.controls.docker.controls.template">
+                        </app-yaml-editor>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Enter some environment variables and set some defaults – TODO link to our docs.
+                        </div>
                       </div>
                     </div>
                   } @else {
@@ -523,6 +539,20 @@
                           [formControl]="deploymentTargetForm.controls.valuesYaml"
                           class="block p-2.5 w-full font-mono text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                           placeholder="Add helm values for this deployment"></textarea>
+                      </div>
+                    }
+
+                    @if (deploymentTargetForm.controls.envFileData.enabled) {
+                      <div>
+                        <label for="env-file-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                          Environment Variables
+                        </label>
+                        <textarea
+                          id="env-file-data"
+                          rows="10"
+                          [formControl]="deploymentTargetForm.controls.envFileData"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          placeholder="Set environment variables for this deployment"></textarea>
                       </div>
                     }
                   </div>
