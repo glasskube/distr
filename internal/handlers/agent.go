@@ -30,7 +30,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
 )
 
 func AgentRouter(r chi.Router) {
@@ -156,7 +155,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				response.Deployment = &api.DockerAgentDeployment{
 					AgentDeployment: api.AgentDeployment{RevisionID: deployment.DeploymentRevisionID},
 					ComposeFile:     patchedComposeFile,
-					EnvFile:       deployment.EnvFileData,
+					EnvFile:         deployment.EnvFileData,
 				}
 			}
 		} else {
