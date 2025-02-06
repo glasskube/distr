@@ -71,7 +71,10 @@ export class YamlEditorComponent implements OnInit, OnDestroy, ControlValueAcces
   }
 
   setDisabledState(isDisabled: boolean) {
-    // TODO don't know how to do this yet, but we probably also don't want a sentry error for that
+    // TODO implement
+    if (isDisabled) {
+      console.error('setDisabledState not implemented yet');
+    }
   }
 
   private onChange = (_: any) => {};
