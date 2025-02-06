@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.1.0](https://github.com/glasskube/distr/compare/1.0.4...1.1.0) (2025-02-06)
+
+
+### Features
+
+* add showing invite URL after user creation ([#427](https://github.com/glasskube/distr/issues/427)) ([7570373](https://github.com/glasskube/distr/commit/7570373a21adfac900b9d7345c94c7134604b424))
+* **docker-agent:** add self-updating (existing agents must be re-deployed) ([#425](https://github.com/glasskube/distr/issues/425)) ([bab6934](https://github.com/glasskube/distr/commit/bab6934a401a1399b45cefd4ecb9a35cbbd5ce8d))
+* support environment for docker compose ([#424](https://github.com/glasskube/distr/issues/424)) ([7b8812b](https://github.com/glasskube/distr/commit/7b8812b11399c2d36258ac1721836bce24cda61d))
+
+
+### Bug Fixes
+
+* **backend:** avoid panic on empty compose file ([#423](https://github.com/glasskube/distr/issues/423)) ([6403124](https://github.com/glasskube/distr/commit/6403124df1aa0a89934b1f00db51b62ab9065e93))
+* **backend:** avoid struct parsing error after update statement ([#420](https://github.com/glasskube/distr/issues/420)) ([ddf1d44](https://github.com/glasskube/distr/commit/ddf1d4453510bc263c5b5eebd932958404c8200d))
+* **deps:** update aws-sdk-go-v2 monorepo ([#429](https://github.com/glasskube/distr/issues/429)) ([7312439](https://github.com/glasskube/distr/commit/7312439540ce5a05b693757b91986214630d654e))
+* **deps:** update dependency @angular/cdk to v19.1.3 ([#428](https://github.com/glasskube/distr/issues/428)) ([6c75a3d](https://github.com/glasskube/distr/commit/6c75a3dea2266edaf85da15b27c8b898b2bae4f1))
+* **deps:** update dependency globe.gl to v2.39.7 ([#432](https://github.com/glasskube/distr/issues/432)) ([c22322e](https://github.com/glasskube/distr/commit/c22322ef8642c5a5542f6107070bed7c757b3646))
+* **deps:** update dependency posthog-js to v1.215.3 ([#416](https://github.com/glasskube/distr/issues/416)) ([cc8ee90](https://github.com/glasskube/distr/commit/cc8ee900fd78cab791889a697593ded6f8956e98))
+* **deps:** update dependency posthog-js to v1.215.5 ([#430](https://github.com/glasskube/distr/issues/430)) ([32eae8f](https://github.com/glasskube/distr/commit/32eae8f7d34325a6dee2e82d94481df2adaae431))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/config to v1.29.5 ([#422](https://github.com/glasskube/distr/issues/422)) ([266b56f](https://github.com/glasskube/distr/commit/266b56f91814ead9ca50f711037be65e9325a3ec))
+
+
+### Other
+
+* allow disabling email verification ([#426](https://github.com/glasskube/distr/issues/426)) ([97301ac](https://github.com/glasskube/distr/commit/97301acf5886813ff77226e87f0812b630fba181))
+* **deps:** update angular-cli monorepo to v19.1.6 ([#431](https://github.com/glasskube/distr/issues/431)) ([e24076c](https://github.com/glasskube/distr/commit/e24076c03cf3e8443ce0e76b2d88531c649efa02))
+* **deps:** update axllent/mailpit docker tag to v1.22.1 ([#433](https://github.com/glasskube/distr/issues/433)) ([b757541](https://github.com/glasskube/distr/commit/b757541cd512996686e88f1d38f6182f082f7d60))
+* **deps:** update docker/setup-buildx-action action to v3.9.0 ([#434](https://github.com/glasskube/distr/issues/434)) ([55e9397](https://github.com/glasskube/distr/commit/55e9397c6e021871a216845496e358cd586d37cf))
+* **deps:** update golangci/golangci-lint-action action to v6.3.0 ([#421](https://github.com/glasskube/distr/issues/421)) ([d991b87](https://github.com/glasskube/distr/commit/d991b871a122a8c70fbcdf339d78f3936da6e39b))
+* mount host docker config directory ([#435](https://github.com/glasskube/distr/issues/435)) ([13b2dd7](https://github.com/glasskube/distr/commit/13b2dd7b5e969de63a0e372d5e7551e4bace4adf))
+
+
+### Docs
+
+* link to register endpoint ([fd551b6](https://github.com/glasskube/distr/commit/fd551b64a77a036d3f64182a895c3e4760b860db))
+
 ## [1.0.4](https://github.com/glasskube/distr/compare/1.0.3...1.0.4) (2025-02-04)
 
 
