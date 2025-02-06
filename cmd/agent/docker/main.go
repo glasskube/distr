@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -57,8 +58,15 @@ loop:
 			if agentVersionId != "" {
 				if agentVersionId != resource.Version.ID {
 					logger.Info("agent version has changed. starting self-update")
-					RunAgentSelfUpdate(ctx)
-					continue
+					if err := RunAgentSelfUpdate(ctx); err != nil {
+						logger.Error("self update failed", zap.Error(err))
+						if err := client.Status(ctx, resource.Deployment.RevisionID, "", err); err != nil {
+							logger.Error("failed to send status", zap.Error(err))
+						}
+					} else {
+						logger.Info("self-update has been applied")
+						continue
+					}
 				} else {
 					logger.Debug("agent version is up to date")
 				}
@@ -80,17 +88,17 @@ loop:
 	logger.Info("shutting down")
 }
 
-func RunAgentSelfUpdate(ctx context.Context) {
+func RunAgentSelfUpdate(ctx context.Context) error {
 	if manifest, err := client.Manifest(ctx); err != nil {
-		logger.Error("error fetching agent manifest", zap.Error(err))
+		return fmt.Errorf("error fetching agent manifest: %w", err)
 	} else if parsedManifest, err := DecodeComposeFile(manifest); err != nil {
-		logger.Error("error parsing agent manifest", zap.Error(err))
+		return fmt.Errorf("error parsing agent manifest: %w", err)
 	} else if err := PatchAgentManifest(parsedManifest); err != nil {
-		logger.Error("error patching agent manifest", zap.Error(err))
+		return fmt.Errorf("error patching agent manifest: %w", err)
 	} else if err := ApplyAgentComposeFile(ctx, parsedManifest); err != nil {
-		logger.Error("error applying agent manifest", zap.Error(err))
+		return fmt.Errorf("error applying agent manifest: %w", err)
 	} else {
-		logger.Info("self-update has been applied")
+		return nil
 	}
 }
 
