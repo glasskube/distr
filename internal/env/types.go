@@ -6,8 +6,9 @@ type MailerTypeString string
 type TLSMode string
 
 const (
-	MailerTypeSMTP MailerTypeString = "smtp"
-	MailerTypeSES  MailerTypeString = "ses"
+	MailerTypeSMTP        MailerTypeString = "smtp"
+	MailerTypeSES         MailerTypeString = "ses"
+	MailerTypeUnspecified MailerTypeString = ""
 )
 
 type MailerConfig struct {
