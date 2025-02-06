@@ -74,7 +74,7 @@ docker-compose up -d
 
 <!-- x-release-please-end -->
 
-Register your first account at http://localhost:8080/register 
+Register your first account at http://localhost:8080/register
 
 The full self-hosting documentation is at https://distr.sh/docs/self-hosting/self-hosting/
 
