@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/glasskube/distr/compare/1.1.0...1.1.1) (2025-02-06)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.1.5 ([#437](https://github.com/glasskube/distr/issues/437)) ([c435fe1](https://github.com/glasskube/distr/commit/c435fe172c17b49e30e71c2c92e0618c1a7af338))
+
+
+### Docs
+
+* add register note ([7418bce](https://github.com/glasskube/distr/commit/7418bce7640b08a837be1350ce105b592fb965c5))
+* format readme ([5c5791d](https://github.com/glasskube/distr/commit/5c5791d700637fe0a2cbbe11a9e15f9832ab9101))
+
 ## [1.1.0](https://github.com/glasskube/distr/compare/1.0.4...1.1.0) (2025-02-06)
 
 
