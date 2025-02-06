@@ -14,7 +14,7 @@ import {ConnectInstructionsComponent} from '../connect-instructions/connect-inst
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
 import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.component';
 import {ToastService} from '../../services/toast.service';
-import {getFormDisplayedError} from '../../../util/errors';
+import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {YamlEditorComponent} from '../yaml-editor.component';
 import {
@@ -26,6 +26,7 @@ import {
   DeploymentType,
   HelmChartType,
 } from '@glasskube/distr-sdk';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -307,7 +308,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     try {
       template = (await firstValueFrom(this.applications.getTemplateFile(app.id!, version.id!))) ?? undefined;
     } catch (e) {
-      // TODO
+      if (!displayedInToast(e) && !(e instanceof HttpErrorResponse && e.status === 404)) {
+        this.toast.error('Failed to get template, the template field will be empty');
+      }
     }
     if (app.type === 'kubernetes') {
       this.deploymentTargetForm.controls.namespace.enable();
