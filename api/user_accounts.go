@@ -12,6 +12,11 @@ type CreateUserAccountRequest struct {
 	UserRole        types.UserRole `json:"userRole"`
 }
 
+type CreateUserAccountResponse struct {
+	ID        string `json:"id"`
+	InviteURL string `json:"inviteUrl"`
+}
+
 type UpdateUserAccountRequest struct {
 	Name     string  `json:"name"`
 	Password *string `json:"password"`

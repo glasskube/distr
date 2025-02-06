@@ -10,6 +10,11 @@ export interface CreateUserAccountRequest {
   applicationName?: string;
 }
 
+export interface CreateUserAccountResponse {
+  id: string;
+  inviteUrl: string;
+}
+
 @Injectable({providedIn: 'root'})
 export class UsersService {
   private readonly httpClient = inject(HttpClient);
@@ -19,8 +24,8 @@ export class UsersService {
     return this.httpClient.get<UserAccountWithRole[]>(this.baseUrl);
   }
 
-  public addUser(request: CreateUserAccountRequest): Observable<void> {
-    return this.httpClient.post<void>(this.baseUrl, request);
+  public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
+    return this.httpClient.post<CreateUserAccountResponse>(this.baseUrl, request);
   }
 
   public delete(user: UserAccount): Observable<void> {

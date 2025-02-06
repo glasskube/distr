@@ -3,14 +3,18 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mailsending"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
@@ -57,6 +61,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		Email: body.Email,
 		Name:  body.Name,
 	}
+	var inviteURL string
 
 	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
@@ -87,16 +92,25 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		if err := mailsending.SendUserInviteMail(
-			ctx,
-			userAccount,
-			organization,
-			body.UserRole,
-			body.ApplicationName,
-		); err != nil {
+		// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
+		if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
+		} else {
+			inviteURL = fmt.Sprintf("%v/join?jwt=%v", env.Host(), url.QueryEscape(token))
+			if err := mailsending.SendUserInviteMail(
+				ctx,
+				userAccount,
+				organization,
+				body.UserRole,
+				body.ApplicationName,
+				inviteURL,
+			); err != nil {
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
 		}
 
 		return nil
@@ -105,7 +119,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	RespondJSON(w, api.CreateUserAccountResponse{ID: userAccount.ID, InviteURL: inviteURL})
 }
 
 func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {

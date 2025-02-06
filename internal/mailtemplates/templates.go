@@ -60,21 +60,21 @@ func Welcome() (*template.Template, any) {
 func InviteUser(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
-	token string,
+	inviteURL string,
 ) (*template.Template, any) {
 	return templates.Lookup("invite-user.html"),
 		map[string]any{
 			"UserAccount":  userAccount,
 			"Organization": organization,
 			"Host":         env.Host(),
-			"Token":        token,
+			"InviteURL":    inviteURL,
 		}
 }
 
 func InviteCustomer(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
-	token string,
+	inviteURL string,
 	applicationName string,
 ) (*template.Template, any) {
 	return templates.Lookup("invite-customer.html"),
@@ -83,7 +83,7 @@ func InviteCustomer(
 			"Organization":    organization,
 			"ApplicationName": applicationName,
 			"Host":            env.Host(),
-			"Token":           token,
+			"InviteURL":       inviteURL,
 		}
 }
 
