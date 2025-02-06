@@ -12,7 +12,7 @@ export interface CreateUserAccountRequest {
 
 export interface CreateUserAccountResponse {
   id: string;
-  inviteUrl?: string;
+  inviteUrl: string;
 }
 
 @Injectable({providedIn: 'root'})

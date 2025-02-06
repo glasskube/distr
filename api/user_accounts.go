@@ -14,7 +14,7 @@ type CreateUserAccountRequest struct {
 
 type CreateUserAccountResponse struct {
 	ID        string `json:"id"`
-	InviteURL string `json:"inviteUrl,omitempty"`
+	InviteURL string `json:"inviteUrl"`
 }
 
 type UpdateUserAccountRequest struct {

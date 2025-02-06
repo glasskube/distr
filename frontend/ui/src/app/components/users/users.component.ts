@@ -114,18 +114,7 @@ export class UsersComponent implements OnDestroy {
             userRole: this.userRole(),
           })
         );
-        if (result.inviteUrl !== undefined) {
-          this.inviteUrl = result.inviteUrl;
-        } else {
-          this.closeInviteDialog();
-          switch (this.userRole()) {
-            case 'customer':
-              this.toast.success('Customer has been invited to the organization');
-              break;
-            case 'vendor':
-              this.toast.success('User has been invited to the organization');
-          }
-        }
+        this.inviteUrl = result.inviteUrl;
         this.refresh$.next();
       } catch (e) {
         const msg = getFormDisplayedError(e);
