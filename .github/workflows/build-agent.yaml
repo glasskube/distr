@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-agent:
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     permissions:
       contents: read
