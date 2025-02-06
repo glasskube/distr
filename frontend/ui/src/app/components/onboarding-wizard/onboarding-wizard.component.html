@@ -321,7 +321,7 @@
                         }
                       </div>
                     </div>
-                    <!--<div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">-->
+
                     <div class="w-full">
                       <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                         >Docker Compose</label
@@ -332,8 +332,7 @@
                         [formControl]="applicationForm.controls.docker.controls.compose">
                       </app-yaml-editor>
                       <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Paste your docker compose file here – TODO link to an FAQ "do I manually have to paste bla bla
-                        bla".
+                        Paste your docker compose file here.
                       </div>
                       <!-- TODO fix touched in yaml editor component -->
                       @if (
@@ -356,10 +355,9 @@
                         [formControl]="applicationForm.controls.docker.controls.template">
                       </app-yaml-editor>
                       <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        This template will be shown when somebody deploys this application – TODO link to our docs.
+                        This template will be shown when somebody deploys this application.
                       </div>
                     </div>
-                    <!--</div>-->
                   } @else {
                     <div class="mb-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"></div>
                   }
@@ -551,7 +549,7 @@
                           [formControl]="deploymentTargetForm.controls.envFileData">
                         </app-yaml-editor>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Set the environment variables for your deployment – TODO link to our docs.
+                          Set the environment variables for your deployment.
                         </div>
                       </div>
                     }
