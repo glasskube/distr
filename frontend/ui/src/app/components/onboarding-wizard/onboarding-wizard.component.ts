@@ -238,6 +238,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         this.loading = true;
         try {
           this.app = await firstValueFrom(this.applications.createSample());
+          await this.prepareFormAfterApplicationCreated(this.app, this.app.versions![0]!);
           this.nextStep();
         } catch (e) {
           this.toast.error('Something went wrong, please try again.');
