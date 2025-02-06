@@ -10,6 +10,7 @@ import (
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/mail/noop"
 	"github.com/glasskube/distr/internal/mail/ses"
 	"github.com/glasskube/distr/internal/mail/smtp"
 	"github.com/glasskube/distr/internal/routing"
@@ -132,6 +133,8 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 	case env.MailerTypeSES:
 		sesConfig := ses.Config{MailerConfig: mail.MailerConfig{DefaultFromAddress: config.FromAddress}}
 		return ses.NewFromContext(ctx, sesConfig)
+	case env.MailerTypeUnspecified:
+		return noop.New(), nil
 	default:
 		return nil, errors.New("invalid mailer type")
 	}
