@@ -78,7 +78,7 @@ loop:
 				continue
 			}
 
-			reportedStatus, reportedErr := ApplyComposeFile(ctx, resource.Deployment.ComposeFile)
+			reportedStatus, reportedErr := ApplyComposeFile(ctx, resource.Deployment.ComposeFile, resource.Deployment.EnvFile)
 			if err := client.Status(ctx, resource.Deployment.RevisionID, reportedStatus, reportedErr); err != nil {
 				logger.Error("failed to send status", zap.Error(err))
 			}
@@ -179,15 +179,44 @@ func ApplyAgentComposeFile(ctx context.Context, manifest map[string]any) error {
 	return cmd.Run()
 }
 
-func ApplyComposeFile(ctx context.Context, composeFileData []byte) (string, error) {
-	cmd := exec.CommandContext(ctx, "docker", "compose", "-f", "-", "up", "-d", "--quiet-pull")
+func ApplyComposeFile(ctx context.Context, composeFileData []byte, envFileData []byte) (string, error) {
+	var err error
+	var envFile *os.File
+	if envFileData != nil {
+		if envFile, err = os.CreateTemp("", "distr-env"); err != nil {
+			logger.Error("", zap.Error(err))
+			return "", fmt.Errorf("failed to create env file in tmp directory: %w", err)
+		} else {
+			if _, err = envFile.Write(envFileData); err != nil {
+				logger.Error("", zap.Error(err))
+				return "", fmt.Errorf("failed to write env file: %w", err)
+			}
+			_ = envFile.Close()
+			defer func() {
+				if err := os.Remove(envFile.Name()); err != nil {
+					logger.Error("failed to remove env file from tmp directory", zap.Error(err))
+				}
+			}()
+		}
+	}
+
+	composeArgs := []string{"compose"}
+	if envFile != nil {
+		composeArgs = append(composeArgs, fmt.Sprintf("--env-file=%v", envFile.Name()))
+	}
+	composeArgs = append(composeArgs, "-f", "-", "up", "-d", "--quiet-pull")
+
+	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
 	cmd.Stdin = bytes.NewReader(composeFileData)
-	out, cmdErr := cmd.CombinedOutput()
-	outStr := string(out)
-	logger.Debug("docker compose returned", zap.String("output", outStr), zap.Error(cmdErr))
-	if cmdErr != nil {
-		return "", errors.New(outStr)
+
+	var cmdOut []byte
+	cmdOut, err = cmd.CombinedOutput()
+	statusStr := string(cmdOut)
+	logger.Debug("docker compose returned", zap.String("output", statusStr), zap.Error(err))
+
+	if err != nil {
+		return "", errors.New(statusStr)
 	} else {
-		return outStr, nil
+		return statusStr, nil
 	}
 }

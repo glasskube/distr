@@ -18,6 +18,7 @@ type DockerAgentResource struct {
 type DockerAgentDeployment struct {
 	AgentDeployment
 	ComposeFile []byte `json:"composeFile"`
+	EnvFile     []byte `json:"envFile"`
 }
 
 type KubernetesAgentResource struct {

@@ -12,6 +12,7 @@ export interface DeploymentRequest {
   applicationVersionId: string;
   releaseName?: string;
   valuesYaml?: string;
+  envFileData?: string;
   note?: string;
 }
 
@@ -21,6 +22,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   applicationVersionId: string;
   applicationVersionName: string;
   valuesYaml?: string;
+  envFileData?: string;
   deploymentRevisionId?: string;
   latestStatus?: DeploymentRevisionStatus;
 }

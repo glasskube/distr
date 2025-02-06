@@ -251,30 +251,28 @@
                       </div>
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                      <div class="w-full">
-                        <label
-                          for="base_values_input"
-                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                          >Base Values</label
-                        >
-                        <app-yaml-editor
-                          id="base_values_input"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          [formControl]="applicationForm.controls.kubernetes.controls.baseValues">
-                        </app-yaml-editor>
-                      </div>
+                    <div class="w-full">
+                      <label
+                        for="base_values_input"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Base Values</label
+                      >
+                      <app-yaml-editor
+                        id="base_values_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="applicationForm.controls.kubernetes.controls.baseValues">
+                      </app-yaml-editor>
+                    </div>
 
-                      <div class="w-full">
-                        <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                          >Template</label
-                        >
-                        <app-yaml-editor
-                          id="template_input"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          [formControl]="applicationForm.controls.kubernetes.controls.template">
-                        </app-yaml-editor>
-                      </div>
+                    <div class="w-full">
+                      <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Template</label
+                      >
+                      <app-yaml-editor
+                        id="template_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="applicationForm.controls.kubernetes.controls.template">
+                      </app-yaml-editor>
                     </div>
                   } @else if (applicationForm.controls.type.value === 'docker') {
                     <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
@@ -323,26 +321,41 @@
                         }
                       </div>
                     </div>
-                    <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                      <div class="w-full">
-                        <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                          >Docker Compose</label
-                        >
-                        <app-yaml-editor
-                          id="compose_input"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          [formControl]="applicationForm.controls.docker.controls.compose">
-                        </app-yaml-editor>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Paste your docker compose file here.
-                        </div>
-                        <!-- TODO fix touched in yaml editor component -->
-                        @if (
-                          applicationForm.controls.docker.controls.compose.invalid &&
-                          applicationForm.controls.docker.controls.compose.touched
-                        ) {
-                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                        }
+
+                    <div class="w-full">
+                      <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Docker Compose</label
+                      >
+                      <app-yaml-editor
+                        id="compose_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="applicationForm.controls.docker.controls.compose">
+                      </app-yaml-editor>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Paste your docker compose file here.
+                      </div>
+                      <!-- TODO fix touched in yaml editor component -->
+                      @if (
+                        applicationForm.controls.docker.controls.compose.invalid &&
+                        applicationForm.controls.docker.controls.compose.touched
+                      ) {
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
+                    </div>
+
+                    <div class="w-full">
+                      <label
+                        for="docker_template_input"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Environment Template</label
+                      >
+                      <app-yaml-editor
+                        id="docker_template_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="applicationForm.controls.docker.controls.template">
+                      </app-yaml-editor>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        This template will be shown when somebody deploys this application.
                       </div>
                     </div>
                   } @else {
@@ -514,15 +527,30 @@
 
                     @if (deploymentTargetForm.controls.valuesYaml.enabled) {
                       <div>
-                        <label for="values-yaml" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        <label for="helm-values" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                           Helm values
                         </label>
-                        <textarea
+                        <app-yaml-editor
                           id="helm-values"
-                          rows="10"
-                          [formControl]="deploymentTargetForm.controls.valuesYaml"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          placeholder="Add helm values for this deployment"></textarea>
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          [formControl]="deploymentTargetForm.controls.valuesYaml">
+                        </app-yaml-editor>
+                      </div>
+                    }
+
+                    @if (deploymentTargetForm.controls.envFileData.enabled) {
+                      <div>
+                        <label for="env-file-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                          Environment Variables
+                        </label>
+                        <app-yaml-editor
+                          id="env-file-data"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          [formControl]="deploymentTargetForm.controls.envFileData">
+                        </app-yaml-editor>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Set the environment variables for your deployment.
+                        </div>
                       </div>
                     }
                   </div>
