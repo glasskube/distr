@@ -15,6 +15,7 @@ import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
+  faCircleExclamation,
   faHeartPulse,
   faMagnifyingGlass,
   faPen,
@@ -193,9 +194,8 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   openDrawer(templateRef: TemplateRef<unknown>, deploymentTarget: DeploymentTarget) {
     this.hideDrawer();
-    if (deploymentTarget) {
-      this.loadDeploymentTarget(deploymentTarget);
-    }
+    this.selectedDeploymentTarget.set(deploymentTarget);
+    this.loadDeploymentTarget(deploymentTarget);
     this.manageDeploymentTargetRef = this.overlay.showDrawer(templateRef);
   }
 
@@ -406,10 +406,14 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
     if (deploymentTarget.currentStatus !== undefined) {
+      let customerOverwriteWarning =
+        deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+          ? 'WARNING: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination with the customer. '
+          : '';
       if (
         !(await firstValueFrom(
           this.overlay.confirm(
-            `Warning: If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid. Continue?`
+            `${customerOverwriteWarning}If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid. Continue?`
           )
         ))
       ) {
@@ -435,4 +439,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
       }
     } catch (e) {}
   }
+
+  protected readonly faCircleExclamation = faCircleExclamation;
 }
