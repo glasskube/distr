@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -60,8 +61,11 @@ loop:
 					logger.Info("agent version has changed. starting self-update")
 					if err := RunAgentSelfUpdate(ctx); err != nil {
 						logger.Error("self update failed", zap.Error(err))
-						if err := client.Status(ctx, resource.Deployment.RevisionID, "", err); err != nil {
-							logger.Error("failed to send status", zap.Error(err))
+						// TODO: Support status without revision ID?
+						if resource.Deployment != nil {
+							if err := client.Status(ctx, resource.Deployment.RevisionID, "", err); err != nil {
+								logger.Error("failed to send status", zap.Error(err))
+							}
 						}
 					} else {
 						logger.Info("self-update has been applied")
@@ -170,13 +174,16 @@ func ApplyAgentComposeFile(ctx context.Context, manifest map[string]any) error {
 	cmd := exec.CommandContext(ctx,
 		"docker", "run", "--detach", "--rm",
 		"--entrypoint", "/usr/local/bin/docker-entrypoint.sh",
+		"--env", "HOST_DOCKER_CONFIG_DIR="+os.Getenv("HOST_DOCKER_CONFIG_DIR"),
 		// TODO: Not sure if it's correct to assume this will always be the correct container name,
 		// but AFAIK there is no reliable way to get the name of a container from the "inside"
 		"--volumes-from", "distr-agent-1",
 		imageName,
 		"docker", "compose", "-f", file.Name(), "up", "-d",
 	)
-	return cmd.Run()
+	out, err := cmd.CombinedOutput()
+	logger.Sugar().Infof("self-update output: %v", strings.TrimSpace(string(out)))
+	return err
 }
 
 func ApplyComposeFile(ctx context.Context, composeFileData []byte, envFileData []byte) (string, error) {
