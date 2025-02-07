@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.2](https://github.com/glasskube/distr/compare/1.1.1...1.1.2) (2025-02-07)
+
+
+### Bug Fixes
+
+* **docker-agent:** keep same docker config after self-update ([#440](https://github.com/glasskube/distr/issues/440)) ([e2619e5](https://github.com/glasskube/distr/commit/e2619e53f68a966a32f0491bcd899ab7974d1bb0))
+
+
+### Other
+
+* make customer managed environment manageable for vendor ([#439](https://github.com/glasskube/distr/issues/439)) ([8b634a9](https://github.com/glasskube/distr/commit/8b634a9555d4a5f3177e479e3f9d0512188166e5))
+
 ## [1.1.1](https://github.com/glasskube/distr/compare/1.1.0...1.1.1) (2025-02-06)
 
 
