@@ -13,9 +13,10 @@ services:
       DISTR_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
       DISTR_INTERVAL: '{{ .agentInterval }}'
       DISTR_AGENT_VERSION_ID: '{{ .agentVersionId }}'
+      HOST_DOCKER_CONFIG_DIR: ${HOST_DOCKER_CONFIG_DIR-${HOME}/.docker}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - scratch:/scratch
-      - ~/.docker:/root/.docker:ro
+      - ${HOST_DOCKER_CONFIG_DIR-${HOME}/.docker}:/root/.docker:ro
 volumes:
   scratch:
