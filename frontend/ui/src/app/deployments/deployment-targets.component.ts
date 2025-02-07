@@ -406,8 +406,10 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
     if (deploymentTarget.currentStatus !== undefined) {
-      let customerOverwriteWarning = (deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')) ?
-        'WARNING: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination with the customer. ' : '';
+      let customerOverwriteWarning =
+        deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+          ? 'WARNING: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination with the customer. '
+          : '';
       if (
         !(await firstValueFrom(
           this.overlay.confirm(
