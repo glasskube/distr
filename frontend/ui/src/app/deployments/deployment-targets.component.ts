@@ -33,7 +33,6 @@ import {
   firstValueFrom,
   lastValueFrom,
   map,
-  merge,
   Observable,
   of,
   Subject,
@@ -148,11 +147,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   });
 
   deployFormLoading = false;
-  private readonly refresh = new Subject<void>();
-  readonly deploymentTargets$ = merge(
-    this.deploymentTargets.poll(),
-    this.refresh.pipe(switchMap(() => this.deploymentTargets.list()))
-  );
+  readonly deploymentTargets$ = this.deploymentTargets.poll();
 
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
