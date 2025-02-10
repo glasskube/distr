@@ -63,15 +63,16 @@
         </a>
       </li>
       <li>
-        @if(featureFlags.isLicensingEnabled$ | async) {
-          <a (click)="sidebar.hide()"
-             routerLink="/licenses"
-             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+        @if (featureFlags.isLicensingEnabled$ | async) {
+          <a
+            (click)="sidebar.hide()"
+            routerLink="/licenses"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
             <fa-icon [icon]="faKey" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
             <span class="ms-3">License Mgmt</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         } @else {
@@ -80,7 +81,7 @@
             <span class="ms-3">License Mgmt</span>
             <span
               class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
+              >Pro</span
             >
           </a>
         }

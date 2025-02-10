@@ -85,11 +85,11 @@ function requiredRoleGuard(userRole: UserRole): CanActivateFn {
   return () => inject(AuthService).hasRole(userRole);
 }
 
-function licensingEnabledGuard() :CanActivateFn {
+function licensingEnabledGuard(): CanActivateFn {
   return async () => {
-    const featureFlags = inject(FeatureFlagService)
+    const featureFlags = inject(FeatureFlagService);
     return await firstValueFrom(featureFlags.isLicensingEnabled$);
-  }
+  };
 }
 
 const baseRouteRedirectGuard: CanActivateFn = () => {

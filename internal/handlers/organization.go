@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -10,7 +12,6 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func OrganizationRouter(r chi.Router) {
