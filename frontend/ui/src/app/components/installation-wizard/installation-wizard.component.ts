@@ -11,7 +11,7 @@ import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {DeploymentService} from '../../services/deployment.service';
+import {DeploymentStatusService} from '../../services/deployment-status.service';
 import {ToastService} from '../../services/toast.service';
 import {YamlEditorComponent} from '../yaml-editor.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
@@ -46,7 +46,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deployments = inject(DeploymentService);
 
   @ViewChild('stepper') private stepper?: CdkStepper;
 
@@ -224,7 +223,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       } else {
         deployment.envFileData = undefined;
       }
-      await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));
+      await firstValueFrom(this.deploymentTargets.deploy(deployment as DeploymentRequest));
       this.toast.success('Deployment saved successfully');
       this.close();
     } catch (e) {

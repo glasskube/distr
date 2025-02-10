@@ -6,13 +6,9 @@ import {Deployment, DeploymentRequest, DeploymentRevisionStatus} from '@glasskub
 @Injectable({
   providedIn: 'root',
 })
-export class DeploymentService {
+export class DeploymentStatusService {
   private readonly baseUrl = '/api/v1/deployments';
   private readonly httpClient = inject(HttpClient);
-
-  createOrUpdate(request: DeploymentRequest): Observable<Deployment> {
-    return this.httpClient.put<Deployment>(this.baseUrl, request);
-  }
 
   getStatuses(depl: Deployment): Observable<DeploymentRevisionStatus[]> {
     return this.httpClient.get<DeploymentRevisionStatus[]>(`${this.baseUrl}/${depl.id}/status`);
