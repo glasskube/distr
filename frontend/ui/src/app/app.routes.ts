@@ -24,6 +24,8 @@ import {VerifyComponent} from './verify/verify.component';
 import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 import {UserRole} from '@glasskube/distr-sdk';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
+import {LicensesComponent} from './licenses/licenses.component';
+import {FeatureFlagService} from './services/feature-flag.service';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -81,6 +83,13 @@ const jwtAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: Route
 
 function requiredRoleGuard(userRole: UserRole): CanActivateFn {
   return () => inject(AuthService).hasRole(userRole);
+}
+
+function licensingEnabledGuard() :CanActivateFn {
+  return async () => {
+    const featureFlags = inject(FeatureFlagService)
+    return await firstValueFrom(featureFlags.isLicensingEnabled$);
+  }
 }
 
 const baseRouteRedirectGuard: CanActivateFn = () => {
@@ -152,6 +161,12 @@ export const routes: Routes = [
             component: OrganizationBrandingComponent,
             data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor')],
+          },
+          {
+            path: 'licenses',
+            component: LicensesComponent,
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
           },
           {
             path: 'settings',

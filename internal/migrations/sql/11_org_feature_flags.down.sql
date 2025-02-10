@@ -1,3 +1,1 @@
-ALTER TABLE organization DROP COLUMN feature_flags;
-
-DROP TYPE IF EXISTS FEATURE_FLAG;
+ALTER TABLE organization DROP COLUMN licensing_enabled;

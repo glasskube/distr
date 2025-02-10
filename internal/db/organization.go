@@ -32,7 +32,7 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT o.id, o.created_at, o.name, j.user_role
+		SELECT o.id, o.created_at, o.name, o.licensing_enabled, j.user_role
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
@@ -49,22 +49,22 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 	}
 }
 
-func GetOrganizationWithID(ctx context.Context, orgId string) (*types.Organization, error) {
+func GetOrganizationByID(ctx context.Context, orgId string) (*types.Organization, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT id, created_at, name FROM Organization WHERE id = @id",
+		"SELECT id, created_at, name, licensing_enabled FROM Organization WHERE id = @id",
 		pgx.NamedArgs{"id": orgId},
 	)
 	if err != nil {
 		return nil, err
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Organization])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, apierrors.ErrNotFound
 	} else if err != nil {
 		return nil, err
 	} else {
-		return result, nil
+		return &result, nil
 	}
 }
 
@@ -73,7 +73,7 @@ func GetOrganizationWithBranding(ctx context.Context, orgId string) (*types.Orga
 	rows, err := db.Query(ctx,
 		fmt.Sprintf(
 			`SELECT
-				o.id, o.created_at, o.name,
+				o.id, o.created_at, o.name, o.licensing_enabled,
 				CASE WHEN b.id IS NOT NULL THEN (%v) END AS branding
 			FROM Organization o
 			LEFT JOIN OrganizationBranding b ON b.organization_id = o.id

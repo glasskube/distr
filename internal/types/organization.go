@@ -10,7 +10,8 @@ import (
 
 type Organization struct {
 	Base
-	Name string `db:"name" json:"name"`
+	Name             string `db:"name" json:"name"`
+	LicensingEnabled bool   `db:"licensing_enabled" json:"licensingEnabled"`
 }
 
 type OrganizationWithUserRole struct {
