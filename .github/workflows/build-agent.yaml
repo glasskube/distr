@@ -52,7 +52,7 @@ jobs:
       - name: Docker build (push only for tag)
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
           file: Dockerfile.${{ matrix.agent }}
           build-args: |
             COMMIT=${{ steps.generate.outputs.sha_short }}
