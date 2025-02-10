@@ -36,8 +36,6 @@ export class DashboardPlaceholderComponent implements AfterViewInit {
   public readonly deploymentTargets$ = this.deploymentTargets.list();
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
-  private readonly user = inject(UsersService);
-  public readonly users$ = this.user.getUsers();
   private readonly auth = inject(AuthService);
 
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;

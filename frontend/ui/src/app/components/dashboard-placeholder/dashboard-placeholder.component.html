@@ -1,6 +1,6 @@
 <div class="p-4 sm:ml-64 bg-gray-50 dark:bg-gray-900">
   <div class="p-4">
-    @if ((deploymentTargets$ | async)?.length === 0 || (users$ | async)?.length === 0) {
+    @if ((deploymentTargets$ | async)?.length === 0) {
       <div
         class="p-4 mb-4 text-sm text-blue-800 max-w-128 mx-auto rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
         role="alert">
