@@ -57,6 +57,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 				httprate.Limit(2000, 1*time.Hour, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
+			r.Route("/application-licenses", handlers.ApplicationLicenseRouter)
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
