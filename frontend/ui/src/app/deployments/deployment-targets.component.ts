@@ -54,7 +54,7 @@ import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {DeploymentService} from '../services/deployment.service';
+import {DeploymentStatusService} from '../services/deployment-status.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -98,7 +98,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   private readonly overlay = inject(OverlayService);
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deployments = inject(DeploymentService);
+  private readonly deploymentStatuses = inject(DeploymentStatusService);
   private readonly agentVersions = inject(AgentVersionService);
 
   readonly magnifyingGlassIcon = faMagnifyingGlass;
@@ -377,7 +377,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
         deployment.envFileData = btoa(deployment.envFileData);
       }
       try {
-        await firstValueFrom(this.deployments.createOrUpdate(deployment as DeploymentRequest));
+        await firstValueFrom(this.deploymentTargets.deploy(deployment as DeploymentRequest));
         this.toast.success('Deployment saved successfully');
         this.hideModal();
       } catch (e) {
@@ -399,7 +399,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     const deployment = deploymentTarget.deployment;
     if (deployment?.id) {
       this.selectedDeploymentTarget.set(deploymentTarget);
-      this.statuses = this.deployments.pollStatuses(deployment);
+      this.statuses = this.deploymentStatuses.pollStatuses(deployment);
       this.showModal(modal);
     }
   }

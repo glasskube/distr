@@ -8,7 +8,7 @@ import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../../
 import {modalFlyInOut} from '../../animations/modal';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {DeploymentService} from '../../services/deployment.service';
+import {DeploymentStatusService} from '../../services/deployment-status.service';
 import {CreateUserAccountRequest, UsersService} from '../../services/users.service';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {OnboardingWizardIntroComponent} from './intro/onboarding-wizard-intro.component';
@@ -48,7 +48,6 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deployments = inject(DeploymentService);
   private readonly users = inject(UsersService);
   private readonly toast = inject(ToastService);
 
@@ -287,7 +286,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
           this.createdDeploymentTarget = await firstValueFrom(
             this.deploymentTargets.create(this.getDeploymentTargetForSubmit())
           );
-          await firstValueFrom(this.deployments.createOrUpdate(this.getDeploymentForSubmit()));
+          await firstValueFrom(this.deploymentTargets.deploy(this.getDeploymentForSubmit()));
           this.nextStep();
         } else {
           await firstValueFrom(this.users.addUser(this.getUserAccountForSubmit()));

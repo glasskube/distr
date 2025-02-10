@@ -1,9 +1,20 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {EMPTY, Observable, retry, shareReplay, switchMap, tap, timer} from 'rxjs';
+import {
+  EMPTY,
+  MonoTypeOperatorFunction,
+  Observable,
+  retry,
+  shareReplay,
+  Subject,
+  switchMap,
+  tap,
+  timer,
+  merge,
+} from 'rxjs';
 import {ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {DeploymentTarget, DeploymentTargetAccessResponse} from '@glasskube/distr-sdk';
+import {Deployment, DeploymentRequest, DeploymentTarget, DeploymentTargetAccessResponse} from '@glasskube/distr-sdk';
 
 class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   protected override identify = (dt: DeploymentTarget) => dt.id;
@@ -14,12 +25,16 @@ class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   providedIn: 'root',
 })
 export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
-  private readonly baseUrl = '/api/v1/deployment-targets';
+  private readonly deploymentTargetsBaseUrl = '/api/v1/deployment-targets';
+  private readonly deploymentsBaseUrl = '/api/v1/deployments';
   private readonly httpClient = inject(HttpClient);
-  private readonly cache = new DeploymentTargetsReactiveList(this.httpClient.get<DeploymentTarget[]>(this.baseUrl));
+  private readonly cache = new DeploymentTargetsReactiveList(
+    this.httpClient.get<DeploymentTarget[]>(this.deploymentTargetsBaseUrl)
+  );
 
-  private readonly sharedPolling$ = timer(0, 5000).pipe(
-    switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.baseUrl)),
+  private readonly pollRefresh$ = new Subject<void>();
+  private readonly sharedPolling$ = merge(timer(0, 5000), this.pollRefresh$).pipe(
+    switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.deploymentTargetsBaseUrl)),
     retry({
       delay: (e, c) =>
         e instanceof HttpErrorResponse && (!e.status || e.status >= 500)
@@ -38,23 +53,40 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   }
 
   create(request: DeploymentTarget): Observable<DeploymentTarget> {
-    return this.httpClient.post<DeploymentTarget>(this.baseUrl, request).pipe(tap((it) => this.cache.save(it)));
+    return this.httpClient.post<DeploymentTarget>(this.deploymentTargetsBaseUrl, request).pipe(
+      tap((it) => {
+        this.cache.save(it);
+        this.pollRefresh$.next();
+      })
+    );
   }
 
   update(request: DeploymentTarget): Observable<DeploymentTarget> {
-    return this.httpClient
-      .put<DeploymentTarget>(`${this.baseUrl}/${request.id}`, request)
-      .pipe(tap((it) => this.cache.save(it)));
+    return this.httpClient.put<DeploymentTarget>(`${this.deploymentTargetsBaseUrl}/${request.id}`, request).pipe(
+      tap((it) => {
+        this.cache.save(it);
+        this.pollRefresh$.next();
+      })
+    );
   }
 
   delete(request: DeploymentTarget): Observable<void> {
-    return this.httpClient.delete<void>(`${this.baseUrl}/${request.id}`).pipe(tap(() => this.cache.remove(request)));
+    return this.httpClient.delete<void>(`${this.deploymentTargetsBaseUrl}/${request.id}`).pipe(
+      tap(() => {
+        this.cache.remove(request);
+        this.pollRefresh$.next();
+      })
+    );
   }
 
   requestAccess(deploymentTargetId: string) {
     return this.httpClient.post<DeploymentTargetAccessResponse>(
-      `${this.baseUrl}/${deploymentTargetId}/access-request`,
+      `${this.deploymentTargetsBaseUrl}/${deploymentTargetId}/access-request`,
       {}
     );
+  }
+
+  deploy(request: DeploymentRequest): Observable<void> {
+    return this.httpClient.put<void>(this.deploymentsBaseUrl, request).pipe(tap(() => this.pollRefresh$.next()));
   }
 }
