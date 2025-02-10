@@ -98,7 +98,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   private readonly overlay = inject(OverlayService);
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deployments = inject(DeploymentStatusService);
+  private readonly deploymentStatuses = inject(DeploymentStatusService);
   private readonly agentVersions = inject(AgentVersionService);
 
   readonly magnifyingGlassIcon = faMagnifyingGlass;
@@ -399,7 +399,7 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     const deployment = deploymentTarget.deployment;
     if (deployment?.id) {
       this.selectedDeploymentTarget.set(deploymentTarget);
-      this.statuses = this.deployments.pollStatuses(deployment);
+      this.statuses = this.deploymentStatuses.pollStatuses(deployment);
       this.showModal(modal);
     }
   }
