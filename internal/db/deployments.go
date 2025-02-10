@@ -17,7 +17,7 @@ import (
 
 const (
 	deploymentOutputExpr = `
-		d.id, d.created_at, d.deployment_target_id, d.release_name
+		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id
 	`
 )
 
