@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"syscall"
+
+	"github.com/glasskube/distr/internal/migrations"
 
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
@@ -23,17 +26,29 @@ import (
 )
 
 type Registry struct {
-	dbPool *pgxpool.Pool
-	logger *zap.Logger
-	mailer mail.Mailer
+	dbPool           *pgxpool.Pool
+	logger           *zap.Logger
+	mailer           mail.Mailer
+	execDbMigrations bool
+}
+
+func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
+	var reg Registry
+	for _, opt := range options {
+		opt(&reg)
+	}
+	return newRegistry(ctx, &reg)
 }
 
 func NewDefault(ctx context.Context) (*Registry, error) {
-	s := &Registry{
-		logger: createLogger(),
-	}
+	var reg Registry
+	return newRegistry(ctx, &reg)
+}
 
-	s.logger.Info("initializing server",
+func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
+	reg.logger = createLogger()
+
+	reg.logger.Info("initializing server",
 		zap.String("version", buildconfig.Version()),
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
@@ -41,16 +56,22 @@ func NewDefault(ctx context.Context) (*Registry, error) {
 	if mailer, err := createMailer(ctx); err != nil {
 		return nil, err
 	} else {
-		s.mailer = mailer
+		reg.mailer = mailer
 	}
 
-	if db, err := createDBPool(ctx, s.logger); err != nil {
+	if reg.execDbMigrations {
+		if err := migrations.Up(reg.logger); err != nil {
+			return nil, err
+		}
+	}
+
+	if db, err := createDBPool(ctx, reg.logger); err != nil {
 		return nil, err
 	} else {
-		s.dbPool = db
+		reg.dbPool = db
 	}
 
-	return s, nil
+	return reg, nil
 }
 
 func (r *Registry) Shutdown() error {
@@ -88,13 +109,18 @@ func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		typeNames := []string{"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE", "DEPLOYMENT_STATUS_TYPE"}
-		if pgTypes, err := conn.LoadTypes(ctx, typeNames); err != nil {
-			return err
-		} else {
-			conn.TypeMap().RegisterTypes(pgTypes)
-			return nil
+		typeNames := []string{"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE", "DEPLOYMENT_STATUS_TYPE", "FEATURE",
+			"_FEATURE"}
+		for _, typeName := range typeNames {
+			if pgType, err := conn.LoadType(ctx, typeName); err != nil {
+				fmt.Fprintf(os.Stderr, "cannot load type %s: %v\n", typeName, err)
+				return err
+			} else {
+				conn.TypeMap().RegisterType(pgType)
+			}
 		}
+		fmt.Fprintf(os.Stderr, "done loading types\n")
+		return nil
 	}
 	if env.EnableQueryLogging() {
 		config.ConnConfig.Tracer = &loggingQueryTracer{log}
