@@ -130,13 +130,20 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 
 func DeleteUserAccountWithID(ctx context.Context, id string) error {
 	db := internalctx.GetDb(ctx)
-	if cmd, err := db.Exec(ctx, `DELETE FROM UserAccount WHERE id = @id`, pgx.NamedArgs{"id": id}); err != nil {
-		return err
+	cmd, err := db.Exec(ctx, `DELETE FROM UserAccount WHERE id = @id`, pgx.NamedArgs{"id": id})
+	if err != nil {
+		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
 	} else if cmd.RowsAffected() == 0 {
-		return apierrors.ErrNotFound
-	} else {
-		return nil
+		err = apierrors.ErrNotFound
 	}
+
+	if err != nil {
+		return fmt.Errorf("could not delete UserAccount: %w", err)
+	}
+
+	return nil
 }
 
 func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId string, role types.UserRole) error {

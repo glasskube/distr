@@ -6,10 +6,12 @@ import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faClipboard, faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
+  catchError,
   combineLatest,
   filter,
   firstValueFrom,
   map,
+  NEVER,
   Observable,
   startWith,
   Subject,
@@ -17,7 +19,7 @@ import {
   takeUntil,
   tap,
 } from 'rxjs';
-import {getFormDisplayedError} from '../../../util/errors';
+import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
@@ -27,6 +29,7 @@ import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
 import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-users',
@@ -129,10 +132,19 @@ export class UsersComponent implements OnDestroy {
 
   public async deleteUser(user: UserAccount): Promise<void> {
     this.overlay
-      .confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)
+      .confirm(`Really delete ${user.name ?? user.email}?`)
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.users.delete(user)),
+        catchError((e) => {
+          if (e instanceof HttpErrorResponse && e.status === 400) {
+            this.toast.error(
+              `User ${user.name ?? user.email} cannot be deleted.
+              Please ensure there are no deployments managed by this user and try again.`
+            );
+          }
+          return NEVER;
+        }),
         tap(() => this.refresh$.next())
       )
       .subscribe();
