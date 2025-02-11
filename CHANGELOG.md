@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.1.3](https://github.com/glasskube/distr/compare/1.1.2...1.1.3) (2025-02-11)
+
+
+### Bug Fixes
+
+* **backend:** change DeploymentTarget created_by reference on delete to `RESTRICT` ([#460](https://github.com/glasskube/distr/issues/460)) ([2d51073](https://github.com/glasskube/distr/commit/2d51073c1a293feca5bd546e5523a6761236f18c))
+* **deps:** update dependency @sentry/angular to v9 ([#457](https://github.com/glasskube/distr/issues/457)) ([469f5e4](https://github.com/glasskube/distr/commit/469f5e4cbc78b05a5bf565779093cdb627ddd5d2))
+* **deps:** update dependency ngx-markdown to v19.1.0 ([#449](https://github.com/glasskube/distr/issues/449)) ([153f978](https://github.com/glasskube/distr/commit/153f978fd37f9478fb6299ac2feaf6779fefb13f))
+* **deps:** update dependency posthog-js to v1.215.6 ([#442](https://github.com/glasskube/distr/issues/442)) ([937f0c1](https://github.com/glasskube/distr/commit/937f0c1ccf06e60e430bd6b316734ac12611083a))
+* **deps:** update dependency posthog-js to v1.215.7 ([#454](https://github.com/glasskube/distr/issues/454)) ([d01d977](https://github.com/glasskube/distr/commit/d01d97725950cc7b541bd25cf7e17036ca452d11))
+* **deps:** update dependency posthog-js to v1.217.0 ([#456](https://github.com/glasskube/distr/issues/456)) ([e303642](https://github.com/glasskube/distr/commit/e303642ce9fa30547746c317352435e0d379a01a))
+* **deps:** update module golang.org/x/crypto to v0.33.0 ([#444](https://github.com/glasskube/distr/issues/444)) ([e51b18b](https://github.com/glasskube/distr/commit/e51b18bc446a0fb2f7bd249a3d0491958f50dab4))
+* **ui:** update deployment targets list immediately ([#452](https://github.com/glasskube/distr/issues/452)) ([8fd358e](https://github.com/glasskube/distr/commit/8fd358e85ddae417c80fdc07b049c0b970482dd5))
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.22.2 ([#445](https://github.com/glasskube/distr/issues/445)) ([7d249c9](https://github.com/glasskube/distr/commit/7d249c95578a4fcebe1d3aa9d920bf22cecb15fa))
+* **deps:** update dependency jasmine-core to ~5.6.0 ([#447](https://github.com/glasskube/distr/issues/447)) ([ae5c2cb](https://github.com/glasskube/distr/commit/ae5c2cb0ef44d5c32a7505179da12ab2c63cf5a8))
+* **deps:** update dependency prettier to v3.5.0 ([#448](https://github.com/glasskube/distr/issues/448)) ([f27441e](https://github.com/glasskube/distr/commit/f27441eb42c7fb1d9c6874706d5ce85f4710826e))
+* **deps:** update dependency typedoc to v0.27.7 ([#450](https://github.com/glasskube/distr/issues/450)) ([2937d6a](https://github.com/glasskube/distr/commit/2937d6a07f5cedcd2339d70de3fa441718c47846))
+* **deps:** update dependency typedoc-plugin-markdown to v4.4.2 ([#451](https://github.com/glasskube/distr/issues/451)) ([eae0de3](https://github.com/glasskube/distr/commit/eae0de3e889e47e72624d33176c49e04a70a9652))
+* **deps:** update golangci/golangci-lint-action action to v6.3.1 ([#446](https://github.com/glasskube/distr/issues/446)) ([d2aec76](https://github.com/glasskube/distr/commit/d2aec762f50c85a59485dcb00f2efc3748cf2ce5))
+* **deps:** update golangci/golangci-lint-action action to v6.3.2 ([#459](https://github.com/glasskube/distr/issues/459)) ([51451bb](https://github.com/glasskube/distr/commit/51451bb8969d6da12055698f3440986e28fb041c))
+
 ## [1.1.2](https://github.com/glasskube/distr/compare/1.1.1...1.1.2) (2025-02-07)
 
 
