@@ -131,8 +131,14 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.DeleteUserAccountWithID(ctx, userAccount.ID); err != nil {
 		log.Warn("error deleting user", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, apierrors.ErrNotFound) {
+			w.WriteHeader(http.StatusNoContent)
+		} else if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
