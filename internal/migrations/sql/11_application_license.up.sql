@@ -3,9 +3,9 @@ CREATE TABLE ApplicationLicense (
   created_at TIMESTAMP DEFAULT current_timestamp,
   name TEXT NOT NULL,
   expires_at TIMESTAMP,
-  application_id UUID NOT NULL REFERENCES Application (id) ON DELETE CASCADE,
+  application_id UUID NOT NULL REFERENCES Application (id),
   organization_id UUID NOT NULL REFERENCES Organization (id) ON DELETE CASCADE,
-  owner_useraccount_id UUID REFERENCES UserAccount (id) ON DELETE CASCADE,
+  owner_useraccount_id UUID REFERENCES UserAccount (id),
   registry_url TEXT,
   registry_username TEXT,
   registry_password TEXT,
@@ -17,8 +17,8 @@ CREATE TABLE ApplicationLicense (
 );
 
 CREATE TABLE ApplicationLicense_ApplicationVersion (
-  application_license_id UUID NOT NULL REFERENCES ApplicationLicense (id),
-  application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id),
+  application_license_id UUID NOT NULL REFERENCES ApplicationLicense (id) ON DELETE CASCADE,
+  application_version_id UUID NOT NULL REFERENCES ApplicationVersion (id) ON DELETE CASCADE,
   PRIMARY KEY (application_license_id, application_version_id)
 );
 
