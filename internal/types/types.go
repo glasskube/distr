@@ -7,6 +7,7 @@ type UserRole string
 type HelmChartType string
 type DeploymentStatusType string
 type DeploymentTargetScope string
+type Feature string
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
@@ -23,6 +24,8 @@ const (
 
 	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
+
+	FeatureLicensing Feature = "licensing"
 )
 
 type Base struct {

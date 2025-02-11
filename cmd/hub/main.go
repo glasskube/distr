@@ -12,7 +12,6 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/migrations"
 	"github.com/glasskube/distr/internal/svc"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/spf13/pflag"
@@ -43,12 +42,8 @@ func main() {
 		}
 	}()
 
-	registry := util.Require(svc.NewDefault(ctx))
+	registry := util.Require(svc.New(ctx, svc.ExecDbMigration(cliOptions.Migrate)))
 	defer func() { util.Must(registry.Shutdown()) }()
-
-	if cliOptions.Migrate {
-		util.Must(migrations.Up(registry.GetLogger()))
-	}
 
 	util.Must(db.CreateAgentVersion(internalctx.WithDb(ctx, registry.GetDbPool())))
 

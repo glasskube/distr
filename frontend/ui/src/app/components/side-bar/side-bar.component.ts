@@ -18,15 +18,18 @@ import {
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
 import {buildConfig} from '../../../buildconfig';
+import {FeatureFlagService} from '../../services/feature-flag.service';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [RouterLink, FaIconComponent, RequireRoleDirective],
+  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
+  public readonly featureFlags = inject(FeatureFlagService);
   public feedbackAlert = true;
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;

@@ -10,7 +10,8 @@ import (
 
 type Organization struct {
 	Base
-	Name string `db:"name" json:"name"`
+	Name     string    `db:"name" json:"name"`
+	Features []Feature `db:"features" json:"features"`
 }
 
 type OrganizationWithUserRole struct {

@@ -1,0 +1,3 @@
+ALTER TABLE organization DROP COLUMN features;
+
+DROP TYPE FEATURE;
