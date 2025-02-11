@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"syscall"
 
 	"github.com/glasskube/distr/internal/migrations"
@@ -113,13 +112,11 @@ func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
 			"_FEATURE"}
 		for _, typeName := range typeNames {
 			if pgType, err := conn.LoadType(ctx, typeName); err != nil {
-				fmt.Fprintf(os.Stderr, "cannot load type %s: %v\n", typeName, err)
 				return err
 			} else {
 				conn.TypeMap().RegisterType(pgType)
 			}
 		}
-		fmt.Fprintf(os.Stderr, "done loading types\n")
 		return nil
 	}
 	if env.EnableQueryLogging() {
