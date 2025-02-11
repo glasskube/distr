@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/glasskube/distr/internal/apierrors"
@@ -164,5 +165,30 @@ func GetApplicationLicensesWithOwnerID(ctx context.Context, id string) ([]types.
 		return nil, fmt.Errorf("could not collect ApplicationLicense: %w", err)
 	} else {
 		return result, nil
+	}
+}
+
+func GetApplicationLicenseWithID(ctx context.Context, id string) (*types.ApplicationLicenseWithVersions, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		fmt.Sprintf(
+			"SELECT %v FROM ApplicationLicense al WHERE al.id = @id",
+			applicationLicenseWithVersionsOutputExpr,
+		),
+		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
+	}
+
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("could not collect ApplicationLicense: %w", err)
+	} else {
+		return &result, nil
 	}
 }
