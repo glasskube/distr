@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/glasskube/distr/internal/util"
@@ -13,6 +14,10 @@ type Organization struct {
 	Base
 	Name     string    `db:"name" json:"name"`
 	Features []Feature `db:"features" json:"features"`
+}
+
+func (org *Organization) HasFeature(feature Feature) bool {
+	return slices.Contains(org.Features, feature)
 }
 
 type OrganizationWithUserRole struct {
