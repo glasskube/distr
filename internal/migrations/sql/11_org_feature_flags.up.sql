@@ -1,1 +1,0 @@
-ALTER TABLE organization ADD COLUMN licensing_enabled BOOLEAN DEFAULT FALSE NOT NULL;
