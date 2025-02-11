@@ -132,14 +132,14 @@ export class UsersComponent implements OnDestroy {
 
   public async deleteUser(user: UserAccount): Promise<void> {
     this.overlay
-      .confirm(`Really delete ${user.name ?? user.email}? This will also delete all deployments they manage!`)
+      .confirm(`Really delete ${user.name ?? user.email}?`)
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.users.delete(user)),
         catchError((e) => {
           if (e instanceof HttpErrorResponse && e.status === 400) {
             this.toast.error(
-              `User ${user.email} cannot be deleted.
+              `User ${user.name ?? user.email} cannot be deleted.
               Please ensure there are no deployments managed by this user and try again.`
             );
           }
