@@ -8,8 +8,9 @@ import (
 
 type Deployment struct {
 	Base
-	DeploymentTargetId string  `db:"deployment_target_id" json:"deploymentTargetId"`
-	ReleaseName        *string `db:"release_name" json:"releaseName,omitempty"`
+	DeploymentTargetId   string  `db:"deployment_target_id" json:"deploymentTargetId"`
+	ReleaseName          *string `db:"release_name" json:"releaseName,omitempty"`
+	ApplicationLicenseID *string `db:"application_license_id" json:"applicationLicenseId,omitempty"`
 }
 
 type DeploymentWithLatestRevision struct {
