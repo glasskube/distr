@@ -2,7 +2,10 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -51,12 +54,51 @@ func CreateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 			"registryPassword":   license.RegistryPassword,
 		},
 	)
-
-	if err == nil {
+	if err != nil {
 		return fmt.Errorf("could not insert ApplicationLicense: %w", err)
 	}
-
 	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+		return err
+	} else {
+		*license = result
+		return nil
+	}
+}
+
+func UpdateApplicationLicense(ctx context.Context, license *types.ApplicationLicense) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`UPDATE ApplicationLicense AS al SET
+			name = @name,
+            expires_at = @expiresAt,
+            owner_useraccount_id = @ownerUserAccountId,
+            registry_url = @registryUrl,
+            registry_username = @registryUsername,
+            registry_password = @registryPassword
+		 WHERE al.id = @id RETURNING`+applicationLicenseOutputExpr,
+		pgx.NamedArgs{
+			"id":                 license.ID,
+			"name":               license.Name,
+			"expiresAt":          license.ExpiresAt,
+			"ownerUserAccountId": license.OwnerUserAccountID,
+			"registryUrl":        license.RegistryURL,
+			"registryUsername":   license.RegistryUsername,
+			"registryPassword":   license.RegistryPassword,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not insert ApplicationLicense: %w", err)
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
 		return err
 	} else {
 		*license = result
@@ -146,15 +188,15 @@ func GetApplicationLicensesWithOrganizationID(
 	}
 }
 
-func GetApplicationLicensesWithOwnerID(ctx context.Context, id string) ([]types.ApplicationLicenseWithVersions, error) {
+func GetApplicationLicensesWithOwnerID(ctx context.Context, ownerID string, organizationID string) ([]types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		fmt.Sprintf(
-			"SELECT %v FROM ApplicationLicense al WHERE al.owner_useraccount_id = @id",
+			"SELECT %v FROM ApplicationLicense al WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId",
 			applicationLicenseWithVersionsOutputExpr,
 		),
-		pgx.NamedArgs{"id": id},
+		pgx.NamedArgs{"ownerId": ownerID, "organizationId": organizationID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
@@ -164,5 +206,29 @@ func GetApplicationLicensesWithOwnerID(ctx context.Context, id string) ([]types.
 		return nil, fmt.Errorf("could not collect ApplicationLicense: %w", err)
 	} else {
 		return result, nil
+	}
+}
+
+func GetApplicationLicenseByID(ctx context.Context, id string) (*types.ApplicationLicenseWithVersions, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		fmt.Sprintf(
+			"SELECT %v FROM ApplicationLicense al WHERE al.id = @id",
+			applicationLicenseWithVersionsOutputExpr,
+		),
+		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
+	}
+
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("could not collect ApplicationLicense: %w", err)
+	} else {
+		return &result, nil
 	}
 }

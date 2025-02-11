@@ -3,19 +3,19 @@ package types
 import "time"
 
 type ApplicationLicense struct {
-	ID                 string     `db:"id"`
-	CreatedAt          time.Time  `db:"created_at"`
-	Name               string     `db:"name"`
-	ExpiresAt          *time.Time `db:"expires_at"`
-	ApplicationID      string     `db:"application_id"`
-	OrganizationID     string     `db:"organization_id"`
-	OwnerUserAccountID *string    `db:"owner_useraccount_id"`
-	RegistryURL        *string    `db:"registry_url"`
-	RegistryUsername   *string    `db:"registry_username"`
-	RegistryPassword   *string    `db:"registry_password"`
+	ID                 string     `db:"id" json:"id"`
+	CreatedAt          time.Time  `db:"created_at" json:"createdAt"`
+	Name               string     `db:"name" json:"name"`
+	ExpiresAt          *time.Time `db:"expires_at" json:"expiresAt,omitempty"`
+	ApplicationID      string     `db:"application_id" json:"applicationId"`
+	OrganizationID     string     `db:"organization_id" json:"-"`
+	OwnerUserAccountID *string    `db:"owner_useraccount_id" json:"ownerUserAccountId,omitempty"`
+	RegistryURL        *string    `db:"registry_url" json:"registryUrl,omitempty"`
+	RegistryUsername   *string    `db:"registry_username" json:"registryUsername,omitempty"`
+	RegistryPassword   *string    `db:"registry_password" json:"registryPassword,omitempty"`
 }
 
 type ApplicationLicenseWithVersions struct {
 	ApplicationLicense
-	Versions []ApplicationVersion `db:"versions"`
+	Versions []ApplicationVersion `db:"versions" json:"versions"`
 }

@@ -1,0 +1,96 @@
+<form [formGroup]="editForm" class="space-y-4">
+  <div>
+    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name *</label>
+    <input
+      formControlName="name"
+      autotrim
+      type="text"
+      id="name"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+      value=""
+      placeholder="License name"
+      required/>
+    @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+  </div>
+
+  <div>
+    <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+      Application *
+    </label>
+    <select
+      id="applicationId"
+      formControlName="applicationId"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+      @for (app of applications$ | async; track app.id) {
+        <option [value]="app.id">{{ app.name }}</option>
+      }
+    </select>
+    @if (editForm.controls.applicationId.invalid && editForm.controls.applicationId.touched) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+  </div>
+
+  <div>
+    <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+      Application Versions *
+    </label>
+
+    <ul
+      class="text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+      <li class="w-full border-b border-gray-200 rounded-t-lg dark:border-gray-600">
+        <div class="flex items-center ps-3">
+          <input
+            id="all-versions-checkbox"
+            formControlName="includeAllVersions"
+            type="checkbox"
+            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"/>
+          <label
+            for="all-versions-checkbox"
+            class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+          >All versions and future versions</label
+          >
+        </div>
+      </li>
+      @if (!editForm.controls.includeAllVersions.value) {
+        <ng-container formArrayName="versions">
+          @for (versionCtrl of versionsArray.controls; track i; let i = $index) {
+            <li class="w-full border-b border-gray-200 rounded-t-lg dark:border-gray-600">
+              <div class="flex items-center ps-3">
+                <input
+                  id="version-checkbox-{{ i }}"
+                  type="checkbox"
+                  [formControlName]="i"
+                  [value]="selectedApplication?.versions?.[i]"
+                  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"/>
+                <label
+                  for="version-checkbox-{{ i }}"
+                  class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                >{{ selectedApplication?.versions?.[i]?.name }}</label
+                >
+              </div>
+            </li>
+          }
+        </ng-container>
+      }
+    </ul>
+  </div>
+
+  <div>
+    <label for="ownerUserAccountId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+      Owner
+    </label>
+    <select
+      id="ownerUserAccountId"
+      formControlName="ownerUserAccountId"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+      @for (customer of customers$ | async; track customer.id) {
+        <option [value]="customer.id">{{ customer.name ?? customer.email }}</option>
+      }
+    </select>
+    @if (editForm.controls.ownerUserAccountId.invalid && editForm.controls.ownerUserAccountId.touched) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+  </div>
+</form>
