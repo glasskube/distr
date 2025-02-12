@@ -1,21 +1,17 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
-import {Observable, of, tap} from 'rxjs';
+import {inject, Injectable} from '@angular/core';
+import {Observable, of, shareReplay, tap} from 'rxjs';
 import {Organization} from '../types/organization';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrganizationService {
+  private readonly httpClient = inject(HttpClient);
   private readonly baseUrl = '/api/v1/organization';
-  private cache?: Organization;
-
-  constructor(private readonly httpClient: HttpClient) {}
+  private readonly organization$ = this.httpClient.get<Organization>(this.baseUrl).pipe(shareReplay(1));
 
   get(): Observable<Organization> {
-    if (this.cache) {
-      return of(this.cache);
-    }
-    return this.httpClient.get<Organization>(this.baseUrl).pipe(tap((org) => (this.cache = org)));
+    return this.organization$;
   }
 }
