@@ -1,5 +1,4 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
-import {AsyncPipe} from '@angular/common';
 import {Component, EventEmitter, inject, OnDestroy, OnInit, Output, signal, ViewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -13,18 +12,16 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {catchError, combineLatest, firstValueFrom, map, NEVER, shareReplay, Subject, switchMap, takeUntil} from 'rxjs';
+import {combineLatest, firstValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {modalFlyInOut} from '../../animations/modal';
+import {DeploymentFormComponent, DeploymentFormValue} from '../../deployment-form/deployment-form.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {ApplicationsService} from '../../services/applications.service';
-import {AuthService} from '../../services/auth.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
-import {LicenseService} from '../../services/license.service';
 import {ToastService} from '../../services/toast.service';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
-import {YamlEditorComponent} from '../yaml-editor.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
 
 @Component({
@@ -35,10 +32,9 @@ import {InstallationWizardStepperComponent} from './installation-wizard-stepper.
     FaIconComponent,
     InstallationWizardStepperComponent,
     CdkStep,
-    AsyncPipe,
     ConnectInstructionsComponent,
-    YamlEditorComponent,
     AutotrimDirective,
+    DeploymentFormComponent,
   ],
   animations: [modalFlyInOut],
 })
@@ -50,8 +46,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   private readonly applications = inject(ApplicationsService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   protected readonly featureFlags = inject(FeatureFlagService);
-  private readonly licenses = inject(LicenseService);
-  private readonly auth = inject(AuthService);
 
   @ViewChild('stepper') private stepper?: CdkStepper;
 
@@ -73,116 +67,20 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
   readonly agentForm = new FormGroup({});
 
-  readonly deployForm = new FormGroup({
-    deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
-    applicationLicenseId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
-    valuesYaml: new FormControl<string>({value: '', disabled: true}),
-    releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
-    envFileData: new FormControl<string>({value: '', disabled: true}),
-  });
+  readonly deployForm = new FormControl<DeploymentFormValue | undefined>(undefined, Validators.required);
 
   protected selectedApplication?: Application;
-  protected availableApplicationVersions: ApplicationVersion[] = [];
+  protected availableApplicationVersions = signal<ApplicationVersion[]>([]);
   protected selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
 
   readonly applications$ = combineLatest([this.applications.list(), toObservable(this.selectedDeploymentTarget)]).pipe(
     map(([apps, dt]) => apps.filter((app) => app.type === dt?.type))
   );
 
-  readonly licenses$ = combineLatest([
-    this.deployForm.controls.applicationId.valueChanges,
-    this.featureFlags.isLicensingEnabled$,
-  ]).pipe(
-    switchMap(([applicationId, isLicensingEnabled]) =>
-      isLicensingEnabled && this.auth.hasRole('customer') && applicationId
-        ? this.licenses.getLicensesForApplication(applicationId)
-        : NEVER
-    ),
-    shareReplay(1)
-  );
-
-  readonly selectedLicense$ = combineLatest([
-    this.deployForm.controls.applicationLicenseId.valueChanges,
-    this.licenses$,
-  ]).pipe(map(([licenseId, licenses]) => licenses.find((it) => it.id === licenseId)));
-
   private loading = false;
   private readonly destroyed$ = new Subject<void>();
 
   ngOnInit() {
-    this.featureFlags.isLicensingEnabled$.pipe(takeUntil(this.destroyed$)).subscribe((isLicensingEnabled) => {
-      if (isLicensingEnabled && this.auth.hasRole('customer')) {
-        this.deployForm.controls.applicationLicenseId.enable();
-      }
-    });
-
-    combineLatest([
-      this.deployForm.controls.applicationId.valueChanges,
-      this.applications$,
-      this.featureFlags.isLicensingEnabled$,
-    ])
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe(([applicationId, applications, isLicensingEnabled]) => {
-        this.updatedSelectedApplication(applications, applicationId);
-        if (isLicensingEnabled && this.auth.hasRole('customer')) {
-          this.deployForm.controls.applicationVersionId.reset();
-        } else {
-          this.updateAvailableApplicationVersions(this.selectedApplication?.versions);
-        }
-      });
-
-    this.deployForm.controls.applicationVersionId.valueChanges
-      .pipe(
-        takeUntil(this.destroyed$),
-        switchMap((id) =>
-          id
-            ? this.applications.getTemplateFile(this.selectedApplication?.id!, id).pipe(
-                catchError(() => NEVER),
-                map((data) => [this.selectedApplication?.type, data])
-              )
-            : NEVER
-        )
-      )
-      .subscribe(([type, templateFile]) => {
-        if (type === 'kubernetes') {
-          this.deployForm.controls.releaseName.enable();
-          this.deployForm.controls.valuesYaml.enable();
-          this.deployForm.controls.envFileData.disable();
-          this.deployForm.patchValue({valuesYaml: templateFile});
-          if (!this.deployForm.value.releaseName) {
-            const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
-            this.deployForm.patchValue({releaseName});
-          }
-        } else {
-          this.deployForm.controls.envFileData.enable();
-          this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
-          this.deployForm.controls.releaseName.disable();
-          this.deployForm.controls.valuesYaml.disable();
-        }
-      });
-
-    this.deployForm.controls.applicationId.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
-      if (s === 'VALID') {
-        this.deployForm.controls.applicationVersionId.enable();
-      } else {
-        this.deployForm.controls.applicationVersionId.disable();
-      }
-    });
-
-    this.licenses$.pipe(takeUntil(this.destroyed$)).subscribe((licenses) => {
-      if (licenses.length > 0) {
-        this.deployForm.controls.applicationLicenseId.setValue(licenses[0].id);
-      } else {
-        this.deployForm.controls.applicationLicenseId.reset();
-      }
-    });
-
-    this.selectedLicense$
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe((license) => this.updateAvailableApplicationVersions(license?.versions));
-
     this.deploymentTargetForm.controls.type.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
       if (s === 'kubernetes') {
         this.deploymentTargetForm.controls.namespace.enable();
@@ -241,6 +139,9 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
         })
       );
       this.selectedDeploymentTarget.set(created as DeploymentTarget);
+      this.deployForm.setValue({
+        deploymentTargetId: created.id,
+      });
       this.nextStep();
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -253,18 +154,18 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   }
 
   private async continueFromDeployStep() {
-    this.deployForm.patchValue({
-      deploymentTargetId: this.selectedDeploymentTarget()!.id,
-    });
-
     this.deployForm.markAllAsTouched();
     if (!this.deployForm.valid || this.loading) {
       return;
     }
 
+    if (!this.deployForm.valid) {
+      return;
+    }
+
     try {
       this.loading = true;
-      const deployment = this.deployForm.value;
+      const deployment = this.deployForm.value!;
       if (deployment.valuesYaml) {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
       } else {
@@ -295,25 +196,5 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   private nextStep() {
     this.loading = false;
     this.stepper?.next();
-  }
-
-  updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
-    this.selectedApplication = applications.find((a) => a.id === applicationId);
-  }
-
-  updateAvailableApplicationVersions(versions: ApplicationVersion[] | undefined) {
-    this.availableApplicationVersions = versions ?? [];
-    if (this.availableApplicationVersions.length > 0) {
-      // Only update the form control, if the previously selected version is no longer in the list
-      if (
-        this.availableApplicationVersions.every((version) => version.id !== this.deployForm.value.applicationVersionId)
-      ) {
-        this.deployForm.controls.applicationVersionId.patchValue(
-          this.availableApplicationVersions[this.availableApplicationVersions.length - 1].id
-        );
-      }
-    } else {
-      this.deployForm.controls.applicationVersionId.reset();
-    }
   }
 }

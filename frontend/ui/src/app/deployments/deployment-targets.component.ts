@@ -1,16 +1,6 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-  signal,
-  TemplateRef,
-  ViewChild,
-} from '@angular/core';
+import {AfterViewInit, Component, inject, Input, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -25,6 +15,14 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
+  Application,
+  DeploymentRequest,
+  DeploymentRevisionStatus,
+  DeploymentTarget,
+  DeploymentTargetScope,
+  DeploymentType,
+} from '@glasskube/distr-sdk';
+import {
   catchError,
   combineLatest,
   EMPTY,
@@ -34,12 +32,8 @@ import {
   lastValueFrom,
   map,
   Observable,
-  of,
   Subject,
   switchMap,
-  takeUntil,
-  tap,
-  withLatestFrom,
 } from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
@@ -49,24 +43,16 @@ import {modalFlyInOut} from '../animations/modal';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {StatusDotComponent} from '../components/status-dot';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {UuidComponent} from '../components/uuid';
+import {DeploymentFormComponent, DeploymentFormValue} from '../deployment-form/deployment-form.component';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {DeploymentStatusService} from '../services/deployment-status.service';
+import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {AutotrimDirective} from '../directives/autotrim.directive';
-import {UuidComponent} from '../components/uuid';
-import {
-  Application,
-  DeploymentRequest,
-  DeploymentRevisionStatus,
-  DeploymentTarget,
-  DeploymentTargetScope,
-  DeploymentType,
-} from '@glasskube/distr-sdk';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -82,15 +68,15 @@ import {
     ConnectInstructionsComponent,
     InstallationWizardComponent,
     UpperCasePipe,
-    YamlEditorComponent,
     AutotrimDirective,
     UuidComponent,
+    DeploymentFormComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
   animations: [modalFlyInOut, drawerFlyInOut],
 })
-export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   @Input('fullVersion') fullVersion = false;
 
   public readonly auth = inject(AuthService);
@@ -134,19 +120,11 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
     scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
   });
-
   editFormLoading = false;
-  readonly deployForm = new FormGroup({
-    deploymentTargetId: new FormControl<string | undefined>(undefined, Validators.required),
-    deploymentId: new FormControl<string | undefined>(undefined),
-    applicationId: new FormControl<string | undefined>(undefined, Validators.required),
-    applicationVersionId: new FormControl<string | undefined>({value: undefined, disabled: true}, Validators.required),
-    valuesYaml: new FormControl<string | undefined>({value: undefined, disabled: true}),
-    releaseName: new FormControl<string>({value: '', disabled: true}, Validators.required),
-    envFileData: new FormControl<string | undefined>({value: undefined, disabled: true}),
-  });
 
+  readonly deployForm = new FormControl<DeploymentFormValue | undefined>(undefined, Validators.required);
   deployFormLoading = false;
+
   readonly deploymentTargets$ = this.deploymentTargets.poll();
 
   readonly filteredDeploymentTargets$ = filteredByFormControl(
@@ -170,10 +148,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
 
   statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
-
-  ngOnInit() {
-    this.registerDeployFormChanges();
-  }
 
   ngAfterViewInit() {
     if (this.fullVersion) {
@@ -293,60 +267,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
-  private registerDeployFormChanges() {
-    this.deployForm.controls.applicationId.valueChanges
-      .pipe(
-        takeUntil(this.destroyed$),
-        withLatestFrom(this.applications$),
-        tap(([selected, apps]) => this.updatedSelectedApplication(apps, selected))
-      )
-      .subscribe(() => {
-        if (this.selectedApplication) {
-          if (this.deployForm.controls.deploymentId.value) {
-            this.deployForm.controls.applicationId.disable({emitEvent: false});
-          }
-          this.deployForm.controls.applicationVersionId.enable({emitEvent: false});
-        } else {
-          this.deployForm.controls.applicationId.enable({emitEvent: false});
-          this.deployForm.controls.applicationVersionId.disable({emitEvent: false});
-        }
-      });
-    this.deployForm.controls.applicationVersionId.valueChanges
-      .pipe(
-        takeUntil(this.destroyed$),
-        filter(() => !!this.selectedApplication),
-        switchMap((id) =>
-          !this.selectedDeploymentTarget()?.deployment?.valuesYaml &&
-          !this.selectedDeploymentTarget()?.deployment?.envFileData
-            ? this.applications
-                .getTemplateFile(this.selectedApplication?.id!, id!)
-                .pipe(map((data) => [this.selectedApplication?.type, data]))
-            : of([this.selectedApplication?.type, null])
-        )
-      )
-      .subscribe(([type, templateFile]) => {
-        if (type === 'kubernetes') {
-          this.deployForm.controls.releaseName.enable();
-          this.deployForm.controls.valuesYaml.enable();
-          this.deployForm.controls.envFileData.disable();
-          if (templateFile) {
-            this.deployForm.patchValue({valuesYaml: templateFile});
-          }
-          if (!this.deployForm.value.releaseName) {
-            const releaseName = this.selectedDeploymentTarget()?.name.trim().toLowerCase().replaceAll(/\W+/g, '-');
-            this.deployForm.patchValue({releaseName});
-          }
-        } else {
-          this.deployForm.controls.envFileData.enable();
-          this.deployForm.controls.releaseName.disable();
-          this.deployForm.controls.valuesYaml.disable();
-          if (templateFile) {
-            this.deployForm.patchValue({envFileData: templateFile});
-          }
-        }
-      });
-  }
-
   async newDeployment(deploymentTarget: DeploymentTarget, modalTemplate: TemplateRef<any>) {
     const apps = await firstValueFrom(this.applications$);
     if (deploymentTarget.deployment) {
@@ -356,7 +276,6 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
-      deploymentId: deploymentTarget.deployment?.id,
       applicationId: deploymentTarget.deployment?.applicationId,
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
       releaseName: deploymentTarget.deployment?.releaseName,
@@ -371,7 +290,10 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
     this.deployForm.markAllAsTouched();
     if (this.deployForm.valid) {
       this.deployFormLoading = true;
-      const deployment = this.deployForm.value;
+      const deployment: DeploymentRequest = {
+        deploymentId: this.selectedDeploymentTarget()?.deployment?.id,
+        ...(this.deployForm.value as Required<DeploymentFormValue>),
+      };
       if (deployment.valuesYaml) {
         deployment.valuesYaml = btoa(deployment.valuesYaml);
       }
