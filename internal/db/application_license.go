@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 
@@ -191,13 +192,15 @@ func GetApplicationLicensesWithOrganizationID(
 
 func GetApplicationLicensesWithOwnerID(
 	ctx context.Context,
-	ownerID ,organizationID uuid.UUID,
+	ownerID, organizationID uuid.UUID,
 ) ([]types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		fmt.Sprintf(
-			"SELECT %v FROM ApplicationLicense al WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId",
+			"SELECT %v "+
+				"FROM ApplicationLicense al "+
+				"WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId",
 			applicationLicenseWithVersionsOutputExpr,
 		),
 		pgx.NamedArgs{"ownerId": ownerID, "organizationId": organizationID},
@@ -227,7 +230,8 @@ func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.Applic
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
 	}
 
-	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions]); err != nil {
+	if result, err :=
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}

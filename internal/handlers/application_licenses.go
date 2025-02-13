@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -12,9 +14,9 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func ApplicationLicensesRouter(r chi.Router) {
@@ -37,12 +39,8 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	license, err := JsonBody[types.ApplicationLicenseWithVersions](w, r)
 	if err != nil {
 		return
-	} else if license.OrganizationID != "" && license.OrganizationID != *auth.CurrentOrgID() {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else {
-		license.OrganizationID = *auth.CurrentOrgID()
 	}
+	license.OrganizationID = *auth.CurrentOrgID()
 
 	// TODO registry validatin probably
 
@@ -79,22 +77,19 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	license.OrganizationID = *auth.CurrentOrgID()
 
 	existing := internalctx.GetApplicationLicense(ctx)
-	if license.ID == "" {
+	if IsEmptyUUID(license.ID) {
 		license.ID = existing.ID
 	} else if license.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if license.OrganizationID != "" && license.OrganizationID != *auth.CurrentOrgID() {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else if existing.OwnerUserAccountID != nil &&
+	}
+	if existing.OwnerUserAccountID != nil &&
 		(license.OwnerUserAccountID == nil || *existing.OwnerUserAccountID != *license.OwnerUserAccountID) {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Changing the license owner is not allowed", http.StatusBadRequest)
 		return
-	} else {
-		license.OrganizationID = *auth.CurrentOrgID()
 	}
 
 	// TODO registry validatin probably
@@ -152,8 +147,9 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return err
 				} else {
-					// however removing the relations is possible iff the user chose "all versions" by setting the versions = []
-					if err := db.RemoveVersionFromApplicationLicense(ctx, &license.ApplicationLicense, existingVersion.ID); err != nil {
+					// however removing the relations is possible iff the user chose "all versions" by versions = []
+					if err := db.RemoveVersionFromApplicationLicense(
+						ctx, &license.ApplicationLicense, existingVersion.ID); err != nil {
 						log.Warn("could not remove version from license", zap.Error(err))
 						sentry.GetHubFromContext(ctx).CaptureException(err)
 						http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -183,7 +179,8 @@ func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 			RespondJSON(w, licenses)
 		}
 	} else {
-		if licenses, err := db.GetApplicationLicensesWithOwnerID(ctx, auth.CurrentUserID(), *auth.CurrentOrgID()); err != nil {
+		if licenses, err :=
+			db.GetApplicationLicensesWithOwnerID(ctx, auth.CurrentUserID(), *auth.CurrentOrgID()); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -217,10 +214,10 @@ func deleteApplicationLicense(w http.ResponseWriter, r *http.Request) {
 func applicationLicenseMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		licenseId := r.PathValue("applicationLicenseId")
 		auth := auth.Authentication.Require(ctx)
-		license, err := db.GetApplicationLicenseByID(ctx, licenseId)
-		if errors.Is(err, apierrors.ErrNotFound) {
+		if licenseId, err := uuid.Parse(r.PathValue("applicationLicenseId")); err != nil {
+			http.Error(w, "applicationLicenseId is not a valid UUID", http.StatusBadRequest)
+		} else if license, err := db.GetApplicationLicenseByID(ctx, licenseId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(r.Context()).Error("failed to get license", zap.Error(err))
