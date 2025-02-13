@@ -6,13 +6,17 @@ import {
   combineLatest,
   combineLatestWith,
   distinctUntilChanged,
+  from,
   map,
   NEVER,
+  Observable,
   of,
   shareReplay,
+  startWith,
   Subject,
   switchMap,
   takeUntil,
+  tap,
 } from 'rxjs';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -65,22 +69,22 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
   });
 
   private readonly deploymentTargetId$ = this.deployForm.controls.deploymentTargetId.valueChanges.pipe(
-    shareReplay(1),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    shareReplay(1)
   );
   private readonly applicationId$ = this.deployForm.controls.applicationId.valueChanges.pipe(
-    shareReplay(1),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    shareReplay(1)
   );
   private readonly applicationVersionId$ = this.deployForm.controls.applicationVersionId.valueChanges.pipe(
-    shareReplay(1),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    shareReplay(1)
   );
   private readonly applicationLicenseId$ = this.deployForm.controls.applicationLicenseId.valueChanges.pipe(
-    shareReplay(1),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    shareReplay(1)
   );
-  private readonly shouldShowLicense$ = this.featureFlags.isLicensingEnabled$.pipe(
+  protected readonly shouldShowLicense$ = this.featureFlags.isLicensingEnabled$.pipe(
     map((isLicensingEnabled) => isLicensingEnabled && this.auth.hasRole('customer'))
   );
   private readonly deploymentTarget$ = this.deploymentTargetId$.pipe(
@@ -129,13 +133,21 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
         this.onTouched?.(callbackArg);
       });
 
-    this.shouldShowLicense$.pipe(takeUntil(this.destroyed$)).subscribe((isLicensingEnabled) => {
-      if (isLicensingEnabled) {
-        this.deployForm.controls.applicationLicenseId.enable();
-      } else {
-        this.deployForm.controls.applicationLicenseId.disable();
-      }
-    });
+    combineLatest([
+      this.shouldShowLicense$,
+      this.deploymentTarget$.pipe(
+        map((dt) => !!dt?.deployment),
+        distinctUntilChanged()
+      ),
+    ])
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe(([isLicensingEnabled, existingDeployment]) => {
+        if (isLicensingEnabled && !existingDeployment) {
+          this.deployForm.controls.applicationLicenseId.enable();
+        } else {
+          this.deployForm.controls.applicationLicenseId.disable();
+        }
+      });
 
     this.deploymentTarget$
       .pipe(
@@ -221,6 +233,10 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
         // this.deployForm.controls.applicationVersionId.reset();
       }
     });
+
+    // This is needed because the first value could be missed otherwise
+    // TODO: Find a better solution for this
+    this.applicationLicenseId$.pipe(takeUntil(this.destroyed$)).subscribe();
   }
 
   ngOnDestroy(): void {

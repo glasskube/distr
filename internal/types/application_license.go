@@ -1,15 +1,19 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type ApplicationLicense struct {
-	ID                 string     `db:"id"`
+	ID                 uuid.UUID  `db:"id"`
 	CreatedAt          time.Time  `db:"created_at"`
 	Name               string     `db:"name"`
 	ExpiresAt          *time.Time `db:"expires_at"`
-	ApplicationID      string     `db:"application_id"`
-	OrganizationID     string     `db:"organization_id"`
-	OwnerUserAccountID *string    `db:"owner_useraccount_id"`
+	ApplicationID      uuid.UUID  `db:"application_id"`
+	OrganizationID     uuid.UUID  `db:"organization_id"`
+	OwnerUserAccountID *uuid.UUID `db:"owner_useraccount_id"`
 	RegistryURL        *string    `db:"registry_url"`
 	RegistryUsername   *string    `db:"registry_username"`
 	RegistryPassword   *string    `db:"registry_password"`

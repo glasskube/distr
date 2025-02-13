@@ -172,7 +172,7 @@ func GetApplicationLicensesWithOwnerID(
 	}
 }
 
-func GetApplicationLicenseWithID(ctx context.Context, id string) (*types.ApplicationLicenseWithVersions, error) {
+func GetApplicationLicenseWithID(ctx context.Context, id uuid.UUID) (*types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
