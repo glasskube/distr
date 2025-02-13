@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.5](https://github.com/glasskube/distr/compare/1.1.4...1.1.5) (2025-02-13)
+
+
+### Bug Fixes
+
+* **deps:** update module helm.sh/helm/v3 to v3.17.1 ([#478](https://github.com/glasskube/distr/issues/478)) ([2c2d77f](https://github.com/glasskube/distr/commit/2c2d77fe230733f6585c369905f8cfa7f416b9d3))
+
+
+### Other
+
+* **deps:** update dependency go to v1.24.0 ([#466](https://github.com/glasskube/distr/issues/466)) ([9c9b271](https://github.com/glasskube/distr/commit/9c9b27145d2ff2c43e0f59bdae7774dd6604c99e))
+* **deps:** update golang docker tag to v1.24 ([#479](https://github.com/glasskube/distr/issues/479)) ([7863713](https://github.com/glasskube/distr/commit/786371356044ed6d7aa97e070b554877978ed83e))
+
+
+### Performance
+
+* **backend:** optimize database query for deployment target with latest status ([#477](https://github.com/glasskube/distr/issues/477)) ([39f6172](https://github.com/glasskube/distr/commit/39f61724ec98f04bdf354977e18a47bc9f1cd66a))
+
 ## [1.1.4](https://github.com/glasskube/distr/compare/1.1.3...1.1.4) (2025-02-13)
 
 
