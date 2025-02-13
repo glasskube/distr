@@ -40,6 +40,7 @@
               <th scope="col" class="p-4">Id</th>
               <th scope="col" class="p-4">License</th>
               <th scope="col" class="p-4">Creation Date</th>
+              <th scope="col" class="p-4">Expires</th>
               <th scope="col" class="p-4"></th>
             </tr>
           </thead>
@@ -61,6 +62,16 @@
                   <div class="flex items-center">
                     {{ license.createdAt | date: 'short' }}
                   </div>
+                </td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  @if (license.expiresAt; as d) {
+                    {{ d | date }}
+                    @if (isExpired(license)) {
+                      (expired)
+                    }
+                  } @else {
+                    never
+                  }
                 </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
@@ -94,7 +105,7 @@
   <div
     @drawerFlyInOut
     id="manage-license-drawer"
-    class="h-screen p-4 overflow-y-auto bg-white w-80 dark:bg-gray-800"
+    class="h-screen p-4 overflow-y-auto bg-white w-160 dark:bg-gray-800"
     tabindex="-1"
     aria-labelledby="drawer-right-label">
     <h5

@@ -18,6 +18,9 @@ import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
 import {ApplicationsService} from '../services/applications.service';
 import {EditLicenseComponent} from './edit-license.component';
+import {AccessToken} from '../../../../../sdk/js/src';
+import dayjs from 'dayjs';
+import {isExpired} from '../../util/dates';
 
 @Component({
   selector: 'app-licenses',
@@ -128,4 +131,5 @@ export class LicensesComponent implements OnDestroy {
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
   protected readonly faTrash = faTrash;
+  protected readonly isExpired = isExpired;
 }

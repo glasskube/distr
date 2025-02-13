@@ -19,6 +19,7 @@ import {ApplicationLicense} from '../types/application-license';
 import {ApplicationsService} from '../services/applications.service';
 import {Application, ApplicationVersion} from '../../../../../sdk/js/src';
 import {UsersService} from '../services/users.service';
+import dayjs from 'dayjs';
 
 @Component({
   selector: 'app-edit-license',
@@ -44,6 +45,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined, {nonNullable: true}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
+    expiresAt: new FormControl('', {nonNullable: true}),
     applicationId: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
     includeAllVersions: new FormControl<boolean>(true, {
       nonNullable: true,
@@ -72,6 +74,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.onChange({
           id: val.id,
           name: val.name,
+          expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
           applicationId: val.applicationId,
           versions: this.getSelectedVersions(val.includeAllVersions!, val.versions ?? []),
           ownerUserAccountId: val.ownerUserAccountId,
@@ -176,6 +179,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       this.editForm.patchValue({
         id: license.id,
         name: license.name,
+        expiresAt: license.expiresAt ? dayjs(license.expiresAt).format('YYYY-MM-DD') : '',
         applicationId: license.applicationId,
         versions: [], // will be set by applicationId-on-change,
         includeAllVersions: (license.versions ?? []).length === 0,
