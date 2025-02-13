@@ -23,14 +23,14 @@ var (
 	interval       = 5 * time.Second
 	logger         = util.Require(zap.NewDevelopment())
 	client         = util.Require(agentclient.NewFromEnv(logger))
-	agentVersionId = os.Getenv("DISTR_AGENT_VERSION_ID")
+	agentVersionID = os.Getenv("DISTR_AGENT_VERSION_ID")
 )
 
 func init() {
 	if intervalStr, ok := os.LookupEnv("DISTR_INTERVAL"); ok {
 		interval = util.Require(time.ParseDuration(intervalStr))
 	}
-	if agentVersionId == "" {
+	if agentVersionID == "" {
 		logger.Warn("DISTR_AGENT_VERSION_ID is not set. self updates will be disabled")
 	}
 }
@@ -56,8 +56,8 @@ loop:
 		if resource, err := client.DockerResource(ctx); err != nil {
 			logger.Error("failed to get resource", zap.Error(err))
 		} else {
-			if agentVersionId != "" {
-				if agentVersionId != resource.Version.ID {
+			if agentVersionID != "" {
+				if agentVersionID != resource.Version.ID.String() {
 					logger.Info("agent version has changed. starting self-update")
 					if err := RunAgentSelfUpdate(ctx); err != nil {
 						logger.Error("self update failed", zap.Error(err))

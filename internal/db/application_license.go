@@ -10,6 +10,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -106,7 +107,7 @@ func UpdateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 	}
 }
 
-func RevokeApplicationLicenseWithID(ctx context.Context, id string) error {
+func RevokeApplicationLicenseWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	cmd, err := db.Exec(ctx, "UPDATE ApplicationLicense SET expires_at = now() WHERE id = @id", pgx.NamedArgs{"id": id})
 	if err == nil && cmd.RowsAffected() < 1 {
@@ -122,7 +123,7 @@ func RevokeApplicationLicenseWithID(ctx context.Context, id string) error {
 func AddVersionToApplicationLicense(
 	ctx context.Context,
 	license *types.ApplicationLicense,
-	id string,
+	id uuid.UUID,
 ) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(
@@ -144,7 +145,7 @@ func AddVersionToApplicationLicense(
 func RemoveVersionFromApplicationLicense(
 	ctx context.Context,
 	license *types.ApplicationLicense,
-	id string,
+	id uuid.UUID,
 ) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(
@@ -166,7 +167,7 @@ func RemoveVersionFromApplicationLicense(
 
 func GetApplicationLicensesWithOrganizationID(
 	ctx context.Context,
-	id string,
+	id uuid.UUID,
 ) ([]types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
@@ -188,7 +189,10 @@ func GetApplicationLicensesWithOrganizationID(
 	}
 }
 
-func GetApplicationLicensesWithOwnerID(ctx context.Context, ownerID string, organizationID string) ([]types.ApplicationLicenseWithVersions, error) {
+func GetApplicationLicensesWithOwnerID(
+	ctx context.Context,
+	ownerID ,organizationID uuid.UUID,
+) ([]types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -209,7 +213,7 @@ func GetApplicationLicensesWithOwnerID(ctx context.Context, ownerID string, orga
 	}
 }
 
-func GetApplicationLicenseByID(ctx context.Context, id string) (*types.ApplicationLicenseWithVersions, error) {
+func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,

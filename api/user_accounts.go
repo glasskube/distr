@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/validation"
+	"github.com/google/uuid"
 )
 
 type CreateUserAccountRequest struct {
@@ -13,8 +14,8 @@ type CreateUserAccountRequest struct {
 }
 
 type CreateUserAccountResponse struct {
-	ID        string `json:"id"`
-	InviteURL string `json:"inviteUrl"`
+	ID        uuid.UUID `json:"id"`
+	InviteURL string    `json:"inviteUrl"`
 }
 
 type UpdateUserAccountRequest struct {

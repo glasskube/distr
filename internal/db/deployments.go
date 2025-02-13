@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glasskube/distr/api"
+	"github.com/google/uuid"
 
 	"github.com/glasskube/distr/internal/env"
 
@@ -21,14 +22,14 @@ const (
 	`
 )
 
-func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetId string) ([]types.Deployment, error) {
+func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetID uuid.UUID) ([]types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT"+deploymentOutputExpr+
 			"FROM Deployment d "+
 			"WHERE d.deployment_target_id = @deploymentTargetId "+
 			"ORDER BY d.created_at DESC",
-		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})
+		pgx.NamedArgs{"deploymentTargetId": deploymentTargetID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
 	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Deployment]); err != nil {
@@ -38,7 +39,7 @@ func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetId s
 	}
 }
 
-func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
+func GetDeployment(ctx context.Context, id uuid.UUID) (*types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT"+deploymentOutputExpr+
@@ -58,7 +59,7 @@ func GetDeployment(ctx context.Context, id string) (*types.Deployment, error) {
 	}
 }
 
-func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetId string) (
+func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetID uuid.UUID) (
 	*types.DeploymentWithLatestRevision, error) {
 	// TODO all these methods also need the orgId criteria
 	db := internalctx.GetDb(ctx)
@@ -82,15 +83,16 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
 				LEFT JOIN (
-					SELECT deployment_revision_id, max(created_at) AS max_created_at
-					FROM DeploymentRevisionStatus
-					GROUP BY deployment_revision_id
+					SELECT
+						dr1.id AS deployment_revision_id,
+						(SELECT max(created_at) FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr1.id) AS max_created_at
+					FROM DeploymentRevision dr1
 				) status_max ON dr.id = status_max.deployment_revision_id
 				LEFT JOIN DeploymentRevisionStatus drs
 					ON dr.id = drs.deployment_revision_id AND drs.created_at = status_max.max_created_at
 			WHERE d.deployment_target_id = @deploymentTargetId
 			ORDER BY d.created_at DESC, dr.created_at DESC LIMIT 1`,
-		pgx.NamedArgs{"deploymentTargetId": deploymentTargetId})
+		pgx.NamedArgs{"deploymentTargetId": deploymentTargetID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
 	}
@@ -113,7 +115,7 @@ func CreateDeployment(ctx context.Context, d *api.DeploymentRequest) error {
 			VALUES (@deploymentTargetId, @releaseName)
 			RETURNING`+deploymentOutputExpr,
 		pgx.NamedArgs{
-			"deploymentTargetId": d.DeploymentTargetId,
+			"deploymentTargetId": d.DeploymentTargetID,
 			"releaseName":        d.ReleaseName,
 		},
 	)
@@ -139,7 +141,7 @@ func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*t
 			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id`,
 		pgx.NamedArgs{
 			"deploymentId":         d.ID,
-			"applicationVersionId": d.ApplicationVersionId,
+			"applicationVersionId": d.ApplicationVersionID,
 			"valuesYaml":           d.ValuesYaml,
 			"envFileData":          d.EnvFileData,
 		},
@@ -157,7 +159,7 @@ func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*t
 
 func CreateDeploymentRevisionStatus(
 	ctx context.Context,
-	revisionID string,
+	revisionID uuid.UUID,
 	statusType types.DeploymentStatusType,
 	message string,
 ) error {
@@ -177,7 +179,7 @@ func CreateDeploymentRevisionStatus(
 
 func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 	ctx context.Context,
-	deploymentRevisionID string,
+	deploymentRevisionID uuid.UUID,
 	statuses []types.DeploymentRevisionStatus,
 ) error {
 	db := internalctx.GetDb(ctx)
@@ -197,7 +199,7 @@ func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 	return err
 }
 
-func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID string) (int64, error) {
+func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID uuid.UUID) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
@@ -215,7 +217,7 @@ func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID string) (in
 
 func GetDeploymentStatus(
 	ctx context.Context,
-	deploymentId string,
+	deploymentID uuid.UUID,
 	maxRows int,
 ) ([]types.DeploymentRevisionStatus, error) {
 	db := internalctx.GetDb(ctx)
@@ -226,7 +228,7 @@ func GetDeploymentStatus(
 		WHERE dr.deployment_id = @deploymentId
 		ORDER BY created_at DESC
 		LIMIT @maxRows`,
-		pgx.NamedArgs{"deploymentId": deploymentId, "maxRows": maxRows})
+		pgx.NamedArgs{"deploymentId": deploymentID, "maxRows": maxRows})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
 	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentRevisionStatus]); err != nil {

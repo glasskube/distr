@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 )
 
 type Organization struct {
@@ -25,16 +26,16 @@ type OrganizationWithBranding struct {
 }
 
 type OrganizationBranding struct {
-	ID                     string    `db:"id" json:"id"`
-	CreatedAt              time.Time `db:"created_at" json:"createdAt"`
-	OrganizationID         string    `db:"organization_id" json:"-"`
-	UpdatedAt              time.Time `db:"updated_at" json:"updatedAt"`
-	UpdatedByUserAccountID *string   `db:"updated_by_user_account_id" json:"-"`
-	Title                  *string   `db:"title" json:"title"`
-	Description            *string   `db:"description" json:"description"`
-	Logo                   []byte    `db:"logo" json:"logo"`
-	LogoFileName           *string   `db:"logo_file_name" json:"logoFileName"`
-	LogoContentType        *string   `db:"logo_content_type" json:"logoContentType"`
+	ID                     uuid.UUID  `db:"id" json:"id"`
+	CreatedAt              time.Time  `db:"created_at" json:"createdAt"`
+	OrganizationID         uuid.UUID  `db:"organization_id" json:"-"`
+	UpdatedAt              time.Time  `db:"updated_at" json:"updatedAt"`
+	UpdatedByUserAccountID *uuid.UUID `db:"updated_by_user_account_id" json:"-"`
+	Title                  *string    `db:"title" json:"title"`
+	Description            *string    `db:"description" json:"description"`
+	Logo                   []byte     `db:"logo" json:"logo"`
+	LogoFileName           *string    `db:"logo_file_name" json:"logoFileName"`
+	LogoContentType        *string    `db:"logo_content_type" json:"logoContentType"`
 }
 
 func (b *OrganizationBranding) LogoDataUrl() *string {

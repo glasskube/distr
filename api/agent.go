@@ -1,13 +1,16 @@
 package api
 
-import "github.com/glasskube/distr/internal/types"
+import (
+	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
+)
 
 type AgentResource struct {
 	Version types.AgentVersion `json:"version"`
 }
 
 type AgentDeployment struct {
-	RevisionID string `json:"revisionId"`
+	RevisionID uuid.UUID `json:"revisionId"`
 }
 
 type DockerAgentResource struct {
@@ -37,7 +40,7 @@ type KubernetesAgentDeployment struct {
 }
 
 type AgentDeploymentStatus struct {
-	RevisionID string                     `json:"revisionId"`
+	RevisionID uuid.UUID                  `json:"revisionId"`
 	Type       types.DeploymentStatusType `json:"type"`
 	Message    string                     `json:"message"`
 }
