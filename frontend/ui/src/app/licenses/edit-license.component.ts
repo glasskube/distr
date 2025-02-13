@@ -12,6 +12,8 @@ import {
   ReactiveFormsModule,
   Validators,
   TouchedChangeEvent,
+  AbstractControl,
+  ValidatorFn,
 } from '@angular/forms';
 import {faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
@@ -42,6 +44,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   customers$ = this.usersService.getUsers().pipe(map((accounts) => accounts.filter((a) => a.userRole === 'customer'))); // TODO cache users response
   private fb = inject(FormBuilder);
   license: ApplicationLicense | undefined;
+
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined, {nonNullable: true}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
@@ -53,12 +56,26 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     }),
     versions: this.fb.array<boolean>([]),
     ownerUserAccountId: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-    /*registryEnabled: new FormControl<boolean>(false),
-    registry: new FormGroup({
-      url: new FormControl('', Validators.required),
-      username: new FormControl('', Validators.required),
-      password: new FormControl('', Validators.required),
-    }),*/
+    registry: new FormGroup(
+      {
+        url: new FormControl('', {nonNullable: true}),
+        username: new FormControl('', {nonNullable: true}),
+        password: new FormControl('', {nonNullable: true}),
+      },
+      {
+        validators: (control) => {
+          if (!control.get('url')?.value && !control.get('username')?.value && !control.get('password')?.value) {
+            return null;
+          }
+          if (control.get('url')?.value && control.get('username')?.value && control.get('password')?.value) {
+            return null;
+          }
+          return {
+            required: true,
+          };
+        },
+      }
+    ),
   });
   editFormLoading = false;
   selectedApplication: Application | undefined; // TODO fancy
@@ -78,6 +95,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           applicationId: val.applicationId,
           versions: this.getSelectedVersions(val.includeAllVersions!, val.versions ?? []),
           ownerUserAccountId: val.ownerUserAccountId,
+          registryUrl: val.registry.url ?? undefined,
+          registryUsername: val.registry.username,
+          registryPassword: val.registry.password,
         });
       } else {
         this.onChange(undefined);
@@ -184,12 +204,11 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         versions: [], // will be set by applicationId-on-change,
         includeAllVersions: (license.versions ?? []).length === 0,
         ownerUserAccountId: license.ownerUserAccountId,
-        /*registry: {
+        registry: {
           url: license.registryUrl,
           username: license.registryUsername,
           password: license.registryPassword,
         },
-        registryEnabled: !!(license.registryUrl && license.registryUsername && license.registryPassword),*/
       });
       if (license.ownerUserAccountId) {
         this.editForm.controls.applicationId.disable({emitEvent: false});

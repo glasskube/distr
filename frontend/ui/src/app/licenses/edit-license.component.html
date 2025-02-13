@@ -9,9 +9,7 @@
           type="text"
           id="name"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-          value=""
-          placeholder="License name"
-          required />
+          placeholder="License name" />
         @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
         }
@@ -103,6 +101,67 @@
       }
     </select>
     @if (editForm.controls.ownerUserAccountId.invalid && editForm.controls.ownerUserAccountId.touched) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+  </div>
+
+  <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+
+  <h5 class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+    Docker Registry
+  </h5>
+
+  <div class="w-full">
+    <label for="registryUrl" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Registry URL</label>
+    <input
+      [formControl]="editForm.controls.registry.controls.url"
+      autotrim
+      type="text"
+      id="registryUrl"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+    @if (
+      editForm.controls.registry.invalid &&
+      editForm.controls.registry.controls.url.touched &&
+      !editForm.controls.registry.controls.url.value
+    ) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+  </div>
+
+  <div class="w-full">
+    <label for="registryUsername" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+      >Registry Username</label
+    >
+    <input
+      [formControl]="editForm.controls.registry.controls.username"
+      autotrim
+      type="text"
+      id="registryUsername"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+    @if (
+      editForm.controls.registry.invalid &&
+      editForm.controls.registry.controls.username.touched &&
+      !editForm.controls.registry.controls.username.value
+    ) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+  </div>
+
+  <div class="w-full">
+    <label for="registryPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+      >Registry Password</label
+    >
+    <input
+      [formControl]="editForm.controls.registry.controls.password"
+      autotrim
+      type="text"
+      id="registryPassword"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+    @if (
+      editForm.controls.registry.invalid &&
+      editForm.controls.registry.controls.password.touched &&
+      !editForm.controls.registry.controls.password.value
+    ) {
       <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
     }
   </div>
