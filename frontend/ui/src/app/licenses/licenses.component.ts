@@ -3,8 +3,8 @@ import {AsyncPipe, DatePipe} from '@angular/common';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, Observable, Subject, takeUntil, tap} from 'rxjs';
+import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {filteredByFormControl} from '../../util/filter';
 import {LicensesService} from '../services/licenses.service';
 import {ApplicationLicense} from '../types/application-license';
@@ -102,6 +102,23 @@ export class LicensesComponent implements OnDestroy {
     }
   }
 
+  deleteLicense(license: ApplicationLicense) {
+    this.overlay
+      .confirm(`Really delete ${license.name}?`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.licensesService.delete(license)),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return EMPTY;
+        })
+      )
+      .subscribe();
+  }
+
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
@@ -110,4 +127,5 @@ export class LicensesComponent implements OnDestroy {
   protected readonly faPlus = faPlus;
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
+  protected readonly faTrash = faTrash;
 }

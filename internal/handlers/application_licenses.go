@@ -196,19 +196,20 @@ func getApplicationLicense(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteApplicationLicense(w http.ResponseWriter, r *http.Request) {
-	// TODO
-	/*ctx := r.Context()
+	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	application := internalctx.GetApplication(ctx)
+	license := internalctx.GetApplicationLicense(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if application.OrganizationID != *auth.CurrentOrgID() {
+	if license.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
-	} else if err := db.DeleteApplicationWithID(ctx, application.ID); err != nil {
-		log.Warn("error deleting application", zap.Error(err))
+	} else if err := db.DeleteApplicationLicenseWithID(ctx, license.ID); errors.Is(err, apierrors.ErrConflict) {
+		http.Error(w, "could not delete license because it is still in use", http.StatusBadRequest)
+	} else if err != nil {
+		log.Warn("error deleting license", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusNoContent)
-	}*/
+	}
 }
 
 func applicationLicenseMiddleware(next http.Handler) http.Handler {
