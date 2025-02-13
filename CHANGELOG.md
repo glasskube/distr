@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.1.4](https://github.com/glasskube/distr/compare/1.1.3...1.1.4) (2025-02-13)
+
+
+### Features
+
+* **backend:** add db models for application licenses ([#455](https://github.com/glasskube/distr/issues/455)) ([2ece672](https://github.com/glasskube/distr/commit/2ece672b87e6c1a4919ad3de93fb0ceaff8a9f85))
+* license management feature flag ([#458](https://github.com/glasskube/distr/issues/458)) ([1f3fede](https://github.com/glasskube/distr/commit/1f3fede701a3714b02a52b1626f1dee98fc2a72e))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.1.6 ([#472](https://github.com/glasskube/distr/issues/472)) ([52cb2a8](https://github.com/glasskube/distr/commit/52cb2a8561cfe9f761babdf8cb1b927f2f7d932d))
+* **deps:** update dependency @angular/cdk to v19.1.4 ([#475](https://github.com/glasskube/distr/issues/475)) ([3a1f39e](https://github.com/glasskube/distr/commit/3a1f39e708f37a788a9e5f430896ed27faae733f))
+* **deps:** update dependency @sentry/angular to v9.0.1 ([#464](https://github.com/glasskube/distr/issues/464)) ([857802f](https://github.com/glasskube/distr/commit/857802fe48f05f0692159a038888fefaa9faa050))
+* **deps:** update dependency posthog-js to v1.217.1 ([#465](https://github.com/glasskube/distr/issues/465)) ([fb1e045](https://github.com/glasskube/distr/commit/fb1e045276cb2459b59ef95fccc3521de27dc3ad))
+* **deps:** update dependency posthog-js to v1.217.2 ([#468](https://github.com/glasskube/distr/issues/468)) ([254483f](https://github.com/glasskube/distr/commit/254483f2a7a94ad4a6e305ed6c09ea61a5805672))
+* **sdk/js:** correctly use default api base ([#469](https://github.com/glasskube/distr/issues/469)) ([04c4d02](https://github.com/glasskube/distr/commit/04c4d02acb4a9dfb1cd41efdc0978867786624ea))
+
+
+### Other
+
+* **backend:** use `uuid.UUID` instead of `string` for all IDs internally ([#471](https://github.com/glasskube/distr/issues/471)) ([5459351](https://github.com/glasskube/distr/commit/5459351ee67ade13501d5a3b50dc331ca261b077))
+* change next release to 1.1.4 ([cbeec52](https://github.com/glasskube/distr/commit/cbeec5242f4b7213f2bc9187e69e25388bd3c101))
+* **deps:** update angular-cli monorepo to v19.1.7 ([#474](https://github.com/glasskube/distr/issues/474)) ([71cdbba](https://github.com/glasskube/distr/commit/71cdbba26fe1b9c753a75c16aa7ef772fa6bc926))
+* **deps:** update dependency golangci-lint to v1.64.2 ([#467](https://github.com/glasskube/distr/issues/467)) ([c112701](https://github.com/glasskube/distr/commit/c112701fd472c5492477e174694e032f7d6826d2))
+* **deps:** update dependency golangci-lint to v1.64.4 ([#470](https://github.com/glasskube/distr/issues/470)) ([6bfcb9a](https://github.com/glasskube/distr/commit/6bfcb9a98e2c42380d6528ebde27a8c64a61fe2f))
+* **deps:** update dependency postcss to v8.5.2 ([#461](https://github.com/glasskube/distr/issues/461)) ([063bdea](https://github.com/glasskube/distr/commit/063bdea16123a7faf6413024f49f45d82917d2b9))
+
+
+### Performance
+
+* **backend:** optimize database query for deployment with latest status ([#473](https://github.com/glasskube/distr/issues/473)) ([88a6f46](https://github.com/glasskube/distr/commit/88a6f46c1670b61f0ed5bab1f6572f157d809b8f))
+
 ## [1.1.3](https://github.com/glasskube/distr/compare/1.1.2...1.1.3) (2025-02-11)
 
 
