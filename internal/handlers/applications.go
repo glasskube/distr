@@ -83,7 +83,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	existing := internalctx.GetApplication(ctx)
-	if IsEmptyUUID(application.ID) {
+	if application.ID == uuid.Nil {
 		application.ID = existing.ID
 	} else if application.ID != existing.ID || application.Type != existing.Type {
 		w.WriteHeader(http.StatusBadRequest)
@@ -259,7 +259,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	if existingVersion == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if IsEmptyUUID(applicationVersion.ID) {
+	} else if applicationVersion.ID == uuid.Nil {
 		applicationVersion.ID = existingVersion.ID
 	}
 

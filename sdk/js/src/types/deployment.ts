@@ -8,12 +8,12 @@ export interface Deployment extends BaseModel {
 
 export interface DeploymentRequest {
   deploymentTargetId: string;
-  deploymentId?: string;
   applicationVersionId: string;
+  deploymentId?: string;
+  applicationLicenseId?: string;
   releaseName?: string;
   valuesYaml?: string;
   envFileData?: string;
-  note?: string;
 }
 
 export interface DeploymentWithLatestRevision extends Deployment {
@@ -21,6 +21,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   applicationName: string;
   applicationVersionId: string;
   applicationVersionName: string;
+  applicationLicenseId?: string;
   valuesYaml?: string;
   envFileData?: string;
   deploymentRevisionId?: string;

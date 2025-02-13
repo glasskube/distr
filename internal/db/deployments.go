@@ -106,17 +106,18 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 	}
 }
 
-func CreateDeployment(ctx context.Context, d *api.DeploymentRequest) error {
+func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO Deployment AS d
-			(deployment_target_id, release_name)
-			VALUES (@deploymentTargetId, @releaseName)
+			(deployment_target_id, release_name, application_license_id)
+			VALUES (@deploymentTargetId, @releaseName, @applicationLicenseId)
 			RETURNING`+deploymentOutputExpr,
 		pgx.NamedArgs{
-			"deploymentTargetId": d.DeploymentTargetID,
-			"releaseName":        d.ReleaseName,
+			"deploymentTargetId":   request.DeploymentTargetID,
+			"releaseName":          request.ReleaseName,
+			"applicationLicenseId": request.ApplicationLicenseID,
 		},
 	)
 	if err != nil {
@@ -126,12 +127,12 @@ func CreateDeployment(ctx context.Context, d *api.DeploymentRequest) error {
 	if err != nil {
 		return fmt.Errorf("could not save Deployment: %w", err)
 	} else {
-		d.ID = result.ID
+		request.DeploymentID = &result.ID
 		return nil
 	}
 }
 
-func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*types.DeploymentRevision, error) {
+func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentRequest) (*types.DeploymentRevision, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -140,10 +141,10 @@ func CreateDeploymentRevision(ctx context.Context, d *api.DeploymentRequest) (*t
 			VALUES (@deploymentId, @applicationVersionId, @valuesYaml, @envFileData)
 			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id`,
 		pgx.NamedArgs{
-			"deploymentId":         d.ID,
-			"applicationVersionId": d.ApplicationVersionID,
-			"valuesYaml":           d.ValuesYaml,
-			"envFileData":          d.EnvFileData,
+			"deploymentId":         request.DeploymentID,
+			"applicationVersionId": request.ApplicationVersionID,
+			"valuesYaml":           request.ValuesYaml,
+			"envFileData":          request.EnvFileData,
 		},
 	)
 	if err != nil {

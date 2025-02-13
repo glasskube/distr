@@ -14,12 +14,13 @@ type DeploymentTargetAccessTokenResponse struct {
 }
 
 type DeploymentRequest struct {
-	ID                   uuid.UUID `json:"deploymentId"`
-	DeploymentTargetID   uuid.UUID `json:"deploymentTargetId"`
-	ApplicationVersionID uuid.UUID `json:"applicationVersionId"`
-	ReleaseName          *string   `json:"releaseName"`
-	ValuesYaml           []byte    `json:"valuesYaml"`
-	EnvFileData          []byte    `json:"envFileData"`
+	DeploymentID         *uuid.UUID `json:"deploymentId"`
+	DeploymentTargetID   uuid.UUID  `json:"deploymentTargetId"`
+	ApplicationVersionID uuid.UUID  `json:"applicationVersionId"`
+	ApplicationLicenseID *uuid.UUID `json:"applicationLicenseId"`
+	ReleaseName          *string    `json:"releaseName"`
+	ValuesYaml           []byte     `json:"valuesYaml"`
+	EnvFileData          []byte     `json:"envFileData"`
 }
 
 func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {

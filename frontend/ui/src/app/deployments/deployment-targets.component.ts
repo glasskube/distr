@@ -278,6 +278,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
       deploymentTargetId: deploymentTarget.id,
       applicationId: deploymentTarget.deployment?.applicationId,
       applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
+      applicationLicenseId: deploymentTarget.deployment?.applicationLicenseId,
       releaseName: deploymentTarget.deployment?.releaseName,
       valuesYaml: deploymentTarget.deployment?.valuesYaml ? atob(deploymentTarget.deployment.valuesYaml) : undefined,
       envFileData: deploymentTarget.deployment?.envFileData ? atob(deploymentTarget.deployment.envFileData) : undefined,

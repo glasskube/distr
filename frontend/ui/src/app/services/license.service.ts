@@ -8,14 +8,11 @@ export class LicenseService {
     return from([
       [
         {
-          id: 'a',
-          name: 'L1',
-          versions: [
-            {id: 'a', name: 'V1'},
-            {id: 'c', name: 'V3'},
-          ],
+          id: 'ced3992d-6717-498e-8726-6845ec3069b4',
+          name: 'test',
+          applicationId,
+          versions: [{id: 'bf58c94e-0c5b-476a-a647-09464d85bcae', name: 'v4.2.0'}],
         },
-        {id: 'b', name: 'L2', versions: [{id: 'b', name: 'V2'}]},
       ],
     ]);
   }
