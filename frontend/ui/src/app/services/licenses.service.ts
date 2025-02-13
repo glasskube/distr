@@ -4,34 +4,34 @@ import {catchError, Observable, of, tap, throwError} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
 import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
-import {License} from '../types/license';
+import {ApplicationLicense} from '../types/application-license';
 
 @Injectable({
   providedIn: 'root',
 })
-export class LicensesService implements CrudService<License> {
+export class LicensesService implements CrudService<ApplicationLicense> {
   private readonly licensesUrl = '/api/v1/application-licenses';
-  private readonly cache: ReactiveList<License>;
+  private readonly cache: ReactiveList<ApplicationLicense>;
 
   constructor(private readonly httpClient: HttpClient) {
-    this.cache = new DefaultReactiveList(this.httpClient.get<License[]>(this.licensesUrl));
+    this.cache = new DefaultReactiveList(this.httpClient.get<ApplicationLicense[]>(this.licensesUrl));
   }
 
-  list(): Observable<License[]> {
+  list(): Observable<ApplicationLicense[]> {
     return this.cache.get();
   }
 
-  create(license: License): Observable<License> {
-    return this.httpClient.post<License>(this.licensesUrl, license).pipe(tap((it) => this.cache.save(it)));
+  create(license: ApplicationLicense): Observable<ApplicationLicense> {
+    return this.httpClient.post<ApplicationLicense>(this.licensesUrl, license).pipe(tap((it) => this.cache.save(it)));
   }
 
-  update(license: License): Observable<License> {
+  update(license: ApplicationLicense): Observable<ApplicationLicense> {
     return this.httpClient
-      .put<License>(`${this.licensesUrl}/${license.id}`, license)
+      .put<ApplicationLicense>(`${this.licensesUrl}/${license.id}`, license)
       .pipe(tap((it) => this.cache.save(it)));
   }
 
-  delete(license: License): Observable<void> {
+  delete(license: ApplicationLicense): Observable<void> {
     return this.httpClient
       .delete<void>(`${this.licensesUrl}/${license.id}`)
       .pipe(tap(() => this.cache.remove(license)));

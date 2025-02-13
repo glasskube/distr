@@ -7,7 +7,7 @@ import {faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid
 import {firstValueFrom, Observable, Subject, takeUntil, tap} from 'rxjs';
 import {filteredByFormControl} from '../../util/filter';
 import {LicensesService} from '../services/licenses.service';
-import {License} from '../types/license';
+import {ApplicationLicense} from '../types/application-license';
 import {UuidComponent} from '../components/uuid';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {getFormDisplayedError} from '../../util/errors';
@@ -42,15 +42,15 @@ export class LicensesComponent implements OnDestroy {
   filterForm = new FormGroup({
     search: new FormControl(''),
   });
-  licenses$: Observable<License[]> = filteredByFormControl(
+  licenses$: Observable<ApplicationLicense[]> = filteredByFormControl(
     this.licensesService.list(),
     this.filterForm.controls.search,
-    (it: License, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
+    (it: ApplicationLicense, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
   ).pipe(takeUntil(this.destroyed$));
   applications$ = this.applicationsService.list();
 
   editForm = new FormGroup({
-    license: new FormControl<License | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
+    license: new FormControl<ApplicationLicense | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
   });
   editFormLoading = false;
 
@@ -60,7 +60,7 @@ export class LicensesComponent implements OnDestroy {
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
 
-  openDrawer(templateRef: TemplateRef<unknown>, license?: License) {
+  openDrawer(templateRef: TemplateRef<unknown>, license?: ApplicationLicense) {
     this.hideDrawer();
     if (license) {
       this.loadLicense(license);
@@ -68,7 +68,7 @@ export class LicensesComponent implements OnDestroy {
     this.manageLicenseDrawerRef = this.overlay.showDrawer(templateRef);
   }
 
-  loadLicense(license: License) {
+  loadLicense(license: ApplicationLicense) {
     this.editForm.patchValue({license});
   }
 

@@ -1,6 +1,6 @@
 import {ApplicationVersion, BaseModel, Named} from '@glasskube/distr-sdk';
 
-export interface License extends BaseModel, Named {
+export interface ApplicationLicense extends BaseModel, Named {
   applicationId?: string;
   versions?: ApplicationVersion[];
   ownerUserAccountId?: string;

@@ -15,7 +15,7 @@ import {
 } from '@angular/forms';
 import {faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
-import {License} from '../types/license';
+import {ApplicationLicense} from '../types/application-license';
 import {ApplicationsService} from '../services/applications.service';
 import {Application, ApplicationVersion} from '../../../../../sdk/js/src';
 import {UsersService} from '../services/users.service';
@@ -40,7 +40,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   applications$ = this.applicationsService.list();
   customers$ = this.usersService.getUsers().pipe(map((accounts) => accounts.filter((a) => a.userRole === 'customer'))); // TODO cache users response
   private fb = inject(FormBuilder);
-  license: License | undefined;
+  license: ApplicationLicense | undefined;
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined, {nonNullable: true}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
@@ -154,10 +154,10 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
 
-  private onChange: (l: License | undefined) => void = () => {};
+  private onChange: (l: ApplicationLicense | undefined) => void = () => {};
   private onTouched: () => void = () => {};
 
-  registerOnChange(fn: (l: License | undefined) => void): void {
+  registerOnChange(fn: (l: ApplicationLicense | undefined) => void): void {
     this.onChange = fn;
   }
 
@@ -165,7 +165,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     this.onTouched = fn;
   }
 
-  writeValue(license: License | undefined): void {
+  writeValue(license: ApplicationLicense | undefined): void {
     console.log('writeValue', license);
     this.license = license;
     if (license) {
