@@ -1,4 +1,15 @@
-import {AfterViewInit, Component, forwardRef, inject, Injector, Input, OnDestroy, OnInit} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  effect,
+  forwardRef,
+  inject,
+  Injector,
+  Input,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import {AsyncPipe} from '@angular/common';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {
@@ -15,18 +26,23 @@ import {
   AbstractControl,
   ValidatorFn,
 } from '@angular/forms';
-import {faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
 import {ApplicationLicense} from '../types/application-license';
 import {ApplicationsService} from '../services/applications.service';
 import {Application, ApplicationVersion} from '../../../../../sdk/js/src';
 import {UsersService} from '../services/users.service';
 import dayjs from 'dayjs';
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {RouterLink} from '@angular/router';
+import {dropdownAnimation} from '../animations/dropdown';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-edit-license',
   templateUrl: './edit-license.component.html',
-  imports: [AsyncPipe, AutotrimDirective, ReactiveFormsModule],
+  imports: [AsyncPipe, AutotrimDirective, ReactiveFormsModule, CdkOverlayOrigin, CdkConnectedOverlay, FaIconComponent],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -34,6 +50,7 @@ import dayjs from 'dayjs';
       multi: true,
     },
   ],
+  animations: [dropdownAnimation],
 })
 export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, ControlValueAccessor {
   private injector = inject(Injector);
@@ -80,14 +97,46 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   editFormLoading = false;
   selectedApplication: Application | undefined; // TODO fancy
 
+  dropdownOpen = signal(false);
+  protected versionsSelected = 0;
+
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
 
+  toggleDropdown() {
+    this.dropdownOpen.update((v) => !v);
+  }
+
+  constructor() {
+    effect(() => {
+      if (!this.dropdownOpen()) {
+        if (
+          !this.editForm.controls.includeAllVersions.value &&
+          !this.editForm.controls.versions.value.some((v) => !!v)
+        ) {
+          this.editForm.controls.includeAllVersions.patchValue(true);
+        }
+      }
+    });
+  }
+
   ngOnInit() {
-    // this.editForm.controls.registry.disable({emitEvent: false});
+    this.editForm.controls.includeAllVersions.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((includeAll) => {
+      if (includeAll) {
+        this.editForm.controls.versions.controls.forEach((c) => c.patchValue(false, {emitEvent: false}));
+      }
+    });
+    this.editForm.controls.versions.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
+      if (this.editForm.controls.includeAllVersions.value && val.some((v) => !!v)) {
+        this.editForm.controls.includeAllVersions.patchValue(false, {emitEvent: false});
+      }
+    });
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       // this.onTouched();
+      const val = this.editForm.getRawValue();
+      if (!val.includeAllVersions) {
+        this.versionsSelected = val.versions.filter((v) => !!v).length;
+      }
       if (this.editForm.valid) {
-        const val = this.editForm.getRawValue();
         this.onChange({
           id: val.id,
           name: val.name,
@@ -115,6 +164,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.selectedApplication = selectedApplication;
         this.versionsArray.clear({emitEvent: false});
         const versions = selectedApplication?.versions ?? [];
+        let anySelected = false;
         for (let i = 0; i < versions.length; i++) {
           const version = versions[i];
           const selected = !!this.license?.versions?.some((v) => v.id === version.id);
@@ -133,6 +183,10 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
               - registry stuff is enabled
            */
           this.versionsArray.push(this.fb.control(selected), {emitEvent: i === versions.length - 1});
+          anySelected = anySelected || selected;
+        }
+        if (!anySelected) {
+          this.editForm.controls.includeAllVersions.patchValue(true);
         }
       });
   }
@@ -219,4 +273,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       this.editForm.reset();
     }
   }
+
+  protected readonly faChevronDown = faChevronDown;
 }

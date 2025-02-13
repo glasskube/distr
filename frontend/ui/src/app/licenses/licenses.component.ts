@@ -37,7 +37,7 @@ import {isExpired} from '../../util/dates';
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class LicensesComponent implements OnDestroy {
+export class LicensesComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly licensesService = inject(LicensesService);
   private readonly applicationsService = inject(ApplicationsService);
@@ -132,4 +132,8 @@ export class LicensesComponent implements OnDestroy {
   protected readonly faPen = faPen;
   protected readonly faTrash = faTrash;
   protected readonly isExpired = isExpired;
+
+  ngOnInit(): void {
+    this.editForm.controls.license.valueChanges.pipe(tap(console.log)).subscribe();
+  }
 }
