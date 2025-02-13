@@ -114,7 +114,14 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
   protected availableApplicationVersions$ = this.shouldShowLicense$.pipe(
     switchMap((shouldShowLicense) =>
       shouldShowLicense
-        ? this.selectedLicense$.pipe(map((license) => license?.versions ?? []))
+        ? this.selectedLicense$.pipe(
+            switchMap((license) =>
+              // if the license has no version associations, assume that the application has all available versions
+              license?.versions.length
+                ? of(license.versions)
+                : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
+            )
+          )
         : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
     )
   );
