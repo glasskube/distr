@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/internal/authkey"
+	"github.com/google/uuid"
 )
 
 type AccessToken struct {
-	ID         string     `json:"id"`
+	ID         uuid.UUID  `json:"id"`
 	CreatedAt  time.Time  `json:"createdAt"`
 	ExpiresAt  *time.Time `json:"expiresAt,omitempty"`
 	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`

@@ -81,7 +81,7 @@ func SentryUser(h http.Handler) http.Handler {
 		if hub := sentry.GetHubFromContext(ctx); hub != nil {
 			if auth, err := auth.Authentication.Get(ctx); err == nil {
 				hub.Scope().SetUser(sentry.User{
-					ID:    auth.CurrentUserID(),
+					ID:    auth.CurrentUserID().String(),
 					Email: auth.CurrentUserEmail(),
 				})
 			}

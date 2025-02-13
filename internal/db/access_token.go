@@ -9,6 +9,7 @@ import (
 	"github.com/glasskube/distr/internal/authkey"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -47,7 +48,7 @@ func CreateAccessToken(ctx context.Context, token *types.AccessToken) error {
 	}
 }
 
-func DeleteAccessToken(ctx context.Context, id string, userID string) error {
+func DeleteAccessToken(ctx context.Context, id, userID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	if _, err := db.Exec(
 		ctx,
@@ -59,7 +60,7 @@ func DeleteAccessToken(ctx context.Context, id string, userID string) error {
 	return nil
 }
 
-func GetAccessTokensByUserAccountID(ctx context.Context, id string) ([]types.AccessToken, error) {
+func GetAccessTokensByUserAccountID(ctx context.Context, id uuid.UUID) ([]types.AccessToken, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,

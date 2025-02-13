@@ -29,6 +29,7 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -96,9 +97,11 @@ func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if targetId, targetSecret, ok := r.BasicAuth(); !ok {
 		log.Error("invalid Basic Auth")
 		w.WriteHeader(http.StatusUnauthorized)
+	} else if parsedTargetId, err := uuid.Parse(targetId); err != nil {
+		http.Error(w, "targetId is not a valid UUID", http.StatusBadRequest)
 	} else if agentLoginPerTargetIdRateLimiter.RespondOnLimit(w, r, targetId) {
 		return
-	} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
+	} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, parsedTargetId, targetSecret); err != nil {
 		log.Error("failed to get deployment target from query auth", zap.Error(err))
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
@@ -116,7 +119,7 @@ func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
+	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID.String()))
 
 	var statusMessage string
 	var appVersion *types.ApplicationVersion
@@ -129,7 +132,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error(msg, zap.Error(err))
 		statusMessage = fmt.Sprintf("%v: %v", msg, err)
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if av, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionId); err != nil {
+	} else if av, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionID); err != nil {
 		msg := "failed to get ApplicationVersion from DB"
 		log.Error(msg, zap.Error(err))
 		statusMessage = fmt.Sprintf("%v: %v", msg, err)
@@ -199,24 +202,24 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// not in a TX because insertion should not be rolled back when the cleanup fails
 	if err := db.CreateDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget, statusMessage); err != nil {
 		log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
-			zap.String("deploymentTargetId", deploymentTarget.ID),
+			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
 			zap.String("statusMessage", statusMessage))
 	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget); err != nil {
 		log.Error("failed to cleanup old deployment target status", zap.Error(err),
-			zap.String("deploymentTargetId", deploymentTarget.ID))
+			zap.String("deploymentTargetId", deploymentTarget.ID.String()))
 	} else if cnt > 0 {
 		log.Debug("old deployment target statuses deleted",
-			zap.String("deploymentTargetId", deploymentTarget.ID),
+			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
 			zap.Int64("count", cnt),
 			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
 }
 
-func patchProjectName(data map[string]any, deploymentId string) ([]byte, error) {
+func patchProjectName(data map[string]any, deploymentID uuid.UUID) ([]byte, error) {
 	if data == nil {
 		data = make(map[string]any)
 	}
-	data["name"] = fmt.Sprintf("distr-%v", deploymentId[:8])
+	data["name"] = fmt.Sprintf("distr-%v", deploymentID.String()[:8])
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf)
 	if err := enc.Encode(data); err != nil {
@@ -247,7 +250,7 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error("failed to cleanup old deployment revision status", zap.Error(err), zap.Reflect("status", status))
 	} else if cnt > 0 {
 		log.Debug("old deployment revision statuses deleted",
-			zap.String("deploymentRevisionId", status.RevisionID),
+			zap.String("deploymentRevisionId", status.RevisionID.String()),
 			zap.Int64("count", cnt),
 			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
@@ -257,12 +260,16 @@ func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		targetId := r.URL.Query().Get("targetId")
+		targetID, err := uuid.Parse(r.URL.Query().Get("targetId"))
+		if err != nil {
+			http.Error(w, "targetId is not a valid UUID", http.StatusBadRequest)
+			return
+		}
 		targetSecret := r.URL.Query().Get("targetSecret")
 
-		if agentConnectPerTargetIdRateLimiter.RespondOnLimit(w, r, targetId) {
+		if agentConnectPerTargetIdRateLimiter.RespondOnLimit(w, r, targetID.String()) {
 			return
-		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetId, targetSecret); err != nil {
+		} else if deploymentTarget, err := getVerifiedDeploymentTarget(ctx, targetID, targetSecret); err != nil {
 			log.Error("failed to get deployment target from query auth", zap.Error(err))
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
@@ -276,7 +283,7 @@ func agentManifestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-		log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID))
+		log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID.String()))
 
 		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, nil); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
@@ -328,10 +335,10 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 
 func getVerifiedDeploymentTarget(
 	ctx context.Context,
-	targetId string,
+	targetID uuid.UUID,
 	targetSecret string,
 ) (*types.DeploymentTargetWithCreatedBy, error) {
-	if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, nil); err != nil {
+	if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetID, nil); err != nil {
 		return nil, fmt.Errorf("failed to get deployment target from DB: %w", err)
 	} else if deploymentTarget.AccessKeySalt == nil || deploymentTarget.AccessKeyHash == nil {
 		return nil, errors.New("deployment target does not have key and salt")

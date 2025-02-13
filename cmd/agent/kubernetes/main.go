@@ -63,7 +63,7 @@ func main() {
 		}
 
 		if agentVersionId != "" {
-			if agentVersionId != res.Version.ID {
+			if agentVersionId != res.Version.ID.String() {
 				logger.Info("agent version has changed. starting self-update")
 				if manifest, err := agentClient.Manifest(ctx); err != nil {
 					logger.Error("error fetching agent manifest", zap.Error(err))

@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -29,7 +30,7 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
-func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.OrganizationWithUserRole, error) {
+func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT o.id, o.created_at, o.name, o.features, j.user_role
@@ -37,7 +38,7 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
 			WHERE u.id = @id
-	`, pgx.NamedArgs{"id": userId})
+	`, pgx.NamedArgs{"id": userID})
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +50,11 @@ func GetOrganizationsForUser(ctx context.Context, userId string) ([]*types.Organ
 	}
 }
 
-func GetOrganizationByID(ctx context.Context, orgId string) (*types.Organization, error) {
+func GetOrganizationByID(ctx context.Context, orgID uuid.UUID) (*types.Organization, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT id, created_at, name, features FROM Organization WHERE id = @id",
-		pgx.NamedArgs{"id": orgId},
+		pgx.NamedArgs{"id": orgID},
 	)
 	if err != nil {
 		return nil, err
@@ -68,7 +69,7 @@ func GetOrganizationByID(ctx context.Context, orgId string) (*types.Organization
 	}
 }
 
-func GetOrganizationWithBranding(ctx context.Context, orgId string) (*types.OrganizationWithBranding, error) {
+func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.OrganizationWithBranding, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		fmt.Sprintf(
@@ -80,7 +81,7 @@ func GetOrganizationWithBranding(ctx context.Context, orgId string) (*types.Orga
 			WHERE o.id = @id`,
 			organizationBrandingOutputExpr,
 		),
-		pgx.NamedArgs{"id": orgId},
+		pgx.NamedArgs{"id": orgID},
 	)
 	if err != nil {
 		return nil, err

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/google/uuid"
 
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -19,13 +20,13 @@ const (
 	`
 )
 
-func GetOrganizationBranding(ctx context.Context, organizationId string) (*types.OrganizationBranding, error) {
+func GetOrganizationBranding(ctx context.Context, organizationID uuid.UUID) (*types.OrganizationBranding, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT"+organizationBrandingOutputExpr+
 			"FROM OrganizationBranding b "+
 			"WHERE b.organization_id = @organizationId",
-		pgx.NamedArgs{"organizationId": organizationId})
+		pgx.NamedArgs{"organizationId": organizationID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query OrganizationBranding: %w", err)
 	}

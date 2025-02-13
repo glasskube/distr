@@ -1,9 +1,13 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type UserAccount struct {
-	ID              string     `db:"id" json:"id"`
+	ID              uuid.UUID  `db:"id" json:"id"`
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
 	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
@@ -15,7 +19,7 @@ type UserAccount struct {
 
 type UserAccountWithUserRole struct {
 	// copy+pasted from UserAccount because pgx does not like embedded strucs
-	ID              string     `db:"id" json:"id"`
+	ID              uuid.UUID  `db:"id" json:"id"`
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
 	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`

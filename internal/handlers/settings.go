@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/httprate"
+	"github.com/google/uuid"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -170,7 +171,11 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		tokenID := r.PathValue("id")
+		tokenID, err := uuid.Parse(r.PathValue("id"))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
 		auth := auth.Authentication.Require(ctx)
 		if err := db.DeleteAccessToken(ctx, tokenID, auth.CurrentUserID()); err != nil {
 			log.Warn("error deleting token", zap.Error(err))
