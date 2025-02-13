@@ -9,6 +9,7 @@ import (
 	"github.com/glasskube/distr/internal/svc"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 	defer func() { _ = registry.Shutdown() }()
 	ctx = internalctx.WithDb(ctx, registry.GetDbPool())
 
-	revisionID := "68297e49-b17b-4d32-8111-f8ee678f73da"
+	revisionID := uuid.MustParse("68297e49-b17b-4d32-8111-f8ee678f73da")
 	statusCount := 500000
 	statusInterval := 5 * time.Second
 
