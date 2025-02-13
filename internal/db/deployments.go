@@ -83,9 +83,10 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
 				LEFT JOIN (
-					SELECT deployment_revision_id, max(created_at) AS max_created_at
-					FROM DeploymentRevisionStatus
-					GROUP BY deployment_revision_id
+					SELECT
+						dr1.id AS deployment_revision_id,
+						(SELECT max(created_at) FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr1.id) AS max_created_at
+					FROM DeploymentRevision dr1
 				) status_max ON dr.id = status_max.deployment_revision_id
 				LEFT JOIN DeploymentRevisionStatus drs
 					ON dr.id = drs.deployment_revision_id AND drs.created_at = status_max.max_created_at
