@@ -2,17 +2,23 @@ package authinfo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/glasskube/distr/internal/authjwt"
 	"github.com/glasskube/distr/internal/authn"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 func FromJWT(token jwt.Token) (*SimpleAuthInfo, error) {
 	var result SimpleAuthInfo
-	result.userID = token.Subject()
+	if parsedSub, err := uuid.Parse(token.Subject()); err != nil {
+		return nil, fmt.Errorf("JWT subject is invalid: %w", err)
+	} else {
+		result.userID = parsedSub
+	}
 	result.rawToken = token
 	if userEmail, ok := token.Get(authjwt.UserEmailKey); ok {
 		result.userEmail = userEmail.(string)
@@ -20,8 +26,12 @@ func FromJWT(token jwt.Token) (*SimpleAuthInfo, error) {
 	if userRole, ok := token.Get(authjwt.UserRoleKey); ok {
 		result.userRole = util.PtrTo(types.UserRole(userRole.(string)))
 	}
-	if orgId, ok := token.Get(authjwt.OrgIdKey); ok {
-		result.organizationID = util.PtrTo(orgId.(string))
+	if orgID, ok := token.Get(authjwt.OrgIdKey); ok {
+		if parsedOrgID, err := uuid.Parse(orgID.(string)); err != nil {
+			return nil, fmt.Errorf("JWT orgId is invalid: %w", err)
+		} else {
+			result.organizationID = util.PtrTo(parsedOrgID)
+		}
 	}
 	if verified, ok := token.Get(authjwt.UserEmailVerifiedKey); ok {
 		result.emailVerified = verified.(bool)

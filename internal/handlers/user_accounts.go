@@ -19,6 +19,7 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
@@ -148,8 +149,8 @@ func userAccountMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		if userId := r.PathValue("userId"); userId == "" {
-			http.Error(w, "missing userId", http.StatusBadRequest)
+		if userId, err := uuid.Parse(r.PathValue("userId")); err != nil {
+			http.NotFound(w, r)
 		} else if userAccount, err := db.GetUserAccountByID(ctx, userId); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)

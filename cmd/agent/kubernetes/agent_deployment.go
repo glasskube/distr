@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 )
@@ -12,9 +13,9 @@ import (
 const LabelDeplyoment = "agent.distr.sh/deployment"
 
 type AgentDeployment struct {
-	ReleaseName  string `json:"releaseName"`
-	RevisionID   string `json:"revisionId"`
-	HelmRevision int    `json:"helmRevision"`
+	ReleaseName  string    `json:"releaseName"`
+	RevisionID   uuid.UUID `json:"revisionId"`
+	HelmRevision int       `json:"helmRevision"`
 }
 
 func (d *AgentDeployment) SecretName() string {

@@ -1,11 +1,15 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type DeploymentTargetStatus struct {
 	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
-	ID                 string    `db:"id" json:"id"`
+	ID                 uuid.UUID `db:"id" json:"id"`
 	CreatedAt          time.Time `db:"created_at" json:"createdAt"`
 	Message            string    `db:"message" json:"message"`
-	DeploymentTargetId string    `db:"deployment_target_id" json:"-"`
+	DeploymentTargetID uuid.UUID `db:"deployment_target_id" json:"-"`
 }

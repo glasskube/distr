@@ -4,16 +4,17 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/internal/authkey"
+	"github.com/google/uuid"
 )
 
 type AccessToken struct {
-	ID            string      `db:"id"`
+	ID            uuid.UUID   `db:"id"`
 	CreatedAt     time.Time   `db:"created_at"`
 	ExpiresAt     *time.Time  `db:"expires_at"`
 	LastUsedAt    *time.Time  `db:"last_used_at"`
 	Label         *string     `db:"label"`
 	Key           authkey.Key `db:"key"`
-	UserAccountID string      `db:"user_account_id"`
+	UserAccountID uuid.UUID   `db:"user_account_id"`
 }
 
 func (tok AccessToken) HasExpired() bool {

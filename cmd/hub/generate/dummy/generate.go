@@ -47,24 +47,24 @@ func main() {
 	app1 := types.Application{Name: "ASAN Mars Explorer", Type: types.DeploymentTypeDocker}
 	util.Must(db.CreateApplication(ctx, &app1, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId: app1.ID,
+		ApplicationID: app1.ID,
 		Name:          "v4.2.0",
 	}))
 
 	app2 := types.Application{Name: "Genome Graph Database", Type: types.DeploymentTypeDocker}
 	util.Must(db.CreateApplication(ctx, &app2, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId:   app2.ID,
+		ApplicationID:   app2.ID,
 		Name:            "v1",
 		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId:   app2.ID,
+		ApplicationID:   app2.ID,
 		Name:            "v2",
 		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId:   app2.ID,
+		ApplicationID:   app2.ID,
 		Name:            "v3",
 		ComposeFileData: []byte("name: Hello World!\n"),
 	}))
@@ -72,7 +72,7 @@ func main() {
 	app3 := types.Application{Name: "Wizard Security Graph", Type: types.DeploymentTypeDocker}
 	util.Must(db.CreateApplication(ctx, &app3, org.ID))
 	av := types.ApplicationVersion{
-		ApplicationId:   app3.ID,
+		ApplicationID:   app3.ID,
 		Name:            "v1",
 		ComposeFileData: []byte("name: Hello World!\n"),
 	}
@@ -81,7 +81,7 @@ func main() {
 	podinfoApp := types.Application{Name: "Podinfo", Type: types.DepolymentTypeKubernetes}
 	util.Must(db.CreateApplication(ctx, &podinfoApp, org.ID))
 	util.Must(db.CreateApplicationVersion(ctx, &types.ApplicationVersion{
-		ApplicationId: podinfoApp.ID,
+		ApplicationID: podinfoApp.ID,
 		Name:          "6.7.1",
 		ChartType:     util.PtrTo(types.HelmChartTypeOCI),
 		ChartUrl:      util.PtrTo("oci://ghcr.io/stefanprodan/charts/podinfo"),
@@ -101,7 +101,7 @@ func main() {
 			Name:           "Space Center Austria",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 48.1956026, Lon: 16.3633028},
-			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
+			AgentVersionID: util.PtrTo(util.Require(db.GetCurrentAgentVersion(ctx)).ID),
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt1, org.ID, pmig.ID))
@@ -110,7 +110,7 @@ func main() {
 		DeploymentTarget: types.DeploymentTarget{
 			Name:           "Edge Location",
 			Type:           types.DeploymentTypeDocker,
-			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
+			AgentVersionID: util.PtrTo(util.Require(db.GetCurrentAgentVersion(ctx)).ID),
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt2, org.ID, kosmoz.ID))
@@ -120,7 +120,7 @@ func main() {
 			Name:           "580 Founders Café",
 			Type:           types.DeploymentTypeDocker,
 			Geolocation:    &types.Geolocation{Lat: 37.758781, Lon: -122.396882},
-			AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
+			AgentVersionID: util.PtrTo(util.Require(db.GetCurrentAgentVersion(ctx)).ID),
 		},
 	}
 	util.Must(db.CreateDeploymentTarget(ctx, &dt3, org.ID, kosmoz.ID))
@@ -131,13 +131,13 @@ func main() {
 			DeploymentTarget: types.DeploymentTarget{
 				Name:           fmt.Sprintf("Deployment Target %v", idx),
 				Type:           types.DeploymentTypeDocker,
-				AgentVersionID: util.Require(db.GetCurrentAgentVersion(ctx)).ID,
+				AgentVersionID: util.PtrTo(util.Require(db.GetCurrentAgentVersion(ctx)).ID),
 			},
 		}
 		util.Must(db.CreateDeploymentTarget(ctx, &dt, org.ID, pmig.ID))
 		util.Must(db.CreateDeploymentTargetStatus(ctx, &dt.DeploymentTarget, "running"))
 		deployment := api.DeploymentRequest{
-			DeploymentTargetId: dt.ID, ApplicationVersionId: av.ID,
+			DeploymentTargetID: dt.ID, ApplicationVersionID: av.ID,
 		}
 		util.Must(db.CreateDeployment(ctx, &deployment))
 		revision, err := db.CreateDeploymentRevision(ctx, &deployment)

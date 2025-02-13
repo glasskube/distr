@@ -7,10 +7,11 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
-func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.UptimeMetric, error) {
+func GetUptimeForDeployment(ctx context.Context, deploymentID uuid.UUID) ([]types.UptimeMetric, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`
@@ -28,7 +29,7 @@ func GetUptimeForDeployment(ctx context.Context, deploymentId string) ([]types.U
 		) AS statuses ON hours.base_hour = statuses.created_at_hour
 		ORDER BY hours.base_hour, statuses.created_at;`,
 		pgx.NamedArgs{
-			"deploymentId": deploymentId,
+			"deploymentId": deploymentID,
 		})
 	if err != nil {
 		return nil, err

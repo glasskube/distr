@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/agentclient/useragent"
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 
 	"github.com/glasskube/distr/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -70,7 +71,7 @@ func (c *Client) Manifest(ctx context.Context) (io.Reader, error) {
 	}
 }
 
-func (c *Client) Status(ctx context.Context, revisionID string, status string, error error) error {
+func (c *Client) Status(ctx context.Context, revisionID uuid.UUID, status string, error error) error {
 	deploymentStatus := api.AgentDeploymentStatus{
 		RevisionID: revisionID,
 	}

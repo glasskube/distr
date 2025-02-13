@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
 
 type ApplicationVersion struct {
 	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
-	ID        string    `db:"id" json:"id"`
+	ID        uuid.UUID `db:"id" json:"id"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	Name      string    `db:"name" json:"name"`
 
@@ -27,7 +28,7 @@ type ApplicationVersion struct {
 	TemplateFileData []byte `db:"template_file_data" json:"-"`
 	ComposeFileData  []byte `db:"compose_file_data" json:"-"`
 
-	ApplicationId string `db:"application_id" json:"applicationId"`
+	ApplicationID uuid.UUID `db:"application_id" json:"applicationId"`
 }
 
 func (av ApplicationVersion) ParsedValuesFile() (result map[string]any, err error) {

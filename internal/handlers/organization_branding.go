@@ -17,6 +17,7 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -88,7 +89,11 @@ func getOrganizationBrandingFromRequest(r *http.Request) (*types.OrganizationBra
 		Description: util.PtrTo(r.Form.Get("description")),
 	}
 
-	organizationBranding.ID = r.PathValue("organizationBrandingId")
+	if brandingID, err := uuid.Parse(r.PathValue("organizationBrandingId")); err != nil {
+		return nil, err
+	} else {
+		organizationBranding.ID = brandingID
+	}
 
 	if file, head, err := r.FormFile("logo"); err != nil {
 		if !errors.Is(err, http.ErrMissingFile) {

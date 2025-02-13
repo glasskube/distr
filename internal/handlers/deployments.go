@@ -15,6 +15,7 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
@@ -41,7 +42,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 
 	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if application, err := db.GetApplicationForApplicationVersionID(
-			ctx, deploymentRequest.ApplicationVersionId, *auth.CurrentOrgID(),
+			ctx, deploymentRequest.ApplicationVersionID, *auth.CurrentOrgID(),
 		); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "application does not exist", http.StatusBadRequest)
 			return err
@@ -49,14 +50,14 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 			log.Warn("could not get application version", zap.Error(err))
 			http.Error(w, "an internal error occurred", http.StatusInternalServerError)
 			return err
-		} else if appVersion, err := db.GetApplicationVersion(ctx, deploymentRequest.ApplicationVersionId); err != nil {
+		} else if appVersion, err := db.GetApplicationVersion(ctx, deploymentRequest.ApplicationVersionID); err != nil {
 			http.Error(w, "application version does not exist", http.StatusBadRequest)
 			return err
 		} else if appVersionValues, err := appVersion.ParsedValuesFile(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		} else if deploymentTarget, err := db.GetDeploymentTarget(
-			ctx, deploymentRequest.DeploymentTargetId, orgId,
+			ctx, deploymentRequest.DeploymentTargetID, orgId,
 		); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "deployment target does not exist", http.StatusBadRequest)
 			return err
@@ -75,7 +76,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("values cannot be merged with base: %v", err), http.StatusBadRequest)
 			return err
 		} else {
-			if deploymentRequest.ID == "" {
+			if IsEmptyUUID(deploymentRequest.ID) {
 				if deploymentTarget.Deployment != nil {
 					msg := "only one deployment per target is supported right now"
 					http.Error(w, msg, http.StatusBadRequest)
@@ -91,7 +92,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 				return errors.New(msg)
 			}
 
-			if deploymentRequest.ID == "" {
+			if IsEmptyUUID(deploymentRequest.ID) {
 				if err = db.CreateDeployment(ctx, &deploymentRequest); err != nil {
 					log.Warn("could not create deployment", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -129,7 +130,11 @@ func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
 func deploymentMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		deploymentId := r.PathValue("deploymentId")
+		deploymentId, err := uuid.Parse(r.PathValue("deploymentId"))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
 		deployment, err := db.GetDeployment(ctx, deploymentId)
 		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)

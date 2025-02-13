@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/glasskube/distr/internal/validation"
+	"github.com/google/uuid"
 )
 
 type DeploymentTarget struct {
@@ -14,10 +15,10 @@ type DeploymentTarget struct {
 	CurrentStatus          *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
 	Namespace              *string                 `db:"namespace" json:"namespace,omitempty"`
 	Scope                  *DeploymentTargetScope  `db:"scope" json:"scope,omitempty"`
-	OrganizationID         string                  `db:"organization_id" json:"-"`
-	CreatedByUserAccountID string                  `db:"created_by_user_account_id" json:"-"`
-	AgentVersionID         string                  `db:"agent_version_id" json:"-"`
-	ReportedAgentVersionID *string                 `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"`
+	OrganizationID         uuid.UUID               `db:"organization_id" json:"-"`
+	CreatedByUserAccountID uuid.UUID               `db:"created_by_user_account_id" json:"-"`
+	AgentVersionID         *uuid.UUID              `db:"agent_version_id" json:"-"`
+	ReportedAgentVersionID *uuid.UUID              `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"`
 }
 
 func (dt *DeploymentTarget) Validate() error {

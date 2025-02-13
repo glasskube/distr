@@ -7,6 +7,7 @@ import (
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -53,27 +54,27 @@ func generateUserToken(
 		jwt.IssuedAtKey:      now,
 		jwt.NotBeforeKey:     now,
 		jwt.ExpirationKey:    now.Add(validFor),
-		jwt.SubjectKey:       user.ID,
+		jwt.SubjectKey:       user.ID.String(),
 		UserNameKey:          user.Name,
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
 	}
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole
-		claims[OrgIdKey] = org.ID
+		claims[OrgIdKey] = org.ID.String()
 	}
 	maps.Copy(claims, extraClaims)
 	return JWTAuth.Encode(claims)
 }
 
-func GenerateAgentTokenValidFor(targetId string, orgId string, validFor time.Duration) (jwt.Token, string, error) {
+func GenerateAgentTokenValidFor(targetID, orgID uuid.UUID, validFor time.Duration) (jwt.Token, string, error) {
 	now := time.Now()
 	claims := map[string]any{
 		jwt.IssuedAtKey:   now,
 		jwt.NotBeforeKey:  now,
 		jwt.ExpirationKey: now.Add(validFor),
-		jwt.SubjectKey:    targetId,
-		OrgIdKey:          orgId,
+		jwt.SubjectKey:    targetID.String(),
+		OrgIdKey:          orgID.String(),
 	}
 	return JWTAuth.Encode(claims)
 }

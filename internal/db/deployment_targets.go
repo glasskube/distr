@@ -10,6 +10,7 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -44,9 +45,12 @@ const (
 	deploymentTargetJoinExpr = `
 		LEFT JOIN (
 			-- find the creation date of the latest status entry for each deployment target
-			SELECT deployment_target_id, max(created_at) AS max_created_at
-			FROM DeploymentTargetStatus
-			GROUP BY deployment_target_id
+			-- IMPORTANT: The sub-query here might seem inefficient but it is MUCH FASTER than using a GROUP BY clause
+			-- because it can utilize an index!!
+			SELECT
+				dt1.id AS deployment_target_id,
+				(SELECT max(created_at) FROM DeploymentTargetStatus WHERE deployment_target_id = dt1.id) AS max_created_at
+			FROM DeploymentTarget dt1
 		) status_max
 		 	ON dt.id = status_max.deployment_target_id
 		LEFT JOIN DeploymentTargetStatus status
@@ -66,7 +70,7 @@ const (
 
 func GetDeploymentTargets(
 	ctx context.Context,
-	orgID, userID string,
+	orgID, userID uuid.UUID,
 	userRole types.UserRole,
 ) ([]types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
@@ -93,7 +97,11 @@ func GetDeploymentTargets(
 	}
 }
 
-func GetDeploymentTarget(ctx context.Context, id string, orgID *string) (*types.DeploymentTargetWithCreatedBy, error) {
+func GetDeploymentTarget(
+	ctx context.Context,
+	id uuid.UUID,
+	orgID *uuid.UUID,
+) (*types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
 	query := "SELECT" + deploymentTargetWithStatusOutputExpr + deploymentTargetFromExpr + "WHERE dt.id = @id"
@@ -120,7 +128,7 @@ func GetDeploymentTarget(ctx context.Context, id string, orgID *string) (*types.
 func CreateDeploymentTarget(
 	ctx context.Context,
 	dt *types.DeploymentTargetWithCreatedBy,
-	orgID, createdByID string,
+	orgID, createdByID uuid.UUID,
 ) error {
 	dt.OrganizationID = orgID
 	if dt.CreatedBy == nil {
@@ -166,7 +174,7 @@ func CreateDeploymentTarget(
 	}
 }
 
-func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy, orgID string) error {
+func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy, orgID uuid.UUID) error {
 	agentUpdateStr := ""
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
@@ -176,7 +184,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		"lat":   nil,
 		"lon":   nil,
 	}
-	if dt.AgentVersionID != "" {
+	if dt.AgentVersionID != nil {
 		args["agentVersionId"] = dt.AgentVersionID
 		agentUpdateStr = ", agent_version_id = @agentVersionId "
 	}
@@ -204,7 +212,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	}
 }
 
-func DeleteDeploymentTargetWithID(ctx context.Context, id string) error {
+func DeleteDeploymentTargetWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(ctx, `DELETE FROM DeploymentTarget WHERE id = @id`, pgx.NamedArgs{"id": id}); err != nil {
 		return err
@@ -215,7 +223,7 @@ func DeleteDeploymentTargetWithID(ctx context.Context, id string) error {
 	}
 }
 
-func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarget, orgID string) error {
+func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarget, orgID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE DeploymentTarget AS dt SET access_key_salt = @accessKeySalt, access_key_hash = @accessKeyHash "+
@@ -236,7 +244,7 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 func UpdateDeploymentTargetReportedAgentVersionID(
 	ctx context.Context,
 	dt *types.DeploymentTargetWithCreatedBy,
-	agentVersionID string,
+	agentVersionID uuid.UUID,
 ) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(

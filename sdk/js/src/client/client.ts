@@ -27,7 +27,10 @@ export class Client {
   private readonly config: ClientConfig;
 
   constructor(config: ConditionalPartial<ClientConfig, keyof typeof defaultClientConfig>) {
-    this.config = {...defaultClientConfig, ...config};
+    this.config = {
+      apiKey: config.apiKey,
+      apiBase: config.apiBase || defaultClientConfig.apiBase,
+    };
     if (!this.config.apiBase.endsWith('/')) {
       this.config.apiBase += '/';
     }

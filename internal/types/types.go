@@ -1,6 +1,10 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type DeploymentType string
 type UserRole string
@@ -29,7 +33,7 @@ const (
 )
 
 type Base struct {
-	ID        string    `db:"id" json:"id"`
+	ID        uuid.UUID `db:"id" json:"id"`
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 }
 

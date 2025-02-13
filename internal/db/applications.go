@@ -8,10 +8,11 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
-func CreateApplication(ctx context.Context, application *types.Application, orgID string) error {
+func CreateApplication(ctx context.Context, application *types.Application, orgID uuid.UUID) error {
 	application.OrganizationID = orgID
 	db := internalctx.GetDb(ctx)
 	row := db.QueryRow(ctx,
@@ -23,7 +24,7 @@ func CreateApplication(ctx context.Context, application *types.Application, orgI
 	return nil
 }
 
-func UpdateApplication(ctx context.Context, application *types.Application, orgID string) error {
+func UpdateApplication(ctx context.Context, application *types.Application, orgID uuid.UUID) error {
 	application.OrganizationID = orgID
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
@@ -39,7 +40,7 @@ func UpdateApplication(ctx context.Context, application *types.Application, orgI
 	}
 }
 
-func DeleteApplicationWithID(ctx context.Context, id string) error {
+func DeleteApplicationWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(ctx, `DELETE FROM Application WHERE id = @id`, pgx.NamedArgs{"id": id}); err != nil {
 		return err
@@ -50,7 +51,7 @@ func DeleteApplicationWithID(ctx context.Context, id string) error {
 	}
 }
 
-func GetApplicationsByOrgID(ctx context.Context, orgID string) ([]types.Application, error) {
+func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -78,7 +79,7 @@ func GetApplicationsByOrgID(ctx context.Context, orgID string) ([]types.Applicat
 	}
 }
 
-func GetApplicationsWithLicenseOwnerID(ctx context.Context, id string) ([]types.Application, error) {
+func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	// TODO: Only include versions from at least one license
 	if rows, err := db.Query(ctx, `
@@ -108,7 +109,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id string) ([]types.
 	}
 }
 
-func GetApplication(ctx context.Context, id string, orgID string) (*types.Application, error) {
+func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -138,7 +139,7 @@ func GetApplication(ctx context.Context, id string, orgID string) (*types.Applic
 	}
 }
 
-func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID string) (*types.Application, error) {
+func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.UUID) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT
@@ -172,7 +173,7 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
-		"applicationId": applicationVersion.ApplicationId,
+		"applicationId": applicationVersion.ApplicationID,
 		"chartType":     applicationVersion.ChartType,
 		"chartName":     applicationVersion.ChartName,
 		"chartUrl":      applicationVersion.ChartUrl,
@@ -216,7 +217,7 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	}
 }
 
-func GetApplicationVersion(ctx context.Context, applicationVersionId string) (*types.ApplicationVersion, error) {
+func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) (*types.ApplicationVersion, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -224,7 +225,7 @@ func GetApplicationVersion(ctx context.Context, applicationVersionId string) (*t
 			av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id
 		FROM ApplicationVersion av
 		WHERE id = @id`,
-		pgx.NamedArgs{"id": applicationVersionId},
+		pgx.NamedArgs{"id": applicationVersionID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not get ApplicationVersion: %w", err)

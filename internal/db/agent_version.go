@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/internal/buildconfig"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -60,7 +61,7 @@ func GetCurrentAgentVersion(ctx context.Context) (*types.AgentVersion, error) {
 	}
 }
 
-func GetAgentVersionForDeploymentTargetID(ctx context.Context, id string) (*types.AgentVersion, error) {
+func GetAgentVersionForDeploymentTargetID(ctx context.Context, id uuid.UUID) (*types.AgentVersion, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`SELECT av.id, av.created_at, av.name, av.manifest_file_revision, av.compose_file_revision

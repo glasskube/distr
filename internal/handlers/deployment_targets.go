@@ -19,6 +19,7 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -74,7 +75,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		dt.AgentVersionID = agentVersion.ID
+		dt.AgentVersionID = &agentVersion.ID
 		if err = db.CreateDeploymentTarget(ctx, &dt, *auth.CurrentOrgID(), auth.CurrentUserID()); err != nil {
 			log.Warn("could not create DeploymentTarget", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -96,10 +97,10 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dt.AgentVersionID = dt.AgentVersion.ID
+	dt.AgentVersionID = &dt.AgentVersion.ID
 
 	existing := internalctx.GetDeploymentTarget(ctx)
-	if dt.ID == "" {
+	if IsEmptyUUID(dt.ID) {
 		dt.ID = existing.ID
 	} else if dt.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)
@@ -186,20 +187,20 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
-		ConnectUrl:   connectUrl,
-		TargetId:     deploymentTarget.ID,
+		ConnectURL:   connectUrl,
+		TargetID:     deploymentTarget.ID,
 		TargetSecret: targetSecret,
 	}); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
 
-func buildConnectUrl(targetId string, targetSecret string) (string, error) {
+func buildConnectUrl(targetID uuid.UUID, targetSecret string) (string, error) {
 	if u, err := url.Parse(env.Host()); err != nil {
 		return "", err
 	} else {
 		query := url.Values{}
-		query.Set("targetId", targetId)
+		query.Set("targetId", targetID.String())
 		query.Set("targetSecret", targetSecret)
 		u = u.JoinPath("/api/v1/connect")
 		u.RawQuery = query.Encode()
@@ -210,7 +211,11 @@ func buildConnectUrl(targetId string, targetSecret string) (string, error) {
 func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		id := r.PathValue("deploymentTargetId")
+		id, err := uuid.Parse(r.PathValue("deploymentTargetId"))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
 		auth := auth.Authentication.Require(ctx)
 		orgId := auth.CurrentOrgID()
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, orgId); errors.Is(err, apierrors.ErrNotFound) {

@@ -1,9 +1,13 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type DeploymentRevisionStatus struct {
-	ID                   string               `db:"id" json:"id"`
+	ID                   uuid.UUID            `db:"id" json:"id"`
 	CreatedAt            time.Time            `db:"created_at" json:"createdAt"`
 	DeploymentRevisionID string               `db:"deployment_revision_id" json:"deploymentRevisionId"`
 	Type                 DeploymentStatusType `db:"type" json:"type"`
