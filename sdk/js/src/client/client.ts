@@ -29,8 +29,8 @@ export class Client {
   constructor(config: ConditionalPartial<ClientConfig, keyof typeof defaultClientConfig>) {
     this.config = {
       apiKey: config.apiKey,
-      apiBase: config.apiBase || defaultClientConfig.apiBase
-    }
+      apiBase: config.apiBase || defaultClientConfig.apiBase,
+    };
     if (!this.config.apiBase.endsWith('/')) {
       this.config.apiBase += '/';
     }
