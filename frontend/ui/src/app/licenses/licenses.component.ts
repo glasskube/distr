@@ -50,7 +50,10 @@ export class LicensesComponent implements OnDestroy {
   applications$ = this.applicationsService.list();
 
   editForm = new FormGroup({
-    license: new FormControl<ApplicationLicense | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
+    license: new FormControl<ApplicationLicense | undefined>(undefined, {
+      nonNullable: true,
+      validators: Validators.required,
+    }),
   });
   editFormLoading = false;
 
@@ -107,5 +110,4 @@ export class LicensesComponent implements OnDestroy {
   protected readonly faPlus = faPlus;
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
-
 }

@@ -94,7 +94,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         const versions = selectedApplication?.versions ?? [];
         for (let i = 0; i < versions.length; i++) {
           const version = versions[i];
-          const selected = !!(this.license?.versions?.some((v) => v.id === version.id));
+          const selected = !!this.license?.versions?.some((v) => v.id === version.id);
           /*
           business logic for now:
           * if license exists but not assigned yet:
@@ -115,15 +115,17 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   }
 
   private getSelectedVersions(includeAllVersions: boolean, versionControls: (boolean | null)[]): ApplicationVersion[] {
-    if(includeAllVersions) {
+    if (includeAllVersions) {
       return [];
     }
-    return versionControls.map((v, idx) => {
-      if(v) {
-        return this.selectedApplication?.versions?.[idx];
-      }
-      return undefined;
-    }).filter(v => !!v);
+    return versionControls
+      .map((v, idx) => {
+        if (v) {
+          return this.selectedApplication?.versions?.[idx];
+        }
+        return undefined;
+      })
+      .filter((v) => !!v);
   }
 
   ngAfterViewInit() {
@@ -134,7 +136,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .subscribe((event) => {
         if (event instanceof TouchedChangeEvent) {
           console.log('event', event);
-          if(event.touched) {
+          if (event.touched) {
             this.editForm.markAllAsTouched();
           }
         }
