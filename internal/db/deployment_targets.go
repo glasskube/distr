@@ -45,9 +45,12 @@ const (
 	deploymentTargetJoinExpr = `
 		LEFT JOIN (
 			-- find the creation date of the latest status entry for each deployment target
-			SELECT deployment_target_id, max(created_at) AS max_created_at
-			FROM DeploymentTargetStatus
-			GROUP BY deployment_target_id
+			-- IMPORTANT: The sub-query here might seem inefficient but it is MUCH FASTER than using a GROUP BY clause
+			-- because it can utilize an index!!
+			SELECT
+				dt1.id AS deployment_target_id,
+				(SELECT max(created_at) FROM DeploymentTargetStatus WHERE deployment_target_id = dt1.id) AS max_created_at
+			FROM DeploymentTarget dt1
 		) status_max
 		 	ON dt.id = status_max.deployment_target_id
 		LEFT JOIN DeploymentTargetStatus status

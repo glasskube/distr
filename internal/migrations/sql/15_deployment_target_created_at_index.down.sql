@@ -1,0 +1,1 @@
+DROP INDEX DeploymentTargetStatus_created_at;
