@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -128,7 +129,7 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 	}
 }
 
-func DeleteUserAccountWithID(ctx context.Context, id string) error {
+func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	cmd, err := db.Exec(ctx, `DELETE FROM UserAccount WHERE id = @id`, pgx.NamedArgs{"id": id})
 	if err != nil {
@@ -146,16 +147,16 @@ func DeleteUserAccountWithID(ctx context.Context, id string) error {
 	return nil
 }
 
-func CreateUserAccountOrganizationAssignment(ctx context.Context, userId, orgId string, role types.UserRole) error {
+func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
 		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
-		pgx.NamedArgs{"userId": userId, "orgId": orgId, "role": role},
+		pgx.NamedArgs{"userId": userID, "orgId": orgID, "role": role},
 	)
 	return err
 }
 
-func GetUserAccountsByOrgID(ctx context.Context, orgId string) ([]types.UserAccountWithUserRole, error) {
+func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountWithRoleOutputExpr+`
@@ -163,7 +164,7 @@ func GetUserAccountsByOrgID(ctx context.Context, orgId string) ([]types.UserAcco
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 		WHERE j.organization_id = @orgId
 		ORDER BY u.name`,
-		pgx.NamedArgs{"orgId": orgId},
+		pgx.NamedArgs{"orgId": orgID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
@@ -174,7 +175,7 @@ func GetUserAccountsByOrgID(ctx context.Context, orgId string) ([]types.UserAcco
 	}
 }
 
-func GetUserAccountByID(ctx context.Context, id string) (*types.UserAccount, error) {
+func GetUserAccountByID(ctx context.Context, id uuid.UUID) (*types.UserAccount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountOutputExpr+" FROM UserAccount u WHERE u.id = @id",
@@ -212,7 +213,7 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 	}
 }
 
-func GetUserAccountWithRole(ctx context.Context, userID, orgID string) (*types.UserAccountWithUserRole, error) {
+func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountOutputExpr+`, j.user_role

@@ -17,6 +17,7 @@ import (
 	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
@@ -82,7 +83,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	existing := internalctx.GetApplication(ctx)
-	if application.ID == "" {
+	if IsEmptyUUID(application.ID) {
 		application.ID = existing.ID
 	} else if application.ID != existing.ID || application.Type != existing.Type {
 		w.WriteHeader(http.StatusBadRequest)
@@ -138,8 +139,10 @@ func getApplicationVersions(w http.ResponseWriter, r *http.Request) {
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
-	applicationVersionId := r.PathValue("applicationVersionId")
-	if applicationVersion, err := db.GetApplicationVersion(r.Context(), applicationVersionId); err != nil {
+	applicationVersionID, err := uuid.Parse(r.PathValue("applicationVersionId"))
+	if err != nil {
+		http.NotFound(w, r)
+	} else if applicationVersion, err := db.GetApplicationVersion(r.Context(), applicationVersionID); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			http.NotFound(w, r)
 		} else {
@@ -163,7 +166,7 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	application := internalctx.GetApplication(ctx)
-	applicationVersion.ApplicationId = application.ID
+	applicationVersion.ApplicationID = application.ID
 
 	if application.Type == types.DeploymentTypeDocker {
 		if data, ok := readMultipartFile(w, r, "composefile"); !ok {
@@ -225,7 +228,11 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	applicationVersionIdFromUrl := r.PathValue("applicationVersionId")
+	applicationVersionIdFromUrl, err := uuid.Parse(r.PathValue("applicationVersionId"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
 	existing := internalctx.GetApplication(r.Context())
 	var existingVersion *types.ApplicationVersion
 	for _, version := range existing.Versions {
@@ -236,7 +243,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	if existingVersion == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if applicationVersion.ID == "" {
+	} else if IsEmptyUUID(applicationVersion.ID) {
 		applicationVersion.ID = existingVersion.ID
 	}
 
@@ -264,8 +271,12 @@ func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		applicationVersionId := r.PathValue("applicationVersionId")
-		if v, err := db.GetApplicationVersion(ctx, applicationVersionId); errors.Is(err, apierrors.ErrNotFound) {
+		applicationVersionID, err := uuid.Parse(r.PathValue("applicationVersionId"))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		if v, err := db.GetApplicationVersion(ctx, applicationVersionID); errors.Is(err, apierrors.ErrNotFound) {
 			http.NotFound(w, r)
 		} else if err != nil {
 			log.Error("failed to get ApplicationVersion from DB", zap.Error(err))
@@ -317,7 +328,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
-		version.ApplicationId = application.ID
+		version.ApplicationID = application.ID
 		if err := db.CreateApplicationVersion(ctx, &version); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
@@ -350,9 +361,13 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 func applicationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		applicationId := r.PathValue("applicationId")
+		applicationID, err := uuid.Parse(r.PathValue("applicationId"))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
 		auth := auth.Authentication.Require(ctx)
-		application, err := db.GetApplication(ctx, applicationId, *auth.CurrentOrgID())
+		application, err := db.GetApplication(ctx, applicationID, *auth.CurrentOrgID())
 		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {

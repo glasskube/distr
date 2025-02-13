@@ -1,24 +1,27 @@
 package authinfo
 
-import "github.com/glasskube/distr/internal/types"
+import (
+	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
+)
 
 type SimpleAuthInfo struct {
-	userID         string
+	userID         uuid.UUID
 	userEmail      string
-	organizationID *string
+	organizationID *uuid.UUID
 	emailVerified  bool
 	userRole       *types.UserRole
 	rawToken       any
 }
 
 // CurrentOrgID implements AuthInfo.
-func (i *SimpleAuthInfo) CurrentOrgID() *string { return i.organizationID }
+func (i *SimpleAuthInfo) CurrentOrgID() *uuid.UUID { return i.organizationID }
 
 // CurrentUserEmailVerified implements AuthInfo.
 func (i *SimpleAuthInfo) CurrentUserEmailVerified() bool { return i.emailVerified }
 
 // CurrentUserID implements AuthInfo.
-func (i *SimpleAuthInfo) CurrentUserID() string { return i.userID }
+func (i *SimpleAuthInfo) CurrentUserID() uuid.UUID { return i.userID }
 
 // CurrentUserEmail implements AuthInfo.
 func (i *SimpleAuthInfo) CurrentUserEmail() string { return i.userEmail }

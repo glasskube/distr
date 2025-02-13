@@ -3,22 +3,23 @@ package api
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
 
 type DeploymentTargetAccessTokenResponse struct {
-	ConnectUrl   string `json:"connectUrl"`
-	TargetId     string `json:"targetId"`
-	TargetSecret string `json:"targetSecret"`
+	ConnectURL   string    `json:"connectUrl"`
+	TargetID     uuid.UUID `json:"targetId"`
+	TargetSecret string    `json:"targetSecret"`
 }
 
 type DeploymentRequest struct {
-	ID                   string  `json:"deploymentId"`
-	DeploymentTargetId   string  `json:"deploymentTargetId"`
-	ApplicationVersionId string  `json:"applicationVersionId"`
-	ReleaseName          *string `json:"releaseName"`
-	ValuesYaml           []byte  `json:"valuesYaml"`
-	EnvFileData          []byte  `json:"envFileData"`
+	ID                   uuid.UUID `json:"deploymentId"`
+	DeploymentTargetID   uuid.UUID `json:"deploymentTargetId"`
+	ApplicationVersionID uuid.UUID `json:"applicationVersionId"`
+	ReleaseName          *string   `json:"releaseName"`
+	ValuesYaml           []byte    `json:"valuesYaml"`
+	EnvFileData          []byte    `json:"envFileData"`
 }
 
 func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {
