@@ -6,17 +6,13 @@ import {
   combineLatest,
   combineLatestWith,
   distinctUntilChanged,
-  from,
   map,
   NEVER,
-  Observable,
   of,
   shareReplay,
-  startWith,
   Subject,
   switchMap,
   takeUntil,
-  tap,
 } from 'rxjs';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -24,7 +20,7 @@ import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
-import {LicenseService} from '../services/license.service';
+import {LicensesService} from '../services/licenses.service';
 
 export type DeploymentFormValue = Partial<{
   deploymentTargetId: string;
@@ -53,7 +49,7 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueAccessor {
   protected readonly featureFlags = inject(FeatureFlagService);
   private readonly applications = inject(ApplicationsService);
-  private readonly licenses = inject(LicenseService);
+  private readonly licenses = inject(LicensesService);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly deplyomentTargets = inject(DeploymentTargetsService);
@@ -104,7 +100,7 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
   protected readonly licenses$ = this.applicationId$.pipe(
     combineLatestWith(this.shouldShowLicense$),
     switchMap(([applicationId, isLicensingEnabled]) =>
-      isLicensingEnabled && applicationId ? this.licenses.getLicensesForApplication(applicationId) : NEVER
+      isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
     )
   );
   private readonly selectedLicense$ = this.applicationLicenseId$.pipe(
@@ -117,7 +113,7 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
         ? this.selectedLicense$.pipe(
             switchMap((license) =>
               // if the license has no version associations, assume that the application has all available versions
-              license?.versions.length
+              license?.versions?.length
                 ? of(license.versions)
                 : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
             )
