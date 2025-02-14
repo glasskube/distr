@@ -6,9 +6,9 @@ export abstract class ReactiveList<T> {
   protected abstract readonly identify: Predicate<T, unknown>;
   protected abstract readonly sortAttr: Predicate<T, string>;
 
-  private readonly saved$ = new Subject<T>();
+  private readonly saved$ = new Subject<T[]>();
   private readonly savedAcc$: Observable<T[]> = this.saved$.pipe(
-    scan((list: T[], it: T) => [it, ...list], []),
+    scan((list: T[], it: T[]) => distinctBy(this.identify)([...it, ...list]), []),
     startWith([])
   );
 
@@ -31,7 +31,7 @@ export abstract class ReactiveList<T> {
     );
   }
 
-  public save(arg: T) {
+  public save(...arg: T[]) {
     this.saved$.next(arg);
   }
 
