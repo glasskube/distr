@@ -1,10 +1,18 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, forwardRef, inject, OnDestroy, OnInit} from '@angular/core';
-import {ControlValueAccessor, FormBuilder, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  ControlValueAccessor,
+  FormBuilder,
+  FormGroup,
+  NG_VALUE_ACCESSOR,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import {
   catchError,
   combineLatest,
   combineLatestWith,
+  debounceTime,
   distinctUntilChanged,
   map,
   NEVER,
@@ -101,7 +109,8 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
     combineLatestWith(this.shouldShowLicense$),
     switchMap(([applicationId, isLicensingEnabled]) =>
       isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
-    )
+    ),
+    shareReplay(1)
   );
   private readonly selectedLicense$ = this.applicationLicenseId$.pipe(
     combineLatestWith(this.licenses$),
@@ -194,6 +203,7 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
       ),
     ])
       .pipe(
+        debounceTime(5),
         switchMap(([applicationId, versionId, dt]) =>
           combineLatest([
             of(dt),
