@@ -23,3 +23,12 @@ type ApplicationLicenseWithVersions struct {
 	ApplicationLicense
 	Versions []ApplicationVersion `db:"versions"`
 }
+
+func (license *ApplicationLicenseWithVersions) HasVersionWithID(id uuid.UUID) bool {
+	for _, v := range license.Versions {
+		if v.ID == id {
+			return true
+		}
+	}
+	return false
+}
