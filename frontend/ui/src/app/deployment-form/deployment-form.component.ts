@@ -1,13 +1,6 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, forwardRef, inject, OnDestroy, OnInit} from '@angular/core';
-import {
-  ControlValueAccessor,
-  FormBuilder,
-  FormGroup,
-  NG_VALUE_ACCESSOR,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import {ControlValueAccessor, FormBuilder, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators} from '@angular/forms';
 import {
   catchError,
   combineLatest,
@@ -25,7 +18,6 @@ import {
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
-import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {LicensesService} from '../services/licenses.service';
@@ -58,7 +50,6 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
   protected readonly featureFlags = inject(FeatureFlagService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
-  private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly deplyomentTargets = inject(DeploymentTargetsService);
 
@@ -76,47 +67,81 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   private readonly applicationId$ = this.deployForm.controls.applicationId.valueChanges.pipe(
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   private readonly applicationVersionId$ = this.deployForm.controls.applicationVersionId.valueChanges.pipe(
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   private readonly applicationLicenseId$ = this.deployForm.controls.applicationLicenseId.valueChanges.pipe(
     distinctUntilChanged(),
     shareReplay(1)
   );
-  protected readonly shouldShowLicense$ = this.featureFlags.isLicensingEnabled$.pipe(
-    map((isLicensingEnabled) => isLicensingEnabled && this.auth.hasRole('customer'))
-  );
+
   private readonly deploymentTarget$ = this.deploymentTargetId$.pipe(
     combineLatestWith(this.deplyomentTargets.list()),
     map(([id, dts]) => dts.find((dt) => dt.id === id)),
     shareReplay(1)
   );
+
+  /**
+   * The license control is VISIBLE for users editing a customer managed deployment.
+   */
+  protected readonly licenseControlVisible$ = this.featureFlags.isLicensingEnabled$.pipe(
+    combineLatestWith(this.deploymentTarget$),
+    map(
+      ([isLicensingEnabled, deploymentTarget]) =>
+        isLicensingEnabled && deploymentTarget?.createdBy?.userRole === 'customer'
+    ),
+    distinctUntilChanged()
+  );
+
+  /**
+   * The license control is ENABLED when deploying to a customer managed target and there is no deployment yet.
+   * A vendor might be required to choose a license for a customer managed deplyoment target with no previous
+   * deployment but they may only choose a license owned by the same customer.
+   */
+  private readonly licenseControlEnabled$ = this.featureFlags.isLicensingEnabled$.pipe(
+    combineLatestWith(this.deploymentTarget$),
+    map(
+      ([isLicensingEnabled, deploymentTarget]) =>
+        isLicensingEnabled && deploymentTarget?.createdBy?.userRole === 'customer' && !deploymentTarget?.deployment
+    ),
+    distinctUntilChanged()
+  );
+
   protected readonly applications$ = this.deploymentTarget$.pipe(
     map((dt) => dt?.type),
     combineLatestWith(this.applications.list()),
     map(([type, apps]) => apps.filter((app) => app.type === type))
   );
+
   private selectedApplication$ = this.applicationId$.pipe(
     combineLatestWith(this.applications$),
     map(([applicationId, applications]) => applications.find((application) => application.id === applicationId))
   );
+
   protected readonly licenses$ = this.applicationId$.pipe(
-    combineLatestWith(this.shouldShowLicense$),
+    combineLatestWith(this.licenseControlVisible$),
     switchMap(([applicationId, isLicensingEnabled]) =>
       isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
     ),
+    combineLatestWith(this.deploymentTarget$),
+    map(([licenses, dt]) => licenses.filter((l) => l.ownerUserAccountId === dt?.createdBy?.id)),
     shareReplay(1)
   );
+
   private readonly selectedLicense$ = this.applicationLicenseId$.pipe(
     combineLatestWith(this.licenses$),
     map(([licenseId, licenses]) => licenses.find((license) => license.id === licenseId))
   );
-  protected availableApplicationVersions$ = this.shouldShowLicense$.pipe(
+
+  protected availableApplicationVersions$ = this.licenseControlVisible$.pipe(
     switchMap((shouldShowLicense) =>
       shouldShowLicense
         ? this.selectedLicense$.pipe(
@@ -145,21 +170,13 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
         this.onTouched?.(callbackArg);
       });
 
-    combineLatest([
-      this.shouldShowLicense$,
-      this.deploymentTarget$.pipe(
-        map((dt) => !!dt?.deployment),
-        distinctUntilChanged()
-      ),
-    ])
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe(([isLicensingEnabled, existingDeployment]) => {
-        if (isLicensingEnabled && !existingDeployment) {
-          this.deployForm.controls.applicationLicenseId.enable();
-        } else {
-          this.deployForm.controls.applicationLicenseId.disable();
-        }
-      });
+    this.licenseControlEnabled$.pipe(takeUntil(this.destroyed$)).subscribe((licenseControlEnabled) => {
+      if (licenseControlEnabled) {
+        this.deployForm.controls.applicationLicenseId.enable();
+      } else {
+        this.deployForm.controls.applicationLicenseId.disable();
+      }
+    });
 
     this.deploymentTarget$
       .pipe(
@@ -277,5 +294,6 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
     } else {
       this.deployForm.reset();
     }
+    console.log('writeValue', obj, this.deployForm.value);
   }
 }

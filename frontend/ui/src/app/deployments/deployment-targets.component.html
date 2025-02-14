@@ -161,7 +161,7 @@
                     Status
                   </button>
                 }
-                @if (true) {
+                @if (dt.currentStatus && !(dt.currentStatus | isStale)) {
                   <button
                     type="button"
                     (click)="newDeployment(dt, deploymentModal)"
