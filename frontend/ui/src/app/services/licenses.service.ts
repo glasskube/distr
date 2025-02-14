@@ -17,8 +17,12 @@ export class LicensesService implements CrudService<ApplicationLicense> {
     this.cache = new DefaultReactiveList(this.httpClient.get<ApplicationLicense[]>(this.licensesUrl));
   }
 
-  list(): Observable<ApplicationLicense[]> {
-    return this.cache.get();
+  list(applicationId?: string): Observable<ApplicationLicense[]> {
+    if (applicationId) {
+      return this.httpClient.get<ApplicationLicense[]>(this.licensesUrl, {params: {applicationId}});
+    } else {
+      return this.cache.get();
+    }
   }
 
   create(license: ApplicationLicense): Observable<ApplicationLicense> {
