@@ -75,7 +75,7 @@ func validateDeploymentRequest(
 	auth := auth.Authentication.Require(ctx)
 	orgId := *auth.CurrentOrgID()
 
-	var license *types.ApplicationLicenseWithVersions
+	var license *types.ApplicationLicense
 	var app *types.Application
 	var version *types.ApplicationVersion
 	var target *types.DeploymentTargetWithCreatedBy
@@ -170,7 +170,7 @@ func validateDeploymentRequestLicense(
 	ctx context.Context,
 	w http.ResponseWriter,
 	request api.DeploymentRequest,
-	license *types.ApplicationLicenseWithVersions,
+	license *types.ApplicationLicense,
 	app *types.Application,
 	target *types.DeploymentTargetWithCreatedBy,
 ) error {

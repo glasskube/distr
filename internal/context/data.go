@@ -61,9 +61,9 @@ func GetUserAccount(ctx context.Context) *types.UserAccount {
 	panic("no UserAccount found in context")
 }
 
-func GetApplicationLicense(ctx context.Context) *types.ApplicationLicenseWithVersions {
+func GetApplicationLicense(ctx context.Context) *types.ApplicationLicense {
 	val := ctx.Value(ctxKeyApplicationLicense)
-	if license, ok := val.(*types.ApplicationLicenseWithVersions); ok {
+	if license, ok := val.(*types.ApplicationLicense); ok {
 		if license != nil {
 			return license
 		}
@@ -71,7 +71,7 @@ func GetApplicationLicense(ctx context.Context) *types.ApplicationLicenseWithVer
 	panic("license not contained in context")
 }
 
-func WithApplicationLicense(ctx context.Context, license *types.ApplicationLicenseWithVersions) context.Context {
+func WithApplicationLicense(ctx context.Context, license *types.ApplicationLicense) context.Context {
 	ctx = context.WithValue(ctx, ctxKeyApplicationLicense, license)
 	return ctx
 }

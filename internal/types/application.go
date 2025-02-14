@@ -1,9 +1,14 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Application struct {
-	Base
+	ID             uuid.UUID            `db:"id" json:"id"`
+	CreatedAt      time.Time            `db:"created_at" json:"createdAt"`
 	OrganizationID uuid.UUID            `db:"organization_id" json:"-"`
 	Name           string               `db:"name" json:"name"`
 	Type           DeploymentType       `db:"type" json:"type"`
