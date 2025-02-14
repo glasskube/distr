@@ -170,8 +170,18 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
+	var applicationId *uuid.UUID
+	if applicationidParam := r.URL.Query().Get("applicationId"); applicationidParam != "" {
+		if id, err := uuid.Parse(applicationidParam); err != nil {
+			http.Error(w, "applicationId is not a valid UUID", http.StatusBadRequest)
+			return
+		} else {
+			applicationId = &id
+		}
+	}
 	if *auth.CurrentUserRole() == types.UserRoleVendor {
-		if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, *auth.CurrentOrgID()); err != nil {
+		if licenses, err := db.GetApplicationLicensesWithOrganizationID(
+			ctx, *auth.CurrentOrgID(), applicationId); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -180,7 +190,7 @@ func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if licenses, err :=
-			db.GetApplicationLicensesWithOwnerID(ctx, auth.CurrentUserID(), *auth.CurrentOrgID()); err != nil {
+			db.GetApplicationLicensesWithOwnerID(ctx, auth.CurrentUserID(), *auth.CurrentOrgID(), applicationId); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)

@@ -168,16 +168,21 @@ func RemoveVersionFromApplicationLicense(
 
 func GetApplicationLicensesWithOrganizationID(
 	ctx context.Context,
-	id uuid.UUID,
+	organizationID uuid.UUID,
+	applicationID *uuid.UUID,
 ) ([]types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		fmt.Sprintf(
-			"SELECT %v FROM ApplicationLicense al WHERE al.organization_id = @id",
+			"SELECT %v FROM ApplicationLicense al WHERE al.organization_id = @organizationId %v",
 			applicationLicenseWithVersionsOutputExpr,
+			andApplicationIdMatchesOrEmpty(applicationID),
 		),
-		pgx.NamedArgs{"id": id},
+		pgx.NamedArgs{
+			"organizationId": organizationID,
+			"applicationId":  applicationID,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
@@ -193,6 +198,7 @@ func GetApplicationLicensesWithOrganizationID(
 func GetApplicationLicensesWithOwnerID(
 	ctx context.Context,
 	ownerID, organizationID uuid.UUID,
+	applicationID *uuid.UUID,
 ) ([]types.ApplicationLicenseWithVersions, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
@@ -200,10 +206,15 @@ func GetApplicationLicensesWithOwnerID(
 		fmt.Sprintf(
 			"SELECT %v "+
 				"FROM ApplicationLicense al "+
-				"WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId",
+				"WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId %v",
 			applicationLicenseWithVersionsOutputExpr,
+			andApplicationIdMatchesOrEmpty(applicationID),
 		),
-		pgx.NamedArgs{"ownerId": ownerID, "organizationId": organizationID},
+		pgx.NamedArgs{
+			"ownerId":        ownerID,
+			"organizationId": organizationID,
+			"applicationId":  applicationID,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
@@ -214,6 +225,13 @@ func GetApplicationLicensesWithOwnerID(
 	} else {
 		return result, nil
 	}
+}
+
+func andApplicationIdMatchesOrEmpty(applicationID *uuid.UUID) string {
+	if applicationID != nil {
+		return " AND al.application_id = @applicationId "
+	}
+	return ""
 }
 
 func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.ApplicationLicenseWithVersions, error) {
