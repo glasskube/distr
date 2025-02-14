@@ -249,7 +249,9 @@ export class DeploymentTargetsComponent implements OnInit, AfterViewInit, OnDest
 
   showModal(templateRef: TemplateRef<unknown>) {
     this.hideModal();
-    this.modal = this.overlay.showModal(templateRef);
+    this.modal = this.overlay.showModal(templateRef, {
+      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+    });
   }
 
   hideModal(): void {

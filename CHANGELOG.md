@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.1.6](https://github.com/glasskube/distr/compare/1.1.5...1.1.6) (2025-02-14)
+
+
+### Bug Fixes
+
+* **backend:** deployment target update respects empty agent version ([#496](https://github.com/glasskube/distr/issues/496)) ([d8d954a](https://github.com/glasskube/distr/commit/d8d954a9965134387fe44714287dca82f9cae459))
+* **deps:** update dependency @sentry/angular to v9.1.0 ([#493](https://github.com/glasskube/distr/issues/493)) ([53b657d](https://github.com/glasskube/distr/commit/53b657de439d8e528b89aa32a7c295008c0a9074))
+* **deps:** update dependency posthog-js to v1.217.4 ([#485](https://github.com/glasskube/distr/issues/485)) ([a6f9922](https://github.com/glasskube/distr/commit/a6f9922eac4b8093696cf6233ff173ab4577c272))
+* **deps:** update dependency posthog-js to v1.217.5 ([#495](https://github.com/glasskube/distr/issues/495)) ([292df16](https://github.com/glasskube/distr/commit/292df16434510f7bf8a322e69299338e7b6cd01d))
+* **deps:** update kubernetes packages to v0.32.2 ([#486](https://github.com/glasskube/distr/issues/486)) ([ec950ce](https://github.com/glasskube/distr/commit/ec950cec66edfa0f2efd7d7575b508e4b8c12502))
+* **ui:** deploy modal scroll ([#494](https://github.com/glasskube/distr/issues/494)) ([0cac96f](https://github.com/glasskube/distr/commit/0cac96f7d6c63bc3a876e6b88667f410c0d0a08b))
+
+
+### Other
+
+* **backend:** increase per-second API rate limit from 5 to 10 ([#481](https://github.com/glasskube/distr/issues/481)) ([b14f8f2](https://github.com/glasskube/distr/commit/b14f8f2459aace5ab767856c9b8bcf2548b5734e))
+* **deps:** update dependency @types/jasmine to v5.1.6 ([#489](https://github.com/glasskube/distr/issues/489)) ([dae9719](https://github.com/glasskube/distr/commit/dae9719f50b11c0ab3e87588fa7e50f7f35b12ca))
+* **deps:** update dependency golangci-lint to v1.64.5 ([#490](https://github.com/glasskube/distr/issues/490)) ([6c27927](https://github.com/glasskube/distr/commit/6c279275f1060e71aa8528cfdd1e093a76bb8e4d))
+* **deps:** update dependency prettier to v3.5.1 ([#482](https://github.com/glasskube/distr/issues/482)) ([41314e7](https://github.com/glasskube/distr/commit/41314e77b4b505402de536aec972ef1099a4cb6e))
+* **deps:** update golangci/golangci-lint-action action to v6.3.3 ([#483](https://github.com/glasskube/distr/issues/483)) ([9d48e2b](https://github.com/glasskube/distr/commit/9d48e2bda0f544630b1c866f74f54e420eacdc5c))
+* **deps:** update golangci/golangci-lint-action action to v6.4.0 ([#491](https://github.com/glasskube/distr/issues/491)) ([9f58ad9](https://github.com/glasskube/distr/commit/9f58ad9f8ba05aca893320f30c02e766b5058ac5))
+* **deps:** update postgres docker tag to v17.3 ([#492](https://github.com/glasskube/distr/issues/492)) ([aa2ab6b](https://github.com/glasskube/distr/commit/aa2ab6bd817640cd4cc4e388a701e114aeea9f37))
+
+## [1.1.5](https://github.com/glasskube/distr/compare/1.1.4...1.1.5) (2025-02-13)
+
+
+### Bug Fixes
+
+* **deps:** update module helm.sh/helm/v3 to v3.17.1 ([#478](https://github.com/glasskube/distr/issues/478)) ([2c2d77f](https://github.com/glasskube/distr/commit/2c2d77fe230733f6585c369905f8cfa7f416b9d3))
+
+
+### Other
+
+* **deps:** update dependency go to v1.24.0 ([#466](https://github.com/glasskube/distr/issues/466)) ([9c9b271](https://github.com/glasskube/distr/commit/9c9b27145d2ff2c43e0f59bdae7774dd6604c99e))
+* **deps:** update golang docker tag to v1.24 ([#479](https://github.com/glasskube/distr/issues/479)) ([7863713](https://github.com/glasskube/distr/commit/786371356044ed6d7aa97e070b554877978ed83e))
+
+
+### Performance
+
+* **backend:** optimize database query for deployment target with latest status ([#477](https://github.com/glasskube/distr/issues/477)) ([39f6172](https://github.com/glasskube/distr/commit/39f61724ec98f04bdf354977e18a47bc9f1cd66a))
+
 ## [1.1.4](https://github.com/glasskube/distr/compare/1.1.3...1.1.4) (2025-02-13)
 
 
