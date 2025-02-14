@@ -45,7 +45,7 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	// TODO registry validatin probably
 
 	err = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-		if err := db.CreateApplicationLicense(ctx, &license.ApplicationLicense); errors.Is(err, apierrors.ErrConflict) {
+		if err := db.CreateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "A license with this name already exists", http.StatusBadRequest)
 			return err
 		} else if err != nil {
@@ -55,7 +55,7 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		for _, version := range license.Versions {
-			if err := db.AddVersionToApplicationLicense(ctx, &license.ApplicationLicense, version.ID); err != nil {
+			if err := db.AddVersionToApplicationLicense(ctx, &license.ApplicationLicenseBase, version.ID); err != nil {
 				log.Warn("could not add version to license", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -65,7 +65,13 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err == nil {
-		RespondJSON(w, license)
+		if completeLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
+			log.Warn("could not read previously created license", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			RespondJSON(w, license)
+		} else {
+			RespondJSON(w, completeLicense)
+		}
 	}
 }
 
@@ -95,7 +101,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	// TODO registry validatin probably
 
 	txErr := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-		if err := db.UpdateApplicationLicense(ctx, &license.ApplicationLicense); errors.Is(err, apierrors.ErrConflict) {
+		if err := db.UpdateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "A license with this name already exists", http.StatusBadRequest)
 			return err
 		} else if err != nil {
@@ -121,7 +127,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return err
 				} else {
-					if err := db.AddVersionToApplicationLicense(ctx, &license.ApplicationLicense, version.ID); err != nil {
+					if err := db.AddVersionToApplicationLicense(ctx, &license.ApplicationLicenseBase, version.ID); err != nil {
 						log.Warn("could not add version to license", zap.Error(err))
 						sentry.GetHubFromContext(ctx).CaptureException(err)
 						http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -149,7 +155,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 				} else {
 					// however removing the relations is possible iff the user chose "all versions" by versions = []
 					if err := db.RemoveVersionFromApplicationLicense(
-						ctx, &license.ApplicationLicense, existingVersion.ID); err != nil {
+						ctx, &license.ApplicationLicenseBase, existingVersion.ID); err != nil {
 						log.Warn("could not remove version from license", zap.Error(err))
 						sentry.GetHubFromContext(ctx).CaptureException(err)
 						http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -162,8 +168,15 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if txErr == nil {
-		// TODO versions?
-		RespondJSON(w, license)
+		if err == nil {
+			if completeLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
+				log.Warn("could not read previously updated license", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				RespondJSON(w, license)
+			} else {
+				RespondJSON(w, completeLicense)
+			}
+		}
 	}
 }
 
@@ -243,7 +256,7 @@ func applicationLicenseMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func canSeeLicense(auth authinfo.AuthInfo, license *types.ApplicationLicenseWithVersions) bool {
+func canSeeLicense(auth authinfo.AuthInfo, license *types.ApplicationLicense) bool {
 	if license.OrganizationID != *auth.CurrentOrgID() {
 		return false
 	}

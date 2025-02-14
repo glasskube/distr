@@ -32,9 +32,13 @@ const (
 		   ), array[]::record[]
 		) as versions
 	`
+	applicationLicenseCompleteOutputExpr = applicationLicenseWithVersionsOutputExpr + `,
+		(a.id, a.created_at, a.organization_id, a.name, a.type) as application,
+		CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (` + userAccountOutputExpr + `) END as owner
+	`
 )
 
-func CreateApplicationLicense(ctx context.Context, license *types.ApplicationLicense) error {
+func CreateApplicationLicense(ctx context.Context, license *types.ApplicationLicenseBase) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -59,7 +63,7 @@ func CreateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 	if err != nil {
 		return fmt.Errorf("could not insert ApplicationLicense: %w", err)
 	}
-	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseBase]); err != nil {
 		var pgError *pgconn.PgError
 		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
 			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
@@ -71,7 +75,7 @@ func CreateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 	}
 }
 
-func UpdateApplicationLicense(ctx context.Context, license *types.ApplicationLicense) error {
+func UpdateApplicationLicense(ctx context.Context, license *types.ApplicationLicenseBase) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -96,7 +100,7 @@ func UpdateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 	if err != nil {
 		return fmt.Errorf("could not insert ApplicationLicense: %w", err)
 	}
-	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseBase]); err != nil {
 		var pgError *pgconn.PgError
 		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
 			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
@@ -123,7 +127,7 @@ func RevokeApplicationLicenseWithID(ctx context.Context, id uuid.UUID) error {
 
 func AddVersionToApplicationLicense(
 	ctx context.Context,
-	license *types.ApplicationLicense,
+	license *types.ApplicationLicenseBase,
 	id uuid.UUID,
 ) error {
 	db := internalctx.GetDb(ctx)
@@ -145,7 +149,7 @@ func AddVersionToApplicationLicense(
 
 func RemoveVersionFromApplicationLicense(
 	ctx context.Context,
-	license *types.ApplicationLicense,
+	license *types.ApplicationLicenseBase,
 	id uuid.UUID,
 ) error {
 	db := internalctx.GetDb(ctx)
@@ -170,15 +174,16 @@ func GetApplicationLicensesWithOrganizationID(
 	ctx context.Context,
 	organizationID uuid.UUID,
 	applicationID *uuid.UUID,
-) ([]types.ApplicationLicenseWithVersions, error) {
+) ([]types.ApplicationLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		fmt.Sprintf(
-			"SELECT %v FROM ApplicationLicense al WHERE al.organization_id = @organizationId %v",
-			applicationLicenseWithVersionsOutputExpr,
+		"SELECT "+applicationLicenseCompleteOutputExpr+
+			"FROM ApplicationLicense al "+
+			"LEFT JOIN Application a ON al.application_id = a.id "+
+			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
+			"WHERE al.organization_id = @organizationId "+
 			andApplicationIdMatchesOrEmpty(applicationID),
-		),
 		pgx.NamedArgs{
 			"organizationId": organizationID,
 			"applicationId":  applicationID,
@@ -188,7 +193,7 @@ func GetApplicationLicensesWithOrganizationID(
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
 	}
 
-	if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions]); err != nil {
+	if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
 		return nil, fmt.Errorf("could not collect ApplicationLicense: %w", err)
 	} else {
 		return result, nil
@@ -199,17 +204,16 @@ func GetApplicationLicensesWithOwnerID(
 	ctx context.Context,
 	ownerID, organizationID uuid.UUID,
 	applicationID *uuid.UUID,
-) ([]types.ApplicationLicenseWithVersions, error) {
+) ([]types.ApplicationLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		fmt.Sprintf(
-			"SELECT %v "+
-				"FROM ApplicationLicense al "+
-				"WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId %v",
-			applicationLicenseWithVersionsOutputExpr,
+		"SELECT "+applicationLicenseCompleteOutputExpr+
+			"FROM ApplicationLicense al "+
+			"LEFT JOIN Application a ON al.application_id = a.id "+
+			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
+			"WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId "+
 			andApplicationIdMatchesOrEmpty(applicationID),
-		),
 		pgx.NamedArgs{
 			"ownerId":        ownerID,
 			"organizationId": organizationID,
@@ -220,7 +224,7 @@ func GetApplicationLicensesWithOwnerID(
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
 	}
 
-	if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions]); err != nil {
+	if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
 		return nil, fmt.Errorf("could not collect ApplicationLicense: %w", err)
 	} else {
 		return result, nil
@@ -234,14 +238,15 @@ func andApplicationIdMatchesOrEmpty(applicationID *uuid.UUID) string {
 	return ""
 }
 
-func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.ApplicationLicenseWithVersions, error) {
+func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.ApplicationLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		fmt.Sprintf(
-			"SELECT %v FROM ApplicationLicense al WHERE al.id = @id",
-			applicationLicenseWithVersionsOutputExpr,
-		),
+		"SELECT "+applicationLicenseCompleteOutputExpr+
+			"FROM ApplicationLicense al "+
+			"LEFT JOIN Application a ON al.application_id = a.id "+
+			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
+			"WHERE al.id = @id ",
 		pgx.NamedArgs{"id": id},
 	)
 	if err != nil {
@@ -249,7 +254,7 @@ func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.Applic
 	}
 
 	if result, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicenseWithVersions]); err != nil {
+		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}

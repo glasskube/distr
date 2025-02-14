@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type ApplicationLicense struct {
+type ApplicationLicenseBase struct {
 	ID                 uuid.UUID  `db:"id" json:"id"`
 	CreatedAt          time.Time  `db:"created_at" json:"createdAt"`
 	Name               string     `db:"name" json:"name"`
@@ -20,6 +20,12 @@ type ApplicationLicense struct {
 }
 
 type ApplicationLicenseWithVersions struct {
-	ApplicationLicense
+	ApplicationLicenseBase
 	Versions []ApplicationVersion `db:"versions" json:"versions"`
+}
+
+type ApplicationLicense struct {
+	ApplicationLicenseWithVersions
+	Application Application  `db:"application" json:"application"`
+	Owner       *UserAccount `db:"owner" json:"owner,omitempty"`
 }
