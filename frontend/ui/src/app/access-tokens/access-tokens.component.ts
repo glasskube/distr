@@ -6,7 +6,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faClipboard, faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
 import {firstValueFrom, startWith, Subject, switchMap} from 'rxjs';
-import {RelativeDatePipe} from '../../util/dates';
+import {isExpired, RelativeDatePipe} from '../../util/dates';
 import {drawerFlyInOut} from '../animations/drawer';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AccessTokensService} from '../services/access-tokens.service';
@@ -54,10 +54,6 @@ export class AccessTokensComponent {
 
   protected editFormLoading = false;
   protected createdToken: AccessTokenWithKey | null = null;
-
-  public isExpired(token: AccessToken): boolean {
-    return !token.expiresAt || dayjs(token.expiresAt).isBefore();
-  }
 
   public openDrawer(template: TemplateRef<unknown>) {
     this.hideDrawer();
@@ -108,4 +104,6 @@ export class AccessTokensComponent {
       this.toast.success('copied to clipboard');
     }
   }
+
+  protected readonly isExpired = isExpired;
 }

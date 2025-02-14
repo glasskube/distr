@@ -97,7 +97,7 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsEmptyUUID(dt.AgentVersion.ID) {
+	if dt.AgentVersion.ID != uuid.Nil {
 		dt.AgentVersionID = &dt.AgentVersion.ID
 	}
 

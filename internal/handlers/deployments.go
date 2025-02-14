@@ -93,7 +93,7 @@ func validateDeploymentRequest(
 		if deploymentRequest.ApplicationLicenseID == nil && *auth.CurrentUserRole() == types.UserRoleCustomer {
 			http.Error(w, "applicationLicenseId is required", http.StatusBadRequest)
 		} else {
-			if license, err = db.GetApplicationLicenseWithID(ctx, *deploymentRequest.ApplicationLicenseID); err != nil {
+			if license, err = db.GetApplicationLicenseByID(ctx, *deploymentRequest.ApplicationLicenseID); err != nil {
 				if errors.Is(err, apierrors.ErrNotFound) {
 					return licenseNotFound(w)
 				} else {
