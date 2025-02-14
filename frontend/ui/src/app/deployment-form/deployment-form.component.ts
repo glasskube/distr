@@ -131,8 +131,13 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
     switchMap(([applicationId, isLicensingEnabled]) =>
       isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
     ),
-    combineLatestWith(this.deploymentTarget$),
-    map(([licenses, dt]) => licenses.filter((l) => l.ownerUserAccountId === dt?.createdBy?.id)),
+    combineLatestWith(
+      this.deploymentTarget$.pipe(
+        map((dt) => dt?.createdBy?.id),
+        distinctUntilChanged()
+      )
+    ),
+    map(([licenses, targetCreatedById]) => licenses.filter((l) => l.ownerUserAccountId === targetCreatedById)),
     shareReplay(1)
   );
 
