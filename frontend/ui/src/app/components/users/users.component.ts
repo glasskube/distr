@@ -4,7 +4,14 @@ import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faClipboard, faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircleExclamation,
+  faClipboard,
+  faMagnifyingGlass,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
   combineLatest,
@@ -30,6 +37,7 @@ import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
 import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
+import {FeatureFlagService} from '../../services/feature-flag.service';
 
 @Component({
   selector: 'app-users',
@@ -49,6 +57,7 @@ export class UsersComponent implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly users = inject(UsersService);
   private readonly overlay = inject(OverlayService);
+  readonly featureFlags = inject(FeatureFlagService);
 
   public readonly faMagnifyingGlass = faMagnifyingGlass;
   public readonly faPlus = faPlus;
@@ -162,4 +171,6 @@ export class UsersComponent implements OnDestroy {
       this.toast.success('Invite URL has been copied');
     }
   }
+
+  protected readonly faCircleExclamation = faCircleExclamation;
 }
