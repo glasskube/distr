@@ -1,12 +1,21 @@
 import {AsyncPipe} from '@angular/common';
-import {Component, forwardRef, inject, OnDestroy, OnInit} from '@angular/core';
-import {ControlValueAccessor, FormBuilder, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators} from '@angular/forms';
+import {AfterViewInit, Component, forwardRef, inject, Injector, OnDestroy, OnInit} from '@angular/core';
+import {
+  ControlValueAccessor,
+  FormBuilder,
+  NG_VALUE_ACCESSOR,
+  NgControl,
+  ReactiveFormsModule,
+  TouchedChangeEvent,
+  Validators,
+} from '@angular/forms';
 import {
   catchError,
   combineLatest,
   combineLatestWith,
   debounceTime,
   distinctUntilChanged,
+  filter,
   map,
   NEVER,
   of,
@@ -46,12 +55,13 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
   ],
   templateUrl: './deployment-form.component.html',
 })
-export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueAccessor {
+export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy, ControlValueAccessor {
   protected readonly featureFlags = inject(FeatureFlagService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly fb = inject(FormBuilder);
   private readonly deplyomentTargets = inject(DeploymentTargetsService);
+  private readonly injector = inject(Injector);
 
   protected readonly deployForm = this.fb.nonNullable.group({
     deploymentTargetId: this.fb.nonNullable.control('', Validators.required),
@@ -272,6 +282,17 @@ export class DeploymentFormComponent implements OnInit, OnDestroy, ControlValueA
     // This is needed because the first value could be missed otherwise
     // TODO: Find a better solution for this
     this.applicationLicenseId$.pipe(takeUntil(this.destroyed$)).subscribe();
+  }
+
+  ngAfterViewInit(): void {
+    // adapted from https://github.com/angular/angular/issues/45089
+    this.injector
+      .get(NgControl)
+      .control!.events.pipe(
+        takeUntil(this.destroyed$),
+        filter((event) => event instanceof TouchedChangeEvent && event.touched)
+      )
+      .subscribe(() => this.deployForm.markAllAsTouched());
   }
 
   ngOnDestroy(): void {
