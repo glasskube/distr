@@ -159,10 +159,6 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.deployForm.valid) {
-      return;
-    }
-
     try {
       this.loading = true;
       const deployment = this.deployForm.value!;
