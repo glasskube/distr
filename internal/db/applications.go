@@ -239,3 +239,31 @@ func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) 
 		return &data, nil
 	}
 }
+
+// AuthorizeApplicationVersion checks if a license exists that is owned by the user with the given userID that is
+// either unrestricted (i.e. it references no application versions) or it references the application version with
+// the given versionID.
+//
+// IMPORTANT: This function does not check whether the licensing feature is enabled for the organization holding the
+// license or what role the user has in that organization. Those MUST be checked before calling this function.
+func AuthorizeApplicationVersion(ctx context.Context, versionID, userID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(
+		ctx,
+		`SELECT exists(
+			SELECT al.id
+			FROM ApplicationLicense al
+			LEFT JOIN ApplicationLicense_ApplicationVersion alav
+				ON al.id = alav.application_license_id
+			LEFT JOIN Organization o
+				ON al.organization_id = o.id
+			WHERE al.owner_useraccount_id = @userId AND 'licensing' NOT IN o.features AND (
+				alav.application_version_id IS NULL OR
+				alav.application_version_id = @versionId
+			)
+		)`,
+		pgx.NamedArgs{"versionId": versionID, "userId": userID},
+	)
+	var exists bool
+	return exists, row.Scan(&exists)
+}
