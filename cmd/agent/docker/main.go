@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/zap"
@@ -82,12 +83,18 @@ loop:
 				continue
 			}
 
-			reportedStatus, reportedErr := ApplyComposeFile(ctx, resource.Deployment.ComposeFile, resource.Deployment.EnvFile)
-			if err := client.Status(ctx, resource.Deployment.RevisionID, reportedStatus, reportedErr); err != nil {
-				logger.Error("failed to send status", zap.Error(err))
+			var status string
+			err = EnsureAuth(ctx, *resource.Deployment)
+			if err != nil {
+				logger.Error("docker auth error", zap.Error(err))
+			} else {
+				status, err = ApplyComposeFile(ctx, *resource.Deployment)
+			}
+
+			if statusErr := client.Status(ctx, resource.Deployment.RevisionID, status, err); statusErr != nil {
+				logger.Error("failed to send status", zap.Error(statusErr))
 			}
 		}
-
 	}
 	logger.Info("shutting down")
 }
@@ -186,15 +193,15 @@ func ApplyAgentComposeFile(ctx context.Context, manifest map[string]any) error {
 	return err
 }
 
-func ApplyComposeFile(ctx context.Context, composeFileData []byte, envFileData []byte) (string, error) {
+func ApplyComposeFile(ctx context.Context, deployment api.DockerAgentDeployment) (string, error) {
 	var err error
 	var envFile *os.File
-	if envFileData != nil {
+	if deployment.EnvFile != nil {
 		if envFile, err = os.CreateTemp("", "distr-env"); err != nil {
 			logger.Error("", zap.Error(err))
 			return "", fmt.Errorf("failed to create env file in tmp directory: %w", err)
 		} else {
-			if _, err = envFile.Write(envFileData); err != nil {
+			if _, err = envFile.Write(deployment.EnvFile); err != nil {
 				logger.Error("", zap.Error(err))
 				return "", fmt.Errorf("failed to write env file: %w", err)
 			}
@@ -214,7 +221,8 @@ func ApplyComposeFile(ctx context.Context, composeFileData []byte, envFileData [
 	composeArgs = append(composeArgs, "-f", "-", "up", "-d", "--quiet-pull")
 
 	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
-	cmd.Stdin = bytes.NewReader(composeFileData)
+	cmd.Stdin = bytes.NewReader(deployment.ComposeFile)
+	cmd.Env = append(os.Environ(), DockerConfigEnv(deployment)...)
 
 	var cmdOut []byte
 	cmdOut, err = cmd.CombinedOutput()

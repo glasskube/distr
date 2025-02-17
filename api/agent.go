@@ -9,8 +9,14 @@ type AgentResource struct {
 	Version types.AgentVersion `json:"version"`
 }
 
+type AgentRegistryAuth struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type AgentDeployment struct {
-	RevisionID uuid.UUID `json:"revisionId"`
+	RevisionID   uuid.UUID                    `json:"revisionId"`
+	RegistryAuth map[string]AgentRegistryAuth `json:"registryAuth"`
 }
 
 type DockerAgentResource struct {

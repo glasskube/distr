@@ -142,9 +142,30 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		appVersion = av
 	}
 
+	var baseResource = api.AgentResource{Version: deploymentTarget.AgentVersion}
+	var baseDeployment api.AgentDeployment
+
+	if deployment != nil && deployment.ApplicationLicenseID != nil {
+		baseDeployment.RevisionID = deployment.DeploymentRevisionID
+
+		if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
+			msg := "failed to get ApplicationLicense from DB"
+			log.Error(msg, zap.Error(err))
+			statusMessage = fmt.Sprintf("%v: %v", msg, err)
+			w.WriteHeader(http.StatusInternalServerError)
+		} else if license.RegistryURL != nil {
+			baseDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
+				*license.RegistryURL: {
+					Username: *license.RegistryUsername,
+					Password: *license.RegistryPassword,
+				},
+			}
+		}
+	}
+
 	// TODO: Consider consolidating all types into the same response format
 	if deploymentTarget.Type == types.DeploymentTypeDocker {
-		response := api.DockerAgentResource{AgentResource: api.AgentResource{Version: deploymentTarget.AgentVersion}}
+		response := api.DockerAgentResource{AgentResource: baseResource}
 		if deployment != nil && appVersion != nil {
 			if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
 				log.Warn("parse error", zap.Error(err))
@@ -156,7 +177,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				response.Deployment = &api.DockerAgentDeployment{
-					AgentDeployment: api.AgentDeployment{RevisionID: deployment.DeploymentRevisionID},
+					AgentDeployment: baseDeployment,
 					ComposeFile:     patchedComposeFile,
 					EnvFile:         deployment.EnvFileData,
 				}
@@ -166,13 +187,10 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		RespondJSON(w, response)
 	} else {
-		response := api.KubernetesAgentResource{
-			AgentResource: api.AgentResource{Version: deploymentTarget.AgentVersion},
-			Namespace:     *deploymentTarget.Namespace,
-		}
+		response := api.KubernetesAgentResource{AgentResource: baseResource, Namespace: *deploymentTarget.Namespace}
 		if deployment != nil && appVersion != nil {
 			response.Deployment = &api.KubernetesAgentDeployment{
-				AgentDeployment: api.AgentDeployment{RevisionID: deployment.DeploymentRevisionID},
+				AgentDeployment: baseDeployment,
 				ReleaseName:     *deployment.ReleaseName,
 				ChartUrl:        *appVersion.ChartUrl,
 				ChartVersion:    *appVersion.ChartVersion,
