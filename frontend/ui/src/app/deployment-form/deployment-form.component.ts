@@ -258,10 +258,13 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       });
 
     this.licenses$.pipe(takeUntil(this.destroyed$)).subscribe((licenses) => {
-      if (licenses.length > 0 && licenses[0].id) {
+      // Only update the form control, if the previously selected version is no longer in the list
+      if (
+        licenses.length > 0 &&
+        licenses[0].id &&
+        licenses.every((l) => l.id !== this.deployForm.controls.applicationLicenseId.value)
+      ) {
         this.deployForm.controls.applicationLicenseId.setValue(licenses[0].id);
-      } else {
-        this.deployForm.controls.applicationLicenseId.reset();
       }
     });
 
