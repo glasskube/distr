@@ -18,8 +18,6 @@ import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
 import {ApplicationsService} from '../services/applications.service';
 import {EditLicenseComponent} from './edit-license.component';
-import {AccessToken} from '../../../../../sdk/js/src';
-import dayjs from 'dayjs';
 import {isExpired} from '../../util/dates';
 
 @Component({
@@ -37,7 +35,7 @@ import {isExpired} from '../../util/dates';
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class LicensesComponent implements OnInit, OnDestroy {
+export class LicensesComponent implements OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly licensesService = inject(LicensesService);
   private readonly applicationsService = inject(ApplicationsService);
@@ -62,6 +60,11 @@ export class LicensesComponent implements OnInit, OnDestroy {
 
   private manageLicenseDrawerRef?: DialogRef;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPlus = faPlus;
+  protected readonly faXmark = faXmark;
+  protected readonly faPen = faPen;
+  protected readonly faTrash = faTrash;
+  protected readonly isExpired = isExpired;
 
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
@@ -86,7 +89,6 @@ export class LicensesComponent implements OnInit, OnDestroy {
   async saveLicense() {
     this.editForm.markAllAsTouched();
     const {license} = this.editForm.value;
-    console.log('save', license);
     if (this.editForm.valid && license) {
       this.editFormLoading = true;
       const action = license.id ? this.licensesService.update(license) : this.licensesService.create(license);
@@ -125,15 +127,5 @@ export class LicensesComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
-  }
-
-  protected readonly faPlus = faPlus;
-  protected readonly faXmark = faXmark;
-  protected readonly faPen = faPen;
-  protected readonly faTrash = faTrash;
-  protected readonly isExpired = isExpired;
-
-  ngOnInit(): void {
-    this.editForm.controls.license.valueChanges.pipe(tap(console.log)).subscribe();
   }
 }

@@ -5,10 +5,10 @@ import {
   forwardRef,
   inject,
   Injector,
-  Input,
   OnDestroy,
   OnInit,
   signal,
+  WritableSignal,
 } from '@angular/core';
 import {AsyncPipe} from '@angular/common';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -21,23 +21,19 @@ import {
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
-  Validators,
   TouchedChangeEvent,
-  AbstractControl,
-  ValidatorFn,
+  Validators,
 } from '@angular/forms';
 import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
+import {first, firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
 import {ApplicationLicense} from '../types/application-license';
 import {ApplicationsService} from '../services/applications.service';
-import {Application, ApplicationVersion} from '../../../../../sdk/js/src';
+import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
 import {UsersService} from '../services/users.service';
 import dayjs from 'dayjs';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {RouterLink} from '@angular/router';
 import {dropdownAnimation} from '../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-edit-license',
@@ -58,10 +54,12 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   private readonly applicationsService = inject(ApplicationsService);
   private readonly usersService = inject(UsersService);
   applications$ = this.applicationsService.list();
-  customers$ = this.usersService.getUsers().pipe(map((accounts) => accounts.filter((a) => a.userRole === 'customer'))); // TODO cache users response
-  private fb = inject(FormBuilder);
-  license: ApplicationLicense | undefined;
+  customers$ = this.usersService.getUsers().pipe(
+    map((accounts) => accounts.filter((a) => a.userRole === 'customer')),
+    first()
+  );
 
+  private fb = inject(FormBuilder);
   editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined, {nonNullable: true}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
@@ -95,16 +93,17 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     ),
   });
   editFormLoading = false;
-  selectedApplication: Application | undefined; // TODO fancy
+  license: WritableSignal<ApplicationLicense | undefined> = signal(undefined);
+  selectedApplication: WritableSignal<Application | undefined> = signal(undefined);
 
   dropdownOpen = signal(false);
   protected versionsSelected = 0;
 
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
-
-  toggleDropdown() {
-    this.dropdownOpen.update((v) => !v);
-  }
+  protected readonly faChevronDown = faChevronDown;
+  protected readonly faPlus = faPlus;
+  protected readonly faXmark = faXmark;
+  protected readonly faPen = faPen;
 
   constructor() {
     effect(() => {
@@ -161,33 +160,20 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         })
       )
       .subscribe((selectedApplication) => {
-        this.selectedApplication = selectedApplication;
         this.versionsArray.clear({emitEvent: false});
-        const versions = selectedApplication?.versions ?? [];
+        const applicationVersions = selectedApplication?.versions ?? [];
+        const licenseVersions = this.license()?.versions;
         let anySelected = false;
-        for (let i = 0; i < versions.length; i++) {
-          const version = versions[i];
-          const selected = !!this.license?.versions?.some((v) => v.id === version.id);
-          /*
-          business logic for now:
-          * if license exists but not assigned yet:
-              - owner is enabled
-              - "all versions" and all app versions are enabled
-              - application is disabled
-              - registry stuff is enabled
-          * if license assigned already:
-              - owner is disabled
-              - application is disabled
-              - if "all versions" selected: "all versions" and all app versions disabled
-              - if specific versions selected: "all versions" and unselected versions enabled; already selected versions disabled
-              - registry stuff is enabled
-           */
-          this.versionsArray.push(this.fb.control(selected), {emitEvent: i === versions.length - 1});
+        for (let i = 0; i < applicationVersions.length; i++) {
+          const version = applicationVersions[i];
+          const selected = !!licenseVersions?.some((v) => v.id === version.id);
+          this.versionsArray.push(this.fb.control(selected), {emitEvent: i === applicationVersions.length - 1});
           anySelected = anySelected || selected;
         }
         if (!anySelected) {
           this.editForm.controls.includeAllVersions.patchValue(true);
         }
+        this.selectedApplication.set(selectedApplication);
       });
   }
 
@@ -195,10 +181,11 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     if (includeAllVersions) {
       return [];
     }
+    const app = this.selectedApplication();
     return versionControls
       .map((v, idx) => {
         if (v) {
-          return this.selectedApplication?.versions?.[idx];
+          return app?.versions?.[idx];
         }
         return undefined;
       })
@@ -212,12 +199,15 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .control!.events.pipe(takeUntil(this.destroyed$))
       .subscribe((event) => {
         if (event instanceof TouchedChangeEvent) {
-          console.log('event', event);
           if (event.touched) {
             this.editForm.markAllAsTouched();
           }
         }
       });
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen.update((v) => !v);
   }
 
   ngOnDestroy() {
@@ -228,10 +218,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   get versionsArray() {
     return this.editForm.controls.versions as FormArray;
   }
-
-  protected readonly faPlus = faPlus;
-  protected readonly faXmark = faXmark;
-  protected readonly faPen = faPen;
 
   private onChange: (l: ApplicationLicense | undefined) => void = () => {};
   private onTouched: () => void = () => {};
@@ -245,11 +231,8 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   }
 
   writeValue(license: ApplicationLicense | undefined): void {
-    console.log('writeValue', license);
-    this.license = license;
+    this.license.set(license);
     if (license) {
-      // TODO disable: applicationId if not assigned yet; assignee if assigned
-      // TODO same on backend
       this.editForm.patchValue({
         id: license.id,
         name: license.name,
@@ -268,11 +251,8 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.editForm.controls.applicationId.disable({emitEvent: false});
         this.editForm.controls.ownerUserAccountId.disable({emitEvent: false});
       }
-      // TODO probably more disabling/enabling logic??
     } else {
       this.editForm.reset();
     }
   }
-
-  protected readonly faChevronDown = faChevronDown;
 }

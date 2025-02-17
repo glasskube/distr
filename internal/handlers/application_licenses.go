@@ -91,10 +91,12 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	} else if license.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	}
-	if existing.OwnerUserAccountID != nil &&
+	} else if existing.OwnerUserAccountID != nil &&
 		(license.OwnerUserAccountID == nil || *existing.OwnerUserAccountID != *license.OwnerUserAccountID) {
 		http.Error(w, "Changing the license owner is not allowed", http.StatusBadRequest)
+		return
+	} else if existing.ApplicationID != license.ApplicationID {
+		http.Error(w, "Changing the application is not allowed", http.StatusBadRequest)
 		return
 	}
 

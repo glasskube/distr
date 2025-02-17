@@ -71,7 +71,7 @@
                     <span class="max-w-32 sm:max-w-64 lg:max-w-128 overflow-hidden text-ellipsis">
                       {{
                         license.application?.name +
-                          ((license.versions || [])?.length === 0
+                          ((license.versions || []).length === 0
                             ? ' (unrestricted)'
                             : ' (' + license.versions!.length + ' versions)')
                       }}
