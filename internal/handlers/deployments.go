@@ -88,27 +88,6 @@ func validateDeploymentRequest(
 		return err
 	}
 
-	if org.HasFeature(types.FeatureLicensing) {
-		if request.ApplicationLicenseID != nil {
-			if license, err = db.GetApplicationLicenseByID(ctx, *request.ApplicationLicenseID); err != nil {
-				if errors.Is(err, apierrors.ErrNotFound) {
-					return licenseNotFoundError(w)
-				} else {
-					log.Error("could not ApplicationLicense", zap.Error(err))
-					sentry.GetHubFromContext(ctx).CaptureException(err)
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					return err
-				}
-			}
-
-		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			// license ID is required for customer but optional for vendor
-			return badRequestError(w, "applicationLicenseId is required")
-		}
-	} else if request.ApplicationLicenseID != nil {
-		return badRequestError(w, "unexpected applicationLicenseId")
-	}
-
 	if app, err =
 		db.GetApplicationForApplicationVersionID(ctx, request.ApplicationVersionID, orgId); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
@@ -138,6 +117,39 @@ func validateDeploymentRequest(
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return err
 		}
+	}
+
+	if target.Deployment != nil {
+		if request.ApplicationLicenseID == nil {
+			if target.Deployment.ApplicationLicenseID != nil {
+				request.ApplicationLicenseID = target.Deployment.ApplicationLicenseID
+			}
+		} else if target.Deployment.ApplicationLicenseID == nil {
+			return badRequestError(w, "can not update license")
+		} else if *request.ApplicationLicenseID != *target.Deployment.ApplicationLicenseID {
+			return badRequestError(w, "can not update license")
+		}
+	}
+
+	if org.HasFeature(types.FeatureLicensing) {
+		if request.ApplicationLicenseID != nil {
+			if license, err = db.GetApplicationLicenseByID(ctx, *request.ApplicationLicenseID); err != nil {
+				if errors.Is(err, apierrors.ErrNotFound) {
+					return licenseNotFoundError(w)
+				} else {
+					log.Error("could not ApplicationLicense", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return err
+				}
+			}
+
+		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
+			// license ID is required for customer but optional for vendor
+			return badRequestError(w, "applicationLicenseId is required")
+		}
+	} else if request.ApplicationLicenseID != nil {
+		return badRequestError(w, "unexpected applicationLicenseId")
 	}
 
 	if err = validateDeploymentRequestLicense(ctx, w, request, license, app, target); err != nil {
