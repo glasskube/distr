@@ -147,9 +147,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           applicationId: val.applicationId,
           versions: this.getSelectedVersions(val.includeAllVersions!, val.versions ?? []),
           ownerUserAccountId: val.ownerUserAccountId,
-          registryUrl: val.registry.url ?? undefined,
-          registryUsername: val.registry.username,
-          registryPassword: val.registry.password,
+          registryUrl: val.registry.url?.trim() || undefined,
+          registryUsername: val.registry.username?.trim() || undefined,
+          registryPassword: val.registry.password?.trim() || undefined,
         });
       } else {
         this.onChange(undefined);
@@ -252,9 +252,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         includeAllVersions: (license.versions ?? []).length === 0,
         ownerUserAccountId: license.ownerUserAccountId,
         registry: {
-          url: license.registryUrl,
-          username: license.registryUsername,
-          password: license.registryPassword,
+          url: license.registryUrl || '',
+          username: license.registryUsername || '',
+          password: license.registryPassword || '',
         },
       });
       if (license.ownerUserAccountId) {

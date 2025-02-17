@@ -42,7 +42,7 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	}
 	license.OrganizationID = *auth.CurrentOrgID()
 
-	// TODO registry validatin probably
+	sanitizeRegistryInput(license)
 
 	err = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if err := db.CreateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
@@ -99,8 +99,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Changing the application is not allowed", http.StatusBadRequest)
 		return
 	}
-
-	// TODO registry validatin probably
+	sanitizeRegistryInput(license)
 
 	txErr := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if err := db.UpdateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
@@ -179,6 +178,14 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 				RespondJSON(w, completeLicense)
 			}
 		}
+	}
+}
+
+func sanitizeRegistryInput(license types.ApplicationLicenseWithVersions) {
+	if license.RegistryURL == nil || (*license.RegistryURL) == "" {
+		license.RegistryURL = nil
+		license.RegistryUsername = nil
+		license.RegistryPassword = nil
 	}
 }
 
