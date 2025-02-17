@@ -2,12 +2,14 @@ import {
   AfterViewInit,
   Component,
   effect,
+  ElementRef,
   forwardRef,
   inject,
   Injector,
   OnDestroy,
   OnInit,
   signal,
+  ViewChild,
   WritableSignal,
 } from '@angular/core';
 import {AsyncPipe} from '@angular/common';
@@ -98,6 +100,8 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
 
   dropdownOpen = signal(false);
   protected versionsSelected = 0;
+
+  dropdownWidth: number = 0;
 
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faChevronDown = faChevronDown;
@@ -206,8 +210,14 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       });
   }
 
+  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef;
+  // _triggerRect: ClientRect;
+
   toggleDropdown() {
     this.dropdownOpen.update((v) => !v);
+    if (this.dropdownOpen()) {
+      this.dropdownWidth = (this.dropdownTriggerButton.nativeElement as Element).getBoundingClientRect().width;
+    }
   }
 
   ngOnDestroy() {
