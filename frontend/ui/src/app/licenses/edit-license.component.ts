@@ -109,6 +109,8 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
 
+  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef;
+
   constructor() {
     effect(() => {
       if (!this.dropdownOpen()) {
@@ -209,9 +211,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         }
       });
   }
-
-  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef;
-  // _triggerRect: ClientRect;
 
   toggleDropdown() {
     this.dropdownOpen.update((v) => !v);
