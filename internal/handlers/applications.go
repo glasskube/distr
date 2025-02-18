@@ -38,7 +38,6 @@ func ApplicationsRouter(r chi.Router) {
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
 			r.With(applicationMiddleware).Group(func(r chi.Router) {
-				r.Get("/", getApplicationVersions)
 				r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
 			})
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
@@ -136,22 +135,6 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 
 func getApplication(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, internalctx.GetApplication(r.Context()))
-}
-
-func getApplicationVersions(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	auth := auth.Authentication.Require(ctx)
-	log := internalctx.GetLogger(ctx)
-
-	if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	} else if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-	} else {
-		RespondJSON(w, internalctx.GetApplication(ctx).Versions)
-	}
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
