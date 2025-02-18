@@ -121,6 +121,7 @@ func main() {
 				logger.Info("current helm release does not exist")
 			} else {
 				logger.Error("could not get latest helm revision", zap.Error(err))
+				pushErrorStatus(ctx, err)
 				continue
 			}
 		} else if currentDeployment != nil {
