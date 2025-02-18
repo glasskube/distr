@@ -45,7 +45,7 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 
 	sanitizeRegistryInput(license)
 
-	err = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if err := db.CreateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "A license with this name already exists", http.StatusBadRequest)
 			return err
@@ -63,17 +63,17 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 		}
-		return nil
-	})
-	if err == nil {
-		if completeLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
+
+		if createdLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
 			log.Warn("could not read previously created license", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
-			RespondJSON(w, license)
+			return err
 		} else {
-			RespondJSON(w, completeLicense)
+			RespondJSON(w, createdLicense)
 		}
-	}
+
+		return nil
+	})
 }
 
 func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +102,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	}
 	sanitizeRegistryInput(license)
 
-	txErr := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if err := db.UpdateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "A license with this name already exists", http.StatusBadRequest)
 			return err
@@ -159,17 +159,16 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		return nil
-	})
-	if txErr == nil {
-		if completeLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
+		if updatedLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
 			log.Warn("could not read previously updated license", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
-			RespondJSON(w, license)
+			return err
 		} else {
-			RespondJSON(w, completeLicense)
+			RespondJSON(w, updatedLicense)
 		}
-	}
+
+		return nil
+	})
 }
 
 func sanitizeRegistryInput(license types.ApplicationLicenseWithVersions) {
