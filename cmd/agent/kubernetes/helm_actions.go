@@ -22,7 +22,11 @@ var (
 	helmActionConfigCache = make(map[string]*action.Configuration)
 )
 
-func GetHelmActionConfig(ctx context.Context, namespace string, deployment api.AgentDeployment) (*action.Configuration, error) {
+func GetHelmActionConfig(
+	ctx context.Context,
+	namespace string,
+	deployment api.AgentDeployment,
+) (*action.Configuration, error) {
 	if cfg, ok := helmActionConfigCache[namespace]; ok {
 		return cfg, nil
 	}
@@ -47,7 +51,11 @@ func GetHelmActionConfig(ctx context.Context, namespace string, deployment api.A
 	}
 }
 
-func GetLatestHelmRelease(ctx context.Context, namespace string, deployment api.KubernetesAgentDeployment) (*release.Release, error) {
+func GetLatestHelmRelease(
+	ctx context.Context,
+	namespace string,
+	deployment api.KubernetesAgentDeployment,
+) (*release.Release, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
@@ -141,7 +149,11 @@ func RunHelmUpgrade(
 	}
 }
 
-func GetHelmManifest(ctx context.Context, namespace string, deployment api.KubernetesAgentDeployment) ([]*unstructured.Unstructured, error) {
+func GetHelmManifest(
+	ctx context.Context,
+	namespace string,
+	deployment api.KubernetesAgentDeployment,
+) ([]*unstructured.Unstructured, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
