@@ -1,5 +1,5 @@
 import {OverlayModule} from '@angular/cdk/overlay';
-import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {combineLatestWith, firstValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
@@ -14,6 +14,7 @@ import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
+import {dropdownAnimation} from '../animations/dropdown';
 
 @Component({
   selector: 'app-application-detail',
@@ -30,6 +31,7 @@ import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../uti
     YamlEditorComponent,
   ],
   templateUrl: './application-detail.component.html',
+  animations: [dropdownAnimation],
 })
 export class ApplicationDetailComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
@@ -45,7 +47,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }),
     tap((app) => {
       this.newVersionForm.reset();
-      if(app) {
+      if (app) {
         if (app.type === 'kubernetes') {
           enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
           disableControlsWithoutEvent(this.newVersionForm.controls.docker);
@@ -77,8 +79,10 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   newVersionFormLoading = false;
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
+  readonly dropdownOpen = signal(false);
 
   ngOnInit() {
+    this.route.url.pipe().subscribe(() => this.dropdownOpen.set(false));
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -93,6 +97,10 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen.update((v) => !v);
   }
 
   async createVersion() {
@@ -143,7 +151,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   async fillVersionFormWith(version: ApplicationVersion) {
     const application = await firstValueFrom(this.application$);
-    if(!application) {
+    if (!application) {
       return;
     }
     if (application.type === 'kubernetes') {

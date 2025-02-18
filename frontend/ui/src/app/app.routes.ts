@@ -146,12 +146,12 @@ export const routes: Routes = [
           {
             path: 'applications',
             component: ApplicationsPageComponent,
-            canActivate: [requiredRoleGuard('vendor')]
+            canActivate: [requiredRoleGuard('vendor')],
           },
           {
             path: 'applications/:applicationId',
             component: ApplicationDetailComponent, // TODO try to make it child route of applications again
-            canActivate: [requiredRoleGuard('vendor')]
+            canActivate: [requiredRoleGuard('vendor')],
           },
           {path: 'deployments', component: DeploymentsPageComponent},
           {
