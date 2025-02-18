@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/zap"
@@ -84,7 +85,7 @@ loop:
 			}
 
 			var status string
-			err = EnsureAuth(ctx, *resource.Deployment)
+			_, err = agentauth.EnsureAuth(ctx, resource.Deployment.AgentDeployment)
 			if err != nil {
 				logger.Error("docker auth error", zap.Error(err))
 			} else {
@@ -222,7 +223,7 @@ func ApplyComposeFile(ctx context.Context, deployment api.DockerAgentDeployment)
 
 	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
 	cmd.Stdin = bytes.NewReader(deployment.ComposeFile)
-	cmd.Env = append(os.Environ(), DockerConfigEnv(deployment)...)
+	cmd.Env = append(os.Environ(), agentauth.DockerConfigEnv(deployment.AgentDeployment)...)
 
 	var cmdOut []byte
 	cmdOut, err = cmd.CombinedOutput()

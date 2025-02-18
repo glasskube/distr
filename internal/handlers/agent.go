@@ -146,6 +146,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	var baseDeployment api.AgentDeployment
 
 	if deployment != nil && deployment.ApplicationLicenseID != nil {
+		baseDeployment.ID = deployment.ID
 		baseDeployment.RevisionID = deployment.DeploymentRevisionID
 
 		if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {

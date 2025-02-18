@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentauth"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -21,13 +22,15 @@ var (
 	helmActionConfigCache = make(map[string]*action.Configuration)
 )
 
-func GetHelmActionConfig(namespace string) (*action.Configuration, error) {
+func GetHelmActionConfig(ctx context.Context, namespace string, deployment api.AgentDeployment) (*action.Configuration, error) {
 	if cfg, ok := helmActionConfigCache[namespace]; ok {
 		return cfg, nil
 	}
 
 	var cfg action.Configuration
-	if rc, err := registry.NewClient(); err != nil {
+	if authorizer, err := agentauth.EnsureAuth(ctx, deployment); err != nil {
+		return nil, err
+	} else if rc, err := registry.NewClient(registry.ClientOptAuthorizer(authorizer)); err != nil {
 		return nil, err
 	} else {
 		cfg.RegistryClient = rc
@@ -44,13 +47,13 @@ func GetHelmActionConfig(namespace string) (*action.Configuration, error) {
 	}
 }
 
-func GetLatestHelmRelease(namespace, releaseName string) (*release.Release, error) {
-	cfg, err := GetHelmActionConfig(namespace)
+func GetLatestHelmRelease(ctx context.Context, namespace string, deployment api.KubernetesAgentDeployment) (*release.Release, error) {
+	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
 	historyAction := action.NewHistory(cfg)
-	if releases, err := historyAction.Run(releaseName); err != nil {
+	if releases, err := historyAction.Run(deployment.ReleaseName); err != nil {
 		return nil, err
 	} else {
 		return releases[len(releases)-1], nil
@@ -82,7 +85,7 @@ func RunHelmInstall(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) (*AgentDeployment, error) {
-	config, err := GetHelmActionConfig(namespace)
+	config, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +115,7 @@ func RunHelmUpgrade(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) (*AgentDeployment, error) {
-	cfg, err := GetHelmActionConfig(namespace)
+	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
@@ -138,13 +141,13 @@ func RunHelmUpgrade(
 	}
 }
 
-func GetHelmManifest(namespace, releaseName string) ([]*unstructured.Unstructured, error) {
-	cfg, err := GetHelmActionConfig(namespace)
+func GetHelmManifest(ctx context.Context, namespace string, deployment api.KubernetesAgentDeployment) ([]*unstructured.Unstructured, error) {
+	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
 	getAction := action.NewGet(cfg)
-	if release, err := getAction.Run(releaseName); err != nil {
+	if release, err := getAction.Run(deployment.ReleaseName); err != nil {
 		return nil, err
 	} else {
 		// decode the release manifests which is represented as multi-document YAML
