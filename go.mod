@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/config v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.10
-	github.com/docker/cli v27.1.0+incompatible
+	github.com/docker/cli v27.5.1+incompatible
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/httprate v0.14.1
