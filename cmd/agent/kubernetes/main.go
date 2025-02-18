@@ -115,12 +115,13 @@ func main() {
 			}
 		}
 
-		latestRelease, err := GetLatestHelmRelease(res.Namespace, res.Deployment.ReleaseName)
+		latestRelease, err := GetLatestHelmRelease(ctx, res.Namespace, *res.Deployment)
 		if err != nil {
 			if errors.Is(err, driver.ErrReleaseNotFound) {
 				logger.Info("current helm release does not exist")
 			} else {
 				logger.Error("could not get latest helm revision", zap.Error(err))
+				pushErrorStatus(ctx, err)
 				continue
 			}
 		} else if currentDeployment != nil {
@@ -164,7 +165,7 @@ func main() {
 			}
 		} else {
 			logger.Info("no action required. running status check")
-			if resources, err := GetHelmManifest(res.Namespace, res.Deployment.ReleaseName); err != nil {
+			if resources, err := GetHelmManifest(ctx, res.Namespace, *res.Deployment); err != nil {
 				logger.Warn("could not get helm manifest", zap.Error(err))
 				pushErrorStatus(ctx, fmt.Errorf("could not get helm manifest: %w", err))
 			} else {
