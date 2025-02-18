@@ -95,8 +95,8 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     ),
   });
   editFormLoading = false;
-  license: WritableSignal<ApplicationLicense | undefined> = signal(undefined);
-  selectedApplication: WritableSignal<Application | undefined> = signal(undefined);
+  readonly license = signal<ApplicationLicense | undefined>(undefined);
+  readonly selectedApplication = signal<Application | undefined>(undefined);
 
   dropdownOpen = signal(false);
   protected versionsSelected = 0;
@@ -109,7 +109,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
 
-  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef;
+  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
   constructor() {
     effect(() => {
@@ -215,7 +215,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   toggleDropdown() {
     this.dropdownOpen.update((v) => !v);
     if (this.dropdownOpen()) {
-      this.dropdownWidth = (this.dropdownTriggerButton.nativeElement as Element).getBoundingClientRect().width;
+      this.dropdownWidth = this.dropdownTriggerButton.nativeElement.getBoundingClientRect().width;
     }
   }
 
