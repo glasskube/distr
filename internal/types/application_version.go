@@ -11,9 +11,10 @@ import (
 
 type ApplicationVersion struct {
 	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
-	ID        uuid.UUID `db:"id" json:"id"`
-	CreatedAt time.Time `db:"created_at" json:"createdAt"`
-	Name      string    `db:"name" json:"name"`
+	ID         uuid.UUID `db:"id" json:"id"`
+	CreatedAt  time.Time `db:"created_at" json:"createdAt"`
+	ArchivedAt time.Time `db:"archived_at" json:"archivedAt"`
+	Name       string    `db:"name" json:"name"`
 
 	ChartType    *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
 	ChartName    *string        `db:"chart_name" json:"chartName,omitempty"`

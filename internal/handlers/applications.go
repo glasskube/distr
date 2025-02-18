@@ -221,10 +221,10 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
-	var applicationVersion types.ApplicationVersion
-	if err := json.NewDecoder(r.Body).Decode(&applicationVersion); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	applicationVersion, err := JsonBody[types.ApplicationVersion](w, r)
+	if err != nil {
 		return
 	}
 
@@ -233,7 +233,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	existing := internalctx.GetApplication(r.Context())
+	existing := internalctx.GetApplication(ctx)
 	var existingVersion *types.ApplicationVersion
 	for _, version := range existing.Versions {
 		if version.ID == applicationVersionIdFromUrl {
@@ -247,13 +247,12 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 		applicationVersion.ID = existingVersion.ID
 	}
 
-	if err := db.UpdateApplicationVersion(r.Context(), &applicationVersion); err != nil {
+	if err := db.UpdateApplicationVersion(ctx, &applicationVersion); err != nil {
 		log.Warn("could not update applicationversion", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-	} else if err = json.NewEncoder(w).Encode(applicationVersion); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+	} else {
+		RespondJSON(w, applicationVersion)
 	}
 }
 

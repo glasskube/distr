@@ -175,7 +175,7 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"UPDATE ApplicationVersion SET name = @name WHERE id = @id RETURNING *",
+		"UPDATE ApplicationVersion SET name = @name, archived_at = @archivedAt WHERE id = @id RETURNING *",
 		pgx.NamedArgs{"id": applicationVersion.ID, "name": applicationVersion.Name})
 	if err != nil {
 		return fmt.Errorf("could not update applicationversion: %w", err)
