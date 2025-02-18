@@ -25,19 +25,21 @@ var (
 func GetHelmActionConfig(
 	ctx context.Context,
 	namespace string,
-	deployment api.AgentDeployment,
+	deployment *api.AgentDeployment,
 ) (*action.Configuration, error) {
 	if cfg, ok := helmActionConfigCache[namespace]; ok {
 		return cfg, nil
 	}
 
 	var cfg action.Configuration
-	if authorizer, err := agentauth.EnsureAuth(ctx, deployment); err != nil {
-		return nil, err
-	} else if rc, err := registry.NewClient(registry.ClientOptAuthorizer(authorizer)); err != nil {
-		return nil, err
-	} else {
-		cfg.RegistryClient = rc
+	if deployment != nil {
+		if authorizer, err := agentauth.EnsureAuth(ctx, *deployment); err != nil {
+			return nil, err
+		} else if rc, err := registry.NewClient(registry.ClientOptAuthorizer(authorizer)); err != nil {
+			return nil, err
+		} else {
+			cfg.RegistryClient = rc
+		}
 	}
 	if err := cfg.Init(
 		k8sConfigFlags,
@@ -56,7 +58,7 @@ func GetLatestHelmRelease(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) (*release.Release, error) {
-	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
+	cfg, err := GetHelmActionConfig(ctx, namespace, &deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,7 @@ func RunHelmInstall(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) (*AgentDeployment, error) {
-	config, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
+	config, err := GetHelmActionConfig(ctx, namespace, &deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +125,7 @@ func RunHelmUpgrade(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) (*AgentDeployment, error) {
-	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
+	cfg, err := GetHelmActionConfig(ctx, namespace, &deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}
@@ -149,12 +151,28 @@ func RunHelmUpgrade(
 	}
 }
 
+func RunHelmUninstall(ctx context.Context, namespace, releaseName string) error {
+	config, err := GetHelmActionConfig(ctx, namespace, nil)
+	if err != nil {
+		return err
+	}
+
+	uninstallAction := action.NewUninstall(config)
+	uninstallAction.Timeout = 5 * time.Minute
+	uninstallAction.Wait = true
+	uninstallAction.IgnoreNotFound = true
+	if _, err := uninstallAction.Run(releaseName); err != nil {
+		return fmt.Errorf("helm uninstall failed: %w", err)
+	}
+	return nil
+}
+
 func GetHelmManifest(
 	ctx context.Context,
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) ([]*unstructured.Unstructured, error) {
-	cfg, err := GetHelmActionConfig(ctx, namespace, deployment.AgentDeployment)
+	cfg, err := GetHelmActionConfig(ctx, namespace, &deployment.AgentDeployment)
 	if err != nil {
 		return nil, err
 	}

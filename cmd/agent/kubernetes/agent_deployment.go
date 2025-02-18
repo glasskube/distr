@@ -13,8 +13,9 @@ import (
 const LabelDeplyoment = "agent.distr.sh/deployment"
 
 type AgentDeployment struct {
-	ReleaseName  string    `json:"releaseName"`
+	ID           uuid.UUID `json:"id"`
 	RevisionID   uuid.UUID `json:"revisionId"`
+	ReleaseName  string    `json:"releaseName"`
 	HelmRevision int       `json:"helmRevision"`
 }
 
@@ -54,4 +55,12 @@ func SaveDeployment(ctx context.Context, namespace string, deployment AgentDeplo
 		metav1.ApplyOptions{Force: true, FieldManager: "distr-agent"},
 	)
 	return err
+}
+
+func DeleteDeployment(ctx context.Context, namespace string, deployment AgentDeployment) error {
+	err := k8sClient.CoreV1().Secrets(namespace).Delete(ctx, deployment.SecretName(), metav1.DeleteOptions{})
+	if err != nil {
+		return fmt.Errorf("could not delete AgentDeployment: %w", err)
+	}
+	return nil
 }
