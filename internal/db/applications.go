@@ -79,6 +79,36 @@ func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Appli
 	}
 }
 
+func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]types.Application, error) {
+	db := internalctx.GetDb(ctx)
+	// TODO: Only include versions from at least one license
+	if rows, err := db.Query(ctx, `
+			SELECT DISTINCT
+			    a.id,
+			    a.created_at,
+				a.organization_id,
+			    a.name,
+			    a.type,
+			    coalesce((
+			    	SELECT array_agg(row(av.id, av.created_at, av.name,
+			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
+			    	FROM applicationversion av
+			    	WHERE av.application_id = a.id
+			    ), array[]::record[]) as versions
+			FROM ApplicationLicense al
+				LEFT JOIN Application a ON al.application_id = a.id
+			WHERE al.owner_useraccount_id = @id
+			ORDER BY a.name
+			`, pgx.NamedArgs{"id": id}); err != nil {
+		return nil, fmt.Errorf("failed to query applications: %w", err)
+	} else if applications, err :=
+		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		return nil, fmt.Errorf("failed to get applications: %w", err)
+	} else {
+		return applications, nil
+	}
+}
+
 func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
