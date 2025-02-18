@@ -7,14 +7,12 @@ import (
 	"html"
 	"io"
 	"net/http"
-	"slices"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/contenttype"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -66,12 +64,4 @@ func readMultipartFile(w http.ResponseWriter, r *http.Request, formKey string) (
 			return data, true
 		}
 	}
-}
-
-// IsEmptyUUID checks if a UUID values consists of only zeros (i.e. it was not set)
-//
-// TODO: find a better way to perform this check
-func IsEmptyUUID(id uuid.UUID) bool {
-	var emptyUUID uuid.UUID
-	return slices.Equal(id[:], emptyUUID[:])
 }

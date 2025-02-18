@@ -29,3 +29,12 @@ type ApplicationLicense struct {
 	Application Application  `db:"application" json:"application"`
 	Owner       *UserAccount `db:"owner" json:"owner,omitempty"`
 }
+
+func (license *ApplicationLicenseWithVersions) HasVersionWithID(id uuid.UUID) bool {
+	for _, v := range license.Versions {
+		if v.ID == id {
+			return true
+		}
+	}
+	return false
+}

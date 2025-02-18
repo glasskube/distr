@@ -97,12 +97,12 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsEmptyUUID(dt.AgentVersion.ID) {
+	if dt.AgentVersion.ID != uuid.Nil {
 		dt.AgentVersionID = &dt.AgentVersion.ID
 	}
 
 	existing := internalctx.GetDeploymentTarget(ctx)
-	if IsEmptyUUID(dt.ID) {
+	if dt.ID == uuid.Nil {
 		dt.ID = existing.ID
 	} else if dt.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)

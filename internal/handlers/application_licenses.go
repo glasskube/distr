@@ -87,7 +87,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	license.OrganizationID = *auth.CurrentOrgID()
 
 	existing := internalctx.GetApplicationLicense(ctx)
-	if IsEmptyUUID(license.ID) {
+	if license.ID == uuid.Nil {
 		license.ID = existing.ID
 	} else if license.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)

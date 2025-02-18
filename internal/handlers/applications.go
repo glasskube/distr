@@ -38,7 +38,6 @@ func ApplicationsRouter(r chi.Router) {
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
 			r.With(applicationMiddleware).Group(func(r chi.Router) {
-				r.Get("/", getApplicationVersions)
 				r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
 			})
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
@@ -83,7 +82,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	existing := internalctx.GetApplication(ctx)
-	if IsEmptyUUID(application.ID) {
+	if application.ID == uuid.Nil {
 		application.ID = existing.ID
 	} else if application.ID != existing.ID || application.Type != existing.Type {
 		w.WriteHeader(http.StatusBadRequest)
@@ -108,34 +107,34 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 func getApplications(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if applications, err := db.GetApplicationsByOrgID(r.Context(), *auth.CurrentOrgID()); err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to get applications", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	log := internalctx.GetLogger(ctx)
+
+	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
+	if err != nil {
+		log.Error("failed to get org", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	var applications []types.Application
+	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
+		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, auth.CurrentUserID())
 	} else {
-		err := json.NewEncoder(w).Encode(applications)
-		if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-		}
+		applications, err = db.GetApplicationsByOrgID(ctx, *auth.CurrentOrgID())
+	}
+
+	if err != nil {
+		log.Error("failed to get applications", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, applications)
 	}
 }
 
 func getApplication(w http.ResponseWriter, r *http.Request) {
-	application := internalctx.GetApplication(r.Context())
-	// in the future we might want to transform the application to a well-defined endpoint-type instead of passing through
-	// could use the https://github.com/go-chi/render package for that or we do it ourselves
-	err := json.NewEncoder(w).Encode(application)
-	if err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-	}
-}
-
-func getApplicationVersions(w http.ResponseWriter, r *http.Request) {
-	application := internalctx.GetApplication(r.Context())
-	err := json.NewEncoder(w).Encode(application.Versions)
-	if err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-	}
+	RespondJSON(w, internalctx.GetApplication(r.Context()))
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
@@ -243,7 +242,7 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	if existingVersion == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if IsEmptyUUID(applicationVersion.ID) {
+	} else if applicationVersion.ID == uuid.Nil {
 		applicationVersion.ID = existingVersion.ID
 	}
 
