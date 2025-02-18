@@ -26,6 +26,7 @@ import {UserRole} from '@glasskube/distr-sdk';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {LicensesComponent} from './licenses/licenses.component';
 import {FeatureFlagService} from './services/feature-flag.service';
+import {ApplicationDetailComponent} from './applications/application-detail.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -142,7 +143,16 @@ export const routes: Routes = [
             loadComponent: async () => (await import('./components/home/home.component')).HomeComponent,
             canActivate: [requiredRoleGuard('customer')],
           },
-          {path: 'applications', component: ApplicationsPageComponent, canActivate: [requiredRoleGuard('vendor')]},
+          {
+            path: 'applications',
+            component: ApplicationsPageComponent,
+            canActivate: [requiredRoleGuard('vendor')]
+          },
+          {
+            path: 'applications/:applicationId',
+            component: ApplicationDetailComponent, // TODO try to make it child route of applications again
+            canActivate: [requiredRoleGuard('vendor')]
+          },
           {path: 'deployments', component: DeploymentsPageComponent},
           {
             path: 'customers',

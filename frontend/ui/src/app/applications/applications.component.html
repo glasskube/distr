@@ -82,17 +82,19 @@
               </td>
             }
             <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-              <div class="flex items-center mr-3">
-                <img
-                  [ngSrc]="'/' + application.type + '.png'"
-                  [alt]="application.type"
-                  class="h-8 w-auto mr-3 rounded"
-                  height="199"
-                  width="199" />
-                <span class="max-w-32 sm:max-w-64 lg:max-w-128 overflow-hidden text-ellipsis">
-                  {{ application.name }}
-                </span>
-              </div>
+              <a [routerLink]="['/', 'applications', application.id]">
+                <div class="flex items-center mr-3">
+                  <img
+                    [ngSrc]="'/' + application.type + '.png'"
+                    [alt]="application.type"
+                    class="h-8 w-auto mr-3 rounded"
+                    height="199"
+                    width="199" />
+                  <span class="max-w-32 sm:max-w-64 lg:max-w-128 overflow-hidden text-ellipsis">
+                    {{ application.name }}
+                  </span>
+                </div>
+              </a>
             </td>
             <td class="px-4 py-3">
               <span

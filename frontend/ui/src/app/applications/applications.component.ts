@@ -19,6 +19,7 @@ import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {Application, ApplicationVersion, DeploymentType, HelmChartType} from '@glasskube/distr-sdk';
 import {UuidComponent} from '../components/uuid';
 import {RequireRoleDirective} from '../directives/required-role.directive';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-applications',
@@ -33,6 +34,7 @@ import {RequireRoleDirective} from '../directives/required-role.directive';
     YamlEditorComponent,
     UuidComponent,
     RequireRoleDirective,
+    RouterLink,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
