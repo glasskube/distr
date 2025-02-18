@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"slices"
@@ -54,7 +55,7 @@ func readMultipartFile(w http.ResponseWriter, r *http.Request, formKey string) (
 			return nil, false
 		} else if err := contenttype.IsYaml(head.Header); err != nil {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
-			fmt.Fprint(w, err)
+			fmt.Fprint(w, html.EscapeString(err.Error()))
 			return nil, false
 		} else if data, err := io.ReadAll(file); err != nil {
 			log.Error("failed to read file from upload", zap.Error(err))
