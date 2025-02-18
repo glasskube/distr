@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
@@ -113,13 +114,9 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, version := range license.Versions {
-			alreadyExists := false
-			for _, existingVersion := range existing.Versions {
-				if version.ID == existingVersion.ID {
-					alreadyExists = true
-					break
-				}
-			}
+			alreadyExists := slices.ContainsFunc(existing.Versions, func(v types.ApplicationVersion) bool {
+				return v.ID == version.ID
+			})
 			if !alreadyExists {
 				if len(existing.Versions) == 0 {
 					// we don't allow narrowing down the scope yet. If the existing license allows all versions,
@@ -139,13 +136,9 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, existingVersion := range existing.Versions {
-			stillExists := false
-			for _, version := range license.Versions {
-				if version.ID == existingVersion.ID {
-					stillExists = true
-					break
-				}
-			}
+			stillExists := slices.ContainsFunc(license.Versions, func(v types.ApplicationVersion) bool {
+				return v.ID == existingVersion.ID
+			})
 			if !stillExists {
 				if len(license.Versions) > 0 {
 					// for now, removing specific versions from the license is not possible
@@ -169,14 +162,12 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if txErr == nil {
-		if err == nil {
-			if completeLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
-				log.Warn("could not read previously updated license", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				RespondJSON(w, license)
-			} else {
-				RespondJSON(w, completeLicense)
-			}
+		if completeLicense, err := db.GetApplicationLicenseByID(ctx, license.ID); err != nil {
+			log.Warn("could not read previously updated license", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			RespondJSON(w, license)
+		} else {
+			RespondJSON(w, completeLicense)
 		}
 	}
 }
