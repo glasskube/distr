@@ -323,6 +323,5 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     } else {
       this.deployForm.reset();
     }
-    console.log('writeValue', obj, this.deployForm.value);
   }
 }
