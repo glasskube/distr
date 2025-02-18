@@ -16,8 +16,8 @@ const (
 	applicationOutputExpr             = `a.id, a.created_at, a.organization_id, a.name, a.type`
 	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
-			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name,
-				av.chart_type, av.chart_name, av.chart_url, av.chart_version, av.application_id) ORDER BY av.created_at ASC)
+			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
+				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			FROM applicationversion av
 			WHERE av.application_id = a.id
 		), array[]::record[]) as versions `

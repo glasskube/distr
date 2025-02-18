@@ -11,10 +11,11 @@ import (
 
 type ApplicationVersion struct {
 	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
-	ID         uuid.UUID  `db:"id" json:"id"`
-	CreatedAt  time.Time  `db:"created_at" json:"createdAt"`
-	ArchivedAt *time.Time `db:"archived_at" json:"archivedAt,omitempty"`
-	Name       string     `db:"name" json:"name"`
+	ID            uuid.UUID  `db:"id" json:"id"`
+	CreatedAt     time.Time  `db:"created_at" json:"createdAt"`
+	ArchivedAt    *time.Time `db:"archived_at" json:"archivedAt,omitempty"`
+	Name          string     `db:"name" json:"name"`
+	ApplicationID uuid.UUID  `db:"application_id" json:"applicationId"`
 
 	ChartType    *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
 	ChartName    *string        `db:"chart_name" json:"chartName,omitempty"`
@@ -28,8 +29,6 @@ type ApplicationVersion struct {
 	ValuesFileData   []byte `db:"values_file_data" json:"-"`
 	TemplateFileData []byte `db:"template_file_data" json:"-"`
 	ComposeFileData  []byte `db:"compose_file_data" json:"-"`
-
-	ApplicationID uuid.UUID `db:"application_id" json:"applicationId"`
 }
 
 func (av ApplicationVersion) ParsedValuesFile() (result map[string]any, err error) {
