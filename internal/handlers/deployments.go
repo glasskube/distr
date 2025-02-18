@@ -182,7 +182,7 @@ func validateDeploymentRequestLicense(
 	ctx context.Context,
 	w http.ResponseWriter,
 	request api.DeploymentRequest,
-	license *types.ApplicationLicenseWithVersions,
+	license *types.ApplicationLicense,
 	app *types.Application,
 	target *types.DeploymentTargetWithCreatedBy,
 ) error {
