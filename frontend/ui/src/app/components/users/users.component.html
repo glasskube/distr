@@ -118,7 +118,7 @@
       <section class="antialiased">
         <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
           @if (!inviteUrl) {
-            <form class="max-w-sm mx-auto" (ngSubmit)="submitInviteForm()" [formGroup]="inviteForm">
+            <form class="mx-auto" (ngSubmit)="submitInviteForm()" [formGroup]="inviteForm">
               <div class="flex flex-col space-y-5">
                 <div class="space-y-2">
                   <label for="name" class="block text-sm font-medium text-gray-900 dark:text-white">
@@ -155,6 +155,18 @@
                     </div>
                   }
                 </div>
+
+                @if (userRole() === 'customer' && (featureFlags.isLicensingEnabled$ | async)) {
+                  <div
+                    class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+                    role="alert">
+                    <fa-icon [icon]="faCircleExclamation" />
+                    <span class="sr-only">Info</span>
+                    <div class="ms-3 text-sm font-medium">
+                      Please make sure to assign a license to the new customer afterwards.
+                    </div>
+                  </div>
+                }
 
                 <button
                   type="submit"
