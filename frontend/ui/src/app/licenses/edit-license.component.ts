@@ -62,22 +62,19 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   );
 
   private fb = inject(FormBuilder);
-  editForm = new FormGroup({
-    id: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-    name: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
-    expiresAt: new FormControl('', {nonNullable: true}),
-    applicationId: new FormControl<string | undefined>(undefined, {nonNullable: true, validators: Validators.required}),
-    includeAllVersions: new FormControl<boolean>(true, {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
+  editForm = this.fb.nonNullable.group({
+    id: this.fb.nonNullable.control<string | undefined>(undefined),
+    name: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
+    expiresAt: this.fb.nonNullable.control(''),
+    applicationId: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
+    includeAllVersions: this.fb.nonNullable.control<boolean>(true, Validators.required),
     versions: this.fb.array<boolean>([]),
-    ownerUserAccountId: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-    registry: new FormGroup(
+    ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
+    registry: this.fb.nonNullable.group(
       {
-        url: new FormControl('', {nonNullable: true}),
-        username: new FormControl('', {nonNullable: true}),
-        password: new FormControl('', {nonNullable: true}),
+        url: this.fb.nonNullable.control(''),
+        username: this.fb.nonNullable.control(''),
+        password: this.fb.nonNullable.control(''),
       },
       {
         validators: (control) => {
@@ -136,7 +133,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       }
     });
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
-      // this.onTouched();
+      this.onTouched();
       const val = this.editForm.getRawValue();
       if (!val.includeAllVersions) {
         this.versionsSelected = val.versions.filter((v) => !!v).length;
