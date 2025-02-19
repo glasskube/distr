@@ -63,7 +63,6 @@ export class OrganizationBrandingComponent implements OnInit {
       const id = this.organizationBranding?.id;
       let req: Observable<OrganizationBranding>;
       if (id) {
-        formData.set('id', id);
         req = this.organizationBrandingService.update(formData);
       } else {
         req = this.organizationBrandingService.create(formData);

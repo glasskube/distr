@@ -29,10 +29,7 @@ export class OrganizationBrandingService {
 
   update(organizationBranding: FormData): Observable<OrganizationBranding> {
     return this.httpClient
-      .put<OrganizationBranding>(
-        `${this.organizationBrandingUrl}/${organizationBranding.get('id')}`,
-        organizationBranding
-      )
+      .put<OrganizationBranding>(this.organizationBrandingUrl, organizationBranding)
       .pipe(tap((obj) => (this.cache = obj)));
   }
 }
