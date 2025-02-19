@@ -13,6 +13,7 @@ import {
   lastValueFrom,
   map,
   Observable,
+  startWith,
   Subject,
   switchMap,
   takeUntil,
@@ -30,6 +31,7 @@ import {
   faChevronDown,
   faCross,
   faEdit,
+  faMagnifyingGlass,
   faPen,
   faTrash,
   faXmark,
@@ -72,6 +74,9 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly applications$: Observable<Application[]> = this.applicationService.list();
+  filterForm = new FormGroup({
+    showArchived: new FormControl<boolean>(false),
+  });
   readonly application$: Observable<Application | undefined> = this.route.paramMap.pipe(
     map((params) => params.get('applicationId')?.trim()),
     distinctUntilChanged(),
@@ -87,6 +92,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         this.editForm.patchValue({name: app.name});
         this.enableTypeSpecificGroups(app);
       }
+    })
+  );
+  readonly visibleVersions$ = this.application$.pipe(
+    combineLatestWith(this.filterForm.valueChanges.pipe(startWith({showArchived: false}))),
+    map(([app, filter]) => {
+      if (app && !filter.showArchived) {
+        return (app.versions ?? []).filter((av) => !isArchived(av));
+      }
+      return app?.versions;
     })
   );
 
@@ -114,6 +128,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     name: new FormControl('', Validators.required),
   });
   editFormLoading = signal(false);
+
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
   protected readonly faEdit = faEdit;
@@ -138,6 +153,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.newVersionForm.controls.kubernetes.controls.chartName.disable();
         }
       });
+    this.filterForm.valueChanges.pipe(takeUntil(this.destroyed$), distinctUntilChanged());
   }
 
   ngOnDestroy() {
@@ -334,4 +350,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
     }
   }
+
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
 }
