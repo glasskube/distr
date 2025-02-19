@@ -174,7 +174,11 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE ApplicationVersion SET name = @name, archived_at = @archivedAt WHERE id = @id RETURNING *",
-		pgx.NamedArgs{"id": applicationVersion.ID, "name": applicationVersion.Name, "archivedAt": applicationVersion.ArchivedAt})
+		pgx.NamedArgs{
+			"id":         applicationVersion.ID,
+			"name":       applicationVersion.Name,
+			"archivedAt": applicationVersion.ArchivedAt,
+		})
 	if err != nil {
 		return fmt.Errorf("could not update applicationversion: %w", err)
 	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[types.ApplicationVersion]); err != nil {
