@@ -17,7 +17,6 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +25,7 @@ func OrganizationBrandingRouter(r chi.Router) {
 	r.Get("/", getOrganizationBranding)
 	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
 		r.Post("/", createOrganizationBranding)
-		r.Put("/{organizationBrandingId}", updateOrganizationBranding)
+		r.Put("/", updateOrganizationBranding)
 	})
 }
 
@@ -87,12 +86,6 @@ func getOrganizationBrandingFromRequest(r *http.Request) (*types.OrganizationBra
 	organizationBranding := types.OrganizationBranding{
 		Title:       util.PtrTo(r.Form.Get("title")),
 		Description: util.PtrTo(r.Form.Get("description")),
-	}
-
-	if brandingID, err := uuid.Parse(r.PathValue("organizationBrandingId")); err != nil {
-		return nil, err
-	} else {
-		organizationBranding.ID = brandingID
 	}
 
 	if file, head, err := r.FormFile("logo"); err != nil {

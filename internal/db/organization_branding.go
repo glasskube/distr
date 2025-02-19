@@ -85,10 +85,10 @@ func UpdateOrganizationBranding(ctx context.Context, b *types.OrganizationBrandi
 			logo = @logo,
 			logo_file_name = @logo_file_name,
 			logo_content_type = @logo_content_type
-		WHERE id = @id
+		WHERE organization_id = @organization_id
 		RETURNING `+organizationBrandingOutputExpr,
 		pgx.NamedArgs{
-			"id":                         b.ID,
+			"organization_id":            b.OrganizationID,
 			"updated_at":                 b.UpdatedAt,
 			"updated_by_user_account_id": b.UpdatedByUserAccountID,
 			"title":                      b.Title,
