@@ -85,16 +85,11 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       this.editForm.disable();
       if (app) {
         this.editForm.patchValue({name: app.name});
-        if (app.type === 'kubernetes') {
-          enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
-          disableControlsWithoutEvent(this.newVersionForm.controls.docker);
-        } else {
-          enableControlsWithoutEvent(this.newVersionForm.controls.docker);
-          disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
-        }
+        this.enableTypeSpecificGroups(app);
       }
     })
   );
+
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
     kubernetes: new FormGroup({
@@ -113,6 +108,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl<string>(''),
     }),
   });
+
   newVersionFormLoading = signal(false);
   editForm = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -125,15 +121,12 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
   protected readonly faArchive = faArchive;
-
   readonly breadcrumbDropdown = signal(false);
-  readonly actionsDropdown = signal(false);
-  @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
 
+  @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
   ngOnInit() {
     this.route.url.pipe().subscribe(() => {
       this.breadcrumbDropdown.set(false);
-      this.actionsDropdown.set(false);
     });
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
@@ -153,10 +146,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   toggleBreadcrumbDropdown() {
     this.breadcrumbDropdown.update((v) => !v);
-  }
-
-  toggleActionsDropdown() {
-    this.actionsDropdown.update((v) => !v);
   }
 
   enableApplicationEdit(application: Application) {
@@ -225,6 +214,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         const av = await firstValueFrom(res);
         this.toast.success(`${av.name} created successfully`);
         this.newVersionForm.reset();
+        this.enableTypeSpecificGroups(application);
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
@@ -277,7 +267,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   deleteApplication(application: Application) {
-    this.toggleActionsDropdown();
     this.overlay
       .confirm(`Really delete ${application.name} and all related deployments?`)
       .pipe(
@@ -317,6 +306,16 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe();
+  }
+
+  private enableTypeSpecificGroups(app: Application) {
+    if (app.type === 'kubernetes') {
+      enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
+      disableControlsWithoutEvent(this.newVersionForm.controls.docker);
+    } else {
+      enableControlsWithoutEvent(this.newVersionForm.controls.docker);
+      disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
+    }
   }
 
   protected readonly isArchived = isArchived;
