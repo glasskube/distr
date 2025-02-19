@@ -251,9 +251,6 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	} else if applicationVersion.ID == uuid.Nil {
 		applicationVersion.ID = existingVersion.ID
 	}
-	if existingVersion.ArchivedAt != nil {
-		applicationVersion.ArchivedAt = existingVersion.ArchivedAt
-	}
 
 	if err := db.UpdateApplicationVersion(ctx, &applicationVersion); err != nil {
 		log.Warn("could not update applicationversion", zap.Error(err))

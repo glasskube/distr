@@ -121,6 +121,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
   protected readonly faArchive = faArchive;
+  protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
 
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
@@ -308,6 +309,22 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
+  async unArchiveVersion(application: Application, version: ApplicationVersion) {
+    try {
+      await lastValueFrom(
+        this.applicationService.updateApplicationVersion(application, {
+          ...version,
+          archivedAt: undefined,
+        })
+      );
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    }
+  }
+
   private enableTypeSpecificGroups(app: Application) {
     if (app.type === 'kubernetes') {
       enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
@@ -317,6 +334,4 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       disableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
     }
   }
-
-  protected readonly isArchived = isArchived;
 }
