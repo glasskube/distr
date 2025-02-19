@@ -28,7 +28,8 @@ require (
 	k8s.io/apimachinery v0.32.2
 	k8s.io/cli-runtime v0.32.2
 	k8s.io/client-go v0.32.2
-	oras.land/oras-go v1.2.6
+	oras.land/oras-go v1.2.5
+	oras.land/oras-go/v2 v2.5.0
 )
 
 require (
