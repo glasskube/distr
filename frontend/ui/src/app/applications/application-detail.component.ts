@@ -2,12 +2,12 @@ import {OverlayModule} from '@angular/cdk/overlay';
 import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
-import {combineLatestWith, firstValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
+import {combineLatestWith, firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
 import {ApplicationsService} from '../services/applications.service';
 import {AsyncPipe, DatePipe, JsonPipe, NgOptimizedImage} from '@angular/common';
 import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBoxesStacked, faChevronDown} from '@fortawesome/free-solid-svg-icons';
+import {faBoxesStacked, faCheck, faChevronDown, faCross, faEdit, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
@@ -47,7 +47,9 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }),
     tap((app) => {
       this.newVersionForm.reset();
+      this.editForm.disable();
       if (app) {
+        this.editForm.patchValue({name: app.name});
         if (app.type === 'kubernetes') {
           enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
           disableControlsWithoutEvent(this.newVersionForm.controls.docker);
@@ -77,12 +79,19 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }),
   });
   newVersionFormLoading = false;
+  editForm = new FormGroup({
+    name: new FormControl('', Validators.required),
+  });
+  editFormLoading = false;
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
   readonly dropdownOpen = signal(false);
 
   ngOnInit() {
-    this.route.url.pipe().subscribe(() => this.dropdownOpen.set(false));
+    this.route.url.pipe().subscribe(() => {
+      this.dropdownOpen.set(false);
+      // this.editForm.disable();
+    });
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -101,6 +110,36 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   toggleDropdown() {
     this.dropdownOpen.update((v) => !v);
+  }
+
+  enableApplicationEdit(application: Application) {
+    this.editForm.enable();
+    this.editForm.patchValue({name: application.name});
+  }
+
+  cancelApplicationEdit() {
+    this.editForm.disable();
+  }
+
+  async saveApplication(application: Application) {
+    if (this.editForm.valid) {
+      this.editFormLoading = true;
+      try {
+        await lastValueFrom(
+          this.applicationService.update({
+            ...application,
+            name: this.editForm.value.name!.trim(),
+          })
+        );
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editFormLoading = false;
+      }
+    }
   }
 
   async createVersion() {
@@ -192,4 +231,9 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  protected readonly faEdit = faEdit;
+  protected readonly faCheck = faCheck;
+  protected readonly faCross = faCross;
+  protected readonly faXmark = faXmark;
 }

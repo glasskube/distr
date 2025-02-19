@@ -55,11 +55,15 @@ func createApplication(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	var application types.Application
-	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
+	application, err := JsonBody[types.Application](w, r)
+	if err != nil {
+		return
+	} else if application.Name == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if err = db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
+	}
+
+	if err = db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 		log.Warn("could not create application", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -75,12 +79,13 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	var application types.Application
-	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	application, err := JsonBody[types.Application](w, r)
+	if err != nil {
+		return
+	} else if application.Name == "" {
+		http.Error(w, "name is required", http.StatusBadRequest)
 		return
 	}
-
 	existing := internalctx.GetApplication(ctx)
 	if application.ID == uuid.Nil {
 		application.ID = existing.ID
@@ -96,6 +101,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 		return
 	}
+	// TODO ?
 	// there surely is some way to have the update command returning the versions too, but I don't think it's worth
 	// the work right now
 	application.Versions = existing.Versions
