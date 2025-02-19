@@ -256,10 +256,14 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := db.CreateDeploymentRevisionStatus(ctx, status.RevisionID, status.Type, status.Message); err != nil {
-		log.Error("failed to create deployment revision status – skipping cleanup of old statuses", zap.Error(err),
-			zap.Reflect("status", status))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		} else {
+			log.Error("failed to create deployment revision status – skipping cleanup of old statuses", zap.Error(err),
+				zap.Reflect("status", status))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}

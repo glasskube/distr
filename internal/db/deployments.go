@@ -13,7 +13,9 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -165,13 +167,15 @@ func CreateDeploymentRevisionStatus(
 	message string,
 ) error {
 	db := internalctx.GetDb(ctx)
-	var id string
-	rows := db.QueryRow(ctx, `
+	_, err := db.Exec(ctx, `
 		INSERT INTO DeploymentRevisionStatus (deployment_revision_id, message, type)
-		VALUES (@deploymentRevisionId, @message, @type)
-		RETURNING id`,
+		VALUES (@deploymentRevisionId, @message, @type)`,
 		pgx.NamedArgs{"deploymentRevisionId": revisionID, "message": message, "type": statusType})
-	if err := rows.Scan(&id); err != nil {
+	if err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
 		return err
 	} else {
 		return nil
