@@ -5,6 +5,8 @@ import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {
   catchError,
   combineLatestWith,
+  distinctUntilChanged,
+  distinctUntilKeyChanged,
   EMPTY,
   filter,
   firstValueFrom,
@@ -15,6 +17,7 @@ import {
   switchMap,
   takeUntil,
   tap,
+  withLatestFrom,
 } from 'rxjs';
 import {ApplicationsService} from '../services/applications.service';
 import {AsyncPipe, DatePipe, JsonPipe, NgOptimizedImage} from '@angular/common';
@@ -27,6 +30,7 @@ import {
   faChevronDown,
   faCross,
   faEdit,
+  faPen,
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
@@ -39,6 +43,9 @@ import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../uti
 import {dropdownAnimation} from '../animations/dropdown';
 import {OverlayService} from '../services/overlay.service';
 import {RequireRoleDirective} from '../directives/required-role.directive';
+import dayjs from 'dayjs';
+import {combineLatest} from 'rxjs/internal/operators/combineLatest';
+import {isArchived} from '../../util/dates';
 
 @Component({
   selector: 'app-application-detail',
@@ -66,13 +73,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   readonly applications$: Observable<Application[]> = this.applicationService.list();
   readonly application$: Observable<Application | undefined> = this.route.paramMap.pipe(
-    combineLatestWith(this.applications$),
-    map(([params, applications]) => {
-      const id = params.get('applicationId');
-      return applications.find((a) => a.id === id);
-    }),
-    tap((app) => {
+    map((params) => params.get('applicationId')?.trim()),
+    distinctUntilChanged(),
+    tap(() => {
       this.newVersionForm.reset();
+      this.newVersionFormLoading.set(false);
+    }),
+    combineLatestWith(this.applications$),
+    map(([id, applications]) => applications.find((a) => a.id === id)),
+    tap((app) => {
       this.editForm.disable();
       if (app) {
         this.editForm.patchValue({name: app.name});
@@ -104,11 +113,11 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl<string>(''),
     }),
   });
-  newVersionFormLoading = false;
+  newVersionFormLoading = signal(false);
   editForm = new FormGroup({
     name: new FormControl('', Validators.required),
   });
-  editFormLoading = false;
+  editFormLoading = signal(false);
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
   protected readonly faEdit = faEdit;
@@ -162,7 +171,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   async saveApplication(application: Application) {
     if (this.editForm.valid) {
-      this.editFormLoading = true;
+      this.editFormLoading.set(true);
       try {
         await lastValueFrom(
           this.applicationService.update({
@@ -176,16 +185,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.toast.error(msg);
         }
       } finally {
-        this.editFormLoading = false;
+        this.editFormLoading.set(false);
       }
     }
   }
 
-  async createVersion() {
+  async createVersion(application: Application) {
     this.newVersionForm.markAllAsTouched();
-    const application = await firstValueFrom(this.application$);
     if (this.newVersionForm.valid && application) {
-      this.newVersionFormLoading = true;
+      this.newVersionFormLoading.set(true);
       let res;
       if (application.type === 'docker') {
         res = this.applicationService.createApplicationVersionForDocker(
@@ -216,22 +224,19 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       try {
         const av = await firstValueFrom(res);
         this.toast.success(`${av.name} created successfully`);
+        this.newVersionForm.reset();
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
           this.toast.error(msg);
         }
       } finally {
-        this.newVersionFormLoading = false;
+        this.newVersionFormLoading.set(false);
       }
     }
   }
 
-  async fillVersionFormWith(version: ApplicationVersion) {
-    const application = await firstValueFrom(this.application$);
-    if (!application) {
-      return;
-    }
+  async fillVersionFormWith(application: Application, version: ApplicationVersion) {
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
@@ -291,4 +296,28 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       )
       .subscribe();
   }
+
+  async archiveVersion(application: Application, version: ApplicationVersion) {
+    this.overlay
+      .confirm(`Really archive ${version.name}? Existing deployments will continue to work.`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() =>
+          this.applicationService.updateApplicationVersion(application, {
+            ...version,
+            archivedAt: new Date().toISOString(),
+          })
+        ),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return EMPTY;
+        })
+      )
+      .subscribe();
+  }
+
+  protected readonly isArchived = isArchived;
 }

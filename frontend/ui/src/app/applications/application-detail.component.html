@@ -76,6 +76,7 @@
                     </div>
                     <button
                       type="submit"
+                      [disabled]="editFormLoading()"
                       class="ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                       <fa-icon [icon]="faCheck" class="mr-2"></fa-icon>
                       Save
@@ -137,11 +138,13 @@
                     <th scope="col" class="px-6 py-3">Chart Version</th>
                   }
                   <th scope="col" class="px-6 py-3">Created At</th>
+                  <th scope="col" class="px-6 py-3">Status</th>
                   <th scope="col" class="px-6 py-3"></th>
                 </tr>
               </thead>
               <tbody>
                 @for (version of application.versions; track version.id) {
+                  @let archived = isArchived(version);
                   <tr
                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -161,11 +164,22 @@
                     <td class="px-6 py-4">
                       {{ version.createdAt | date: 'short' }}
                     </td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-4">
+                      {{ archived ? 'Archived' : 'Active' }}
+                    </td>
+                    <td class="px-6 py-2 text-right">
+                      @if (!archived) {
+                        <button
+                          (click)="archiveVersion(application, version)"
+                          class="py-2 px-3 mr-4 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                          <fa-icon [icon]="faArchive" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
+                          Archive
+                        </button>
+                      }
                       <button
                         type="button"
                         class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                        (click)="fillVersionFormWith(version)">
+                        (click)="fillVersionFormWith(application, version)">
                         Copy from
                       </button>
                     </td>
@@ -176,7 +190,7 @@
           </div>
         }
 
-        <form [formGroup]="newVersionForm" (ngSubmit)="createVersion()">
+        <form [formGroup]="newVersionForm" (ngSubmit)="createVersion(application)">
           <div>
             <h3 class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">New Version</h3>
             <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
@@ -348,7 +362,7 @@
             <div class="flex justify-stretch sm:justify-end mt-5 space-x-2.5">
               <button
                 type="submit"
-                [disabled]="newVersionFormLoading"
+                [disabled]="newVersionFormLoading()"
                 class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                 Create New Version
               </button>

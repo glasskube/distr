@@ -109,4 +109,21 @@ export class ApplicationsService implements CrudService<Application> {
       .post<Application>(`${this.applicationsUrl}/sample`, null)
       .pipe(tap((it) => this.cache.save(it)));
   }
+
+  updateApplicationVersion(app: Application, version: ApplicationVersion): Observable<ApplicationVersion> {
+    return this.httpClient
+      .put<ApplicationVersion>(`${this.applicationsUrl}/${app.id}/versions/${version.id}`, version)
+      .pipe(
+        tap((it) => {
+          app.versions = (app.versions ?? []).map((av) => {
+            if (av.id === it.id) {
+              return it;
+            } else {
+              return av;
+            }
+          });
+          this.cache.save(app);
+        })
+      );
+  }
 }

@@ -32,6 +32,7 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {LicensesService} from '../services/licenses.service';
 import dayjs from 'dayjs';
+import {isArchived} from '../../util/dates';
 
 export type DeploymentFormValue = Partial<{
   deploymentTargetId: string;
@@ -177,7 +178,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         if (av.id === selectedApplicationVersionId) {
           return true;
         }
-        return !av.archivedAt || dayjs(av.archivedAt).isAfter(dayjs());
+        return !isArchived(av);
       })
     )
   );

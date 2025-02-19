@@ -19,5 +19,9 @@ export class RelativeDatePipe implements PipeTransform {
 }
 
 export function isExpired(obj: {expiresAt?: Date | string}): boolean {
-  return !obj.expiresAt || dayjs(obj.expiresAt).isBefore();
+  return obj.expiresAt ? dayjs(obj.expiresAt).isBefore() : false;
+}
+
+export function isArchived(obj: {archivedAt?: Date | string}): boolean {
+  return obj.archivedAt ? dayjs(obj.archivedAt).isBefore() : false;
 }

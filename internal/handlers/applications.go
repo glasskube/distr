@@ -42,7 +42,7 @@ func ApplicationsRouter(r chi.Router) {
 			})
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
-				r.With(requireUserRoleVendor).Put("/", updateApplicationVersion)
+				r.With(requireUserRoleVendor, applicationMiddleware).Put("/", updateApplicationVersion)
 				r.Get("/compose-file", getApplicationVersionComposeFile)
 				r.Get("/template-file", getApplicationVersionTemplateFile)
 				r.Get("/values-file", getApplicationVersionValuesFile)
