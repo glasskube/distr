@@ -72,7 +72,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   private applicationCreateModalRef?: DialogRef;
 
   private readonly overlay = inject(OverlayService);
-
   private readonly toast = inject(ToastService);
 
   ngOnInit() {}
@@ -118,22 +117,5 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
         this.createApplicationFormLoading = false;
       }
     }
-  }
-
-  deleteApplication(application: Application) {
-    this.overlay
-      .confirm(`Really delete ${application.name} and all related deployments?`)
-      .pipe(
-        filter((result) => result === true),
-        switchMap(() => this.applications.delete(application)),
-        catchError((e) => {
-          const msg = getFormDisplayedError(e);
-          if (msg) {
-            this.toast.error(msg);
-          }
-          return EMPTY;
-        })
-      )
-      .subscribe();
   }
 }

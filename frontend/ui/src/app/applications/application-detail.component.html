@@ -18,7 +18,7 @@
                 id="application-dropdown"
                 cdkOverlayOrigin
                 #dropdownTrigger="cdkOverlayOrigin"
-                (click)="toggleDropdown()"
+                (click)="toggleBreadcrumbDropdown()"
                 class="inline-flex items-center px-3 py-2 text-sm font-normal text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 dark:text-white dark:focus:ring-gray-700">
                 {{ application.name }}
                 <fa-icon class="ml-2" [icon]="faChevronDown"></fa-icon>
@@ -26,10 +26,10 @@
               <ng-template
                 cdkConnectedOverlay
                 [cdkConnectedOverlayHasBackdrop]="true"
-                (backdropClick)="dropdownOpen.set(false)"
+                (backdropClick)="breadcrumbDropdown.set(false)"
                 [cdkConnectedOverlayBackdropClass]="'transparent'"
                 [cdkConnectedOverlayOrigin]="dropdownTrigger"
-                [cdkConnectedOverlayOpen]="dropdownOpen()">
+                [cdkConnectedOverlayOpen]="breadcrumbDropdown()">
                 <div
                   @dropdown
                   style="transform-origin: top center"
@@ -48,9 +48,9 @@
         </ol>
       </nav>
 
-      <div class="my-4 grid gap-4 md:my-6 md:grid-cols-2 md:gap-12">
+      <div class="my-4 gap-4 md:my-6 md:gap-12">
         <div class="space-y-4">
-          <div class="flex items-center space-x-4">
+          <div class="flex space-x-4">
             <img
               [ngSrc]="'/' + application.type + '.png'"
               [alt]="application.type"
@@ -109,6 +109,16 @@
                 class="me-2 rounded bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
                 {{ application.type }}
               </span>
+            </div>
+            <div class="inline-flex self-start items-end justify-end grow">
+              <button
+                type="button"
+                aria-label="Delete"
+                (click)="deleteApplication(application)"
+                class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                <fa-icon [icon]="faTrash" class="h-4 w-4 mr-2"></fa-icon>
+                Delete Application
+              </button>
             </div>
           </div>
         </div>

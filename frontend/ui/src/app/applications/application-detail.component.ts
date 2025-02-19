@@ -1,13 +1,35 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {ActivatedRoute, RouterLink} from '@angular/router';
-import {combineLatestWith, firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {
+  catchError,
+  combineLatestWith,
+  EMPTY,
+  filter,
+  firstValueFrom,
+  lastValueFrom,
+  map,
+  Observable,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import {ApplicationsService} from '../services/applications.service';
 import {AsyncPipe, DatePipe, JsonPipe, NgOptimizedImage} from '@angular/common';
 import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBoxesStacked, faCheck, faChevronDown, faCross, faEdit, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faArchive,
+  faBoxesStacked,
+  faCheck,
+  faChevronDown,
+  faCross,
+  faEdit,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
@@ -15,6 +37,8 @@ import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {dropdownAnimation} from '../animations/dropdown';
+import {OverlayService} from '../services/overlay.service';
+import {RequireRoleDirective} from '../directives/required-role.directive';
 
 @Component({
   selector: 'app-application-detail',
@@ -36,8 +60,10 @@ import {dropdownAnimation} from '../animations/dropdown';
 export class ApplicationDetailComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly toast = inject(ToastService);
+  private readonly overlay = inject(OverlayService);
   private readonly applicationService = inject(ApplicationsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly applications$: Observable<Application[]> = this.applicationService.list();
   readonly application$: Observable<Application | undefined> = this.route.paramMap.pipe(
     combineLatestWith(this.applications$),
@@ -85,13 +111,20 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   editFormLoading = false;
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
-  readonly dropdownOpen = signal(false);
+  protected readonly faEdit = faEdit;
+  protected readonly faCheck = faCheck;
+  protected readonly faXmark = faXmark;
+  protected readonly faTrash = faTrash;
+  protected readonly faArchive = faArchive;
+
+  readonly breadcrumbDropdown = signal(false);
+  readonly actionsDropdown = signal(false);
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
 
   ngOnInit() {
     this.route.url.pipe().subscribe(() => {
-      this.dropdownOpen.set(false);
-      // this.editForm.disable();
+      this.breadcrumbDropdown.set(false);
+      this.actionsDropdown.set(false);
     });
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
@@ -109,8 +142,12 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     this.destroyed$.complete();
   }
 
-  toggleDropdown() {
-    this.dropdownOpen.update((v) => !v);
+  toggleBreadcrumbDropdown() {
+    this.breadcrumbDropdown.update((v) => !v);
+  }
+
+  toggleActionsDropdown() {
+    this.actionsDropdown.update((v) => !v);
   }
 
   enableApplicationEdit(application: Application) {
@@ -234,8 +271,24 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected readonly faEdit = faEdit;
-  protected readonly faCheck = faCheck;
-  protected readonly faCross = faCross;
-  protected readonly faXmark = faXmark;
+  deleteApplication(application: Application) {
+    this.toggleActionsDropdown();
+    this.overlay
+      .confirm(`Really delete ${application.name} and all related deployments?`)
+      .pipe(
+        filter((result) => result === true),
+        switchMap(async () => {
+          await lastValueFrom(this.applicationService.delete(application));
+          return this.router.navigate(['/applications']);
+        }),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return EMPTY;
+        })
+      )
+      .subscribe();
+  }
 }
