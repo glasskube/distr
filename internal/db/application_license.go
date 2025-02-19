@@ -23,7 +23,8 @@ const (
 	applicationLicenseWithVersionsOutputExpr = applicationLicenseOutputExpr + `,
 		coalesce((
 		   	SELECT array_agg(
-				row(av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version)
+				row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
+					av.chart_type, av.chart_name, av.chart_url, av.chart_version)
 				ORDER BY av.created_at ASC
 			)
 		   	FROM ApplicationLicense_ApplicationVersion alav
