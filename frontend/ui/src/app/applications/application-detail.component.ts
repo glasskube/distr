@@ -1,5 +1,5 @@
 import {OverlayModule} from '@angular/cdk/overlay';
-import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {combineLatestWith, firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
@@ -86,6 +86,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
   readonly dropdownOpen = signal(false);
+  @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
 
   ngOnInit() {
     this.route.url.pipe().subscribe(() => {
@@ -115,6 +116,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   enableApplicationEdit(application: Application) {
     this.editForm.enable();
     this.editForm.patchValue({name: application.name});
+    setTimeout(() => this.nameInputElem?.nativeElement.focus(), 0);
   }
 
   cancelApplicationEdit() {
