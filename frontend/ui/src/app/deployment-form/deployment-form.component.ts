@@ -23,6 +23,7 @@ import {
   Subject,
   switchMap,
   takeUntil,
+  withLatestFrom,
 } from 'rxjs';
 import {YamlEditorComponent} from '../components/yaml-editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -30,6 +31,7 @@ import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {LicensesService} from '../services/licenses.service';
+import dayjs from 'dayjs';
 
 export type DeploymentFormValue = Partial<{
   deploymentTargetId: string;
@@ -168,6 +170,15 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
             )
           )
         : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
+    ),
+    withLatestFrom(this.applicationVersionId$),
+    map(([avs, selectedApplicationVersionId]) =>
+      avs.filter((av) => {
+        if (av.id === selectedApplicationVersionId) {
+          return true;
+        }
+        return !av.archivedAt || dayjs(av.archivedAt).isAfter(dayjs());
+      })
     )
   );
 
