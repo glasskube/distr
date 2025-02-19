@@ -350,8 +350,12 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 	if application.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
 	} else if err := db.DeleteApplicationWithID(ctx, application.ID); err != nil {
-		log.Warn("error deleting application", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, "could not delete Application because it is still in use", http.StatusBadRequest)
+		} else {
+			log.Warn("error deleting application", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
