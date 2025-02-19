@@ -31,7 +31,7 @@ type OrganizationWithBranding struct {
 }
 
 type OrganizationBranding struct {
-	ID                     *uuid.UUID `db:"id" json:"id"`
+	ID                     uuid.UUID  `db:"id" json:"id"`
 	CreatedAt              time.Time  `db:"created_at" json:"createdAt"`
 	OrganizationID         uuid.UUID  `db:"organization_id" json:"-"`
 	UpdatedAt              time.Time  `db:"updated_at" json:"updatedAt"`
