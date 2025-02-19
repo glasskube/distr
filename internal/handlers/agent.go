@@ -145,21 +145,23 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	var baseResource = api.AgentResource{Version: deploymentTarget.AgentVersion}
 	var baseDeployment api.AgentDeployment
 
-	if deployment != nil && deployment.ApplicationLicenseID != nil {
+	if deployment != nil {
 		baseDeployment.ID = deployment.ID
 		baseDeployment.RevisionID = deployment.DeploymentRevisionID
 
-		if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
-			msg := "failed to get ApplicationLicense from DB"
-			log.Error(msg, zap.Error(err))
-			statusMessage = fmt.Sprintf("%v: %v", msg, err)
-			w.WriteHeader(http.StatusInternalServerError)
-		} else if license.RegistryURL != nil {
-			baseDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
-				*license.RegistryURL: {
-					Username: *license.RegistryUsername,
-					Password: *license.RegistryPassword,
-				},
+		if deployment.ApplicationLicenseID != nil {
+			if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
+				msg := "failed to get ApplicationLicense from DB"
+				log.Error(msg, zap.Error(err))
+				statusMessage = fmt.Sprintf("%v: %v", msg, err)
+				w.WriteHeader(http.StatusInternalServerError)
+			} else if license.RegistryURL != nil {
+				baseDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
+					*license.RegistryURL: {
+						Username: *license.RegistryUsername,
+						Password: *license.RegistryPassword,
+					},
+				}
 			}
 		}
 	}
