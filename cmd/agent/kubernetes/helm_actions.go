@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glasskube/distr/api"
@@ -181,6 +180,6 @@ func GetHelmManifest(
 		return nil, err
 	} else {
 		// decode the release manifests which is represented as multi-document YAML
-		return DecodeResourceYaml(strings.NewReader(release.Manifest))
+		return DecodeResourceYaml([]byte(release.Manifest))
 	}
 }

@@ -59,7 +59,7 @@ func resource[T any](ctx context.Context, c *Client) (*T, error) {
 	}
 }
 
-func (c *Client) Manifest(ctx context.Context) (io.Reader, error) {
+func (c *Client) Manifest(ctx context.Context) ([]byte, error) {
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.manifestEndpoint, nil); err != nil {
 		return nil, err
 	} else if resp, err := c.doAuthenticated(ctx, req); err != nil {
@@ -67,7 +67,7 @@ func (c *Client) Manifest(ctx context.Context) (io.Reader, error) {
 	} else if data, err := io.ReadAll(resp.Body); err != nil {
 		return nil, err
 	} else {
-		return bytes.NewBuffer(data), nil
+		return data, nil
 	}
 }
 
