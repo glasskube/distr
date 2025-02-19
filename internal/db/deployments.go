@@ -134,6 +134,18 @@ func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error
 	}
 }
 
+func DeleteDeploymentWithID(ctx context.Context, id uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	res, err := db.Exec(ctx, "DELETE FROM Deployment WHERE id = @id", pgx.NamedArgs{"id": id})
+	if err == nil && res.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("could not delete Deployment: %w", err)
+	}
+	return nil
+}
+
 func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentRequest) (*types.DeploymentRevision, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
