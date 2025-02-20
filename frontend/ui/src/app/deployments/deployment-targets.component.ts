@@ -109,6 +109,10 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   private deploymentWizardOverlayRef?: DialogRef;
 
+  protected readonly customerManagedWarning = `
+    You are about to make changes to a customer-managed deployment.
+    Ensure this is done in coordination with the customer.`;
+
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
   selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
 
@@ -207,15 +211,19 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   }
 
   async deleteDeploymentTarget(dt: DeploymentTarget) {
+    const message = `
+      You are about to delete the deployment with name ${dt.name}?
+      Afterwards you will not be able to deploy to this target anymore.
+      This will also delete all associated configuration, revision history and status logs.
+      This does not undeploy the deployed application.
+      This action can not be undone.
+      Do you want to continue?`;
+    const warning =
+      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        ? {message: this.customerManagedWarning}
+        : undefined;
     this.overlay
-      .confirm(
-        `You are about to delete the deployment with name ${dt.name}?
-        Afterwards you will not be able to deploy to this target anymore.
-        This will also delete all associated configuration, revision history and status logs.
-        This does not undeploy the deployed application.
-        This action can not be undone.
-        Do you want to continue?`
-      )
+      .confirm({message, warning})
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.deploymentTargets.delete(dt)),
@@ -231,18 +239,19 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   }
 
   async deleteDeployment(dt: DeploymentTarget, d: Deployment) {
+    const message = `
+      You are about to uninstall the application installed on ${dt.name}.
+      Afterwards you will be able to deploy a new application to this target.
+      This will also delete all associated configuration, revision history and status logs.
+      In most cases all application data is deleted.
+      This action can not be undone.
+      Do you want to continue?`;
+    const warning =
+      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        ? {message: this.customerManagedWarning}
+        : undefined;
     if (d.id) {
-      if (
-        await firstValueFrom(
-          this.overlay.confirm(`
-            You are about to uninstall the application installed on ${dt.name}.
-            Afterwards you will be able to deploy a new application to this target.
-            This will also delete all associated configuration, revision history and status logs.
-            In most cases all application data is deleted.
-            This action can not be undone.
-            Do you want to continue?`)
-        )
-      )
+      if (await firstValueFrom(this.overlay.confirm({message, warning})))
         try {
           await firstValueFrom(this.deploymentTargets.undeploy(d.id));
         } catch (e) {
@@ -372,17 +381,14 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
     if (deploymentTarget.currentStatus !== undefined) {
-      let customerOverwriteWarning =
+      const message = `
+        If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid.
+        Continue?`;
+      const warning =
         deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
-          ? 'WARNING: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination with the customer. '
-          : '';
-      if (
-        !(await firstValueFrom(
-          this.overlay.confirm(
-            `${customerOverwriteWarning}If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid. Continue?`
-          )
-        ))
-      ) {
+          ? {message: this.customerManagedWarning}
+          : undefined;
+      if (!(await firstValueFrom(this.overlay.confirm({message, warning})))) {
         return;
       }
     }

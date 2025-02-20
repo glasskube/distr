@@ -312,10 +312,7 @@
             role="alert">
             <fa-icon [icon]="faCircleExclamation" />
             <span class="sr-only">Info</span>
-            <div class="ms-3 text-sm font-medium">
-              Warning: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination
-              with the customer.
-            </div>
+            <div class="ms-3 text-sm font-medium">{{ customerManagedWarning }}</div>
           </div>
         }
         <div>
