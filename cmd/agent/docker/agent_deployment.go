@@ -50,18 +50,25 @@ func GetExistingDeployments() ([]AgentDeployment, error) {
 		}
 		return nil, err
 	} else {
+		fn := func(name string) (*AgentDeployment, error) {
+			if file, err := os.Open(path.Join(agentDeploymentDir(), name)); err != nil {
+				return nil, err
+			} else {
+				defer file.Close()
+				var d AgentDeployment
+				if err := json.NewDecoder(file).Decode(&d); err != nil {
+					return nil, err
+				}
+				return &d, nil
+			}
+		}
 		result := make([]AgentDeployment, 0, len(entries))
 		for _, entry := range entries {
 			if !entry.IsDir() {
-				if file, err := os.Open(path.Join(agentDeploymentDir(), entry.Name())); err != nil {
+				if d, err := fn(entry.Name()); err != nil {
 					return nil, err
 				} else {
-					defer file.Close()
-					var d AgentDeployment
-					if err := json.NewDecoder(file).Decode(&d); err != nil {
-						return nil, err
-					}
-					result = append(result, d)
+					result = append(result, *d)
 				}
 			}
 		}
