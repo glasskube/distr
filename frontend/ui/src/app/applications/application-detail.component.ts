@@ -168,7 +168,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   enableApplicationEdit(application: Application) {
     this.editForm.enable();
     this.editForm.patchValue({name: application.name});
-    setTimeout(() => this.nameInputElem?.nativeElement.focus(), 0);
+    setTimeout(() => this.nameInputElem?.nativeElement.focus(), 10);
   }
 
   cancelApplicationEdit() {

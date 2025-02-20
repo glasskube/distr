@@ -98,7 +98,7 @@ export class ApplicationsService implements CrudService<Application> {
       .post<ApplicationVersion>(`${this.applicationsUrl}/${application.id}/versions`, formData)
       .pipe(
         tap((it) => {
-          application.versions = [it, ...(application.versions || [])];
+          application.versions = [...(application.versions || []), it];
           this.cache.save(application);
         })
       );
