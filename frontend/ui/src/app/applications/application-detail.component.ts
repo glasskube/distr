@@ -138,6 +138,8 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faArchive = faArchive;
   protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
+  breadcrumbDropdownWidth: number = 0;
+  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
   ngOnInit() {
@@ -163,6 +165,9 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   toggleBreadcrumbDropdown() {
     this.breadcrumbDropdown.update((v) => !v);
+    if (this.breadcrumbDropdown()) {
+      this.breadcrumbDropdownWidth = this.dropdownTriggerButton.nativeElement.getBoundingClientRect().width;
+    }
   }
 
   enableApplicationEdit(application: Application) {

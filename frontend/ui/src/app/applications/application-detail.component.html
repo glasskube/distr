@@ -19,8 +19,9 @@
                   id="application-dropdown"
                   cdkOverlayOrigin
                   #dropdownTrigger="cdkOverlayOrigin"
+                  #dropdownTriggerButton
                   (click)="toggleBreadcrumbDropdown()"
-                  class="inline-flex items-center px-3 py-2 text-sm font-normal text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 dark:text-white dark:focus:ring-gray-700">
+                  class="inline-flex items-center px-3 py-2 text-sm font-normal text-center text-gray-700 dark:hover:text-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:hover:bg-gray-800 dark:text-gray-400 dark:focus:ring-gray-700">
                   {{ application.name }}
                   <fa-icon class="ml-2" [icon]="faChevronDown"></fa-icon>
                 </button>
@@ -30,15 +31,16 @@
                   (backdropClick)="breadcrumbDropdown.set(false)"
                   [cdkConnectedOverlayBackdropClass]="'transparent'"
                   [cdkConnectedOverlayOrigin]="dropdownTrigger"
+                  [cdkConnectedOverlayMinWidth]="breadcrumbDropdownWidth + 'px'"
                   [cdkConnectedOverlayOpen]="breadcrumbDropdown()">
                   <div
                     @dropdown
                     style="transform-origin: top center"
-                    class="z-10 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700">
+                    class="z-10 w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700">
                     <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefault">
                       @for (app of applications$ | async; track app.id) {
                         <li class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                          <a [routerLink]="['/', 'applications', app.id]">{{ app.name }}</a>
+                          <a class="flex items-stretch" [routerLink]="['/', 'applications', app.id]">{{ app.name }}</a>
                         </li>
                       }
                     </ul>
