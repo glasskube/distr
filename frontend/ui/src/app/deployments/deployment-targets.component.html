@@ -195,6 +195,7 @@
                   cdkConnectedOverlay
                   [cdkConnectedOverlayHasBackdrop]="true"
                   (backdropClick)="showDropdownForId = undefined"
+                  (detach)="showDropdownForId = undefined"
                   [cdkConnectedOverlayBackdropClass]="'transparent'"
                   [cdkConnectedOverlayOrigin]="dropdownTrigger"
                   [cdkConnectedOverlayPositions]="[
