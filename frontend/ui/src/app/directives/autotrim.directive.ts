@@ -10,7 +10,7 @@ export class AutotrimDirective {
     if (target.value !== target.value.trim()) {
       target.value = target.value.trim();
     }
-    if (typeof this.ngControl?.value === 'string' && this.ngControl.value != this.ngControl.value.trim()) {
+    if (typeof this.ngControl?.value === 'string' && this.ngControl.value !== this.ngControl.value.trim()) {
       this.ngControl.control?.setValue(this.ngControl.value.trim());
     }
   }
