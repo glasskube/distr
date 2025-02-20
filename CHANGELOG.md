@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.2](https://github.com/glasskube/distr/compare/1.2.1...1.2.2) (2025-02-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency posthog-js to v1.221.0 ([#539](https://github.com/glasskube/distr/issues/539)) ([b658f50](https://github.com/glasskube/distr/commit/b658f50de40aca40e3d58caff2bf189a591c0ede))
+* **deps:** update module github.com/docker/cli to v28 ([#533](https://github.com/glasskube/distr/issues/533)) ([ae39374](https://github.com/glasskube/distr/commit/ae393740804d11bc4952a69c823e482bc0b7d46d))
+* **ui:** make autotrim work with FormControls ([#535](https://github.com/glasskube/distr/issues/535)) ([6b4c994](https://github.com/glasskube/distr/commit/6b4c994a9aba9466a16ba058bbb5dc8e11990ef3))
+
+
+### Other
+
+* **backend:** change DeploymentRevision application_version_id reference on delete to `RESTRICT` ([#528](https://github.com/glasskube/distr/issues/528)) ([0ed852f](https://github.com/glasskube/distr/commit/0ed852fc9801dbcce4e4c2d6756913e69c5ceeb9))
+
 ## [1.2.1](https://github.com/glasskube/distr/compare/1.2.0...1.2.1) (2025-02-20)
 
 
