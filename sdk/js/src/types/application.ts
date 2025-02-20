@@ -10,6 +10,7 @@ export interface ApplicationVersion {
   id?: string;
   name?: string;
   createdAt?: string;
+  archivedAt?: string;
   applicationId?: string;
   chartType?: HelmChartType;
   chartName?: string;
