@@ -9,8 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -62,131 +65,154 @@ func main() {
 			continue
 		}
 
-		if agentVersionId != "" {
-			if agentVersionId != res.Version.ID.String() {
-				logger.Info("agent version has changed. starting self-update")
-				if manifest, err := agentClient.Manifest(ctx); err != nil {
-					logger.Error("error fetching agent manifest", zap.Error(err))
-				} else if parsedManifest, err := DecodeResourceYaml(manifest); err != nil {
-					logger.Error("error parsing agent manifest", zap.Error(err))
-				} else if err := ApplyResources(ctx, res.Namespace, parsedManifest); err != nil {
-					logger.Error("error applying agent manifest", zap.Error(err))
-				} else {
-					logger.Info("self-update has been applied")
-				}
-				continue
+		if runSelfUpdateIfNeeded(ctx, res.Namespace, res.Version) {
+			continue
+		}
+
+		deployments, err := GetExistingDeployments(ctx, res.Namespace)
+		if err != nil {
+			logger.Error("could not get existing deployments", zap.Error(err))
+			continue
+		}
+
+		var currentDeployment *AgentDeployment
+		for _, d := range deployments {
+			// Check if the deployment ID matches, but fall back to checking the release name if the agent
+			// deployment is missing the ID. This has the disadvantage that we would miss if a deployment is
+			// deleted and recreated with the same name very quickly.
+			if res.Deployment != nil &&
+				((d.ID != uuid.Nil && d.ID == res.Deployment.ID) ||
+					(d.ID == uuid.Nil && res.Deployment.ReleaseName == d.ReleaseName)) {
+				currentDeployment = &d
 			} else {
-				logger.Debug("agent version is up to date")
+				logger.Info("uninstalling orphan deployment", zap.String("id", d.ID.String()))
+				if err := RunHelmUninstall(ctx, res.Namespace, d.ReleaseName); err != nil {
+					logger.Warn("could not uninstall old deployment", zap.Error(err))
+				} else if err := DeleteDeployment(ctx, res.Namespace, d); err != nil {
+					logger.Warn("could not delete old AgentDeployment resource", zap.Error(err))
+				}
 			}
 		}
 
 		if res.Deployment == nil {
-			// TODO: delete previous deployment if it exists?
 			logger.Info("no deployment in resource response")
 			continue
 		}
 
-		pushStatus := func(ctx context.Context, status string) {
-			if err := agentClient.Status(ctx, res.Deployment.RevisionID, status, nil); err != nil {
-				logger.Warn("status push failed", zap.Error(err))
-			}
-		}
-		pushErrorStatus := func(ctx context.Context, error error) {
-			if err := agentClient.Status(ctx, res.Deployment.RevisionID, "", error); err != nil {
-				logger.Warn("status push failed", zap.Error(err))
-			}
-		}
-
-		installRequired := true
-		upgradeRequired := true
-		var currentDeployment *AgentDeployment
-		if deployments, err := GetExistingDeployments(ctx, res.Namespace); err != nil {
-			logger.Error("could not get existing deployments", zap.Error(err))
-			continue
-		} else {
-			for _, deployment := range deployments {
-				if deployment.ReleaseName == res.Deployment.ReleaseName {
-					currentDeployment = &deployment
-					upgradeRequired = deployment.RevisionID != res.Deployment.RevisionID
-				} else {
-					// TODO: existing deployments should probably be handled somehow... for now we just print a warning
-					logger.Sugar().Warnf("found unhandled deployment: %v", deployment.ReleaseName)
-				}
-			}
-		}
-
-		latestRelease, err := GetLatestHelmRelease(ctx, res.Namespace, *res.Deployment)
-		if err != nil {
+		if err := verifyLatestHelmRelease(ctx, res.Namespace, *res.Deployment, currentDeployment); err != nil {
 			if errors.Is(err, driver.ErrReleaseNotFound) {
 				logger.Info("current helm release does not exist")
 			} else {
-				logger.Error("could not get latest helm revision", zap.Error(err))
-				pushErrorStatus(ctx, err)
+				logger.Warn("refusing to install or update", zap.Error(err))
+				pushErrorStatus(ctx, *res.Deployment, err)
 				continue
-			}
-		} else if currentDeployment != nil {
-			if currentDeployment.HelmRevision != latestRelease.Version {
-				msg := fmt.Sprintf("actual helm revision (%v) is different from latest deployed by agent (%v). bailing out",
-					latestRelease.Version, currentDeployment.HelmRevision)
-				logger.Warn(msg)
-				pushErrorStatus(ctx, errors.New(msg))
-				continue
-			} else {
-				installRequired = false
-			}
-		} else {
-			msg := "helm release already exists but was not created by the agent. bailing out"
-			logger.Warn(msg)
-			pushErrorStatus(ctx, errors.New(msg))
-			continue
-		}
-
-		if installRequired {
-			if deployment, err := RunHelmInstall(ctx, res.Namespace, *res.Deployment); err != nil {
-				logger.Error("helm upgrade failed", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Errorf("helm upgrade failed: %w", err))
-			} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
-				logger.Error("could not save latest deployment", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Errorf("could not save latest deployment: %w", err))
-			} else {
-				logger.Info("helm install succeeded")
-				pushStatus(ctx, "helm install succeeded")
-			}
-		} else if upgradeRequired {
-			if deployment, err := RunHelmUpgrade(ctx, res.Namespace, *res.Deployment); err != nil {
-				logger.Error("helm install failed", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Errorf("helm install failed: %w", err))
-			} else if err := SaveDeployment(ctx, res.Namespace, *deployment); err != nil {
-				logger.Error("could not save latest deployment", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Errorf("could not save latest deployment: %w", err))
-			} else {
-				logger.Info("helm upgrade succeeded")
-				pushStatus(ctx, "helm upgrade succeeded")
-			}
-		} else {
-			logger.Info("no action required. running status check")
-			if resources, err := GetHelmManifest(ctx, res.Namespace, *res.Deployment); err != nil {
-				logger.Warn("could not get helm manifest", zap.Error(err))
-				pushErrorStatus(ctx, fmt.Errorf("could not get helm manifest: %w", err))
-			} else {
-				var err error
-				for _, resource := range resources {
-					logger.Sugar().Debugf("check status for %v %v", resource.GetKind(), resource.GetName())
-					if err = CheckStatus(ctx, res.Namespace, resource); err != nil {
-						break
-					}
-				}
-				if err != nil {
-					logger.Warn("resource status error", zap.Error(err))
-					pushErrorStatus(ctx, fmt.Errorf("resource status error: %w", err))
-				} else {
-					logger.Info("status check passed")
-					pushStatus(ctx, fmt.Sprintf("status check passed. %v resources", len(resources)))
-				}
 			}
 		}
 
+		runInstallOrUpgrade(ctx, res.Namespace, *res.Deployment, currentDeployment)
 	}
 
 	logger.Info("shutting down")
+}
+
+func runSelfUpdateIfNeeded(ctx context.Context, namespace string, targetVersion types.AgentVersion) bool {
+	if agentVersionId != "" {
+		if agentVersionId != targetVersion.ID.String() {
+			logger.Info("agent version has changed. starting self-update")
+			if manifest, err := agentClient.Manifest(ctx); err != nil {
+				logger.Error("error fetching agent manifest", zap.Error(err))
+			} else if parsedManifest, err := DecodeResourceYaml(manifest); err != nil {
+				logger.Error("error parsing agent manifest", zap.Error(err))
+			} else if err := ApplyResources(ctx, namespace, parsedManifest); err != nil {
+				logger.Error("error applying agent manifest", zap.Error(err))
+			} else {
+				logger.Info("self-update has been applied")
+			}
+			return true
+		} else {
+			logger.Debug("agent version is up to date")
+		}
+	}
+	return false
+}
+
+func verifyLatestHelmRelease(
+	ctx context.Context,
+	namespace string,
+	deployment api.KubernetesAgentDeployment,
+	currentDeployment *AgentDeployment,
+) error {
+	if latestRelease, err := GetLatestHelmRelease(ctx, namespace, deployment); err != nil {
+		return fmt.Errorf("could not get latest helm revision: %w", err)
+	} else if currentDeployment == nil {
+		return fmt.Errorf("helm release %v already exists but was not created by the agent", latestRelease.Name)
+	} else if currentDeployment.HelmRevision != latestRelease.Version {
+		return fmt.Errorf("actual helm revision for %v (%v) is different from latest deployed by agent (%v)",
+			latestRelease.Name, latestRelease.Version, currentDeployment.HelmRevision)
+	} else {
+		return nil
+	}
+}
+
+func runInstallOrUpgrade(
+	ctx context.Context,
+	namespace string,
+	deployment api.KubernetesAgentDeployment,
+	currentDeployment *AgentDeployment,
+) {
+	if currentDeployment == nil {
+		if installedDeployment, err := RunHelmInstall(ctx, namespace, deployment); err != nil {
+			logger.Error("helm upgrade failed", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("helm upgrade failed: %w", err))
+		} else if err := SaveDeployment(ctx, namespace, *installedDeployment); err != nil {
+			logger.Error("could not save latest deployment", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
+		} else {
+			logger.Info("helm install succeeded")
+			pushStatus(ctx, deployment, "helm install succeeded")
+		}
+	} else if currentDeployment.RevisionID != deployment.RevisionID {
+		if updatedDeployment, err := RunHelmUpgrade(ctx, namespace, deployment); err != nil {
+			logger.Error("helm install failed", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("helm install failed: %w", err))
+		} else if err := SaveDeployment(ctx, namespace, *updatedDeployment); err != nil {
+			logger.Error("could not save latest deployment", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
+		} else {
+			logger.Info("helm upgrade succeeded")
+			pushStatus(ctx, deployment, "helm upgrade succeeded")
+		}
+	} else {
+		logger.Info("no action required. running status check")
+		if resources, err := GetHelmManifest(ctx, namespace, deployment); err != nil {
+			logger.Warn("could not get helm manifest", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("could not get helm manifest: %w", err))
+		} else {
+			var err error
+			for _, resource := range resources {
+				logger.Sugar().Debugf("check status for %v %v", resource.GetKind(), resource.GetName())
+				if err = CheckStatus(ctx, namespace, resource); err != nil {
+					break
+				}
+			}
+			if err != nil {
+				logger.Warn("resource status error", zap.Error(err))
+				pushErrorStatus(ctx, deployment, fmt.Errorf("resource status error: %w", err))
+			} else {
+				logger.Info("status check passed")
+				pushStatus(ctx, deployment, fmt.Sprintf("status check passed. %v resources", len(resources)))
+			}
+		}
+	}
+}
+
+func pushStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, status string) {
+	if err := agentClient.Status(ctx, deployment.RevisionID, status, nil); err != nil {
+		logger.Warn("status push failed", zap.Error(err))
+	}
+}
+func pushErrorStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, error error) {
+	if err := agentClient.Status(ctx, deployment.RevisionID, "", error); err != nil {
+		logger.Warn("status push failed", zap.Error(err))
+	}
 }

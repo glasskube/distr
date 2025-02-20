@@ -90,4 +90,8 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   deploy(request: DeploymentRequest): Observable<void> {
     return this.httpClient.put<void>(this.deploymentsBaseUrl, request).pipe(tap(() => this.pollRefresh$.next()));
   }
+
+  undeploy(id: string): Observable<void> {
+    return this.httpClient.delete<void>(`${this.deploymentsBaseUrl}/${id}`).pipe(tap(() => this.pollRefresh$.next()));
+  }
 }

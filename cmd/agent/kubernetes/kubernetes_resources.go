@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -14,8 +15,8 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
-func DecodeResourceYaml(reader io.Reader) ([]*unstructured.Unstructured, error) {
-	decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
+func DecodeResourceYaml(data []byte) ([]*unstructured.Unstructured, error) {
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewBuffer(data), 4096)
 	var result []*unstructured.Unstructured
 	for {
 		var object unstructured.Unstructured

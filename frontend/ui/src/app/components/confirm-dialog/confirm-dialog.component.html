@@ -14,6 +14,14 @@
     </div>
     <!-- Modal body -->
     <div class="p-4 md:p-5 space-y-4">
+      @if (data.warning) {
+        <div
+          class="p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+          role="alert">
+          <span class="font-semibold me-1">WARNING!</span>
+          {{ data.warning.message }}
+        </div>
+      }
       <p class="text-base leading-relaxed text-gray-500 dark:text-gray-200">
         {{ data.message }}
       </p>
