@@ -85,6 +85,7 @@ func deleteDeploymentHandler() http.HandlerFunc {
 			if target.OrganizationID != orgId ||
 				(*auth.CurrentUserRole() != types.UserRoleVendor && target.CreatedByUserAccountID != auth.CurrentUserID()) {
 				http.NotFound(w, r)
+				return apierrors.ErrNotFound
 			}
 
 			if err := db.DeleteDeploymentWithID(ctx, deployment.ID); err != nil {
