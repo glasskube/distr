@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/glasskube/distr/compare/1.2.0...1.2.1) (2025-02-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @angular/cdk to v19.1.5 ([#531](https://github.com/glasskube/distr/issues/531)) ([5db3911](https://github.com/glasskube/distr/commit/5db391165ad11d8b46ac4d1b50d2327df26fbd45))
+
 ## [1.2.0](https://github.com/glasskube/distr/compare/1.1.6...1.2.0) (2025-02-20)
 
 
