@@ -64,7 +64,7 @@ const (
 			ON u.id = j.user_account_id
 	`
 	deploymentTargetFromExpr = `
-		FROM DeploymentTarget dt
+		DeploymentTarget dt
 	` + deploymentTargetJoinExpr
 )
 
@@ -75,7 +75,7 @@ func GetDeploymentTargets(
 ) ([]types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
-		"SELECT"+deploymentTargetWithStatusOutputExpr+deploymentTargetFromExpr+
+		"SELECT"+deploymentTargetWithStatusOutputExpr+"FROM"+deploymentTargetFromExpr+
 			"WHERE dt.organization_id = @orgId "+
 			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor') "+
 			"ORDER BY u.name, u.email, dt.name",
@@ -104,7 +104,7 @@ func GetDeploymentTarget(
 ) (*types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
-	query := "SELECT" + deploymentTargetWithStatusOutputExpr + deploymentTargetFromExpr + "WHERE dt.id = @id"
+	query := "SELECT" + deploymentTargetWithStatusOutputExpr + "FROM" + deploymentTargetFromExpr + "WHERE dt.id = @id"
 	if orgID != nil {
 		args = pgx.NamedArgs{"id": id, "orgId": *orgID}
 		query = query + " AND dt.organization_id = @orgId"
@@ -112,6 +112,30 @@ func GetDeploymentTarget(
 		args = pgx.NamedArgs{"id": id}
 	}
 	rows, err := db.Query(ctx, query, args)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTargetWithCreatedBy])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, apierrors.ErrNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
+	} else {
+		return &result, addDeploymentToTarget(ctx, &result)
+	}
+}
+
+func GetDeploymentTargetForDeploymentID(
+	ctx context.Context,
+	id uuid.UUID,
+) (*types.DeploymentTargetWithCreatedBy, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		fmt.Sprintf("SELECT %v FROM %v JOIN Deployment d ON dt.id = d.deployment_target_id WHERE d.id = @id",
+			deploymentTargetWithStatusOutputExpr, deploymentTargetFromExpr),
+		pgx.NamedArgs{"id": id},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}

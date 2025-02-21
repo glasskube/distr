@@ -181,21 +181,71 @@
                     }
                   </button>
                 }
+
                 <button
                   type="button"
-                  (click)="openDrawer(manageDeploymentTargetDrawer, dt)"
-                  aria-controls="manage-deployment-target-drawer"
-                  class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                  <fa-icon [icon]="penIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-                  Edit
+                  aria-label="More actions"
+                  class="p-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                  cdkOverlayOrigin
+                  #dropdownTrigger="cdkOverlayOrigin"
+                  (click)="showDropdownForId = dt.id">
+                  <fa-icon [icon]="faEllipsisVertical" class="h-5 w-5 text-gray-500 dark:text-gray-400"></fa-icon>
                 </button>
-                <button
-                  type="button"
-                  aria-label="Delete"
-                  (click)="deleteDeploymentTarget(dt)"
-                  class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                  <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
-                </button>
+                <ng-template
+                  cdkConnectedOverlay
+                  [cdkConnectedOverlayHasBackdrop]="true"
+                  (backdropClick)="showDropdownForId = undefined"
+                  (detach)="showDropdownForId = undefined"
+                  [cdkConnectedOverlayBackdropClass]="'transparent'"
+                  [cdkConnectedOverlayOrigin]="dropdownTrigger"
+                  [cdkConnectedOverlayPositions]="[
+                    {originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top'},
+                  ]"
+                  [cdkConnectedOverlayOpen]="showDropdownForId === dt.id">
+                  <div
+                    @dropdown
+                    style="transform-origin: top center"
+                    class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+                    <ul class="py-1" role="none">
+                      <li>
+                        <button
+                          type="button"
+                          (click)="showDropdownForId = undefined; openDrawer(manageDeploymentTargetDrawer, dt)"
+                          aria-controls="manage-deployment-target-drawer"
+                          class="text-start block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                          <fa-icon
+                            [icon]="penIcon"
+                            class="inline-block w-4 mr-2 text-gray-500 dark:text-gray-400"></fa-icon>
+                          Edit
+                        </button>
+                      </li>
+                      @if (dt.deployment) {
+                        <li>
+                          <button
+                            type="button"
+                            aria-label="Delete"
+                            (click)="showDropdownForId = undefined; deleteDeployment(dt, dt.deployment)"
+                            class="text-start block w-full px-4 py-2 text-sm text-red-700 hover:text-white hover:bg-red-800 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600">
+                            <fa-icon [icon]="faTriangleExclamation" class="inline-block w-4 mr-2"></fa-icon>
+                            Undeploy
+                          </button>
+                        </li>
+                      }
+                      <li>
+                        <button
+                          type="button"
+                          aria-label="Delete"
+                          [disabled]="dt.deployment"
+                          [title]="dt.deployment ? 'Undeploy application first' : ''"
+                          (click)="showDropdownForId = undefined; deleteDeploymentTarget(dt)"
+                          class="text-start block w-full px-4 py-2 text-sm text-red-700 not-disabled:hover:text-white not-disabled:hover:bg-red-800 dark:text-red-500 dark:not-disabled:hover:text-white dark:not-disabled:hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed">
+                          <fa-icon [icon]="faTrash" class="inline-block w-4 mr-2"></fa-icon>
+                          Delete
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </ng-template>
               </td>
             }
 
@@ -265,10 +315,7 @@
             role="alert">
             <fa-icon [icon]="faCircleExclamation" />
             <span class="sr-only">Info</span>
-            <div class="ms-3 text-sm font-medium">
-              Warning: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination
-              with the customer.
-            </div>
+            <div class="ms-3 text-sm font-medium">{{ customerManagedWarning }}</div>
           </div>
         }
         <div>

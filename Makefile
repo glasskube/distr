@@ -49,6 +49,10 @@ run: frontend-dev tidy
 run-kubernetes-agent: tidy
 	CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/agent/kubernetes
 
+.PHONY: run-docker-agent
+run-docker-agent: tidy
+	CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/agent/docker
+
 .PHONY: build
 build: frontend-prod tidy
 	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/distr ./cmd/hub/

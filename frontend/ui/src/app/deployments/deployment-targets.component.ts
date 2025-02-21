@@ -1,4 +1,4 @@
-import {GlobalPositionStrategy} from '@angular/cdk/overlay';
+import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/common';
 import {AfterViewInit, Component, inject, Input, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
@@ -6,16 +6,20 @@ import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} fr
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faCircleExclamation,
+  faEllipsisVertical,
+  faExclamation,
   faHeartPulse,
   faMagnifyingGlass,
   faPen,
   faPlus,
   faShip,
   faTrash,
+  faTriangleExclamation,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Application,
+  Deployment,
   DeploymentRequest,
   DeploymentRevisionStatus,
   DeploymentTarget,
@@ -53,6 +57,7 @@ import {DeploymentStatusService} from '../services/deployment-status.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {dropdownAnimation} from '../animations/dropdown';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -71,10 +76,11 @@ import {ToastService} from '../services/toast.service';
     AutotrimDirective,
     UuidComponent,
     DeploymentFormComponent,
+    OverlayModule,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
-  animations: [modalFlyInOut, drawerFlyInOut],
+  animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
 export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   @Input('fullVersion') fullVersion = false;
@@ -94,12 +100,18 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   readonly xmarkIcon = faXmark;
   protected readonly faHeartPulse = faHeartPulse;
   protected readonly faTrash = faTrash;
+  protected readonly faEllipsisVertical = faEllipsisVertical;
+  protected readonly faTriangleExclamation = faTriangleExclamation;
 
   private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
 
   private deploymentWizardOverlayRef?: DialogRef;
+
+  protected readonly customerManagedWarning = `
+    You are about to make changes to a customer-managed deployment.
+    Ensure this is done in coordination with the customer.`;
 
   @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
   selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
@@ -149,6 +161,8 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
 
+  protected showDropdownForId?: string;
+
   ngAfterViewInit() {
     if (this.fullVersion) {
       combineLatest([this.applications$, this.deploymentTargets$])
@@ -197,8 +211,19 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   }
 
   async deleteDeploymentTarget(dt: DeploymentTarget) {
+    const message = `
+      You are about to delete the deployment with name ${dt.name}?
+      Afterwards you will not be able to deploy to this target anymore.
+      This will also delete all associated configuration, revision history and status logs.
+      This does not undeploy the deployed application.
+      This action can not be undone.
+      Do you want to continue?`;
+    const warning =
+      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        ? {message: this.customerManagedWarning}
+        : undefined;
     this.overlay
-      .confirm(`Really delete ${dt.name}? This action can not be undone.`)
+      .confirm({message, warning})
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.deploymentTargets.delete(dt)),
@@ -211,6 +236,31 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
         })
       )
       .subscribe();
+  }
+
+  async deleteDeployment(dt: DeploymentTarget, d: Deployment) {
+    const message = `
+      You are about to uninstall the application installed on ${dt.name}.
+      Afterwards you will be able to deploy a new application to this target.
+      This will also delete all associated configuration, revision history and status logs.
+      In most cases all application data is deleted.
+      This action can not be undone.
+      Do you want to continue?`;
+    const warning =
+      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        ? {message: this.customerManagedWarning}
+        : undefined;
+    if (d.id) {
+      if (await firstValueFrom(this.overlay.confirm({message, warning})))
+        try {
+          await firstValueFrom(this.deploymentTargets.undeploy(d.id));
+        } catch (e) {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        }
+    }
   }
 
   loadDeploymentTarget(dt: DeploymentTarget) {
@@ -331,17 +381,14 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
     if (deploymentTarget.currentStatus !== undefined) {
-      let customerOverwriteWarning =
+      const message = `
+        If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid.
+        Continue?`;
+      const warning =
         deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
-          ? 'WARNING: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination with the customer. '
-          : '';
-      if (
-        !(await firstValueFrom(
-          this.overlay.confirm(
-            `${customerOverwriteWarning}If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid. Continue?`
-          )
-        ))
-      ) {
+          ? {message: this.customerManagedWarning}
+          : undefined;
+      if (!(await firstValueFrom(this.overlay.confirm({message, warning})))) {
         return;
       }
     }
