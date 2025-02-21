@@ -26,6 +26,7 @@ func DeploymentsRouter(r chi.Router) {
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
+		r.Delete("/", deleteDeploymentHandler())
 		r.Get("/status", getDeploymentStatus)
 	})
 }
@@ -64,6 +65,39 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	})
+}
+
+func deleteDeploymentHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.Authentication.Require(ctx)
+		orgId := *auth.CurrentOrgID()
+		deployment := internalctx.GetDeployment(ctx)
+		_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+			target, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID)
+			if err != nil {
+				log.Warn("could not get DeploymentTarget", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+			if target.OrganizationID != orgId ||
+				(*auth.CurrentUserRole() != types.UserRoleVendor && target.CreatedByUserAccountID != auth.CurrentUserID()) {
+				http.NotFound(w, r)
+				return apierrors.ErrNotFound
+			}
+
+			if err := db.DeleteDeploymentWithID(ctx, deployment.ID); err != nil {
+				log.Warn("could not delete Deployment", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+
+			return nil
+		})
+	}
 }
 
 func validateDeploymentRequest(
