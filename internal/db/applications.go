@@ -171,8 +171,9 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 				compose_file_data, values_file_data, template_file_data)
 			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @composeFileData::bytea,
 				@valuesFileData::bytea, @templateFileData::bytea)
-			RETURNING av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
-				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`, args)
+			RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url,
+				av.chart_version, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+		args)
 	if err != nil {
 		return fmt.Errorf("can not create ApplicationVersion: %w", err)
 	} else if result, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[types.ApplicationVersion]); err != nil {
@@ -192,7 +193,7 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt WHERE id = @id
-		RETURNING av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
+		RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
 				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
 		pgx.NamedArgs{
 			"id":         applicationVersion.ID,
