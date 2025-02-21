@@ -1,8 +1,10 @@
-import {HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
+import {HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
 import {tap} from 'rxjs';
 import {inject} from '@angular/core';
 import {ToastService} from './toast.service';
 import {displayedInToast} from '../../util/errors';
+import {captureException} from '@sentry/browser';
+import {captureMessage} from '@sentry/angular';
 
 export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
@@ -12,6 +14,10 @@ export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
         const msg = getToastDisplayedError(err);
         if (msg) {
           toast.error(msg);
+        }
+
+        if (err.status && (err.status === 400 || err.status >= 500)) {
+          captureException(err);
         }
       },
     })
