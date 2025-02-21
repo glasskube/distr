@@ -6,7 +6,6 @@ import {
   catchError,
   combineLatestWith,
   distinctUntilChanged,
-  distinctUntilKeyChanged,
   EMPTY,
   filter,
   firstValueFrom,
@@ -18,10 +17,9 @@ import {
   switchMap,
   takeUntil,
   tap,
-  withLatestFrom,
 } from 'rxjs';
 import {ApplicationsService} from '../services/applications.service';
-import {AsyncPipe, DatePipe, JsonPipe, NgOptimizedImage} from '@angular/common';
+import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -29,10 +27,8 @@ import {
   faBoxesStacked,
   faCheck,
   faChevronDown,
-  faCross,
   faEdit,
   faMagnifyingGlass,
-  faPen,
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
@@ -44,9 +40,6 @@ import {ToastService} from '../services/toast.service';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
 import {dropdownAnimation} from '../animations/dropdown';
 import {OverlayService} from '../services/overlay.service';
-import {RequireRoleDirective} from '../directives/required-role.directive';
-import dayjs from 'dayjs';
-import {combineLatest} from 'rxjs/internal/operators/combineLatest';
 import {isArchived} from '../../util/dates';
 
 @Component({
@@ -153,7 +146,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.newVersionForm.controls.kubernetes.controls.chartName.disable();
         }
       });
-    this.filterForm.valueChanges.pipe(takeUntil(this.destroyed$), distinctUntilChanged());
   }
 
   ngOnDestroy() {
