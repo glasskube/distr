@@ -165,33 +165,50 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	if applicationVersion.TemplateFileData != nil {
 		args["templateFileData"] = applicationVersion.TemplateFileData
 	}
-	row := db.QueryRow(ctx,
-		`INSERT INTO ApplicationVersion (name, application_id,
-                                chart_type, chart_name, chart_url, chart_version,
-                                compose_file_data, values_file_data, template_file_data)
-					VALUES (@name, @applicationId,
-					        @chartType, @chartName, @chartUrl, @chartVersion,
-					        @composeFileData::bytea, @valuesFileData::bytea, @templateFileData::bytea)
-					RETURNING id, created_at`, args)
-	if err := row.Scan(&applicationVersion.ID, &applicationVersion.CreatedAt); err != nil {
-		return fmt.Errorf("could not save application: %w", err)
+
+	row, err := db.Query(ctx,
+		`INSERT INTO ApplicationVersion AS av (name, application_id, chart_type, chart_name, chart_url, chart_version,
+				compose_file_data, values_file_data, template_file_data)
+			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @composeFileData::bytea,
+				@valuesFileData::bytea, @templateFileData::bytea)
+			RETURNING av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
+				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`, args)
+	if err != nil {
+		return fmt.Errorf("can not create ApplicationVersion: %w", err)
+	} else if result, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[types.ApplicationVersion]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		} else if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
+			err = apierrors.ErrAlreadyExists
+		}
+		return fmt.Errorf("could not scan ApplicationVersion: %w", err)
+	} else {
+		*applicationVersion = result
+		return nil
 	}
-	return nil
 }
 
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"UPDATE ApplicationVersion SET name = @name, archived_at = @archivedAt WHERE id = @id RETURNING *",
+		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt WHERE id = @id
+		RETURNING av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
+				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
 		pgx.NamedArgs{
 			"id":         applicationVersion.ID,
 			"name":       applicationVersion.Name,
 			"archivedAt": applicationVersion.ArchivedAt,
 		})
 	if err != nil {
-		return fmt.Errorf("could not update applicationversion: %w", err)
-	} else if updated, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[types.ApplicationVersion]); err != nil {
-		return fmt.Errorf("could not get updated applicationversion: %w", err)
+		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
+			err = apierrors.ErrAlreadyExists
+		}
+		return fmt.Errorf("can not update ApplicationVersion: %w", err)
+	} else if updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationVersion]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return fmt.Errorf("could not scan ApplicationVersion: %w", err)
 	} else {
 		*applicationVersion = updated
 		return nil

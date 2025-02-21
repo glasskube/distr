@@ -2,7 +2,7 @@ import {BlockScrollStrategy, GlobalPositionStrategy, Overlay, OverlayConfig, Vie
 import {ComponentPortal, ComponentType, TemplatePortal} from '@angular/cdk/portal';
 import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainerRef} from '@angular/core';
 import {filter, fromEvent, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
-import {ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
+import {ConfirmDialogComponent, ConfirmMessage} from '../components/confirm-dialog/confirm-dialog.component';
 
 type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
@@ -54,8 +54,9 @@ export class OverlayService {
   private readonly viewportRuler = inject(ViewportRuler);
   private readonly viewContainerRef = inject(ViewContainerRef);
 
-  public confirm(message: string) {
-    return this.showModal<boolean>(ConfirmDialogComponent, {data: {message}}).result();
+  public confirm(messageOrConfig: string | ConfirmMessage) {
+    const config = typeof messageOrConfig === 'string' ? {message: messageOrConfig} : messageOrConfig;
+    return this.showModal<boolean>(ConfirmDialogComponent, {data: config}).result();
   }
 
   /**

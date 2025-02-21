@@ -214,14 +214,18 @@ func createApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.CreateApplicationVersion(ctx, &applicationVersion); err != nil {
-		log.Warn("could not create applicationversion", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = fmt.Fprintln(w, err); err != nil {
-			log.Error("failed to write error to response", zap.Error(err))
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+		} else if errors.Is(err, apierrors.ErrAlreadyExists) {
+			http.Error(w, "application version can not be created. Does a version with the same name already exist?",
+				http.StatusBadRequest)
+		} else {
+			log.Warn("could not create applicationversion", zap.Error(err))
+			sentry.GetHubFromContext(r.Context()).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
-	} else if err = json.NewEncoder(w).Encode(applicationVersion); err != nil {
-		log.Error("failed to encode json", zap.Error(err))
+	} else {
+		RespondJSON(w, applicationVersion)
 	}
 }
 
