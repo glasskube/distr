@@ -145,8 +145,18 @@ export const routes: Routes = [
           },
           {
             path: 'applications',
-            component: ApplicationsPageComponent,
             canActivate: [requiredRoleGuard('vendor')],
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                component: ApplicationsPageComponent,
+              },
+              {
+                path: ':applicationId',
+                component: ApplicationDetailComponent,
+              },
+            ],
           },
           {
             path: 'applications/:applicationId',
