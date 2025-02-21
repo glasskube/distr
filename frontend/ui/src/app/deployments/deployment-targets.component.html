@@ -236,7 +236,7 @@
                           type="button"
                           aria-label="Delete"
                           [disabled]="dt.deployment"
-                          [title]="dt.deployment ? 'Undeploy application first' : undefined"
+                          [title]="dt.deployment ? 'Undeploy application first' : ''"
                           (click)="showDropdownForId = undefined; deleteDeploymentTarget(dt)"
                           class="text-start block w-full px-4 py-2 text-sm text-red-700 not-disabled:hover:text-white not-disabled:hover:bg-red-800 dark:text-red-500 dark:not-disabled:hover:text-white dark:not-disabled:hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed">
                           <fa-icon [icon]="faTrash" class="inline-block w-4 mr-2"></fa-icon>
