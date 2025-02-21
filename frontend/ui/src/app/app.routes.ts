@@ -158,11 +158,6 @@ export const routes: Routes = [
               },
             ],
           },
-          {
-            path: 'applications/:applicationId',
-            component: ApplicationDetailComponent, // TODO try to make it child route of applications again
-            canActivate: [requiredRoleGuard('vendor')],
-          },
           {path: 'deployments', component: DeploymentsPageComponent},
           {
             path: 'customers',
