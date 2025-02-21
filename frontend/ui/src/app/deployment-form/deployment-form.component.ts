@@ -31,7 +31,6 @@ import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {LicensesService} from '../services/licenses.service';
-import dayjs from 'dayjs';
 import {isArchived} from '../../util/dates';
 
 export type DeploymentFormValue = Partial<{

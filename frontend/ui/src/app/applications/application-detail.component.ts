@@ -111,15 +111,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         nonNullable: true,
         validators: Validators.required,
       }),
-      chartName: new FormControl<string>('', Validators.required),
-      chartUrl: new FormControl<string>('', Validators.required),
-      chartVersion: new FormControl<string>('', Validators.required),
-      baseValues: new FormControl<string>(''),
-      template: new FormControl<string>(''),
+      chartName: new FormControl('', Validators.required),
+      chartUrl: new FormControl('', Validators.required),
+      chartVersion: new FormControl('', Validators.required),
+      baseValues: new FormControl(''),
+      template: new FormControl(''),
     }),
     docker: new FormGroup({
-      compose: new FormControl<string>('', Validators.required),
-      template: new FormControl<string>(''),
+      compose: new FormControl('', Validators.required),
+      template: new FormControl(''),
     }),
   });
 
@@ -143,9 +143,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
   ngOnInit() {
-    this.route.url.pipe().subscribe(() => {
-      this.breadcrumbDropdown.set(false);
-    });
+    this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -290,7 +288,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   deleteApplication(application: Application) {
     this.overlay
-      .confirm(`Really delete ${application.name} and all related deployments?`)
+      .confirm(`Really delete ${application.name}?`)
       .pipe(
         filter((result) => result === true),
         switchMap(async () => {
