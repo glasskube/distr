@@ -15,7 +15,7 @@ services:
       SHIORI_DATABASE_URL: postgres://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@shiori-postgres/shiori?sslmode=disable
 
   shiori-postgres:
-    image: 'postgres:17.3-alpine3.20'
+    image: 'postgres:17.4-alpine3.20'
     ports:
       - '5433:5432'
     environment:
