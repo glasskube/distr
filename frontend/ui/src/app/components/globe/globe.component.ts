@@ -108,7 +108,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
     // This makes the element clickable
     el.style.setProperty('pointer-events', 'auto');
     // Set a href, so the destination shows up in the browser chrome
-    el.href = '/deployment-targets';
+    el.href = '/deployments';
     // Navigate to the destination via angular routing to prevent page reload.
     el.addEventListener('click', (event) => {
       event.preventDefault();
@@ -127,6 +127,6 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private async navigateToDeploymentTargets(): Promise<void> {
-    await this.router.navigate(['/deployment-targets']);
+    await this.router.navigate(['/deployments']);
   }
 }
