@@ -2,7 +2,7 @@ name: distr-dev
 
 services:
   postgres:
-    image: 'postgres:17.3-alpine3.20'
+    image: 'postgres:17.4-alpine3.20'
     environment:
       POSTGRES_USER: local
       POSTGRES_PASSWORD: local
