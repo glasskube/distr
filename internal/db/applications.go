@@ -14,6 +14,17 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+const (
+	applicationOutputExpr             = `a.id, a.created_at, a.organization_id, a.name, a.type`
+	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
+		coalesce((
+			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
+				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
+			FROM applicationversion av
+			WHERE av.application_id = a.id
+		), array[]::record[]) as versions `
+)
+
 func CreateApplication(ctx context.Context, application *types.Application, orgID uuid.UUID) error {
 	application.OrganizationID = orgID
 	db := internalctx.GetDb(ctx)
@@ -63,18 +74,7 @@ func DeleteApplicationWithID(ctx context.Context, id uuid.UUID) error {
 func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-			SELECT
-			    a.id,
-			    a.created_at,
-				a.organization_id,
-			    a.name,
-			    a.type,
-			    coalesce((
-			    	SELECT array_agg(row(av.id, av.created_at, av.name,
-			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
-			    	FROM applicationversion av
-			    	WHERE av.application_id = a.id
-			    ), array[]::record[]) as versions
+			SELECT `+applicationWithVersionsOutputExpr+`
 			FROM Application a
 			WHERE a.organization_id = @orgId
 			ORDER BY a.name
@@ -92,18 +92,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 	db := internalctx.GetDb(ctx)
 	// TODO: Only include versions from at least one license
 	if rows, err := db.Query(ctx, `
-			SELECT DISTINCT
-			    a.id,
-			    a.created_at,
-				a.organization_id,
-			    a.name,
-			    a.type,
-			    coalesce((
-			    	SELECT array_agg(row(av.id, av.created_at, av.name,
-			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
-			    	FROM applicationversion av
-			    	WHERE av.application_id = a.id
-			    ), array[]::record[]) as versions
+			SELECT DISTINCT `+applicationWithVersionsOutputExpr+`
 			FROM ApplicationLicense al
 				LEFT JOIN Application a ON al.application_id = a.id
 			WHERE al.owner_useraccount_id = @id
@@ -121,18 +110,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-			SELECT
-			    a.id,
-			    a.created_at,
-				a.organization_id,
-			    a.name,
-			    a.type,
-			    coalesce((
-			    	SELECT array_agg(row(av.id, av.created_at, av.name,
-			    	    av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
-			    	FROM applicationversion av
-			    	WHERE av.application_id = a.id
-			    ), array[]::record[]) as versions
+			SELECT `+applicationWithVersionsOutputExpr+`
 			FROM Application a
 			WHERE a.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
@@ -151,17 +129,7 @@ func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Applicatio
 func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.UUID) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-			SELECT
-			    a.id,
-			    a.created_at,
-				a.organization_id,
-			    a.name,
-			    a.type,
-			    coalesce((
-			    	SELECT array_agg(row(av.id, av.created_at, av.name) ORDER BY av.created_at ASC)
-			    	FROM applicationversion av
-			    	WHERE av.application_id = a.id
-			    ), array[]::record[]) as versions
+			SELECT `+applicationWithVersionsOutputExpr+`
 			FROM ApplicationVersion v
 				LEFT JOIN Application a ON a.id = v.application_id
 			WHERE v.id = @id AND a.organization_id = @orgId
@@ -203,8 +171,9 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 				compose_file_data, values_file_data, template_file_data)
 			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @composeFileData::bytea,
 				@valuesFileData::bytea, @templateFileData::bytea)
-			RETURNING av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
-				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`, args)
+			RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url,
+				av.chart_version, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+		args)
 	if err != nil {
 		return fmt.Errorf("can not create ApplicationVersion: %w", err)
 	} else if result, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[types.ApplicationVersion]); err != nil {
@@ -223,10 +192,14 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		`UPDATE ApplicationVersion AS av SET name = @name WHERE id = @id
-		RETURNING av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
+		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt WHERE id = @id
+		RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
 				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
-		pgx.NamedArgs{"id": applicationVersion.ID, "name": applicationVersion.Name})
+		pgx.NamedArgs{
+			"id":         applicationVersion.ID,
+			"name":       applicationVersion.Name,
+			"archivedAt": applicationVersion.ArchivedAt,
+		})
 	if err != nil {
 		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
 			err = apierrors.ErrAlreadyExists
@@ -247,7 +220,7 @@ func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) 
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`SELECT av.id, av.created_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
+		`SELECT av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
 			av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id
 		FROM ApplicationVersion av
 		WHERE id = @id`,
