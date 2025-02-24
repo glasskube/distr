@@ -39,8 +39,10 @@
                     class="z-10 w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700">
                     <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefault">
                       @for (app of applications$ | async; track app.id) {
-                        <li class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                          <a class="flex items-stretch" [routerLink]="['/', 'applications', app.id]">{{ app.name }}</a>
+                        <li class="block py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                          <a class="px-4 flex items-stretch" [routerLink]="['/', 'applications', app.id]">{{
+                            app.name
+                          }}</a>
                         </li>
                       }
                     </ul>
