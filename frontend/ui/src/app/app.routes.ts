@@ -27,6 +27,8 @@ import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {LicensesComponent} from './licenses/licenses.component';
 import {FeatureFlagService} from './services/feature-flag.service';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
+import {ArtifactsComponent} from './artifacts/artifacts.component';
+import {ArtifactTagsComponent} from './artifact-tags/artifact-tags.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -159,6 +161,13 @@ export const routes: Routes = [
             ],
           },
           {path: 'deployments', component: DeploymentsPageComponent},
+          {
+            path: 'artifacts',
+            children: [
+              {path: '', pathMatch: 'full', component: ArtifactsComponent},
+              {path: ':id', component: ArtifactTagsComponent},
+            ],
+          },
           {
             path: 'customers',
             component: UsersComponent,

@@ -1,0 +1,53 @@
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
+  <div class="mx-auto max-w-screen-lg px-4">
+    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+      <div
+        class="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between mx-4 py-4 dark:border-gray-700">
+        <div class="w-full md:w-1/2">
+          <form class="flex items-center" [formGroup]="filterForm">
+            <label for="simple-search" class="sr-only">Search</label>
+            <div class="relative w-full">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <fa-icon [icon]="faMagnifyingGlass" class="text-gray-500 dark:text-gray-400"></fa-icon>
+              </div>
+              <input
+                [formControl]="filterForm.controls.search"
+                autotrim
+                type="text"
+                id="simple-search"
+                placeholder="Filter artifacts"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
+          @for (artifact of filteredArtifacts$ | async; track artifact.id) {
+            <li class="py-3 px-6 sm:py-4">
+              <div class="flex items-center">
+                <div class="shrink-0 text-gray-900 dark:text-white">
+                  <fa-icon class="text-xl" [icon]="faBox"></fa-icon>
+                </div>
+                <div class="flex-1 min-w-0 ms-4">
+                  <a
+                    class="font-semibold text-gray-900 truncate dark:text-white hover:underline hover:text-blue-600 dark:hover:text-blue-500"
+                    [routerLink]="artifact.id">
+                    {{ artifact.name }}
+                  </a>
+                  <p class="text-sm text-gray-500 truncate dark:text-gray-400 mt-1">
+                    <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
+                  </p>
+                </div>
+                <div class="inline-flex items-center text-sm text-gray-500 truncate dark:text-gray-400">
+                  <fa-icon class="me-1" [icon]="faDownload"></fa-icon>
+                  {{ artifact.downloads }}
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
