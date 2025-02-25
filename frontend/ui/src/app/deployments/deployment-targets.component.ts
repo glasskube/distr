@@ -18,6 +18,7 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
+  AgentVersion,
   Application,
   ApplicationVersion,
   Deployment,
@@ -310,6 +311,28 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   hideModal(): void {
     this.modal?.close();
+  }
+
+  public isAgentVersionSnapshotOrAtLeast(
+    dt: DeploymentTarget,
+    agentVersions: AgentVersion[],
+    version: string
+  ): boolean {
+    if (!dt.reportedAgentVersionId) {
+      console.warn('reported agent version id is empty');
+      return true;
+    }
+    const reported = agentVersions.find((it) => it.id === dt.reportedAgentVersionId);
+    if (!reported) {
+      console.warn('agent version with id not found', dt.reportedAgentVersionId);
+      return false;
+    }
+    try {
+      return reported.name === 'snapshot' || new SemVer(reported.name).compare(version) >= 0;
+    } catch (e) {
+      console.warn(e);
+      return reported.name === 'snapshot';
+    }
   }
 
   async saveDeploymentTarget() {
