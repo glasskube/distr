@@ -7,28 +7,28 @@ import {
   RouterStateSnapshot,
   Routes,
 } from '@angular/router';
+import {UserRole} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
+import {AccessTokensComponent} from './access-tokens/access-tokens.component';
+import {ApplicationDetailComponent} from './applications/application-detail.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
+import {ArtifactTagsComponent} from './artifacts/artifact-tags/artifact-tags.component';
+import {ArtifactsComponent} from './artifacts/artifacts/artifacts.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 import {ForgotComponent} from './forgot/forgot.component';
 import {InviteComponent} from './invite/invite.component';
+import {LicensesComponent} from './licenses/licenses.component';
 import {LoginComponent} from './login/login.component';
+import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 import {PasswordResetComponent} from './password-reset/password-reset.component';
 import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
+import {FeatureFlagService} from './services/feature-flag.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {VerifyComponent} from './verify/verify.component';
-import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
-import {UserRole} from '@glasskube/distr-sdk';
-import {AccessTokensComponent} from './access-tokens/access-tokens.component';
-import {LicensesComponent} from './licenses/licenses.component';
-import {FeatureFlagService} from './services/feature-flag.service';
-import {ApplicationDetailComponent} from './applications/application-detail.component';
-import {ArtifactsComponent} from './artifacts/artifacts.component';
-import {ArtifactTagsComponent} from './artifact-tags/artifact-tags.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);

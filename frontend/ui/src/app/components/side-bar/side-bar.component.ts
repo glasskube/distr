@@ -4,6 +4,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faAddressBook,
   faArrowRightLong,
+  faBox,
   faBoxesStacked,
   faCheckDouble,
   faDashboard,
@@ -41,6 +42,7 @@ export class SideBarComponent {
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
   protected readonly faAddressBook = faAddressBook;
+  protected readonly faBox = faBox;
   protected readonly buildConfig = buildConfig;
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;

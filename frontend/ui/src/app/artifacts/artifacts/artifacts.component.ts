@@ -5,12 +5,21 @@ import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faDownload, faMagnifyingGlass} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, debounceTime, map, startWith} from 'rxjs';
-import {UuidComponent} from '../components/uuid';
-import {ArtifactsService} from '../services/artifacts.service';
+import {UuidComponent} from '../../components/uuid';
+import {ArtifactsService} from '../../services/artifacts.service';
+import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent} from '../components';
 
 @Component({
   selector: 'app-artifacts',
-  imports: [ReactiveFormsModule, AsyncPipe, FaIconComponent, UuidComponent, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    AsyncPipe,
+    FaIconComponent,
+    UuidComponent,
+    RouterLink,
+    ArtifactsDownloadCountComponent,
+    ArtifactsDownloadedByComponent,
+  ],
   templateUrl: './artifacts.component.html',
 })
 export class ArtifactsComponent {
