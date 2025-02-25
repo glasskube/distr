@@ -28,7 +28,6 @@ import {
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import dayjs from 'dayjs';
 import {
   catchError,
   combineLatest,
@@ -44,7 +43,9 @@ import {
   switchMap,
 } from 'rxjs';
 import {SemVer} from 'semver';
+import {environment} from '../../env/env';
 import {maxBy} from '../../util/arrays';
+import {isArchived} from '../../util/dates';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
 import {IsStalePipe} from '../../util/model';
@@ -65,8 +66,6 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {environment} from '../../env/env';
-import {isArchived} from '../../util/dates';
 
 @Component({
   selector: 'app-deployment-targets',
