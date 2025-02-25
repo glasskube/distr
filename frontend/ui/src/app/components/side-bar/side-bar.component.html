@@ -69,16 +69,6 @@
         </a>
       </li>
       <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faGear" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Channels</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
-            Pro
-          </span>
-        </a>
-      </li>
-      <li>
         @if (featureFlags.isLicensingEnabled$ | async) {
           <a
             (click)="sidebar.hide()"
@@ -90,20 +80,79 @@
               class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
             <span class="ms-3">License Mgmt</span>
             <span
-              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-              >Pro</span
+              class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
+              >Beta</span
             >
           </a>
         } @else {
-          <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-            <fa-icon [icon]="faKey" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"
+            title="Contact support to enable licensing"
+            (click)="showRequestAccessTooltip = true"
+            cdkOverlayOrigin
+            #tooltipTrigger="cdkOverlayOrigin">
+            <fa-icon
+              [icon]="faKey"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
             <span class="ms-3">License Mgmt</span>
             <span
-              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-              >Pro</span
+              class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
+              >Beta</span
             >
+            <ng-template
+              cdkConnectedOverlay
+              [cdkConnectedOverlayHasBackdrop]="true"
+              (backdropClick)="showRequestAccessTooltip = false"
+              [cdkConnectedOverlayPositions]="[
+                {originX: 'center', overlayX: 'start', originY: 'center', overlayY: 'center'},
+              ]"
+              [cdkConnectedOverlayOrigin]="tooltipTrigger"
+              [cdkConnectedOverlayBackdropClass]="'transparent'"
+              [cdkConnectedOverlayOpen]="showRequestAccessTooltip">
+              <div
+                role="tooltip"
+                class="p-3 text-sm font-medium text-gray-900 bg-white border border-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-w-64">
+                <div>
+                  The License Management feature is currently in
+                  <span
+                    class="bg-gray-300 text-gray-900 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100">
+                    Beta</span
+                  >.
+                </div>
+                <div class="my-3">
+                  <a
+                    href="https://distr.sh/docs/guides/license-mgmt/"
+                    target="_blank"
+                    class="text-gray-600 dark:text-gray-400 hover:underline"
+                    >Learn more in our docs</a
+                  >
+                </div>
+                To request access, reach out to us on
+                <a
+                  href="https://discord.gg/6qqBSAWZfW"
+                  target="_blank"
+                  class="text-gray-600 dark:text-gray-400 hover:underline"
+                  >Discord</a
+                >
+                or by email at
+                <a href="mailto:support@glasskube.com" class="text-gray-600 dark:text-gray-400 hover:underline"
+                  >support&#64;glasskube.com</a
+                >.
+              </div>
+            </ng-template>
           </a>
         }
+      </li>
+      <li>
+        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
+          <fa-icon [icon]="faGear" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
+          <span class="ms-3">Channels</span>
+          <span
+            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
+            Pro
+          </span>
+        </a>
       </li>
       <li>
         <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">

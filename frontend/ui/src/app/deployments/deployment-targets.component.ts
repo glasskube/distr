@@ -7,8 +7,8 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faCircleExclamation,
   faEllipsisVertical,
-  faExclamation,
   faHeartPulse,
+  faLightbulb,
   faMagnifyingGlass,
   faPen,
   faPlus,
@@ -18,13 +18,16 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
+  AgentVersion,
   Application,
+  ApplicationVersion,
   Deployment,
   DeploymentRequest,
   DeploymentRevisionStatus,
   DeploymentTarget,
   DeploymentTargetScope,
   DeploymentType,
+  DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
 import {
   catchError,
@@ -36,13 +39,18 @@ import {
   lastValueFrom,
   map,
   Observable,
+  of,
   Subject,
   switchMap,
 } from 'rxjs';
+import {SemVer} from 'semver';
+import {maxBy} from '../../util/arrays';
+import {isArchived} from '../../util/dates';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
 import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
+import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
 import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
@@ -55,9 +63,9 @@ import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentStatusService} from '../services/deployment-status.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {dropdownAnimation} from '../animations/dropdown';
 
 @Component({
   selector: 'app-deployment-targets',
@@ -89,6 +97,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
   private readonly applications = inject(ApplicationsService);
+  private readonly licenses = inject(LicensesService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deploymentStatuses = inject(DeploymentStatusService);
   private readonly agentVersions = inject(AgentVersionService);
@@ -102,6 +111,8 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   protected readonly faTrash = faTrash;
   protected readonly faEllipsisVertical = faEllipsisVertical;
   protected readonly faTriangleExclamation = faTriangleExclamation;
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faLightbulb = faLightbulb;
 
   private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
@@ -160,6 +171,26 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
 
   statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
+
+  protected deploymentTargetsWithUpdate$: Observable<{dt: DeploymentTarget; version: ApplicationVersion}[]> =
+    this.deploymentTargets$.pipe(
+      switchMap((deploymentTargets) =>
+        combineLatest(
+          deploymentTargets
+            .filter((deplyomentTarget) => deplyomentTarget.id && deplyomentTarget.deployment)
+            .map((deploymentTarget) =>
+              this.getAvailableVersions(deploymentTarget.deployment!).pipe(
+                map((versions) => ({dt: deploymentTarget, version: this.findMaxVersion(versions)}))
+              )
+            )
+        )
+      ),
+      map((result) =>
+        result
+          .filter((it) => it.version && it.version.id !== it.dt.deployment?.applicationVersionId)
+          .map((it) => ({dt: it.dt, version: it.version!}))
+      )
+    );
 
   protected showDropdownForId?: string;
 
@@ -282,6 +313,28 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     this.modal?.close();
   }
 
+  public isAgentVersionSnapshotOrAtLeast(
+    dt: DeploymentTarget,
+    agentVersions: AgentVersion[],
+    version: string
+  ): boolean {
+    if (!dt.reportedAgentVersionId) {
+      console.warn('reported agent version id is empty');
+      return true;
+    }
+    const reported = agentVersions.find((it) => it.id === dt.reportedAgentVersionId);
+    if (!reported) {
+      console.warn('agent version with id not found', dt.reportedAgentVersionId);
+      return false;
+    }
+    try {
+      return reported.name === 'snapshot' || new SemVer(reported.name).compare(version) >= 0;
+    } catch (e) {
+      console.warn(e);
+      return reported.name === 'snapshot';
+    }
+  }
+
   async saveDeploymentTarget() {
     this.editForm.markAllAsTouched();
     if (this.editForm.valid) {
@@ -317,7 +370,11 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async newDeployment(deploymentTarget: DeploymentTarget, modalTemplate: TemplateRef<any>) {
+  async newDeployment(
+    deploymentTarget: DeploymentTarget,
+    modalTemplate: TemplateRef<any>,
+    version?: ApplicationVersion
+  ) {
     const apps = await firstValueFrom(this.applications$);
     if (deploymentTarget.deployment) {
       this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
@@ -327,7 +384,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     this.deployForm.reset({
       deploymentTargetId: deploymentTarget.id,
       applicationId: deploymentTarget.deployment?.applicationId,
-      applicationVersionId: deploymentTarget.deployment?.applicationVersionId,
+      applicationVersionId: version?.id ?? deploymentTarget.deployment?.applicationVersionId,
       applicationLicenseId: deploymentTarget.deployment?.applicationLicenseId,
       releaseName: deploymentTarget.deployment?.releaseName,
       valuesYaml: deploymentTarget.deployment?.valuesYaml ? atob(deploymentTarget.deployment.valuesYaml) : undefined,
@@ -412,5 +469,37 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     } catch (e) {}
   }
 
-  protected readonly faCircleExclamation = faCircleExclamation;
+  private getAvailableVersions(deployment: DeploymentWithLatestRevision): Observable<ApplicationVersion[]> {
+    return (
+      deployment.applicationLicenseId
+        ? this.licenses
+            .list()
+            .pipe(
+              map((licenses) => licenses.find((license) => license.id === deployment.applicationLicenseId)?.versions)
+            )
+        : of(undefined)
+    ).pipe(
+      switchMap((versions) =>
+        versions?.length
+          ? of(versions)
+          : this.applications$.pipe(
+              map((apps) => apps.find((app) => app.id === deployment.applicationId)?.versions ?? [])
+            )
+      ),
+      map((versions) => versions.filter((version) => !isArchived(version)))
+    );
+  }
+
+  private findMaxVersion(versions: ApplicationVersion[]): ApplicationVersion | undefined {
+    try {
+      return maxBy(
+        versions,
+        (version) => new SemVer(version.name),
+        (a, b) => a.compare(b) > 0
+      );
+    } catch (e) {
+      console.warn('semver compare failed, falling back to creation date', e);
+      return maxBy(versions, (version) => new Date(version.createdAt!));
+    }
+  }
 }
