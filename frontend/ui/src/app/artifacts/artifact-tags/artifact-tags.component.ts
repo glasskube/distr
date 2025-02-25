@@ -45,7 +45,6 @@ export class ArtifactTagsComponent {
     artifact: ArtifactWithTags,
     tag: ArtifactTag | undefined = artifact.tags.find((it) => it.labels.some((l) => l.name === 'latest'))
   ) {
-    console.log('called');
     const orgName = this.org.value()?.name?.replaceAll(/\W/g, '').toLowerCase();
     let url = `oci://${location.host}/${orgName ?? 'ORG_NAME'}/${artifact.name}`;
     if (tag) {
