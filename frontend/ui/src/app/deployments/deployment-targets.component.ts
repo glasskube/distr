@@ -43,7 +43,6 @@ import {
   switchMap,
 } from 'rxjs';
 import {SemVer} from 'semver';
-import {environment} from '../../env/env';
 import {maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
 import {getFormDisplayedError} from '../../util/errors';
@@ -476,9 +475,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
         (a, b) => a.compare(b) > 0
       );
     } catch (e) {
-      if (!environment.production) {
-        console.warn('semver compare failed, falling back to creation date', e);
-      }
+      console.warn('semver compare failed, falling back to creation date', e);
       return maxBy(versions, (version) => new Date(version.createdAt!));
     }
   }
