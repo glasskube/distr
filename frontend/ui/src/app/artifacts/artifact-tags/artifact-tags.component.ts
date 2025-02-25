@@ -1,12 +1,13 @@
-import {AsyncPipe, DatePipe} from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 import {Component, inject} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faDownload} from '@fortawesome/free-solid-svg-icons';
 import {switchMap} from 'rxjs';
+import {RelativeDatePipe} from '../../../util/dates';
 import {UuidComponent} from '../../components/uuid';
 import {ArtifactsService} from '../../services/artifacts.service';
-import {RelativeDatePipe} from '../../../util/dates';
+import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
 
 @Component({
@@ -19,6 +20,7 @@ import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, Artifac
     ArtifactsDownloadCountComponent,
     ArtifactsDownloadedByComponent,
     ArtifactsHashComponent,
+    ArtifactsVulnerabilityReportComponent,
   ],
   templateUrl: './artifact-tags.component.html',
 })
