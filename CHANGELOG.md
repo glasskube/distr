@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.3.0](https://github.com/glasskube/distr/compare/1.2.1...1.3.0) (2025-02-25)
+
+
+### Features
+
+* add "undeploying" applications from a target ([#515](https://github.com/glasskube/distr/issues/515)) ([8a86e0b](https://github.com/glasskube/distr/commit/8a86e0be925c18620ae08597aa4789db6113cb6e))
+* add application version archiving ([#520](https://github.com/glasskube/distr/issues/520)) ([cdd09e2](https://github.com/glasskube/distr/commit/cdd09e2bc519c24111761b4ce4243a3c793ee6c2))
+* **frontend:** add indicator if update is available ([#550](https://github.com/glasskube/distr/issues/550)) ([d87feb1](https://github.com/glasskube/distr/commit/d87feb12189a7a0f62df7b3b4f100566df7b5a34))
+* **ui:** add beta feature activation tooltip ([#556](https://github.com/glasskube/distr/issues/556)) ([e5a5d52](https://github.com/glasskube/distr/commit/e5a5d5286f05a15ae439a23b682772c62a0dc27c))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v9.2.0 ([#553](https://github.com/glasskube/distr/issues/553)) ([ffa8dec](https://github.com/glasskube/distr/commit/ffa8dec47131d32e8c85189cf9f0500738f76037))
+* **deps:** update dependency posthog-js to v1.221.0 ([#539](https://github.com/glasskube/distr/issues/539)) ([b658f50](https://github.com/glasskube/distr/commit/b658f50de40aca40e3d58caff2bf189a591c0ede))
+* **deps:** update dependency posthog-js to v1.222.0 ([#541](https://github.com/glasskube/distr/issues/541)) ([a124c97](https://github.com/glasskube/distr/commit/a124c97c91934c2eb64c5447e0e0cc7539af3ff5))
+* **deps:** update dependency posthog-js to v1.223.3 ([#548](https://github.com/glasskube/distr/issues/548)) ([e3d615c](https://github.com/glasskube/distr/commit/e3d615c28421b0a5bb3668a64c51a77e7d3a70d9))
+* **deps:** update dependency rxjs to v7.8.2 ([#545](https://github.com/glasskube/distr/issues/545)) ([ef910c2](https://github.com/glasskube/distr/commit/ef910c25023f25b72bc24cf9f03f4070b3fcc1d0))
+* **deps:** update module github.com/docker/cli to v28 ([#533](https://github.com/glasskube/distr/issues/533)) ([ae39374](https://github.com/glasskube/distr/commit/ae393740804d11bc4952a69c823e482bc0b7d46d))
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.4 ([#559](https://github.com/glasskube/distr/issues/559)) ([f9ca0d1](https://github.com/glasskube/distr/commit/f9ca0d1b5077ff43c76b5cf3efa0ff9d09cd3ada))
+* **deps:** update module golang.org/x/crypto to v0.34.0 ([#547](https://github.com/glasskube/distr/issues/547)) ([07605e2](https://github.com/glasskube/distr/commit/07605e286803a3ddea12dd4c50ef3ae4e0929615))
+* **deps:** update module golang.org/x/crypto to v0.35.0 ([#554](https://github.com/glasskube/distr/issues/554)) ([493203e](https://github.com/glasskube/distr/commit/493203eae8a9757e75e753126ead0b792c923050))
+* **frontend:** add deployed application as cell title on deployment targets page ([#557](https://github.com/glasskube/distr/issues/557)) ([fd5e62c](https://github.com/glasskube/distr/commit/fd5e62c5b84d36e2ec84ddd9544487debf04e40a))
+* **frontend:** use correct deployments link on globe marker ([#549](https://github.com/glasskube/distr/issues/549)) ([f3bfa4b](https://github.com/glasskube/distr/commit/f3bfa4b61f2490772973d7e7238c03b9a3e22840))
+* **ui:** make autotrim work with FormControls ([#535](https://github.com/glasskube/distr/issues/535)) ([6b4c994](https://github.com/glasskube/distr/commit/6b4c994a9aba9466a16ba058bbb5dc8e11990ef3))
+
+
+### Other
+
+* **backend:** add application version name unique constraint ([#536](https://github.com/glasskube/distr/issues/536)) ([4400491](https://github.com/glasskube/distr/commit/4400491052dd34f3012bc738fe9e7dadbd888be9))
+* **backend:** change DeploymentRevision application_version_id reference on delete to `RESTRICT` ([#528](https://github.com/glasskube/distr/issues/528)) ([0ed852f](https://github.com/glasskube/distr/commit/0ed852fc9801dbcce4e4c2d6756913e69c5ceeb9))
+* **deps:** update dependency @sentry/cli to v2.42.2 ([#551](https://github.com/glasskube/distr/issues/551)) ([a0abeb3](https://github.com/glasskube/distr/commit/a0abeb30115fbb3e70f096bf5244bdd28e220ad5))
+* **deps:** update dependency @types/jasmine to v5.1.7 ([#542](https://github.com/glasskube/distr/issues/542)) ([ca6bd8e](https://github.com/glasskube/distr/commit/ca6bd8e1a6e58151bb7820def71d177784b4c629))
+* **deps:** update dependency prettier to v3.5.2 ([#544](https://github.com/glasskube/distr/issues/544)) ([e534237](https://github.com/glasskube/distr/commit/e5342379e12f51716de531c303663b9d7f2c72ee))
+* **deps:** update dependency typedoc to v0.27.8 ([#543](https://github.com/glasskube/distr/issues/543)) ([465ac60](https://github.com/glasskube/distr/commit/465ac60d04062d3576a2b09cdca4c7a35c14bbf9))
+* **deps:** update dependency typedoc to v0.27.9 ([#555](https://github.com/glasskube/distr/issues/555)) ([6075168](https://github.com/glasskube/distr/commit/607516804ce25636746f88ec7e3d8f88f7099b8e))
+* **deps:** update postgres docker tag to v17.4 ([#546](https://github.com/glasskube/distr/issues/546)) ([2077ded](https://github.com/glasskube/distr/commit/2077ded593fa224c8a348e0a2048dd8c2003ce08))
+* **frontend:** add disabling "undeploy" button if reported agent version is too old ([#560](https://github.com/glasskube/distr/issues/560)) ([4e77d05](https://github.com/glasskube/distr/commit/4e77d05b289a6e10f5226ae6bd4bb750a1c5236d))
+* **frontend:** change table header "owner" to "customer" ([#540](https://github.com/glasskube/distr/issues/540)) ([538bbec](https://github.com/glasskube/distr/commit/538bbec8b7e89aee7c0f37e6b406525bd3feccab))
+
+
+### Docs
+
+* **repo:** update readme to include macOS guide ([#558](https://github.com/glasskube/distr/issues/558)) ([5352a5a](https://github.com/glasskube/distr/commit/5352a5afe138518e75d58cabcb79583552031fd4))
+
 ## [1.2.1](https://github.com/glasskube/distr/compare/1.2.0...1.2.1) (2025-02-20)
 
 
