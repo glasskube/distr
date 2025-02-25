@@ -8,7 +8,7 @@ export interface Application extends BaseModel, Named {
 
 export interface ApplicationVersion {
   id?: string;
-  name?: string;
+  name: string;
   createdAt?: string;
   archivedAt?: string;
   applicationId?: string;
