@@ -1,15 +1,15 @@
-<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64 text-gray-900 dark:text-white">
   <div class="mx-auto max-w-screen-lg px-4">
-    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-      <div class="overflow-x-auto">
-        @if (artifact$ | async; as artifact) {
+    @if (artifact$ | async; as artifact) {
+      <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
           <div class="py-3 px-6 sm:py-4">
             <div class="flex items-center">
-              <div class="shrink-0 text-gray-900 dark:text-white">
+              <div class="shrink-0">
                 <fa-icon class="text-xl" [icon]="faBox"></fa-icon>
               </div>
               <div class="flex-1 min-w-0 ms-4">
-                <h2 class="text-2xl font-semibold text-gray-900 truncate dark:text-white">
+                <h2 class="text-2xl font-semibold truncate">
                   {{ artifact.name }}
                 </h2>
                 <p class="text-sm text-gray-500 truncate dark:text-gray-400 mt-1">
@@ -18,8 +18,20 @@
               </div>
               <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
             </div>
-          </div>
 
+            <div class="mt-3">
+              <div class="text-xs text-gray-500 dark:text-gray-400">Pull with OCI URL</div>
+              <div class="font-mono mt-1">
+                {{ getOciUrl(artifact) }}
+                <app-clip [clip]="getOciUrl(artifact)"></app-clip>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
           <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
             @for (tag of artifact.tags; track tag.hash) {
               <li class="py-3 px-6 sm:py-4">
@@ -52,10 +64,8 @@
                 </div>
 
                 <div class="flex mt-2 justify-between">
-                  <div class="text-gray-900 dark:text-white">
-                    <app-artifacts-vulnerability-report [vulns]="tag.vulnerabilities" [date]="tag.createdAt">
-                    </app-artifacts-vulnerability-report>
-                  </div>
+                  <app-artifacts-vulnerability-report [vulns]="tag.vulnerabilities" [date]="tag.createdAt">
+                  </app-artifacts-vulnerability-report>
                   @if (tag.sbom) {
                     <div>
                       <button
@@ -70,8 +80,8 @@
               </li>
             }
           </ul>
-        }
+        </div>
       </div>
-    </div>
+    }
   </div>
 </section>
