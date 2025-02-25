@@ -121,12 +121,16 @@
                   {{ dt.createdAt | date: 'short' }}
                 </div>
               </td>
-              <td
-                class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                @if (dt.deployment; as deployment) {
+
+              @if (dt.deployment; as deployment) {
+                <td
+                  class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  [title]="deployment.applicationName + '&#64;' + deployment.applicationVersionName">
                   {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
-                }
-              </td>
+                </td>
+              } @else {
+                <td></td>
+              }
 
               @if (showAgentUpdateColumn$ | async) {
                 <td
