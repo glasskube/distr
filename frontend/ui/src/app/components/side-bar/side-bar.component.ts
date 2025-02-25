@@ -20,12 +20,13 @@ import {SidebarService} from '../../services/sidebar.service';
 import {buildConfig} from '../../../buildconfig';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {AsyncPipe} from '@angular/common';
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 
 @Component({
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe],
+  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe, CdkConnectedOverlay, CdkOverlayOrigin],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
@@ -55,4 +56,5 @@ export class SideBarComponent {
 
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
+  protected showRequestAccessTooltip = false;
 }
