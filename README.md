@@ -78,6 +78,8 @@ Register your first account at http://localhost:8080/register
 
 The full self-hosting documentation is at https://distr.sh/docs/self-hosting/self-hosting/
 
+Using Distr agents on macOS? Follow the [guide](https://distr.sh/docs/guides/distr-on-macos/) to get started.
+
 ### Building from source
 
 To build Distr Hub from source, first ensure that the following build dependencies are installed:
