@@ -27,25 +27,39 @@
 
     <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
       <div class="w-full">
-        <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-          Application *
+        <label for="subjectId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          @if(licenseType === 'application') {
+            Application *
+          } @else {
+            Artifact *
+          }
         </label>
         <select
-          id="applicationId"
-          formControlName="applicationId"
+          id="subjectId"
+          formControlName="subjectId"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-          @for (app of applications$ | async; track app.id) {
-            <option [value]="app.id">{{ app.name }}</option>
+          @if(licenseType === 'application') {
+            @for (app of applications$ | async; track app.id) {
+              <option [value]="app.id">{{ app.name }}</option>
+            }
+          } @else {
+            @for (artifact of artifacts$ | async; track artifact.id) {
+              <option [value]="artifact.id">{{ artifact.name }}</option>
+            }
           }
         </select>
-        @if (editForm.controls.applicationId.invalid && editForm.controls.applicationId.touched) {
+        @if (editForm.controls.subjectId.invalid && editForm.controls.subjectId.touched) {
           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
         }
       </div>
 
       <div class="w-full">
-        <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-          Application Versions *
+        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          @if(licenseType === 'application') {
+            Application Versions *
+          } @else {
+            Artifact Tags *
+          }
         </label>
         <button
           class="inline-flex w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -56,9 +70,9 @@
           (click)="toggleDropdown()">
           <span class="flex-grow text-left"
             >{{
-              editForm.controls.includeAllVersions.value
+              editForm.controls.includeAllItems.value
                 ? 'All versions and future versions'
-                : versionsSelected + ' versions selected'
+                : subjectItemsSelected + ' versions selected'
             }}
           </span>
           <fa-icon [icon]="faChevronDown"></fa-icon>
@@ -82,7 +96,7 @@
                 <div class="flex items-center ps-3">
                   <input
                     id="all-versions-checkbox"
-                    formControlName="includeAllVersions"
+                    formControlName="includeAllItems"
                     type="checkbox"
                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                   <label
@@ -92,21 +106,22 @@
                   >
                 </div>
               </li>
-              <ng-container formArrayName="versions">
-                @for (versionCtrl of versionsArray.controls; track i; let i = $index) {
-                  @let version = selectedApplication()?.versions?.[i];
+              <ng-container formArrayName="subjectItems">
+                @for (versionCtrl of subjectItemsArray.controls; track i; let i = $index) {
+                  @let item = licenseType === 'application' ? selectedApplication()?.versions?.[i] : selectedArtifact()?.tags?.[i];
+                  @let itemLabel = licenseType === 'application' ? selectedApplication()?.versions?.[i]?.name : selectedArtifact()?.tags?.[i]?.hash;
                   <li class="w-full border-t border-gray-200 dark:border-gray-600">
                     <div class="flex items-center ps-3">
                       <input
                         id="version-checkbox-{{ i }}"
                         type="checkbox"
                         [formControlName]="i"
-                        [value]="version"
+                        [value]="item"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                       <label
                         for="version-checkbox-{{ i }}"
                         class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                        >{{ version?.name }}</label
+                        >{{ itemLabel }}</label
                       >
                     </div>
                   </li>
@@ -134,64 +149,68 @@
     }
   </div>
 
-  <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+  @if(licenseType === 'application') {
 
-  <h5 class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-    Docker Registry
-  </h5>
+    <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
 
-  <div class="w-full">
-    <label for="registryUrl" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Registry URL</label>
-    <input
-      [formControl]="editForm.controls.registry.controls.url"
-      autotrim
-      type="text"
-      id="registryUrl"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-    @if (
-      editForm.controls.registry.invalid &&
-      editForm.controls.registry.controls.url.touched &&
-      !editForm.controls.registry.controls.url.value
-    ) {
-      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-    }
-  </div>
+    <h5 class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+      Docker Registry
+    </h5>
 
-  <div class="w-full">
-    <label for="registryUsername" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-      >Registry Username</label
-    >
-    <input
-      [formControl]="editForm.controls.registry.controls.username"
-      autotrim
-      type="text"
-      id="registryUsername"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-    @if (
-      editForm.controls.registry.invalid &&
-      editForm.controls.registry.controls.username.touched &&
-      !editForm.controls.registry.controls.username.value
-    ) {
-      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-    }
-  </div>
+    <div class="w-full">
+      <label for="registryUrl" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Registry URL</label>
+      <input
+        [formControl]="editForm.controls.registry.controls.url"
+        autotrim
+        type="text"
+        id="registryUrl"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      @if (
+        editForm.controls.registry.invalid &&
+        editForm.controls.registry.controls.url.touched &&
+        !editForm.controls.registry.controls.url.value
+      ) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+      }
+    </div>
 
-  <div class="w-full">
-    <label for="registryPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-      >Registry Password</label
-    >
-    <input
-      [formControl]="editForm.controls.registry.controls.password"
-      autotrim
-      type="text"
-      id="registryPassword"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-    @if (
-      editForm.controls.registry.invalid &&
-      editForm.controls.registry.controls.password.touched &&
-      !editForm.controls.registry.controls.password.value
-    ) {
-      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-    }
-  </div>
+    <div class="w-full">
+      <label for="registryUsername" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >Registry Username</label
+      >
+      <input
+        [formControl]="editForm.controls.registry.controls.username"
+        autotrim
+        type="text"
+        id="registryUsername"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      @if (
+        editForm.controls.registry.invalid &&
+        editForm.controls.registry.controls.username.touched &&
+        !editForm.controls.registry.controls.username.value
+      ) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+      }
+    </div>
+
+    <div class="w-full">
+      <label for="registryPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >Registry Password</label
+      >
+      <input
+        [formControl]="editForm.controls.registry.controls.password"
+        autotrim
+        type="text"
+        id="registryPassword"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      @if (
+        editForm.controls.registry.invalid &&
+        editForm.controls.registry.controls.password.touched &&
+        !editForm.controls.registry.controls.password.value
+      ) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+      }
+    </div>
+
+  }
 </form>
