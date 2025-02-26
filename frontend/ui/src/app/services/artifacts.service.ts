@@ -33,6 +33,7 @@ export interface ArtifactTag extends HasDownloads {
   createdAt: string;
   labels: {name: string}[];
   vulnerabilities: Vulnerability[];
+  lastScannedAt?: string;
 }
 
 export interface ArtifactWithTags extends Artifact {
@@ -66,6 +67,7 @@ export class ArtifactsService {
           ],
           labels: [{name: 'latest'}, {name: '1.2.1'}],
           vulnerabilities: [],
+          lastScannedAt: '2025-02-25T09:25:21Z',
         },
         {
           hash: 'sha265:28b7a85914586d15a531566443b6d5ea6d11ad38b1e75fa753385f03b0a0a57f',
@@ -96,6 +98,7 @@ export class ArtifactsService {
               severity: [{type: 'CVSS_V4', score: 'CVSS:4.0/AV:N/AC:L/AT:P/PR:H/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N'}],
             },
           ],
+          lastScannedAt: '2025-02-25T09:25:21Z',
         },
       ],
     },
@@ -141,6 +144,7 @@ export class ArtifactsService {
               severity: [{type: 'CVSS_V4', score: 'CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N'}],
             },
           ],
+          lastScannedAt: '2025-02-25T09:25:21Z',
         },
       ],
     },

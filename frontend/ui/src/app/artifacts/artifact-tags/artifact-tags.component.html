@@ -64,8 +64,10 @@
                 </div>
 
                 <div class="flex mt-2 justify-between">
-                  <app-artifacts-vulnerability-report [vulns]="tag.vulnerabilities" [date]="tag.createdAt">
-                  </app-artifacts-vulnerability-report>
+                  @if (tag.lastScannedAt) {
+                    <app-artifacts-vulnerability-report [vulns]="tag.vulnerabilities" [date]="tag.lastScannedAt">
+                    </app-artifacts-vulnerability-report>
+                  }
                   @if (tag.sbom) {
                     <div>
                       <button
