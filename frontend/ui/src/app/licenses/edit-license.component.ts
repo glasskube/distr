@@ -5,7 +5,8 @@ import {
   ElementRef,
   forwardRef,
   inject,
-  Injector, Input,
+  Injector,
+  Input,
   OnDestroy,
   OnInit,
   signal,
@@ -152,12 +153,18 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
           applicationId: this.licenseType === 'application' ? val.subjectId : undefined,
           artifactId: this.licenseType === 'artifact' ? val.subjectId : undefined,
-          versions: this.licenseType === 'application' ? this.getSelectedVersions(val.includeAllItems!, val.subjectItems ?? []) : undefined,
-          artifactTags: this.licenseType === 'artifact' ? this.getSelectedTags(val.includeAllItems!, val.subjectItems ?? []) : undefined,
+          versions:
+            this.licenseType === 'application'
+              ? this.getSelectedVersions(val.includeAllItems!, val.subjectItems ?? [])
+              : undefined,
+          artifactTags:
+            this.licenseType === 'artifact'
+              ? this.getSelectedTags(val.includeAllItems!, val.subjectItems ?? [])
+              : undefined,
           ownerUserAccountId: val.ownerUserAccountId,
-          registryUrl: this.licenseType === 'application' ? (val.registry.url?.trim() || undefined) : undefined,
-          registryUsername: this.licenseType === 'application' ? (val.registry.username?.trim() || undefined) : undefined,
-          registryPassword: this.licenseType === 'application' ? (val.registry.password?.trim() || undefined) : undefined,
+          registryUrl: this.licenseType === 'application' ? val.registry.url?.trim() || undefined : undefined,
+          registryUsername: this.licenseType === 'application' ? val.registry.username?.trim() || undefined : undefined,
+          registryPassword: this.licenseType === 'application' ? val.registry.password?.trim() || undefined : undefined,
         });
       } else {
         this.onChange(undefined);
@@ -167,7 +174,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .pipe(
         takeUntil(this.destroyed$),
         switchMap(async (subjectId) => {
-          if(this.licenseType === 'application') {
+          if (this.licenseType === 'application') {
             const apps = await firstValueFrom(this.applicationsService.list());
             return apps.find((a) => a.id === subjectId);
           } else {
@@ -178,12 +185,14 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       )
       .subscribe((selectedSubject) => {
         this.subjectItemsArray.clear({emitEvent: false});
-        const allItems = this.licenseType === 'application' ?
-          (selectedSubject as Application)?.versions ?? [] :
-          (selectedSubject as ArtifactWithTags)?.tags ?? [];
-        const licenseItems = this.licenseType === 'application' ?
-          (this.license() as ApplicationLicense)?.versions :
-          (this.license() as ArtifactLicense)?.artifactTags;
+        const allItems =
+          this.licenseType === 'application'
+            ? ((selectedSubject as Application)?.versions ?? [])
+            : ((selectedSubject as ArtifactWithTags)?.tags ?? []);
+        const licenseItems =
+          this.licenseType === 'application'
+            ? (this.license() as ApplicationLicense)?.versions
+            : (this.license() as ArtifactLicense)?.artifactTags;
         let anySelected = false;
         for (let i = 0; i < allItems.length; i++) {
           const item = allItems[i];
@@ -289,7 +298,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         subjectItems: [], // will be set by on-change,
         includeAllItems,
         ownerUserAccountId: license.ownerUserAccountId,
-        registry
+        registry,
       });
       if (license.ownerUserAccountId) {
         this.editForm.controls.subjectId.disable({emitEvent: false});
@@ -307,9 +316,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       url?: string;
       username?: string;
       password?: string;
-    }
+    };
   } {
-    if(this.licenseType === 'application') {
+    if (this.licenseType === 'application') {
       const appLicense = license as ApplicationLicense;
       return {
         subjectId: appLicense.applicationId,
@@ -318,15 +327,14 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           url: appLicense.registryUrl || '',
           username: appLicense.registryUsername || '',
           password: appLicense.registryPassword || '',
-        }
-      }
+        },
+      };
     } else {
       const artifactLicense = license as ArtifactLicense;
       return {
         subjectId: artifactLicense.artifactId,
-        includeAllItems: (artifactLicense.artifactTags ?? []).length === 0
-      }
+        includeAllItems: (artifactLicense.artifactTags ?? []).length === 0,
+      };
     }
   }
-
 }

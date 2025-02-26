@@ -7,14 +7,16 @@ import {faBox, faDownload, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} f
 import {
   catchError,
   combineLatest,
-  debounceTime, EMPTY,
+  debounceTime,
+  EMPTY,
   filter,
   firstValueFrom,
   map,
   Observable,
   startWith,
-  Subject, switchMap,
-  takeUntil
+  Subject,
+  switchMap,
+  takeUntil,
 } from 'rxjs';
 import {UuidComponent} from '../../components/uuid';
 import {ArtifactLicense, ArtifactLicensesService} from '../../services/artifact-licenses.service';
@@ -47,7 +49,6 @@ import {modalFlyInOut} from '../../animations/modal';
 export class ArtifactLicensesComponent implements OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly artifactLicensesService = inject(ArtifactLicensesService);
-  private readonly applicationsService = inject(ApplicationsService);
 
   filterForm = new FormGroup({
     search: new FormControl(''),
@@ -57,7 +58,6 @@ export class ArtifactLicensesComponent implements OnDestroy {
     this.filterForm.controls.search,
     (it: ArtifactLicense, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
   ).pipe(takeUntil(this.destroyed$));
-  applications$ = this.applicationsService.list();
 
   editForm = new FormGroup({
     license: new FormControl<ArtifactLicense | undefined>(undefined, {
