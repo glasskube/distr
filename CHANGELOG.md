@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.3.1](https://github.com/glasskube/distr/compare/1.3.0...1.3.1) (2025-02-27)
+
+
+### Bug Fixes
+
+* **backend:** improve graceful shutdown procedure ([#573](https://github.com/glasskube/distr/issues/573)) ([8085698](https://github.com/glasskube/distr/commit/80856985ee486be78e50ade0f4933374dc563934))
+* **deps:** update angular monorepo to v19.2.0 ([#570](https://github.com/glasskube/distr/issues/570)) ([2728480](https://github.com/glasskube/distr/commit/27284807fd7778dd99404e4c1e06acfa94f84941))
+* **deps:** update dependency @angular/cdk to v19.2.1 ([#571](https://github.com/glasskube/distr/issues/571)) ([1a704c9](https://github.com/glasskube/distr/commit/1a704c926289901370afa83049d35313f7a70577))
+* **deps:** update dependency posthog-js to v1.223.4 ([#561](https://github.com/glasskube/distr/issues/561)) ([6f7df58](https://github.com/glasskube/distr/commit/6f7df584249f919fe214b38d7921f4c38ef3b881))
+* **deps:** update dependency posthog-js to v1.223.5 ([#564](https://github.com/glasskube/distr/issues/564)) ([718b597](https://github.com/glasskube/distr/commit/718b597dbfeca53d51b6785786afcebc536fca84))
+* **deps:** update dependency posthog-js to v1.224.0 ([#572](https://github.com/glasskube/distr/issues/572)) ([d8048f9](https://github.com/glasskube/distr/commit/d8048f928285278fb057c97d7d59812feed5ed4d))
+* **deps:** update module github.com/docker/cli to v28.0.1+incompatible ([#565](https://github.com/glasskube/distr/issues/565)) ([543f7c1](https://github.com/glasskube/distr/commit/543f7c11129ad6e685c3954cc56d2584f73940ea))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.2.0 ([#566](https://github.com/glasskube/distr/issues/566)) ([c936eb6](https://github.com/glasskube/distr/commit/c936eb67ac405c66bb53b779312e6606f0579956))
+* **deps:** update docker/build-push-action action to v6.15.0 ([#567](https://github.com/glasskube/distr/issues/567)) ([d619b2a](https://github.com/glasskube/distr/commit/d619b2afdf942890b2ba1e40a2fbab59c7c13848))
+* **deps:** update docker/metadata-action action to v5.7.0 ([#568](https://github.com/glasskube/distr/issues/568)) ([37481c8](https://github.com/glasskube/distr/commit/37481c8141e5fb38c0bb790b78cb96f4250f02f6))
+* **deps:** update docker/setup-buildx-action action to v3.10.0 ([#569](https://github.com/glasskube/distr/issues/569)) ([0c1abbb](https://github.com/glasskube/distr/commit/0c1abbb44a53f4ae73e3c289d32226b63570365e))
+
 ## [1.3.0](https://github.com/glasskube/distr/compare/1.2.1...1.3.0) (2025-02-25)
 
 
