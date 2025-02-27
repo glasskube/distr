@@ -35,6 +35,7 @@ export interface Artifact extends HasDownloads {
 }
 
 export interface ArtifactTag extends HasDownloads {
+  id: string;
   hash: string;
   sbom?: string;
   createdAt: string;
@@ -61,6 +62,7 @@ export class ArtifactsService {
         downloadedByUsers: await this.getDownloadedByUsers(),
         tags: [
           {
+            id: 'b63e6df0-0e78-4c93-8543-db0926967411',
             hash: 'sha265:78f8664cbfbec1c378f8c2af68f6fcbb1ce3faf1388c9d0b70533152b1415e98',
             sbom: 'aaaaaaaaaaaaa',
             createdAt: '2025-02-25T09:25:21Z',
@@ -72,6 +74,7 @@ export class ArtifactsService {
             lastScannedAt: '2025-02-25T09:25:21Z',
           },
           {
+            id: 'cdf206ae-91c4-43f6-b116-7a28e083d9c8',
             hash: 'sha265:28b7a85914586d15a531566443b6d5ea6d11ad38b1e75fa753385f03b0a0a57f',
             createdAt: '2025-02-25T09:25:21Z',
             downloadsTotal: 124,
@@ -108,6 +111,7 @@ export class ArtifactsService {
         downloadedByUsers: await this.getDownloadedByUsers(),
         tags: [
           {
+            id: '357d4c97-aead-4b94-b329-fc0670c5ce4c',
             hash: 'sha265:8f441db4a6dc00a1d5d9fe7eee9e222d17d05695cd6970cd7ea8687a25411982',
             createdAt: '2025-02-25T09:25:21Z',
             downloadsTotal: 879,
@@ -117,6 +121,7 @@ export class ArtifactsService {
             vulnerabilities: [],
           },
           {
+            id: 'b66a042e-076f-477c-9d7c-9a356f5b34db',
             hash: 'sha265:bdef5adfc7661eb7719c164a2167d67405e4ce2b3a36c98e64e8755883aeab39',
             createdAt: '2025-02-25T09:25:21Z',
             sbom: 'aaaaaaaaaaaaa',
@@ -161,7 +166,7 @@ export class ArtifactsService {
     return [];
   }
 
-  public list(): Observable<Artifact[]> {
+  public list(): Observable<ArtifactWithTags[]> {
     return from(this.getArtifacts());
   }
 

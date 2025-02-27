@@ -84,6 +84,16 @@
               >Beta</span
             >
           </a>
+          <ul id="dropdown-example" class="py-2 space-y-2">
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLink="/artifact-licenses"
+                class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                Artifact Licenses
+              </a>
+            </li>
+          </ul>
         } @else {
           <a
             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"

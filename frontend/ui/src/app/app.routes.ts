@@ -29,6 +29,7 @@ import {FeatureFlagService} from './services/feature-flag.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {VerifyComponent} from './verify/verify.component';
+import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -167,6 +168,12 @@ export const routes: Routes = [
               {path: '', pathMatch: 'full', component: ArtifactsComponent},
               {path: ':id', component: ArtifactTagsComponent},
             ],
+          },
+          {
+            path: 'artifact-licenses',
+            children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
           },
           {
             path: 'customers',
