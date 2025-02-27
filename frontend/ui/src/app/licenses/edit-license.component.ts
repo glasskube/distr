@@ -39,13 +39,24 @@ import {dropdownAnimation} from '../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {ArtifactLicense} from '../services/artifact-licenses.service';
 import {Artifact, ArtifactsService, ArtifactTag, ArtifactWithTags} from '../services/artifacts.service';
+import {ArtifactsHashComponent} from '../artifacts/components';
+import {RelativeDatePipe} from '../../util/dates';
 
 export type LicenseType = 'application' | 'artifact';
 
 @Component({
   selector: 'app-edit-license',
   templateUrl: './edit-license.component.html',
-  imports: [AsyncPipe, AutotrimDirective, ReactiveFormsModule, CdkOverlayOrigin, CdkConnectedOverlay, FaIconComponent],
+  imports: [
+    AsyncPipe,
+    AutotrimDirective,
+    ReactiveFormsModule,
+    CdkOverlayOrigin,
+    CdkConnectedOverlay,
+    FaIconComponent,
+    ArtifactsHashComponent,
+    RelativeDatePipe,
+  ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
