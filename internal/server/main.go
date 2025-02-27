@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	server *http.Server
-	logger *zap.Logger
+	server           *http.Server
+	logger           *zap.Logger
+	shutdownComplete chan struct{}
 }
 
 func NewServer(handler http.Handler, logger *zap.Logger) *Server {
@@ -19,7 +21,8 @@ func NewServer(handler http.Handler, logger *zap.Logger) *Server {
 		server: &http.Server{
 			Handler: handler,
 		},
-		logger: logger,
+		logger:           logger,
+		shutdownComplete: make(chan struct{}),
 	}
 	return server
 }
@@ -38,5 +41,19 @@ func (s *Server) Shutdown(ctx context.Context) {
 	s.logger.Warn("shutting down HTTP server")
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.logger.Error("error shutting down", zap.Error(err))
+	}
+	close(s.shutdownComplete)
+}
+
+func (s *Server) WaitForShutdown() {
+	tick := time.Tick(5 * time.Second)
+	for {
+		select {
+		case <-tick:
+			s.logger.Info("waiting for server shutdown")
+		case <-s.shutdownComplete:
+			s.logger.Info("server shutdown complete")
+			return
+		}
 	}
 }

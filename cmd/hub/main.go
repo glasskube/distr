@@ -55,6 +55,7 @@ func main() {
 	})
 
 	util.Must(server.Start(":8080"))
+	server.WaitForShutdown()
 }
 
 func onSigterm(callback func()) {
