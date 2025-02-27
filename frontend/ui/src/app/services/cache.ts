@@ -2,13 +2,7 @@ import {concat, map, Observable, scan, shareReplay, Subject} from 'rxjs';
 import {compareBy, distinctBy, Predicate} from '../../util/arrays';
 import {BaseModel, Named} from '@glasskube/distr-sdk';
 
-interface ReactiveListEvent<T> {
-  objects?: T[]; // used for type 'reset'
-  object?: T; // used when type is 'save' or 'remove'
-  type: ReactiveListEventType;
-}
-
-type ReactiveListEventType = 'save' | 'remove' | 'reset';
+type ReactiveListEvent<T> = {type: 'save' | 'remove'; object: T} | {type: 'reset'; objects: T[]};
 
 export abstract class ReactiveList<T> {
   protected abstract readonly identify: Predicate<T, unknown>;
@@ -25,11 +19,11 @@ export abstract class ReactiveList<T> {
       this.events$
     ).pipe(
       scan((state: T[], event: ReactiveListEvent<T>) => {
-        if (event.type === 'reset' && event.objects) {
+        if (event.type === 'reset') {
           return event.objects;
-        } else if (event.type === 'save' && event.object) {
+        } else if (event.type === 'save') {
           return distinctBy(this.identify)([event.object, ...state]);
-        } else if (event.type === 'remove' && event.object) {
+        } else if (event.type === 'remove') {
           return state.filter((item) => {
             return this.identify(item) !== this.identify(event.object!);
           });
