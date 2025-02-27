@@ -12,7 +12,7 @@ export abstract class ReactiveList<T> {
   private readonly state$: Observable<T[]>;
 
   constructor(private readonly initial$: Observable<T[]>) {
-    // TODO potential race condition: initial load takes too long and other stuff is being added locally
+    // TODO unhandled scenarios: initial request fails or takes too long (probably a task for the callers/components)
     this.state$ = concat(
       this.initial$.pipe(map((items) => ({type: 'reset', objects: items}) as ReactiveListEvent<T>)),
       this.events$
