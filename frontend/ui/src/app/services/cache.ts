@@ -13,7 +13,6 @@ export abstract class ReactiveList<T> {
 
   constructor(private readonly initial$: Observable<T[]>) {
     // TODO potential race condition: initial load takes too long and other stuff is being added locally
-    // could be prevented locally by requiring the first event to always be of reset type and otherwise not pushing the event?
     this.state$ = concat(
       this.initial$.pipe(map((items) => ({type: 'reset', objects: items}) as ReactiveListEvent<T>)),
       this.events$
