@@ -1,6 +1,6 @@
 import {Component, inject, OnDestroy} from '@angular/core';
 import {ApexOptions, NgApexchartsModule} from 'ng-apexcharts';
-import {Subject, takeUntil} from 'rxjs';
+import {distinctUntilChanged, Subject, takeUntil} from 'rxjs';
 import {DeploymentTargetsService} from '../../../services/deployment-targets.service';
 import {UserAccountWithRole} from '@glasskube/distr-sdk';
 
@@ -13,7 +13,9 @@ export class ChartTypeComponent implements OnDestroy {
   public chartOptions?: ApexOptions;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deploymentTargets$ = this.deploymentTargets.list();
+  private readonly deploymentTargets$ = this.deploymentTargets
+    .list()
+    .pipe(distinctUntilChanged((prev, curr) => prev.length === curr.length));
 
   private readonly destroyed$ = new Subject<void>();
 

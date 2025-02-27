@@ -35,7 +35,7 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   private readonly pollRefresh$ = new Subject<void>();
   private readonly sharedPolling$ = merge(timer(0, 5000), this.pollRefresh$).pipe(
     switchMap(() => this.httpClient.get<DeploymentTarget[]>(this.deploymentTargetsBaseUrl)),
-    tap((dts) => this.cache.save(...dts)),
+    tap((dts) => this.cache.reset(dts)),
     retry({
       delay: (e, c) =>
         e instanceof HttpErrorResponse && (!e.status || e.status >= 500)
