@@ -25,7 +25,7 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {EditorComponent} from '../components/editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
@@ -47,7 +47,7 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 
 @Component({
   selector: 'app-deployment-form',
-  imports: [ReactiveFormsModule, AsyncPipe, YamlEditorComponent, AutotrimDirective],
+  imports: [ReactiveFormsModule, AsyncPipe, EditorComponent, AutotrimDirective],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

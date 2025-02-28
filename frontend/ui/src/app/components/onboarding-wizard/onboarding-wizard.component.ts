@@ -16,7 +16,7 @@ import {OnboardingWizardStepperComponent} from './onboarding-wizard-stepper.comp
 import {ToastService} from '../../services/toast.service';
 import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {YamlEditorComponent} from '../yaml-editor.component';
+import {EditorComponent} from '../editor.component';
 import {
   Application,
   ApplicationVersion,
@@ -39,7 +39,7 @@ import {HttpErrorResponse} from '@angular/common/http';
     ConnectInstructionsComponent,
     OnboardingWizardIntroComponent,
     AutotrimDirective,
-    YamlEditorComponent,
+    EditorComponent,
   ],
   animations: [modalFlyInOut],
 })

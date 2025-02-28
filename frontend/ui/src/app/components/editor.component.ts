@@ -1,4 +1,4 @@
-import {Component, ElementRef, forwardRef, inject, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, forwardRef, inject, input, Input, OnDestroy, OnInit, Signal} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {defaultKeymap, history, historyKeymap, indentWithTab} from '@codemirror/commands';
 import {yaml} from '@codemirror/lang-yaml';
@@ -7,18 +7,21 @@ import {EditorView, highlightSpecialChars, keymap} from '@codemirror/view';
 import {tags} from '@lezer/highlight';
 import {Subject} from 'rxjs';
 
+export type EditorLanguage = 'yaml';
+
 @Component({
-  selector: 'app-yaml-editor',
+  selector: 'app-editor',
   template: '',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => YamlEditorComponent),
+      useExisting: forwardRef(() => EditorComponent),
       multi: true,
     },
   ],
 })
-export class YamlEditorComponent implements OnInit, OnDestroy, ControlValueAccessor {
+export class EditorComponent implements OnInit, OnDestroy, ControlValueAccessor {
+  @Input() language: EditorLanguage | undefined;
   private readonly host = inject(ElementRef);
   private view!: EditorView;
   private readonly destroyed$ = new Subject<void>();
@@ -38,7 +41,6 @@ export class YamlEditorComponent implements OnInit, OnDestroy, ControlValueAcces
           ])
         ),
         highlightSpecialChars(),
-        yaml(),
         keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
         EditorView.updateListener.of((update) => {
           this.onTouched();
@@ -46,6 +48,7 @@ export class YamlEditorComponent implements OnInit, OnDestroy, ControlValueAcces
             this.onChange(this.view.state.doc.toString());
           }
         }),
+        ...(this.language === 'yaml' ? [yaml()] : []),
       ],
       parent: this.host.nativeElement,
     });
