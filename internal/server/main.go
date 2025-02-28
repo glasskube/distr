@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/distr/internal/env"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +39,10 @@ func (s *Server) Start(addr string) error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) {
+	if d := env.ServerShutdownDelayDuration(); d != nil {
+		s.logger.Sugar().Warnf("shutting down HTTP server in %v", d)
+		time.Sleep(*d)
+	}
 	s.logger.Warn("shutting down HTTP server")
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.logger.Error("error shutting down", zap.Error(err))
