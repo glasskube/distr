@@ -163,7 +163,7 @@ func validateDeploymentRequest(
 		} else if *request.ApplicationLicenseID != *target.Deployment.ApplicationLicenseID {
 			return badRequestError(w, "can not update license")
 		}
-		if target.Deployment.ApplicationID != (*app).ID {
+		if target.Deployment.ApplicationID != app.ID {
 			return badRequestError(w, "can not change application of existing deployment")
 		}
 	}
