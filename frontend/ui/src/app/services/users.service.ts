@@ -24,6 +24,10 @@ export class UsersService {
     return this.httpClient.get<UserAccountWithRole[]>(this.baseUrl);
   }
 
+  public getUserStatus(): Observable<{active: boolean}> {
+    return this.httpClient.get<{active: boolean}>(`${this.baseUrl}/status`);
+  }
+
   public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
     return this.httpClient.post<CreateUserAccountResponse>(this.baseUrl, request);
   }

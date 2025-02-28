@@ -25,8 +25,8 @@ import (
 )
 
 func UserAccountsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
+		r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
 		r.Route("/{userId}", func(r chi.Router) {
@@ -34,6 +34,7 @@ func UserAccountsRouter(r chi.Router) {
 			r.Delete("/", deleteUserAccountHandler)
 		})
 	})
+	r.Get("/status", getUserAccountStatusHandler)
 }
 
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +45,19 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, userAccoutns)
+	}
+}
+
+func getUserAccountStatusHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	auth := auth.Authentication.Require(ctx)
+	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, map[string]any{
+			"active": userAccount.PasswordHash != nil,
+		})
 	}
 }
 
