@@ -53,20 +53,42 @@
         </a>
       </li>
       <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLink="/artifacts"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+        <button
+          type="button"
+          (click)="toggleArtifactsSubMenu()"
+          class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          aria-controls="dropdown-example">
           <fa-icon
             [icon]="faBox"
             size="lg"
             class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Artifacts</span>
+          <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Artifacts</span>
           <span
             class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
             Preview
           </span>
-        </a>
+          <fa-icon [icon]="faChevronDown"></fa-icon>
+        </button>
+        @if (artifactsSubMenuOpen()) {
+          <ul class="py-2 space-y-2">
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLink="/artifacts"
+                class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Overview</span>
+              </a>
+            </li>
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLink="/artifact-licenses"
+                class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Licenses</span>
+              </a>
+            </li>
+          </ul>
+        }
       </li>
       <li>
         @if (featureFlags.isLicensingEnabled$ | async) {
@@ -84,16 +106,6 @@
               >Beta</span
             >
           </a>
-          <ul id="dropdown-example" class="py-2 space-y-2">
-            <li>
-              <a
-                (click)="sidebar.hide()"
-                routerLink="/artifact-licenses"
-                class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                Artifact Licenses
-              </a>
-            </li>
-          </ul>
         } @else {
           <a
             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"

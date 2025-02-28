@@ -1,4 +1,4 @@
-import {Component, effect, ElementRef, inject, ViewChild} from '@angular/core';
+import {Component, effect, ElementRef, inject, signal, ViewChild} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -7,6 +7,7 @@ import {
   faBox,
   faBoxesStacked,
   faCheckDouble,
+  faChevronDown,
   faDashboard,
   faGear,
   faHome,
@@ -48,6 +49,8 @@ export class SideBarComponent {
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
 
+  protected readonly artifactsSubMenuOpen = signal(true);
+
   constructor() {
     effect(() => {
       const show = this.sidebar.showSidebar();
@@ -56,7 +59,12 @@ export class SideBarComponent {
     });
   }
 
+  protected toggleArtifactsSubMenu() {
+    this.artifactsSubMenuOpen.update((val) => !val);
+  }
+
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
   protected showRequestAccessTooltip = false;
+  protected readonly faChevronDown = faChevronDown;
 }

@@ -173,7 +173,7 @@ export const routes: Routes = [
             path: 'artifact-licenses',
             children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
             data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
+            canActivate: [requiredRoleGuard('vendor')],
           },
           {
             path: 'customers',
