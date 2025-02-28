@@ -84,6 +84,7 @@ const jwtAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: Route
 };
 
 const inviteComponentGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
   const users = inject(UsersService);
   const router = inject(Router);
   try {
@@ -92,6 +93,7 @@ const inviteComponentGuard: CanActivateFn = async () => {
       return true;
     }
   } catch (e) {}
+  auth.actionToken = null;
   return router.createUrlTree(['/login']);
 };
 
