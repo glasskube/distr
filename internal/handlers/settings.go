@@ -107,6 +107,8 @@ func userSettingsVerifyConfirmHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if !auth.CurrentUserEmailVerified() {
 		http.Error(w, "token does not have verified claim", http.StatusForbidden)
+	} else if userAccount.EmailVerifiedAt != nil {
+		w.WriteHeader(http.StatusNoContent)
 	} else if err := db.UpdateUserAccountEmailVerified(ctx, userAccount); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "could not update user", http.StatusBadRequest)

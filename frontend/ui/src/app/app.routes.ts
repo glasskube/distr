@@ -27,6 +27,7 @@ import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {LicensesComponent} from './licenses/licenses.component';
 import {FeatureFlagService} from './services/feature-flag.service';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
+import {UsersService} from './services/users.service';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -82,6 +83,20 @@ const jwtAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: Route
   }
 };
 
+const inviteComponentGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const users = inject(UsersService);
+  const router = inject(Router);
+  try {
+    const {active} = await firstValueFrom(users.getUserStatus());
+    if (!active) {
+      return true;
+    }
+  } catch (e) {}
+  auth.actionToken = null;
+  return router.createUrlTree(['/login']);
+};
+
 function requiredRoleGuard(userRole: UserRole): CanActivateFn {
   return () => inject(AuthService).hasRole(userRole);
 }
@@ -126,7 +141,7 @@ export const routes: Routes = [
         canActivate: [emailVerificationGuard],
       },
       {path: 'reset', component: PasswordResetComponent},
-      {path: 'join', component: InviteComponent},
+      {path: 'join', component: InviteComponent, canActivate: [inviteComponentGuard]},
       {
         path: '',
         component: NavShellComponent,
