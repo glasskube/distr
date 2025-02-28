@@ -147,6 +147,7 @@
               <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
+                    <th scope="col" class="px-6 py-3">ID</th>
                     <th scope="col" class="px-6 py-3">Version</th>
                     @if (application.type === 'kubernetes') {
                       <th scope="col" class="px-6 py-3">Chart URL</th>
@@ -165,6 +166,9 @@
                       [class.hover:bg-gray-50]="!archived"
                       [class.dark:hover:bg-gray-600]="!archived"
                       class="bg-white border-t dark:bg-gray-800 dark:border-gray-700">
+                      <td class="px-1 py-4">
+                        <app-uuid [uuid]="version.id!" [small]="true"></app-uuid>
+                      </td>
                       <th
                         scope="row"
                         [class.text-gray-900]="!archived"
