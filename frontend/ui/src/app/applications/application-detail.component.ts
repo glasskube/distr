@@ -34,7 +34,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {EditorComponent} from '../components/editor.component';
 import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
@@ -54,7 +54,7 @@ import {isArchived} from '../../util/dates';
     UuidComponent,
     AutotrimDirective,
     DatePipe,
-    YamlEditorComponent,
+    EditorComponent,
   ],
   templateUrl: './application-detail.component.html',
   animations: [dropdownAnimation],
