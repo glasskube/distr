@@ -98,7 +98,12 @@ const inviteComponentGuard: CanActivateFn = async () => {
 };
 
 function requiredRoleGuard(userRole: UserRole): CanActivateFn {
-  return () => inject(AuthService).hasRole(userRole);
+  return () => {
+    if (inject(AuthService).hasRole(userRole)) {
+      return true;
+    }
+    return inject(Router).createUrlTree(['/']);
+  };
 }
 
 function licensingEnabledGuard(): CanActivateFn {
@@ -210,5 +215,9 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: '**',
+    redirectTo: '/',
   },
 ];
