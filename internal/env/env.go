@@ -128,7 +128,7 @@ func init() {
 	}
 
 	if value, ok := os.LookupEnv("SERVER_SHUTDOWN_DELAY_DURATION"); ok {
-		serverShutdownDelayDuration = util.PtrTo(util.Require(time.ParseDuration(value)))
+		serverShutdownDelayDuration = util.PtrTo(requirePositiveDuration(value))
 	}
 }
 
