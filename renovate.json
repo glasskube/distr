@@ -13,7 +13,8 @@
         "github-actions",
         "gomod",
         "dockerfile",
-        "docker-compose"
+        "docker-compose",
+        "mise"
       ],
       "matchDepTypes": [
         "devDependencies"
