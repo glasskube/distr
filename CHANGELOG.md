@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.3.2](https://github.com/glasskube/distr/compare/1.3.1...1.3.2) (2025-03-03)
+
+
+### Bug Fixes
+
+* avoid settings override by using invite link multiple times ([#579](https://github.com/glasskube/distr/issues/579)) ([2b738ce](https://github.com/glasskube/distr/commit/2b738ce1877407fce1d07507cc7d781ba88ebfeb))
+* **deps:** update aws-sdk-go-v2 monorepo ([#577](https://github.com/glasskube/distr/issues/577)) ([8f64b98](https://github.com/glasskube/distr/commit/8f64b9843b7c951a516164e279d7ddf81158a878))
+* **deps:** update dependency @sentry/angular to v9.3.0 ([#584](https://github.com/glasskube/distr/issues/584)) ([6e9d696](https://github.com/glasskube/distr/commit/6e9d696a1e08f74afeeff941fda19f9265aa47ea))
+* **deps:** update dependency globe.gl to v2.41.1 ([#590](https://github.com/glasskube/distr/issues/590)) ([6a7d614](https://github.com/glasskube/distr/commit/6a7d6147db70d64e3bfbfd27822b79b64f635c1e))
+* **deps:** update dependency posthog-js to v1.224.1 ([#580](https://github.com/glasskube/distr/issues/580)) ([69f5945](https://github.com/glasskube/distr/commit/69f594570e2a724a8fa932096f53a3df3446a16b))
+* **deps:** update dependency posthog-js to v1.225.0 ([#589](https://github.com/glasskube/distr/issues/589)) ([22e80bf](https://github.com/glasskube/distr/commit/22e80bf6c8a47ead8b6c4eb63ed69130ba6eed16))
+* **deps:** update fontsource monorepo to v5.2.5 ([#588](https://github.com/glasskube/distr/issues/588)) ([6e9dfef](https://github.com/glasskube/distr/commit/6e9dfef881fd814db40e9d40544b89d03e988f55))
+
+
+### Other
+
+* **backend:** add `SERVER_SHUTDOWN_DELAY_DURATION` config variable ([#583](https://github.com/glasskube/distr/issues/583)) ([5cfd73f](https://github.com/glasskube/distr/commit/5cfd73ff8ebe1619445ca92161817749e1d4155f))
+* **backend:** application of existing deployment should not be changeable ([#578](https://github.com/glasskube/distr/issues/578)) ([8155538](https://github.com/glasskube/distr/commit/81555381d636e861d470966e0e8de87738344448))
+* **deps:** update axllent/mailpit docker tag to v1.23.0 ([#587](https://github.com/glasskube/distr/issues/587)) ([4c831e3](https://github.com/glasskube/distr/commit/4c831e3d8bcdd05235f921ab048d4d36c6a4ef11))
+* **deps:** update dependency golangci-lint to v1.64.6 ([#591](https://github.com/glasskube/distr/issues/591)) ([f98b6e6](https://github.com/glasskube/distr/commit/f98b6e6613640ebe161f01e1b92958fba14fe49a))
+* **deps:** update dependency prettier to v3.5.3 ([#592](https://github.com/glasskube/distr/issues/592)) ([9c089c0](https://github.com/glasskube/distr/commit/9c089c04e95da8e8ef57ae072400c70beecdfd1a))
+* **deps:** update dependency typescript to ~5.8.0 ([#586](https://github.com/glasskube/distr/issues/586)) ([01a0cb6](https://github.com/glasskube/distr/commit/01a0cb6d9d4ee1d095eea79a2d6cc23b74aa12e0))
+* **deps:** update dependency typescript to v5.8.2 ([#585](https://github.com/glasskube/distr/issues/585)) ([8825de8](https://github.com/glasskube/distr/commit/8825de83a5c4c98e61b3439d8730e623110b9496))
+* **deps:** update googleapis/release-please-action action to v4.1.4 ([#576](https://github.com/glasskube/distr/issues/576)) ([6541edd](https://github.com/glasskube/distr/commit/6541edd4e37f106eda5c4051c7860cf5de43aa66))
+* **ui:** additional routing fallbacks ([#593](https://github.com/glasskube/distr/issues/593)) ([a0f7506](https://github.com/glasskube/distr/commit/a0f7506a799a6f282d4d2323d61136b61134ff3b))
+* **ui:** editor should not always expect yaml ([#581](https://github.com/glasskube/distr/issues/581)) ([8f6758e](https://github.com/glasskube/distr/commit/8f6758e911f3715cfa89ddb8daad6ce7b3bfad40))
+* **ui:** make cache resettable ([#574](https://github.com/glasskube/distr/issues/574)) ([06ea2af](https://github.com/glasskube/distr/commit/06ea2afe60f801365ef368adf27b1d1a825e56a7))
+* **ui:** show app version id in table ([#582](https://github.com/glasskube/distr/issues/582)) ([a5a1f82](https://github.com/glasskube/distr/commit/a5a1f82b20e869ce5183b82d8e601550002e600a))
+
 ## [1.3.1](https://github.com/glasskube/distr/compare/1.3.0...1.3.1) (2025-02-27)
 
 
