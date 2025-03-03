@@ -38,6 +38,17 @@
       ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true
+    },
+    {
+      "description": "Schedule noisy deps on Monday morning (6 AM - 9 AM)",
+      "matchPackageNames": [
+        "posthog-js",
+        "@sentry/*",
+        "@fontsource/*"
+      ],
+      "schedule": [
+        "* 6-9 * * 1"
+      ]
     }
   ]
 }
