@@ -27,7 +27,7 @@
         <ng-container *ngTemplateOutlet="data.customTemplate"></ng-container>
       } @else {
         <p class="text-base leading-relaxed text-gray-500 dark:text-gray-200">
-          {{ data.message }}
+          {{ data.message?.message }}
         </p>
       }
 

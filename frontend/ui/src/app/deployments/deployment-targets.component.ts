@@ -279,7 +279,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
         await firstValueFrom(
           this.overlay.confirm({
             customTemplate: confirmTemplate,
-            requiredConfirmInputText: 'DELETE',
+            requiredConfirmInputText: 'UNDEPLOY',
             message: {
               warning,
               message: '',

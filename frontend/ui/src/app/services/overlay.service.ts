@@ -59,7 +59,7 @@ export class OverlayService {
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   public confirm(messageOrConfig: ConfirmConfig | string) {
-    const config = typeof messageOrConfig === 'string' ? {message: messageOrConfig} : messageOrConfig;
+    const config = typeof messageOrConfig === 'string' ? {message: {message: messageOrConfig}} : messageOrConfig;
     return this.showModal<boolean>(ConfirmDialogComponent, {data: config}).result();
   }
 
