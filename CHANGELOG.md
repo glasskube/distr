@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.3](https://github.com/glasskube/distr/compare/1.3.2...1.3.3) (2025-03-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @codemirror/view to v6.36.4 ([#595](https://github.com/glasskube/distr/issues/595)) ([406f656](https://github.com/glasskube/distr/commit/406f656d9a47c090612ceb7e4fab7e1c20451368))
+
+
+### Other
+
+* **ui:** require additional input when deleting deployments ([#598](https://github.com/glasskube/distr/issues/598)) ([c6a8a5f](https://github.com/glasskube/distr/commit/c6a8a5f075bcda3c183ca1194798ade6fe6570ef))
+
 ## [1.3.2](https://github.com/glasskube/distr/compare/1.3.1...1.3.2) (2025-03-03)
 
 
