@@ -6,21 +6,17 @@ import {
   forwardRef,
   inject,
   Injector,
-  Input,
   OnDestroy,
   OnInit,
   signal,
   ViewChild,
-  WritableSignal,
 } from '@angular/core';
 import {AsyncPipe} from '@angular/common';
-import {AutotrimDirective} from '../directives/autotrim.directive';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {
   ControlValueAccessor,
   FormArray,
   FormBuilder,
-  FormControl,
-  FormGroup,
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
@@ -29,38 +25,46 @@ import {
 } from '@angular/forms';
 import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {first, firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
-import {ApplicationLicense} from '../types/application-license';
-import {ApplicationsService} from '../services/applications.service';
-import {Application, ApplicationVersion, BaseModel, Named, UserAccount} from '@glasskube/distr-sdk';
-import {UsersService} from '../services/users.service';
+import {ApplicationLicense} from '../../types/application-license';
+import {ApplicationsService} from '../../services/applications.service';
+import {UsersService} from '../../services/users.service';
 import dayjs from 'dayjs';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {dropdownAnimation} from '../animations/dropdown';
+import {dropdownAnimation} from '../../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {ArtifactLicense} from '../services/artifact-licenses.service';
-import {Artifact, ArtifactsService, ArtifactTag, ArtifactWithTags} from '../services/artifacts.service';
-import {ArtifactsHashComponent} from '../artifacts/components';
-import {RelativeDatePipe} from '../../util/dates';
+import {ArtifactLicense} from '../../services/artifact-licenses.service';
+import {ArtifactsService, ArtifactTag, ArtifactWithTags} from '../../services/artifacts.service';
+import {ArtifactsHashComponent} from '../components';
+import {RelativeDatePipe} from '../../../util/dates';
 
 @Component({
-  selector: 'app-edit-license',
-  templateUrl: './edit-license.component.html',
-  imports: [AsyncPipe, AutotrimDirective, ReactiveFormsModule, CdkOverlayOrigin, CdkConnectedOverlay, FaIconComponent],
+  selector: 'app-edit-artifact-license',
+  templateUrl: './edit-artifact-license.component.html',
+  imports: [
+    AsyncPipe,
+    AutotrimDirective,
+    ReactiveFormsModule,
+    CdkOverlayOrigin,
+    CdkConnectedOverlay,
+    FaIconComponent,
+    ArtifactsHashComponent,
+    RelativeDatePipe,
+  ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EditLicenseComponent),
+      useExisting: forwardRef(() => EditArtifactLicenseComponent),
       multi: true,
     },
   ],
   animations: [dropdownAnimation],
 })
-export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, ControlValueAccessor {
+export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterViewInit, ControlValueAccessor {
   private injector = inject(Injector);
   private readonly destroyed$ = new Subject<void>();
-  private readonly applicationsService = inject(ApplicationsService);
+  private readonly artifactsService = inject(ArtifactsService);
   private readonly usersService = inject(UsersService);
-  applications$ = this.applicationsService.list();
+  artifacts$ = this.artifactsService.list();
   customers$ = this.usersService.getUsers().pipe(
     map((accounts) => accounts.filter((a) => a.userRole === 'customer')),
     first()
@@ -75,30 +79,10 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     includeAllItems: this.fb.nonNullable.control<boolean>(true, Validators.required),
     subjectItems: this.fb.array<boolean>([]),
     ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
-    registry: this.fb.nonNullable.group(
-      {
-        url: this.fb.nonNullable.control(''),
-        username: this.fb.nonNullable.control(''),
-        password: this.fb.nonNullable.control(''),
-      },
-      {
-        validators: (control) => {
-          if (!control.get('url')?.value && !control.get('username')?.value && !control.get('password')?.value) {
-            return null;
-          }
-          if (control.get('url')?.value && control.get('username')?.value && control.get('password')?.value) {
-            return null;
-          }
-          return {
-            required: true,
-          };
-        },
-      }
-    ),
   });
   editFormLoading = false;
-  readonly license = signal<ApplicationLicense | undefined>(undefined);
-  readonly selectedSubject = signal<Application | undefined>(undefined);
+  readonly license = signal<ArtifactLicense | undefined>(undefined);
+  readonly selectedSubject = signal<ArtifactWithTags | undefined>(undefined);
 
   dropdownOpen = signal(false);
   protected subjectItemsSelected = 0;
@@ -148,12 +132,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           id: val.id,
           name: val.name,
           expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
-          applicationId: val.subjectId,
-          versions: this.getSelectedVersions(val.includeAllItems!, val.subjectItems ?? []),
+          artifactId: val.subjectId,
+          artifactTags: this.getSelectedTags(val.includeAllItems!, val.subjectItems ?? []),
           ownerUserAccountId: val.ownerUserAccountId,
-          registryUrl: val.registry.url?.trim() || undefined,
-          registryUsername: val.registry.username?.trim() || undefined,
-          registryPassword: val.registry.password?.trim() || undefined,
         });
       } else {
         this.onChange(undefined);
@@ -163,14 +144,14 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .pipe(
         takeUntil(this.destroyed$),
         switchMap(async (subjectId) => {
-          const apps = await firstValueFrom(this.applicationsService.list());
-          return apps.find((a) => a.id === subjectId);
+          const artifacts = await firstValueFrom(this.artifactsService.list());
+          return artifacts.find((a) => a.id === subjectId);
         })
       )
       .subscribe((selectedSubject) => {
         this.subjectItemsArray.clear({emitEvent: false});
-        const allItems = (selectedSubject as Application)?.versions ?? [];
-        const licenseItems = (this.license() as ApplicationLicense)?.versions;
+        const allItems = (selectedSubject as ArtifactWithTags)?.tags ?? [];
+        const licenseItems = (this.license() as ArtifactLicense)?.artifactTags;
         let anySelected = false;
         for (let i = 0; i < allItems.length; i++) {
           const item = allItems[i];
@@ -185,19 +166,19 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       });
   }
 
-  selectedApplication(): Application | undefined {
-    return this.selectedSubject() as Application;
+  selectedArtifact(): ArtifactWithTags | undefined {
+    return this.selectedSubject() as ArtifactWithTags;
   }
 
-  private getSelectedVersions(includeAllVersions: boolean, itemControls: (boolean | null)[]): ApplicationVersion[] {
+  private getSelectedTags(includeAllVersions: boolean, itemControls: (boolean | null)[]): ArtifactTag[] {
     if (includeAllVersions) {
       return [];
     }
-    const app = this.selectedApplication();
+    const artifact = this.selectedArtifact();
     return itemControls
       .map((v, idx) => {
         if (v) {
-          return app?.versions?.[idx];
+          return artifact?.tags?.[idx];
         }
         return undefined;
       })
@@ -245,22 +226,17 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     this.onTouched = fn;
   }
 
-  writeValue(license: ApplicationLicense | undefined): void {
+  writeValue(license: ArtifactLicense | undefined): void {
     this.license.set(license);
     if (license) {
       this.editForm.patchValue({
         id: license.id,
         name: license.name,
         expiresAt: license.expiresAt ? dayjs(license.expiresAt).format('YYYY-MM-DD') : '',
-        subjectId: license.applicationId,
+        subjectId: license.artifactId,
         subjectItems: [], // will be set by on-change,
-        includeAllItems: (license.versions ?? []).length === 0,
+        includeAllItems: (license.artifactTags ?? []).length === 0,
         ownerUserAccountId: license.ownerUserAccountId,
-        registry: {
-          url: license.registryUrl || '',
-          username: license.registryUsername || '',
-          password: license.registryPassword || '',
-        },
       });
       if (license.ownerUserAccountId) {
         this.editForm.controls.subjectId.disable({emitEvent: false});

@@ -31,6 +31,7 @@ import {EditLicenseComponent} from '../../licenses/edit-license.component';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {drawerFlyInOut} from '../../animations/drawer';
 import {modalFlyInOut} from '../../animations/modal';
+import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
 
 @Component({
   selector: 'app-artifact-licenses',
@@ -41,7 +42,7 @@ import {modalFlyInOut} from '../../animations/modal';
     UuidComponent,
     DatePipe,
     RequireRoleDirective,
-    EditLicenseComponent,
+    EditArtifactLicenseComponent,
   ],
   templateUrl: './artifact-licenses.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
