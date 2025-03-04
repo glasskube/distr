@@ -33,7 +33,15 @@
                 role="alert">
                 <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
                 <div>
-                  <span class="font-medium">It looks like you are not using the latest version of this artifact.</span>
+                  <span class="font-medium">Some customers are not using the latest version of this artifact.</span>
+                </div>
+              </div>
+              <div
+                class="flex text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                role="alert">
+                <fa-icon [icon]="faWarning" class="me-4"></fa-icon>
+                <div>
+                  <span class="font-medium">Some customers are effected by a critical vulnerability.</span>
                 </div>
               </div>
             }
@@ -79,16 +87,26 @@
                     <app-artifacts-vulnerability-report [vulns]="tag.vulnerabilities" [date]="tag.lastScannedAt">
                     </app-artifacts-vulnerability-report>
                   }
-                  @if (tag.sbom) {
-                    <div>
-                      <button
-                        type="button"
-                        class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                        <fa-icon class="me-1" [icon]="faDownload"></fa-icon>
-                        Download SBOM
-                      </button>
-                    </div>
-                  }
+                  <div class="flex row gap-4">
+                    @if (tag.sbom) {
+                      <div>
+                        <button
+                          type="button"
+                          class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                          <fa-icon class="me-1" [icon]="faFile"></fa-icon>
+                          Release Notes
+                        </button>
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                          <fa-icon class="me-1" [icon]="faDownload"></fa-icon>
+                          Download SBOM
+                        </button>
+                      </div>
+                    }
+                  </div>
                 </div>
               </li>
             }

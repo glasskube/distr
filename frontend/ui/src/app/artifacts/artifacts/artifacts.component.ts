@@ -8,6 +8,7 @@ import {combineLatest, debounceTime, map, startWith} from 'rxjs';
 import {UuidComponent} from '../../components/uuid';
 import {ArtifactsService} from '../../services/artifacts.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent} from '../components';
+import {faDocker} from '@fortawesome/free-brands-svg-icons';
 
 @Component({
   selector: 'app-artifacts',
@@ -43,4 +44,5 @@ export class ArtifactsComponent {
     ),
     debounceTime(200) // simulate network lag :^)
   );
+  protected readonly faDocker = faDocker;
 }

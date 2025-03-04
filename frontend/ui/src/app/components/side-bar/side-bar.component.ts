@@ -1,5 +1,5 @@
 import {Component, effect, ElementRef, inject, signal, ViewChild} from '@angular/core';
-import {RouterLink} from '@angular/router';
+import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faAddressBook,
@@ -28,7 +28,15 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe, CdkConnectedOverlay, CdkOverlayOrigin],
+  imports: [
+    RouterLink,
+    FaIconComponent,
+    RequireRoleDirective,
+    AsyncPipe,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
+    RouterLinkActive,
+  ],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);

@@ -57,8 +57,8 @@ export class ArtifactsService {
       {
         id: '86d0f4c2-650c-480f-b875-ae2857c9753f',
         name: 'distr',
-        downloadsTotal: 782,
-        downloadedByCount: this.auth.hasRole('vendor') ? 72 : 1,
+        downloadsTotal: 40,
+        downloadedByCount: this.auth.hasRole('vendor') ? 13 : 1,
         downloadedByUsers: await this.getDownloadedByUsers(),
         tags: [
           {
@@ -66,7 +66,7 @@ export class ArtifactsService {
             hash: 'sha265:78f8664cbfbec1c378f8c2af68f6fcbb1ce3faf1388c9d0b70533152b1415e98',
             sbom: 'aaaaaaaaaaaaa',
             createdAt: '2025-02-25T09:25:21Z',
-            downloadsTotal: 345,
+            downloadsTotal: 16,
             downloadedByCount: this.auth.hasRole('vendor') ? 12 : 1,
             downloadedByUsers: await this.getDownloadedByUsers(),
             labels: [{name: 'latest'}, {name: '1.2.1'}],
@@ -77,10 +77,11 @@ export class ArtifactsService {
             id: 'cdf206ae-91c4-43f6-b116-7a28e083d9c8',
             hash: 'sha265:28b7a85914586d15a531566443b6d5ea6d11ad38b1e75fa753385f03b0a0a57f',
             createdAt: '2025-02-25T09:25:21Z',
-            downloadsTotal: 124,
-            downloadedByCount: this.auth.hasRole('vendor') ? 79 : 1,
-            downloadedByUsers: await this.getDownloadedByUsers(),
+            downloadsTotal: 24,
+            downloadedByCount: this.auth.hasRole('vendor') ? 1 : 1,
+            downloadedByUsers: await this.getDownloadedByUsers(true, 1),
             labels: [{name: '1.1.6'}],
+            sbom: 'aaaaaaaaaaaaa',
             vulnerabilities: [
               {
                 id: 'GHSA-vp9c-fpxx-744v',
@@ -127,7 +128,7 @@ export class ArtifactsService {
             sbom: 'aaaaaaaaaaaaa',
             downloadsTotal: 468,
             downloadedByCount: this.auth.hasRole('vendor') ? 79 : 1,
-            downloadedByUsers: await this.getDownloadedByUsers(),
+            downloadedByUsers: await this.getDownloadedByUsers(true),
             labels: [{name: '1.2.0'}],
             vulnerabilities: [
               {
@@ -142,8 +143,12 @@ export class ArtifactsService {
     ];
   }
 
-  private async getDownloadedByUsers(self: boolean = true) {
+  private async getDownloadedByUsers(self: boolean = true, count = 3): Promise<ArtifactUser[]> {
     if (this.auth.hasRole('vendor')) {
+      if (count === 1) {
+        return [{id: '4f21317b-61d5-44a8-a431-c220f3fd010f', avatarUrl: '/placeholders/company-4.jpg'}];
+      }
+
       return [
         {id: '4f21317b-61d5-44a8-a431-c220f3fd010f', avatarUrl: '/placeholders/company-1.jpg'},
         {id: '45560805-6900-4160-ba32-1d9f09bafff6', avatarUrl: '/placeholders/company-2.jpg'},

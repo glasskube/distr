@@ -2,7 +2,7 @@ import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faLightbulb} from '@fortawesome/free-solid-svg-icons';
+import {faBox, faDownload, faFile, faLightbulb, faWarning} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
 import {firstValueFrom, map, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
@@ -104,4 +104,7 @@ export class ArtifactTagsComponent {
       return url;
     }
   }
+
+  protected readonly faWarning = faWarning;
+  protected readonly faFile = faFile;
 }

@@ -10,7 +10,7 @@
           <ul class="mt-1.5 list-disc list-inside">
             @for (u of updates; track u.dt.id) {
               <li>
-                {{ u.dt.name }} &rarr; {{ u.version.name }} (<button
+                {{ u.dt.name }}: {{ u.dt.deployment?.applicationName }} &rarr; {{ u.version.name }} (<button
                   type="button"
                   class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
                   (click)="newDeployment(u.dt, deploymentModal, u.version)">
