@@ -241,20 +241,20 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     this.editForm.patchValue({type: 'docker'});
   }
 
-  async deleteDeploymentTarget(dt: DeploymentTarget) {
-    const message = `
-      You are about to delete the deployment with name ${dt.name}?
-      Afterwards you will not be able to deploy to this target anymore.
-      This will also delete all associated configuration, revision history and status logs.
-      This does not undeploy the deployed application.
-      This action can not be undone.
-      Do you want to continue?`;
+  async deleteDeploymentTarget(dt: DeploymentTarget, confirmTemplate: TemplateRef<any>) {
     const warning =
       dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
         ? {message: this.customerManagedWarning}
         : undefined;
     this.overlay
-      .confirm({message, warning})
+      .confirm({
+        customTemplate: confirmTemplate,
+        requiredConfirmInputText: 'DELETE',
+        message: {
+          warning,
+          message: '',
+        },
+      })
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.deploymentTargets.delete(dt)),
@@ -269,20 +269,24 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
       .subscribe();
   }
 
-  async deleteDeployment(dt: DeploymentTarget, d: Deployment) {
-    const message = `
-      You are about to uninstall the application installed on ${dt.name}.
-      Afterwards you will be able to deploy a new application to this target.
-      This will also delete all associated configuration, revision history and status logs.
-      In most cases all application data is deleted.
-      This action can not be undone.
-      Do you want to continue?`;
+  async deleteDeployment(dt: DeploymentTarget, d: Deployment, confirmTemplate: TemplateRef<any>) {
     const warning =
       dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
         ? {message: this.customerManagedWarning}
         : undefined;
     if (d.id) {
-      if (await firstValueFrom(this.overlay.confirm({message, warning})))
+      if (
+        await firstValueFrom(
+          this.overlay.confirm({
+            customTemplate: confirmTemplate,
+            requiredConfirmInputText: 'UNDEPLOY',
+            message: {
+              warning,
+              message: '',
+            },
+          })
+        )
+      )
         try {
           await firstValueFrom(this.deploymentTargets.undeploy(d.id));
         } catch (e) {
@@ -445,7 +449,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
         deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
           ? {message: this.customerManagedWarning}
           : undefined;
-      if (!(await firstValueFrom(this.overlay.confirm({message, warning})))) {
+      if (!(await firstValueFrom(this.overlay.confirm({message: {message, warning}})))) {
         return;
       }
     }
