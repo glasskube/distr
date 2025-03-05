@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -47,7 +47,7 @@ import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
   templateUrl: './artifact-licenses.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ArtifactLicensesComponent implements OnDestroy {
+export class ArtifactLicensesComponent implements OnDestroy, OnInit {
   private readonly destroyed$ = new Subject<void>();
   private readonly artifactLicensesService = inject(ArtifactLicensesService);
 
@@ -141,4 +141,10 @@ export class ArtifactLicensesComponent implements OnDestroy {
   protected readonly faPen = faPen;
   protected readonly faTrash = faTrash;
   protected readonly faXmark = faXmark;
+
+  ngOnInit(): void {
+    this.editForm.valueChanges.subscribe((val) => {
+      console.log('value changed', val);
+    });
+  }
 }

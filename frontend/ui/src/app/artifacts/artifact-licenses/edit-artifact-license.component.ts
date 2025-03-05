@@ -24,7 +24,7 @@ import {
   Validators,
 } from '@angular/forms';
 import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {first, firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
+import {first, firstValueFrom, map, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
 import {ApplicationLicense} from '../../types/application-license';
 import {UsersService} from '../../services/users.service';
 import dayjs from 'dayjs';
@@ -74,7 +74,10 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     id: this.fb.nonNullable.control<string | undefined>(undefined),
     name: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
     expiresAt: this.fb.nonNullable.control(''),
-    artifacts: this.fb.array([]),
+    artifacts: this.fb.nonNullable.array<{artifactId?: string; includeAllTags: boolean; artifactTags: boolean[]}>(
+      [],
+      Validators.required
+    ),
     ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
   });
   editFormLoading = false;
@@ -92,24 +95,30 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   protected readonly faPen = faPen;
 
   ngOnInit() {
-    this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
-      this.onTouched();
-      const val = this.editForm.getRawValue();
-      console.log('onChange', val);
-      /*
-      if (this.editForm.valid) {
-        this.onChange({
-          id: val.id,
-          name: val.name,
-          expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
-          artifactId: val.subjectId,
-          artifactTags: this.getSelectedTags(val.includeAllItems!, val.subjectItems ?? []),
-          ownerUserAccountId: val.ownerUserAccountId,
-        });
-      } else {
-        this.onChange(undefined);
-      }*/
-    });
+    this.editForm.valueChanges
+      .pipe(withLatestFrom(this.allArtifacts$), takeUntil(this.destroyed$))
+      .subscribe(([_, allArtifacts]) => {
+        this.onTouched();
+        const val = this.editForm.getRawValue();
+        console.log('onChange', val, 'valid', this.editForm.valid);
+        if (this.editForm.valid) {
+          this.onChange({
+            id: val.id,
+            name: val.name,
+            expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
+            artifacts: val.artifacts.map((artifact) => {
+              const art = allArtifacts.find((a) => a.id === artifact.artifactId)!;
+              return {
+                artifact: art,
+                tags: this.getSelectedTags(artifact.includeAllTags, artifact.artifactTags, art),
+              };
+            }),
+            ownerUserAccountId: val.ownerUserAccountId,
+          });
+        } else {
+          this.onChange(undefined);
+        }
+      });
   }
 
   selectedArtifact(): ArtifactWithTags | undefined {
@@ -117,11 +126,14 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     return this.selectedSubject() as ArtifactWithTags;
   }
 
-  private getSelectedTags(includeAllVersions: boolean, itemControls: (boolean | null)[]): ArtifactTag[] {
-    if (includeAllVersions) {
+  private getSelectedTags(
+    includeAllTags: boolean,
+    itemControls: (boolean | null)[],
+    artifact: ArtifactWithTags
+  ): ArtifactTag[] {
+    if (includeAllTags) {
       return [];
     }
-    const artifact = this.selectedArtifact();
     return itemControls
       .map((v, idx) => {
         if (v) {
@@ -147,7 +159,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   toggleDropdown(i: number, artifactCtrl: AbstractControl) {
-    console.log('toggle', i);
     if (this.openedArtifactIdx() === i) {
       if (
         !artifactCtrl.get('includeAllTags')?.value &&
@@ -159,9 +170,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     this.openedArtifactIdx.update((idx) => {
       return idx === i ? undefined : i;
     });
-    if (this.openedArtifactIdx()) {
-      this.dropdownWidth = this.dropdownTriggerButton.nativeElement.getBoundingClientRect().width;
-    }
+    this.dropdownWidth = this.dropdownTriggerButton.nativeElement.getBoundingClientRect().width;
   }
 
   ngOnDestroy() {
@@ -239,10 +248,10 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     this.artifacts.removeAt(i);
   }
 
-  private onChange: (l: ApplicationLicense | ArtifactLicense | undefined) => void = () => {};
+  private onChange: (l: ArtifactLicense | undefined) => void = () => {};
   private onTouched: () => void = () => {};
 
-  registerOnChange(fn: (l: ApplicationLicense | ArtifactLicense | undefined) => void): void {
+  registerOnChange(fn: (l: ArtifactLicense | undefined) => void): void {
     this.onChange = fn;
   }
 
