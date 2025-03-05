@@ -17,7 +17,7 @@ import (
 
 func cleanComposeFile(composeData []byte) []byte {
 	lines := strings.Split(string(composeData), "\n")
-	var cleanedLines []string
+	cleanedLines := make([]string, 0, 50)
 
 	for _, line := range lines {
 		// Skip lines that define `name:`
@@ -53,7 +53,10 @@ func replaceEnvVars(composeData []byte, envVars map[string]string) []byte {
 	return []byte(content)
 }
 
-func ApplyComposeFileSwarm(ctx context.Context, deployment api.DockerAgentDeployment) (*AgentDeployment, string, error) {
+func ApplyComposeFileSwarm(
+	ctx context.Context,
+	deployment api.DockerAgentDeployment,
+) (*AgentDeployment, string, error) {
 	agentDeployment, err := NewAgentDeployment(deployment)
 	if err != nil {
 		return nil, "", err
@@ -81,7 +84,7 @@ func ApplyComposeFileSwarm(ctx context.Context, deployment api.DockerAgentDeploy
 	// fix: Clean up Compose file: remove `name` field and inject environment variables
 	cleanedCompose := cleanComposeFile(deployment.ComposeFile)
 	finalCompose := replaceEnvVars(cleanedCompose, envVars)
-	
+
 	// Run `docker stack deploy`
 	composeArgs := []string{"stack", "deploy", "-c", "-", agentDeployment.ProjectName}
 	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
