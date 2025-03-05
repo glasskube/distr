@@ -69,12 +69,7 @@
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <div class="flex items-center mr-3">
                     <span class="max-w-32 sm:max-w-64 lg:max-w-128 overflow-hidden text-ellipsis">
-                      {{
-                        license.artifact?.name +
-                          ((license.artifactTags || []).length === 0
-                            ? ' (unrestricted)'
-                            : ' (' + license.artifactTags!.length + ' tags)')
-                      }}
+                      {{ license.artifacts?.[0]?.artifact?.name }}
                     </span>
                   </div>
                 </td>
@@ -143,7 +138,7 @@
 
     <form [formGroup]="editForm" (ngSubmit)="saveLicense()">
       <div class="space-y-4">
-        <app-edit-license formControlName="license" [licenseType]="'artifact'"></app-edit-license>
+        <app-edit-artifact-license formControlName="license"></app-edit-artifact-license>
         <div class="flex justify-center w-full pb-4 space-x-4 sm:mt-0">
           <button
             type="submit"

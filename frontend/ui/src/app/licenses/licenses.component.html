@@ -143,7 +143,7 @@
 
     <form [formGroup]="editForm" (ngSubmit)="saveLicense()">
       <div class="space-y-4">
-        <app-edit-license formControlName="license" [licenseType]="'application'"></app-edit-license>
+        <app-edit-license formControlName="license"></app-edit-license>
         <div class="flex justify-center w-full pb-4 space-x-4 sm:mt-0">
           <button
             type="submit"

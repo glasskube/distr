@@ -42,21 +42,10 @@ import {Artifact, ArtifactsService, ArtifactTag, ArtifactWithTags} from '../serv
 import {ArtifactsHashComponent} from '../artifacts/components';
 import {RelativeDatePipe} from '../../util/dates';
 
-export type LicenseType = 'application' | 'artifact';
-
 @Component({
   selector: 'app-edit-license',
   templateUrl: './edit-license.component.html',
-  imports: [
-    AsyncPipe,
-    AutotrimDirective,
-    ReactiveFormsModule,
-    CdkOverlayOrigin,
-    CdkConnectedOverlay,
-    FaIconComponent,
-    ArtifactsHashComponent,
-    RelativeDatePipe,
-  ],
+  imports: [AsyncPipe, AutotrimDirective, ReactiveFormsModule, CdkOverlayOrigin, CdkConnectedOverlay, FaIconComponent],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -67,14 +56,11 @@ export type LicenseType = 'application' | 'artifact';
   animations: [dropdownAnimation],
 })
 export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, ControlValueAccessor {
-  @Input({required: true}) licenseType!: LicenseType;
   private injector = inject(Injector);
   private readonly destroyed$ = new Subject<void>();
   private readonly applicationsService = inject(ApplicationsService);
-  private readonly artifactsService = inject(ArtifactsService);
   private readonly usersService = inject(UsersService);
   applications$ = this.applicationsService.list();
-  artifacts$ = this.artifactsService.list();
   customers$ = this.usersService.getUsers().pipe(
     map((accounts) => accounts.filter((a) => a.userRole === 'customer')),
     first()
@@ -111,8 +97,8 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     ),
   });
   editFormLoading = false;
-  readonly license = signal<ApplicationLicense | ArtifactLicense | undefined>(undefined);
-  readonly selectedSubject = signal<Application | ArtifactWithTags | undefined>(undefined);
+  readonly license = signal<ApplicationLicense | undefined>(undefined);
+  readonly selectedSubject = signal<Application | undefined>(undefined);
 
   dropdownOpen = signal(false);
   protected subjectItemsSelected = 0;
@@ -162,20 +148,12 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           id: val.id,
           name: val.name,
           expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
-          applicationId: this.licenseType === 'application' ? val.subjectId : undefined,
-          artifactId: this.licenseType === 'artifact' ? val.subjectId : undefined,
-          versions:
-            this.licenseType === 'application'
-              ? this.getSelectedVersions(val.includeAllItems!, val.subjectItems ?? [])
-              : undefined,
-          artifactTags:
-            this.licenseType === 'artifact'
-              ? this.getSelectedTags(val.includeAllItems!, val.subjectItems ?? [])
-              : undefined,
+          applicationId: val.subjectId,
+          versions: this.getSelectedVersions(val.includeAllItems!, val.subjectItems ?? []),
           ownerUserAccountId: val.ownerUserAccountId,
-          registryUrl: this.licenseType === 'application' ? val.registry.url?.trim() || undefined : undefined,
-          registryUsername: this.licenseType === 'application' ? val.registry.username?.trim() || undefined : undefined,
-          registryPassword: this.licenseType === 'application' ? val.registry.password?.trim() || undefined : undefined,
+          registryUrl: val.registry.url?.trim() || undefined,
+          registryUsername: val.registry.username?.trim() || undefined,
+          registryPassword: val.registry.password?.trim() || undefined,
         });
       } else {
         this.onChange(undefined);
@@ -185,25 +163,14 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .pipe(
         takeUntil(this.destroyed$),
         switchMap(async (subjectId) => {
-          if (this.licenseType === 'application') {
-            const apps = await firstValueFrom(this.applicationsService.list());
-            return apps.find((a) => a.id === subjectId);
-          } else {
-            const artifacts = await firstValueFrom(this.artifactsService.list());
-            return artifacts.find((a) => a.id === subjectId);
-          }
+          const apps = await firstValueFrom(this.applicationsService.list());
+          return apps.find((a) => a.id === subjectId);
         })
       )
       .subscribe((selectedSubject) => {
         this.subjectItemsArray.clear({emitEvent: false});
-        const allItems =
-          this.licenseType === 'application'
-            ? ((selectedSubject as Application)?.versions ?? [])
-            : ((selectedSubject as ArtifactWithTags)?.tags ?? []);
-        const licenseItems =
-          this.licenseType === 'application'
-            ? (this.license() as ApplicationLicense)?.versions
-            : (this.license() as ArtifactLicense)?.artifactTags;
+        const allItems = (selectedSubject as Application)?.versions ?? [];
+        const licenseItems = (this.license() as ApplicationLicense)?.versions;
         let anySelected = false;
         for (let i = 0; i < allItems.length; i++) {
           const item = allItems[i];
@@ -231,25 +198,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .map((v, idx) => {
         if (v) {
           return app?.versions?.[idx];
-        }
-        return undefined;
-      })
-      .filter((v) => !!v);
-  }
-
-  selectedArtifact(): ArtifactWithTags | undefined {
-    return this.selectedSubject() as ArtifactWithTags;
-  }
-
-  private getSelectedTags(includeAllVersions: boolean, itemControls: (boolean | null)[]): ArtifactTag[] {
-    if (includeAllVersions) {
-      return [];
-    }
-    const artifact = this.selectedArtifact();
-    return itemControls
-      .map((v, idx) => {
-        if (v) {
-          return artifact?.tags?.[idx];
         }
         return undefined;
       })
@@ -297,19 +245,22 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     this.onTouched = fn;
   }
 
-  writeValue(license: ApplicationLicense | ArtifactLicense | undefined): void {
+  writeValue(license: ApplicationLicense | undefined): void {
     this.license.set(license);
     if (license) {
-      const {subjectId, includeAllItems, registry} = this.getLicenseTypeSpecificValuesForForm(license);
       this.editForm.patchValue({
         id: license.id,
         name: license.name,
         expiresAt: license.expiresAt ? dayjs(license.expiresAt).format('YYYY-MM-DD') : '',
-        subjectId,
+        subjectId: license.applicationId,
         subjectItems: [], // will be set by on-change,
-        includeAllItems,
+        includeAllItems: (license.versions ?? []).length === 0,
         ownerUserAccountId: license.ownerUserAccountId,
-        registry,
+        registry: {
+          url: license.registryUrl || '',
+          username: license.registryUsername || '',
+          password: license.registryPassword || '',
+        },
       });
       if (license.ownerUserAccountId) {
         this.editForm.controls.subjectId.disable({emitEvent: false});
@@ -317,35 +268,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       }
     } else {
       this.editForm.reset();
-    }
-  }
-
-  private getLicenseTypeSpecificValuesForForm(license: ApplicationLicense | ArtifactLicense): {
-    subjectId?: string;
-    includeAllItems: boolean;
-    registry?: {
-      url?: string;
-      username?: string;
-      password?: string;
-    };
-  } {
-    if (this.licenseType === 'application') {
-      const appLicense = license as ApplicationLicense;
-      return {
-        subjectId: appLicense.applicationId,
-        includeAllItems: (appLicense.versions ?? []).length === 0,
-        registry: {
-          url: appLicense.registryUrl || '',
-          username: appLicense.registryUsername || '',
-          password: appLicense.registryPassword || '',
-        },
-      };
-    } else {
-      const artifactLicense = license as ArtifactLicense;
-      return {
-        subjectId: artifactLicense.artifactId,
-        includeAllItems: (artifactLicense.artifactTags ?? []).length === 0,
-      };
     }
   }
 }

@@ -6,11 +6,14 @@ import {CrudService} from './interfaces';
 import {DefaultReactiveList} from './cache';
 import {UsersService} from './users.service';
 
+export interface ArtifactLicenseSelection {
+  artifact: Artifact;
+  tags?: ArtifactTag[];
+}
+
 export interface ArtifactLicense extends BaseModel, Named {
   expiresAt?: Date;
-  artifactId?: string;
-  artifact?: Artifact;
-  artifactTags?: ArtifactTag[];
+  artifacts?: ArtifactLicenseSelection[];
   ownerUserAccountId?: string;
   owner?: UserAccount;
 }
@@ -28,16 +31,22 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
             id: 'b135b6b2-ebc9-4c13-a2c1-7eaa79455955',
             name: 'distr',
             createdAt: '2025-02-25T09:25:21Z',
-            artifactId: mockArtifacts[0].id,
-            artifact: mockArtifacts[0],
+            artifacts: [
+              {
+                artifact: mockArtifacts[0],
+              },
+            ],
           } as ArtifactLicense,
           {
             id: '49638b03-4644-4221-81df-be8981622c74',
             name: 'distr-docker-agent',
             createdAt: '2025-02-25T09:25:21Z',
-            artifactId: mockArtifacts[1].id,
-            artifact: mockArtifacts[1],
-            artifactTags: [mockArtifacts[1].tags[0]],
+            artifacts: [
+              {
+                artifact: mockArtifacts[1],
+                tags: [mockArtifacts[1].tags[0]],
+              },
+            ],
           } as ArtifactLicense,
         ];
       })
@@ -49,20 +58,19 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
   }
 
   create(request: ArtifactLicense): Observable<ArtifactLicense> {
-    return this.artifactsService.get(request.artifactId!).pipe(
-      combineLatestWith(
-        this.usersService.getUsers().pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
-      ),
-      map(([artifact, owner]) => {
-        return {
-          ...request,
-          id: generateUUIDv4(),
-          artifact,
-          owner,
-        } as ArtifactLicense;
-      }),
-      tap((t) => this.cache.save(t))
-    );
+    return this.usersService
+      .getUsers()
+      .pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
+      .pipe(
+        map((owner) => {
+          return {
+            ...request,
+            id: generateUUIDv4(),
+            owner,
+          } as ArtifactLicense;
+        }),
+        tap((t) => this.cache.save(t))
+      );
   }
 
   delete(request: ArtifactLicense): Observable<void> {
@@ -77,14 +85,12 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
         return licenses.find((l) => l.id === request.id);
       }),
       combineLatestWith(
-        this.artifactsService.get(request.artifactId!),
         this.usersService.getUsers().pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
       ),
-      map(([oldLicense, artifact, owner]) => {
+      map(([oldLicense, owner]) => {
         const newLicense = {
           ...oldLicense,
           ...request,
-          artifact,
           owner,
         };
         this.cache.save(newLicense);
