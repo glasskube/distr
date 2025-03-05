@@ -32,7 +32,7 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {ArtifactLicense, ArtifactLicenseSelection} from '../../services/artifact-licenses.service';
-import {ArtifactsService, ArtifactTag, ArtifactWithTags} from '../../services/artifacts.service';
+import {Artifact, ArtifactsService, ArtifactTag, ArtifactWithTags} from '../../services/artifacts.service';
 import {ArtifactsHashComponent} from '../components';
 import {RelativeDatePipe} from '../../../util/dates';
 
@@ -74,15 +74,16 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     id: this.fb.nonNullable.control<string | undefined>(undefined),
     name: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
     expiresAt: this.fb.nonNullable.control(''),
-    artifacts: this.fb.nonNullable.array<{artifactId?: string; includeAllTags: boolean; artifactTags: boolean[]}>(
-      [],
-      Validators.required
-    ),
+    artifacts: this.fb.nonNullable.array<{
+      artifactId?: string;
+      artifact?: ArtifactWithTags;
+      includeAllTags: boolean;
+      artifactTags: boolean[];
+    }>([], Validators.required),
     ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
   });
   editFormLoading = false;
   readonly license = signal<ArtifactLicense | undefined>(undefined);
-  readonly selectedSubject = signal<ArtifactWithTags | undefined>(undefined); // TODO multiple?
 
   readonly openedArtifactIdx = signal<number | undefined>(undefined);
   dropdownWidth: number = 0;
@@ -95,35 +96,27 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   protected readonly faPen = faPen;
 
   ngOnInit() {
-    this.editForm.valueChanges
-      .pipe(withLatestFrom(this.allArtifacts$), takeUntil(this.destroyed$))
-      .subscribe(([_, allArtifacts]) => {
-        this.onTouched();
-        const val = this.editForm.getRawValue();
-        console.log('onChange', val, 'valid', this.editForm.valid);
-        if (this.editForm.valid) {
-          this.onChange({
-            id: val.id,
-            name: val.name,
-            expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
-            artifacts: val.artifacts.map((artifact) => {
-              const art = allArtifacts.find((a) => a.id === artifact.artifactId)!;
-              return {
-                artifact: art,
-                tags: this.getSelectedTags(artifact.includeAllTags, artifact.artifactTags, art),
-              };
-            }),
-            ownerUserAccountId: val.ownerUserAccountId,
-          });
-        } else {
-          this.onChange(undefined);
-        }
-      });
-  }
-
-  selectedArtifact(): ArtifactWithTags | undefined {
-    // TODO
-    return this.selectedSubject() as ArtifactWithTags;
+    this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
+      this.onTouched();
+      const val = this.editForm.getRawValue();
+      console.log('onChange', val, 'valid', this.editForm.valid);
+      if (this.editForm.valid) {
+        this.onChange({
+          id: val.id,
+          name: val.name,
+          expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
+          artifacts: val.artifacts.map((artifact) => {
+            return {
+              artifact: artifact.artifact!,
+              tags: this.getSelectedTags(artifact.includeAllTags, artifact.artifactTags, artifact.artifact!),
+            };
+          }),
+          ownerUserAccountId: val.ownerUserAccountId,
+        });
+      } else {
+        this.onChange(undefined);
+      }
+    });
   }
 
   private getSelectedTags(
@@ -186,6 +179,10 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     return control as FormArray;
   }
 
+  asArtifactWithTags(control: AbstractControl): ArtifactWithTags | undefined {
+    return control.get('artifact')?.value as ArtifactWithTags;
+  }
+
   getSelectedItemsCount(control: AbstractControl): number {
     return ((control.get('artifactTags')?.value ?? []) as boolean[]).filter((v) => v).length;
   }
@@ -194,6 +191,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     console.log('addArtifactGroup', selection);
     const artifactGroup = this.fb.group({
       artifactId: this.fb.nonNullable.control<string | undefined>('', Validators.required),
+      artifact: this.fb.nonNullable.control<ArtifactWithTags | undefined>(undefined, Validators.required),
       includeAllTags: this.fb.nonNullable.control<boolean>(false, Validators.required),
       artifactTags: this.fb.array<boolean>([]), // TODO
     });
@@ -216,6 +214,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         })
       )
       .subscribe((selectedArtifact) => {
+        artifactGroup.controls.artifact.patchValue(selectedArtifact);
         artifactGroup.controls.artifactTags.clear({emitEvent: false});
         const allTagsOfArtifact = (selectedArtifact as ArtifactWithTags)?.tags ?? [];
         const licenseItems = this.license()?.artifacts?.find((a) => a.artifact.id === selectedArtifact?.id)?.tags;
@@ -231,7 +230,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         if (!anySelected) {
           artifactGroup.controls.includeAllTags.patchValue(true);
         }
-        this.selectedSubject.set(selectedArtifact);
       });
     if (selection) {
       artifactGroup.patchValue({

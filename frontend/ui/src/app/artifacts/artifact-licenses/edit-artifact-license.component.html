@@ -26,7 +26,7 @@
     </div>
 
     <ng-container formArrayName="artifacts">
-      @for (artifact of artifacts.controls; track i; let i = $index) {
+      @for (artifactCtrl of artifacts.controls; track i; let i = $index) {
         <div class="flex" [formGroupName]="i">
           <div class="flex-grow grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
             <div class="w-full">
@@ -60,12 +60,12 @@
                 cdkOverlayOrigin
                 #dropdownTriggerButton
                 #dropdownTrigger="cdkOverlayOrigin"
-                (click)="toggleDropdown(i, artifact)">
+                (click)="toggleDropdown(i, artifactCtrl)">
                 <span class="flex-grow text-left"
                   >{{
-                    artifact.get('includeAllTags')?.value
+                    artifactCtrl.get('includeAllTags')?.value
                       ? 'All tags and future tags'
-                      : getSelectedItemsCount(artifact) + ' tags selected'
+                      : getSelectedItemsCount(artifactCtrl) + ' tags selected'
                   }}
                 </span>
                 <fa-icon [icon]="faChevronDown"></fa-icon>
@@ -74,7 +74,7 @@
               <ng-template
                 cdkConnectedOverlay
                 [cdkConnectedOverlayHasBackdrop]="true"
-                (backdropClick)="toggleDropdown(i, artifact)"
+                (backdropClick)="toggleDropdown(i, artifactCtrl)"
                 [cdkConnectedOverlayBackdropClass]="'transparent'"
                 [cdkConnectedOverlayOrigin]="dropdownTrigger"
                 [cdkConnectedOverlayMinWidth]="dropdownWidth + 'px'"
@@ -101,11 +101,12 @@
                     </li>
                     <ng-container formArrayName="artifactTags">
                       @for (
-                        versionCtrl of asFormArray(artifact.get('artifactTags')!).controls;
+                        versionCtrl of asFormArray(artifactCtrl.get('artifactTags')!).controls;
                         track tagsIdx;
                         let tagsIdx = $index
                       ) {
-                        @let item = selectedArtifact()?.tags?.[tagsIdx];
+                        @let selectedArtifact = asArtifactWithTags(artifactCtrl);
+                        @let item = selectedArtifact?.tags?.[tagsIdx];
                         <li class="w-full border-t border-gray-200 dark:border-gray-600">
                           <div class="flex items-center ps-3">
                             <input
@@ -117,7 +118,7 @@
                             <label
                               for="version-checkbox-{{ tagsIdx }}"
                               class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                              @let tag = selectedArtifact()?.tags?.[tagsIdx];
+                              @let tag = selectedArtifact?.tags?.[tagsIdx];
                               <div class="flex-1 min-w-0">
                                 <div class="flex flex-row gap-1">
                                   @for (label of tag?.labels; track label.name) {
