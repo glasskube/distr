@@ -58,19 +58,19 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
   }
 
   create(request: ArtifactLicense): Observable<ArtifactLicense> {
-    return this.artifactsService.list().pipe(
-      combineLatestWith(
-        this.usersService.getUsers().pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
-      ),
-      map(([artifacts, owner]) => {
-        return {
-          ...request,
-          id: generateUUIDv4(),
-          owner,
-        } as ArtifactLicense;
-      }),
-      tap((t) => this.cache.save(t))
-    );
+    return this.usersService
+      .getUsers()
+      .pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
+      .pipe(
+        map((owner) => {
+          return {
+            ...request,
+            id: generateUUIDv4(),
+            owner,
+          } as ArtifactLicense;
+        }),
+        tap((t) => this.cache.save(t))
+      );
   }
 
   delete(request: ArtifactLicense): Observable<void> {
@@ -85,14 +85,12 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
         return licenses.find((l) => l.id === request.id);
       }),
       combineLatestWith(
-        // this.artifactsService.get(request.artifactId!),
         this.usersService.getUsers().pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
       ),
       map(([oldLicense, owner]) => {
         const newLicense = {
           ...oldLicense,
           ...request,
-          // artifacts,
           owner,
         };
         this.cache.save(newLicense);
