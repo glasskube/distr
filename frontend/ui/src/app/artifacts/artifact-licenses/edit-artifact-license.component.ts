@@ -1,7 +1,6 @@
 import {
   AfterViewInit,
   Component,
-  effect,
   ElementRef,
   forwardRef,
   inject,
@@ -18,7 +17,6 @@ import {
   ControlValueAccessor,
   FormArray,
   FormBuilder,
-  FormGroup,
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
@@ -28,7 +26,6 @@ import {
 import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {first, firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
 import {ApplicationLicense} from '../../types/application-license';
-import {ApplicationsService} from '../../services/applications.service';
 import {UsersService} from '../../services/users.service';
 import dayjs from 'dayjs';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
@@ -82,12 +79,11 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   });
   editFormLoading = false;
   readonly license = signal<ArtifactLicense | undefined>(undefined);
-  readonly selectedSubject = signal<ArtifactWithTags | undefined>(undefined);
+  readonly selectedSubject = signal<ArtifactWithTags | undefined>(undefined); // TODO multiple?
 
   readonly openedArtifactIdx = signal<number | undefined>(undefined);
-  protected subjectItemsSelected = 0;
-
   dropdownWidth: number = 0;
+  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>; // TODO multiple?
 
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faChevronDown = faChevronDown;
@@ -95,29 +91,12 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   protected readonly faXmark = faXmark;
   protected readonly faPen = faPen;
 
-  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
-
-  constructor() {
-    /*effect(() => {
-      if (!this.openedArtifactIdx()) {
-        if (
-          !this.editForm.controls.includeAllItems.value &&
-          !this.editForm.controls.subjectItems.value.some((v) => !!v)
-        ) {
-          this.editForm.controls.includeAllItems.patchValue(true);
-        }
-      }
-    });*/
-  }
-
   ngOnInit() {
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.onTouched();
       const val = this.editForm.getRawValue();
-      console.log(val);
-      /*if (!val.includeAllItems) {
-        this.subjectItemsSelected = val.subjectItems.filter((v) => !!v).length;
-      }
+      console.log('onChange', val);
+      /*
       if (this.editForm.valid) {
         this.onChange({
           id: val.id,
@@ -134,6 +113,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   selectedArtifact(): ArtifactWithTags | undefined {
+    // TODO
     return this.selectedSubject() as ArtifactWithTags;
   }
 
@@ -166,9 +146,19 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       });
   }
 
-  toggleDropdown(i: number) {
-    this.openedArtifactIdx.update((idx) => (idx === i ? undefined : i));
-    // this.dropdownOpen.update((v) => !v);
+  toggleDropdown(i: number, artifactCtrl: AbstractControl) {
+    console.log('toggle', i);
+    if (this.openedArtifactIdx() === i) {
+      if (
+        !artifactCtrl.get('includeAllTags')?.value &&
+        !artifactCtrl.get('artifactTags')?.value.some((v: boolean) => v)
+      ) {
+        artifactCtrl.get('includeAllTags')?.patchValue(true);
+      }
+    }
+    this.openedArtifactIdx.update((idx) => {
+      return idx === i ? undefined : i;
+    });
     if (this.openedArtifactIdx()) {
       this.dropdownWidth = this.dropdownTriggerButton.nativeElement.getBoundingClientRect().width;
     }
@@ -192,9 +182,10 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   addArtifactGroup(selection?: ArtifactLicenseSelection) {
+    console.log('addArtifactGroup', selection);
     const artifactGroup = this.fb.group({
-      artifactId: this.fb.nonNullable.control<string | undefined>(selection?.artifact.id, Validators.required),
-      includeAllTags: this.fb.nonNullable.control<boolean>((selection?.tags || []).length === 0, Validators.required),
+      artifactId: this.fb.nonNullable.control<string | undefined>('', Validators.required),
+      includeAllTags: this.fb.nonNullable.control<boolean>(false, Validators.required),
       artifactTags: this.fb.array<boolean>([]), // TODO
     });
     artifactGroup.controls.includeAllTags.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((includeAll) => {
@@ -233,6 +224,12 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         }
         this.selectedSubject.set(selectedArtifact);
       });
+    if (selection) {
+      artifactGroup.patchValue({
+        artifactId: selection.artifact.id,
+        includeAllTags: (selection?.tags || []).length === 0,
+      });
+    }
     this.artifacts.push(artifactGroup);
   }
 

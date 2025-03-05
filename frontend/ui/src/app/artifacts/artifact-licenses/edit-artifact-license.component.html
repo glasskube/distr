@@ -60,7 +60,7 @@
                 cdkOverlayOrigin
                 #dropdownTriggerButton
                 #dropdownTrigger="cdkOverlayOrigin"
-                (click)="toggleDropdown(i)">
+                (click)="toggleDropdown(i, artifact)">
                 <span class="flex-grow text-left"
                   >{{
                     artifact.get('includeAllTags')?.value
@@ -74,7 +74,7 @@
               <ng-template
                 cdkConnectedOverlay
                 [cdkConnectedOverlayHasBackdrop]="true"
-                (backdropClick)="toggleDropdown(i)"
+                (backdropClick)="toggleDropdown(i, artifact)"
                 [cdkConnectedOverlayBackdropClass]="'transparent'"
                 [cdkConnectedOverlayOrigin]="dropdownTrigger"
                 [cdkConnectedOverlayMinWidth]="dropdownWidth + 'px'"
