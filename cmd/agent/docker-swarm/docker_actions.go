@@ -44,14 +44,6 @@ func parseEnvFile(envData []byte) (map[string]string, error) {
 	}
 	return envVars, scanner.Err()
 }
-func replaceEnvVars(composeData []byte, envVars map[string]string) []byte {
-	content := string(composeData)
-	for key, value := range envVars {
-		placeholder := fmt.Sprintf("${%s}", key)
-		content = strings.ReplaceAll(content, placeholder, value)
-	}
-	return []byte(content)
-}
 
 func ApplyComposeFileSwarm(
 	ctx context.Context,
@@ -62,40 +54,50 @@ func ApplyComposeFileSwarm(
 		return nil, "", err
 	}
 
-	// Process environment variables
-	envVars := make(map[string]string)
-	if deployment.EnvFile != nil {
-		envVars, err = parseEnvFile(deployment.EnvFile)
-		if err != nil {
-			logger.Error("failed to parse env file", zap.Error(err))
-			return nil, "", fmt.Errorf("failed to parse env file: %w", err)
-		}
-	}
-
 	// Ensure Docker Swarm is initialized
-	initCmd := exec.CommandContext(ctx, "docker", "info", "--format", "'{{.Swarm.LocalNodeState}}'")
-	initOutput, _ := initCmd.CombinedOutput()
-	if !strings.Contains(string(initOutput), "active") {
-		logger.Error("docker swarm not initializ: ", zap.String("output", string(initOutput)), zap.Error(err))
-		return nil, "", fmt.Errorf("docker swarm not initialize: %s ", string(initOutput))
-
+	initCmd := exec.CommandContext(ctx, "docker", "info", "--format", "{{.Swarm.LocalNodeState}}")
+	initOutput, err := initCmd.CombinedOutput()
+	if err != nil {
+		logger.Error("Failed to check Docker Swarm state", zap.Error(err))
+		return nil, "", fmt.Errorf("failed to check Docker Swarm state: %w", err)
 	}
 
-	// fix: Clean up Compose file: remove `name` field and inject environment variables
+	if !strings.Contains(strings.TrimSpace(string(initOutput)), "active") {
+		logger.Error("Docker Swarm not initialized", zap.String("output", string(initOutput)))
+		return nil, "", fmt.Errorf("docker Swarm not initialized: %s", string(initOutput))
+	}
+
+	// Read the Compose file as is, without replacing environment variables
 	cleanedCompose := cleanComposeFile(deployment.ComposeFile)
-	finalCompose := replaceEnvVars(cleanedCompose, envVars)
 
 	// Run `docker stack deploy`
 	composeArgs := []string{"stack", "deploy", "-c", "-", agentDeployment.ProjectName}
 	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
-	cmd.Stdin = bytes.NewReader(finalCompose)
+	cmd.Stdin = bytes.NewReader(cleanedCompose)
 	cmd.Env = append(os.Environ(), agentauth.DockerConfigEnv(deployment.AgentDeployment)...)
+	// Add environment variables to the process
+	cmd.Env = os.Environ()
 
+	// If an env file is provided, load its values into the command environment
+	if deployment.EnvFile != nil {
+		envVars, err := parseEnvFile(deployment.EnvFile)
+		if err != nil {
+			logger.Error("Failed to parse env file", zap.Error(err))
+			return nil, "", fmt.Errorf("failed to parse env file: %w", err)
+		}
+		for key, value := range envVars {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+
+	// Execute the command and capture output
 	cmdOut, err := cmd.CombinedOutput()
 	statusStr := string(cmdOut)
-	logger.Debug("docker stack deploy returned", zap.String("output", statusStr), zap.Error(err))
+
+	logger.Debug("docker stack deploy returned", zap.String("output", statusStr))
 
 	if err != nil {
+		logger.Error("Docker stack deploy failed", zap.String("output", statusStr))
 		return nil, "", errors.New(statusStr)
 	}
 
