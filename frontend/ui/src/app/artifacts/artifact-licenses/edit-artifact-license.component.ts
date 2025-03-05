@@ -17,6 +17,8 @@ import {
   ControlValueAccessor,
   FormArray,
   FormBuilder,
+  FormControl,
+  FormGroup,
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
@@ -87,7 +89,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
 
   readonly openedArtifactIdx = signal<number | undefined>(undefined);
   dropdownWidth: number = 0;
-  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>; // TODO multiple?
+  @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faChevronDown = faChevronDown;
@@ -99,7 +101,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.onTouched();
       const val = this.editForm.getRawValue();
-      console.log('onChange', val, 'valid', this.editForm.valid);
+      console.log('onChange', val, 'valid', this.editForm);
       if (this.editForm.valid) {
         this.onChange({
           id: val.id,
@@ -179,6 +181,10 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     return control as FormArray;
   }
 
+  asFormControl(control: AbstractControl): FormControl {
+    return control as FormControl;
+  }
+
   asArtifactWithTags(control: AbstractControl): ArtifactWithTags | undefined {
     return control.get('artifact')?.value as ArtifactWithTags;
   }
@@ -193,7 +199,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       artifactId: this.fb.nonNullable.control<string | undefined>('', Validators.required),
       artifact: this.fb.nonNullable.control<ArtifactWithTags | undefined>(undefined, Validators.required),
       includeAllTags: this.fb.nonNullable.control<boolean>(false, Validators.required),
-      artifactTags: this.fb.array<boolean>([]), // TODO
+      artifactTags: this.fb.array<boolean>([]),
     });
     artifactGroup.controls.includeAllTags.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((includeAll) => {
       if (includeAll) {
@@ -241,8 +247,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   deleteArtifactGroup(i: number) {
-    console.log('delete ', i);
-    // TODO seems to be working incorrectly
     this.artifacts.removeAt(i);
   }
 
@@ -276,6 +280,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       }
     } else {
       this.editForm.reset();
+      this.addArtifactGroup();
     }
   }
 }
