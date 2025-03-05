@@ -78,9 +78,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     name: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
     expiresAt: this.fb.nonNullable.control(''),
     artifacts: this.fb.array([]),
-    /*subjectId: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
-    includeAllItems: this.fb.nonNullable.control<boolean>(true, Validators.required),
-    subjectItems: this.fb.array<boolean>([]),*/
     ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
   });
   editFormLoading = false;
@@ -88,7 +85,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   readonly selectedSubject = signal<ArtifactWithTags | undefined>(undefined);
 
   readonly openedArtifactIdx = signal<number | undefined>(undefined);
-  dropdownOpen = signal(false);
   protected subjectItemsSelected = 0;
 
   dropdownWidth: number = 0;
@@ -135,7 +131,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         this.onChange(undefined);
       }*/
     });
-
   }
 
   selectedArtifact(): ArtifactWithTags | undefined {
@@ -172,7 +167,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   toggleDropdown(i: number) {
-    this.openedArtifactIdx.update((idx) => idx === i ? undefined : i)
+    this.openedArtifactIdx.update((idx) => (idx === i ? undefined : i));
     // this.dropdownOpen.update((v) => !v);
     if (this.openedArtifactIdx()) {
       this.dropdownWidth = this.dropdownTriggerButton.nativeElement.getBoundingClientRect().width;
@@ -190,6 +185,10 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
 
   asFormArray(control: AbstractControl): FormArray {
     return control as FormArray;
+  }
+
+  getSelectedItemsCount(control: AbstractControl): number {
+    return ((control.get('artifactTags')?.value ?? []) as boolean[]).filter((v) => v).length;
   }
 
   addArtifactGroup(selection?: ArtifactLicenseSelection) {
@@ -219,12 +218,14 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       .subscribe((selectedArtifact) => {
         artifactGroup.controls.artifactTags.clear({emitEvent: false});
         const allTagsOfArtifact = (selectedArtifact as ArtifactWithTags)?.tags ?? [];
-        const licenseItems = this.license()?.artifacts?.find(a => a.artifact.id === selectedArtifact?.id)?.tags;
+        const licenseItems = this.license()?.artifacts?.find((a) => a.artifact.id === selectedArtifact?.id)?.tags;
         let anySelected = false;
         for (let i = 0; i < allTagsOfArtifact.length; i++) {
           const item = allTagsOfArtifact[i];
           const selected = !!licenseItems?.some((v) => v.id === item.id);
-          artifactGroup.controls.artifactTags.push(this.fb.control(selected), {emitEvent: i === allTagsOfArtifact.length - 1});
+          artifactGroup.controls.artifactTags.push(this.fb.control(selected), {
+            emitEvent: i === allTagsOfArtifact.length - 1,
+          });
           anySelected = anySelected || selected;
         }
         if (!anySelected) {
@@ -236,7 +237,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   deleteArtifactGroup(i: number) {
-    console.log('delete ', i)
+    console.log('delete ', i);
     // TODO seems to be working incorrectly
     this.artifacts.removeAt(i);
   }
@@ -262,7 +263,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         expiresAt: license.expiresAt ? dayjs(license.expiresAt).format('YYYY-MM-DD') : '',
         ownerUserAccountId: license.ownerUserAccountId,
       });
-      for(let selection of license.artifacts || []) {
+      for (let selection of license.artifacts || []) {
         this.addArtifactGroup(selection);
       }
       if (license.ownerUserAccountId) {
