@@ -47,7 +47,7 @@ import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
   templateUrl: './artifact-licenses.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ArtifactLicensesComponent implements OnDestroy, OnInit {
+export class ArtifactLicensesComponent implements OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly artifactLicensesService = inject(ArtifactLicensesService);
 
@@ -141,10 +141,4 @@ export class ArtifactLicensesComponent implements OnDestroy, OnInit {
   protected readonly faPen = faPen;
   protected readonly faTrash = faTrash;
   protected readonly faXmark = faXmark;
-
-  ngOnInit(): void {
-    this.editForm.valueChanges.subscribe((val) => {
-      console.log('value changed', val);
-    });
-  }
 }

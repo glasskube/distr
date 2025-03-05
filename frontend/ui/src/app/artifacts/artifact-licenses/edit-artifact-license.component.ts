@@ -101,7 +101,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.onTouched();
       const val = this.editForm.getRawValue();
-      console.log('onChange', val, 'valid', this.editForm);
       if (this.editForm.valid) {
         this.onChange({
           id: val.id,
@@ -194,7 +193,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   }
 
   addArtifactGroup(selection?: ArtifactLicenseSelection) {
-    console.log('addArtifactGroup', selection);
     const artifactGroup = this.fb.group({
       artifactId: this.fb.nonNullable.control<string | undefined>('', Validators.required),
       artifact: this.fb.nonNullable.control<ArtifactWithTags | undefined>(undefined, Validators.required),
