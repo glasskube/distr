@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/docker/distribution"
+	"github.com/docker/distribution/registry/storage"
+	"github.com/docker/distribution/registry/storage/driver/inmemory"
 	"github.com/glasskube/distr/internal/migrations"
 
 	"github.com/glasskube/distr/internal/buildconfig"
@@ -28,6 +31,7 @@ type Registry struct {
 	dbPool           *pgxpool.Pool
 	logger           *zap.Logger
 	mailer           mail.Mailer
+	dreg             distribution.Namespace
 	execDbMigrations bool
 }
 
@@ -62,6 +66,12 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		if err := migrations.Up(reg.logger); err != nil {
 			return nil, err
 		}
+	}
+
+	if dreg, err := createDistributionRegistry(ctx); err != nil {
+		return nil, err
+	} else {
+		reg.dreg = dreg
 	}
 
 	if db, err := createDBPool(ctx, reg.logger); err != nil {
@@ -163,6 +173,11 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 	}
 }
 
+func createDistributionRegistry(ctx context.Context) (distribution.Namespace, error) {
+	driver := inmemory.New()
+	return storage.NewRegistry(ctx, driver)
+}
+
 func (r *Registry) GetMailer() mail.Mailer {
 	return r.mailer
 }
@@ -178,9 +193,13 @@ func (r *Registry) GetLogger() *zap.Logger {
 }
 
 func (r *Registry) GetRouter() http.Handler {
-	return routing.NewRouter(r.logger, r.dbPool, r.mailer)
+	return routing.NewRouter(r.logger, r.dbPool, r.mailer, r.dreg)
 }
 
 func (r *Registry) GetServer() server.Server {
 	return *server.NewServer(r.GetRouter(), r.logger)
+}
+
+func (r *Registry) GetDistributionRegistry() distribution.Namespace {
+	return r.dreg
 }

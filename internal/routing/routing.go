@@ -1,10 +1,15 @@
 package routing
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
+	"github.com/distribution/reference"
+	"github.com/docker/distribution"
+	drouterv2 "github.com/docker/distribution/registry/api/v2"
 	"github.com/go-chi/httprate"
+	"github.com/gorilla/mux"
 
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/frontend"
@@ -17,7 +22,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Handler {
+func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, reg distribution.Namespace) http.Handler {
 	router := chi.NewRouter()
 	router.Use(
 		// Handles panics
@@ -27,8 +32,37 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 	)
 	router.Mount("/api", ApiRouter(logger, db, mailer))
 	router.Mount("/internal", InternalRouter())
+	router.Handle("/v2/*", OCIRouter(reg))
 	router.Mount("/", FrontendRouter())
 	return router
+}
+
+func OCIRouter(reg distribution.Namespace) http.Handler {
+	notImplementedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "not implemented", http.StatusInternalServerError)
+	})
+	r := drouterv2.Router()
+	r.GetRoute(drouterv2.RouteNameBase).Handler(notImplementedHandler)
+	r.GetRoute(drouterv2.RouteNameTags).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if name, err := reference.WithName(mux.Vars(r)["name"]); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else if repo, err := reg.Repository(ctx, name); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else if tags, err := repo.Tags(ctx).All(ctx); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name": name.String(),
+				"tags": tags,
+			})
+		}
+	})
+	r.GetRoute(drouterv2.RouteNameBlob).Handler(notImplementedHandler)
+	r.GetRoute(drouterv2.RouteNameBlobUpload).Handler(notImplementedHandler)
+	r.GetRoute(drouterv2.RouteNameBlobUploadChunk).Handler(notImplementedHandler)
+	r.GetRoute(drouterv2.RouteNameCatalog).Handler(notImplementedHandler)
+	return r
 }
 
 func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Handler {
