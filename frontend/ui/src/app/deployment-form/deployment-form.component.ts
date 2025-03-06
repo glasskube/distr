@@ -74,6 +74,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
   });
+  protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
   private readonly deploymentTargetId$ = this.deployForm.controls.deploymentTargetId.valueChanges.pipe(
     distinctUntilChanged(),
@@ -250,6 +251,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         switchMap(([applicationId, versionId, dt]) =>
           combineLatest([
             of(dt),
+            versionId && applicationId && dt?.type === 'docker' ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER)) : NEVER,
             // Only fill in the template if there is no existing deployment or the existing deployment has no values/env file
             versionId && applicationId && !(dt?.deployment?.valuesYaml || dt?.deployment?.envFileData)
               ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
@@ -258,12 +260,13 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         ),
         takeUntil(this.destroyed$)
       )
-      .subscribe(([deploymentTarget, templateFile]) => {
+      .subscribe(([deploymentTarget, composeFile, templateFile]) => {
         if (deploymentTarget) {
           if (deploymentTarget.type === 'kubernetes') {
             this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
           } else {
             this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
+            this.composeFile.patchValue(composeFile ?? '');
           }
         }
       });
