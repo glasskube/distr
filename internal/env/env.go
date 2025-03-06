@@ -33,7 +33,7 @@ var (
 	frontendPosthogUIHost         *string
 	userEmailVerificationRequired = true
 	serverShutdownDelayDuration   *time.Duration
-	registration                  = RegistrationHidden
+	registration                  = RegistrationEnabled
 )
 
 func init() {
