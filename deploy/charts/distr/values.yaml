@@ -60,6 +60,8 @@ hub:
     #    secretKeyRef:
     #      name: ""
     #      key: ""
+    # - name: REGISTRATION # can be one of "enabled", "hidden" (default), "disabled"
+    #   value: hidden
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
