@@ -286,7 +286,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         takeUntil(this.destroyed$)
       )
       .subscribe((composeFile) => {
-        console.log('composeFile', composeFile);
         this.composeFile.patchValue(composeFile ?? '');
       });
 
