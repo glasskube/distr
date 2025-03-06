@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/distr/internal/env"
+
 	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
@@ -32,7 +34,10 @@ func AuthRouter(r chi.Router) {
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 	r.Post("/login", authLoginHandler)
-	r.Post("/register", authRegisterHandler)
+	r.Route("/register", func(r chi.Router) {
+		r.Get("/", authRegisterGetHandler())
+		r.Post("/", authRegisterHandler)
+	})
 	r.Post("/reset", authResetPasswordHandler)
 }
 
@@ -69,9 +74,24 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func authRegisterGetHandler() http.HandlerFunc {
+	ok := env.Registration() == env.RegistrationEnabled
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !ok {
+			w.WriteHeader(http.StatusForbidden)
+		}
+	}
+}
+
 func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
+
+	if env.Registration() == env.RegistrationDisabled {
+		http.Error(w, "registration is disabled", http.StatusForbidden)
+		return
+	}
+
 	if request, err := JsonBody[api.AuthRegistrationRequest](w, r); err != nil {
 		return
 	} else if err := request.Validate(); err != nil {
