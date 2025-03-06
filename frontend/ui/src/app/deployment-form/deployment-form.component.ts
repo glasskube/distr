@@ -15,6 +15,7 @@ import {
   combineLatestWith,
   debounceTime,
   distinctUntilChanged,
+  EMPTY,
   filter,
   map,
   NEVER,
@@ -23,6 +24,7 @@ import {
   Subject,
   switchMap,
   takeUntil,
+  tap,
   withLatestFrom,
 } from 'rxjs';
 import {EditorComponent} from '../components/editor.component';
@@ -251,7 +253,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         switchMap(([applicationId, versionId, dt]) =>
           combineLatest([
             of(dt),
-            versionId && applicationId && dt?.type === 'docker' ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER)) : NEVER,
             // Only fill in the template if there is no existing deployment or the existing deployment has no values/env file
             versionId && applicationId && !(dt?.deployment?.valuesYaml || dt?.deployment?.envFileData)
               ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
@@ -260,15 +261,33 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         ),
         takeUntil(this.destroyed$)
       )
-      .subscribe(([deploymentTarget, composeFile, templateFile]) => {
+      .subscribe(([deploymentTarget, templateFile]) => {
         if (deploymentTarget) {
           if (deploymentTarget.type === 'kubernetes') {
             this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
           } else {
             this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
-            this.composeFile.patchValue(composeFile ?? '');
           }
         }
+      });
+
+    combineLatest([
+      this.applicationId$,
+      this.applicationVersionId$,
+      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
+    ])
+      .pipe(
+        debounceTime(5),
+        switchMap(([applicationId, versionId, dt]) =>
+          versionId && applicationId && dt?.type === 'docker'
+            ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER))
+            : NEVER
+        ),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((composeFile) => {
+        console.log('composeFile', composeFile);
+        this.composeFile.patchValue(composeFile ?? '');
       });
 
     this.licenses$.pipe(takeUntil(this.destroyed$)).subscribe((licenses) => {
