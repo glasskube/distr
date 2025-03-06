@@ -1,7 +1,7 @@
 import {HttpClient, HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {jwtDecode} from 'jwt-decode';
-import {map, Observable, of, tap, throwError} from 'rxjs';
+import {catchError, map, Observable, of, tap, throwError} from 'rxjs';
 import dayjs from 'dayjs';
 import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
 
@@ -65,6 +65,13 @@ export class AuthService {
 
   public resetPassword(email: string): Observable<void> {
     return this.httpClient.post<void>(`${this.baseUrl}/reset`, {email});
+  }
+
+  public registrationEnabled(): Observable<boolean> {
+    return this.httpClient.get(`${this.baseUrl}/register`).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
   }
 
   public register(email: string, name: string | null | undefined, password: string): Observable<void> {
