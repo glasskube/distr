@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/glasskube/distr/internal/util"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -20,9 +22,20 @@ const (
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
 				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
-			FROM applicationversion av
+			FROM ApplicationVersion av
 			WHERE av.application_id = a.id
-		), array[]::record[]) as versions `
+		), array[]::record[]) AS versions `
+
+	applicationWithLicensedVersionsOutputExpr = applicationOutputExpr + `,
+		coalesce((
+			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
+				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
+			FROM ApplicationVersion av
+			WHERE av.application_id = a.id and
+				((av.id IN
+					(SELECT application_version_id FROM ApplicationLicense_ApplicationVersion WHERE application_license_id = al.id)
+					OR (SELECT NOT EXISTS (SELECT FROM ApplicationLicense_ApplicationVersion WHERE application_license_id = al.id)))
+		)), array[]::record[]) AS versions `
 )
 
 func CreateApplication(ctx context.Context, application *types.Application, orgID uuid.UUID) error {
@@ -88,14 +101,43 @@ func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Appli
 	}
 }
 
+func appendMissingVersions(application types.Application,
+	versions []types.ApplicationVersion) types.Application {
+
+	for _, version := range versions {
+		found := false
+		for _, existingVersion := range application.Versions {
+			if version.ID == existingVersion.ID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			application.Versions = append(application.Versions, version)
+		}
+	}
+	return application
+}
+
+func mergeApplications(applications []types.Application) []types.Application {
+	applicationMap := make(map[uuid.UUID]types.Application)
+	for _, application := range applications {
+		if existingApplication, ok := applicationMap[application.ID]; ok {
+			applicationMap[application.ID] = appendMissingVersions(existingApplication, application.Versions)
+		} else {
+			applicationMap[application.ID] = application
+		}
+	}
+	return util.GetValues(applicationMap)
+}
+
 func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
-	// TODO: Only include versions from at least one license
 	if rows, err := db.Query(ctx, `
-			SELECT DISTINCT `+applicationWithVersionsOutputExpr+`
+			SELECT DISTINCT `+applicationWithLicensedVersionsOutputExpr+`
 			FROM ApplicationLicense al
 				LEFT JOIN Application a ON al.application_id = a.id
-			WHERE al.owner_useraccount_id = @id
+			WHERE al.owner_useraccount_id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
 			ORDER BY a.name
 			`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
@@ -103,7 +145,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
-		return applications, nil
+		return mergeApplications(applications), nil
 	}
 }
 
@@ -123,6 +165,27 @@ func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Applicatio
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {
 		return &application, nil
+	}
+}
+
+func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uuid.UUID) (*types.Application, error) {
+	db := internalctx.GetDb(ctx)
+	if rows, err := db.Query(ctx, `
+			SELECT DISTINCT `+applicationWithLicensedVersionsOutputExpr+`
+			FROM ApplicationLicense al
+				LEFT JOIN Application a ON al.application_id = a.id
+			WHERE al.owner_useraccount_id = @ownerID AND a.id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
+			ORDER BY a.name
+			`, pgx.NamedArgs{"ownerID": oID, "id": id}); err != nil {
+		return nil, fmt.Errorf("failed to query applications: %w", err)
+	} else if applications, err :=
+		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get application: %w", err)
+	} else {
+		return &mergeApplications(applications)[0], nil
 	}
 }
 
