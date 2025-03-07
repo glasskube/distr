@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.3](https://github.com/glasskube/distr/compare/1.3.2...1.3.3) (2025-03-07)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.1 ([#603](https://github.com/glasskube/distr/issues/603)) ([8fd5e45](https://github.com/glasskube/distr/commit/8fd5e45e5deb1d221ca5eaab7dd1fc8b1fe972a7))
+* **deps:** update aws-sdk-go-v2 monorepo ([#600](https://github.com/glasskube/distr/issues/600)) ([75a1df1](https://github.com/glasskube/distr/commit/75a1df13ed52f577136851e79138f30b56a12a7d))
+* **deps:** update dependency @angular/cdk to v19.2.2 ([#607](https://github.com/glasskube/distr/issues/607)) ([e0d4d0a](https://github.com/glasskube/distr/commit/e0d4d0a2c64dafd659089c5c3bd13986a3590082))
+* **deps:** update dependency @codemirror/view to v6.36.4 ([#595](https://github.com/glasskube/distr/issues/595)) ([406f656](https://github.com/glasskube/distr/commit/406f656d9a47c090612ceb7e4fab7e1c20451368))
+* **deps:** update module golang.org/x/crypto to v0.36.0 ([#604](https://github.com/glasskube/distr/issues/604)) ([10de92f](https://github.com/glasskube/distr/commit/10de92f10fc6c8db1f3687774dc4bf7665afdb1a))
+* only return licensed application if feature is active ([#611](https://github.com/glasskube/distr/issues/611)) ([92cd1b9](https://github.com/glasskube/distr/commit/92cd1b9618b2da68002225c0c52ee384b12ad9fd))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.2.1 ([#606](https://github.com/glasskube/distr/issues/606)) ([5916bc1](https://github.com/glasskube/distr/commit/5916bc1a9d0b7ba9bfc6a66cfa6d67430577c4ec))
+* **deps:** update dependency go to v1.24.1 ([#599](https://github.com/glasskube/distr/issues/599)) ([e9c4fb3](https://github.com/glasskube/distr/commit/e9c4fb3300ac1fb869b4f4f27b2e12577f61ff1f))
+* **deps:** update googleapis/release-please-action action to v4.1.5 ([#605](https://github.com/glasskube/distr/issues/605)) ([9314995](https://github.com/glasskube/distr/commit/9314995762da27a3053cb61e0e95c7cb85bbfd4c))
+* support registration mode via environment ([#608](https://github.com/glasskube/distr/issues/608)) ([dd9f747](https://github.com/glasskube/distr/commit/dd9f74702298c4eb77124fe9e958c90d1c0325df))
+* **ui:** preview docker compose in deploy form ([#610](https://github.com/glasskube/distr/issues/610)) ([cf293fc](https://github.com/glasskube/distr/commit/cf293fc93448fc4abed8dfafd4951cbcf747acd4))
+* **ui:** require additional input when deleting deployments ([#598](https://github.com/glasskube/distr/issues/598)) ([c6a8a5f](https://github.com/glasskube/distr/commit/c6a8a5f075bcda3c183ca1194798ade6fe6570ef))
+
 ## [1.3.2](https://github.com/glasskube/distr/compare/1.3.1...1.3.2) (2025-03-03)
 
 
