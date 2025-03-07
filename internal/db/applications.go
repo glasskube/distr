@@ -105,7 +105,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 			SELECT DISTINCT `+applicationWithLicensedVersionsOutputExpr+`
 			FROM ApplicationLicense al
 				LEFT JOIN Application a ON al.application_id = a.id
-			WHERE al.owner_useraccount_id = @id AND (expires_at IS NULL OR expires_at > now())
+			WHERE al.owner_useraccount_id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
 			ORDER BY a.name
 			`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
@@ -142,7 +142,7 @@ func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uui
 			SELECT DISTINCT `+applicationWithLicensedVersionsOutputExpr+`
 			FROM ApplicationLicense al
 				LEFT JOIN Application a ON al.application_id = a.id
-			WHERE al.owner_useraccount_id = @ownerID AND a.id = @id AND (expires_at IS NULL OR expires_at > now())
+			WHERE al.owner_useraccount_id = @ownerID AND a.id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
 			ORDER BY a.name
 			`, pgx.NamedArgs{"ownerID": oID, "id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
