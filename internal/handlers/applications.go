@@ -140,7 +140,38 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 }
 
 func getApplication(w http.ResponseWriter, r *http.Request) {
-	RespondJSON(w, internalctx.GetApplication(r.Context()))
+	ctx := r.Context()
+	auth := auth.Authentication.Require(ctx)
+	log := internalctx.GetLogger(ctx)
+
+	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
+	if err != nil {
+		log.Error("failed to get org", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
+
+		if applicationID, err := uuid.Parse(r.PathValue("applicationId")); err != nil {
+			http.NotFound(w, r)
+			return
+		} else {
+			application, err := db.GetApplicationWithLicenseOwnerID(ctx, auth.CurrentUserID(), applicationID)
+			if err != nil {
+				log.Error("failed to get application", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			} else {
+				RespondJSON(w, application)
+			}
+		}
+
+	} else {
+		RespondJSON(w, internalctx.GetApplication(r.Context()))
+	}
+
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
