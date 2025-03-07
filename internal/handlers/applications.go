@@ -159,7 +159,9 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			application, err := db.GetApplicationWithLicenseOwnerID(ctx, auth.CurrentUserID(), applicationID)
-			if err != nil {
+			if errors.Is(err, apierrors.NotFound) {
+				http.NotFound(w, r)
+			} else if err != nil {
 				log.Error("failed to get application", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
