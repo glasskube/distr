@@ -1,0 +1,26 @@
+FROM golang:1.24 AS builder
+ARG TARGETOS
+ARG TARGETARCH
+ARG VERSION
+ARG COMMIT
+
+WORKDIR /workspace
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN go mod download
+
+COPY api/ api/
+COPY cmd/agent/docker-swarm/ cmd/agent/docker-swarm/
+# doesn't exist (yet?)
+# COPY pkg/ pkg/
+COPY internal/ internal/
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
+  go build -a -o agent \
+  -ldflags="-s -w -X github.com/glasskube/distr/internal/buildconfig.version=${VERSION:-snapshot} -X github.com/glasskube/distr/internal/buildconfig.commit=${COMMIT}" \
+  ./cmd/agent/docker-swarm/
+
+FROM docker:27.3.1-alpine3.20
+WORKDIR /
+COPY --from=builder /workspace/agent .
+
+ENTRYPOINT ["/agent"]
