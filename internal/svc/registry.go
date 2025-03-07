@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/glasskube/distr/internal/migrations"
+	"github.com/glasskube/distr/internal/registry"
 
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
@@ -181,6 +182,14 @@ func (r *Registry) GetRouter() http.Handler {
 	return routing.NewRouter(r.logger, r.dbPool, r.mailer)
 }
 
+func (r *Registry) GetRegistryRouter() http.Handler {
+	return registry.New()
+}
+
 func (r *Registry) GetServer() server.Server {
-	return *server.NewServer(r.GetRouter(), r.logger)
+	return *server.NewServer(r.GetRouter(), r.logger.With(zap.String("server", "main")))
+}
+
+func (r *Registry) GetRegistryServer() server.Server {
+	return *server.NewServer(r.GetRegistryRouter(), r.logger.With(zap.String("server", "registry")))
 }

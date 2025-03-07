@@ -51,14 +51,6 @@ func (s *Server) Shutdown(ctx context.Context) {
 }
 
 func (s *Server) WaitForShutdown() {
-	tick := time.Tick(5 * time.Second)
-	for {
-		select {
-		case <-tick:
-			s.logger.Info("waiting for server shutdown")
-		case <-s.shutdownComplete:
-			s.logger.Info("server shutdown complete")
-			return
-		}
-	}
+	<-s.shutdownComplete
+	s.logger.Info("server shutdown complete")
 }
