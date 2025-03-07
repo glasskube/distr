@@ -6,6 +6,7 @@ import {HighlightStyle, indentOnInput, syntaxHighlighting} from '@codemirror/lan
 import {EditorView, highlightSpecialChars, keymap} from '@codemirror/view';
 import {tags} from '@lezer/highlight';
 import {Subject} from 'rxjs';
+import {EditorState, StateEffect, StateEffectType} from '@codemirror/state';
 
 export type EditorLanguage = 'yaml';
 
@@ -74,10 +75,13 @@ export class EditorComponent implements OnInit, OnDestroy, ControlValueAccessor 
   }
 
   setDisabledState(isDisabled: boolean) {
-    // TODO implement
-    if (isDisabled) {
-      console.error('setDisabledState not implemented yet');
-    }
+    const tr = this.view.state.update({
+      effects: [
+        StateEffect.appendConfig.of(EditorState.readOnly.of(isDisabled)),
+        StateEffect.appendConfig.of(EditorView.editable.of(!isDisabled)),
+      ],
+    });
+    this.view.dispatch(tr);
   }
 
   private onChange = (_: any) => {};
