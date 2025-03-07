@@ -22,7 +22,7 @@ const (
 				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			FROM applicationversion av
 			WHERE av.application_id = a.id
-		), array[]::record[]) as versions `
+		), array[]::record[]) AS versions `
 
 	applicationWithLicensedVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
@@ -30,10 +30,10 @@ const (
 				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			FROM ApplicationVersion av
 			WHERE av.application_id = a.id and
-				((av.id in
-					(select application_version_id FROM ApplicationLicense_ApplicationVersion WHERE application_license_id = al.id)
-					OR (select NOT EXISTS (select from ApplicationLicense_ApplicationVersion where application_license_id = al.id)))
-		)), array[]::record[]) as versions `
+				((av.id IN
+					(SELECT application_version_id FROM ApplicationLicense_ApplicationVersion WHERE application_license_id = al.id)
+					OR (SELECT NOT EXISTS (SELECT FROM ApplicationLicense_ApplicationVersion WHERE application_license_id = al.id)))
+		)), array[]::record[]) AS versions `
 )
 
 func CreateApplication(ctx context.Context, application *types.Application, orgID uuid.UUID) error {
