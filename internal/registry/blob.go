@@ -29,6 +29,7 @@ import (
 
 	"github.com/glasskube/distr/internal/registry/verify"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"go.uber.org/zap"
 )
 
 // Returns whether this url should be handled by the blob handler
@@ -167,7 +168,7 @@ type blobs struct {
 	// Each upload gets a unique id that writes occur to until finalized.
 	uploads map[string][]byte
 	lock    sync.Mutex
-	log     *log.Logger
+	log     *zap.SugaredLogger
 }
 
 func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {

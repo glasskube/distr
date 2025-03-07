@@ -183,7 +183,7 @@ func (r *Registry) GetRouter() http.Handler {
 }
 
 func (r *Registry) GetRegistryRouter() http.Handler {
-	return registry.New()
+	return registry.New(registry.Logger(r.logger.With(zap.String("component", "registry"))))
 }
 
 func (r *Registry) GetServer() server.Server {

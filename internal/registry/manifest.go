@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -28,6 +27,7 @@ import (
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"go.uber.org/zap"
 )
 
 type catalog struct {
@@ -48,7 +48,7 @@ type manifests struct {
 	// maps repo -> manifest tag/digest -> manifest
 	manifests map[string]map[string]manifest
 	lock      sync.RWMutex
-	log       *log.Logger
+	log       *zap.SugaredLogger
 }
 
 func isManifest(req *http.Request) bool {
@@ -195,7 +195,7 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 						}
 					} else {
 						// TODO: Probably want to do an existence check for blobs.
-						m.log.Printf("TODO: Check blobs for %q", desc.Digest)
+						m.log.Warnf("TODO: Check blobs for %q", desc.Digest)
 					}
 				}
 				return nil

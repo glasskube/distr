@@ -25,14 +25,14 @@ package registry
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
-	"os"
+
+	"go.uber.org/zap"
 )
 
 type registry struct {
-	log              *log.Logger
+	log              *zap.SugaredLogger
 	blobs            blobs
 	manifests        manifests
 	referrersEnabled bool
@@ -80,26 +80,23 @@ func (r *registry) v2(resp http.ResponseWriter, req *http.Request) *regError {
 
 func (r *registry) root(resp http.ResponseWriter, req *http.Request) {
 	if rerr := r.v2(resp, req); rerr != nil {
-		r.log.Printf("%s %s %d %s %s", req.Method, req.URL, rerr.Status, rerr.Code, rerr.Message)
+		r.log.Warnf("%s %s %d %s %s", req.Method, req.URL, rerr.Status, rerr.Code, rerr.Message)
 		rerr.Write(resp)
 		return
 	}
-	r.log.Printf("%s %s", req.Method, req.URL)
+	r.log.Infof("%s %s", req.Method, req.URL)
 }
 
 // New returns a handler which implements the docker registry protocol.
 // It should be registered at the site root.
 func New(opts ...Option) http.Handler {
 	r := &registry{
-		log: log.New(os.Stderr, "", log.LstdFlags),
 		blobs: blobs{
 			blobHandler: &memHandler{m: map[string][]byte{}},
 			uploads:     map[string][]byte{},
-			log:         log.New(os.Stderr, "", log.LstdFlags),
 		},
 		manifests: manifests{
 			manifests: map[string]map[string]manifest{},
-			log:       log.New(os.Stderr, "", log.LstdFlags),
 		},
 	}
 	for _, o := range opts {
@@ -113,11 +110,11 @@ func New(opts ...Option) http.Handler {
 type Option func(r *registry)
 
 // Logger overrides the logger used to record requests to the registry.
-func Logger(l *log.Logger) Option {
+func Logger(l *zap.Logger) Option {
 	return func(r *registry) {
-		r.log = l
-		r.manifests.log = l
-		r.blobs.log = l
+		r.log = l.Sugar()
+		r.manifests.log = l.Sugar()
+		r.blobs.log = l.Sugar()
 	}
 }
 
