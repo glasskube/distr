@@ -148,6 +148,9 @@ func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uui
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if application, err :=
 		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {
 		return &application, nil
