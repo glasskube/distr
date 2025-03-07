@@ -159,7 +159,7 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			application, err := db.GetApplicationWithLicenseOwnerID(ctx, auth.CurrentUserID(), applicationID)
-			if errors.Is(err, apierrors.NotFound) {
+			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else if err != nil {
 				log.Error("failed to get application", zap.Error(err))

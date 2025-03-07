@@ -20,7 +20,7 @@ const (
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
 				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
-			FROM applicationversion av
+			FROM ApplicationVersion av
 			WHERE av.application_id = a.id
 		), array[]::record[]) AS versions `
 
