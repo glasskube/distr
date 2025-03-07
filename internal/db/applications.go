@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/glasskube/distr/internal/util"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -99,6 +101,36 @@ func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Appli
 	}
 }
 
+func appendMissingVersions(application types.Application,
+	versions []types.ApplicationVersion) types.Application {
+
+	for _, version := range versions {
+		found := false
+		for _, existingVersion := range application.Versions {
+			if version.ID == existingVersion.ID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			application.Versions = append(application.Versions, version)
+		}
+	}
+	return application
+}
+
+func mergeApplications(applications []types.Application) []types.Application {
+	applicationMap := make(map[uuid.UUID]types.Application)
+	for _, application := range applications {
+		if existingApplication, ok := applicationMap[application.ID]; ok {
+			applicationMap[application.ID] = appendMissingVersions(existingApplication, application.Versions)
+		} else {
+			applicationMap[application.ID] = application
+		}
+	}
+	return util.GetValues(applicationMap)
+}
+
 func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
@@ -113,7 +145,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
-		return applications, nil
+		return mergeApplications(applications), nil
 	}
 }
 
@@ -146,14 +178,14 @@ func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uui
 			ORDER BY a.name
 			`, pgx.NamedArgs{"ownerID": oID, "id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if application, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err :=
+		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get application: %w", err)
 	} else {
-		return &application, nil
+		return &mergeApplications(applications)[0], nil
 	}
 }
 
