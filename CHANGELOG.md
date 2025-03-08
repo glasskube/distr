@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/glasskube/distr/compare/1.3.3...1.3.4) (2025-03-08)
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.23.1 ([#613](https://github.com/glasskube/distr/issues/613)) ([f0cbd3b](https://github.com/glasskube/distr/commit/f0cbd3b5692fc1b720548228d07453d16b288a9b))
+
 ## [1.3.3](https://github.com/glasskube/distr/compare/1.3.2...1.3.3) (2025-03-07)
 
 
