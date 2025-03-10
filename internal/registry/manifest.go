@@ -122,7 +122,7 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 			}
 		}
 
-		b, err := handler.blobHandler.Get(req.Context(), repo, m.hash)
+		b, err := handler.blobHandler.Get(req.Context(), repo, m.hash, true)
 		if err != nil {
 			var rerr blob.RedirectError
 			if errors.As(err, &rerr) {
@@ -469,7 +469,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 			continue
 		}
 
-		b, err := m.blobHandler.Get(req.Context(), repo, manifest.hash)
+		b, err := m.blobHandler.Get(req.Context(), repo, manifest.hash, false)
 		if err != nil {
 			var rerr blob.RedirectError
 			if errors.As(err, &rerr) {

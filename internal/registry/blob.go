@@ -110,7 +110,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 				return regErrInternal(err)
 			}
 		} else {
-			rc, err := b.blobHandler.Get(req.Context(), repo, h)
+			rc, err := b.blobHandler.Get(req.Context(), repo, h, true)
 			if errors.Is(err, blob.ErrNotFound) {
 				return regErrBlobUnknown
 			} else if err != nil {
@@ -158,7 +158,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 				return regErrInternal(err)
 			}
 
-			rc, err := b.blobHandler.Get(req.Context(), repo, h)
+			rc, err := b.blobHandler.Get(req.Context(), repo, h, true)
 			if errors.Is(err, blob.ErrNotFound) {
 				return regErrBlobUnknown
 			} else if err != nil {
@@ -175,7 +175,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			r = rc
 
 		} else {
-			tmp, err := b.blobHandler.Get(req.Context(), repo, h)
+			tmp, err := b.blobHandler.Get(req.Context(), repo, h, true)
 			if errors.Is(err, blob.ErrNotFound) {
 				return regErrBlobUnknown
 			} else if err != nil {

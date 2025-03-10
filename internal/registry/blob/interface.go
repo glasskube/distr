@@ -11,7 +11,7 @@ import (
 // blob contents.
 type BlobHandler interface {
 	// Get gets the blob contents, or errNotFound if the blob wasn't found.
-	Get(ctx context.Context, repo string, h v1.Hash) (io.ReadCloser, error)
+	Get(ctx context.Context, repo string, h v1.Hash, allowRedirect bool) (io.ReadCloser, error)
 }
 
 // BlobStatHandler is an extension interface representing a blob storage

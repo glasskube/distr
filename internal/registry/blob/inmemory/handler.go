@@ -29,7 +29,7 @@ func (m *blobHandler) Stat(_ context.Context, _ string, h v1.Hash) (int64, error
 	return int64(len(b)), nil
 }
 
-func (m *blobHandler) Get(_ context.Context, _ string, h v1.Hash) (io.ReadCloser, error) {
+func (m *blobHandler) Get(_ context.Context, _ string, h v1.Hash, _ bool) (io.ReadCloser, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
