@@ -92,7 +92,7 @@ export class AccessTokensComponent {
   }
 
   public async deleteAccessToken(accessToken: AccessToken) {
-    if (await firstValueFrom(this.overlay.confirm(`Really delete token '${accessToken.label}'`))) {
+    if (await firstValueFrom(this.overlay.confirm(`Really delete token '${accessToken.label}'?`))) {
       try {
         await firstValueFrom(this.accessTokens.delete(accessToken.id!));
         this.refresh$.next();

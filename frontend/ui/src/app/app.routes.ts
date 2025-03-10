@@ -30,6 +30,7 @@ import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {VerifyComponent} from './verify/verify.component';
 import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
+import {UsersService} from './services/users.service';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -85,8 +86,27 @@ const jwtAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: Route
   }
 };
 
+const inviteComponentGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const users = inject(UsersService);
+  const router = inject(Router);
+  try {
+    const {active} = await firstValueFrom(users.getUserStatus());
+    if (!active) {
+      return true;
+    }
+  } catch (e) {}
+  auth.actionToken = null;
+  return router.createUrlTree(['/login']);
+};
+
 function requiredRoleGuard(userRole: UserRole): CanActivateFn {
-  return () => inject(AuthService).hasRole(userRole);
+  return () => {
+    if (inject(AuthService).hasRole(userRole)) {
+      return true;
+    }
+    return inject(Router).createUrlTree(['/']);
+  };
 }
 
 function licensingEnabledGuard(): CanActivateFn {
@@ -129,7 +149,7 @@ export const routes: Routes = [
         canActivate: [emailVerificationGuard],
       },
       {path: 'reset', component: PasswordResetComponent},
-      {path: 'join', component: InviteComponent},
+      {path: 'join', component: InviteComponent, canActivate: [inviteComponentGuard]},
       {
         path: '',
         component: NavShellComponent,
@@ -211,5 +231,9 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: '**',
+    redirectTo: '/',
   },
 ];

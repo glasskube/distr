@@ -1,15 +1,19 @@
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
+import {catchError, distinctUntilChanged, filter, lastValueFrom, map, Observable, of, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {ToastService} from '../services/toast.service';
+import {getRemoteEnvironment} from '../../env/remote';
+import {fromPromise} from 'rxjs/internal/observable/innerFrom';
+import {AsyncPipe} from '@angular/common';
+import {HttpClient} from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, AutotrimDirective],
+  imports: [ReactiveFormsModule, RouterLink, AutotrimDirective, AsyncPipe],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit, OnDestroy {
@@ -24,6 +28,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyed$ = new Subject<void>();
   private readonly toast = inject(ToastService);
+  private readonly http = inject(HttpClient);
+  readonly showRegistrationLink$ = this.auth.registrationEnabled();
 
   public ngOnInit(): void {
     this.route.queryParams

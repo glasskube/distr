@@ -15,6 +15,7 @@ import {
   combineLatestWith,
   debounceTime,
   distinctUntilChanged,
+  EMPTY,
   filter,
   map,
   NEVER,
@@ -23,9 +24,10 @@ import {
   Subject,
   switchMap,
   takeUntil,
+  tap,
   withLatestFrom,
 } from 'rxjs';
-import {YamlEditorComponent} from '../components/yaml-editor.component';
+import {EditorComponent} from '../components/editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
@@ -47,7 +49,7 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 
 @Component({
   selector: 'app-deployment-form',
-  imports: [ReactiveFormsModule, AsyncPipe, YamlEditorComponent, AutotrimDirective],
+  imports: [ReactiveFormsModule, AsyncPipe, EditorComponent, AutotrimDirective],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -74,6 +76,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
   });
+  protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
   private readonly deploymentTargetId$ = this.deployForm.controls.deploymentTargetId.valueChanges.pipe(
     distinctUntilChanged(),
@@ -266,6 +269,24 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
             this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
           }
         }
+      });
+
+    combineLatest([
+      this.applicationId$,
+      this.applicationVersionId$,
+      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
+    ])
+      .pipe(
+        debounceTime(5),
+        switchMap(([applicationId, versionId, dt]) =>
+          versionId && applicationId && dt?.type === 'docker'
+            ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER))
+            : NEVER
+        ),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((composeFile) => {
+        this.composeFile.patchValue(composeFile ?? '');
       });
 
     this.licenses$.pipe(takeUntil(this.destroyed$)).subscribe((licenses) => {

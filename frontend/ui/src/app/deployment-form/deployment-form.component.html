@@ -69,32 +69,52 @@
         Helm values
       </label>
 
-      <app-yaml-editor
+      <app-editor
+        language="yaml"
         class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         [formControl]="deployForm.controls.valuesYaml">
-      </app-yaml-editor>
+      </app-editor>
     </div>
   }
-  @if (deployForm.controls.envFileData.enabled) {
-    <div class="col-span-2">
-      <label for="env-file" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Environment variables
+  @if (deployForm.controls.envFileData.enabled && deployForm.controls.applicationVersionId.valid) {
+    <div class="flex flex-wrap col-span-2 text-gray-500 dark:text-gray-400">
+      <input type="radio" id="tab-environment" name="deployment-tabs" class="hidden peer/environment" checked />
+      <label
+        for="tab-environment"
+        class="tab-label peer-checked/environment:text-blue-600 dark:peer-checked/environment:text-blue-500 peer-checked/environment:border-blue-600 dark:peer-checked/environment:border-blue-500 text-sm cursor-pointer inline-flex items-center justify-center p-2 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
+        Environment
       </label>
+      <div class="order-12 mt-4 w-full hidden peer-checked/environment:block">
+        <app-editor
+          id="env-file"
+          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          [formControl]="deployForm.controls.envFileData">
+        </app-editor>
 
-      <app-yaml-editor
-        id="env-file"
-        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        [formControl]="deployForm.controls.envFileData">
-      </app-yaml-editor>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Set your environment variables here. Documentation:
+          <a
+            target="_blank"
+            class="text-primary-600 underline"
+            href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/#env-file-syntax">
+            Env File Syntax</a
+          >.
+        </div>
+      </div>
 
-      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-        Set your environment variables here. Documentation:
-        <a
-          target="_blank"
-          class="text-primary-600 underline"
-          href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/#env-file-syntax">
-          Env File Syntax</a
-        >.
+      <input type="radio" id="tab-compose" name="deployment-tabs" class="hidden peer/compose" />
+      <label
+        for="tab-compose"
+        class="tab-label peer-checked/compose:text-blue-600 dark:peer-checked/compose:text-blue-500 peer-checked/compose:border-blue-600 dark:peer-checked/compose:border-blue-500 text-sm cursor-pointer inline-flex items-center justify-center p-2 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group">
+        Docker Compose File
+      </label>
+      <div class="order-12 mt-4 w-full hidden peer-checked/compose:block">
+        <app-editor
+          id="compose-file"
+          language="yaml"
+          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          [formControl]="composeFile">
+        </app-editor>
       </div>
     </div>
   }

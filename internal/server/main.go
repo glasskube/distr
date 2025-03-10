@@ -5,13 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/glasskube/distr/internal/env"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	server *http.Server
-	logger *zap.Logger
+	server           *http.Server
+	logger           *zap.Logger
+	shutdownComplete chan struct{}
 }
 
 func NewServer(handler http.Handler, logger *zap.Logger) *Server {
@@ -19,7 +22,8 @@ func NewServer(handler http.Handler, logger *zap.Logger) *Server {
 		server: &http.Server{
 			Handler: handler,
 		},
-		logger: logger,
+		logger:           logger,
+		shutdownComplete: make(chan struct{}),
 	}
 	return server
 }
@@ -35,8 +39,26 @@ func (s *Server) Start(addr string) error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) {
+	if d := env.ServerShutdownDelayDuration(); d != nil {
+		s.logger.Sugar().Warnf("shutting down HTTP server in %v", d)
+		time.Sleep(*d)
+	}
 	s.logger.Warn("shutting down HTTP server")
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.logger.Error("error shutting down", zap.Error(err))
+	}
+	close(s.shutdownComplete)
+}
+
+func (s *Server) WaitForShutdown() {
+	tick := time.Tick(5 * time.Second)
+	for {
+		select {
+		case <-tick:
+			s.logger.Info("waiting for server shutdown")
+		case <-s.shutdownComplete:
+			s.logger.Info("server shutdown complete")
+			return
+		}
 	}
 }

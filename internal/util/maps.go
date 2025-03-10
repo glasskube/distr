@@ -57,3 +57,11 @@ func MergeIntoRecursive(dst, src map[string]any) error {
 	}
 	return nil
 }
+
+func GetValues[K comparable, V any](src map[K]V) []V {
+	values := make([]V, 0, len(src))
+	for _, value := range src {
+		values = append(values, value)
+	}
+	return values
+}

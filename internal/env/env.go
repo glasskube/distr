@@ -32,6 +32,8 @@ var (
 	frontendPosthogAPIHost        *string
 	frontendPosthogUIHost         *string
 	userEmailVerificationRequired = true
+	serverShutdownDelayDuration   *time.Duration
+	registration                  = RegistrationEnabled
 )
 
 func init() {
@@ -125,6 +127,19 @@ func init() {
 	if value, ok := os.LookupEnv("USER_EMAIL_VERIFICATION_REQUIRED"); ok {
 		userEmailVerificationRequired = util.Require(strconv.ParseBool(value))
 	}
+
+	if value, ok := os.LookupEnv("SERVER_SHUTDOWN_DELAY_DURATION"); ok {
+		serverShutdownDelayDuration = util.PtrTo(requirePositiveDuration(value))
+	}
+
+	if value, ok := os.LookupEnv("REGISTRATION"); ok {
+		switch value {
+		case string(RegistrationEnabled), string(RegistrationHidden), string(RegistrationDisabled):
+			registration = RegistrationMode(value)
+		default:
+			panic("invalid REGISTRATION")
+		}
+	}
 }
 
 func requirePositiveDuration(val string) time.Duration {
@@ -202,4 +217,12 @@ func FrontendPosthogUIHost() *string {
 
 func UserEmailVerificationRequired() bool {
 	return userEmailVerificationRequired
+}
+
+func ServerShutdownDelayDuration() *time.Duration {
+	return serverShutdownDelayDuration
+}
+
+func Registration() RegistrationMode {
+	return registration
 }

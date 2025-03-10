@@ -147,6 +147,7 @@
               <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
+                    <th scope="col" class="px-6 py-3">ID</th>
                     <th scope="col" class="px-6 py-3">Version</th>
                     @if (application.type === 'kubernetes') {
                       <th scope="col" class="px-6 py-3">Chart URL</th>
@@ -165,6 +166,9 @@
                       [class.hover:bg-gray-50]="!archived"
                       [class.dark:hover:bg-gray-600]="!archived"
                       class="bg-white border-t dark:bg-gray-800 dark:border-gray-700">
+                      <td class="px-1 py-4">
+                        <app-uuid [uuid]="version.id!" [small]="true"></app-uuid>
+                      </td>
                       <th
                         scope="row"
                         [class.text-gray-900]="!archived"
@@ -332,22 +336,23 @@
                     <label for="base_values_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                       >Base Values</label
                     >
-                    <app-yaml-editor
+                    <app-editor
                       id="base_values_input"
+                      language="yaml"
                       class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       [formControl]="newVersionForm.controls.kubernetes.controls.baseValues">
-                    </app-yaml-editor>
+                    </app-editor>
                   </div>
 
                   <div class="w-full">
                     <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                       >Template</label
                     >
-                    <app-yaml-editor
+                    <app-editor
                       id="template_input"
                       class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       [formControl]="newVersionForm.controls.kubernetes.controls.template">
-                    </app-yaml-editor>
+                    </app-editor>
                   </div>
                 </div>
               } @else {
@@ -356,11 +361,12 @@
                     <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                       >Docker Compose *</label
                     >
-                    <app-yaml-editor
+                    <app-editor
                       id="compose_input"
+                      language="yaml"
                       class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       [formControl]="newVersionForm.controls.docker.controls.compose">
-                    </app-yaml-editor>
+                    </app-editor>
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Paste your docker compose file here.
                     </div>
@@ -378,11 +384,11 @@
                       class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                       >Environment Template</label
                     >
-                    <app-yaml-editor
+                    <app-editor
                       id="compose_template_input"
                       class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       [formControl]="newVersionForm.controls.docker.controls.template">
-                    </app-yaml-editor>
+                    </app-editor>
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       This template will be shown when somebody deploys this application.
                     </div>
