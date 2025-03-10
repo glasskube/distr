@@ -471,11 +471,6 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 
 		b, err := m.blobHandler.Get(req.Context(), repo, manifest.hash, false)
 		if err != nil {
-			var rerr blob.RedirectError
-			if errors.As(err, &rerr) {
-				http.Redirect(resp, req, rerr.Location, rerr.Code)
-				return nil
-			}
 			return &regError{
 				Status:  http.StatusNotFound,
 				Code:    "BAD_REQUEST",
