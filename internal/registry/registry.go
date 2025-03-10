@@ -28,6 +28,7 @@ import (
 	"math/rand"
 	"net/http"
 
+	"github.com/glasskube/distr/internal/registry/blob"
 	"go.uber.org/zap"
 )
 
@@ -92,8 +93,7 @@ func (r *registry) root(resp http.ResponseWriter, req *http.Request) {
 func New(opts ...Option) http.Handler {
 	r := &registry{
 		blobs: blobs{
-			blobHandler: &memHandler{m: map[string][]byte{}},
-			uploads:     map[string][]byte{},
+			uploads: map[string][]byte{},
 		},
 		manifests: manifests{
 			manifests: map[string]map[string]manifest{},
@@ -134,8 +134,9 @@ func WithWarning(prob float64, msg string) Option {
 	}
 }
 
-func WithBlobHandler(h BlobHandler) Option {
+func WithBlobHandler(h blob.BlobHandler) Option {
 	return func(r *registry) {
 		r.blobs.blobHandler = h
+		r.manifests.blobHandler = h
 	}
 }

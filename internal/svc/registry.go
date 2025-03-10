@@ -9,6 +9,7 @@ import (
 
 	"github.com/glasskube/distr/internal/migrations"
 	"github.com/glasskube/distr/internal/registry"
+	"github.com/glasskube/distr/internal/registry/blob/inmemory"
 
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
@@ -183,7 +184,10 @@ func (r *Registry) GetRouter() http.Handler {
 }
 
 func (r *Registry) GetArtifactsRouter() http.Handler {
-	return registry.New(registry.Logger(r.logger.With(zap.String("component", "registry"))))
+	return registry.New(
+		registry.Logger(r.logger.With(zap.String("component", "registry"))),
+		registry.WithBlobHandler(inmemory.NewBlobHandler()),
+	)
 }
 
 func (r *Registry) GetServer() server.Server {

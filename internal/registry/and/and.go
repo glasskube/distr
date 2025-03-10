@@ -16,6 +16,7 @@
 package and
 
 import (
+	"bytes"
 	"io"
 )
 
@@ -45,4 +46,12 @@ var _ io.WriteCloser = (*WriteCloser)(nil)
 // Close implements io.WriteCloser
 func (wac *WriteCloser) Close() error {
 	return wac.CloseFunc()
+}
+
+type BytesCloser struct {
+	*bytes.Reader
+}
+
+func (r *BytesCloser) Close() error {
+	return nil
 }

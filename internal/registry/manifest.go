@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/glasskube/distr/internal/registry/blob"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/types"
 	"go.uber.org/zap"
@@ -40,11 +41,12 @@ type listTags struct {
 }
 
 type manifest struct {
+	hash        v1.Hash
 	contentType string
-	blob        []byte
 }
 
 type manifests struct {
+	blobHandler blob.BlobHandler
 	// maps repo -> manifest tag/digest -> manifest
 	manifests map[string]map[string]manifest
 	lock      sync.RWMutex
@@ -91,7 +93,7 @@ func isReferrers(req *http.Request) bool {
 
 // https://github.com/opencontainers/distribution-spec/blob/master/spec.md#pulling-an-image-manifest
 // https://github.com/opencontainers/distribution-spec/blob/master/spec.md#pushing-an-image
-func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regError {
+func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *regError {
 	elem := strings.Split(req.URL.Path, "/")
 	elem = elem[1:]
 	target := elem[len(elem)-1]
@@ -99,10 +101,10 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 
 	switch req.Method {
 	case http.MethodGet:
-		m.lock.RLock()
-		defer m.lock.RUnlock()
+		handler.lock.RLock()
+		defer handler.lock.RUnlock()
 
-		c, ok := m.manifests[repo]
+		c, ok := handler.manifests[repo]
 		if !ok {
 			return &regError{
 				Status:  http.StatusNotFound,
@@ -119,26 +121,46 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 			}
 		}
 
-		h, _, _ := v1.SHA256(bytes.NewReader(m.blob))
-		resp.Header().Set("Docker-Content-Digest", h.String())
+		b, err := handler.blobHandler.Get(req.Context(), repo, m.hash)
+		if err != nil {
+			// TODO: More nuanced
+			return &regError{
+				Status:  http.StatusNotFound,
+				Code:    "MANIFEST_UNKNOWN",
+				Message: "Unknown manifest",
+			}
+		}
+		defer b.Close()
+
+		buf := bytes.Buffer{}
+		if _, err = io.Copy(&buf, b); err != nil {
+			// TODO: More nuanced
+			return &regError{
+				Status:  http.StatusNotFound,
+				Code:    "MANIFEST_UNKNOWN",
+				Message: "Unknown manifest",
+			}
+		}
+
+		resp.Header().Set("Docker-Content-Digest", m.hash.String())
 		resp.Header().Set("Content-Type", m.contentType)
-		resp.Header().Set("Content-Length", fmt.Sprint(len(m.blob)))
+		resp.Header().Set("Content-Length", fmt.Sprint(buf.Len()))
 		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, bytes.NewReader(m.blob))
+		io.Copy(resp, &buf)
 		return nil
 
 	case http.MethodHead:
-		m.lock.RLock()
-		defer m.lock.RUnlock()
+		handler.lock.RLock()
+		defer handler.lock.RUnlock()
 
-		if _, ok := m.manifests[repo]; !ok {
+		if _, ok := handler.manifests[repo]; !ok {
 			return &regError{
 				Status:  http.StatusNotFound,
 				Code:    "NAME_UNKNOWN",
 				Message: "Unknown name",
 			}
 		}
-		m, ok := m.manifests[repo][target]
+		m, ok := handler.manifests[repo][target]
 		if !ok {
 			return &regError{
 				Status:  http.StatusNotFound,
@@ -147,21 +169,41 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 			}
 		}
 
-		h, _, _ := v1.SHA256(bytes.NewReader(m.blob))
-		resp.Header().Set("Docker-Content-Digest", h.String())
+		b, err := handler.blobHandler.Get(req.Context(), repo, m.hash)
+		if err != nil {
+			// TODO: More nuanced
+			return &regError{
+				Status:  http.StatusNotFound,
+				Code:    "MANIFEST_UNKNOWN",
+				Message: "Unknown manifest",
+			}
+		}
+		defer b.Close()
+
+		blob, err := io.ReadAll(b)
+		if err != nil {
+			// TODO: More nuanced
+			return &regError{
+				Status:  http.StatusNotFound,
+				Code:    "MANIFEST_UNKNOWN",
+				Message: "Unknown manifest",
+			}
+		}
+
+		resp.Header().Set("Docker-Content-Digest", m.hash.String())
 		resp.Header().Set("Content-Type", m.contentType)
-		resp.Header().Set("Content-Length", fmt.Sprint(len(m.blob)))
+		resp.Header().Set("Content-Length", fmt.Sprint(len(blob)))
 		resp.WriteHeader(http.StatusOK)
 		return nil
 
 	case http.MethodPut:
-		b := &bytes.Buffer{}
-		io.Copy(b, req.Body)
-		h, _, _ := v1.SHA256(bytes.NewReader(b.Bytes()))
+		buf := &bytes.Buffer{}
+		io.Copy(buf, req.Body)
+		h, _, _ := v1.SHA256(bytes.NewReader(buf.Bytes()))
 		digest := h.String()
 		mf := manifest{
-			blob:        b.Bytes(),
 			contentType: req.Header.Get("Content-Type"),
+			hash:        h,
 		}
 
 		// If the manifest is a manifest list, check that the manifest
@@ -170,10 +212,10 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 		// registries require this.
 		if types.MediaType(mf.contentType).IsIndex() {
 			if err := func() *regError {
-				m.lock.RLock()
-				defer m.lock.RUnlock()
+				handler.lock.RLock()
+				defer handler.lock.RUnlock()
 
-				im, err := v1.ParseIndexManifest(b)
+				im, err := v1.ParseIndexManifest(buf)
 				if err != nil {
 					return &regError{
 						Status:  http.StatusBadRequest,
@@ -186,7 +228,7 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 						continue
 					}
 					if desc.MediaType.IsIndex() || desc.MediaType.IsImage() {
-						if _, found := m.manifests[repo][desc.Digest.String()]; !found {
+						if _, found := handler.manifests[repo][desc.Digest.String()]; !found {
 							return &regError{
 								Status:  http.StatusNotFound,
 								Code:    "MANIFEST_UNKNOWN",
@@ -195,7 +237,7 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 						}
 					} else {
 						// TODO: Probably want to do an existence check for blobs.
-						m.log.Warnf("TODO: Check blobs for %q", desc.Digest)
+						handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
 					}
 				}
 				return nil
@@ -204,25 +246,37 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 			}
 		}
 
-		m.lock.Lock()
-		defer m.lock.Unlock()
+		handler.lock.Lock()
+		defer handler.lock.Unlock()
 
-		if _, ok := m.manifests[repo]; !ok {
-			m.manifests[repo] = make(map[string]manifest, 2)
+		if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
+		} else {
+			if err := bph.Put(req.Context(), repo, h, buf); err != nil {
+				// TODO: better error
+				return &regError{
+					Status:  http.StatusBadRequest,
+					Code:    "MANIFEST_INVALID",
+					Message: err.Error(),
+				}
+			}
+		}
+
+		if _, ok := handler.manifests[repo]; !ok {
+			handler.manifests[repo] = make(map[string]manifest, 2)
 		}
 
 		// Allow future references by target (tag) and immutable digest.
 		// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
-		m.manifests[repo][digest] = mf
-		m.manifests[repo][target] = mf
+		handler.manifests[repo][digest] = mf
+		handler.manifests[repo][target] = mf
 		resp.Header().Set("Docker-Content-Digest", digest)
 		resp.WriteHeader(http.StatusCreated)
 		return nil
 
 	case http.MethodDelete:
-		m.lock.Lock()
-		defer m.lock.Unlock()
-		if _, ok := m.manifests[repo]; !ok {
+		handler.lock.Lock()
+		defer handler.lock.Unlock()
+		if _, ok := handler.manifests[repo]; !ok {
 			return &regError{
 				Status:  http.StatusNotFound,
 				Code:    "NAME_UNKNOWN",
@@ -230,7 +284,7 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 			}
 		}
 
-		_, ok := m.manifests[repo][target]
+		_, ok := handler.manifests[repo][target]
 		if !ok {
 			return &regError{
 				Status:  http.StatusNotFound,
@@ -239,7 +293,7 @@ func (m *manifests) handle(resp http.ResponseWriter, req *http.Request) *regErro
 			}
 		}
 
-		delete(m.manifests[repo], target)
+		delete(handler.manifests[repo], target)
 		resp.WriteHeader(http.StatusAccepted)
 		return nil
 
@@ -410,10 +464,29 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 		if err != nil {
 			continue
 		}
+
+		b, err := m.blobHandler.Get(req.Context(), repo, manifest.hash)
+		if err != nil {
+			return &regError{
+				Status:  http.StatusNotFound,
+				Code:    "BAD_REQUEST",
+				Message: err.Error(),
+			}
+		}
+		var buf bytes.Buffer
+		if _, err := io.Copy(&buf, b); err != nil {
+			// TODO: real error
+			return &regError{
+				Status:  http.StatusNotFound,
+				Code:    "BAD_REQUEST",
+				Message: err.Error(),
+			}
+		}
+
 		var refPointer struct {
 			Subject *v1.Descriptor `json:"subject"`
 		}
-		json.Unmarshal(manifest.blob, &refPointer)
+		json.Unmarshal(buf.Bytes(), &refPointer)
 		if refPointer.Subject == nil {
 			continue
 		}
@@ -427,10 +500,10 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 				MediaType string `json:"mediaType"`
 			} `json:"config"`
 		}
-		json.Unmarshal(manifest.blob, &imageAsArtifact)
+		json.Unmarshal(buf.Bytes(), &imageAsArtifact)
 		im.Manifests = append(im.Manifests, v1.Descriptor{
 			MediaType:    types.MediaType(manifest.contentType),
-			Size:         int64(len(manifest.blob)),
+			Size:         int64(buf.Len()),
 			Digest:       h,
 			ArtifactType: imageAsArtifact.Config.MediaType,
 		})
