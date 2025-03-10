@@ -186,7 +186,7 @@ func (r *Registry) GetArtifactsRouter() http.Handler {
 	return registry.New(
 		registry.Logger(r.logger.With(zap.String("component", "registry"))),
 		//registry.WithBlobHandler(inmemory.NewBlobHandler()),
-		registry.WithBlobHandler(s3.NewBlobHandler()),
+		registry.WithBlobHandler(s3.NewBlobHandler(true)),
 	)
 }
 

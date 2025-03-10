@@ -17,6 +17,7 @@ package registry
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -123,6 +124,11 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 
 		b, err := handler.blobHandler.Get(req.Context(), repo, m.hash)
 		if err != nil {
+			var rerr blob.RedirectError
+			if errors.As(err, &rerr) {
+				http.Redirect(resp, req, rerr.Location, rerr.Code)
+				return nil
+			}
 			// TODO: More nuanced
 			return &regError{
 				Status:  http.StatusNotFound,
@@ -169,18 +175,16 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 			}
 		}
 
-		b, err := handler.blobHandler.Get(req.Context(), repo, m.hash)
-		if err != nil {
-			// TODO: More nuanced
+		bsh, ok := handler.blobHandler.(blob.BlobStatHandler)
+		if !ok {
 			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "MANIFEST_UNKNOWN",
-				Message: "Unknown manifest",
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: "cannot stat blob",
 			}
 		}
-		defer b.Close()
 
-		blob, err := io.ReadAll(b)
+		l, err := bsh.Stat(req.Context(), repo, m.hash)
 		if err != nil {
 			// TODO: More nuanced
 			return &regError{
@@ -192,7 +196,7 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 
 		resp.Header().Set("Docker-Content-Digest", m.hash.String())
 		resp.Header().Set("Content-Type", m.contentType)
-		resp.Header().Set("Content-Length", fmt.Sprint(len(blob)))
+		resp.Header().Set("Content-Length", fmt.Sprint(l))
 		resp.WriteHeader(http.StatusOK)
 		return nil
 
@@ -467,6 +471,11 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 
 		b, err := m.blobHandler.Get(req.Context(), repo, manifest.hash)
 		if err != nil {
+			var rerr blob.RedirectError
+			if errors.As(err, &rerr) {
+				http.Redirect(resp, req, rerr.Location, rerr.Code)
+				return nil
+			}
 			return &regError{
 				Status:  http.StatusNotFound,
 				Code:    "BAD_REQUEST",
