@@ -48,18 +48,18 @@ func main() {
 	util.Must(db.CreateAgentVersion(internalctx.WithDb(ctx, registry.GetDbPool())))
 
 	server := registry.GetServer()
-	artifactServer := registry.GetRegistryServer()
+	artifactsServer := registry.GetArtifactsServer()
 	go onSigterm(func() {
 		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		server.Shutdown(ctx)
-		artifactServer.Shutdown(ctx)
+		artifactsServer.Shutdown(ctx)
 		cancel()
 	})
 
 	go func() { util.Must(server.Start(":8080")) }()
-	go func() { util.Must(artifactServer.Start(":8585")) }()
+	go func() { util.Must(artifactsServer.Start(":8585")) }()
 	server.WaitForShutdown()
-	artifactServer.WaitForShutdown()
+	artifactsServer.WaitForShutdown()
 }
 
 func onSigterm(callback func()) {

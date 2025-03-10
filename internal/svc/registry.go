@@ -182,7 +182,7 @@ func (r *Registry) GetRouter() http.Handler {
 	return routing.NewRouter(r.logger, r.dbPool, r.mailer)
 }
 
-func (r *Registry) GetRegistryRouter() http.Handler {
+func (r *Registry) GetArtifactsRouter() http.Handler {
 	return registry.New(registry.Logger(r.logger.With(zap.String("component", "registry"))))
 }
 
@@ -190,6 +190,6 @@ func (r *Registry) GetServer() server.Server {
 	return *server.NewServer(r.GetRouter(), r.logger.With(zap.String("server", "main")))
 }
 
-func (r *Registry) GetRegistryServer() server.Server {
-	return *server.NewServer(r.GetRegistryRouter(), r.logger.With(zap.String("server", "registry")))
+func (r *Registry) GetArtifactsServer() server.Server {
+	return *server.NewServer(r.GetArtifactsRouter(), r.logger.With(zap.String("server", "registry")))
 }
