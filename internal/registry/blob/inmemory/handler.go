@@ -11,14 +11,14 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
-type memHandler struct {
+type blobHandler struct {
 	m    map[string][]byte
 	lock sync.Mutex
 }
 
-func NewBlobHandler() blob.BlobHandler { return &memHandler{m: map[string][]byte{}} }
+func NewBlobHandler() blob.BlobHandler { return &blobHandler{m: map[string][]byte{}} }
 
-func (m *memHandler) Stat(_ context.Context, _ string, h v1.Hash) (int64, error) {
+func (m *blobHandler) Stat(_ context.Context, _ string, h v1.Hash) (int64, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -29,7 +29,7 @@ func (m *memHandler) Stat(_ context.Context, _ string, h v1.Hash) (int64, error)
 	return int64(len(b)), nil
 }
 
-func (m *memHandler) Get(_ context.Context, _ string, h v1.Hash) (io.ReadCloser, error) {
+func (m *blobHandler) Get(_ context.Context, _ string, h v1.Hash) (io.ReadCloser, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -40,7 +40,7 @@ func (m *memHandler) Get(_ context.Context, _ string, h v1.Hash) (io.ReadCloser,
 	return &and.BytesCloser{Reader: bytes.NewReader(b)}, nil
 }
 
-func (m *memHandler) Put(_ context.Context, _ string, h v1.Hash, r io.Reader) error {
+func (m *blobHandler) Put(_ context.Context, _ string, h v1.Hash, r io.Reader) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -55,7 +55,7 @@ func (m *memHandler) Put(_ context.Context, _ string, h v1.Hash, r io.Reader) er
 	return nil
 }
 
-func (m *memHandler) Delete(_ context.Context, _ string, h v1.Hash) error {
+func (m *blobHandler) Delete(_ context.Context, _ string, h v1.Hash) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 

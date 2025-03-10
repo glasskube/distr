@@ -32,6 +32,10 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	uploads = "uploads"
+)
+
 // Returns whether this url should be handled by the blob handler
 // This is complicated because blob is indicated by the trailing path, not the leading path.
 // https://github.com/opencontainers/distribution-spec/blob/master/spec.md#pulling-a-layer
@@ -46,7 +50,7 @@ func isBlob(req *http.Request) bool {
 		return false
 	}
 	return elem[len(elem)-2] == "blobs" || (elem[len(elem)-3] == "blobs" &&
-		elem[len(elem)-2] == "uploads")
+		elem[len(elem)-2] == uploads)
 }
 
 // blobs
@@ -243,7 +247,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 
 		// It is weird that this is "target" instead of "service", but
 		// that's how the index math works out above.
-		if target != "uploads" {
+		if target != uploads {
 			return &regError{
 				Status:  http.StatusBadRequest,
 				Code:    "METHOD_UNKNOWN",
@@ -282,7 +286,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		return nil
 
 	case http.MethodPatch:
-		if service != "uploads" {
+		if service != uploads {
 			return &regError{
 				Status:  http.StatusBadRequest,
 				Code:    "METHOD_UNKNOWN",
@@ -342,7 +346,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			return regErrUnsupported
 		}
 
-		if service != "uploads" {
+		if service != uploads {
 			return &regError{
 				Status:  http.StatusBadRequest,
 				Code:    "METHOD_UNKNOWN",

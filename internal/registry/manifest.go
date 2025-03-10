@@ -311,7 +311,7 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 	elem = elem[1:]
 	repo := strings.Join(elem[1:len(elem)-2], "/")
 
-	if req.Method == "GET" {
+	if req.Method == http.MethodGet {
 		m.lock.RLock()
 		defer m.lock.RUnlock()
 
@@ -383,7 +383,7 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 		n, _ = strconv.Atoi(nStr)
 	}
 
-	if req.Method == "GET" {
+	if req.Method == http.MethodGet {
 		m.lock.RLock()
 		defer m.lock.RUnlock()
 
@@ -420,7 +420,7 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 // TODO: implement handling of artifactType querystring
 func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request) *regError {
 	// Ensure this is a GET request
-	if req.Method != "GET" {
+	if req.Method != http.MethodGet {
 		return &regError{
 			Status:  http.StatusBadRequest,
 			Code:    "METHOD_UNKNOWN",
@@ -473,6 +473,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 				Message: err.Error(),
 			}
 		}
+		defer b.Close()
 		var buf bytes.Buffer
 		if _, err := io.Copy(&buf, b); err != nil {
 			// TODO: real error

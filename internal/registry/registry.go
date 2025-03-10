@@ -82,7 +82,7 @@ func (r *registry) v2(resp http.ResponseWriter, req *http.Request) *regError {
 func (r *registry) root(resp http.ResponseWriter, req *http.Request) {
 	if rerr := r.v2(resp, req); rerr != nil {
 		r.log.Warnf("%s %s %d %s %s", req.Method, req.URL, rerr.Status, rerr.Code, rerr.Message)
-		rerr.Write(resp)
+		_ = rerr.Write(resp)
 		return
 	}
 	r.log.Infof("%s %s", req.Method, req.URL)
