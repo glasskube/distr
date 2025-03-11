@@ -30,7 +30,7 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
           {
             id: 'b135b6b2-ebc9-4c13-a2c1-7eaa79455955',
             name: 'distr',
-            createdAt: '2025-02-25T09:25:21Z',
+            createdAt: '2025-03-08T09:25:21Z',
             artifacts: [
               {
                 artifact: mockArtifacts[0],
@@ -40,7 +40,7 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
           {
             id: '49638b03-4644-4221-81df-be8981622c74',
             name: 'distr-docker-agent',
-            createdAt: '2025-02-25T09:25:21Z',
+            createdAt: '2025-03-08T09:25:21Z',
             artifacts: [
               {
                 artifact: mockArtifacts[1],
