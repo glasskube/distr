@@ -1,5 +1,3 @@
--- TODO organization slug
-
 -- artifact core
 
 CREATE TABLE Artifact (
