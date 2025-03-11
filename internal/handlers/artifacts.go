@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -9,7 +11,6 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func ArtifactsRouter(r chi.Router) {

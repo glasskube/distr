@@ -1,10 +1,6 @@
 package main
 
-import (
-	"github.com/google/uuid"
-	"github.com/spf13/pflag"
-)
-
+/*
 var orgID uuid.UUID
 
 func init() {
@@ -14,7 +10,7 @@ func init() {
 	orgID = uuid.MustParse(orgIDStr)
 }
 
-/*
+
 func main() {
 	ctx := context.Background()
 	registry := util.Require(svc.NewDefault(ctx))
