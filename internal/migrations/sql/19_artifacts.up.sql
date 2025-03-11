@@ -1,17 +1,21 @@
+-- TODO organization slug
+
 CREATE TABLE Artifact (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
   name TEXT NOT NULL,
-  organization_id UUID NOT NULL REFERENCES Organization (id) ON DELETE RESTRICT
+  organization_id UUID NOT NULL REFERENCES Organization (id) ON DELETE RESTRICT,
+  CONSTRAINT Artifact_unique_name UNIQUE (organization_id, name)
 );
 
 CREATE TABLE ArtifactVersion (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
-  created_by_user_account_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
+  created_by_useraccount_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   -- TODO maybe also save hash of lead blob such that they are easier to together for the UI?
-  artifact_id UUID NOT NULL REFERENCES Artifact (id) ON DELETE RESTRICT
+  artifact_id UUID NOT NULL REFERENCES Artifact (id) ON DELETE RESTRICT,
+  CONSTRAINT ArtifactVersion_unique_name UNIQUE (artifact_id, name)
 );
 
 CREATE TABLE ArtifactBlob (
@@ -24,7 +28,7 @@ CREATE TABLE ArtifactBlob (
 CREATE TABLE ArtifactVersionPart (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
-  created_by_user_account_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
+  created_by_useraccount_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
   hash_md5 TEXT NOT NULL,
   hash_sha1 TEXT NOT NULL,
   hash_sha256 TEXT NOT NULL,
