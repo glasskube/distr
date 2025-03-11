@@ -14,36 +14,25 @@ CREATE TABLE ArtifactVersion (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT current_timestamp,
   created_by_useraccount_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
-  -- TODO maybe also save hash of lead blob such that they are easier to together for the UI?
+  updated_at TIMESTAMP DEFAULT current_timestamp,
+  updated_by_useraccount_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
+  name TEXT NOT NULL, --- either a digest ("sha256:...") or a tag
+  manifest_blob_digest TEXT NOT NULL, --- "sha256:..."
+  manifest_content_type TEXT NOT NULL,
   artifact_id UUID NOT NULL REFERENCES Artifact (id) ON DELETE RESTRICT,
   CONSTRAINT ArtifactVersion_unique_name UNIQUE (artifact_id, name)
 );
 
-CREATE TABLE ArtifactBlob (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMP DEFAULT current_timestamp,
-  name TEXT NOT NULL,
-  is_lead BOOLEAN NOT NULL
-);
-
 CREATE TABLE ArtifactVersionPart (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMP DEFAULT current_timestamp,
-  created_by_useraccount_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
-  hash_md5 TEXT NOT NULL,
-  hash_sha1 TEXT NOT NULL,
-  hash_sha256 TEXT NOT NULL,
-  hash_sha512 TEXT NOT NULL,
   artifact_version_id UUID NOT NULL REFERENCES ArtifactVersion (id) ON DELETE CASCADE,
-  artifact_blob_id UUID NOT NULL REFERENCES ArtifactBlob (id) ON DELETE CASCADE
+  artifact_blob_digest TEXT NOT NULL, --- "sha256:..."
+  PRIMARY KEY (artifact_version_id, artifact_blob_digest)
 );
 
 CREATE INDEX fk_Artifact_organization_id ON Artifact (organization_id);
 CREATE INDEX fk_ArtifactVersion_artifact_id ON ArtifactVersion (artifact_id);
 
 CREATE INDEX fk_ArtifactVersionPart_artifact_version_id ON ArtifactVersionPart (artifact_version_id);
-CREATE INDEX fk_ArtifactVersionPart_artifact_blob_id ON ArtifactVersionPart (artifact_blob_id);
 
 -- artifact licensing
 CREATE TABLE ArtifactLicense (

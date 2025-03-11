@@ -14,30 +14,37 @@ import (
 )
 
 const (
-	artifactOutputExpr         = `a.id, a.created_at, a.organization_id, a.name `
-	artifactWithTagsOutputExpr = artifactOutputExpr + `,
-		coalesce((
-			SELECT array_agg(row(av.id, av.created_at, av.hash, av.labels, av.artifact_id) ORDER BY av.created_at ASC)
-			FROM ArtifactVersion av
-			WHERE av.artifact_id = a.id
-		), array[]::record[]) AS versions `
+	artifactOutputExpr = `a.id, a.created_at, a.organization_id, a.name `
 )
 
 func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact, error) {
-	// TODO impl
-	/*db := internalctx.GetDb(ctx)
-	if rows, err := db.Query(ctx, `
-		SELECT `+artifactWithTagsOutputExpr+`
-		FROM Artifact a WHERE a.organization_id = @orgId
-		ORDER BY a.name`, pgx.NamedArgs{
-		"orgId": orgID,
-	}); err != nil {
-		return nil, fmt.Errorf("failed to query artifacts: %w", err)
-	} else if artifacts, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Artifact]); err != nil {
-		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
-	} else {
-		return artifacts, nil
-	}*/
+	// TODO impl, something like:
+	/*
+		SELECT
+		    a.id, a.created_at, a.organization_id, a.name,
+		    coalesce((
+		            array_agg(row(av.id, av.created_at, av.name, av.artifact_id, avp.hash_sha256))
+		    ), ARRAY[]::RECORD[]) as versions
+		FROM artifact a
+		INNER JOIN ArtifactVersion av ON a.id = av.artifact_id
+		INNER JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+		INNER JOIN ArtifactBlob ab ON avp.artifact_blob_id = ab.id
+		WHERE a.organization_id = 'b135b6b2-ebc9-4c13-a2c1-7eaa79455955' AND ab.is_lead = true
+		GROUP BY a.id;
+
+		db := internalctx.GetDb(ctx)
+		if rows, err := db.Query(ctx, `
+			SELECT `+artifactOutputExpr+`,
+			FROM Artifact a WHERE a.organization_id = @orgId
+			ORDER BY a.name`, pgx.NamedArgs{
+			"orgId": orgID,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to query artifacts: %w", err)
+		} else if artifacts, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Artifact]); err != nil {
+			return nil, fmt.Errorf("failed to collect artifacts: %w", err)
+		} else {
+			return artifacts, nil
+		}*/
 	return nil, nil
 }
 
@@ -103,18 +110,20 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO ArtifactVersion AS av (
-            name, created_by_useraccount_id, artifact_id
+            name, created_by_useraccount_id, manifest_blob_digest, manifest_content_type, artifact_id
         ) VALUES (
-        	@name, @createdById, @artifactId
+        	@name, @createdById, @manifestBlobDigest, @manifestContentType, @artifactId
         ) RETURNING *`,
 		pgx.NamedArgs{
-			"name":        av.Name,
-			"createdById": av.CreatedByUserAccountID,
-			"artifactId":  av.ArtifactID,
+			"name":                av.Name,
+			"createdById":         av.CreatedByUserAccountID,
+			"manifestBlobDigest":  av.ManifestBlobDigest,
+			"manifestContentType": av.ManifestContentType,
+			"artifactId":          av.ArtifactID,
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("could not insert Artifact: %w", err)
+		return fmt.Errorf("could not insert ArtifactVersion: %w", err)
 	}
 	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersion]); err != nil {
 		var pgError *pgconn.PgError
@@ -124,6 +133,27 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 		return err
 	} else {
 		*av = result
+		return nil
+	}
+}
+
+func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPart) error {
+	db := internalctx.GetDb(ctx)
+	if rows, err := db.Query(
+		ctx,
+		`INSERT INTO ArtifactVersionPart AS avp (
+         	artifact_version_id, artifact_blob_digest
+         ) VALUES (@versionId, @blobDigest) RETURNING *`,
+		pgx.NamedArgs{
+			"versionId":  avp.ArtifactVersionID,
+			"blobDigest": avp.ArtifactBlobDigest,
+		},
+	); err != nil {
+		return fmt.Errorf("could not insert ArtifactVersionPart: %w", err)
+	} else if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersionPart]); err != nil {
+		return err
+	} else {
+		*avp = result
 		return nil
 	}
 }
