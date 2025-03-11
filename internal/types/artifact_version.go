@@ -5,12 +5,11 @@ import (
 	"time"
 )
 
-type ArtifactTag struct {
+type ArtifactVersion struct {
 	ID                     uuid.UUID `db:"id" json:"id"`
 	CreatedAt              time.Time `db:"created_at" json:"createdAt"`
-	CreatedByUserAccountID uuid.UUID `db:"organization_id" json:"-"`
-	Hash                   string    `db:"hash" json:"hash"`
-	Labels                 []string  `db:"labels" json:"labels"`
+	CreatedByUserAccountID uuid.UUID `db:"created_by_user_account_id" json:"-"`
+	Name                   string    `db:"name" json:"name"`
 
 	ArtifactID uuid.UUID `db:"artifact_id" json:"artifactId"`
 }
