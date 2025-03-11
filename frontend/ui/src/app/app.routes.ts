@@ -28,6 +28,7 @@ import {LicensesComponent} from './licenses/licenses.component';
 import {FeatureFlagService} from './services/feature-flag.service';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
 import {UsersService} from './services/users.service';
+import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -194,6 +195,12 @@ export const routes: Routes = [
           {
             path: 'branding',
             component: OrganizationBrandingComponent,
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor')],
+          },
+          {
+            path: 'settings',
+            component: OrganizationSettingsComponent,
             data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor')],
           },

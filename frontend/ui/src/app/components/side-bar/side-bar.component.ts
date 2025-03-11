@@ -6,6 +6,8 @@ import {
   faArrowRightLong,
   faBoxesStacked,
   faCheckDouble,
+  faChevronDown,
+  faCodeFork,
   faDashboard,
   faGear,
   faHome,
@@ -57,4 +59,5 @@ export class SideBarComponent {
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
   protected showRequestAccessTooltip = false;
+  protected readonly faCodeFork = faCodeFork;
 }
