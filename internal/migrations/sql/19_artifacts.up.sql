@@ -10,6 +10,7 @@ CREATE TABLE ArtifactVersion (
   created_at TIMESTAMP DEFAULT current_timestamp,
   created_by_user_account_id UUID REFERENCES UserAccount (id) ON DELETE SET NULL,
   name TEXT NOT NULL,
+  -- TODO maybe also save hash of lead blob such that they are easier to together for the UI?
   artifact_id UUID NOT NULL REFERENCES Artifact (id) ON DELETE RESTRICT
 );
 
