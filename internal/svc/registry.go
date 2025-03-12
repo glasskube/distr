@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"syscall"
 
-	"github.com/glasskube/distr/internal/migrations"
-
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mail/noop"
 	"github.com/glasskube/distr/internal/mail/ses"
 	"github.com/glasskube/distr/internal/mail/smtp"
+	"github.com/glasskube/distr/internal/migrations"
+	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
 	"github.com/jackc/pgx/v5"
@@ -181,6 +181,18 @@ func (r *Registry) GetRouter() http.Handler {
 	return routing.NewRouter(r.logger, r.dbPool, r.mailer)
 }
 
+func (r *Registry) GetArtifactsRouter() http.Handler {
+	return registry.NewDefault(
+		r.logger.With(zap.String("component", "registry")),
+		r.dbPool,
+		r.mailer,
+	)
+}
+
 func (r *Registry) GetServer() server.Server {
-	return *server.NewServer(r.GetRouter(), r.logger)
+	return *server.NewServer(r.GetRouter(), r.logger.With(zap.String("server", "main")))
+}
+
+func (r *Registry) GetArtifactsServer() server.Server {
+	return *server.NewServer(r.GetArtifactsRouter(), r.logger.With(zap.String("server", "registry")))
 }

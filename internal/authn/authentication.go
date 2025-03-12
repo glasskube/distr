@@ -76,6 +76,11 @@ func (a *Authentication[T]) ValidatorMiddleware(fn func(value T) error) func(nex
 }
 
 func (a *Authentication[T]) handleError(w http.ResponseWriter, r *http.Request, err error) {
+	hhe := &HttpHeaderError{}
+	if errors.As(err, &hhe) {
+		hhe.WriteTo(w)
+	}
+
 	if errors.Is(err, ErrBadAuthentication) || errors.Is(err, ErrNoAuthentication) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	} else if a.unknownErrorHandler == nil {
