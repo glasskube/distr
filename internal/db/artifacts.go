@@ -67,7 +67,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 						SELECT ala.id
                      	FROM ArtifactLicense_Artifact ala
                      	INNER JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
-                     	WHERE al.owner_useraccount_id = @ownerId -- TODO expiry
+                     	WHERE al.owner_useraccount_id = @ownerId AND (al.expires_at IS NULL OR al.expires_at > now())
                      	AND ala.artifact_id = av.artifact_id
                      	AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
                     )
@@ -79,7 +79,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 				SELECT ala.id
 				FROM ArtifactLicense_Artifact ala
 				INNER JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
-				WHERE al.owner_useraccount_id = @ownerId -- TODO expiry
+				WHERE al.owner_useraccount_id = @ownerId AND (al.expires_at IS NULL OR al.expires_at > now())
 				AND ala.artifact_id = a.id
 			)
 			ORDER BY a.name`,
