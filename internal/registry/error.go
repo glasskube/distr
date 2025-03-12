@@ -54,6 +54,14 @@ func regErrInternal(err error) *regError {
 	}
 }
 
+func regErrManifestInvalid(err error) *regError {
+	return &regError{
+		Status:  http.StatusBadRequest,
+		Code:    "MANIFEST_INVALID",
+		Message: err.Error(),
+	}
+}
+
 var regErrBlobUnknown = &regError{
 	Status:  http.StatusNotFound,
 	Code:    "BLOB_UNKNOWN",
@@ -76,4 +84,28 @@ var regErrDigestInvalid = &regError{
 	Status:  http.StatusBadRequest,
 	Code:    "NAME_INVALID",
 	Message: "invalid digest",
+}
+
+var regErrManifestUnknown = &regError{
+	Status:  http.StatusNotFound,
+	Code:    "MANIFEST_UNKNOWN",
+	Message: "Unknown manifest",
+}
+
+var regErrNameUnknown = &regError{
+	Status:  http.StatusNotFound,
+	Code:    "NAME_UNKNOWN",
+	Message: "Unknown name",
+}
+
+var regErrMethodUnknown = &regError{
+	Status:  http.StatusBadRequest,
+	Code:    "METHOD_UNKNOWN",
+	Message: "We don't understand your method + url",
+}
+
+var regErrDenied = &regError{
+	Status:  http.StatusForbidden,
+	Code:    "DENIED",
+	Message: "Access to the resource has been denied",
 }
