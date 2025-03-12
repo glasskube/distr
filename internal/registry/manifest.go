@@ -153,7 +153,13 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		resp.Header().Set("Content-Type", m.ContentType)
 		resp.Header().Set("Content-Length", fmt.Sprint(buf.Len()))
 		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, &buf)
+		if _, err := io.Copy(resp, &buf); err != nil {
+			return &regError{
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: err.Error(),
+			}
+		}
 		return nil
 
 	case http.MethodHead:
@@ -208,7 +214,13 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 
 	case http.MethodPut:
 		buf := &bytes.Buffer{}
-		io.Copy(buf, req.Body)
+		if _, err := io.Copy(buf, req.Body); err != nil {
+			return &regError{
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: err.Error(),
+			}
+		}
 		manifestDigest, _, _ := v1.SHA256(bytes.NewReader(buf.Bytes()))
 		mf := manifest.Manifest{
 			ContentType: req.Header.Get("Content-Type"),
@@ -405,7 +417,13 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 		msg, _ := json.Marshal(tagsToList)
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, bytes.NewReader([]byte(msg)))
+		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
+			return &regError{
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: err.Error(),
+			}
+		}
 		return nil
 	}
 
@@ -442,7 +460,13 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 		msg, _ := json.Marshal(repositoriesToList)
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, bytes.NewReader([]byte(msg)))
+		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
+			return &regError{
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: err.Error(),
+			}
+		}
 		return nil
 	}
 
@@ -558,6 +582,12 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 	resp.Header().Set("Content-Type", string(types.OCIImageIndex))
 	resp.WriteHeader(http.StatusOK)
-	io.Copy(resp, bytes.NewReader([]byte(msg)))
+	if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
+		return &regError{
+			Status:  http.StatusInternalServerError,
+			Code:    "INTERNAL_ERROR",
+			Message: err.Error(),
+		}
+	}
 	return nil
 }

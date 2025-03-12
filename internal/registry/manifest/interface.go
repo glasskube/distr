@@ -11,7 +11,12 @@ type ManifestHandler interface {
 	// ListTags
 	//
 	// Spec for implementation:
-	// https://github.com/opencontainers/distribution-spec/blob/b505e9cc53ec499edbd9c1be32298388921bb705/detail.md#tags-paginated
+	//
+	// name: Name of the target repository.
+	//
+	// n: Limit the number of entries in each response. If not present, all entries will be returned.
+	//
+	// last: Result set will include values lexically after last.
 	ListTags(ctx context.Context, name string, n int, last string) ([]string, error)
 	ListDigests(ctx context.Context, name string) ([]v1.Hash, error)
 	Get(ctx context.Context, name string, reference string) (*Manifest, error)

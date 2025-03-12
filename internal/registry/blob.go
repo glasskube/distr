@@ -189,7 +189,13 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			}
 			defer tmp.Close()
 			var buf bytes.Buffer
-			io.Copy(&buf, tmp)
+			if _, err := io.Copy(&buf, tmp); err != nil {
+				return &regError{
+					Status:  http.StatusInternalServerError,
+					Code:    "INTERNAL_ERROR",
+					Message: err.Error(),
+				}
+			}
 			size = int64(buf.Len())
 			r = &buf
 		}
@@ -236,7 +242,13 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			resp.WriteHeader(http.StatusOK)
 		}
 
-		io.Copy(resp, r)
+		if _, err := io.Copy(resp, r); err != nil {
+			return &regError{
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: err.Error(),
+			}
+		}
 		return nil
 
 	case http.MethodPost:
@@ -313,7 +325,13 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 				}
 			}
 			l := bytes.NewBuffer(b.uploads[target])
-			io.Copy(l, req.Body)
+			if _, err := io.Copy(l, req.Body); err != nil {
+				return &regError{
+					Status:  http.StatusInternalServerError,
+					Code:    "INTERNAL_ERROR",
+					Message: err.Error(),
+				}
+			}
 			b.uploads[target] = l.Bytes()
 			resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
 			resp.Header().Set("Range", fmt.Sprintf("0-%d", len(l.Bytes())-1))
@@ -332,7 +350,13 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 
 		l := &bytes.Buffer{}
-		io.Copy(l, req.Body)
+		if _, err := io.Copy(l, req.Body); err != nil {
+			return &regError{
+				Status:  http.StatusInternalServerError,
+				Code:    "INTERNAL_ERROR",
+				Message: err.Error(),
+			}
+		}
 
 		b.uploads[target] = l.Bytes()
 		resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
