@@ -52,12 +52,12 @@
       <div class="mt-4 bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
           <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-            @for (tag of artifact.tags; track tag.hash) {
+            @for (tag of artifact.versions; track tag.digest) {
               <li class="py-3 px-6 sm:py-4">
                 <div class="flex items-center gap-2">
                   <div class="flex-1 min-w-0">
                     <div class="flex flex-row gap-1">
-                      @for (label of tag.labels; track label.name) {
+                      @for (label of tag.tags; track label.name) {
                         @if (label.name === 'latest') {
                           <span
                             class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-green-400 border border-green-400">
@@ -73,7 +73,7 @@
                     </div>
                     <ul class="flex gap-3 mt-1 text-xs font-normal text-gray-500 truncate dark:text-gray-400">
                       <li>{{ tag.createdAt | relativeDate }}</li>
-                      <li><app-artifacts-hash [hash]="tag.hash"></app-artifacts-hash></li>
+                      <li><app-artifacts-hash [hash]="tag.digest"></app-artifacts-hash></li>
                     </ul>
                   </div>
                   <div class="flex flex-col items-end gap-1">

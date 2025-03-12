@@ -34,7 +34,7 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {ArtifactLicense, ArtifactLicenseSelection} from '../../services/artifact-licenses.service';
-import {Artifact, ArtifactsService, ArtifactTag, ArtifactWithTags} from '../../services/artifacts.service';
+import {Artifact, ArtifactsService, TaggedArtifactVersion, ArtifactWithTags} from '../../services/artifacts.service';
 import {ArtifactsHashComponent} from '../components';
 import {RelativeDatePipe} from '../../../util/dates';
 
@@ -124,14 +124,14 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     includeAllTags: boolean,
     itemControls: (boolean | null)[],
     artifact: ArtifactWithTags
-  ): ArtifactTag[] {
+  ): TaggedArtifactVersion[] {
     if (includeAllTags) {
       return [];
     }
     return itemControls
       .map((v, idx) => {
         if (v) {
-          return artifact?.tags?.[idx];
+          return artifact?.versions?.[idx];
         }
         return undefined;
       })
@@ -220,7 +220,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       .subscribe((selectedArtifact) => {
         artifactGroup.controls.artifact.patchValue(selectedArtifact);
         artifactGroup.controls.artifactTags.clear({emitEvent: false});
-        const allTagsOfArtifact = (selectedArtifact as ArtifactWithTags)?.tags ?? [];
+        const allTagsOfArtifact = (selectedArtifact as ArtifactWithTags)?.versions ?? [];
         const licenseItems = this.license()?.artifacts?.find((a) => a.artifact.id === selectedArtifact?.id)?.tags;
         let anySelected = false;
         for (let i = 0; i < allTagsOfArtifact.length; i++) {
