@@ -16,6 +16,7 @@ package registry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,10 +26,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/manifest"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
@@ -45,6 +49,7 @@ type listTags struct {
 type manifests struct {
 	blobHandler     blob.BlobHandler
 	manifestHandler manifest.ManifestHandler
+	authz           authz.Authorizer
 	lock            sync.RWMutex
 	log             *zap.SugaredLogger
 }
@@ -97,260 +102,39 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 
 	switch req.Method {
 	case http.MethodGet:
-		handler.lock.RLock()
-		defer handler.lock.RUnlock()
-
-		m, err := handler.manifestHandler.Get(req.Context(), repo, target)
-		if errors.Is(err, manifest.ErrNameUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "NAME_UNKNOWN",
-				Message: "Unknown name",
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
 			}
-		} else if errors.Is(err, manifest.ErrManifestUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "MANIFEST_UNKNOWN",
-				Message: "Unknown manifest",
-			}
-		} else if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
-
-		b, err := handler.blobHandler.Get(req.Context(), repo, m.BlobDigest, true)
-		if err != nil {
-			var rerr blob.RedirectError
-			if errors.As(err, &rerr) {
-				http.Redirect(resp, req, rerr.Location, rerr.Code)
-				return nil
-			}
-			// TODO: More nuanced
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "MANIFEST_UNKNOWN",
-				Message: "Unknown manifest",
-			}
-		}
-		defer b.Close()
-
-		buf := bytes.Buffer{}
-		if _, err = io.Copy(&buf, b); err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
-		}
-
-		resp.Header().Set("Docker-Content-Digest", m.BlobDigest.String())
-		resp.Header().Set("Content-Type", m.ContentType)
-		resp.Header().Set("Content-Length", fmt.Sprint(buf.Len()))
-		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, &buf)
-		return nil
-
+		return handler.handleGet(resp, req, repo, target)
 	case http.MethodHead:
-		handler.lock.RLock()
-		defer handler.lock.RUnlock()
-
-		m, err := handler.manifestHandler.Get(req.Context(), repo, target)
-		if errors.Is(err, manifest.ErrNameUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "NAME_UNKNOWN",
-				Message: "Unknown name",
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
 			}
-		} else if errors.Is(err, manifest.ErrManifestUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "MANIFEST_UNKNOWN",
-				Message: "Unknown manifest",
-			}
-		} else if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
-
-		bsh, ok := handler.blobHandler.(blob.BlobStatHandler)
-		if !ok {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: "cannot stat blob",
-			}
-		}
-
-		l, err := bsh.Stat(req.Context(), repo, m.BlobDigest)
-		if err != nil {
-			// TODO: More nuanced
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "MANIFEST_UNKNOWN",
-				Message: "Unknown manifest",
-			}
-		}
-
-		resp.Header().Set("Docker-Content-Digest", m.BlobDigest.String())
-		resp.Header().Set("Content-Type", m.ContentType)
-		resp.Header().Set("Content-Length", fmt.Sprint(l))
-		resp.WriteHeader(http.StatusOK)
-		return nil
-
+		return handler.handleHead(resp, req, repo, target)
 	case http.MethodPut:
-		buf := &bytes.Buffer{}
-		io.Copy(buf, req.Body)
-		manifestDigest, _, _ := v1.SHA256(bytes.NewReader(buf.Bytes()))
-		mf := manifest.Manifest{
-			ContentType: req.Header.Get("Content-Type"),
-			BlobDigest:  manifestDigest,
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
 		}
-
-		var blobs []v1.Hash
-
-		// If the manifest is a manifest list, check that the manifest
-		// list's constituent manifests are already uploaded.
-		// This isn't strictly required by the registry API, but some
-		// registries require this.
-		if types.MediaType(mf.ContentType).IsIndex() {
-			if err := func() *regError {
-				handler.lock.RLock()
-				defer handler.lock.RUnlock()
-
-				im, err := v1.ParseIndexManifest(bytes.NewReader(buf.Bytes()))
-				if err != nil {
-					return &regError{
-						Status:  http.StatusBadRequest,
-						Code:    "MANIFEST_INVALID",
-						Message: err.Error(),
-					}
-				}
-				for _, desc := range im.Manifests {
-					if !desc.MediaType.IsDistributable() {
-						continue
-					}
-					if desc.MediaType.IsIndex() || desc.MediaType.IsImage() {
-						if _, err := handler.manifestHandler.Get(req.Context(), repo, desc.Digest.String()); err != nil {
-							return &regError{
-								Status:  http.StatusNotFound,
-								Code:    "MANIFEST_UNKNOWN",
-								Message: fmt.Sprintf("Sub-manifest %q not found", desc.Digest),
-							}
-						}
-						blobs = append(blobs, desc.Digest)
-					} else {
-						// TODO: Probably want to do an existence check for blobs.
-						handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
-					}
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else if types.MediaType(mf.ContentType).IsImage() {
-			if err := func() *regError {
-				m, err := v1.ParseManifest(bytes.NewReader(buf.Bytes()))
-				if err != nil {
-					return &regError{
-						Status:  http.StatusBadRequest,
-						Code:    "MANIFEST_INVALID",
-						Message: err.Error(),
-					}
-				}
-				blobs = append(blobs, m.Config.Digest)
-				for _, desc := range m.Layers {
-					if !desc.MediaType.IsDistributable() {
-						continue
-					}
-					if desc.MediaType.IsLayer() {
-						// TODO: Maybe check if the layer was already uploaded
-						blobs = append(blobs, desc.Digest)
-					} else {
-						handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
-					}
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		}
-
-		handler.lock.Lock()
-		defer handler.lock.Unlock()
-
-		if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: "blob handler is not a BlobPutHandler",
-			}
-		} else {
-			if err := bph.Put(req.Context(), repo, manifestDigest, mf.ContentType, buf); err != nil {
-				return &regError{
-					Status:  http.StatusInternalServerError,
-					Code:    "INTERNAL_ERROR",
-					Message: err.Error(),
-				}
-			}
-		}
-
-		// Allow future references by target (tag) and immutable digest.
-		// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
-		err := multierr.Combine(
-			handler.manifestHandler.Put(req.Context(), repo, manifestDigest.String(), mf, blobs),
-			handler.manifestHandler.Put(req.Context(), repo, target, mf, blobs),
-		)
-		if err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
-		}
-
-		resp.Header().Set("Docker-Content-Digest", manifestDigest.String())
-		resp.WriteHeader(http.StatusCreated)
-		return nil
-
+		return handler.handlePut(resp, req, repo, target)
 	case http.MethodDelete:
-		handler.lock.Lock()
-		defer handler.lock.Unlock()
-
-		if err := handler.manifestHandler.Delete(req.Context(), repo, target); errors.Is(err, manifest.ErrNameUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "NAME_UNKNOWN",
-				Message: "Unknown name",
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
 			}
-		} else if errors.Is(err, manifest.ErrManifestUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "MANIFEST_UNKNOWN",
-				Message: "Unknown manifest",
-			}
-		} else if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
-
-		resp.WriteHeader(http.StatusAccepted)
-		return nil
-
+		return handler.handleDelete(resp, req, repo, target)
 	default:
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "METHOD_UNKNOWN",
-			Message: "We don't understand your method + url",
-		}
+		return regErrMethodUnknown
 	}
 }
 
@@ -360,6 +144,12 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 	repo := strings.Join(elem[1:len(elem)-2], "/")
 
 	if req.Method == http.MethodGet {
+		if err := m.authz.Authorize(req.Context(), repo, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		m.lock.RLock()
 		defer m.lock.RUnlock()
 
@@ -379,17 +169,9 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 
 		references, err := m.manifestHandler.ListTags(req.Context(), repo, n, last)
 		if errors.Is(err, manifest.ErrNameUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "NAME_UNKNOWN",
-				Message: "Unknown name",
-			}
+			return regErrNameUnknown
 		} else if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		tagsToList := listTags{
@@ -400,15 +182,13 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 		msg, _ := json.Marshal(tagsToList)
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, bytes.NewReader([]byte(msg)))
+		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
+			return regErrInternal(err)
+		}
 		return nil
 	}
 
-	return &regError{
-		Status:  http.StatusBadRequest,
-		Code:    "METHOD_UNKNOWN",
-		Message: "We don't understand your method + url",
-	}
+	return regErrMethodUnknown
 }
 
 func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *regError {
@@ -425,11 +205,7 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 
 		repos, err := m.manifestHandler.List(req.Context(), n)
 		if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		repositoriesToList := catalog{Repos: repos}
@@ -437,32 +213,33 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 		msg, _ := json.Marshal(repositoriesToList)
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
-		io.Copy(resp, bytes.NewReader([]byte(msg)))
+		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
+			return regErrInternal(err)
+		}
 		return nil
 	}
 
-	return &regError{
-		Status:  http.StatusBadRequest,
-		Code:    "METHOD_UNKNOWN",
-		Message: "We don't understand your method + url",
-	}
+	return regErrMethodUnknown
 }
 
 // TODO: implement handling of artifactType querystring
 func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request) *regError {
 	// Ensure this is a GET request
 	if req.Method != http.MethodGet {
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "METHOD_UNKNOWN",
-			Message: "We don't understand your method + url",
-		}
+		return regErrMethodUnknown
 	}
 
 	elem := strings.Split(req.URL.Path, "/")
 	elem = elem[1:]
 	target := elem[len(elem)-1]
 	repo := strings.Join(elem[1:len(elem)-2], "/")
+
+	if err := m.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+		if errors.Is(err, authz.ErrAccessDenied) {
+			return regErrDenied
+		}
+		return regErrInternal(err)
+	}
 
 	// Validate that incoming target is a valid digest
 	if _, err := v1.NewHash(target); err != nil {
@@ -478,17 +255,9 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 
 	digests, err := m.manifestHandler.ListDigests(req.Context(), repo)
 	if errors.Is(err, manifest.ErrNameUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "NAME_UNKNOWN",
-			Message: "Unknown name",
-		}
+		return regErrNameUnknown
 	} else if err != nil {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	im := v1.IndexManifest{
@@ -499,11 +268,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	for _, reference := range digests {
 		manifest, err := m.manifestHandler.Get(req.Context(), repo, reference.String())
 		if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		b, err := m.blobHandler.Get(req.Context(), repo, manifest.BlobDigest, false)
@@ -517,11 +282,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 		defer b.Close()
 		var buf bytes.Buffer
 		if _, err := io.Copy(&buf, b); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		var refPointer struct {
@@ -553,6 +314,196 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 	resp.Header().Set("Content-Type", string(types.OCIImageIndex))
 	resp.WriteHeader(http.StatusOK)
-	io.Copy(resp, bytes.NewReader([]byte(msg)))
+	if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
+		return regErrInternal(err)
+	}
+	return nil
+}
+
+func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
+	handler.lock.RLock()
+	defer handler.lock.RUnlock()
+
+	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
+	if errors.Is(err, manifest.ErrNameUnknown) {
+		return regErrNameUnknown
+	} else if errors.Is(err, manifest.ErrManifestUnknown) {
+		return regErrManifestUnknown
+	} else if err != nil {
+		return regErrInternal(err)
+	}
+
+	b, err := handler.blobHandler.Get(req.Context(), repo, m.BlobDigest, true)
+	if err != nil {
+		var rerr blob.RedirectError
+		if errors.As(err, &rerr) {
+			http.Redirect(resp, req, rerr.Location, rerr.Code)
+			return nil
+		}
+		// TODO: More nuanced
+		return regErrManifestUnknown
+	}
+	defer b.Close()
+
+	buf := bytes.Buffer{}
+	if _, err = io.Copy(&buf, b); err != nil {
+		return regErrInternal(err)
+	}
+
+	resp.Header().Set("Docker-Content-Digest", m.BlobDigest.String())
+	resp.Header().Set("Content-Type", m.ContentType)
+	resp.Header().Set("Content-Length", fmt.Sprint(buf.Len()))
+	resp.WriteHeader(http.StatusOK)
+	if _, err := io.Copy(resp, &buf); err != nil {
+		return regErrInternal(err)
+	}
+	return nil
+}
+
+func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
+	handler.lock.RLock()
+	defer handler.lock.RUnlock()
+
+	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
+	if errors.Is(err, manifest.ErrNameUnknown) {
+		return regErrNameUnknown
+	} else if errors.Is(err, manifest.ErrManifestUnknown) {
+		return regErrManifestUnknown
+	} else if err != nil {
+		return regErrInternal(err)
+	}
+
+	bsh, ok := handler.blobHandler.(blob.BlobStatHandler)
+	if !ok {
+		return regErrInternal(errors.New("cannot stat blob"))
+	}
+
+	l, err := bsh.Stat(req.Context(), repo, m.BlobDigest)
+	if err != nil {
+		// TODO: More nuanced
+		return regErrManifestUnknown
+	}
+
+	resp.Header().Set("Docker-Content-Digest", m.BlobDigest.String())
+	resp.Header().Set("Content-Type", m.ContentType)
+	resp.Header().Set("Content-Length", fmt.Sprint(l))
+	resp.WriteHeader(http.StatusOK)
+	return nil
+}
+
+func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
+	buf := &bytes.Buffer{}
+	if _, err := io.Copy(buf, req.Body); err != nil {
+		return regErrInternal(err)
+	}
+	manifestDigest, _, _ := v1.SHA256(bytes.NewReader(buf.Bytes()))
+	mf := manifest.Manifest{
+		ContentType: req.Header.Get("Content-Type"),
+		BlobDigest:  manifestDigest,
+	}
+
+	var blobs []v1.Hash
+
+	// If the manifest is a manifest list, check that the manifest
+	// list's constituent manifests are already uploaded.
+	// This isn't strictly required by the registry API, but some
+	// registries require this.
+	if types.MediaType(mf.ContentType).IsIndex() {
+		if err := func() *regError {
+			handler.lock.RLock()
+			defer handler.lock.RUnlock()
+
+			im, err := v1.ParseIndexManifest(bytes.NewReader(buf.Bytes()))
+			if err != nil {
+				return regErrManifestInvalid(err)
+			}
+			for _, desc := range im.Manifests {
+				if !desc.MediaType.IsDistributable() {
+					continue
+				}
+				if desc.MediaType.IsIndex() || desc.MediaType.IsImage() {
+					if _, err := handler.manifestHandler.Get(req.Context(), repo, desc.Digest.String()); err != nil {
+
+						return &regError{
+							Status:  http.StatusNotFound,
+							Code:    "MANIFEST_UNKNOWN",
+							Message: fmt.Sprintf("Sub-manifest %q not found", desc.Digest),
+						}
+					}
+					blobs = append(blobs, desc.Digest)
+				} else {
+					// TODO: Probably want to do an existence check for blobs.
+					handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
+				}
+			}
+			return nil
+		}(); err != nil {
+			return err
+		}
+	} else if types.MediaType(mf.ContentType).IsImage() {
+		if err := func() *regError {
+			m, err := v1.ParseManifest(bytes.NewReader(buf.Bytes()))
+			if err != nil {
+				return regErrManifestInvalid(err)
+			}
+			blobs = append(blobs, m.Config.Digest)
+			for _, desc := range m.Layers {
+				if !desc.MediaType.IsDistributable() {
+					continue
+				}
+				if desc.MediaType.IsLayer() {
+					// TODO: Maybe check if the layer was already uploaded
+					blobs = append(blobs, desc.Digest)
+				} else {
+					handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
+				}
+			}
+			return nil
+		}(); err != nil {
+			return err
+		}
+	}
+
+	handler.lock.Lock()
+	defer handler.lock.Unlock()
+
+	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
+		return regErrInternal(errors.New("blob handler is not a BlobPutHandler"))
+	} else {
+		if err := bph.Put(req.Context(), repo, manifestDigest, mf.ContentType, buf); err != nil {
+			return regErrInternal(err)
+		}
+	}
+
+	// Allow future references by target (tag) and immutable digest.
+	// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
+	err := db.RunTx(req.Context(), pgx.TxOptions{}, func(ctx context.Context) error {
+		return multierr.Combine(
+			handler.manifestHandler.Put(req.Context(), repo, manifestDigest.String(), mf, blobs),
+			handler.manifestHandler.Put(req.Context(), repo, target, mf, blobs),
+		)
+	})
+	if err != nil {
+		return regErrInternal(err)
+	}
+
+	resp.Header().Set("Docker-Content-Digest", manifestDigest.String())
+	resp.WriteHeader(http.StatusCreated)
+	return nil
+}
+
+func (handler *manifests) handleDelete(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
+	handler.lock.Lock()
+	defer handler.lock.Unlock()
+
+	if err := handler.manifestHandler.Delete(req.Context(), repo, target); errors.Is(err, manifest.ErrNameUnknown) {
+		return regErrNameUnknown
+	} else if errors.Is(err, manifest.ErrManifestUnknown) {
+		return regErrManifestUnknown
+	} else if err != nil {
+		regErrInternal(err)
+	}
+
+	resp.WriteHeader(http.StatusAccepted)
 	return nil
 }
