@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/verify"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -56,6 +57,7 @@ func isBlob(req *http.Request) bool {
 // blobs
 type blobs struct {
 	blobHandler blob.BlobHandler
+	authz       authz.Authorizer
 
 	// Each upload gets a unique id that writes occur to until finalized.
 	uploads map[string][]byte
@@ -82,40 +84,72 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 	digest := req.URL.Query().Get("digest")
 	contentRange := req.Header.Get("Content-Range")
 	rangeHeader := req.Header.Get("Range")
-
 	repo := req.URL.Host + path.Join(elem[1:len(elem)-2]...)
+
+	targetHash, err := v1.NewHash(target)
+	if err != nil {
+		return regErrDigestInvalid
+	}
 
 	switch req.Method {
 	case http.MethodHead:
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return b.handleHead(resp, req, repo, target)
 	case http.MethodGet:
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return b.handleGet(resp, req, repo, target, rangeHeader)
 	case http.MethodPost:
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return b.handlePost(resp, req, repo, target, digest, elem)
 	case http.MethodPatch:
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return b.handlePatch(resp, req, target, service, contentRange, elem)
 	case http.MethodPut:
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return b.handlePut(resp, req, service, repo, target, digest)
 	case http.MethodDelete:
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return b.handleDelete(resp, req, repo, target)
 
 	default:
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "METHOD_UNKNOWN",
-			Message: "We don't understand your method + url",
-		}
+		return regErrMethodUnknown
 	}
 }
 
 func (b *blobs) handleHead(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
 	h, err := v1.NewHash(target)
 	if err != nil {
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "NAME_INVALID",
-			Message: "invalid digest",
-		}
+		return regErrDigestInvalid
 	}
 
 	var size int64
@@ -159,11 +193,7 @@ func (b *blobs) handleHead(resp http.ResponseWriter, req *http.Request, repo, ta
 func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, target, rangeHeader string) *regError {
 	h, err := v1.NewHash(target)
 	if err != nil {
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "NAME_INVALID",
-			Message: "invalid digest",
-		}
+		return regErrDigestInvalid
 	}
 
 	var size int64
@@ -213,11 +243,7 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 		defer tmp.Close()
 		var buf bytes.Buffer
 		if _, err := io.Copy(&buf, tmp); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 		size = int64(buf.Len())
 		r = &buf
@@ -266,11 +292,7 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 	}
 
 	if _, err := io.Copy(resp, r); err != nil {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 	return nil
 }
@@ -360,11 +382,7 @@ func (b *blobs) handlePatch(
 		}
 		l := bytes.NewBuffer(b.uploads[target])
 		if _, err := io.Copy(l, req.Body); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 		b.uploads[target] = l.Bytes()
 		resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
@@ -385,11 +403,7 @@ func (b *blobs) handlePatch(
 
 	l := &bytes.Buffer{}
 	if _, err := io.Copy(l, req.Body); err != nil {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	b.uploads[target] = l.Bytes()
@@ -426,11 +440,7 @@ func (b *blobs) handlePut(resp http.ResponseWriter, req *http.Request, service, 
 
 	h, err := v1.NewHash(digest)
 	if err != nil {
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "NAME_INVALID",
-			Message: "invalid digest",
-		}
+		return regErrDigestInvalid
 	}
 
 	defer req.Body.Close()
@@ -469,11 +479,7 @@ func (b *blobs) handleDelete(resp http.ResponseWriter, req *http.Request, repo, 
 
 	h, err := v1.NewHash(target)
 	if err != nil {
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "NAME_INVALID",
-			Message: "invalid digest",
-		}
+		return regErrDigestInvalid
 	}
 	if err := bdh.Delete(req.Context(), repo, h); err != nil {
 		return regErrInternal(err)

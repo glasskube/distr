@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
-	"strings"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/registry/manifest"
+	"github.com/glasskube/distr/internal/registry/name"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -29,10 +28,10 @@ func (h *handler) Delete(ctx context.Context, name string, reference string) err
 }
 
 // Get implements manifest.ManifestHandler.
-func (h *handler) Get(ctx context.Context, name string, reference string) (*manifest.Manifest, error) {
-	if orgName, artifactName, err := splitName(name); err != nil {
+func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*manifest.Manifest, error) {
+	if name, err := name.Parse(nameStr); err != nil {
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
-	} else if av, err := db.GetArtifactVersion(ctx, orgName, artifactName, reference); err != nil {
+	} else if av, err := db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 		}
@@ -61,7 +60,8 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	result := make([]string, len(artifacts))
 	for i, artifact := range artifacts {
 		// TODO: use org slug instead
-		result[i] = combineName(artifact.OrganizationID.String(), artifact.Name)
+		name := name.Name{OrgName: artifact.OrganizationID.String(), ArtifactName: artifact.Name}
+		result[i] = name.String()
 	}
 	// TODO: move to DB
 	if 0 < n && n < len(result) {
@@ -71,17 +71,17 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 }
 
 // ListDigests implements manifest.ManifestHandler.
-func (h *handler) ListDigests(ctx context.Context, name string) ([]v1.Hash, error) {
-	if orgName, artifactName, err := splitName(name); err != nil {
+func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]v1.Hash, error) {
+	if name, err := name.Parse(nameStr); err != nil {
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var versions []types.ArtifactVersion
 		var err error
 		if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			versions, err = db.GetLicensedArtifactVersions(ctx, orgName, artifactName, auth.CurrentUserID())
+			versions, err = db.GetLicensedArtifactVersions(ctx, name.OrgName, name.ArtifactName, auth.CurrentUserID())
 		} else {
-			versions, err = db.GetArtifactVersions(ctx, orgName, artifactName)
+			versions, err = db.GetArtifactVersions(ctx, name.OrgName, name.ArtifactName)
 		}
 		if err != nil {
 			return nil, err
@@ -99,17 +99,17 @@ func (h *handler) ListDigests(ctx context.Context, name string) ([]v1.Hash, erro
 }
 
 // ListTags implements manifest.ManifestHandler.
-func (h *handler) ListTags(ctx context.Context, name string, n int, last string) ([]string, error) {
-	if orgName, artifactName, err := splitName(name); err != nil {
+func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last string) ([]string, error) {
+	if name, err := name.Parse(nameStr); err != nil {
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var versions []types.ArtifactVersion
 		var err error
 		if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			versions, err = db.GetLicensedArtifactVersions(ctx, orgName, artifactName, auth.CurrentUserID())
+			versions, err = db.GetLicensedArtifactVersions(ctx, name.OrgName, name.ArtifactName, auth.CurrentUserID())
 		} else {
-			versions, err = db.GetArtifactVersions(ctx, orgName, artifactName)
+			versions, err = db.GetArtifactVersions(ctx, name.OrgName, name.ArtifactName)
 		}
 		if err != nil {
 			return nil, err
@@ -134,17 +134,17 @@ func (h *handler) ListTags(ctx context.Context, name string, n int, last string)
 // Put implements manifest.ManifestHandler.
 func (h *handler) Put(
 	ctx context.Context,
-	name, reference string,
+	nameStr, reference string,
 	manifest manifest.Manifest,
 	blobs []v1.Hash,
 ) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
-	orgName, artifactName, err := splitName(name)
+	name, err := name.Parse(nameStr)
 	if err != nil {
 		return err
 	}
 	return db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-		artifact, err := db.GetOrCreateArtifact(ctx, *auth.CurrentOrgID(), artifactName)
+		artifact, err := db.GetOrCreateArtifact(ctx, *auth.CurrentOrgID(), name.ArtifactName)
 		if err != nil {
 			return err
 		}
@@ -157,7 +157,7 @@ func (h *handler) Put(
 			ArtifactID:             artifact.ID,
 		}
 
-		existingVersion, err := db.GetArtifactVersion(ctx, orgName, artifactName, reference)
+		existingVersion, err := db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference)
 		if err != nil {
 			if !errors.Is(err, apierrors.ErrNotFound) {
 				return err
@@ -183,16 +183,4 @@ func (h *handler) Put(
 		}
 		return nil
 	})
-}
-
-func splitName(name string) (string, string, error) {
-	if parts := strings.SplitN(name, "/", 2); len(parts) != 2 {
-		return "", "", fmt.Errorf("is not a valid artifact name: %v", name)
-	} else {
-		return parts[0], parts[1], nil
-	}
-}
-
-func combineName(orgName, artifactName string) string {
-	return path.Join(orgName, artifactName)
 }

@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/manifest"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -48,6 +49,7 @@ type listTags struct {
 type manifests struct {
 	blobHandler     blob.BlobHandler
 	manifestHandler manifest.ManifestHandler
+	authz           authz.Authorizer
 	lock            sync.RWMutex
 	log             *zap.SugaredLogger
 }
@@ -100,19 +102,39 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 
 	switch req.Method {
 	case http.MethodGet:
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return handler.handleGet(resp, req, repo, target)
 	case http.MethodHead:
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return handler.handleHead(resp, req, repo, target)
 	case http.MethodPut:
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return handler.handlePut(resp, req, repo, target)
 	case http.MethodDelete:
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		return handler.handleDelete(resp, req, repo, target)
 	default:
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "METHOD_UNKNOWN",
-			Message: "We don't understand your method + url",
-		}
+		return regErrMethodUnknown
 	}
 }
 
@@ -122,6 +144,12 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 	repo := strings.Join(elem[1:len(elem)-2], "/")
 
 	if req.Method == http.MethodGet {
+		if err := m.authz.Authorize(req.Context(), repo, authz.ActionRead); err != nil {
+			if errors.Is(err, authz.ErrAccessDenied) {
+				return regErrDenied
+			}
+			return regErrInternal(err)
+		}
 		m.lock.RLock()
 		defer m.lock.RUnlock()
 
@@ -141,17 +169,9 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 
 		references, err := m.manifestHandler.ListTags(req.Context(), repo, n, last)
 		if errors.Is(err, manifest.ErrNameUnknown) {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "NAME_UNKNOWN",
-				Message: "Unknown name",
-			}
+			return regErrNameUnknown
 		} else if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		tagsToList := listTags{
@@ -163,20 +183,12 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 		return nil
 	}
 
-	return &regError{
-		Status:  http.StatusBadRequest,
-		Code:    "METHOD_UNKNOWN",
-		Message: "We don't understand your method + url",
-	}
+	return regErrMethodUnknown
 }
 
 func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *regError {
@@ -193,11 +205,7 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 
 		repos, err := m.manifestHandler.List(req.Context(), n)
 		if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		repositoriesToList := catalog{Repos: repos}
@@ -206,37 +214,32 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 		return nil
 	}
 
-	return &regError{
-		Status:  http.StatusBadRequest,
-		Code:    "METHOD_UNKNOWN",
-		Message: "We don't understand your method + url",
-	}
+	return regErrMethodUnknown
 }
 
 // TODO: implement handling of artifactType querystring
 func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request) *regError {
 	// Ensure this is a GET request
 	if req.Method != http.MethodGet {
-		return &regError{
-			Status:  http.StatusBadRequest,
-			Code:    "METHOD_UNKNOWN",
-			Message: "We don't understand your method + url",
-		}
+		return regErrMethodUnknown
 	}
 
 	elem := strings.Split(req.URL.Path, "/")
 	elem = elem[1:]
 	target := elem[len(elem)-1]
 	repo := strings.Join(elem[1:len(elem)-2], "/")
+
+	if err := m.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+		if errors.Is(err, authz.ErrAccessDenied) {
+			return regErrDenied
+		}
+		return regErrInternal(err)
+	}
 
 	// Validate that incoming target is a valid digest
 	if _, err := v1.NewHash(target); err != nil {
@@ -252,17 +255,9 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 
 	digests, err := m.manifestHandler.ListDigests(req.Context(), repo)
 	if errors.Is(err, manifest.ErrNameUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "NAME_UNKNOWN",
-			Message: "Unknown name",
-		}
+		return regErrNameUnknown
 	} else if err != nil {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	im := v1.IndexManifest{
@@ -273,11 +268,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	for _, reference := range digests {
 		manifest, err := m.manifestHandler.Get(req.Context(), repo, reference.String())
 		if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		b, err := m.blobHandler.Get(req.Context(), repo, manifest.BlobDigest, false)
@@ -291,11 +282,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 		defer b.Close()
 		var buf bytes.Buffer
 		if _, err := io.Copy(&buf, b); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 
 		var refPointer struct {
@@ -328,11 +315,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	resp.Header().Set("Content-Type", string(types.OCIImageIndex))
 	resp.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 	return nil
 }
@@ -343,23 +326,11 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 
 	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
 	if errors.Is(err, manifest.ErrNameUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "NAME_UNKNOWN",
-			Message: "Unknown name",
-		}
+		return regErrNameUnknown
 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "MANIFEST_UNKNOWN",
-			Message: "Unknown manifest",
-		}
+		return regErrManifestUnknown
 	} else if err != nil {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	b, err := handler.blobHandler.Get(req.Context(), repo, m.BlobDigest, true)
@@ -370,21 +341,13 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 			return nil
 		}
 		// TODO: More nuanced
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "MANIFEST_UNKNOWN",
-			Message: "Unknown manifest",
-		}
+		return regErrManifestUnknown
 	}
 	defer b.Close()
 
 	buf := bytes.Buffer{}
 	if _, err = io.Copy(&buf, b); err != nil {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	resp.Header().Set("Docker-Content-Digest", m.BlobDigest.String())
@@ -392,11 +355,7 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 	resp.Header().Set("Content-Length", fmt.Sprint(buf.Len()))
 	resp.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(resp, &buf); err != nil {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 	return nil
 }
@@ -407,42 +366,22 @@ func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request
 
 	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
 	if errors.Is(err, manifest.ErrNameUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "NAME_UNKNOWN",
-			Message: "Unknown name",
-		}
+		return regErrNameUnknown
 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "MANIFEST_UNKNOWN",
-			Message: "Unknown manifest",
-		}
+		return regErrManifestUnknown
 	} else if err != nil {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	bsh, ok := handler.blobHandler.(blob.BlobStatHandler)
 	if !ok {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: "cannot stat blob",
-		}
+		return regErrInternal(errors.New("cannot stat blob"))
 	}
 
 	l, err := bsh.Stat(req.Context(), repo, m.BlobDigest)
 	if err != nil {
 		// TODO: More nuanced
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "MANIFEST_UNKNOWN",
-			Message: "Unknown manifest",
-		}
+		return regErrManifestUnknown
 	}
 
 	resp.Header().Set("Docker-Content-Digest", m.BlobDigest.String())
@@ -455,11 +394,7 @@ func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request
 func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
 	buf := &bytes.Buffer{}
 	if _, err := io.Copy(buf, req.Body); err != nil {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 	manifestDigest, _, _ := v1.SHA256(bytes.NewReader(buf.Bytes()))
 	mf := manifest.Manifest{
@@ -480,11 +415,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 
 			im, err := v1.ParseIndexManifest(bytes.NewReader(buf.Bytes()))
 			if err != nil {
-				return &regError{
-					Status:  http.StatusBadRequest,
-					Code:    "MANIFEST_INVALID",
-					Message: err.Error(),
-				}
+				return regErrManifestInvalid(err)
 			}
 			for _, desc := range im.Manifests {
 				if !desc.MediaType.IsDistributable() {
@@ -492,6 +423,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 				}
 				if desc.MediaType.IsIndex() || desc.MediaType.IsImage() {
 					if _, err := handler.manifestHandler.Get(req.Context(), repo, desc.Digest.String()); err != nil {
+
 						return &regError{
 							Status:  http.StatusNotFound,
 							Code:    "MANIFEST_UNKNOWN",
@@ -512,11 +444,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		if err := func() *regError {
 			m, err := v1.ParseManifest(bytes.NewReader(buf.Bytes()))
 			if err != nil {
-				return &regError{
-					Status:  http.StatusBadRequest,
-					Code:    "MANIFEST_INVALID",
-					Message: err.Error(),
-				}
+				return regErrManifestInvalid(err)
 			}
 			blobs = append(blobs, m.Config.Digest)
 			for _, desc := range m.Layers {
@@ -540,18 +468,10 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	defer handler.lock.Unlock()
 
 	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: "blob handler is not a BlobPutHandler",
-		}
+		return regErrInternal(errors.New("blob handler is not a BlobPutHandler"))
 	} else {
 		if err := bph.Put(req.Context(), repo, manifestDigest, mf.ContentType, buf); err != nil {
-			return &regError{
-				Status:  http.StatusInternalServerError,
-				Code:    "INTERNAL_ERROR",
-				Message: err.Error(),
-			}
+			return regErrInternal(err)
 		}
 	}
 
@@ -564,11 +484,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		)
 	})
 	if err != nil {
-		return &regError{
-			Status:  http.StatusInternalServerError,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		return regErrInternal(err)
 	}
 
 	resp.Header().Set("Docker-Content-Digest", manifestDigest.String())
@@ -581,23 +497,11 @@ func (handler *manifests) handleDelete(resp http.ResponseWriter, req *http.Reque
 	defer handler.lock.Unlock()
 
 	if err := handler.manifestHandler.Delete(req.Context(), repo, target); errors.Is(err, manifest.ErrNameUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "NAME_UNKNOWN",
-			Message: "Unknown name",
-		}
+		return regErrNameUnknown
 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "MANIFEST_UNKNOWN",
-			Message: "Unknown manifest",
-		}
+		return regErrManifestUnknown
 	} else if err != nil {
-		return &regError{
-			Status:  http.StatusNotFound,
-			Code:    "INTERNAL_ERROR",
-			Message: err.Error(),
-		}
+		regErrInternal(err)
 	}
 
 	resp.WriteHeader(http.StatusAccepted)
