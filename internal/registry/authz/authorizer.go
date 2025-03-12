@@ -3,6 +3,7 @@ package authz
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/db"
@@ -61,8 +62,16 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 	} else if org.ID.String() != name.OrgName {
 		return ErrAccessDenied
 	} else if action == ActionRead && *auth.CurrentUserRole() != types.UserRoleVendor {
-		// TODO: check license
-		return nil
+		versions, err := db.GetLicensedArtifactVersions(ctx, name.OrgName, name.ArtifactName, auth.CurrentUserID())
+		if err != nil {
+			return err
+		}
+		if slices.ContainsFunc(versions, func(v types.ArtifactVersion) bool { return v.Name == reference }) {
+			return ErrAccessDenied
+		}
+		// We might be serving a sub-manifest referenced by an index manifest, in which case the license might not be
+		// for this manifest but for the index!
+		// TODO: Check if there is a package version part for a version that would be licensed (similar to AuthorizeBlob)
 	}
 	return nil
 }
