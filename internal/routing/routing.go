@@ -58,6 +58,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)
+			r.Route("/artifacts", handlers.ArtifactsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
 			r.Route("/application-licenses", handlers.ApplicationLicensesRouter)
