@@ -4,14 +4,7 @@ import (
 	"context"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
-	"github.com/google/uuid"
 )
-
-type ManifestAuthChecker interface {
-	Check(ctx context.Context, name string, userID, orgID uuid.UUID, action string) error
-	CheckReference(ctx context.Context, name string, reference string, userID, orgID uuid.UUID, action string) error
-	CheckBlob(ctx context.Context, digest v1.Hash, userID, orgID uuid.UUID, action string) error
-}
 
 type ManifestHandler interface {
 	List(ctx context.Context, n int) ([]string, error)

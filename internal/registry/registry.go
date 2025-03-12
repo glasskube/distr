@@ -35,7 +35,7 @@ import (
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/blob/s3"
 	"github.com/glasskube/distr/internal/registry/manifest"
-	"github.com/glasskube/distr/internal/registry/manifest/inmemory"
+	"github.com/glasskube/distr/internal/registry/manifest/db"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -117,16 +117,16 @@ func New(opts ...Option) http.Handler {
 	return h
 }
 
-func NewDefault(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Handler {
+func NewDefault(logger *zap.Logger, pool *pgxpool.Pool, mailer mail.Mailer) http.Handler {
 	return New(
 		WithLogger(logger),
 		WithBlobHandler(s3.NewBlobHandler(true)),
-		WithManifestHandler(inmemory.NewManifestHandler()),
+		WithManifestHandler(db.NewManifestHandler()),
 		WithMiddlewares(
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,
-			middleware.ContextInjectorMiddleware(db, mailer),
+			middleware.ContextInjectorMiddleware(pool, mailer),
 			auth.ArtifactsAuthentication.Middleware,
 		),
 	)

@@ -15,7 +15,18 @@ import (
 )
 
 const (
-	artifactOutputExpr = `a.id, a.created_at, a.organization_id, a.name `
+	artifactOutputExpr        = `a.id, a.created_at, a.organization_id, a.name `
+	artifactVersionOutputExpr = `
+		v.id,
+		v.created_at,
+		v.created_by_useraccount_id,
+		v.updated_at,
+		v.updated_by_useraccount_id,
+		v.name,
+		v.manifest_blob_digest,
+		v.manifest_content_type,
+		v.artifact_id
+	`
 )
 
 func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact, error) {
@@ -46,7 +57,24 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 		} else {
 			return artifacts, nil
 		}*/
-	return nil, nil
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT `+artifactOutputExpr+`
+		FROM Artifact a
+		WHERE a.organization_id = @orgId
+		ORDER BY a.name ASC
+		`,
+		pgx.NamedArgs{"orgId": orgID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query Artifact: %w", err)
+	}
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Artifact])
+	if err != nil {
+		return nil, fmt.Errorf("could not query Artifact: %w", err)
+	}
+	return result, nil
 }
 
 func GetArtifactsByLicenseOwnerID(ctx context.Context, ownerID uuid.UUID) ([]types.Artifact, error) {
@@ -54,7 +82,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, ownerID uuid.UUID) ([]typ
 	return nil, nil
 }
 
-func GetOrCreateArtifact(ctx context.Context, org *types.Organization, artifactName string) (*types.Artifact, error) {
+func GetOrCreateArtifact(ctx context.Context, orgID uuid.UUID, artifactName string) (*types.Artifact, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -63,7 +91,7 @@ func GetOrCreateArtifact(ctx context.Context, org *types.Organization, artifactN
 			WHERE a.name = @name AND a.organization_id = @orgId`,
 		pgx.NamedArgs{
 			"name":  artifactName,
-			"orgId": org.ID,
+			"orgId": orgID,
 		},
 	)
 	if err != nil {
@@ -71,7 +99,7 @@ func GetOrCreateArtifact(ctx context.Context, org *types.Organization, artifactN
 	}
 	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Artifact]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			artifact := &types.Artifact{Name: artifactName, OrganizationID: org.ID}
+			artifact := &types.Artifact{Name: artifactName, OrganizationID: orgID}
 			err = CreateArtifact(ctx, artifact)
 			return artifact, err
 		}
@@ -104,6 +132,63 @@ func CreateArtifact(ctx context.Context, artifact *types.Artifact) error {
 		*artifact = result
 		return nil
 	}
+}
+
+func GetArtifactVersions(ctx context.Context, orgName, name string) ([]types.ArtifactVersion, error) {
+	db := internalctx.GetDb(ctx)
+	// TODO: Switch to org slug when implemented
+	rows, err := db.Query(
+		ctx,
+		`SELECT`+artifactVersionOutputExpr+`
+		FROM Artifact a
+		LEFT JOIN ArtifactVersion v ON a.id = v.artifact_id
+		WHERE a.organization_id = @orgName
+			AND a.name = @name
+		ORDER BY v.name ASC`,
+		pgx.NamedArgs{"orgName": orgName, "name": name},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	return result, nil
+}
+
+func GetLicensedArtifactVersions(
+	ctx context.Context,
+	orgName, name string,
+	userID uuid.UUID,
+) ([]types.ArtifactVersion, error) {
+	panic("TODO: not implemented")
+}
+
+func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
+	db := internalctx.GetDb(ctx)
+	// TODO: Switch to org slug when implemented
+	rows, err := db.Query(
+		ctx,
+		`SELECT`+artifactVersionOutputExpr+`
+		FROM Artifact a
+		LEFT JOIN ArtifactVersion v ON a.id = v.artifact_id
+		WHERE a.organization_id = @orgName
+			AND a.name = @name
+			AND v.name = @reference`,
+		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	return &result, nil
 }
 
 func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error {
@@ -140,11 +225,18 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 
 func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPart) error {
 	db := internalctx.GetDb(ctx)
+	log := internalctx.GetLogger(ctx)
+	log.Sugar().Infof("create %v", avp)
 	if rows, err := db.Query(
 		ctx,
 		`INSERT INTO ArtifactVersionPart AS avp (
-         	artifact_version_id, artifact_blob_digest
-         ) VALUES (@versionId, @blobDigest) RETURNING *`,
+        	artifact_version_id, artifact_blob_digest
+        ) VALUES (@versionId, @blobDigest)
+		ON CONFLICT (artifact_version_id, artifact_blob_digest)
+			DO UPDATE SET
+				artifact_version_id = @versionId,
+				artifact_blob_digest = @blobDigest
+		RETURNING *`,
 		pgx.NamedArgs{
 			"versionId":  avp.ArtifactVersionID,
 			"blobDigest": avp.ArtifactBlobDigest,

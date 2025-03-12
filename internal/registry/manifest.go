@@ -16,6 +16,7 @@ package registry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,10 +26,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/manifest"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
@@ -302,10 +305,12 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 
 		// Allow future references by target (tag) and immutable digest.
 		// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
-		err := multierr.Combine(
-			handler.manifestHandler.Put(req.Context(), repo, manifestDigest.String(), mf, blobs),
-			handler.manifestHandler.Put(req.Context(), repo, target, mf, blobs),
-		)
+		err := db.RunTx(req.Context(), pgx.TxOptions{}, func(ctx context.Context) error {
+			return multierr.Combine(
+				handler.manifestHandler.Put(req.Context(), repo, manifestDigest.String(), mf, blobs),
+				handler.manifestHandler.Put(req.Context(), repo, target, mf, blobs),
+			)
+		})
 		if err != nil {
 			return &regError{
 				Status:  http.StatusInternalServerError,
