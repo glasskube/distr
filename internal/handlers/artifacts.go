@@ -26,7 +26,7 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 	var artifacts []types.ArtifactWithTaggedVersion
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer {
-		artifacts, err = nil, nil // db.GetArtifactsByLicenseOwnerID(ctx, auth.CurrentUserID())
+		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), auth.CurrentUserID())
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
 	}

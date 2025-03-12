@@ -23,21 +23,23 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 	if rows, err := db.Query(ctx, `
 			SELECT a.id, a.created_at, a.organization_id, a.name,
 				coalesce((
-					select array_agg(row(
+					SELECT array_agg(row(
 						av.id, av.created_at, av.manifest_blob_digest,
-						coalesce((SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
-								  FROM ArtifactVersion avt
-								  WHERE avt.manifest_blob_digest = av.manifest_blob_digest
-                            		AND avt.artifact_id = av.artifact_id
-									AND avt.name NOT LIKE 'sha256:%'), ARRAY []::RECORD[])
+						coalesce((
+							SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
+							FROM ArtifactVersion avt
+							WHERE avt.manifest_blob_digest = av.manifest_blob_digest
+							AND avt.artifact_id = av.artifact_id
+							AND avt.name NOT LIKE 'sha256:%'), ARRAY []::RECORD[])
 						))
-					from ArtifactVersion av
-					where av.artifact_id = a.id AND av.name LIKE 'sha256:%'), ARRAY []::RECORD[]) as versions
-			FROM artifact a
+					FROM ArtifactVersion av
+					WHERE av.artifact_id = a.id AND av.name LIKE 'sha256:%'), ARRAY []::RECORD[]) as versions
+			FROM Artifact a
 			WHERE a.organization_id = @orgId
-			ORDER BY a.name`, pgx.NamedArgs{
-		"orgId": orgID,
-	}); err != nil {
+			ORDER BY a.name`,
+		pgx.NamedArgs{
+			"orgId": orgID,
+		}); err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
 	} else if artifacts, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactWithTaggedVersion]); err != nil {
 		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
@@ -46,9 +48,51 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 	}
 }
 
-func GetArtifactsByLicenseOwnerID(ctx context.Context, ownerID uuid.UUID) ([]types.Artifact, error) {
-	// TODO impl
-	return nil, nil
+func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID uuid.UUID) ([]types.ArtifactWithTaggedVersion, error) {
+	db := internalctx.GetDb(ctx)
+	if rows, err := db.Query(ctx, `
+			SELECT a.id, a.created_at, a.organization_id, a.name,
+				coalesce((
+					SELECT array_agg(row(
+						av.id, av.created_at, av.manifest_blob_digest,
+						coalesce((
+							SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
+							FROM ArtifactVersion avt
+							WHERE avt.manifest_blob_digest = av.manifest_blob_digest
+							AND avt.artifact_id = av.artifact_id
+							AND avt.name NOT LIKE 'sha256:%'), ARRAY []::RECORD[])
+						))
+					FROM ArtifactVersion av
+					WHERE EXISTS(
+						SELECT ala.id
+                     	FROM ArtifactLicense_Artifact ala
+                     	INNER JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
+                     	WHERE al.owner_useraccount_id = @ownerId -- TODO expiry
+                     	AND ala.artifact_id = av.artifact_id
+                     	AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
+                    )
+					AND av.artifact_id = a.id
+					AND av.name LIKE 'sha256:%'), ARRAY []::RECORD[]) as versions
+			FROM Artifact a
+			WHERE a.organization_id = @orgId
+			AND EXISTS(
+				SELECT ala.id
+				FROM ArtifactLicense_Artifact ala
+				INNER JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
+				WHERE al.owner_useraccount_id = @ownerId -- TODO expiry
+				AND ala.artifact_id = a.id
+			)
+			ORDER BY a.name`,
+		pgx.NamedArgs{
+			"orgId":   orgID,
+			"ownerId": ownerID,
+		}); err != nil {
+		return nil, fmt.Errorf("failed to query artifacts: %w", err)
+	} else if artifacts, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactWithTaggedVersion]); err != nil {
+		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
+	} else {
+		return artifacts, nil
+	}
 }
 
 func GetOrCreateArtifact(ctx context.Context, org *types.Organization, artifactName string) (*types.Artifact, error) {
