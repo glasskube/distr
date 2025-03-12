@@ -43,7 +43,7 @@ export class ArtifactsComponent {
   ]).pipe(
     map(([artifacts, formValue]) =>
       artifacts.filter((it) => !formValue.search || it.name.toLowerCase().includes(formValue.search.toLowerCase()))
-    ),
+    )
   );
   protected readonly faDocker = faDocker;
 }

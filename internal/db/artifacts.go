@@ -59,7 +59,9 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 	}
 }
 
-func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID uuid.UUID) ([]types.ArtifactWithTaggedVersion, error) {
+func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID uuid.UUID) (
+	[]types.ArtifactWithTaggedVersion, error,
+) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT a.id, a.created_at, a.organization_id, a.name,

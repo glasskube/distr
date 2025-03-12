@@ -183,5 +183,4 @@ export class ArtifactsService {
   public list(): Observable<ArtifactWithTags[]> {
     return this.cache.get();
   }
-
 }

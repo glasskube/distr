@@ -40,11 +40,13 @@ export class ArtifactTagsComponent {
   protected readonly faDownload = faDownload;
   protected readonly faLightbulb = faLightbulb;
 
-  protected readonly artifact$ = this.route.params.pipe(combineLatestWith(this.artifacts.list()),
-    map(([params, artifacts]) => artifacts.find(a => a.id === params['id'])));
+  protected readonly artifact$ = this.route.params.pipe(
+    combineLatestWith(this.artifacts.list()),
+    map(([params, artifacts]) => artifacts.find((a) => a.id === params['id']))
+  );
 
   protected readonly updateTag$: Observable<TaggedArtifactVersion | null> = this.artifact$.pipe(
-    filter(a => !!a),
+    filter((a) => !!a),
     map((artifact) => {
       const tagsSorted = [...artifact.versions]
         .sort((a, b) => {
