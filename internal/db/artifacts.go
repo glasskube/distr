@@ -41,10 +41,10 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 							FROM ArtifactVersion avt
 							WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 							AND avt.artifact_id = av.artifact_id
-							AND avt.name NOT LIKE 'sha256:%'), ARRAY []::RECORD[])
+							AND avt.name NOT LIKE '%:%'), ARRAY []::RECORD[])
 						))
 					FROM ArtifactVersion av
-					WHERE av.artifact_id = a.id AND av.name LIKE 'sha256:%'), ARRAY []::RECORD[]) as versions
+					WHERE av.artifact_id = a.id AND av.name LIKE '%:%'), ARRAY []::RECORD[]) as versions
 			FROM Artifact a
 			WHERE a.organization_id = @orgId
 			ORDER BY a.name`,
@@ -71,7 +71,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 							FROM ArtifactVersion avt
 							WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 							AND avt.artifact_id = av.artifact_id
-							AND avt.name NOT LIKE 'sha256:%'), ARRAY []::RECORD[])
+							AND avt.name NOT LIKE '%:%'), ARRAY []::RECORD[])
 						))
 					FROM ArtifactVersion av
 					WHERE EXISTS(
@@ -83,7 +83,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
                      	AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
                     )
 					AND av.artifact_id = a.id
-					AND av.name LIKE 'sha256:%'), ARRAY []::RECORD[]) as versions
+					AND av.name LIKE '%:%'), ARRAY []::RECORD[]) as versions
 			FROM Artifact a
 			WHERE a.organization_id = @orgId
 			AND EXISTS(
@@ -249,8 +249,6 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 
 func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPart) error {
 	db := internalctx.GetDb(ctx)
-	log := internalctx.GetLogger(ctx)
-	log.Sugar().Infof("create %v", avp)
 	if rows, err := db.Query(
 		ctx,
 		`INSERT INTO ArtifactVersionPart AS avp (
