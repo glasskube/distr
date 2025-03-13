@@ -279,6 +279,7 @@ func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference strin
 						AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
 				JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
 				WHERE al.owner_useraccount_id = @userId
+					AND (al.expires_at IS NULL OR al.expires_at > now())
 		)`,
 		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference, "userId": userID},
 	)
@@ -343,6 +344,7 @@ func CheckLicenseForArtifactBlob(ctx context.Context, digest string, userID uuid
 						AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
 				JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
 				WHERE al.owner_useraccount_id = @userId
+					AND (al.expires_at IS NULL OR al.expires_at > now())
 		)`,
 		pgx.NamedArgs{"digest": digest, "userId": userID},
 	)
