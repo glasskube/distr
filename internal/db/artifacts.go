@@ -42,9 +42,18 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 							WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 							AND avt.artifact_id = av.artifact_id
 							AND avt.name NOT LIKE '%:%'), ARRAY []::RECORD[])
-						))
+						)) as vs
 					FROM ArtifactVersion av
-					WHERE av.artifact_id = a.id AND av.name LIKE '%:%'), ARRAY []::RECORD[]) as versions
+					WHERE av.artifact_id = a.id
+					AND av.name LIKE '%:%'
+					AND EXISTS (
+						SELECT avt.id
+						FROM ArtifactVersion avt
+						WHERE avt.manifest_blob_digest = av.manifest_blob_digest
+						AND avt.artifact_id = av.artifact_id
+						AND avt.name NOT LIKE '%:%'
+					)
+				), ARRAY []::RECORD[]) as versions
 			FROM Artifact a
 			WHERE a.organization_id = @orgId
 			ORDER BY a.name`,
@@ -85,7 +94,15 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
                      	AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
                     )
 					AND av.artifact_id = a.id
-					AND av.name LIKE '%:%'), ARRAY []::RECORD[]) as versions
+					AND av.name LIKE '%:%'
+					AND EXISTS (
+						SELECT avt.id
+						FROM ArtifactVersion avt
+						WHERE avt.manifest_blob_digest = av.manifest_blob_digest
+						AND avt.artifact_id = av.artifact_id
+						AND avt.name NOT LIKE '%:%'
+					)
+				), ARRAY []::RECORD[]) as versions
 			FROM Artifact a
 			WHERE a.organization_id = @orgId
 			AND EXISTS(
