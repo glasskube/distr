@@ -396,10 +396,14 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	if _, err := io.Copy(buf, req.Body); err != nil {
 		return regErrInternal(err)
 	}
-	manifestDigest, _, _ := v1.SHA256(bytes.NewReader(buf.Bytes()))
+
 	mf := manifest.Manifest{
 		ContentType: req.Header.Get("Content-Type"),
-		BlobDigest:  manifestDigest,
+	}
+	if manifestDigest, _, err := v1.SHA256(bytes.NewReader(buf.Bytes())); err != nil {
+		return regErrInternal(err)
+	} else {
+		mf.BlobDigest = manifestDigest
 	}
 
 	var blobs []v1.Hash
@@ -470,7 +474,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
 		return regErrInternal(errors.New("blob handler is not a BlobPutHandler"))
 	} else {
-		if err := bph.Put(req.Context(), repo, manifestDigest, mf.ContentType, buf); err != nil {
+		if err := bph.Put(req.Context(), repo, mf.BlobDigest, mf.ContentType, buf); err != nil {
 			return regErrInternal(err)
 		}
 	}
@@ -479,7 +483,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
 	err := db.RunTx(req.Context(), pgx.TxOptions{}, func(ctx context.Context) error {
 		return multierr.Combine(
-			handler.manifestHandler.Put(req.Context(), repo, manifestDigest.String(), mf, blobs),
+			handler.manifestHandler.Put(req.Context(), repo, mf.BlobDigest.String(), mf, blobs),
 			handler.manifestHandler.Put(req.Context(), repo, target, mf, blobs),
 		)
 	})
@@ -487,7 +491,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		return regErrInternal(err)
 	}
 
-	resp.Header().Set("Docker-Content-Digest", manifestDigest.String())
+	resp.Header().Set("Docker-Content-Digest", mf.BlobDigest.String())
 	resp.WriteHeader(http.StatusCreated)
 	return nil
 }
