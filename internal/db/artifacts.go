@@ -265,7 +265,32 @@ func GetLicensedArtifactVersions(
 	orgName, name string,
 	userID uuid.UUID,
 ) ([]types.ArtifactVersion, error) {
-	panic("TODO: not implemented")
+	db := internalctx.GetDb(ctx)
+	// TODO: Switch to org slug when implemented
+	rows, err := db.Query(
+		ctx,
+		`SELECT`+artifactVersionOutputExpr+`
+		FROM ArtifactVersion v
+		JOIN ArtifactLicense_Artifact ala
+			ON ala.artifact_id = v.artifact_id
+				AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = v.id)
+		JOIN ArtifactLicense al ON al.id = ala.artifact_license_id
+		JOIN Artifact a ON v.artifact_id = a.id
+		WHERE a.organization_id = @orgName
+			AND a.name = @name
+			AND al.owner_useraccount_id = @userId
+			AND (al.expires_at IS NULL or al.expires_at > now())
+		ORDER BY v.name ASC`,
+		pgx.NamedArgs{"orgName": orgName, "name": name, "userId": userID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	return result, nil
 }
 
 func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference string, userID uuid.UUID) error {
