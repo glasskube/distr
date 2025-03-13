@@ -169,15 +169,15 @@ func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference strin
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`WITH RECURSIVE ArtifactVersionAggregate (id, manifest_blob_digest) AS (
-			SELECT av.id, av.manifest_blob_digest
+		`WITH RECURSIVE ArtifactVersionAggregate (id, artifact_id, manifest_blob_digest) AS (
+			SELECT av.id, av.artifact_id, av.manifest_blob_digest
 				FROM Artifact a
 				JOIN ArtifactVersion av ON a.id = av.artifact_id
 				WHERE a.organization_id = @orgName
 				AND a.name = @name
 				AND (av.name = @reference OR av.manifest_blob_digest = @reference)
 			UNION ALL
-			SELECT DISTINCT av.id, av.manifest_blob_digest
+			SELECT DISTINCT av.id, av.artifact_id, av.manifest_blob_digest
 				FROM ArtifactVersion av
 				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
 				JOIN ArtifactVersionAggregate agg ON avp.artifact_blob_digest = agg.manifest_blob_digest
@@ -185,7 +185,9 @@ func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference strin
 		SELECT exists(
 			SELECT *
 				FROM ArtifactVersionAggregate av
-				JOIN ArtifactLicense_Artifact ala ON ala.artifact_version_id = av.id
+				JOIN ArtifactLicense_Artifact ala
+					ON av.artifact_id = ala.artifact_id
+						AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
 				JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
 				WHERE al.owner_useraccount_id = @userId
 		)`,
@@ -233,13 +235,13 @@ func CheckLicenseForArtifactBlob(ctx context.Context, digest string, userID uuid
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`WITH RECURSIVE ArtifactVersionAggregate (id, manifest_blob_digest) AS (
-			SELECT av.id, av.manifest_blob_digest
+		`WITH RECURSIVE ArtifactVersionAggregate (id, artifact_id, manifest_blob_digest) AS (
+			SELECT av.id, av.artifact_id, av.manifest_blob_digest
 				FROM ArtifactVersion av
 				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
 				WHERE avp.artifact_blob_digest = @digest
 			UNION ALL
-			SELECT DISTINCT av.id, av.manifest_blob_digest
+			SELECT DISTINCT av.id, av.artifact_id, av.manifest_blob_digest
 				FROM ArtifactVersion av
 				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
 				JOIN ArtifactVersionAggregate agg ON avp.artifact_blob_digest = agg.manifest_blob_digest
@@ -247,7 +249,9 @@ func CheckLicenseForArtifactBlob(ctx context.Context, digest string, userID uuid
 		SELECT exists(
 			SELECT *
 				FROM ArtifactVersionAggregate av
-				JOIN ArtifactLicense_Artifact ala ON ala.artifact_version_id = av.id
+				JOIN ArtifactLicense_Artifact ala
+					ON av.artifact_id = ala.artifact_id
+						AND (ala.artifact_version_id IS NULL OR ala.artifact_version_id = av.id)
 				JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
 				WHERE al.owner_useraccount_id = @userId
 		)`,
