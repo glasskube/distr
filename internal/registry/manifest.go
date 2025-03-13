@@ -110,7 +110,7 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		}
 		return handler.handleGet(resp, req, repo, target)
 	case http.MethodHead:
-		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}

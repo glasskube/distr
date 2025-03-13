@@ -93,7 +93,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 
 	switch req.Method {
 	case http.MethodHead:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionRead); err != nil {
+		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}

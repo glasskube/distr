@@ -165,6 +165,106 @@ func GetLicensedArtifactVersions(
 	panic("TODO: not implemented")
 }
 
+func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference string, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`WITH RECURSIVE ArtifactVersionAggregate (id, manifest_blob_digest) AS (
+			SELECT av.id, av.manifest_blob_digest
+				FROM Artifact a
+				JOIN ArtifactVersion av ON a.id = av.artifact_id
+				WHERE a.organization_id = @orgName
+				AND a.name = @name
+				AND (av.name = @reference OR av.manifest_blob_digest = @reference)
+			UNION ALL
+			SELECT DISTINCT av.id, av.manifest_blob_digest
+				FROM ArtifactVersion av
+				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+				JOIN ArtifactVersionAggregate agg ON avp.artifact_blob_digest = agg.manifest_blob_digest
+		)
+		SELECT exists(
+			SELECT *
+				FROM ArtifactVersionAggregate av
+				JOIN ArtifactLicense_Artifact ala ON ala.artifact_version_id = av.id
+				JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
+				WHERE al.owner_useraccount_id = @userId
+		)`,
+		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference, "userId": userID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+	} else if !result.Exists {
+		return apierrors.ErrForbidden
+	}
+	return nil
+}
+
+func CheckOrganizationForArtifactBlob(ctx context.Context, digest string, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT exists(
+			SELECT *
+				FROM Artifact a
+				JOIN ArtifactVersion av ON a.id = av.artifact_id
+				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+				WHERE avp.artifact_blob_digest = @digest
+					AND a.organization_id = @orgId
+		)`,
+		pgx.NamedArgs{"digest": digest, "orgId": orgID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+	} else if !result.Exists {
+		return apierrors.ErrForbidden
+	}
+	return nil
+}
+
+func CheckLicenseForArtifactBlob(ctx context.Context, digest string, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`WITH RECURSIVE ArtifactVersionAggregate (id, manifest_blob_digest) AS (
+			SELECT av.id, av.manifest_blob_digest
+				FROM ArtifactVersion av
+				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+				WHERE avp.artifact_blob_digest = @digest
+			UNION ALL
+			SELECT DISTINCT av.id, av.manifest_blob_digest
+				FROM ArtifactVersion av
+				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+				JOIN ArtifactVersionAggregate agg ON avp.artifact_blob_digest = agg.manifest_blob_digest
+		)
+		SELECT exists(
+			SELECT *
+				FROM ArtifactVersionAggregate av
+				JOIN ArtifactLicense_Artifact ala ON ala.artifact_version_id = av.id
+				JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
+				WHERE al.owner_useraccount_id = @userId
+		)`,
+		pgx.NamedArgs{"digest": digest, "userId": userID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+	} else if !result.Exists {
+		return apierrors.ErrForbidden
+	}
+	return nil
+}
+
 func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
 	db := internalctx.GetDb(ctx)
 	// TODO: Switch to org slug when implemented
@@ -225,8 +325,6 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 
 func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPart) error {
 	db := internalctx.GetDb(ctx)
-	log := internalctx.GetLogger(ctx)
-	log.Sugar().Infof("create %v", avp)
 	if rows, err := db.Query(
 		ctx,
 		`INSERT INTO ArtifactVersionPart AS avp (
