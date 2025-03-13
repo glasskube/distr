@@ -1,10 +1,11 @@
 import {inject, Injectable} from '@angular/core';
 import {combineLatestWith, EMPTY, first, map, Observable, tap} from 'rxjs';
 import {BaseModel, Named, UserAccount} from '@glasskube/distr-sdk';
-import {Artifact, ArtifactsService, TaggedArtifactVersion} from './artifacts.service';
+import {Artifact, ArtifactsService, ArtifactWithTags, TaggedArtifactVersion} from './artifacts.service';
 import {CrudService} from './interfaces';
-import {DefaultReactiveList} from './cache';
+import {DefaultReactiveList, ReactiveList} from './cache';
 import {UsersService} from './users.service';
+import {HttpClient} from '@angular/common/http';
 
 export interface ArtifactLicenseSelection {
   artifact: Artifact;
@@ -20,38 +21,13 @@ export interface ArtifactLicense extends BaseModel, Named {
 
 @Injectable({providedIn: 'root'})
 export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
-  private readonly artifactsService = inject(ArtifactsService);
   private readonly usersService = inject(UsersService);
-  private readonly cache = new DefaultReactiveList<ArtifactLicense>(
-    this.artifactsService.list().pipe(
-      first(),
-      map((mockArtifacts) => {
-        return [
-          {
-            id: 'b135b6b2-ebc9-4c13-a2c1-7eaa79455955',
-            name: 'distr',
-            createdAt: '2025-03-08T09:25:21Z',
-            artifacts: [
-              {
-                artifact: mockArtifacts[0],
-              },
-            ],
-          } as ArtifactLicense,
-          {
-            id: '49638b03-4644-4221-81df-be8981622c74',
-            name: 'distr-docker-agent',
-            createdAt: '2025-03-08T09:25:21Z',
-            artifacts: [
-              {
-                artifact: mockArtifacts[1],
-                tags: [mockArtifacts[1].versions[0]],
-              },
-            ],
-          } as ArtifactLicense,
-        ];
-      })
-    )
-  );
+  private readonly cache: ReactiveList<ArtifactLicense>;
+  private readonly artifactLicensesUrl = '/api/v1/artifact-licenses';
+
+  constructor(private readonly http: HttpClient) {
+    this.cache = new DefaultReactiveList(this.http.get<ArtifactLicense[]>(this.artifactLicensesUrl));
+  }
 
   public list(): Observable<ArtifactLicense[]> {
     return this.cache.get();
