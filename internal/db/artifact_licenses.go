@@ -12,7 +12,7 @@ import (
 func GetArtifactLicenses(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT al.id, al.created_at, al.name, al.expires_at
+		SELECT al.id, al.created_at, al.name, al.expires_at, al.owner_useraccount_id
 		FROM ArtifactLicense al
 		WHERE al.organization_id = @orgId
 		ORDER BY al.name`,
