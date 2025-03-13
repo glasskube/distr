@@ -28,9 +28,9 @@ import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, Artifac
     ArtifactsVulnerabilityReportComponent,
     ClipComponent,
   ],
-  templateUrl: './artifact-tags.component.html',
+  templateUrl: './artifact-versions.component.html',
 })
-export class ArtifactTagsComponent {
+export class ArtifactVersionsComponent {
   private readonly artifacts = inject(ArtifactsService);
   private readonly route = inject(ActivatedRoute);
   private readonly organization = inject(OrganizationService);
