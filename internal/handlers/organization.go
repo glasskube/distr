@@ -64,9 +64,9 @@ func updateOrganization(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Slug can not get unset", http.StatusBadRequest)
 				return
 			}
-			slugPattern := regexp.MustCompile("^[a-z0-9]+((\\.|_|__|-+)[a-z0-9]+)*$")
+			slugPattern := "^[a-z0-9]+((\\.|_|__|-+)[a-z0-9]+)*$"
 			slugMaxLength := 64
-			if matched, _ := regexp.MatchString(slugPattern.String(), *organization.Slug); !matched {
+			if matched, _ := regexp.MatchString(slugPattern, *organization.Slug); !matched {
 				http.Error(w, "Slug is invalid", http.StatusBadRequest)
 				return
 			} else if len(*organization.Slug) > slugMaxLength {
