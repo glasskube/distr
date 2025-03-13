@@ -47,13 +47,14 @@
                     id="slug"
                     class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     placeholder="slug"
-                    [pattern]="slugPattern" />
+                    [pattern]="slugPattern"
+                    [maxlength]="slugMaxLength"/>
                   <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
                     The slug will used as part of the url for artifact registry. It must be only lower cased letters.
                   </p>
                   @if (form.controls.slug.invalid && form.controls.slug.touched) {
                     <p class="mt-1 text-sm text-red-600 dark:text-red-500">
-                      Slug must only contain lower cased letters.
+                      Slug must be url safe.
                     </p>
                   }
                 </div>

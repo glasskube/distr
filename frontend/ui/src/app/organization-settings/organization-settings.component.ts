@@ -21,11 +21,12 @@ export class OrganizationSettingsComponent implements OnInit {
   private organization?: Organization;
   private toast = inject(ToastService);
 
-  readonly slugPattern = /^[a-z]*$/;
+  readonly slugPattern = /^[a-z0-9]+((\.|_|__|-+)[a-z0-9]+)*$/;
+  readonly slugMaxLength = 64;
 
   protected readonly form = new FormGroup({
     name: new FormControl('', [Validators.required]),
-    slug: new FormControl('', [Validators.pattern(this.slugPattern)]),
+    slug: new FormControl('', [Validators.pattern(this.slugPattern), Validators.maxLength(this.slugMaxLength)]),
   });
   formLoading = signal(false);
 

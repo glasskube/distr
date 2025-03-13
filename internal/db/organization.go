@@ -101,7 +101,7 @@ func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.O
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		fmt.Sprintf(
-			`SELECT`+organizationOutputExpr+`
+			`SELECT `+organizationOutputExpr+`,
 				CASE WHEN b.id IS NOT NULL THEN (%v) END AS branding
 			FROM Organization o
 			LEFT JOIN OrganizationBranding b ON b.organization_id = o.id
