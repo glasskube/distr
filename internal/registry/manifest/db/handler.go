@@ -47,10 +47,10 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 // List implements manifest.ManifestHandler.
 func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
-	var artifacts []types.Artifact
+	var artifacts []types.ArtifactWithTaggedVersion
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer {
-		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, auth.CurrentUserID())
+		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), auth.CurrentUserID())
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
 	}
