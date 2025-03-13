@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -13,15 +16,13 @@ import (
 )
 
 const (
-	organizationOutputExpr = `
-		o.id, o.created_at, o.name, o.slug, o.features
-`
+	organizationOutputExpr = ` o.id, o.created_at, o.name, o.slug, o.features `
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization (name) VALUES (@name) RETURNING id, created_at, name, features",
+		"INSERT INTO Organization AS o (name) VALUES (@name) RETURNING "+organizationOutputExpr,
 		pgx.NamedArgs{"name": org.Name},
 	)
 	if err != nil {
@@ -45,8 +46,11 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	if err != nil {
 		return err
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
-	if err != nil {
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization]); err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
 		return err
 	} else {
 		*org = *result

@@ -57,12 +57,12 @@ func updateOrganization(w http.ResponseWriter, r *http.Request) {
 	if existingOrganization, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err == nil {
 		if existingOrganization.Slug != nil {
 			if organization.Slug == nil || *organization.Slug == "" {
-				http.Error(w, "slug can not get unset", http.StatusBadRequest)
+				http.Error(w, "Slug can not get unset", http.StatusBadRequest)
 				return
 			}
 
 			if matched, _ := regexp.MatchString("^[a-z]+$", *organization.Slug); !matched {
-				http.Error(w, "slug is invalid", http.StatusBadRequest)
+				http.Error(w, "Slug is invalid", http.StatusBadRequest)
 				return
 			}
 
@@ -75,7 +75,10 @@ func updateOrganization(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := db.UpdateOrganization(ctx, &organization); err != nil {
+		if err := db.UpdateOrganization(ctx, &organization); errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, "Slug is not available", http.StatusBadRequest)
+			return
+		} else if err != nil {
 			internalctx.GetLogger(ctx).Error("failed to update organization", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)

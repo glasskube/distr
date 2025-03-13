@@ -2,8 +2,7 @@ import {Component, inject, OnInit, signal} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {firstValueFrom} from 'rxjs';
-import {HttpErrorResponse} from '@angular/common/http';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {ToastService} from '../services/toast.service';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -22,7 +21,7 @@ export class OrganizationSettingsComponent implements OnInit {
   private organization?: Organization;
   private toast = inject(ToastService);
 
-  readonly slugPattern = /^[a-z]+$/;
+  readonly slugPattern = /^[a-z]*$/;
 
   protected readonly form = new FormGroup({
     name: new FormControl('', [Validators.required]),
@@ -42,8 +41,7 @@ export class OrganizationSettingsComponent implements OnInit {
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
-      if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
-        // it's a valid use case for an organization to have no branding (hence 404 is not shown in toast)
+      if (msg) {
         this.toast.error(msg);
       }
     }
@@ -54,15 +52,16 @@ export class OrganizationSettingsComponent implements OnInit {
     if (this.form.valid) {
       this.formLoading.set(true);
       try {
-        this.organization = await firstValueFrom(
+        this.organization = await lastValueFrom(
           this.organizationService.update({
             ...this.organization!,
             name: this.form.value.name!.trim(),
-            slug: this.form.value.slug!.trim(),
+            slug: this.form.value.slug ? this.form.value.slug!.trim() : undefined,
           })
         );
         this.toast.success('Settings saved successfully');
       } catch (e) {
+        console.error(e);
         const msg = getFormDisplayedError(e);
         if (msg) {
           this.toast.error(msg);
