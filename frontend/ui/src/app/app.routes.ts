@@ -12,7 +12,7 @@ import {firstValueFrom} from 'rxjs';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
-import {ArtifactTagsComponent} from './artifacts/artifact-tags/artifact-tags.component';
+import {ArtifactVersionsComponent} from './artifacts/artifact-versions/artifact-versions.component';
 import {ArtifactsComponent} from './artifacts/artifacts/artifacts.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {UsersComponent} from './components/users/users.component';
@@ -186,7 +186,7 @@ export const routes: Routes = [
             path: 'artifacts',
             children: [
               {path: '', pathMatch: 'full', component: ArtifactsComponent},
-              {path: ':id', component: ArtifactTagsComponent},
+              {path: ':id', component: ArtifactVersionsComponent},
             ],
           },
           {

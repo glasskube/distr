@@ -23,13 +23,13 @@ export class ArtifactsDownloadCountComponent {
   selector: 'app-artifacts-downloaded-by',
   template: `
     <div class="flex -space-x-3 hover:-space-x-1 rtl:space-x-reverse">
-      @for (user of source().downloadedByUsers; track user.avatarUrl) {
+      @for (user of source().downloadedByUsers ?? []; track user.avatarUrl) {
         <img
           class="size-8 border-2 border-white rounded-full dark:border-gray-800 transition-all duration-100 ease-in-out"
           [src]="user.avatarUrl"
           alt="" />
       }
-      @if (source().downloadedByCount - source().downloadedByUsers.length; as count) {
+      @if ((source().downloadedByCount ?? 0) - (source().downloadedByUsers ?? []).length; as count) {
         @if (count > 0) {
           <div
             class="flex items-center justify-center size-8 text-xs font-medium text-white bg-gray-500 dark:bg-gray-700 border-2 border-white rounded-full dark:border-gray-800">

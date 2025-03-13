@@ -6,12 +6,10 @@ import {
   forwardRef,
   inject,
   Injector,
-  Input,
   OnDestroy,
   OnInit,
   signal,
   ViewChild,
-  WritableSignal,
 } from '@angular/core';
 import {AsyncPipe} from '@angular/common';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -19,8 +17,6 @@ import {
   ControlValueAccessor,
   FormArray,
   FormBuilder,
-  FormControl,
-  FormGroup,
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
@@ -31,16 +27,13 @@ import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawe
 import {first, firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
 import {ApplicationLicense} from '../types/application-license';
 import {ApplicationsService} from '../services/applications.service';
-import {Application, ApplicationVersion, BaseModel, Named, UserAccount} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
 import {UsersService} from '../services/users.service';
 import dayjs from 'dayjs';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {ArtifactLicense} from '../services/artifact-licenses.service';
-import {Artifact, ArtifactsService, ArtifactTag, ArtifactWithTags} from '../services/artifacts.service';
-import {ArtifactsHashComponent} from '../artifacts/components';
-import {RelativeDatePipe} from '../../util/dates';
 
 @Component({
   selector: 'app-edit-license',

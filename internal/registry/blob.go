@@ -132,15 +132,14 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			return regErrInternal(err)
 		}
 		return b.handlePut(resp, req, service, repo, target, digest)
-	case http.MethodDelete:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
-			if errors.Is(err, authz.ErrAccessDenied) {
-				return regErrDenied
-			}
-			return regErrInternal(err)
-		}
-		return b.handleDelete(resp, req, repo, target)
-
+	// case http.MethodDelete:
+	// 	if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+	// 		if errors.Is(err, authz.ErrAccessDenied) {
+	// 			return regErrDenied
+	// 		}
+	// 		return regErrInternal(err)
+	// 	}
+	// 	return b.handleDelete(resp, req, repo, target)
 	default:
 		return regErrMethodUnknown
 	}
@@ -471,19 +470,19 @@ func (b *blobs) handlePut(resp http.ResponseWriter, req *http.Request, service, 
 	return nil
 }
 
-func (b *blobs) handleDelete(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	bdh, ok := b.blobHandler.(blob.BlobDeleteHandler)
-	if !ok {
-		return regErrUnsupported
-	}
+// func (b *blobs) handleDelete(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
+// 	bdh, ok := b.blobHandler.(blob.BlobDeleteHandler)
+// 	if !ok {
+// 		return regErrUnsupported
+// 	}
 
-	h, err := v1.NewHash(target)
-	if err != nil {
-		return regErrDigestInvalid
-	}
-	if err := bdh.Delete(req.Context(), repo, h); err != nil {
-		return regErrInternal(err)
-	}
-	resp.WriteHeader(http.StatusAccepted)
-	return nil
-}
+// 	h, err := v1.NewHash(target)
+// 	if err != nil {
+// 		return regErrDigestInvalid
+// 	}
+// 	if err := bdh.Delete(req.Context(), repo, h); err != nil {
+// 		return regErrInternal(err)
+// 	}
+// 	resp.WriteHeader(http.StatusAccepted)
+// 	return nil
+// }
