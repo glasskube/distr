@@ -21,8 +21,8 @@ type ArtifactVersionTag struct {
 type TaggedArtifactVersion struct {
 	ID        uuid.UUID            `db:"id" json:"id"`
 	CreatedAt time.Time            `db:"created_at" json:"createdAt"`
-	Digest    string               `db:"-" json:"digest"`
-	Tags      []ArtifactVersionTag `db:"-" json:"tags"`
+	Digest    string               `db:"manifest_blob_digest" json:"digest"`
+	Tags      []ArtifactVersionTag `db:"tags" json:"tags"`
 }
 
 type ArtifactWithTaggedVersion struct {
