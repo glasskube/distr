@@ -32,6 +32,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/registry/audit"
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/blob/s3"
@@ -124,6 +125,7 @@ func NewDefault(logger *zap.Logger, pool *pgxpool.Pool, mailer mail.Mailer) http
 		WithBlobHandler(s3.NewBlobHandler(true)),
 		WithManifestHandler(db.NewManifestHandler()),
 		WithAuthorizer(authz.NewAuthorizer()),
+		WithAuditor(audit.NewAuditor()),
 		WithMiddlewares(
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
@@ -186,5 +188,11 @@ func WithAuthorizer(a authz.Authorizer) Option {
 	return func(r *registry) {
 		r.blobs.authz = a
 		r.manifests.authz = a
+	}
+}
+
+func WithAuditor(a audit.ArtifactAuditor) Option {
+	return func(r *registry) {
+		r.manifests.audit = a
 	}
 }

@@ -250,3 +250,87 @@ func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPa
 		return nil
 	}
 }
+
+// CheckArtifactVersionHasChildren checks if one of the ArtifactVersionParts referencing this ArtifactVersion refer to
+// another ArtifactVersion via its manifest digest.
+func CheckArtifactVersionHasChildren(ctx context.Context, versionID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT exists(
+			SELECT * FROM ArtifactVersionPart avp
+			JOIN ArtifactVersion av ON av.manifest_blob_digest = avp.artifact_artifact_blob_digest
+			WHERE avp.artifact_version_id = @versionId
+		)`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return false, fmt.Errorf("could not check artifact version parents: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, fmt.Errorf("could not check artifact version parents: %w", err)
+	}
+	return result.Exists, nil
+}
+
+func CreateArtifactPullLogEntry(ctx context.Context, versionID uuid.UUID, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`INSERT INTO ArtifactVersionPull (artifact_version_id, useraccount_id) VALUES (@versionId, @userId)`,
+		pgx.NamedArgs{"versionId": versionID, "userId": userID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not create artifact pull log entry: %w", err)
+	}
+	return nil
+}
+
+func GetArtifactVersionPullCount(ctx context.Context, versionID uuid.UUID) (int, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT count(SELECT * FROM ArtifactVersionPull WHERE artifact_version_id = @versionId)`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("could not get pull count: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Count int }])
+	if err != nil {
+		return 0, fmt.Errorf("could not get pull count: %w", err)
+	}
+	return result.Count, nil
+}
+
+func GetArtifactVersionPullers(ctx context.Context, versionID uuid.UUID) ([]types.UserAccount, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`
+		WITH LastPull AS (
+			SELECT av.artifact_id, max(avp.created_at) AS latest_pull FROM ArtifactVersionPull avp
+			JOIN ArtifactVersion av ON av.id = avp.artifact_version_id
+			WHERE useraccount_id = @userId
+			GROUP BY av.artifact_id
+		)
+		SELECT DISTINCT `+userAccountOutputExpr+`
+			FROM UserAccount ua
+			JOIN ArtifactVersionPull p ON ua.id = p.useraccount_id
+			JOIN ArtifactVersion av ON av.id = p.artifact_version_id
+			JOIN LastPull lp ON lp.artifact_id = av.artifact_id AND lp.latest_pull = avp.created_at
+			WHERE p.artifact_version_id = @versionId
+			ORDER BY p.created_at DESC
+		`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not get pullers: %w", err)
+	}
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.UserAccount])
+	if err != nil {
+		return nil, fmt.Errorf("could not get pullers: %w", err)
+	}
+	return result, nil
+}

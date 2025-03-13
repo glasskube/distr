@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/registry/audit"
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/manifest"
@@ -50,6 +51,7 @@ type manifests struct {
 	blobHandler     blob.BlobHandler
 	manifestHandler manifest.ManifestHandler
 	authz           authz.Authorizer
+	audit           audit.ArtifactAuditor
 	lock            sync.RWMutex
 	log             *zap.SugaredLogger
 }
