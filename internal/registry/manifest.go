@@ -110,7 +110,7 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		}
 		return handler.handleGet(resp, req, repo, target)
 	case http.MethodHead:
-		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
+		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}
@@ -125,14 +125,14 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 			return regErrInternal(err)
 		}
 		return handler.handlePut(resp, req, repo, target)
-	case http.MethodDelete:
-		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
-			if errors.Is(err, authz.ErrAccessDenied) {
-				return regErrDenied
-			}
-			return regErrInternal(err)
-		}
-		return handler.handleDelete(resp, req, repo, target)
+	// case http.MethodDelete:
+	// 	if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
+	// 		if errors.Is(err, authz.ErrAccessDenied) {
+	// 			return regErrDenied
+	// 		}
+	// 		return regErrInternal(err)
+	// 	}
+	// 	return handler.handleDelete(resp, req, repo, target)
 	default:
 		return regErrMethodUnknown
 	}
@@ -496,18 +496,18 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	return nil
 }
 
-func (handler *manifests) handleDelete(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	handler.lock.Lock()
-	defer handler.lock.Unlock()
+// func (handler *manifests) handleDelete(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
+// 	handler.lock.Lock()
+// 	defer handler.lock.Unlock()
 
-	if err := handler.manifestHandler.Delete(req.Context(), repo, target); errors.Is(err, manifest.ErrNameUnknown) {
-		return regErrNameUnknown
-	} else if errors.Is(err, manifest.ErrManifestUnknown) {
-		return regErrManifestUnknown
-	} else if err != nil {
-		regErrInternal(err)
-	}
+// 	if err := handler.manifestHandler.Delete(req.Context(), repo, target); errors.Is(err, manifest.ErrNameUnknown) {
+// 		return regErrNameUnknown
+// 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
+// 		return regErrManifestUnknown
+// 	} else if err != nil {
+// 		regErrInternal(err)
+// 	}
 
-	resp.WriteHeader(http.StatusAccepted)
-	return nil
-}
+// 	resp.WriteHeader(http.StatusAccepted)
+// 	return nil
+// }
