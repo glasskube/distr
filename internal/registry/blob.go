@@ -86,14 +86,11 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 	rangeHeader := req.Header.Get("Range")
 	repo := req.URL.Host + path.Join(elem[1:len(elem)-2]...)
 
-	targetHash, err := v1.NewHash(target)
-	if err != nil {
-		return regErrDigestInvalid
-	}
-
 	switch req.Method {
 	case http.MethodHead:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionRead); err != nil {
+		if h, err := v1.NewHash(target); err != nil {
+			return regErrDigestInvalid
+		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}
@@ -101,7 +98,9 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handleHead(resp, req, repo, target)
 	case http.MethodGet:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionRead); err != nil {
+		if h, err := v1.NewHash(target); err != nil {
+			return regErrDigestInvalid
+		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionRead); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}
@@ -109,7 +108,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handleGet(resp, req, repo, target, rangeHeader)
 	case http.MethodPost:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}
@@ -117,7 +116,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handlePost(resp, req, repo, target, digest, elem)
 	case http.MethodPatch:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}
@@ -125,7 +124,9 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handlePatch(resp, req, target, service, contentRange, elem)
 	case http.MethodPut:
-		if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
+		if h, err := v1.NewHash(digest); err != nil {
+			return regErrDigestInvalid
+		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
 			}
