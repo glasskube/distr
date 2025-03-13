@@ -31,29 +31,8 @@ const (
 
 func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactWithTaggedVersion, error) {
 	db := internalctx.GetDb(ctx)
-	if rows, err := db.Query(ctx, `
-			SELECT a.id, a.created_at, a.organization_id, a.name,
-				coalesce((
-					SELECT array_agg(row(
-						av.id, av.created_at, av.manifest_blob_digest,
-						coalesce((
-							SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
-							FROM ArtifactVersion avt
-							WHERE avt.manifest_blob_digest = av.manifest_blob_digest
-							AND avt.artifact_id = av.artifact_id
-							AND avt.name NOT LIKE '%:%'), ARRAY []::RECORD[])
-						)) as vs
-					FROM ArtifactVersion av
-					WHERE av.artifact_id = a.id
-					AND av.name LIKE '%:%'
-					AND EXISTS (
-						SELECT avt.id
-						FROM ArtifactVersion avt
-						WHERE avt.manifest_blob_digest = av.manifest_blob_digest
-						AND avt.artifact_id = av.artifact_id
-						AND avt.name NOT LIKE '%:%'
-					)
-				), ARRAY []::RECORD[]) as versions
+	if artifactRows, err := db.Query(ctx, `
+			SELECT a.id, a.created_at, a.organization_id, a.name, ARRAY []::RECORD[] as versions
 			FROM Artifact a
 			WHERE a.organization_id = @orgId
 			ORDER BY a.name`,
@@ -61,10 +40,20 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 			"orgId": orgID,
 		}); err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
-	} else if artifacts, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactWithTaggedVersion]); err != nil {
+	} else if artifacts, err :=
+		pgx.CollectRows(artifactRows, pgx.RowToAddrOfStructByName[types.ArtifactWithTaggedVersion]); err != nil {
 		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
 	} else {
-		return artifacts, nil
+		res := make([]types.ArtifactWithTaggedVersion, len(artifacts))
+		for i, artifact := range artifacts {
+			if versions, err := getVersionsForArtifact(ctx, artifact.ID, nil); err != nil {
+				return nil, fmt.Errorf("failed to get artifact versions: %w", err)
+			} else {
+				artifact.Versions = versions
+			}
+			res[i] = *artifact
+		}
+		return res, nil
 	}
 }
 
@@ -95,7 +84,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 	} else {
 		res := make([]types.ArtifactWithTaggedVersion, len(artifacts))
 		for i, artifact := range artifacts {
-			if versions, err := GetLicensedVersionsForArtifact(ctx, artifact.ID, ownerID); err != nil {
+			if versions, err := getVersionsForArtifact(ctx, artifact.ID, &ownerID); err != nil {
 				return nil, fmt.Errorf("failed to get artifact versions: %w", err)
 			} else {
 				artifact.Versions = versions
@@ -106,10 +95,14 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 	}
 }
 
-func GetLicensedVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID uuid.UUID) (
+func getVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *uuid.UUID) (
 	[]types.TaggedArtifactVersion,
 	error,
 ) {
+	checkLicense := false
+	if ownerID != nil {
+		checkLicense = true
+	}
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT av.id, av.created_at, av.manifest_blob_digest,
@@ -124,8 +117,9 @@ func GetLicensedVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, o
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (
+				NOT @checkLicense
 				-- license check
-				EXISTS (
+				OR EXISTS (
 					-- license for all versions of the artifact
 					SELECT *
 					FROM ArtifactLicense_Artifact ala
@@ -165,8 +159,9 @@ func GetLicensedVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, o
 			)
 			`,
 		pgx.NamedArgs{
-			"artifactId": artifactID,
-			"ownerId":    ownerID,
+			"artifactId":   artifactID,
+			"ownerId":      ownerID,
+			"checkLicense": checkLicense,
 		}); err != nil {
 		return nil, err
 	} else if versions, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.TaggedArtifactVersion]); err != nil {
