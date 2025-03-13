@@ -61,7 +61,6 @@ export class OrganizationSettingsComponent implements OnInit {
         );
         this.toast.success('Settings saved successfully');
       } catch (e) {
-        console.error(e);
         const msg = getFormDisplayedError(e);
         if (msg) {
           this.toast.error(msg);
