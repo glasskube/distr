@@ -43,7 +43,7 @@ func (a *authorizer) Authorize(ctx context.Context, nameStr string, action Actio
 		return errors.New("name invalid")
 	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
 		return err
-	} else if org.Slug != nil && *org.Slug != name.OrgName {
+	} else if org.Slug == nil || *org.Slug != name.OrgName {
 		return ErrAccessDenied
 	}
 	return nil
@@ -60,7 +60,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 		return errors.New("name invalid")
 	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
 		return err
-	} else if org.Slug != nil && *org.Slug != name.OrgName {
+	} else if org.Slug == nil || *org.Slug != name.OrgName {
 		return ErrAccessDenied
 	} else if action == ActionRead && *auth.CurrentUserRole() != types.UserRoleVendor {
 		err := db.CheckLicenseForArtifact(ctx, name.OrgName, name.ArtifactName, reference, auth.CurrentUserID())
