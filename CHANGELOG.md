@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.4.0](https://github.com/glasskube/distr/compare/1.3.3...1.4.0) (2025-03-14)
+
+
+### Features
+
+* add organization slug and organization settings ([#625](https://github.com/glasskube/distr/issues/625)) ([6031033](https://github.com/glasskube/distr/commit/6031033624ac739ad31f3527c725baf9bc6ce5d1))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.2 ([#628](https://github.com/glasskube/distr/issues/628)) ([21cbed9](https://github.com/glasskube/distr/commit/21cbed9be8b06ac78d2b9bbfbc1b99c0acd0591e))
+* **deps:** update dependency @angular/cdk to v19.2.3 ([#629](https://github.com/glasskube/distr/issues/629)) ([6dafee9](https://github.com/glasskube/distr/commit/6dafee9ff4c23ebe61329741e68ceee2ed6bb3a0))
+* **deps:** update dependency @codemirror/language to v6.11.0 ([#635](https://github.com/glasskube/distr/issues/635)) ([52e64b2](https://github.com/glasskube/distr/commit/52e64b22dd00ac0b6234cc3064fe1f6d6995f5be))
+* **deps:** update dependency @sentry/angular to v9.5.0 ([#616](https://github.com/glasskube/distr/issues/616)) ([09eb54d](https://github.com/glasskube/distr/commit/09eb54da61f3eff7f4fb8e9ae97d20c20a036c0a))
+* **deps:** update dependency ngx-markdown to v19.1.1 ([#640](https://github.com/glasskube/distr/issues/640)) ([a405104](https://github.com/glasskube/distr/commit/a40510472e1b0e7ab7361fea44d7181fe31dfe85))
+* **deps:** update dependency posthog-js to v1.230.1 ([#617](https://github.com/glasskube/distr/issues/617)) ([fd0a8c4](https://github.com/glasskube/distr/commit/fd0a8c45521c68457eb87b9520f54c32f286de98))
+* **deps:** update kubernetes packages to v0.32.3 ([#621](https://github.com/glasskube/distr/issues/621)) ([e5fe5aa](https://github.com/glasskube/distr/commit/e5fe5aafa4f5b7bbe01403c33e27643c5877c8d4))
+* **deps:** update module helm.sh/helm/v3 to v3.17.2 ([#636](https://github.com/glasskube/distr/issues/636)) ([6d52afb](https://github.com/glasskube/distr/commit/6d52afb3f37194dddfbe3a8319b6fc8b68b9aa5e))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.2.2 ([#630](https://github.com/glasskube/distr/issues/630)) ([19a94b9](https://github.com/glasskube/distr/commit/19a94b923cd49401d36f4bee84bfcade0c99f5ce))
+* **deps:** update angular-cli monorepo to v19.2.3 ([#631](https://github.com/glasskube/distr/issues/631)) ([8aa2707](https://github.com/glasskube/distr/commit/8aa270726f40b1605884ba8539b53468f1f75d69))
+* **deps:** update axllent/mailpit docker tag to v1.23.1 ([#613](https://github.com/glasskube/distr/issues/613)) ([f0cbd3b](https://github.com/glasskube/distr/commit/f0cbd3b5692fc1b720548228d07453d16b288a9b))
+* **deps:** update dependency autoprefixer to v10.4.21 ([#615](https://github.com/glasskube/distr/issues/615)) ([4c80bb2](https://github.com/glasskube/distr/commit/4c80bb2197ed8a593991c497c01a14e808c0e784))
+* **deps:** update dependency golangci-lint to v1.64.7 ([#620](https://github.com/glasskube/distr/issues/620)) ([8f07438](https://github.com/glasskube/distr/commit/8f074384a8e4e64fde235ded157df3700315dd11))
+* **deps:** update docker/login-action action to v3.4.0 ([#637](https://github.com/glasskube/distr/issues/637)) ([59479c3](https://github.com/glasskube/distr/commit/59479c3c4590893444b76f614bd7d304e30cc2a0))
+* **deps:** update golangci/golangci-lint-action action to v6.5.1 ([#627](https://github.com/glasskube/distr/issues/627)) ([65b79e5](https://github.com/glasskube/distr/commit/65b79e5a3b3272ffda56b488181237596bf071f6))
+* **deps:** update googleapis/release-please-action action to v4.2.0 ([#612](https://github.com/glasskube/distr/issues/612)) ([bd4520c](https://github.com/glasskube/distr/commit/bd4520cb2a61f7093d14deeaf81b40b4caa3863d))
+* **deps:** upgrade prismjs to v1.30.0 ([#634](https://github.com/glasskube/distr/issues/634)) ([72d93be](https://github.com/glasskube/distr/commit/72d93be0401ceebc124fa9a0fcd7ad09872d4db7))
+* improve copy instructions ux ([#638](https://github.com/glasskube/distr/issues/638)) ([d8d04ef](https://github.com/glasskube/distr/commit/d8d04efae944505ad0bb562a710440b23360e832))
+
 ## [1.3.3](https://github.com/glasskube/distr/compare/1.3.2...1.3.3) (2025-03-07)
 
 
