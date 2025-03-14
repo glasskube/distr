@@ -24,6 +24,7 @@ services:
       - .env
     ports:
       - '8080:8080'
+      - '8585:8585'
     restart: always
 
 volumes:

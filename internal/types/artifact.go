@@ -27,5 +27,6 @@ type TaggedArtifactVersion struct {
 
 type ArtifactWithTaggedVersion struct {
 	Artifact
-	Versions []TaggedArtifactVersion `db:"versions" json:"versions"`
+	OrganizationSlug string                  `db:"organization_slug"`
+	Versions         []TaggedArtifactVersion `db:"versions" json:"versions"`
 }
