@@ -7,4 +7,5 @@ export interface RemoteEnvironment {
   readonly posthogToken?: string;
   readonly posthogApiHost?: string;
   readonly posthogUiHost?: string;
+  readonly artifactsHost: string;
 }

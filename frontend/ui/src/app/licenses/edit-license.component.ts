@@ -10,7 +10,6 @@ import {
   OnInit,
   signal,
   ViewChild,
-  WritableSignal,
 } from '@angular/core';
 import {AsyncPipe} from '@angular/common';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -18,8 +17,6 @@ import {
   ControlValueAccessor,
   FormArray,
   FormBuilder,
-  FormControl,
-  FormGroup,
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
@@ -36,6 +33,7 @@ import dayjs from 'dayjs';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {ArtifactLicense} from '../services/artifact-licenses.service';
 
 @Component({
   selector: 'app-edit-license',
@@ -66,9 +64,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     id: this.fb.nonNullable.control<string | undefined>(undefined),
     name: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
     expiresAt: this.fb.nonNullable.control(''),
-    applicationId: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
-    includeAllVersions: this.fb.nonNullable.control<boolean>(true, Validators.required),
-    versions: this.fb.array<boolean>([]),
+    subjectId: this.fb.nonNullable.control<string | undefined>(undefined, Validators.required),
+    includeAllItems: this.fb.nonNullable.control<boolean>(true, Validators.required),
+    subjectItems: this.fb.array<boolean>([]),
     ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
     registry: this.fb.nonNullable.group(
       {
@@ -93,10 +91,10 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   });
   editFormLoading = false;
   readonly license = signal<ApplicationLicense | undefined>(undefined);
-  readonly selectedApplication = signal<Application | undefined>(undefined);
+  readonly selectedSubject = signal<Application | undefined>(undefined);
 
   dropdownOpen = signal(false);
-  protected versionsSelected = 0;
+  protected subjectItemsSelected = 0;
 
   dropdownWidth: number = 0;
 
@@ -112,39 +110,39 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     effect(() => {
       if (!this.dropdownOpen()) {
         if (
-          !this.editForm.controls.includeAllVersions.value &&
-          !this.editForm.controls.versions.value.some((v) => !!v)
+          !this.editForm.controls.includeAllItems.value &&
+          !this.editForm.controls.subjectItems.value.some((v) => !!v)
         ) {
-          this.editForm.controls.includeAllVersions.patchValue(true);
+          this.editForm.controls.includeAllItems.patchValue(true);
         }
       }
     });
   }
 
   ngOnInit() {
-    this.editForm.controls.includeAllVersions.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((includeAll) => {
+    this.editForm.controls.includeAllItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((includeAll) => {
       if (includeAll) {
-        this.editForm.controls.versions.controls.forEach((c) => c.patchValue(false, {emitEvent: false}));
+        this.editForm.controls.subjectItems.controls.forEach((c) => c.patchValue(false, {emitEvent: false}));
       }
     });
-    this.editForm.controls.versions.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
-      if (this.editForm.controls.includeAllVersions.value && val.some((v) => !!v)) {
-        this.editForm.controls.includeAllVersions.patchValue(false, {emitEvent: false});
+    this.editForm.controls.subjectItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
+      if (this.editForm.controls.includeAllItems.value && val.some((v) => !!v)) {
+        this.editForm.controls.includeAllItems.patchValue(false, {emitEvent: false});
       }
     });
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.onTouched();
       const val = this.editForm.getRawValue();
-      if (!val.includeAllVersions) {
-        this.versionsSelected = val.versions.filter((v) => !!v).length;
+      if (!val.includeAllItems) {
+        this.subjectItemsSelected = val.subjectItems.filter((v) => !!v).length;
       }
       if (this.editForm.valid) {
         this.onChange({
           id: val.id,
           name: val.name,
           expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
-          applicationId: val.applicationId,
-          versions: this.getSelectedVersions(val.includeAllVersions!, val.versions ?? []),
+          applicationId: val.subjectId,
+          versions: this.getSelectedVersions(val.includeAllItems!, val.subjectItems ?? []),
           ownerUserAccountId: val.ownerUserAccountId,
           registryUrl: val.registry.url?.trim() || undefined,
           registryUsername: val.registry.username?.trim() || undefined,
@@ -154,38 +152,42 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.onChange(undefined);
       }
     });
-    this.editForm.controls.applicationId.valueChanges
+    this.editForm.controls.subjectId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        switchMap(async (applicationId) => {
+        switchMap(async (subjectId) => {
           const apps = await firstValueFrom(this.applicationsService.list());
-          return apps.find((a) => a.id === applicationId);
+          return apps.find((a) => a.id === subjectId);
         })
       )
-      .subscribe((selectedApplication) => {
-        this.versionsArray.clear({emitEvent: false});
-        const applicationVersions = selectedApplication?.versions ?? [];
-        const licenseVersions = this.license()?.versions;
+      .subscribe((selectedSubject) => {
+        this.subjectItemsArray.clear({emitEvent: false});
+        const allItems = (selectedSubject as Application)?.versions ?? [];
+        const licenseItems = (this.license() as ApplicationLicense)?.versions;
         let anySelected = false;
-        for (let i = 0; i < applicationVersions.length; i++) {
-          const version = applicationVersions[i];
-          const selected = !!licenseVersions?.some((v) => v.id === version.id);
-          this.versionsArray.push(this.fb.control(selected), {emitEvent: i === applicationVersions.length - 1});
+        for (let i = 0; i < allItems.length; i++) {
+          const item = allItems[i];
+          const selected = !!licenseItems?.some((v) => v.id === item.id);
+          this.subjectItemsArray.push(this.fb.control(selected), {emitEvent: i === allItems.length - 1});
           anySelected = anySelected || selected;
         }
         if (!anySelected) {
-          this.editForm.controls.includeAllVersions.patchValue(true);
+          this.editForm.controls.includeAllItems.patchValue(true);
         }
-        this.selectedApplication.set(selectedApplication);
+        this.selectedSubject.set(selectedSubject);
       });
   }
 
-  private getSelectedVersions(includeAllVersions: boolean, versionControls: (boolean | null)[]): ApplicationVersion[] {
+  selectedApplication(): Application | undefined {
+    return this.selectedSubject() as Application;
+  }
+
+  private getSelectedVersions(includeAllVersions: boolean, itemControls: (boolean | null)[]): ApplicationVersion[] {
     if (includeAllVersions) {
       return [];
     }
     const app = this.selectedApplication();
-    return versionControls
+    return itemControls
       .map((v, idx) => {
         if (v) {
           return app?.versions?.[idx];
@@ -221,14 +223,14 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     this.destroyed$.complete();
   }
 
-  get versionsArray() {
-    return this.editForm.controls.versions as FormArray;
+  get subjectItemsArray() {
+    return this.editForm.controls.subjectItems as FormArray;
   }
 
-  private onChange: (l: ApplicationLicense | undefined) => void = () => {};
+  private onChange: (l: ApplicationLicense | ArtifactLicense | undefined) => void = () => {};
   private onTouched: () => void = () => {};
 
-  registerOnChange(fn: (l: ApplicationLicense | undefined) => void): void {
+  registerOnChange(fn: (l: ApplicationLicense | ArtifactLicense | undefined) => void): void {
     this.onChange = fn;
   }
 
@@ -243,9 +245,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         id: license.id,
         name: license.name,
         expiresAt: license.expiresAt ? dayjs(license.expiresAt).format('YYYY-MM-DD') : '',
-        applicationId: license.applicationId,
-        versions: [], // will be set by applicationId-on-change,
-        includeAllVersions: (license.versions ?? []).length === 0,
+        subjectId: license.applicationId,
+        subjectItems: [], // will be set by on-change,
+        includeAllItems: (license.versions ?? []).length === 0,
         ownerUserAccountId: license.ownerUserAccountId,
         registry: {
           url: license.registryUrl || '',
@@ -254,7 +256,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         },
       });
       if (license.ownerUserAccountId) {
-        this.editForm.controls.applicationId.disable({emitEvent: false});
+        this.editForm.controls.subjectId.disable({emitEvent: false});
         this.editForm.controls.ownerUserAccountId.disable({emitEvent: false});
       }
     } else {

@@ -11,5 +11,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.service.artifactsPort }}
+      targetPort: artifacts
+      protocol: TCP
+      name: artifacts
   selector:
     {{- include "distr.selectorLabels" . | nindent 4 }}

@@ -44,6 +44,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.1",
     "@fortawesome/free-solid-svg-icons": "^6.7.1",
     "@glasskube/distr-sdk": "file:./sdk/js/src",
+    "@pandatix/js-cvss": "^0.4.4",
     "@sentry/angular": "^9.0.0",
     "apexcharts": "^4.1.0",
     "dayjs": "^1.11.13",
