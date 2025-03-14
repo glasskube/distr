@@ -31,6 +31,7 @@ import {ToastService} from './services/toast.service';
 import {VerifyComponent} from './verify/verify.component';
 import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
 import {UsersService} from './services/users.service';
+import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -210,6 +211,12 @@ export const routes: Routes = [
           {
             path: 'branding',
             component: OrganizationBrandingComponent,
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor')],
+          },
+          {
+            path: 'settings',
+            component: OrganizationSettingsComponent,
             data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor')],
           },

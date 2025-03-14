@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
@@ -29,6 +29,7 @@ export class OrganizationBrandingComponent implements OnInit {
     description: new FormControl(''),
     logo: new FormControl<Blob | null>(null),
   });
+  formLoading = signal(false);
   protected readonly logoSrc: Observable<string | null> = this.form.controls.logo.valueChanges.pipe(
     map((logo) => (logo ? URL.createObjectURL(logo) : null))
   );
@@ -55,6 +56,7 @@ export class OrganizationBrandingComponent implements OnInit {
   async save() {
     this.form.markAllAsTouched();
     if (this.form.valid) {
+      this.formLoading.set(true);
       const formData = new FormData();
       formData.set('title', this.form.value.title ?? '');
       formData.set('description', this.form.value.description ?? '');
@@ -76,6 +78,8 @@ export class OrganizationBrandingComponent implements OnInit {
         if (msg) {
           this.toast.error(msg);
         }
+      } finally {
+        this.formLoading.set(false);
       }
     }
   }
