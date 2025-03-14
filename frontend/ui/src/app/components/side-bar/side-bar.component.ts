@@ -8,6 +8,7 @@ import {
   faBoxesStacked,
   faCheckDouble,
   faChevronDown,
+  faCodeFork,
   faDashboard,
   faGear,
   faHome,
@@ -75,4 +76,5 @@ export class SideBarComponent {
   protected readonly faHome = faHome;
   protected showRequestAccessTooltip = false;
   protected readonly faChevronDown = faChevronDown;
+  protected readonly faCodeFork = faCodeFork;
 }

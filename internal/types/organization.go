@@ -13,6 +13,7 @@ import (
 type Organization struct {
 	Base
 	Name     string    `db:"name" json:"name"`
+	Slug     *string   `db:"slug" json:"slug"`
 	Features []Feature `db:"features" json:"features"`
 }
 

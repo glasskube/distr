@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -12,10 +15,14 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const (
+	organizationOutputExpr = ` o.id, o.created_at, o.name, o.slug, o.features `
+)
+
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization (name) VALUES (@name) RETURNING id, created_at, name, features",
+		"INSERT INTO Organization AS o (name) VALUES (@name) RETURNING "+organizationOutputExpr,
 		pgx.NamedArgs{"name": org.Name},
 	)
 	if err != nil {
@@ -30,10 +37,31 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
+func UpdateOrganization(ctx context.Context, org *types.Organization) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"UPDATE Organization AS o SET name = @name, slug = @slug WHERE id = @id RETURNING "+organizationOutputExpr,
+		pgx.NamedArgs{"id": org.ID, "name": org.Name, "slug": org.Slug},
+	)
+	if err != nil {
+		return err
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization]); err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+		return err
+	} else {
+		*org = *result
+		return nil
+	}
+}
+
 func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT o.id, o.created_at, o.name, o.features, j.user_role
+		SELECT`+organizationOutputExpr+`, j.user_role
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
@@ -53,7 +81,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.Or
 func GetOrganizationByID(ctx context.Context, orgID uuid.UUID) (*types.Organization, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT id, created_at, name, features FROM Organization WHERE id = @id",
+		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE id = @id",
 		pgx.NamedArgs{"id": orgID},
 	)
 	if err != nil {
@@ -73,8 +101,7 @@ func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.O
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		fmt.Sprintf(
-			`SELECT
-				o.id, o.created_at, o.name, o.features,
+			`SELECT `+organizationOutputExpr+`,
 				CASE WHEN b.id IS NOT NULL THEN (%v) END AS branding
 			FROM Organization o
 			LEFT JOIN OrganizationBranding b ON b.organization_id = o.id
