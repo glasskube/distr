@@ -9,7 +9,7 @@ import {HttpClient} from '@angular/common/http';
 
 export interface ArtifactLicenseSelection {
   artifact: Artifact;
-  tags?: TaggedArtifactVersion[];
+  versions?: TaggedArtifactVersion[];
 }
 
 export interface ArtifactLicense extends BaseModel, Named {
@@ -34,18 +34,8 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
   }
 
   create(request: ArtifactLicense): Observable<ArtifactLicense> {
-    return this.usersService
-      .getUsers()
-      .pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
-      .pipe(
-        map((owner) => {
-          return {
-            ...request,
-            id: generateUUIDv4(),
-            owner,
-          } as ArtifactLicense;
-        }),
-        tap((t) => this.cache.save(t))
+    return this.http.post<ArtifactLicense>(this.artifactLicensesUrl, request).pipe(
+        tap((l) => this.cache.save(l))
       );
   }
 

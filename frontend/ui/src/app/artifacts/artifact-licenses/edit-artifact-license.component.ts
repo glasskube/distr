@@ -109,7 +109,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
           artifacts: val.artifacts.map((artifact) => {
             return {
               artifact: artifact.artifact!,
-              tags: this.getSelectedTags(artifact.includeAllTags, artifact.artifactTags, artifact.artifact!),
+              versions: this.getSelectedTags(artifact.includeAllTags, artifact.artifactTags, artifact.artifact!),
             };
           }),
           ownerUserAccountId: val.ownerUserAccountId,
@@ -221,7 +221,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         artifactGroup.controls.artifact.patchValue(selectedArtifact);
         artifactGroup.controls.artifactTags.clear({emitEvent: false});
         const allTagsOfArtifact = (selectedArtifact as ArtifactWithTags)?.versions ?? [];
-        const licenseItems = this.license()?.artifacts?.find((a) => a.artifact.id === selectedArtifact?.id)?.tags;
+        const licenseItems = this.license()?.artifacts?.find((a) => a.artifact.id === selectedArtifact?.id)?.versions;
         let anySelected = false;
         for (let i = 0; i < allTagsOfArtifact.length; i++) {
           const item = allTagsOfArtifact[i];
@@ -238,7 +238,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     if (selection) {
       artifactGroup.patchValue({
         artifactId: selection.artifact.id,
-        includeAllTags: (selection?.tags || []).length === 0,
+        includeAllTags: (selection?.versions || []).length === 0,
       });
     }
     this.artifacts.push(artifactGroup);

@@ -16,12 +16,12 @@ type ArtifactLicenseBase struct {
 }
 
 type ArtifactLicenseSelection struct {
-	artifact Artifact                `db:"artifact"`
-	tags     []TaggedArtifactVersion `db:"tags"`
+	Artifact Artifact                `db:"artifact" json:"artifact"`
+	Versions []TaggedArtifactVersion `db:"versions" json:"versions"`
 }
 
 type ArtifactLicense struct {
 	ArtifactLicenseBase
-	artifacts []ArtifactLicenseSelection
-	Owner     *UserAccount `db:"owner" json:"owner,omitempty"`
+	Artifacts []ArtifactLicenseSelection `db:"artifacts" json:"artifacts,omitempty"`
+	Owner     *UserAccount               `db:"owner" json:"owner,omitempty"`
 }
