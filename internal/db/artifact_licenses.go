@@ -24,17 +24,20 @@ func GetArtifactLicenses(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT `+artifactLicenseCompleteOutExpr+`,
-			coalesce((
-				SELECT array_agg(
-					row(
-						(`+artifactOutputExpr+`),
-
+			(
+				SELECT array_agg(row (
+					(a.id, a.created_at, a.organization_id, a.name),
+					(
+						SELECT array_agg(row((av.id)))
+						FROM ArtifactLicense_Artifact alax
+						JOIN ArtifactVersion av ON alax.artifact_version_id = av.id
+						WHERE alax.artifact_id = a.id AND alax.artifact_license_id = al.id
 					)
-				)
+				))
 				FROM ArtifactLicense_Artifact ala
-				INNER JOIN Artifact a ON a.id = ala.artifact_id
+						 INNER JOIN Artifact a ON a.id = ala.artifact_id
 				WHERE ala.artifact_license_id = al.id
-			), ARRAY[]::RECORD[]) as artifacts
+			) as artifacts
 		FROM ArtifactLicense al
 		LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id
 		WHERE al.organization_id = @orgId
