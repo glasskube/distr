@@ -73,6 +73,10 @@ docker-build-docker-agent:
 docker-build-kubernetes-agent:
 	docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/distr/kubernetes-agent:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
 
+.PHONY: docker-build-docker-swarm-agent
+docker-build-docker-swarm-agent:
+	docker build -f Dockerfile.docker-swarm-agent --tag ghcr.io/glasskube/distr/docker-swarm-agent:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --network host .
+
 .PHONY: docker-build
 docker-build: docker-build-hub docker-build-docker-agent docker-build-kubernetes-agent
 
