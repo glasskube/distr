@@ -76,20 +76,17 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 // AuthorizeBlob implements ArtifactsAuthorizer.
 func (a *authorizer) AuthorizeBlob(ctx context.Context, digest v1.Hash, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
-	var err error
 	if *auth.CurrentUserRole() != types.UserRoleVendor {
 		if action == ActionWrite {
 			return ErrAccessDenied
 		} else if action == ActionRead {
-			err = db.CheckLicenseForArtifactBlob(ctx, digest.String(), auth.CurrentUserID())
+			err := db.CheckLicenseForArtifactBlob(ctx, digest.String(), auth.CurrentUserID())
+			if errors.Is(err, apierrors.ErrForbidden) {
+				return ErrAccessDenied
+			} else if err != nil {
+				return err
+			}
 		}
-	} else if action == ActionRead {
-		err = db.CheckOrganizationForArtifactBlob(ctx, digest.String(), *auth.CurrentOrgID())
-	}
-	if errors.Is(err, apierrors.ErrForbidden) {
-		return ErrAccessDenied
-	} else if err != nil {
-		return err
 	}
 	return nil
 }

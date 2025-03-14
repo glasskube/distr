@@ -337,6 +337,7 @@ func (b *blobs) handlePost(
 			return regErrInternal(err)
 		}
 		resp.Header().Set("Docker-Content-Digest", h.String())
+		resp.Header().Set("Location", req.URL.JoinPath("..", h.String()).Path)
 		resp.WriteHeader(http.StatusCreated)
 		return nil
 	}
@@ -387,7 +388,7 @@ func (b *blobs) handlePatch(
 		b.uploads[target] = l.Bytes()
 		resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
 		resp.Header().Set("Range", fmt.Sprintf("0-%d", len(l.Bytes())-1))
-		resp.WriteHeader(http.StatusNoContent)
+		resp.WriteHeader(http.StatusAccepted)
 		return nil
 	}
 
@@ -409,7 +410,7 @@ func (b *blobs) handlePatch(
 	b.uploads[target] = l.Bytes()
 	resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
 	resp.Header().Set("Range", fmt.Sprintf("0-%d", len(l.Bytes())-1))
-	resp.WriteHeader(http.StatusNoContent)
+	resp.WriteHeader(http.StatusAccepted)
 	return nil
 }
 
@@ -467,6 +468,7 @@ func (b *blobs) handlePut(resp http.ResponseWriter, req *http.Request, service, 
 
 	delete(b.uploads, target)
 	resp.Header().Set("Docker-Content-Digest", h.String())
+	resp.Header().Set("Location", req.URL.JoinPath("..", h.String()).Path)
 	resp.WriteHeader(http.StatusCreated)
 	return nil
 }
