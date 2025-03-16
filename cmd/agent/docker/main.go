@@ -51,6 +51,7 @@ loop:
 		if resource, err := client.DockerResource(ctx); err != nil {
 			logger.Error("failed to get resource", zap.Error(err))
 		} else {
+
 			if agentVersionID != "" {
 				if agentVersionID != resource.Version.ID.String() {
 					logger.Info("agent version has changed. starting self-update")
@@ -71,13 +72,14 @@ loop:
 				}
 			}
 
-			if deployments, err := GetExistingDeployments(); err != nil {
+			deployments, err := GetExistingDeployments()
+			if err != nil {
 				logger.Error("could not get existing deployments", zap.Error(err))
 			} else {
 				for _, deployment := range deployments {
 					if resource.Deployment == nil || resource.Deployment.ID != deployment.ID {
 						logger.Info("uninstalling old deployment", zap.String("id", deployment.ID.String()))
-						if err := UninstallDockerCompose(ctx, deployment); err != nil {
+						if err := DockerEngineUninstall(ctx, deployment); err != nil {
 							logger.Error("could not uninstall deployment", zap.Error(err))
 						} else if err := DeleteDeployment(deployment); err != nil {
 							logger.Error("could not delete deployment", zap.Error(err))
@@ -96,8 +98,15 @@ loop:
 			_, err = agentauth.EnsureAuth(ctx, resource.Deployment.AgentDeployment)
 			if err != nil {
 				logger.Error("docker auth error", zap.Error(err))
-			} else if agentDeployment, status, err = ApplyComposeFile(ctx, *resource.Deployment); err == nil {
-				multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+			}
+			if _, exists := deployments[resource.Deployment.RevisionID]; !exists {
+
+				agentDeployment, status, err = DockerEngineApply(ctx, *resource.Deployment)
+
+				if err == nil {
+					multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+				}
+
 			}
 
 			if statusErr := client.Status(ctx, resource.Deployment.RevisionID, status, err); statusErr != nil {

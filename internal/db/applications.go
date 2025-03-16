@@ -21,7 +21,7 @@ const (
 	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
-				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
+				av.chart_type, av.chart_name, av.chart_url, av.chart_version, av.docker_type) ORDER BY av.created_at ASC)
 			FROM ApplicationVersion av
 			WHERE av.application_id = a.id
 		), array[]::record[]) AS versions `
@@ -29,7 +29,7 @@ const (
 	applicationWithLicensedVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
-				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
+				av.chart_type, av.chart_name, av.chart_url, av.chart_version, av.docker_type) ORDER BY av.created_at ASC)
 			FROM ApplicationVersion av
 			WHERE av.application_id = a.id and
 				((av.id IN
@@ -210,7 +210,12 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.U
 }
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
+	// defaultDockerType := DockerTypeCompose
+	// av.Docker_Type = &defaultDockerType
+	fmt.Println("----------------->>>>>>>>>>>>", applicationVersion.Docker_Type)
+
 	db := internalctx.GetDb(ctx)
+
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
 		"applicationId": applicationVersion.ApplicationID,
@@ -218,6 +223,7 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 		"chartName":     applicationVersion.ChartName,
 		"chartUrl":      applicationVersion.ChartUrl,
 		"chartVersion":  applicationVersion.ChartVersion,
+		"dockerType":    applicationVersion.Docker_Type,
 	}
 	if applicationVersion.ComposeFileData != nil {
 		args["composeFileData"] = applicationVersion.ComposeFileData
@@ -231,11 +237,11 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 
 	row, err := db.Query(ctx,
 		`INSERT INTO ApplicationVersion AS av (name, application_id, chart_type, chart_name, chart_url, chart_version,
-				compose_file_data, values_file_data, template_file_data)
-			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @composeFileData::bytea,
+				docker_type, compose_file_data, values_file_data, template_file_data)
+			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @dockerType, @composeFileData::bytea,
 				@valuesFileData::bytea, @templateFileData::bytea)
 			RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url,
-				av.chart_version, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+				av.chart_version, av.docker_type, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
 		args)
 	if err != nil {
 		return fmt.Errorf("can not create ApplicationVersion: %w", err)
@@ -255,13 +261,15 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt WHERE id = @id
+		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt, docker_type = @dockerType
+		WHERE id = @id
 		RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
-				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+				av.docker_type, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
 		pgx.NamedArgs{
 			"id":         applicationVersion.ID,
 			"name":       applicationVersion.Name,
 			"archivedAt": applicationVersion.ArchivedAt,
+			"dockerType": applicationVersion.Docker_Type,
 		})
 	if err != nil {
 		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
@@ -284,7 +292,7 @@ func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) 
 	rows, err := db.Query(
 		ctx,
 		`SELECT av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
-			av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id
+			av.docker_type, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id
 		FROM ApplicationVersion av
 		WHERE id = @id`,
 		pgx.NamedArgs{"id": applicationVersionID},

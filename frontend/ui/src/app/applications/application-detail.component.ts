@@ -20,7 +20,7 @@ import {
 } from 'rxjs';
 import {ApplicationsService} from '../services/applications.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion, DockerType, HelmChartType} from '@glasskube/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArchive,
@@ -111,7 +111,12 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl(''),
     }),
     docker: new FormGroup({
-      compose: new FormControl('', Validators.required),
+      dockerType: new FormControl<DockerType>('compose', {
+        nonNullable: true,
+        validators: Validators.required,
+      }),
+      compose: new FormControl(''),
+      swarm: new FormControl(''),
       template: new FormControl(''),
     }),
   });
@@ -137,6 +142,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
+    
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -146,8 +152,19 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.newVersionForm.controls.kubernetes.controls.chartName.disable();
         }
       });
-  }
 
+    this.newVersionForm.controls.docker.controls.dockerType.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((type) => {
+        if (type === 'compose') {
+          this.newVersionForm.controls.docker.controls.compose.enable();
+        
+        } else {
+          this.newVersionForm.controls.docker.controls.compose.disable();
+          
+        }
+      });
+  }
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
@@ -201,9 +218,11 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           application,
           {
             name: this.newVersionForm.controls.versionName.value!,
+            dockerType: this.newVersionForm.controls.docker.controls.dockerType.value!,
           },
           this.newVersionForm.controls.docker.controls.compose.value!,
-          this.newVersionForm.controls.docker.controls.template.value!
+          this.newVersionForm.controls.docker.controls.template.value!,
+        
         );
       } else {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;

@@ -1,5 +1,5 @@
 import {BaseModel, Named} from './base';
-import {DeploymentType, HelmChartType} from './deployment';
+import {DeploymentType, HelmChartType, DockerType} from './deployment';
 
 export interface Application extends BaseModel, Named {
   type: DeploymentType;
@@ -13,6 +13,7 @@ export interface ApplicationVersion {
   archivedAt?: string;
   applicationId?: string;
   chartType?: HelmChartType;
+  dockerType?: DockerType;
   chartName?: string;
   chartUrl?: string;
   chartVersion?: string;
