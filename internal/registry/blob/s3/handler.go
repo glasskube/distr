@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -15,12 +16,14 @@ import (
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/uuid"
 )
 
 const (
 	accessKey       = "distr"
 	accessKeySecret = "distr123"
 	bucket          = "distr"
+	chunksPrefix    = "chunks"
 )
 
 type blobHandler struct {
@@ -121,6 +124,117 @@ func (handler *blobHandler) Put(ctx context.Context, repo string, h v1.Hash, con
 	return nil
 }
 
+func (handler *blobHandler) StartSession(ctx context.Context, repo string) (string, error) {
+	if id, err := uuid.NewRandom(); err != nil {
+		return "", err
+	} else {
+		return id.String(), nil
+	}
+}
+
+func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader, start int64) (int64, error) {
+	if rc, ok := r.(io.Closer); ok {
+		defer rc.Close()
+	}
+
+	uploadKey := path.Join(chunksPrefix, id)
+	var uploadID *string
+	var partNumber int32
+	var size int64
+
+	if start == 0 {
+		if upload, err := handler.s3Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
+			Bucket: util.PtrTo(bucket),
+			Key:    &uploadKey,
+		}); err != nil {
+			return 0, err
+		} else {
+			uploadID = upload.UploadId
+			partNumber = 1
+		}
+	} else {
+		if id, err := handler.getUploadID(ctx, uploadKey); err != nil {
+			return 0, err
+		} else {
+			uploadID = &id
+		}
+
+		if parts, err := handler.getExistingParts(ctx, uploadKey, *uploadID); err != nil {
+			return 0, err
+		} else {
+			partNumber = int32(len(parts) + 1)
+			for _, part := range parts {
+				size += *part.Size
+			}
+		}
+	}
+
+	if size != start {
+		return 0, blob.NewErrBadUpload("range is not as expected")
+	}
+
+	var br *bytes.Reader
+	if data, err := io.ReadAll(r); err != nil {
+		return 0, err
+	} else {
+		size += int64(len(data))
+		br = bytes.NewReader(data)
+	}
+
+	if _, err := handler.s3Client.UploadPart(ctx, &s3.UploadPartInput{
+		Bucket:     util.PtrTo(bucket),
+		Key:        &uploadKey,
+		UploadId:   uploadID,
+		PartNumber: &partNumber,
+		Body:       br,
+	}); err != nil {
+		return 0, err
+	}
+
+	return size, nil
+}
+
+func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string, digest v1.Hash) error {
+	uploadKey := path.Join(chunksPrefix, id)
+	if uploadID, err := handler.getUploadID(ctx, uploadKey); err != nil {
+		return err
+	} else if uploadedParts, err := handler.getExistingParts(ctx, uploadKey, uploadID); err != nil {
+		return err
+	} else {
+		completionParts := make([]types.CompletedPart, len(uploadedParts))
+		for i, part := range uploadedParts {
+			completionParts[i] = types.CompletedPart{PartNumber: part.PartNumber, ETag: part.ETag}
+		}
+
+		// TODO:
+		//   CompleteSession should check if the completed object has the correct digest before copying it to the
+		//   final location. AWS supports calculating checksums automatically, but we would need a SHA256 for the
+		//   complete object which, unfortunately, is explicitly not supported.
+		//   https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html#Full-object-checksums
+		if _, err := handler.s3Client.CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
+			Bucket:          util.PtrTo(bucket),
+			Key:             &uploadKey,
+			UploadId:        &uploadID,
+			MultipartUpload: &types.CompletedMultipartUpload{Parts: completionParts},
+		}); err != nil {
+			return err
+		} else if _, err := handler.s3Client.CopyObject(ctx, &s3.CopyObjectInput{
+			Bucket:     util.PtrTo(bucket),
+			Key:        util.PtrTo(digest.String()),
+			CopySource: util.PtrTo(path.Join(bucket, uploadKey)),
+		}); err != nil {
+			return err
+		} else if _, err := handler.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+			Bucket: util.PtrTo(bucket),
+			Key:    &uploadKey,
+		}); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}
+}
+
 // Delete implements blob.BlobDeleteHandler.
 func (handler *blobHandler) Delete(ctx context.Context, repo string, h v1.Hash) error {
 	key := h.String()
@@ -129,6 +243,42 @@ func (handler *blobHandler) Delete(ctx context.Context, repo string, h v1.Hash) 
 		return convertErrNotFound(err)
 	}
 	return nil
+}
+
+func (handler *blobHandler) getUploadID(ctx context.Context, uploadKey string) (string, error) {
+	// ListMultipartUploads returns at most 1000 elements.
+	// This means that if there are more than 1000 multipart uploads in progress at the same time, finding the upload
+	// ID for a specific multipart upload can fail, since it might not be in among the returned elements!
+	if uploads, err := handler.s3Client.ListMultipartUploads(ctx, &s3.ListMultipartUploadsInput{
+		Bucket: util.PtrTo(bucket),
+	}); err != nil {
+		return "", err
+	} else {
+		for _, upload := range uploads.Uploads {
+			if *upload.Key == uploadKey {
+				return *upload.UploadId, nil
+			}
+		}
+		return "", fmt.Errorf("%w: unknown upload session", blob.ErrNotFound)
+	}
+}
+
+func (handler *blobHandler) getExistingParts(
+	ctx context.Context,
+	uploadKey string,
+	uploadID string,
+) ([]types.Part, error) {
+	// ListParts returns at most 1000 elements.
+	// Thus, we can not currently handle uploads with more than 1000 chunks!
+	if result, err := handler.s3Client.ListParts(ctx, &s3.ListPartsInput{
+		Bucket:   util.PtrTo(bucket),
+		Key:      &uploadKey,
+		UploadId: &uploadID,
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.Parts, nil
+	}
 }
 
 func convertErrNotFound(err error) error {
