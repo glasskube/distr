@@ -3,18 +3,18 @@ package handlers
 import (
 	"context"
 	"errors"
-	"github.com/glasskube/distr/internal/apierrors"
-	"github.com/glasskube/distr/internal/types"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -23,8 +23,9 @@ func ArtifactLicensesRouter(r chi.Router) {
 	r.Get("/", getArtifactLicenses)
 	r.Post("/", createArtifactLicense)
 	r.Route("/{artifactLicenseId}", func(r chi.Router) {
-		r.With(artifactLicenseMiddleware).Group(func(r chi.Router) {
-			r.With(requireUserRoleVendor).Put("/", updateArtifactLicense)
+		r.With(artifactLicenseMiddleware, requireUserRoleVendor).Group(func(r chi.Router) {
+			r.Put("/", updateArtifactLicense)
+			r.Delete("/", deleteArtifactLicense)
 		})
 	})
 }
@@ -92,7 +93,7 @@ func createArtifactLicense(w http.ResponseWriter, r *http.Request) {
 
 func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	// log := internalctx.GetLogger(ctx)
+	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 
 	license, err := JsonBody[types.ArtifactLicense](w, r)
@@ -107,29 +108,66 @@ func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
 	} else if license.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if existing.OwnerUserAccountID != nil &&
-		(license.OwnerUserAccountID == nil || *existing.OwnerUserAccountID != *license.OwnerUserAccountID) {
-		http.Error(w, "Changing the license owner is not allowed", http.StatusBadRequest)
-		return
 	}
 
-	// TODO
-	/*
-		_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
-			if err := db.CreateArtifactLicense(ctx, &license.ArtifactLicenseBase); errors.Is(err, apierrors.ErrConflict) {
-				http.Error(w, "An artifact license with this name already exists", http.StatusBadRequest)
-				return err
-			} else if err != nil {
-				log.Warn("could not create artifact license", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return err
-			}
+	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		if err := db.UpdateArtifactLicense(ctx, &license.ArtifactLicenseBase); errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, "An artifact license with this name already exists", http.StatusBadRequest)
+			return err
+		} else if err != nil {
+			log.Warn("could not update artifact license", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
 
-			// TODO maybe completely read again
-			RespondJSON(w, license)
-			return nil
-		})*/
+		if err := db.RemoveAllArtifactsFromLicense(ctx, license.ID); err != nil {
+			log.Warn("could not update artifct license selection", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+
+		for _, selection := range license.Artifacts {
+			if len(selection.Versions) == 0 {
+				if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.Artifact.ID, nil); err != nil {
+					log.Warn("could not add version to license", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return err
+				}
+			}
+			for _, version := range selection.Versions {
+				if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.Artifact.ID, &version.ID); err != nil {
+					log.Warn("could not add version to license", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return err
+				}
+			}
+		}
+
+		// TODO maybe completely read again
+		RespondJSON(w, license)
+		return nil
+	})
+}
+
+func deleteArtifactLicense(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	license := internalctx.GetArtifactLicense(ctx)
+	auth := auth.Authentication.Require(ctx)
+	if license.OrganizationID != *auth.CurrentOrgID() {
+		http.NotFound(w, r)
+	} else if err := db.DeleteArtifactLicenseWithID(ctx, license.ID); errors.Is(err, apierrors.ErrConflict) {
+		http.Error(w, "could not delete license because it is still in use", http.StatusBadRequest)
+	} else if err != nil {
+		log.Warn("error deleting license", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+	}
 }
 
 func artifactLicenseMiddleware(next http.Handler) http.Handler {

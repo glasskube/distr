@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -85,6 +86,57 @@ func CreateArtifactLicense(ctx context.Context, license *types.ArtifactLicenseBa
 	}
 }
 
+func UpdateArtifactLicense(ctx context.Context, license *types.ArtifactLicenseBase) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`UPDATE ArtifactLicense AS al SET
+			name = @name,
+            expires_at = @expiresAt,
+            owner_useraccount_id = @ownerUserAccountId
+		 WHERE al.id = @id RETURNING`+artifactLicenseOutputExpr, // TODO ?
+		pgx.NamedArgs{
+			"id":                 license.ID,
+			"name":               license.Name,
+			"expiresAt":          license.ExpiresAt,
+			"ownerUserAccountId": license.OwnerUserAccountID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update ArtifactLicense: %w", err)
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactLicenseBase]); err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+		return err
+	} else {
+		*license = result
+		return nil
+	}
+}
+
+func RemoveAllArtifactsFromLicense(
+	ctx context.Context,
+	id uuid.UUID,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`DELETE FROM ArtifactLicense_Artifact
+		WHERE artifact_license_id = @artifactLicenseId`,
+		pgx.NamedArgs{
+			"artifactLicenseId": id,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not delete relation: %w", err)
+	} else {
+		return nil
+	}
+}
+
 func AddArtifactToArtifactLicense(
 	ctx context.Context,
 	licenseID uuid.UUID,
@@ -111,13 +163,12 @@ func AddArtifactToArtifactLicense(
 
 func GetArtifactLicenseByID(ctx context.Context, id uuid.UUID) (*types.ArtifactLicense, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(
-		ctx,
-		"SELECT "+artifactLicenseCompleteOutExpr+
-			"FROM ArtifactLicense al "+
-			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
-			"WHERE al.id = @id ",
-		pgx.NamedArgs{"id": id},
+	rows, err := db.Query(ctx, `
+			SELECT `+artifactLicenseCompleteOutExpr+`, array[]::record[] as artifacts
+			FROM ArtifactLicense al
+			LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id
+			WHERE al.id = @id `,
+		pgx.NamedArgs{"id": id}, // TODO artifacts
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query ArtifactLicense: %w", err)
@@ -132,4 +183,24 @@ func GetArtifactLicenseByID(ctx context.Context, id uuid.UUID) (*types.ArtifactL
 	} else {
 		return &result, nil
 	}
+}
+
+func DeleteArtifactLicenseWithID(ctx context.Context, id uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `DELETE FROM ArtifactLicense WHERE id = @id`, pgx.NamedArgs{"id": id})
+	if err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+		return err
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not delete ArtifactLicense: %w", err)
+	}
+
+	return nil
 }

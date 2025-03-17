@@ -21,7 +21,6 @@ export interface ArtifactLicense extends BaseModel, Named {
 
 @Injectable({providedIn: 'root'})
 export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
-  private readonly usersService = inject(UsersService);
   private readonly cache: ReactiveList<ArtifactLicense>;
   private readonly artifactLicensesUrl = '/api/v1/artifact-licenses';
 
@@ -34,42 +33,18 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
   }
 
   create(request: ArtifactLicense): Observable<ArtifactLicense> {
-    return this.http.post<ArtifactLicense>(this.artifactLicensesUrl, request).pipe(
-        tap((l) => this.cache.save(l))
-      );
+    return this.http.post<ArtifactLicense>(this.artifactLicensesUrl, request).pipe(tap((l) => this.cache.save(l)));
   }
 
   delete(request: ArtifactLicense): Observable<void> {
-    this.cache.remove(request);
-    return EMPTY;
+    return this.http
+      .delete<void>(`${this.artifactLicensesUrl}/${request.id}`)
+      .pipe(tap(() => this.cache.remove(request)));
   }
 
   update(request: ArtifactLicense): Observable<ArtifactLicense> {
-    return this.list().pipe(
-      first(),
-      map((licenses) => {
-        return licenses.find((l) => l.id === request.id);
-      }),
-      combineLatestWith(
-        this.usersService.getUsers().pipe(map((users) => users.find((u) => u.id === request.ownerUserAccountId)))
-      ),
-      map(([oldLicense, owner]) => {
-        const newLicense = {
-          ...oldLicense,
-          ...request,
-          owner,
-        };
-        this.cache.save(newLicense);
-        return newLicense;
-      })
-    );
+    return this.http
+      .put<ArtifactLicense>(`${this.artifactLicensesUrl}/${request.id}`, request)
+      .pipe(tap((l) => this.cache.save(l)));
   }
-}
-
-function generateUUIDv4(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }

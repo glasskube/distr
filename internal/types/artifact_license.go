@@ -12,7 +12,7 @@ type ArtifactLicenseBase struct {
 	Name               string     `db:"name" json:"name"`
 	ExpiresAt          *time.Time `db:"expires_at" json:"expiresAt,omitempty"`
 	OrganizationID     uuid.UUID  `db:"organization_id" json:"-"`
-	OwnerUserAccountID *uuid.UUID `db:"owner_useraccount_id" json:"ownerUserAccountID,omitempty"`
+	OwnerUserAccountID *uuid.UUID `db:"owner_useraccount_id" json:"ownerUserAccountId,omitempty"`
 }
 
 type ArtifactLicenseSelection struct {
