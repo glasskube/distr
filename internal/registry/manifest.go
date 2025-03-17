@@ -470,6 +470,8 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	}
 
 	resp.Header().Set("Docker-Content-Digest", mf.BlobDigest.String())
+	resp.Header().Set("OCI-Subject", mf.BlobDigest.String())
+	resp.Header().Set("Location", req.URL.JoinPath(mf.BlobDigest.String()).Path)
 	resp.WriteHeader(http.StatusCreated)
 	return nil
 }
