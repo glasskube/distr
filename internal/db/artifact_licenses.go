@@ -16,27 +16,24 @@ import (
 
 const (
 	artifactLicenseOutputExpr = " al.id, al.created_at, al.name, al.expires_at, al.owner_useraccount_id, al.organization_id "
-	artifactLicenseOwnerExpr  = " CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (" + userAccountOutputExpr + ") END as owner "
 
-	artifactLicenseCompleteOutExpr = artifactLicenseOutputExpr + ", " + artifactLicenseOwnerExpr
+	artifactLicenseWithOwnerOutExpr = artifactLicenseOutputExpr + ", CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (" + userAccountOutputExpr + ") END as owner "
 )
 
 func GetArtifactLicenses(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT `+artifactLicenseCompleteOutExpr+`,
+		SELECT `+artifactLicenseWithOwnerOutExpr+`,
 			(
-				SELECT array_agg(row (
-					(a.id, a.created_at, a.organization_id, a.name),
-					(
-						SELECT array_agg(row((av.id)))
-						FROM ArtifactLicense_Artifact alax
-						JOIN ArtifactVersion av ON alax.artifact_version_id = av.id
-						WHERE alax.artifact_id = a.id AND alax.artifact_license_id = al.id
-					)
-				))
+				SELECT array_agg(DISTINCT row(
+					ala.artifact_id,
+					coalesce((
+						SELECT array_agg(alax.artifact_version_id) FILTER (WHERE alax.artifact_version_id IS NOT NULL)
+						FROM ArtifactLicense_artifact alax
+						WHERE alax.artifact_license_id = ala.artifact_license_id AND alax.artifact_id = ala.artifact_id
+					 ), ARRAY[]::UUID[])
+					))
 				FROM ArtifactLicense_Artifact ala
-						 INNER JOIN Artifact a ON a.id = ala.artifact_id
 				WHERE ala.artifact_license_id = al.id
 			) as artifacts
 		FROM ArtifactLicense al
@@ -164,11 +161,23 @@ func AddArtifactToArtifactLicense(
 func GetArtifactLicenseByID(ctx context.Context, id uuid.UUID) (*types.ArtifactLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-			SELECT `+artifactLicenseCompleteOutExpr+`, array[]::record[] as artifacts
+			SELECT `+artifactLicenseWithOwnerOutExpr+`,
+				(
+					SELECT array_agg(DISTINCT row(
+						ala.artifact_id,
+						coalesce((
+							SELECT array_agg(alax.artifact_version_id) FILTER (WHERE alax.artifact_version_id IS NOT NULL)
+							FROM ArtifactLicense_artifact alax
+							WHERE alax.artifact_license_id = ala.artifact_license_id AND alax.artifact_id = ala.artifact_id
+						 ), ARRAY[]::UUID[])
+						))
+					FROM ArtifactLicense_Artifact ala
+					WHERE ala.artifact_license_id = al.id
+				) as artifacts
 			FROM ArtifactLicense al
 			LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id
 			WHERE al.id = @id `,
-		pgx.NamedArgs{"id": id}, // TODO artifacts
+		pgx.NamedArgs{"id": id},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query ArtifactLicense: %w", err)

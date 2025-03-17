@@ -66,29 +66,36 @@ func createArtifactLicense(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		for _, selection := range license.Artifacts {
-			if len(selection.Versions) == 0 {
-				if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.Artifact.ID, nil); err != nil {
-					log.Warn("could not add version to license", zap.Error(err))
-					sentry.GetHubFromContext(ctx).CaptureException(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return err
-				}
-			}
-			for _, version := range selection.Versions {
-				if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.Artifact.ID, &version.ID); err != nil {
-					log.Warn("could not add version to license", zap.Error(err))
-					sentry.GetHubFromContext(ctx).CaptureException(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return err
-				}
-			}
+		if err := addArtifacts(ctx, license, log, w); err != nil {
+			return err
 		}
 
 		// TODO maybe completely read again
 		RespondJSON(w, license)
 		return nil
 	})
+}
+
+func addArtifacts(ctx context.Context, license types.ArtifactLicense, log *zap.Logger, w http.ResponseWriter) error {
+	for _, selection := range license.Artifacts {
+		if len(selection.VersionIDs) == 0 {
+			if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.ArtifactID, nil); err != nil {
+				log.Warn("could not add version to license", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+		}
+		for _, versionID := range selection.VersionIDs {
+			if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.ArtifactID, &versionID); err != nil {
+				log.Warn("could not add version to license", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
@@ -128,23 +135,8 @@ func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		for _, selection := range license.Artifacts {
-			if len(selection.Versions) == 0 {
-				if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.Artifact.ID, nil); err != nil {
-					log.Warn("could not add version to license", zap.Error(err))
-					sentry.GetHubFromContext(ctx).CaptureException(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return err
-				}
-			}
-			for _, version := range selection.Versions {
-				if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.Artifact.ID, &version.ID); err != nil {
-					log.Warn("could not add version to license", zap.Error(err))
-					sentry.GetHubFromContext(ctx).CaptureException(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return err
-				}
-			}
+		if err := addArtifacts(ctx, license, log, w); err != nil {
+			return err
 		}
 
 		// TODO maybe completely read again

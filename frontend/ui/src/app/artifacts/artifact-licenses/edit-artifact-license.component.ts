@@ -108,8 +108,8 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
           expiresAt: val.expiresAt ? new Date(val.expiresAt) : undefined,
           artifacts: val.artifacts.map((artifact) => {
             return {
-              artifact: artifact.artifact!,
-              versions: this.getSelectedTags(artifact.includeAllTags, artifact.artifactTags, artifact.artifact!),
+              artifactId: artifact.artifact!.id,
+              versionIds: this.getSelectedVersions(artifact.includeAllTags, artifact.artifactTags, artifact.artifact!),
             };
           }),
           ownerUserAccountId: val.ownerUserAccountId,
@@ -120,22 +120,22 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     });
   }
 
-  private getSelectedTags(
+  private getSelectedVersions(
     includeAllTags: boolean,
     itemControls: (boolean | null)[],
     artifact: ArtifactWithTags
-  ): TaggedArtifactVersion[] {
+  ): string[] {
     if (includeAllTags) {
       return [];
     }
     return itemControls
       .map((v, idx) => {
         if (v) {
-          return artifact?.versions?.[idx];
+          return artifact?.versions?.[idx]?.id;
         }
         return undefined;
       })
-      .filter((v) => !!v);
+      .filter((v) => v !== undefined && v !== null);
   }
 
   ngAfterViewInit() {
@@ -221,11 +221,11 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         artifactGroup.controls.artifact.patchValue(selectedArtifact);
         artifactGroup.controls.artifactTags.clear({emitEvent: false});
         const allTagsOfArtifact = (selectedArtifact as ArtifactWithTags)?.versions ?? [];
-        const licenseItems = this.license()?.artifacts?.find((a) => a.artifact.id === selectedArtifact?.id)?.versions;
+        const licenseItems = this.license()?.artifacts?.find((a) => a.artifactId === selectedArtifact?.id)?.versionIds;
         let anySelected = false;
         for (let i = 0; i < allTagsOfArtifact.length; i++) {
           const item = allTagsOfArtifact[i];
-          const selected = !!licenseItems?.some((v) => v.id === item.id);
+          const selected = !!licenseItems?.some((v) => v === item.id);
           artifactGroup.controls.artifactTags.push(this.fb.control(selected), {
             emitEvent: i === allTagsOfArtifact.length - 1,
           });
@@ -237,8 +237,8 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       });
     if (selection) {
       artifactGroup.patchValue({
-        artifactId: selection.artifact.id,
-        includeAllTags: (selection?.versions || []).length === 0,
+        artifactId: selection.artifactId,
+        includeAllTags: (selection?.versionIds || []).length === 0,
       });
     }
     this.artifacts.push(artifactGroup);

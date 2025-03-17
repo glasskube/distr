@@ -16,8 +16,8 @@ type ArtifactLicenseBase struct {
 }
 
 type ArtifactLicenseSelection struct {
-	Artifact Artifact                `db:"artifact" json:"artifact"`
-	Versions []TaggedArtifactVersion `db:"versions" json:"versions"`
+	ArtifactID uuid.UUID   `db:"artifact_id" json:"artifactId"`
+	VersionIDs []uuid.UUID `db:"versions" json:"versionIds"`
 }
 
 type ArtifactLicense struct {

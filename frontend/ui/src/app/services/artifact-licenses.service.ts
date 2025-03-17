@@ -8,8 +8,8 @@ import {UsersService} from './users.service';
 import {HttpClient} from '@angular/common/http';
 
 export interface ArtifactLicenseSelection {
-  artifact: Artifact;
-  versions?: TaggedArtifactVersion[];
+  artifactId: string;
+  versionIds?: string[];
 }
 
 export interface ArtifactLicense extends BaseModel, Named {
