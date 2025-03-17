@@ -6,22 +6,26 @@
 
 # Type Alias: UpdateDeploymentParams
 
-> **UpdateDeploymentParams**: `object`
+> **UpdateDeploymentParams** = `object`
 
-## Type declaration
+## Properties
 
 ### applicationVersionId?
 
 > `optional` **applicationVersionId**: `string`
 
+---
+
 ### deploymentTargetId
 
 > **deploymentTargetId**: `string`
+
+---
 
 ### kubernetesDeployment?
 
 > `optional` **kubernetesDeployment**: `object`
 
-#### kubernetesDeployment.valuesYaml?
+#### valuesYaml?
 
 > `optional` **valuesYaml**: `string`

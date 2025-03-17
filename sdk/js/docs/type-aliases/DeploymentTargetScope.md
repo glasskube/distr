@@ -6,4 +6,4 @@
 
 # Type Alias: DeploymentTargetScope
 
-> **DeploymentTargetScope**: `"cluster"` \| `"namespace"`
+> **DeploymentTargetScope** = `"cluster"` \| `"namespace"`

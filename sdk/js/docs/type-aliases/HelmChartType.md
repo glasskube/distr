@@ -6,4 +6,4 @@
 
 # Type Alias: HelmChartType
 
-> **HelmChartType**: `"repository"` \| `"oci"`
+> **HelmChartType** = `"repository"` \| `"oci"`
