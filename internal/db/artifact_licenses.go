@@ -17,8 +17,6 @@ import (
 const (
 	artifactLicenseOutExpr = `al.id, al.created_at, al.name, al.expires_at, ` +
 		`al.owner_useraccount_id, al.organization_id `
-	artifactLicenseWithOwnerOutExpr = artifactLicenseOutExpr +
-		`, CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (` + userAccountOutputExpr + `) END as owner `
 	artifactSelectionsOutExpor = `
 		(
 			SELECT array_agg(DISTINCT row(
@@ -37,9 +35,8 @@ const (
 func GetArtifactLicenses(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT `+artifactLicenseWithOwnerOutExpr+`, `+artifactSelectionsOutExpor+`
+		SELECT `+artifactLicenseOutExpr+`, `+artifactSelectionsOutExpor+`
 		FROM ArtifactLicense al
-		LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id
 		WHERE al.organization_id = @orgId
 		ORDER BY al.name`,
 		pgx.NamedArgs{"orgId": orgID},
@@ -65,8 +62,7 @@ func CreateArtifactLicense(ctx context.Context, license *types.ArtifactLicenseBa
 			) RETURNING *
 		)
 		SELECT `+artifactLicenseOutExpr+`
-		FROM inserted al
-		LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id`,
+		FROM inserted al`,
 		pgx.NamedArgs{
 			"name":               license.Name,
 			"expiresAt":          license.ExpiresAt,
@@ -100,8 +96,7 @@ func UpdateArtifactLicense(ctx context.Context, license *types.ArtifactLicenseBa
 		 	WHERE id = @id RETURNING *
 		)
 		SELECT `+artifactLicenseOutExpr+`
-		FROM updated al
-		LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id`,
+		FROM updated al`,
 		pgx.NamedArgs{
 			"id":                 license.ID,
 			"name":               license.Name,
@@ -171,9 +166,8 @@ func AddArtifactToArtifactLicense(
 func GetArtifactLicenseByID(ctx context.Context, id uuid.UUID) (*types.ArtifactLicense, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-			SELECT `+artifactLicenseWithOwnerOutExpr+`, `+artifactSelectionsOutExpor+`
+			SELECT `+artifactLicenseOutExpr+`, `+artifactSelectionsOutExpor+`
 			FROM ArtifactLicense al
-			LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id
 			WHERE al.id = @id `,
 		pgx.NamedArgs{"id": id},
 	)

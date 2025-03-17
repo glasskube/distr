@@ -23,5 +23,4 @@ type ArtifactLicenseSelection struct {
 type ArtifactLicense struct {
 	ArtifactLicenseBase
 	Artifacts []ArtifactLicenseSelection `db:"artifacts" json:"artifacts,omitempty"`
-	Owner     *UserAccount               `db:"owner" json:"owner,omitempty"`
 }
