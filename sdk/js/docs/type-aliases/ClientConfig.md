@@ -6,15 +6,17 @@
 
 # Type Alias: ClientConfig
 
-> **ClientConfig**: `object`
+> **ClientConfig** = `object`
 
-## Type declaration
+## Properties
 
 ### apiBase
 
 > **apiBase**: `string`
 
 The base URL of the Distr API ending with /api/v1, e.g. https://app.distr.sh/api/v1.
+
+---
 
 ### apiKey
 

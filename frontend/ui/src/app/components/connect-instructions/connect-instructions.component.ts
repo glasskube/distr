@@ -46,6 +46,7 @@ export class ConnectInstructionsComponent {
       await navigator.clipboard.writeText(this.modalConnectCommand);
     }
     this.commandCopied = true;
+    setTimeout(() => (this.commandCopied = false), 2000);
   }
 
   protected readonly faClipboard = faClipboard;

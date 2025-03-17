@@ -6,17 +6,21 @@
 
 # Type Alias: ApplicationVersionFiles
 
-> **ApplicationVersionFiles**: `object`
+> **ApplicationVersionFiles** = `object`
 
-## Type declaration
+## Properties
 
 ### baseValuesFile?
 
 > `optional` **baseValuesFile**: `string`
 
+---
+
 ### composeFile?
 
 > `optional` **composeFile**: `string`
+
+---
 
 ### templateFile?
 

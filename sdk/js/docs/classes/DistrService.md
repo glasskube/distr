@@ -14,7 +14,7 @@ Under the hood it uses the low-level [Client](Client.md).
 
 ### new DistrService()
 
-> **new DistrService**(`config`, `latestVersionStrategy`): [`DistrService`](DistrService.md)
+> **new DistrService**(`config`, `latestVersionStrategy`): `DistrService`
 
 Creates a new DistrService instance. A client config containing an API key must be provided, optionally the API
 base URL can be set. Optionally, a strategy for determining the latest version of an application can be specified –
@@ -36,7 +36,7 @@ Strategy for determining the latest version of an application (default: 'semver'
 
 #### Returns
 
-[`DistrService`](DistrService.md)
+`DistrService`
 
 ## Methods
 
@@ -64,9 +64,10 @@ Creates a new deployment target and deploys the given application version to it.
 
 ### createDockerApplicationVersion()
 
-> **createDockerApplicationVersion**(`applicationId`, `name`, `composeFile`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
+> **createDockerApplicationVersion**(`applicationId`, `name`, `data`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
-Creates a new application version for the given docker application using a Docker Compose file.
+Creates a new application version for the given docker application using a Docker Compose file and an
+optional template file.
 
 #### Parameters
 
@@ -80,7 +81,13 @@ Creates a new application version for the given docker application using a Docke
 
 Name of the new version
 
-##### composeFile
+##### data
+
+###### composeFile
+
+`string`
+
+###### templateFile?
 
 `string`
 
@@ -108,11 +115,11 @@ Creates a new application version for the given Kubernetes application using a H
 
 ##### data
 
-###### baseValuesFile
+###### baseValuesFile?
 
 `string`
 
-###### chartName
+###### chartName?
 
 `string`
 
@@ -128,7 +135,7 @@ Creates a new application version for the given Kubernetes application using a H
 
 `string`
 
-###### templateFile
+###### templateFile?
 
 `string`
 
