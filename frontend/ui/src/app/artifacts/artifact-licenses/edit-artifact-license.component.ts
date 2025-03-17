@@ -272,10 +272,6 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       for (let selection of license.artifacts || []) {
         this.addArtifactGroup(selection);
       }
-      if (license.ownerUserAccountId) {
-        this.editForm.controls.artifacts.disable({emitEvent: false});
-        this.editForm.controls.ownerUserAccountId.disable({emitEvent: false});
-      }
     } else {
       this.editForm.reset();
       this.addArtifactGroup();
