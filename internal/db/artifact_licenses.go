@@ -15,9 +15,11 @@ import (
 )
 
 const (
-	artifactLicenseOutExpr          = `al.id, al.created_at, al.name, al.expires_at, al.owner_useraccount_id, al.organization_id `
-	artifactLicenseWithOwnerOutExpr = artifactLicenseOutExpr + `, CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (` + userAccountOutputExpr + `) END as owner `
-	artifactSelectionsOutExpor      = `
+	artifactLicenseOutExpr = `al.id, al.created_at, al.name, al.expires_at, ` +
+		`al.owner_useraccount_id, al.organization_id `
+	artifactLicenseWithOwnerOutExpr = artifactLicenseOutExpr +
+		`, CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (` + userAccountOutputExpr + `) END as owner `
+	artifactSelectionsOutExpor = `
 		(
 			SELECT array_agg(DISTINCT row(
 				ala.artifact_id,

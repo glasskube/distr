@@ -9,10 +9,12 @@ import {
   combineLatest,
   debounceTime,
   EMPTY,
-  filter, first,
+  filter,
+  first,
   firstValueFrom,
   map,
-  Observable, shareReplay,
+  Observable,
+  shareReplay,
   startWith,
   Subject,
   switchMap,
@@ -22,7 +24,7 @@ import {UuidComponent} from '../../components/uuid';
 import {
   ArtifactLicense,
   ArtifactLicenseSelection,
-  ArtifactLicensesService
+  ArtifactLicensesService,
 } from '../../services/artifact-licenses.service';
 import {filteredByFormControl} from '../../../util/filter';
 import {ApplicationsService} from '../../services/applications.service';
@@ -147,16 +149,21 @@ export class ArtifactLicensesComponent implements OnDestroy {
   }
 
   getArtifactColumn(selection?: ArtifactLicenseSelection[]): Observable<string | undefined> {
-    return selection?.[0]?.artifactId ? this.artifacts$.pipe(
-      map(artifacts => artifacts.find(a => a.id === selection?.[0]?.artifactId)),
-      map(a => a?.name + (selection?.length > 1 ? ' (+' + (selection.length - 1) + ')' : ''))
-    ) : EMPTY;
+    return selection?.[0]?.artifactId
+      ? this.artifacts$.pipe(
+          map((artifacts) => artifacts.find((a) => a.id === selection?.[0]?.artifactId)),
+          map((a) => a?.name + (selection?.length > 1 ? ' (+' + (selection.length - 1) + ')' : ''))
+        )
+      : EMPTY;
   }
 
   getOwnerColumn(userAccountId?: string): Observable<string | undefined> {
-    return userAccountId ? this.users$.pipe(
-      map(users => users.find(u => u.id === userAccountId)),
-      map(u => u?.name ?? u?.email)) : EMPTY;
+    return userAccountId
+      ? this.users$.pipe(
+          map((users) => users.find((u) => u.id === userAccountId)),
+          map((u) => u?.name ?? u?.email)
+        )
+      : EMPTY;
   }
 
   protected readonly faPlus = faPlus;
