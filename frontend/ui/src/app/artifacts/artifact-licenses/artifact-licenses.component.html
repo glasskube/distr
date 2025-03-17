@@ -62,14 +62,14 @@
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <div class="flex items-center mr-3">
                     <span class="max-w-32 sm:max-w-64 lg:max-w-128 overflow-hidden text-ellipsis">
-                      {{ license.owner?.name ?? license.owner?.email }}
+                      {{ getOwnerColumn(license.ownerUserAccountId) | async }}
                     </span>
                   </div>
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <div class="flex items-center mr-3">
                     <span class="max-w-32 sm:max-w-64 lg:max-w-128 overflow-hidden text-ellipsis">
-                      {{ license.artifacts?.[0]?.artifactId }}
+                      {{ getArtifactColumn(license.artifacts) | async }}
                     </span>
                   </div>
                 </td>

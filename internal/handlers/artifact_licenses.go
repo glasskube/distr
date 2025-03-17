@@ -55,6 +55,11 @@ func createArtifactLicense(w http.ResponseWriter, r *http.Request) {
 	}
 	license.OrganizationID = *auth.CurrentOrgID()
 
+	if err = validateLicenseSelections(license); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
 		if err := db.CreateArtifactLicense(ctx, &license.ArtifactLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "An artifact license with this name already exists", http.StatusBadRequest)
@@ -70,32 +75,9 @@ func createArtifactLicense(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		// TODO maybe completely read again
 		RespondJSON(w, license)
 		return nil
 	})
-}
-
-func addArtifacts(ctx context.Context, license types.ArtifactLicense, log *zap.Logger, w http.ResponseWriter) error {
-	for _, selection := range license.Artifacts {
-		if len(selection.VersionIDs) == 0 {
-			if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.ArtifactID, nil); err != nil {
-				log.Warn("could not add version to license", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return err
-			}
-		}
-		for _, versionID := range selection.VersionIDs {
-			if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.ArtifactID, &versionID); err != nil {
-				log.Warn("could not add version to license", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return err
-			}
-		}
-	}
-	return nil
 }
 
 func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +90,11 @@ func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	license.OrganizationID = *auth.CurrentOrgID()
+
+	if err = validateLicenseSelections(license); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	existing := internalctx.GetArtifactLicense(ctx)
 	if license.ID == uuid.Nil {
@@ -139,10 +126,49 @@ func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		// TODO maybe completely read again
 		RespondJSON(w, license)
 		return nil
 	})
+}
+
+func validateLicenseSelections(license types.ArtifactLicense) error {
+	artifactIdSet := make(map[uuid.UUID]struct{})
+	for _, selection := range license.Artifacts {
+		if _, exists := artifactIdSet[selection.ArtifactID]; exists {
+			return errors.New("cannot select same artifact multiple times")
+		}
+		versionIdSet := make(map[uuid.UUID]struct{})
+		for _, version := range selection.VersionIDs {
+			if _, exists := versionIdSet[selection.ArtifactID]; exists {
+				return errors.New("cannot select same version of artifact multiple times")
+			}
+			versionIdSet[version] = struct{}{}
+		}
+		artifactIdSet[selection.ArtifactID] = struct{}{}
+	}
+	return nil
+}
+
+func addArtifacts(ctx context.Context, license types.ArtifactLicense, log *zap.Logger, w http.ResponseWriter) error {
+	for _, selection := range license.Artifacts {
+		if len(selection.VersionIDs) == 0 {
+			if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.ArtifactID, nil); err != nil {
+				log.Warn("could not add version to license", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+		}
+		for _, versionID := range selection.VersionIDs {
+			if err := db.AddArtifactToArtifactLicense(ctx, license.ID, selection.ArtifactID, &versionID); err != nil {
+				log.Warn("could not add version to license", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func deleteArtifactLicense(w http.ResponseWriter, r *http.Request) {

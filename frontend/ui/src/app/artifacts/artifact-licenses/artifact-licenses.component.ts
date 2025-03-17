@@ -9,17 +9,21 @@ import {
   combineLatest,
   debounceTime,
   EMPTY,
-  filter,
+  filter, first,
   firstValueFrom,
   map,
-  Observable,
+  Observable, shareReplay,
   startWith,
   Subject,
   switchMap,
   takeUntil,
 } from 'rxjs';
 import {UuidComponent} from '../../components/uuid';
-import {ArtifactLicense, ArtifactLicensesService} from '../../services/artifact-licenses.service';
+import {
+  ArtifactLicense,
+  ArtifactLicenseSelection,
+  ArtifactLicensesService
+} from '../../services/artifact-licenses.service';
 import {filteredByFormControl} from '../../../util/filter';
 import {ApplicationsService} from '../../services/applications.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
@@ -32,6 +36,8 @@ import {dropdownAnimation} from '../../animations/dropdown';
 import {drawerFlyInOut} from '../../animations/drawer';
 import {modalFlyInOut} from '../../animations/modal';
 import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
+import {UsersService} from '../../services/users.service';
+import {ArtifactsService} from '../../services/artifacts.service';
 
 @Component({
   selector: 'app-artifact-licenses',
@@ -73,6 +79,10 @@ export class ArtifactLicensesComponent implements OnDestroy {
 
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
+  private readonly usersService = inject(UsersService);
+  private readonly users$ = this.usersService.getUsers().pipe(first(), shareReplay(1));
+  private readonly artifactsService = inject(ArtifactsService);
+  private readonly artifacts$ = this.artifactsService.list();
 
   openDrawer(templateRef: TemplateRef<unknown>, license?: ArtifactLicense) {
     this.hideDrawer();
@@ -134,6 +144,19 @@ export class ArtifactLicensesComponent implements OnDestroy {
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
+  }
+
+  getArtifactColumn(selection?: ArtifactLicenseSelection[]): Observable<string | undefined> {
+    return selection?.[0]?.artifactId ? this.artifacts$.pipe(
+      map(artifacts => artifacts.find(a => a.id === selection?.[0]?.artifactId)),
+      map(a => a?.name + (selection?.length > 1 ? ' (+' + (selection.length - 1) + ')' : ''))
+    ) : EMPTY;
+  }
+
+  getOwnerColumn(userAccountId?: string): Observable<string | undefined> {
+    return userAccountId ? this.users$.pipe(
+      map(users => users.find(u => u.id === userAccountId)),
+      map(u => u?.name ?? u?.email)) : EMPTY;
   }
 
   protected readonly faPlus = faPlus;
