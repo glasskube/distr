@@ -6,13 +6,15 @@
 
 # Type Alias: CreateDeploymentResult
 
-> **CreateDeploymentResult**: `object`
+> **CreateDeploymentResult** = `object`
 
-## Type declaration
+## Properties
 
 ### access
 
 > **access**: [`DeploymentTargetAccessResponse`](../interfaces/DeploymentTargetAccessResponse.md)
+
+---
 
 ### deploymentTarget
 

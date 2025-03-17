@@ -6,54 +6,58 @@
 
 # Type Alias: CreateDeploymentParams
 
-> **CreateDeploymentParams**: `object`
+> **CreateDeploymentParams** = `object`
 
-## Type declaration
+## Properties
 
 ### application
 
 > **application**: `object`
 
-#### application.id?
+#### id?
 
 > `optional` **id**: `string`
 
-#### application.versionId?
+#### versionId?
 
 > `optional` **versionId**: `string`
+
+---
 
 ### kubernetesDeployment?
 
 > `optional` **kubernetesDeployment**: `object`
 
-#### kubernetesDeployment.releaseName
+#### releaseName
 
 > **releaseName**: `string`
 
-#### kubernetesDeployment.valuesYaml?
+#### valuesYaml?
 
 > `optional` **valuesYaml**: `string`
+
+---
 
 ### target
 
 > **target**: `object`
 
-#### target.kubernetes?
+#### kubernetes?
 
 > `optional` **kubernetes**: `object`
 
-#### target.kubernetes.namespace
+##### kubernetes.namespace
 
 > **namespace**: `string`
 
-#### target.kubernetes.scope
+##### kubernetes.scope
 
 > **scope**: [`DeploymentTargetScope`](DeploymentTargetScope.md)
 
-#### target.name
+#### name
 
 > **name**: `string`
 
-#### target.type
+#### type
 
 > **type**: [`DeploymentType`](DeploymentType.md)

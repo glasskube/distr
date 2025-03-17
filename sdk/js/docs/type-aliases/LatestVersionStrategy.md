@@ -6,7 +6,7 @@
 
 # Type Alias: LatestVersionStrategy
 
-> **LatestVersionStrategy**: `"semver"` \| `"chronological"`
+> **LatestVersionStrategy** = `"semver"` \| `"chronological"`
 
 The strategy for determining the latest version of an application.
 

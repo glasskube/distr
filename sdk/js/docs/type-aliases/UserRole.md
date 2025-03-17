@@ -6,4 +6,4 @@
 
 # Type Alias: UserRole
 
-> **UserRole**: `"vendor"` \| `"customer"`
+> **UserRole** = `"vendor"` \| `"customer"`

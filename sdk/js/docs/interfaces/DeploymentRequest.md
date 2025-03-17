@@ -8,6 +8,12 @@
 
 ## Properties
 
+### applicationLicenseId?
+
+> `optional` **applicationLicenseId**: `string`
+
+---
+
 ### applicationVersionId
 
 > **applicationVersionId**: `string`
@@ -26,9 +32,9 @@
 
 ---
 
-### note?
+### envFileData?
 
-> `optional` **note**: `string`
+> `optional` **envFileData**: `string`
 
 ---
 
