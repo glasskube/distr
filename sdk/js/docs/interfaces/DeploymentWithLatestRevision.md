@@ -18,6 +18,12 @@
 
 ---
 
+### applicationLicenseId?
+
+> `optional` **applicationLicenseId**: `string`
+
+---
+
 ### applicationName
 
 > **applicationName**: `string`
@@ -59,6 +65,12 @@
 #### Inherited from
 
 [`Deployment`](Deployment.md).[`deploymentTargetId`](Deployment.md#deploymenttargetid)
+
+---
+
+### envFileData?
+
+> `optional` **envFileData**: `string`
 
 ---
 
