@@ -35,6 +35,8 @@ hub:
   env:
     - name: DISTR_HOST
       value: http://distr.local
+    - name: DISTR_ARTIFACTS_HOST
+      value: http://pkg.distr.local
     # The base64 encoded JWT secret
     # Can be generated with `openssl rand -base64 32`
     - name: JWT_SECRET
@@ -90,6 +92,7 @@ service:
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
+  artifactsPort: 8585
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -104,6 +107,14 @@ ingress:
       paths:
         - path: /
           pathType: ImplementationSpecific
+          port:
+            name: http
+    - host: pkg.distr.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          port:
+            name: artifacts
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

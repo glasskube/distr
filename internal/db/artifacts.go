@@ -32,8 +32,15 @@ const (
 func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactWithTaggedVersion, error) {
 	db := internalctx.GetDb(ctx)
 	if artifactRows, err := db.Query(ctx, `
-			SELECT a.id, a.created_at, a.organization_id, a.name, ARRAY []::RECORD[] as versions
+			SELECT
+				a.id,
+				a.created_at,
+				a.organization_id,
+				a.name,
+				o.slug AS organization_slug,
+				ARRAY []::RECORD[] AS versions
 			FROM Artifact a
+			JOIN Organization o ON o.id = a.organization_id
 			WHERE a.organization_id = @orgId
 			ORDER BY a.name`,
 		pgx.NamedArgs{
@@ -62,8 +69,15 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 ) {
 	db := internalctx.GetDb(ctx)
 	if artifactRows, err := db.Query(ctx, `
-			SELECT a.id, a.created_at, a.organization_id, a.name, ARRAY []::RECORD[] as versions
+			SELECT
+				a.id,
+				a.created_at,
+				a.organization_id,
+				a.name,
+				o.slug AS organization_slug,
+				ARRAY []::RECORD[] AS versions
 			FROM Artifact a
+			JOIN Organization o ON o.id = a.organization_id
 			WHERE a.organization_id = @orgId
 			AND EXISTS(
 				SELECT ala.id
@@ -225,13 +239,13 @@ func CreateArtifact(ctx context.Context, artifact *types.Artifact) error {
 
 func GetArtifactVersions(ctx context.Context, orgName, name string) ([]types.ArtifactVersion, error) {
 	db := internalctx.GetDb(ctx)
-	// TODO: Switch to org slug when implemented
 	rows, err := db.Query(
 		ctx,
 		`SELECT`+artifactVersionOutputExpr+`
 		FROM Artifact a
+		JOIN Organization o ON o.id = a.organization_id
 		LEFT JOIN ArtifactVersion v ON a.id = v.artifact_id
-		WHERE a.organization_id = @orgName
+		WHERE o.slug = @orgName
 			AND a.name = @name
 		ORDER BY v.name ASC`,
 		pgx.NamedArgs{"orgName": orgName, "name": name},
@@ -367,8 +381,9 @@ func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*
 		ctx,
 		`SELECT`+artifactVersionOutputExpr+`
 		FROM Artifact a
+		JOIN Organization o ON o.id = a.organization_id
 		LEFT JOIN ArtifactVersion v ON a.id = v.artifact_id
-		WHERE a.organization_id = @orgName
+		WHERE o.slug = @orgName
 			AND a.name = @name
 			AND v.name = @reference`,
 		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},

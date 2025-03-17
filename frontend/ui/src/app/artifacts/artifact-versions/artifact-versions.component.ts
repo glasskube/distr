@@ -14,6 +14,7 @@ import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
+import {getRemoteEnvironment} from '../../../env/remote';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -95,13 +96,16 @@ export class ArtifactVersionsComponent {
   protected readonly org = resource({
     loader: () => firstValueFrom(this.organization.get()),
   });
+  private readonly remoteEnv = resource({
+    loader: () => getRemoteEnvironment(),
+  });
 
   getOciUrl(
     artifact: ArtifactWithTags,
     tag: TaggedArtifactVersion | undefined = artifact.versions.find((it) => it.tags.some((l) => l.name === 'latest'))
   ) {
-    const orgName = this.org.value()?.name?.replaceAll(/\W/g, '').toLowerCase();
-    let url = `oci://${location.host}/${orgName ?? 'ORG_NAME'}/${artifact.name}`;
+    const orgName = this.org.value()?.slug;
+    let url = `oci://${this.remoteEnv.value()?.artifactsHost}/${orgName ?? 'ORG_SLUG'}/${artifact.name}`;
     if (tag) {
       return `${url}:${tag.tags[0].name}`;
     } else {

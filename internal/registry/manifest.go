@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/registry/authz"
@@ -50,7 +49,6 @@ type manifests struct {
 	blobHandler     blob.BlobHandler
 	manifestHandler manifest.ManifestHandler
 	authz           authz.Authorizer
-	lock            sync.RWMutex
 	log             *zap.SugaredLogger
 }
 
@@ -150,8 +148,6 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 			}
 			return regErrInternal(err)
 		}
-		m.lock.RLock()
-		defer m.lock.RUnlock()
 
 		last := req.URL.Query().Get("last")
 		n := 10000
@@ -200,9 +196,6 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 	}
 
 	if req.Method == http.MethodGet {
-		m.lock.RLock()
-		defer m.lock.RUnlock()
-
 		repos, err := m.manifestHandler.List(req.Context(), n)
 		if err != nil {
 			return regErrInternal(err)
@@ -249,9 +242,6 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 			Message: "Target must be a valid digest",
 		}
 	}
-
-	m.lock.RLock()
-	defer m.lock.RUnlock()
 
 	digests, err := m.manifestHandler.ListDigests(req.Context(), repo)
 	if errors.Is(err, manifest.ErrNameUnknown) {
@@ -321,9 +311,6 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 }
 
 func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	handler.lock.RLock()
-	defer handler.lock.RUnlock()
-
 	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
 	if errors.Is(err, manifest.ErrNameUnknown) {
 		return regErrNameUnknown
@@ -361,9 +348,6 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 }
 
 func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	handler.lock.RLock()
-	defer handler.lock.RUnlock()
-
 	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
 	if errors.Is(err, manifest.ErrNameUnknown) {
 		return regErrNameUnknown
@@ -414,9 +398,6 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	// registries require this.
 	if types.MediaType(mf.ContentType).IsIndex() {
 		if err := func() *regError {
-			handler.lock.RLock()
-			defer handler.lock.RUnlock()
-
 			im, err := v1.ParseIndexManifest(bytes.NewReader(buf.Bytes()))
 			if err != nil {
 				return regErrManifestInvalid(err)
@@ -468,9 +449,6 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		}
 	}
 
-	handler.lock.Lock()
-	defer handler.lock.Unlock()
-
 	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
 		return regErrInternal(errors.New("blob handler is not a BlobPutHandler"))
 	} else {
@@ -492,14 +470,13 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	}
 
 	resp.Header().Set("Docker-Content-Digest", mf.BlobDigest.String())
+	resp.Header().Set("OCI-Subject", mf.BlobDigest.String())
+	resp.Header().Set("Location", req.URL.JoinPath(mf.BlobDigest.String()).Path)
 	resp.WriteHeader(http.StatusCreated)
 	return nil
 }
 
 // func (handler *manifests) handleDelete(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-// 	handler.lock.Lock()
-// 	defer handler.lock.Unlock()
-
 // 	if err := handler.manifestHandler.Delete(req.Context(), repo, target); errors.Is(err, manifest.ErrNameUnknown) {
 // 		return regErrNameUnknown
 // 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
