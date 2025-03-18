@@ -26,7 +26,7 @@ import {
   Validators,
 } from '@angular/forms';
 import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {first, firstValueFrom, map, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
+import {first, firstValueFrom, map, of, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
 import {ApplicationLicense} from '../../types/application-license';
 import {UsersService} from '../../services/users.service';
 import dayjs from 'dayjs';
@@ -215,7 +215,9 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         switchMap(async (artifactId) => {
           const artifacts = await firstValueFrom(this.artifactsService.list());
           return artifacts.find((a) => a.id === artifactId);
-        })
+        }),
+        // TODO calls are made multiple times right now !
+        switchMap(artifact => artifact ? this.artifactsService.getByIdAndCache(artifact.id) : of(undefined))
       )
       .subscribe((selectedArtifact) => {
         artifactGroup.controls.artifact.patchValue(selectedArtifact);

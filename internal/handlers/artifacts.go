@@ -1,6 +1,10 @@
 package handlers
 
 import (
+	"errors"
+	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
@@ -16,6 +20,7 @@ import (
 func ArtifactsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
 	r.Get("/", getArtifacts)
+	r.Get("/{artifactId}", getArtifact)
 }
 
 func getArtifacts(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +28,7 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 
-	var artifacts []types.ArtifactWithTaggedVersion
+	var artifacts []types.ArtifactWithDownloads
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer {
 		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), auth.CurrentUserID())
@@ -37,5 +42,35 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, artifacts)
+	}
+}
+
+func getArtifact(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	auth := auth.Authentication.Require(ctx)
+
+	var artifact *types.ArtifactWithTaggedVersion
+	var err error
+
+	if artifactId, parseErr := uuid.Parse(r.PathValue("artifactId")); parseErr != nil {
+		http.NotFound(w, r)
+		return
+	} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
+		artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, util.PtrTo(auth.CurrentUserID()))
+	} else {
+		artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)
+	}
+
+	if err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+		} else {
+			log.Error("failed to get artifact", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	} else {
+		RespondJSON(w, artifact)
 	}
 }

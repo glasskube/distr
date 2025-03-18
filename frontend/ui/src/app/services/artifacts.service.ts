@@ -1,5 +1,5 @@
 import {inject, Injectable} from '@angular/core';
-import {from, lastValueFrom, Observable, withLatestFrom} from 'rxjs';
+import {combineLatestWith, first, from, lastValueFrom, map, Observable, of, switchMap, tap, withLatestFrom} from 'rxjs';
 import {digestMessage} from '../../util/crypto';
 import {AuthService} from './auth.service';
 import {HttpClient} from '@angular/common/http';
@@ -182,5 +182,22 @@ export class ArtifactsService {
 
   public list(): Observable<ArtifactWithTags[]> {
     return this.cache.get();
+  }
+
+  public getByIdAndCache(id: string): Observable<ArtifactWithTags | undefined> {
+    return this.list().pipe(
+      map(ls => ls.find(a => a.id === id)),
+      switchMap((existing) => {
+        if((existing?.versions ?? []).length > 0) {
+          return of(existing);
+        } else if(existing) {
+          return this.http.get<ArtifactWithTags>(`${this.artifactsUrl}/${id}`).pipe(
+            tap(a => this.cache.save(a))
+          )
+        } else {
+          return of(undefined);
+        }
+      })
+    )
   }
 }

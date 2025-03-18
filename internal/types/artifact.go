@@ -23,10 +23,21 @@ type TaggedArtifactVersion struct {
 	CreatedAt time.Time            `db:"created_at" json:"createdAt"`
 	Digest    string               `db:"manifest_blob_digest" json:"digest"`
 	Tags      []ArtifactVersionTag `db:"tags" json:"tags"`
+
+	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
+	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
+	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
+}
+
+type ArtifactWithDownloads struct {
+	Artifact
+	OrganizationSlug  string      `db:"organization_slug" json:"-"`
+	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
+	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
+	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
 }
 
 type ArtifactWithTaggedVersion struct {
-	Artifact
-	OrganizationSlug string                  `db:"organization_slug"`
-	Versions         []TaggedArtifactVersion `db:"versions" json:"versions"`
+	ArtifactWithDownloads
+	Versions []TaggedArtifactVersion `db:"versions" json:"versions,omitempty"`
 }
