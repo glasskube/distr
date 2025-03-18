@@ -75,3 +75,18 @@ func WithApplicationLicense(ctx context.Context, license *types.ApplicationLicen
 	ctx = context.WithValue(ctx, ctxKeyApplicationLicense, license)
 	return ctx
 }
+
+func GetArtifactLicense(ctx context.Context) *types.ArtifactLicense {
+	val := ctx.Value(ctxKeyArtifactLicense)
+	if license, ok := val.(*types.ArtifactLicense); ok {
+		if license != nil {
+			return license
+		}
+	}
+	panic("license not contained in context")
+}
+
+func WithArtifactLicense(ctx context.Context, license *types.ArtifactLicense) context.Context {
+	ctx = context.WithValue(ctx, ctxKeyArtifactLicense, license)
+	return ctx
+}

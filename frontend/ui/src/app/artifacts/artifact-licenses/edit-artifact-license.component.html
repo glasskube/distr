@@ -178,6 +178,10 @@
       </ng-container>
     </div>
 
+    @if (editForm.controls.artifacts.invalid && editForm.controls.artifacts.touched) {
+      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+    }
+
     <button
       (click)="addArtifactGroup()"
       class="flex items-center pb-2 text-sm font-medium dark:border-gray-600 text-primary-600 dark:text-primary-500 hover:underline">
