@@ -276,9 +276,11 @@ func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference strin
 			SELECT av.id, av.artifact_id, av.manifest_blob_digest
 				FROM Artifact a
 				JOIN ArtifactVersion av ON a.id = av.artifact_id
-				WHERE a.organization_id = @orgName
+				JOIN ArtifactVersion avx ON a.id = avx.artifact_id AND avx.manifest_blob_digest = av.manifest_blob_digest
+				JOIN Organization o ON o.id = a.organization_id
+				WHERE o.slug = @orgName
 				AND a.name = @name
-				AND (av.name = @reference OR av.manifest_blob_digest = @reference)
+				AND (avx.name = @reference OR avx.manifest_blob_digest = @reference)
 			UNION ALL
 			SELECT DISTINCT av.id, av.artifact_id, av.manifest_blob_digest
 				FROM ArtifactVersion av
