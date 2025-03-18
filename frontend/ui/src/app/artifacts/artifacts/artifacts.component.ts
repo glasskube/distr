@@ -9,6 +9,7 @@ import {UuidComponent} from '../../components/uuid';
 import {ArtifactsService} from '../../services/artifacts.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent} from '../components';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 
 @Component({
   selector: 'app-artifacts',
@@ -20,6 +21,7 @@ import {faDocker} from '@fortawesome/free-brands-svg-icons';
     RouterLink,
     ArtifactsDownloadCountComponent,
     ArtifactsDownloadedByComponent,
+    AutotrimDirective,
   ],
   templateUrl: './artifacts.component.html',
 })
@@ -41,8 +43,7 @@ export class ArtifactsComponent {
   ]).pipe(
     map(([artifacts, formValue]) =>
       artifacts.filter((it) => !formValue.search || it.name.toLowerCase().includes(formValue.search.toLowerCase()))
-    ),
-    debounceTime(200) // simulate network lag :^)
+    )
   );
   protected readonly faDocker = faDocker;
 }

@@ -1,14 +1,14 @@
 import {inject, Injectable} from '@angular/core';
 import {combineLatestWith, EMPTY, first, map, Observable, tap} from 'rxjs';
 import {BaseModel, Named, UserAccount} from '@glasskube/distr-sdk';
-import {Artifact, ArtifactsService, ArtifactTag} from './artifacts.service';
+import {Artifact, ArtifactsService, TaggedArtifactVersion} from './artifacts.service';
 import {CrudService} from './interfaces';
 import {DefaultReactiveList} from './cache';
 import {UsersService} from './users.service';
 
 export interface ArtifactLicenseSelection {
   artifact: Artifact;
-  tags?: ArtifactTag[];
+  tags?: TaggedArtifactVersion[];
 }
 
 export interface ArtifactLicense extends BaseModel, Named {
@@ -44,7 +44,7 @@ export class ArtifactLicensesService implements CrudService<ArtifactLicense> {
             artifacts: [
               {
                 artifact: mockArtifacts[1],
-                tags: [mockArtifacts[1].tags[0]],
+                tags: [mockArtifacts[1].versions[0]],
               },
             ],
           } as ArtifactLicense,

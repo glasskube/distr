@@ -17,6 +17,7 @@ var (
 	databaseUrl                   string
 	jwtSecret                     []byte
 	host                          string
+	artifactsHost                 string
 	mailerConfig                  = MailerConfig{Type: MailerTypeUnspecified}
 	inviteTokenValidDuration      = 24 * time.Hour
 	resetTokenValidDuration       = 1 * time.Hour
@@ -54,6 +55,11 @@ func init() {
 	host = os.Getenv("DISTR_HOST")
 	if host == "" {
 		panic(errors.New("can't start, DISTR_HOST not set"))
+	}
+
+	artifactsHost = os.Getenv("DISTR_ARTIFACTS_HOST")
+	if artifactsHost == "" {
+		artifactsHost = host
 	}
 
 	if value, ok := os.LookupEnv("MAILER_TYPE"); ok {
@@ -159,6 +165,8 @@ func JWTSecret() []byte {
 }
 
 func Host() string { return host }
+
+func ArtifactsHost() string { return artifactsHost }
 
 func GetMailerConfig() MailerConfig {
 	return mailerConfig

@@ -6,21 +6,27 @@
 
 # Type Alias: IsOutdatedResult
 
-> **IsOutdatedResult**: `object`
+> **IsOutdatedResult** = `object`
 
-## Type declaration
+## Properties
 
 ### application
 
 > **application**: [`Application`](../interfaces/Application.md)
 
+---
+
 ### deploymentTarget
 
 > **deploymentTarget**: [`DeploymentTarget`](../interfaces/DeploymentTarget.md)
 
+---
+
 ### newerVersions
 
 > **newerVersions**: [`ApplicationVersion`](../interfaces/ApplicationVersion.md)[]
+
+---
 
 ### outdated
 
