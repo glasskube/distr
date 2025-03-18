@@ -378,7 +378,6 @@ func CheckLicenseForArtifactBlob(ctx context.Context, digest string, userID uuid
 
 func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
 	db := internalctx.GetDb(ctx)
-	// TODO: Switch to org slug when implemented
 	rows, err := db.Query(
 		ctx,
 		`SELECT`+artifactVersionOutputExpr+`
@@ -388,6 +387,34 @@ func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*
 		WHERE o.slug = @orgName
 			AND a.name = @name
 			AND v.name = @reference`,
+		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	return &result, nil
+}
+
+func GetDigestArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT`+artifactVersionOutputExpr+`
+		FROM Artifact a
+		JOIN Organization o ON o.id = a.organization_id
+		JOIN ArtifactVersion v ON a.id = v.artifact_id
+		JOIN ArtifactVersion avx ON a.id = avx.artifact_id AND v.manifest_blob_digest = avx.manifest_blob_digest
+		WHERE o.slug = @orgName
+			AND a.name = @name
+			AND (avx.name = @reference OR avx.manifest_blob_digest = @reference)
+			AND v.name LIKE '%:%'`,
 		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},
 	)
 	if err != nil {
@@ -469,7 +496,7 @@ func CheckArtifactVersionHasChildren(ctx context.Context, versionID uuid.UUID) (
 		ctx,
 		`SELECT exists(
 			SELECT * FROM ArtifactVersionPart avp
-			JOIN ArtifactVersion av ON av.manifest_blob_digest = avp.artifact_artifact_blob_digest
+			JOIN ArtifactVersion av ON av.manifest_blob_digest = avp.artifact_blob_digest
 			WHERE avp.artifact_version_id = @versionId
 		)`,
 		pgx.NamedArgs{"versionId": versionID},

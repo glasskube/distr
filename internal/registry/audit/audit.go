@@ -23,12 +23,12 @@ func (a *auditor) AuditPull(ctx context.Context, nameStr string, reference strin
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	if name, err := name.Parse(nameStr); err != nil {
 		return err
-	} else if version, err := db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
+	} else if digestVersion, err := db.GetDigestArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
 		return err
-	} else if hasChilden, err := db.CheckArtifactVersionHasChildren(ctx, version.ID); err != nil {
+	} else if hasChilden, err := db.CheckArtifactVersionHasChildren(ctx, digestVersion.ID); err != nil {
 		return err
 	} else if !hasChilden {
-		return db.CreateArtifactPullLogEntry(ctx, version.ID, auth.CurrentUserID())
+		return db.CreateArtifactPullLogEntry(ctx, digestVersion.ID, auth.CurrentUserID())
 	} else {
 		return nil
 	}
