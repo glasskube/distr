@@ -25,9 +25,9 @@ type Logger struct {
 // Printf implements migrate.Logger.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	if strings.HasPrefix(format, "error") {
-		l.Errorf(format, v...)
+		l.Errorf(strings.TrimSpace(format), v...)
 	} else {
-		l.Debugf(format, v...)
+		l.Debugf(strings.TrimSpace(format), v...)
 	}
 }
 
