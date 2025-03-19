@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	"go.uber.org/multierr"
 )
 
 type contextKey struct{}
@@ -76,16 +78,34 @@ func (a *Authentication[T]) ValidatorMiddleware(fn func(value T) error) func(nex
 }
 
 func (a *Authentication[T]) handleError(w http.ResponseWriter, r *http.Request, err error) {
-	hhe := &HttpHeaderError{}
-	if errors.As(err, &hhe) {
-		hhe.WriteTo(w)
+	for _, err := range multierr.Errors(err) {
+		var rh WithResponseHeaders
+		if errors.As(err, &rh) {
+			for key, value := range rh.ResponseHeaders() {
+				for _, v := range value {
+					w.Header().Add(key, v)
+				}
+			}
+		}
 	}
 
-	if errors.Is(err, ErrBadAuthentication) || errors.Is(err, ErrNoAuthentication) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-	} else if a.unknownErrorHandler == nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	} else {
+	statusCode := http.StatusInternalServerError
+
+	var rs WithResponseStatus
+	if errors.As(err, &rs) {
+		statusCode = rs.ResponseStatus()
+	} else if errors.Is(err, ErrBadAuthentication) || errors.Is(err, ErrNoAuthentication) {
+		statusCode = http.StatusUnauthorized
+	} else if a.unknownErrorHandler != nil {
 		a.unknownErrorHandler(w, r, err)
+		return
+	}
+
+	var rw ResponseBodyWriter
+	if errors.As(err, &rw) {
+		w.WriteHeader(statusCode)
+		rw.WriteResponse(w)
+	} else {
+		http.Error(w, http.StatusText(statusCode), statusCode)
 	}
 }

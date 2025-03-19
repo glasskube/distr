@@ -12,7 +12,7 @@ type TokenExtractorFunc func(r *http.Request) string
 
 type TokenExtractor struct {
 	fns     []TokenExtractorFunc
-	headers map[string]string
+	headers http.Header
 }
 
 // Authenticate implements Provider.
@@ -35,7 +35,7 @@ func WithExtractorFuncs(fns ...TokenExtractorFunc) ExtractorOption {
 	}
 }
 
-func WithErrorHeaders(headers map[string]string) ExtractorOption {
+func WithErrorHeaders(headers http.Header) ExtractorOption {
 	return func(te *TokenExtractor) {
 		te.headers = headers
 	}

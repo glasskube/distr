@@ -65,7 +65,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
 		}
 		org := orgs[0]
-		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, *org); err != nil {
+		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Warn("token creation failed", zap.Error(err))
 		} else {

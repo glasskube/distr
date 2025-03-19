@@ -6,8 +6,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/authjwt"
 	"github.com/glasskube/distr/internal/authn"
+	"github.com/glasskube/distr/internal/authn/agent"
 	"github.com/glasskube/distr/internal/authn/authinfo"
 	"github.com/glasskube/distr/internal/authn/authkey"
+	"github.com/glasskube/distr/internal/authn/basic"
 	"github.com/glasskube/distr/internal/authn/jwt"
 	"github.com/glasskube/distr/internal/authn/token"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -15,32 +17,36 @@ import (
 )
 
 var Authentication = authn.New(
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
-			jwt.Authenticator(authjwt.JWTAuth),
-		),
+	authn.Chain3(
+		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
+		jwt.Authenticator(authjwt.JWTAuth),
 		authinfo.JWTAuthenticator(),
 	),
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("AccessToken"))),
-			authkey.Authenticator(),
-		),
+	authn.Chain3(
+		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("AccessToken"))),
+		authkey.Authenticator(),
 		authinfo.AuthKeyAuthenticator(),
 	),
 )
 
 var ArtifactsAuthentication = authn.New(
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(
-				token.WithExtractorFuncs(token.FromBasicAuth()),
-				token.WithErrorHeaders(map[string]string{"WWW-Authenticate": "Basic realm=\"Distr\""}),
-			),
-			authkey.Authenticator(),
+	authn.Alternative(
+		authn.Chain3(
+			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
+			jwt.Authenticator(authjwt.JWTAuth),
+			authinfo.JWTAuthenticator(),
 		),
-		authinfo.AuthKeyAuthenticator(),
+		authn.Chain(
+			basic.Authenticator(),
+			authn.Alternative(
+				authn.Chain3(
+					basic.Password(),
+					authkey.Authenticator(),
+					authinfo.AuthKeyAuthenticator(),
+				),
+				agent.Authenticator(),
+			),
+		),
 	),
 )
 
