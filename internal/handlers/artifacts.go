@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
-	"net/http"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/auth"

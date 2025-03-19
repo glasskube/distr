@@ -92,7 +92,10 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 	}
 }
 
-func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID, ownerID *uuid.UUID) (*types.ArtifactWithTaggedVersion, error) {
+func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID, ownerID *uuid.UUID) (
+	*types.ArtifactWithTaggedVersion,
+	error,
+) {
 	db := internalctx.GetDb(ctx)
 	restrictDownloads := false
 	if ownerID != nil {
@@ -104,7 +107,8 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 			FROM Artifact a
 			JOIN Organization o ON o.id = a.organization_id
 			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
-			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id AND (NOT @restrict OR avpl.useraccount_id = @ownerId)
+			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id
+				AND (NOT @restrict OR avpl.useraccount_id = @ownerId)
 			WHERE a.id = @id AND a.organization_id = @orgId
 			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug`,
 		pgx.NamedArgs{
@@ -178,7 +182,8 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 					AND avt.name NOT LIKE '%:%'
 				), ARRAY []::RECORD[]) as tags,`+artifactDownloadsOutExpr+`
 			FROM ArtifactVersion av
-			LEFT JOIN ArtifactVersionPull avpl ON av.id = avpl.artifact_version_id AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
+			LEFT JOIN ArtifactVersionPull avpl ON av.id = avpl.artifact_version_id
+				AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (

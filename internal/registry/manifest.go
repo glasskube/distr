@@ -20,12 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/getsentry/sentry-go"
-	internalctx "github.com/glasskube/distr/internal/context"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/getsentry/sentry-go"
+	internalctx "github.com/glasskube/distr/internal/context"
 
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/registry/audit"
