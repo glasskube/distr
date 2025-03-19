@@ -35,6 +35,7 @@ type BlobPutHandler interface {
 	StartSession(ctx context.Context, repo string) (string, error)
 	CompleteSession(ctx context.Context, repo, id string, digest v1.Hash) error
 	PutChunk(ctx context.Context, id string, r io.Reader, start int64) (int64, error)
+	GetUploadedPartsSize(ctx context.Context, id string) (int64, error)
 }
 
 // BlobDeleteHandler is an extension interface representing a blob storage
