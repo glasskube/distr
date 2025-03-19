@@ -71,7 +71,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		org := orgs[0]
 
-		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, *org); err != nil {
+		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {
 			return fmt.Errorf("token creation failed: %w", err)
 		} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
 			return err
