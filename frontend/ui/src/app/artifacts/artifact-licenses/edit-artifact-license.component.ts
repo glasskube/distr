@@ -217,7 +217,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
           return artifacts.find((a) => a.id === artifactId);
         }),
         // TODO calls are made multiple times right now !
-        switchMap(artifact => artifact ? this.artifactsService.getByIdAndCache(artifact.id) : of(undefined))
+        switchMap((artifact) => (artifact ? this.artifactsService.getByIdAndCache(artifact.id) : of(undefined)))
       )
       .subscribe((selectedArtifact) => {
         artifactGroup.controls.artifact.patchValue(selectedArtifact);

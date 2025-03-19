@@ -139,7 +139,7 @@ export class UsersComponent implements OnDestroy {
     }
   }
 
-  public async deleteUser(user: UserAccount): Promise<void> {
+  public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
       .confirm(`Really delete ${user.name ?? user.email}?`)
       .pipe(

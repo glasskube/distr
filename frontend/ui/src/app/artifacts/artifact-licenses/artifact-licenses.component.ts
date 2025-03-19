@@ -82,7 +82,7 @@ export class ArtifactLicensesComponent implements OnDestroy {
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
   private readonly usersService = inject(UsersService);
-  private readonly users$ = this.usersService.getUsers().pipe(first(), shareReplay(1));
+  private readonly users$ = this.usersService.getUsers();
   private readonly artifactsService = inject(ArtifactsService);
   private readonly artifacts$ = this.artifactsService.list();
 

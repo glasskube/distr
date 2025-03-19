@@ -14,7 +14,7 @@ import {
   of,
   switchMap,
   tap,
-  withLatestFrom
+  withLatestFrom,
 } from 'rxjs';
 import {SemVer} from 'semver';
 import {RelativeDatePipe} from '../../../util/dates';
@@ -94,7 +94,7 @@ export class ArtifactVersionsComponent {
 
       const newer = tagsSorted.slice(
         0,
-        tagsSorted.findIndex((t) => (t.downloadedByUsers ?? []).some((u) => u.id === this.auth.getClaims()?.sub))
+        tagsSorted.findIndex((t) => (t.downloadedByUsers ?? []).some((u) => u === this.auth.getClaims()?.sub))
       );
 
       if (newer.length > 0) {

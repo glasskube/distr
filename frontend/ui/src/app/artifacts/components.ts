@@ -1,7 +1,11 @@
-import {Component, computed, input, signal} from '@angular/core';
+import {Component, computed, inject, input, signal} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faDownload, faEllipsis} from '@fortawesome/free-solid-svg-icons';
 import {HasDownloads} from '../services/artifacts.service';
+import {UsersService} from '../services/users.service';
+import {toObservable} from '@angular/core/rxjs-interop';
+import {switchMap, zip} from 'rxjs';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-artifacts-download-count',
@@ -23,11 +27,11 @@ export class ArtifactsDownloadCountComponent {
   selector: 'app-artifacts-downloaded-by',
   template: `
     <div class="flex -space-x-3 hover:-space-x-1 rtl:space-x-reverse">
-      @for (user of source().downloadedByUsers ?? []; track user.avatarUrl) {
+      @for (user of downloadedBy$ | async; track user?.user?.id) {
         <img
           class="size-8 border-2 border-white rounded-full dark:border-gray-800 transition-all duration-100 ease-in-out"
-          [src]="user.avatarUrl"
-          alt="" />
+          [src]="user?.gravatar"
+          [title]="user?.user?.name ?? user?.user?.email" />
       }
       @if ((source().downloadedByCount ?? 0) - (source().downloadedByUsers ?? []).length; as count) {
         @if (count > 0) {
@@ -39,9 +43,19 @@ export class ArtifactsDownloadCountComponent {
       }
     </div>
   `,
+  imports: [AsyncPipe],
 })
 export class ArtifactsDownloadedByComponent {
   public readonly source = input.required<HasDownloads>();
+  private readonly usersService = inject(UsersService);
+  public readonly downloadedBy$ = toObservable(this.source).pipe(
+    switchMap((dl) => {
+      const gravatarObservables = (dl.downloadedByUsers ?? []).map((id) =>
+        this.usersService.getUserWithGravatarUrl(id)
+      );
+      return zip(...gravatarObservables);
+    })
+  );
 }
 
 @Component({
