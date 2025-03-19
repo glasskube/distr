@@ -20,11 +20,9 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"path"
 	"strings"
-	"sync"
 
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
@@ -58,11 +56,7 @@ func isBlob(req *http.Request) bool {
 type blobs struct {
 	blobHandler blob.BlobHandler
 	authz       authz.Authorizer
-
-	// Each upload gets a unique id that writes occur to until finalized.
-	uploads map[string][]byte
-	lock    sync.Mutex
-	log     *zap.SugaredLogger
+	log         *zap.SugaredLogger
 }
 
 func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
@@ -132,7 +126,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			}
 			return regErrInternal(err)
 		}
-		return b.handlePut(resp, req, service, repo, target, digest)
+		return b.handlePut(resp, req, service, repo, target, digest, contentRange)
 	// case http.MethodDelete:
 	// 	if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
 	// 		if errors.Is(err, authz.ErrAccessDenied) {
@@ -342,11 +336,14 @@ func (b *blobs) handlePost(
 		return nil
 	}
 
-	id := fmt.Sprint(rand.Int63())
-	resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-2]...), "blobs/uploads", id))
-	resp.Header().Set("Range", "0-0")
-	resp.WriteHeader(http.StatusAccepted)
-	return nil
+	if id, err := bph.StartSession(req.Context(), repo); err != nil {
+		return regErrInternal(err)
+	} else {
+		resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-2]...), "blobs/uploads", id))
+		resp.Header().Set("Range", "0-0")
+		resp.WriteHeader(http.StatusAccepted)
+		return nil
+	}
 }
 
 func (b *blobs) handlePatch(
@@ -355,6 +352,11 @@ func (b *blobs) handlePatch(
 	target, service, contentRange string,
 	elem []string,
 ) *regError {
+	bph, ok := b.blobHandler.(blob.BlobPutHandler)
+	if !ok {
+		return regErrUnsupported
+	}
+
 	if service != uploads {
 		return &regError{
 			Status:  http.StatusBadRequest,
@@ -363,8 +365,8 @@ func (b *blobs) handlePatch(
 		}
 	}
 
+	var start, end int64 = 0, 0
 	if contentRange != "" {
-		start, end := 0, 0
 		if _, err := fmt.Sscanf(contentRange, "%d-%d", &start, &end); err != nil {
 			return &regError{
 				Status:  http.StatusRequestedRangeNotSatisfiable,
@@ -372,49 +374,30 @@ func (b *blobs) handlePatch(
 				Message: "We don't understand your Content-Range",
 			}
 		}
-		b.lock.Lock()
-		defer b.lock.Unlock()
-		if start != len(b.uploads[target]) {
-			return &regError{
-				Status:  http.StatusRequestedRangeNotSatisfiable,
-				Code:    "BLOB_UPLOAD_UNKNOWN",
-				Message: "Your content range doesn't match what we have",
-			}
-		}
-		l := bytes.NewBuffer(b.uploads[target])
-		if _, err := io.Copy(l, req.Body); err != nil {
-			return regErrInternal(err)
-		}
-		b.uploads[target] = l.Bytes()
-		resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
-		resp.Header().Set("Range", fmt.Sprintf("0-%d", len(l.Bytes())-1))
-		resp.WriteHeader(http.StatusAccepted)
-		return nil
 	}
 
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	if _, ok := b.uploads[target]; ok {
+	size, err := bph.PutChunk(req.Context(), target, req.Body, start)
+	if errors.Is(err, blob.ErrBadUpload) {
 		return &regError{
-			Status:  http.StatusBadRequest,
+			Status:  http.StatusRequestedRangeNotSatisfiable,
 			Code:    "BLOB_UPLOAD_INVALID",
-			Message: "Stream uploads after first write are not allowed",
+			Message: err.Error(),
 		}
-	}
-
-	l := &bytes.Buffer{}
-	if _, err := io.Copy(l, req.Body); err != nil {
+	} else if err != nil {
 		return regErrInternal(err)
 	}
 
-	b.uploads[target] = l.Bytes()
 	resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
-	resp.Header().Set("Range", fmt.Sprintf("0-%d", len(l.Bytes())-1))
+	resp.Header().Set("Range", fmt.Sprintf("0-%d", size-1))
 	resp.WriteHeader(http.StatusAccepted)
 	return nil
 }
 
-func (b *blobs) handlePut(resp http.ResponseWriter, req *http.Request, service, repo, target, digest string) *regError {
+func (b *blobs) handlePut(
+	resp http.ResponseWriter,
+	req *http.Request,
+	service, repo, target, digest, contentRange string,
+) *regError {
 	bph, ok := b.blobHandler.(blob.BlobPutHandler)
 	if !ok {
 		return regErrUnsupported
@@ -436,37 +419,45 @@ func (b *blobs) handlePut(resp http.ResponseWriter, req *http.Request, service, 
 		}
 	}
 
-	b.lock.Lock()
-	defer b.lock.Unlock()
-
 	h, err := v1.NewHash(digest)
 	if err != nil {
 		return regErrDigestInvalid
 	}
 
-	defer req.Body.Close()
-	in := io.NopCloser(io.MultiReader(bytes.NewBuffer(b.uploads[target]), req.Body))
-
-	size := int64(verify.SizeUnknown)
 	if req.ContentLength > 0 {
-		size = int64(len(b.uploads[target])) + req.ContentLength
+		var start, end int64 = 0, 0
+		if contentRange != "" {
+			if _, err := fmt.Sscanf(contentRange, "%d-%d", &start, &end); err != nil {
+				return &regError{
+					Status:  http.StatusRequestedRangeNotSatisfiable,
+					Code:    "BLOB_UPLOAD_UNKNOWN",
+					Message: "We don't understand your Content-Range",
+				}
+			}
+		}
+		size, err := bph.PutChunk(req.Context(), target, req.Body, start)
+		if errors.Is(err, blob.ErrBadUpload) {
+			return &regError{
+				Status:  http.StatusRequestedRangeNotSatisfiable,
+				Code:    "BLOB_UPLOAD_INVALID",
+				Message: err.Error(),
+			}
+		} else if err != nil {
+			return regErrInternal(err)
+		} else if contentRange != "" && size != end {
+			return &regError{
+				Status:  http.StatusRequestedRangeNotSatisfiable,
+				Code:    "BLOB_UPLOAD_INVALID",
+				Message: "size of uploaded chunks does not match requested range",
+			}
+		}
 	}
 
-	vrc, err := verify.ReadCloser(in, size, h)
+	err = bph.CompleteSession(req.Context(), repo, target, h)
 	if err != nil {
 		return regErrInternal(err)
 	}
-	defer vrc.Close()
 
-	if err := bph.Put(req.Context(), repo, h, "", vrc); err != nil {
-		if errors.As(err, &verify.Error{}) {
-			log.Printf("Digest mismatch: %v", err)
-			return regErrDigestMismatch
-		}
-		return regErrInternal(err)
-	}
-
-	delete(b.uploads, target)
 	resp.Header().Set("Docker-Content-Digest", h.String())
 	resp.Header().Set("Location", req.URL.JoinPath("..", h.String()).Path)
 	resp.WriteHeader(http.StatusCreated)

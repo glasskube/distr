@@ -120,7 +120,7 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 			return nil, apierrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to collect artifact by ID: %w", err)
-	} else if versions, err := getVersionsForArtifact(ctx, artifact.ID, ownerID); err != nil {
+	} else if versions, err := GetVersionsForArtifact(ctx, artifact.ID, ownerID); err != nil {
 		return nil, fmt.Errorf("failed to get artifact versions: %w", err)
 	} else if ownerID != nil && len(versions) == 0 {
 		return nil, apierrors.ErrNotFound
@@ -130,7 +130,36 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 	}
 }
 
-func getVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *uuid.UUID) (
+func GetArtifactByName(ctx context.Context, orgSlug, name string) (*types.Artifact, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+			SELECT
+				a.id,
+				a.created_at,
+				a.organization_id,
+				a.name
+			FROM Artifact a
+			JOIN Organization o on o.id = a.organization_id
+			WHERE o.slug = @orgSlug AND a.name = @name
+			ORDER BY a.name`,
+		pgx.NamedArgs{
+			"orgSlug": orgSlug,
+			"name":    name,
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query artifacts: %w", err)
+	}
+	if a, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Artifact]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get artifact: %w", err)
+	} else {
+		return a, nil
+	}
+}
+
+func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *uuid.UUID) (
 	[]types.TaggedArtifactVersion,
 	error,
 ) {
@@ -282,14 +311,6 @@ func GetArtifactVersions(ctx context.Context, orgName, name string) ([]types.Art
 		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
 	}
 	return result, nil
-}
-
-func GetLicensedArtifactVersions(
-	ctx context.Context,
-	orgName, name string,
-	userID uuid.UUID,
-) ([]types.ArtifactVersion, error) {
-	panic("TODO: not implemented")
 }
 
 func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference string, userID uuid.UUID) error {

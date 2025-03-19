@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -75,25 +76,29 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]v1.Hash, e
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
-		var versions []types.ArtifactVersion
-		var err error
+		var licenseUserID *uuid.UUID
 		if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			versions, err = db.GetLicensedArtifactVersions(ctx, name.OrgName, name.ArtifactName, auth.CurrentUserID())
-		} else {
-			versions, err = db.GetArtifactVersions(ctx, name.OrgName, name.ArtifactName)
+			licenseUserID = util.PtrTo(auth.CurrentUserID())
 		}
-		if err != nil {
-			return nil, err
-		}
-		var result []v1.Hash
-		for _, version := range versions {
-			if h, err := v1.NewHash(version.Name); err != nil {
-				continue
-			} else {
-				result = append(result, h)
+		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
+			return nil, err
+		} else if versions, err :=
+			db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID); err != nil {
+			return nil, err
+		} else {
+			var result []v1.Hash
+			for _, version := range versions {
+				if h, err := v1.NewHash(version.Digest); err != nil {
+					continue
+				} else {
+					result = append(result, h)
+				}
+			}
+			return result, nil
 		}
-		return result, nil
 	}
 }
 
@@ -103,30 +108,27 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
-		var versions []types.ArtifactVersion
-		var err error
+		var licenseUserID *uuid.UUID
 		if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			versions, err = db.GetLicensedArtifactVersions(ctx, name.OrgName, name.ArtifactName, auth.CurrentUserID())
-		} else {
-			versions, err = db.GetArtifactVersions(ctx, name.OrgName, name.ArtifactName)
+			licenseUserID = util.PtrTo(auth.CurrentUserID())
 		}
-		if err != nil {
+		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
+			}
 			return nil, err
-		}
-		var result []string
-		for _, version := range versions {
-			// only collect references that are NOT a hash
-			if _, err := v1.NewHash(version.Name); err == nil {
-				continue
+		} else if versions, err :=
+			db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID); err != nil {
+			return nil, err
+		} else {
+			var result []string
+			for _, version := range versions {
+				for _, tag := range version.Tags {
+					result = append(result, tag.Name)
+				}
 			}
-			if last == "" || version.Name > last {
-				result = append(result, version.Name)
-			}
+			return result, nil
 		}
-		if 0 < n && n < len(result) {
-			result = result[:n]
-		}
-		return result, nil
 	}
 }
 

@@ -20,3 +20,9 @@ func (e RedirectError) Error() string { return fmt.Sprintf("redirecting (%d): %s
 
 // errNotFound represents an error locating the blob.
 var ErrNotFound = errors.New("not found")
+
+var ErrBadUpload = errors.New("bad upload")
+
+func NewErrBadUpload(msg string) error {
+	return fmt.Errorf("%w: %v", ErrBadUpload, msg)
+}
