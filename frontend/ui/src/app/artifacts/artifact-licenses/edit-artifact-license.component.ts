@@ -26,7 +26,17 @@ import {
   Validators,
 } from '@angular/forms';
 import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {first, firstValueFrom, map, of, Subject, switchMap, takeUntil, withLatestFrom} from 'rxjs';
+import {
+  distinctUntilChanged,
+  first,
+  firstValueFrom,
+  map,
+  of,
+  Subject,
+  switchMap,
+  takeUntil,
+  withLatestFrom,
+} from 'rxjs';
 import {ApplicationLicense} from '../../types/application-license';
 import {UsersService} from '../../services/users.service';
 import dayjs from 'dayjs';
@@ -212,6 +222,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
     artifactGroup.controls.artifactId.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
+        distinctUntilChanged(),
         switchMap(async (artifactId) => {
           const artifacts = await firstValueFrom(this.artifactsService.list());
           return artifacts.find((a) => a.id === artifactId);
