@@ -246,9 +246,6 @@ func (handler *blobHandler) Delete(ctx context.Context, repo string, h v1.Hash) 
 }
 
 func (handler *blobHandler) getUploadID(ctx context.Context, uploadKey string) (string, error) {
-	// ListMultipartUploads returns at most 1000 elements.
-	// This means that if there are more than 1000 multipart uploads in progress at the same time, finding the upload
-	// ID for a specific multipart upload can fail, since it might not be in among the returned elements!
 	if uploads, err := handler.s3Client.ListMultipartUploads(ctx, &s3.ListMultipartUploadsInput{
 		Bucket: util.PtrTo(bucket),
 	}); err != nil {
@@ -259,6 +256,12 @@ func (handler *blobHandler) getUploadID(ctx context.Context, uploadKey string) (
 				return *upload.UploadId, nil
 			}
 		}
+		// ListMultipartUploads returns at most 1000 elements.
+		// This means that if there are more than 1000 multipart uploads in progress at the same time, finding the upload
+		// ID for a specific multipart upload can fail, since it might not be in among the returned elements!
+		if uploads.IsTruncated != nil && *uploads.IsTruncated {
+			return "", errors.New("too many concurrent uploads. please try again later")
+		}
 		return "", fmt.Errorf("%w: unknown upload session", blob.ErrNotFound)
 	}
 }
@@ -268,14 +271,16 @@ func (handler *blobHandler) getExistingParts(
 	uploadKey string,
 	uploadID string,
 ) ([]types.Part, error) {
-	// ListParts returns at most 1000 elements.
-	// Thus, we can not currently handle uploads with more than 1000 chunks!
 	if result, err := handler.s3Client.ListParts(ctx, &s3.ListPartsInput{
 		Bucket:   util.PtrTo(bucket),
 		Key:      &uploadKey,
 		UploadId: &uploadID,
 	}); err != nil {
 		return nil, err
+	} else if result.IsTruncated != nil && *result.IsTruncated {
+		// ListParts returns at most 1000 elements.
+		// Thus, we can not currently handle uploads with more than 1000 chunks!
+		return nil, blob.NewErrBadUpload("blob uploads with more than 1000 chunks are not supported")
 	} else {
 		return result.Parts, nil
 	}
