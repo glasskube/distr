@@ -102,9 +102,6 @@ func (r *registry) root(resp http.ResponseWriter, req *http.Request) {
 // It should be registered at the site root.
 func New(opts ...Option) http.Handler {
 	reg := &registry{
-		blobs: blobs{
-			uploads: map[string][]byte{},
-		},
 		manifests: manifests{},
 	}
 	for _, o := range opts {

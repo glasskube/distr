@@ -32,6 +32,9 @@ type BlobPutHandler interface {
 	// don't match. Implementations should return that error, or a wrapper
 	// around that error, to return the correct error when these don't match.
 	Put(ctx context.Context, repo string, h v1.Hash, contentType string, r io.Reader) error
+	StartSession(ctx context.Context, repo string) (string, error)
+	CompleteSession(ctx context.Context, repo, id string, digest v1.Hash) error
+	PutChunk(ctx context.Context, id string, r io.Reader, start int64) (int64, error)
 }
 
 // BlobDeleteHandler is an extension interface representing a blob storage
