@@ -418,7 +418,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 					blobs = append(blobs, desc.Digest)
 				} else {
 					// TODO: Probably want to do an existence check for blobs.
-					handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
+					handler.log.Warnf("TODO: Check blobs for %q (MediaType: %v)", desc.Digest, desc.MediaType)
 				}
 			}
 			return nil
@@ -432,16 +432,15 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 				return regErrManifestInvalid(err)
 			}
 			blobs = append(blobs, m.Config.Digest)
+			if m.Subject != nil {
+				blobs = append(blobs, m.Subject.Digest)
+			}
 			for _, desc := range m.Layers {
 				if !desc.MediaType.IsDistributable() {
 					continue
 				}
-				if desc.MediaType.IsLayer() {
-					// TODO: Maybe check if the layer was already uploaded
-					blobs = append(blobs, desc.Digest)
-				} else {
-					handler.log.Warnf("TODO: Check blobs for %q", desc.Digest)
-				}
+				// TODO: Maybe check if the layer was already uploaded
+				blobs = append(blobs, desc.Digest)
 			}
 			return nil
 		}(); err != nil {

@@ -424,13 +424,15 @@ func (b *blobs) handlePut(
 		return regErrDigestInvalid
 	}
 
-	if contentRange != "" {
+	if req.ContentLength > 0 {
 		var start, end int64 = 0, 0
-		if _, err := fmt.Sscanf(contentRange, "%d-%d", &start, &end); err != nil {
-			return &regError{
-				Status:  http.StatusRequestedRangeNotSatisfiable,
-				Code:    "BLOB_UPLOAD_UNKNOWN",
-				Message: "We don't understand your Content-Range",
+		if contentRange != "" {
+			if _, err := fmt.Sscanf(contentRange, "%d-%d", &start, &end); err != nil {
+				return &regError{
+					Status:  http.StatusRequestedRangeNotSatisfiable,
+					Code:    "BLOB_UPLOAD_UNKNOWN",
+					Message: "We don't understand your Content-Range",
+				}
 			}
 		}
 		size, err := bph.PutChunk(req.Context(), target, req.Body, start)
@@ -442,7 +444,7 @@ func (b *blobs) handlePut(
 			}
 		} else if err != nil {
 			return regErrInternal(err)
-		} else if size != end {
+		} else if contentRange != "" && size != end {
 			return &regError{
 				Status:  http.StatusRequestedRangeNotSatisfiable,
 				Code:    "BLOB_UPLOAD_INVALID",
