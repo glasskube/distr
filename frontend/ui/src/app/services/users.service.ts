@@ -58,6 +58,7 @@ export class UsersService {
   public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
     return this.httpClient.post<CreateUserAccountResponse>(this.baseUrl, request).pipe(
       tap((it) =>
+        // TODO: add user details to CreateUserAccountResponse
         this.cache.save({
           email: request.email,
           name: request.name,
