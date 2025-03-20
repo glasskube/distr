@@ -42,6 +42,7 @@ import {
   of,
   Subject,
   switchMap,
+  takeUntil,
 } from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
@@ -148,7 +149,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   readonly deployForm = new FormControl<DeploymentFormValue | undefined>(undefined, Validators.required);
   deployFormLoading = false;
 
-  readonly deploymentTargets$ = this.deploymentTargets.poll();
+  readonly deploymentTargets$ = this.deploymentTargets.poll().pipe(takeUntil(this.destroyed$));
 
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,
