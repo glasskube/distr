@@ -25,7 +25,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getsentry/sentry-go"
+	internalctx "github.com/glasskube/distr/internal/context"
+
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/registry/audit"
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/manifest"
@@ -49,6 +53,7 @@ type manifests struct {
 	blobHandler     blob.BlobHandler
 	manifestHandler manifest.ManifestHandler
 	authz           authz.Authorizer
+	audit           audit.ArtifactAuditor
 	log             *zap.SugaredLogger
 }
 
@@ -311,7 +316,8 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 }
 
 func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
+	ctx := req.Context()
+	m, err := handler.manifestHandler.Get(ctx, repo, target)
 	if errors.Is(err, manifest.ErrNameUnknown) {
 		return regErrNameUnknown
 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
@@ -320,10 +326,15 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 		return regErrInternal(err)
 	}
 
-	b, err := handler.blobHandler.Get(req.Context(), repo, m.BlobDigest, true)
+	b, err := handler.blobHandler.Get(ctx, repo, m.BlobDigest, true)
 	if err != nil {
 		var rerr blob.RedirectError
 		if errors.As(err, &rerr) {
+			if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+				log := internalctx.GetLogger(ctx)
+				log.Warn("failed to audit-log pull", zap.Error(err))
+				sentry.GetHubFromContext(ctx)
+			}
 			http.Redirect(resp, req, rerr.Location, rerr.Code)
 			return nil
 		}
@@ -344,11 +355,17 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 	if _, err := io.Copy(resp, &buf); err != nil {
 		return regErrInternal(err)
 	}
+	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+		log := internalctx.GetLogger(ctx)
+		log.Warn("failed to audit-log pull", zap.Error(err))
+		sentry.GetHubFromContext(ctx)
+	}
 	return nil
 }
 
 func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	m, err := handler.manifestHandler.Get(req.Context(), repo, target)
+	ctx := req.Context()
+	m, err := handler.manifestHandler.Get(ctx, repo, target)
 	if errors.Is(err, manifest.ErrNameUnknown) {
 		return regErrNameUnknown
 	} else if errors.Is(err, manifest.ErrManifestUnknown) {
@@ -362,7 +379,7 @@ func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request
 		return regErrInternal(errors.New("cannot stat blob"))
 	}
 
-	l, err := bsh.Stat(req.Context(), repo, m.BlobDigest)
+	l, err := bsh.Stat(ctx, repo, m.BlobDigest)
 	if err != nil {
 		// TODO: More nuanced
 		return regErrManifestUnknown

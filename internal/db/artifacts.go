@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	artifactOutputExpr        = `a.id, a.created_at, a.organization_id, a.name `
-	artifactVersionOutputExpr = `
+	artifactOutputExpr         = ` a.id, a.created_at, a.organization_id, a.name `
+	artifactOutputWithSlugExpr = artifactOutputExpr + ", o.slug AS organization_slug"
+	artifactVersionOutputExpr  = `
 		v.id,
 		v.created_at,
 		v.created_by_useraccount_id,
@@ -27,57 +28,47 @@ const (
 		v.manifest_content_type,
 		v.artifact_id
 	`
+	artifactDownloadsOutExpr = `
+		count(avpl.id) as downloads_total,
+		count(DISTINCT avpl.useraccount_id) as downloaded_by_count,
+		coalesce(array_agg(DISTINCT avpl.useraccount_id)
+			FILTER (WHERE avpl.useraccount_id IS NOT NULL), ARRAY[]::UUID[]) as downloaded_by_users
+	`
 )
 
-func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactWithTaggedVersion, error) {
+func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.ArtifactWithDownloads, error) {
 	db := internalctx.GetDb(ctx)
 	if artifactRows, err := db.Query(ctx, `
-			SELECT
-				a.id,
-				a.created_at,
-				a.organization_id,
-				a.name,
-				o.slug AS organization_slug,
-				ARRAY []::RECORD[] AS versions
+			SELECT `+artifactOutputWithSlugExpr+`,`+artifactDownloadsOutExpr+`
 			FROM Artifact a
 			JOIN Organization o ON o.id = a.organization_id
+			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
+			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id
 			WHERE a.organization_id = @orgId
+			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug
 			ORDER BY a.name`,
 		pgx.NamedArgs{
 			"orgId": orgID,
 		}); err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
 	} else if artifacts, err :=
-		pgx.CollectRows(artifactRows, pgx.RowToAddrOfStructByName[types.ArtifactWithTaggedVersion]); err != nil {
+		pgx.CollectRows(artifactRows, pgx.RowToStructByName[types.ArtifactWithDownloads]); err != nil {
 		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
 	} else {
-		res := make([]types.ArtifactWithTaggedVersion, len(artifacts))
-		for i, artifact := range artifacts {
-			if versions, err := GetVersionsForArtifact(ctx, artifact.ID, nil); err != nil {
-				return nil, fmt.Errorf("failed to get artifact versions: %w", err)
-			} else {
-				artifact.Versions = versions
-			}
-			res[i] = *artifact
-		}
-		return res, nil
+		return artifacts, nil
 	}
 }
 
 func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID uuid.UUID) (
-	[]types.ArtifactWithTaggedVersion, error,
+	[]types.ArtifactWithDownloads, error,
 ) {
 	db := internalctx.GetDb(ctx)
 	if artifactRows, err := db.Query(ctx, `
-			SELECT
-				a.id,
-				a.created_at,
-				a.organization_id,
-				a.name,
-				o.slug AS organization_slug,
-				ARRAY []::RECORD[] AS versions
+			SELECT `+artifactOutputWithSlugExpr+`,`+artifactDownloadsOutExpr+`
 			FROM Artifact a
 			JOIN Organization o ON o.id = a.organization_id
+			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
+			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id AND avpl.useraccount_id = @ownerId
 			WHERE a.organization_id = @orgId
 			AND EXISTS(
 				SELECT ala.id
@@ -86,6 +77,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 				WHERE al.owner_useraccount_id = @ownerId AND (al.expires_at IS NULL OR al.expires_at > now())
 				AND ala.artifact_id = a.id
 			)
+			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug
 			ORDER BY a.name`,
 		pgx.NamedArgs{
 			"orgId":   orgID,
@@ -93,19 +85,52 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 		}); err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
 	} else if artifacts, err :=
-		pgx.CollectRows(artifactRows, pgx.RowToAddrOfStructByName[types.ArtifactWithTaggedVersion]); err != nil {
+		pgx.CollectRows(artifactRows, pgx.RowToStructByName[types.ArtifactWithDownloads]); err != nil {
 		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
 	} else {
-		res := make([]types.ArtifactWithTaggedVersion, len(artifacts))
-		for i, artifact := range artifacts {
-			if versions, err := GetVersionsForArtifact(ctx, artifact.ID, &ownerID); err != nil {
-				return nil, fmt.Errorf("failed to get artifact versions: %w", err)
-			} else {
-				artifact.Versions = versions
-			}
-			res[i] = *artifact
+		return artifacts, nil
+	}
+}
+
+func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID, ownerID *uuid.UUID) (
+	*types.ArtifactWithTaggedVersion,
+	error,
+) {
+	db := internalctx.GetDb(ctx)
+	restrictDownloads := false
+	if ownerID != nil {
+		restrictDownloads = true
+	}
+	if artifactRows, err := db.Query(ctx, `
+			SELECT `+artifactOutputWithSlugExpr+`,
+				ARRAY []::RECORD[] AS versions,`+artifactDownloadsOutExpr+`
+			FROM Artifact a
+			JOIN Organization o ON o.id = a.organization_id
+			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
+			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id
+				AND (NOT @restrict OR avpl.useraccount_id = @ownerId)
+			WHERE a.id = @id AND a.organization_id = @orgId
+			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug`,
+		pgx.NamedArgs{
+			"id":       artifactID,
+			"orgId":    orgID,
+			"restrict": restrictDownloads,
+			"ownerId":  ownerID,
+		}); err != nil {
+		return nil, fmt.Errorf("failed to query artifact by ID: %w", err)
+	} else if artifact, err :=
+		pgx.CollectExactlyOneRow(artifactRows, pgx.RowToAddrOfStructByName[types.ArtifactWithTaggedVersion]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
 		}
-		return res, nil
+		return nil, fmt.Errorf("failed to collect artifact by ID: %w", err)
+	} else if versions, err := GetVersionsForArtifact(ctx, artifact.ID, ownerID); err != nil {
+		return nil, fmt.Errorf("failed to get artifact versions: %w", err)
+	} else if ownerID != nil && len(versions) == 0 {
+		return nil, apierrors.ErrNotFound
+	} else {
+		artifact.Versions = versions
+		return artifact, nil
 	}
 }
 
@@ -155,8 +180,10 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 					WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 					AND avt.artifact_id = av.artifact_id
 					AND avt.name NOT LIKE '%:%'
-				), ARRAY []::RECORD[]) as tags
+				), ARRAY []::RECORD[]) as tags,`+artifactDownloadsOutExpr+`
 			FROM ArtifactVersion av
+			LEFT JOIN ArtifactVersionPull avpl ON av.id = avpl.artifact_version_id
+				AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (
@@ -200,6 +227,8 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				AND avt.artifact_id = av.artifact_id
 				AND avt.name NOT LIKE '%:%'
 			)
+			GROUP BY av.id, av.created_at, av.manifest_blob_digest
+			ORDER BY av.created_at DESC
 			`,
 		pgx.NamedArgs{
 			"artifactId":   artifactID,
@@ -399,7 +428,6 @@ func CheckLicenseForArtifactBlob(ctx context.Context, digest string, userID uuid
 
 func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
 	db := internalctx.GetDb(ctx)
-	// TODO: Switch to org slug when implemented
 	rows, err := db.Query(
 		ctx,
 		`SELECT`+artifactVersionOutputExpr+`
@@ -409,6 +437,34 @@ func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*
 		WHERE o.slug = @orgName
 			AND a.name = @name
 			AND v.name = @reference`,
+		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	return &result, nil
+}
+
+func GetDigestArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT DISTINCT `+artifactVersionOutputExpr+`
+		FROM Artifact a
+		JOIN Organization o ON o.id = a.organization_id
+		JOIN ArtifactVersion v ON a.id = v.artifact_id
+		JOIN ArtifactVersion avx ON a.id = avx.artifact_id AND v.manifest_blob_digest = avx.manifest_blob_digest
+		WHERE o.slug = @orgName
+			AND a.name = @name
+			AND (avx.name = @reference OR avx.manifest_blob_digest = @reference)
+			AND v.name LIKE '%:%'`,
 		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},
 	)
 	if err != nil {
@@ -480,4 +536,88 @@ func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPa
 		*avp = result
 		return nil
 	}
+}
+
+// CheckArtifactVersionHasChildren checks if one of the ArtifactVersionParts referencing this ArtifactVersion refer to
+// another ArtifactVersion via its manifest digest.
+func CheckArtifactVersionHasChildren(ctx context.Context, versionID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT exists(
+			SELECT * FROM ArtifactVersionPart avp
+			JOIN ArtifactVersion av ON av.manifest_blob_digest = avp.artifact_blob_digest
+			WHERE avp.artifact_version_id = @versionId
+		)`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return false, fmt.Errorf("could not check artifact version parents: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, fmt.Errorf("could not check artifact version parents: %w", err)
+	}
+	return result.Exists, nil
+}
+
+func CreateArtifactPullLogEntry(ctx context.Context, versionID uuid.UUID, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`INSERT INTO ArtifactVersionPull (artifact_version_id, useraccount_id) VALUES (@versionId, @userId)`,
+		pgx.NamedArgs{"versionId": versionID, "userId": userID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not create artifact pull log entry: %w", err)
+	}
+	return nil
+}
+
+func GetArtifactVersionPullCount(ctx context.Context, versionID uuid.UUID) (int, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT count(SELECT * FROM ArtifactVersionPull WHERE artifact_version_id = @versionId)`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("could not get pull count: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Count int }])
+	if err != nil {
+		return 0, fmt.Errorf("could not get pull count: %w", err)
+	}
+	return result.Count, nil
+}
+
+func GetArtifactVersionPullers(ctx context.Context, versionID uuid.UUID) ([]types.UserAccount, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`
+		WITH LastPull AS (
+			SELECT av.artifact_id, max(avp.created_at) AS latest_pull FROM ArtifactVersionPull avp
+			JOIN ArtifactVersion av ON av.id = avp.artifact_version_id
+			WHERE useraccount_id = @userId
+			GROUP BY av.artifact_id
+		)
+		SELECT DISTINCT `+userAccountOutputExpr+`
+			FROM UserAccount ua
+			JOIN ArtifactVersionPull p ON ua.id = p.useraccount_id
+			JOIN ArtifactVersion av ON av.id = p.artifact_version_id
+			JOIN LastPull lp ON lp.artifact_id = av.artifact_id AND lp.latest_pull = avp.created_at
+			WHERE p.artifact_version_id = @versionId
+			ORDER BY p.created_at DESC
+		`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not get pullers: %w", err)
+	}
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.UserAccount])
+	if err != nil {
+		return nil, fmt.Errorf("could not get pullers: %w", err)
+	}
+	return result, nil
 }

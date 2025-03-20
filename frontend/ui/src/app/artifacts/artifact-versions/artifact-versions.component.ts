@@ -4,7 +4,18 @@ import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faDownload, faFile, faLightbulb, faWarning} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import {combineLatestWith, filter, firstValueFrom, map, Observable, switchMap, tap, withLatestFrom} from 'rxjs';
+import {
+  combineLatestWith,
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  map,
+  Observable,
+  of,
+  switchMap,
+  tap,
+  withLatestFrom,
+} from 'rxjs';
 import {SemVer} from 'semver';
 import {RelativeDatePipe} from '../../../util/dates';
 import {ClipComponent} from '../../components/clip.component';
@@ -42,8 +53,9 @@ export class ArtifactVersionsComponent {
   protected readonly faLightbulb = faLightbulb;
 
   protected readonly artifact$ = this.route.params.pipe(
-    combineLatestWith(this.artifacts.list()),
-    map(([params, artifacts]) => artifacts.find((a) => a.id === params['id']))
+    map((params) => params['id']?.trim()),
+    distinctUntilChanged(),
+    switchMap((id: string) => this.artifacts.getByIdAndCache(id))
   );
 
   protected readonly updateTag$: Observable<TaggedArtifactVersion | null> = this.artifact$.pipe(
@@ -82,7 +94,7 @@ export class ArtifactVersionsComponent {
 
       const newer = tagsSorted.slice(
         0,
-        tagsSorted.findIndex((t) => (t.downloadedByUsers ?? []).some((u) => u.id === this.auth.getClaims()?.sub))
+        tagsSorted.findIndex((t) => (t.downloadedByUsers ?? []).some((u) => u === this.auth.getClaims()?.sub))
       );
 
       if (newer.length > 0) {
