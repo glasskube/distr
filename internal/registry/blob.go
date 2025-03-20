@@ -406,8 +406,6 @@ func (b *blobs) handlePatch(
 	resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
 	resp.Header().Set("Range", fmt.Sprintf("0-%d", size-1))
 	resp.WriteHeader(http.StatusAccepted)
-	log := internalctx.GetLogger(req.Context())
-	log.Info("response headers", zap.String("location", resp.Header().Get("Location")))
 	return nil
 }
 
