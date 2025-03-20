@@ -17,24 +17,40 @@ import (
 var Authentication = authn.New(
 	authn.Chain(
 		authn.Chain(
-			token.NewExtractor(token.FromHeader("Bearer")),
+			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
 			jwt.Authenticator(authjwt.JWTAuth),
 		),
 		authinfo.JWTAuthenticator(),
 	),
 	authn.Chain(
 		authn.Chain(
-			token.NewExtractor(token.FromHeader("AccessToken")),
+			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("AccessToken"))),
 			authkey.Authenticator(),
 		),
 		authinfo.AuthKeyAuthenticator(),
 	),
 )
 
+var ArtifactsAuthentication = authn.New(
+	authn.Chain(
+		authn.Chain(
+			token.NewExtractor(
+				token.WithExtractorFuncs(token.FromBasicAuth()),
+				token.WithErrorHeaders(map[string]string{"WWW-Authenticate": "Basic realm=\"Distr\""}),
+			),
+			authkey.Authenticator(),
+		),
+		authinfo.AuthKeyAuthenticator(),
+	),
+)
+
+func handleUnknownError(w http.ResponseWriter, r *http.Request, err error) {
+	internalctx.GetLogger(r.Context()).Error("error authenticating request", zap.Error(err))
+	sentry.GetHubFromContext(r.Context()).CaptureException(err)
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
 func init() {
-	Authentication.SetUnknownErrorHandler(func(w http.ResponseWriter, r *http.Request, err error) {
-		internalctx.GetLogger(r.Context()).Error("error authenticating request", zap.Error(err))
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	})
+	Authentication.SetUnknownErrorHandler(handleUnknownError)
+	ArtifactsAuthentication.SetUnknownErrorHandler(handleUnknownError)
 }

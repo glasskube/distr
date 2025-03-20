@@ -1,9 +1,10 @@
-import {Component, effect, ElementRef, inject, ViewChild} from '@angular/core';
-import {RouterLink} from '@angular/router';
+import {Component, effect, ElementRef, inject, signal, ViewChild} from '@angular/core';
+import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faAddressBook,
   faArrowRightLong,
+  faBox,
   faBoxesStacked,
   faCheckDouble,
   faChevronDown,
@@ -28,7 +29,15 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe, CdkConnectedOverlay, CdkOverlayOrigin],
+  imports: [
+    RouterLink,
+    FaIconComponent,
+    RequireRoleDirective,
+    AsyncPipe,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
+    RouterLinkActive,
+  ],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
@@ -44,9 +53,12 @@ export class SideBarComponent {
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
   protected readonly faAddressBook = faAddressBook;
+  protected readonly faBox = faBox;
   protected readonly buildConfig = buildConfig;
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
+
+  protected readonly artifactsSubMenuOpen = signal(true);
 
   constructor() {
     effect(() => {
@@ -56,8 +68,14 @@ export class SideBarComponent {
     });
   }
 
+  protected toggleArtifactsSubMenu() {
+    this.artifactsSubMenuOpen.update((val) => !val);
+  }
+
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
-  protected showRequestAccessTooltip = false;
+  protected showLicenseRequestAccessTooltip = false;
+  protected showRegistryRequestAccessTooltip = false;
+  protected readonly faChevronDown = faChevronDown;
   protected readonly faCodeFork = faCodeFork;
 }

@@ -1,0 +1,1 @@
+-- ALTER TYPE FEATURE DROP VALUE is not supported by postgres

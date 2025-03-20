@@ -13,6 +13,7 @@ import {AccessTokensService} from '../services/access-tokens.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '@glasskube/distr-sdk';
+import {ClipComponent} from '../components/clip.component';
 
 @Component({
   selector: 'app-access-tokens',
@@ -24,6 +25,7 @@ import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '@glassk
     AutotrimDirective,
     OverlayModule,
     RelativeDatePipe,
+    ClipComponent,
   ],
   templateUrl: './access-tokens.component.html',
   animations: [drawerFlyInOut],
@@ -95,13 +97,6 @@ export class AccessTokensComponent {
         await firstValueFrom(this.accessTokens.delete(accessToken.id!));
         this.refresh$.next();
       } catch (e) {}
-    }
-  }
-
-  public async clip() {
-    if (this.createdToken) {
-      await navigator.clipboard.writeText(this.createdToken.key);
-      this.toast.success('copied to clipboard');
     }
   }
 

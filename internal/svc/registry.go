@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"syscall"
 
-	"github.com/glasskube/distr/internal/migrations"
-
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mail/noop"
 	"github.com/glasskube/distr/internal/mail/ses"
 	"github.com/glasskube/distr/internal/mail/smtp"
+	"github.com/glasskube/distr/internal/migrations"
+	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
 	"github.com/jackc/pgx/v5"
@@ -25,10 +25,11 @@ import (
 )
 
 type Registry struct {
-	dbPool           *pgxpool.Pool
-	logger           *zap.Logger
-	mailer           mail.Mailer
-	execDbMigrations bool
+	dbPool            *pgxpool.Pool
+	logger            *zap.Logger
+	mailer            mail.Mailer
+	execDbMigrations  bool
+	artifactsRegistry http.Handler
 }
 
 func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
@@ -69,6 +70,8 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 	} else {
 		reg.dbPool = db
 	}
+
+	reg.artifactsRegistry = createArtifactsRegistry(ctx, reg.logger, reg.dbPool, reg.mailer)
 
 	return reg, nil
 }
@@ -163,6 +166,16 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 	}
 }
 
+func createArtifactsRegistry(
+	ctx context.Context,
+	logger *zap.Logger,
+	pool *pgxpool.Pool,
+	mailer mail.Mailer,
+) http.Handler {
+	logger = logger.With(zap.String("component", "registry"))
+	return registry.NewDefault(ctx, logger, pool, mailer)
+}
+
 func (r *Registry) GetMailer() mail.Mailer {
 	return r.mailer
 }
@@ -181,6 +194,14 @@ func (r *Registry) GetRouter() http.Handler {
 	return routing.NewRouter(r.logger, r.dbPool, r.mailer)
 }
 
+func (r *Registry) GetArtifactsRouter() http.Handler {
+	return r.artifactsRegistry
+}
+
 func (r *Registry) GetServer() server.Server {
-	return *server.NewServer(r.GetRouter(), r.logger)
+	return *server.NewServer(r.GetRouter(), r.logger.With(zap.String("server", "main")))
+}
+
+func (r *Registry) GetArtifactsServer() server.Server {
+	return *server.NewServer(r.GetArtifactsRouter(), r.logger.With(zap.String("server", "registry")))
 }
