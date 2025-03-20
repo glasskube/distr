@@ -208,6 +208,22 @@ func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader
 	return size, nil
 }
 
+func (handler *blobHandler) GetUploadedPartsSize(ctx context.Context, id string) (int64, error) {
+	uploadKey := path.Join(chunksPrefix, id)
+	var size int64
+
+	if uploadID, err := handler.getUploadID(ctx, uploadKey); err != nil {
+		return 0, err
+	} else if parts, err := handler.getExistingParts(ctx, uploadKey, uploadID); err != nil {
+		return 0, err
+	} else {
+		for _, part := range parts {
+			size += *part.Size
+		}
+		return size, nil
+	}
+}
+
 func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string, digest v1.Hash) error {
 	uploadKey := path.Join(chunksPrefix, id)
 	if uploadID, err := handler.getUploadID(ctx, uploadKey); err != nil {

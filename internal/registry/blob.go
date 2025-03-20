@@ -24,6 +24,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/registry/verify"
@@ -92,13 +94,15 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handleHead(resp, req, repo, target)
 	case http.MethodGet:
-		if h, err := v1.NewHash(target); err != nil {
-			return regErrDigestInvalid
-		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionRead); err != nil {
-			if errors.Is(err, authz.ErrAccessDenied) {
-				return regErrDenied
+		if h, err := v1.NewHash(target); err == nil {
+			if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionRead); err != nil {
+				if errors.Is(err, authz.ErrAccessDenied) {
+					return regErrDenied
+				}
+				return regErrInternal(err)
 			}
-			return regErrInternal(err)
+		} else if _, err := uuid.Parse(target); err != nil {
+			return regErrDigestInvalid
 		}
 		return b.handleGet(resp, req, repo, target, rangeHeader)
 	case http.MethodPost:
@@ -187,7 +191,18 @@ func (b *blobs) handleHead(resp http.ResponseWriter, req *http.Request, repo, ta
 func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, target, rangeHeader string) *regError {
 	h, err := v1.NewHash(target)
 	if err != nil {
-		return regErrDigestInvalid
+		if id, err := uuid.Parse(target); err != nil {
+			return regErrDigestInvalid
+		} else if bph, ok := b.blobHandler.(blob.BlobPutHandler); !ok {
+			return regErrUnsupported
+		} else if uploaded, err := bph.GetUploadedPartsSize(req.Context(), id.String()); err != nil {
+			return regErrInternal(err)
+		} else {
+			resp.Header().Set("Location", "/"+path.Join("v2", repo, "blobs/uploads", target))
+			resp.Header().Set("Range", fmt.Sprintf("0-%v", uploaded-1))
+			resp.WriteHeader(http.StatusNoContent)
+			return nil
+		}
 	}
 
 	var size int64
