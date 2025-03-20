@@ -2,14 +2,11 @@ package env
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"net/mail"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )
 
@@ -18,11 +15,11 @@ var (
 	jwtSecret                     []byte
 	host                          string
 	artifactsHost                 string
-	mailerConfig                  = MailerConfig{Type: MailerTypeUnspecified}
-	inviteTokenValidDuration      = 24 * time.Hour
-	resetTokenValidDuration       = 1 * time.Hour
-	agentTokenMaxValidDuration    = 24 * time.Hour
-	agentInterval                 = 5 * time.Second
+	mailerConfig                  MailerConfig
+	inviteTokenValidDuration      time.Duration
+	resetTokenValidDuration       time.Duration
+	agentTokenMaxValidDuration    time.Duration
+	agentInterval                 time.Duration
 	statusEntriesMaxAge           *time.Duration
 	sentryDSN                     string
 	sentryDebug                   bool
@@ -32,9 +29,10 @@ var (
 	frontendPosthogToken          *string
 	frontendPosthogAPIHost        *string
 	frontendPosthogUIHost         *string
-	userEmailVerificationRequired = true
+	userEmailVerificationRequired bool
 	serverShutdownDelayDuration   *time.Duration
-	registration                  = RegistrationEnabled
+	registration                  RegistrationMode
+	registryS3Config              S3Config
 )
 
 func init() {
@@ -45,115 +43,52 @@ func init() {
 		}
 	}
 
-	databaseUrl = os.Getenv("DATABASE_URL")
+	databaseUrl = requireEnv("DATABASE_URL")
+	jwtSecret = requireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
+	host = requireEnv("DISTR_HOST")
+	artifactsHost = getEnvOrDefault("DISTR_ARTIFACTS_HOST", host)
+	agentInterval = getEnvParsedOrDefault("AGENT_INTERVAL", getPositiveDuration, 5*time.Second)
+	statusEntriesMaxAge = getEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", getPositiveDuration)
+	enableQueryLogging = getEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
+	userEmailVerificationRequired =
+		getEnvParsedOrDefault("USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true)
+	serverShutdownDelayDuration = getEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", getPositiveDuration)
+	registration = getEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
+	inviteTokenValidDuration =
+		getEnvParsedOrDefault("INVITE_TOKEN_VALID_DURATION", getPositiveDuration, 24*time.Hour)
+	resetTokenValidDuration =
+		getEnvParsedOrDefault("RESET_TOKEN_VALID_DURATION", getPositiveDuration, 1*time.Hour)
+	agentTokenMaxValidDuration =
+		getEnvParsedOrDefault("AGENT_TOKEN_MAX_VALID_DURATION", getPositiveDuration, 24*time.Hour)
 
-	if decoded, err := base64.StdEncoding.DecodeString(os.Getenv("JWT_SECRET")); err != nil {
-		panic(fmt.Errorf("could not decode jwt secret: %w", err))
-	} else {
-		jwtSecret = decoded
+	mailerConfig.Type = getEnvParsedOrDefault("MAILER_TYPE", parseMailerType, MailerTypeUnspecified)
+	if mailerConfig.Type != MailerTypeUnspecified {
+		mailerConfig.FromAddress = requireEnvParsed("MAILER_FROM_ADDRESS", parseMailAddress)
 	}
-	host = os.Getenv("DISTR_HOST")
-	if host == "" {
-		panic(errors.New("can't start, DISTR_HOST not set"))
-	}
-
-	artifactsHost = os.Getenv("DISTR_ARTIFACTS_HOST")
-	if artifactsHost == "" {
-		artifactsHost = host
-	}
-
-	if value, ok := os.LookupEnv("MAILER_TYPE"); ok {
-		switch value {
-		case string(MailerTypeSES):
-			mailerConfig.Type = MailerTypeSES
-			mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
-		case string(MailerTypeSMTP):
-			mailerConfig.Type = MailerTypeSMTP
-			mailerConfig.FromAddress = *util.Require(mail.ParseAddress(os.Getenv("MAILER_FROM_ADDRESS")))
-			port, err := strconv.Atoi(os.Getenv("MAILER_SMTP_PORT"))
-			if err != nil {
-				panic(fmt.Errorf("could not decode smtp port: %w", err))
-			}
-			mailerConfig.SmtpConfig = &MailerSMTPConfig{
-				Host:     os.Getenv("MAILER_SMTP_HOST"),
-				Port:     port,
-				Username: os.Getenv("MAILER_SMTP_USERNAME"),
-				Password: os.Getenv("MAILER_SMTP_PASSWORD"),
-			}
-		default:
-			panic("invalid MAILER_TYPE")
+	if mailerConfig.Type == MailerTypeSMTP {
+		mailerConfig.SmtpConfig = &MailerSMTPConfig{
+			Host:     getEnv("MAILER_SMTP_HOST"),
+			Port:     requireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
+			Username: getEnv("MAILER_SMTP_USERNAME"),
+			Password: getEnv("MAILER_SMTP_PASSWORD"),
 		}
 	}
 
-	if d, ok := os.LookupEnv("INVITE_TOKEN_VALID_DURATION"); ok {
-		inviteTokenValidDuration = requirePositiveDuration(d)
-	}
-	if d, ok := os.LookupEnv("RESET_TOKEN_VALID_DURATION"); ok {
-		resetTokenValidDuration = requirePositiveDuration(d)
-	}
-	if d, ok := os.LookupEnv("AGENT_TOKEN_MAX_VALID_DURATION"); ok {
-		agentTokenMaxValidDuration = requirePositiveDuration(d)
-	}
-	if d, ok := os.LookupEnv("AGENT_INTERVAL"); ok {
-		agentInterval = requirePositiveDuration(d)
-	}
-	if d, ok := os.LookupEnv("STATUS_ENTRIES_MAX_AGE"); ok {
-		statusEntriesMaxAge = util.PtrTo(requirePositiveDuration(d))
-	}
+	registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
+	registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
+	registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
+	registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
+	registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
+	registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
+	registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
 
-	sentryDSN = os.Getenv("SENTRY_DSN")
-	if value, ok := os.LookupEnv("SENTRY_DEBUG"); ok {
-		sentryDebug = util.Require(strconv.ParseBool(value))
-	}
-
-	if value, ok := os.LookupEnv("ENABLE_QUERY_LOGGING"); ok {
-		enableQueryLogging = util.Require(strconv.ParseBool(value))
-	}
-
-	if value, ok := os.LookupEnv("AGENT_DOCKER_CONFIG"); ok {
-		agentDockerConfig = []byte(value)
-	}
-
-	if value, ok := os.LookupEnv("FRONTEND_SENTRY_DSN"); ok {
-		frontendSentryDSN = &value
-	}
-
-	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_TOKEN"); ok {
-		frontendPosthogToken = &value
-	}
-
-	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_API_HOST"); ok {
-		frontendPosthogAPIHost = &value
-	}
-
-	if value, ok := os.LookupEnv("FRONTEND_POSTHOG_UI_HOST"); ok {
-		frontendPosthogUIHost = &value
-	}
-
-	if value, ok := os.LookupEnv("USER_EMAIL_VERIFICATION_REQUIRED"); ok {
-		userEmailVerificationRequired = util.Require(strconv.ParseBool(value))
-	}
-
-	if value, ok := os.LookupEnv("SERVER_SHUTDOWN_DELAY_DURATION"); ok {
-		serverShutdownDelayDuration = util.PtrTo(requirePositiveDuration(value))
-	}
-
-	if value, ok := os.LookupEnv("REGISTRATION"); ok {
-		switch value {
-		case string(RegistrationEnabled), string(RegistrationHidden), string(RegistrationDisabled):
-			registration = RegistrationMode(value)
-		default:
-			panic("invalid REGISTRATION")
-		}
-	}
-}
-
-func requirePositiveDuration(val string) time.Duration {
-	d := util.Require(time.ParseDuration(val))
-	if d.Nanoseconds() <= 0 {
-		panic("duration must be positive")
-	}
-	return d
+	sentryDSN = getEnv("SENTRY_DSN")
+	sentryDebug = getEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
+	agentDockerConfig = getEnvParsedOrDefault("AGENT_DOCKER_CONFIG", asByteSlice, nil)
+	frontendSentryDSN = getEnvOrNil("FRONTEND_SENTRY_DSN")
+	frontendPosthogToken = getEnvOrNil("FRONTEND_POSTHOG_TOKEN")
+	frontendPosthogAPIHost = getEnvOrNil("FRONTEND_POSTHOG_API_HOST")
+	frontendPosthogUIHost = getEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
 }
 
 func DatabaseUrl() string {
@@ -233,4 +168,8 @@ func ServerShutdownDelayDuration() *time.Duration {
 
 func Registration() RegistrationMode {
 	return registration
+}
+
+func RegistryS3Config() S3Config {
+	return registryS3Config
 }

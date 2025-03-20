@@ -10,9 +10,11 @@ import (
 	"path"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -20,16 +22,14 @@ import (
 )
 
 const (
-	accessKey       = "distr"
-	accessKeySecret = "distr123"
-	bucket          = "distr"
-	chunksPrefix    = "chunks"
+	chunksPrefix = "chunks"
 )
 
 type blobHandler struct {
 	s3Client        *s3.Client
 	s3PresignClient *s3.PresignClient
 	allowRedirect   bool
+	bucket          string
 }
 
 var _ blob.BlobHandler = &blobHandler{}
@@ -37,19 +37,33 @@ var _ blob.BlobStatHandler = &blobHandler{}
 var _ blob.BlobPutHandler = &blobHandler{}
 var _ blob.BlobDeleteHandler = &blobHandler{}
 
-func NewBlobHandler(allowRedirect bool) blob.BlobHandler {
-	s3Client := s3.New(s3.Options{
-		Region:       "eu-central-1",
-		UsePathStyle: true,
-		BaseEndpoint: util.PtrTo("http://localhost:9000"),
-		Credentials: aws.NewCredentialsCache(
-			credentials.NewStaticCredentialsProvider(accessKey, accessKeySecret, ""),
-		),
-	})
+func NewBlobHandler(ctx context.Context) blob.BlobHandler {
+	s3Config := env.RegistryS3Config()
+	var s3Client *s3.Client
+	if awsconfig, err := awsconfig.LoadDefaultConfig(ctx); err != nil {
+		s3Client = s3.New(s3.Options{}, clientOpts(s3Config))
+	} else {
+		s3Client = s3.NewFromConfig(awsconfig, clientOpts(s3Config))
+	}
+
 	return &blobHandler{
 		s3Client:        s3Client,
 		s3PresignClient: s3.NewPresignClient(s3Client),
-		allowRedirect:   allowRedirect,
+		allowRedirect:   s3Config.AllowRedirect,
+		bucket:          s3Config.Bucket,
+	}
+}
+
+func clientOpts(s3Config env.S3Config) func(o *s3.Options) {
+	return func(o *s3.Options) {
+		o.Region = s3Config.Region
+		o.BaseEndpoint = s3Config.Endpoint
+		o.UsePathStyle = s3Config.UsePathStyle
+		if s3Config.AccessKeyID != nil && s3Config.SecretAccessKey != nil {
+			o.Credentials = aws.NewCredentialsCache(
+				credentials.NewStaticCredentialsProvider(*s3Config.AccessKeyID, *s3Config.SecretAccessKey, ""),
+			)
+		}
 	}
 }
 
@@ -63,7 +77,7 @@ func (handler *blobHandler) Get(
 	key := h.String()
 	if handler.allowRedirect && allowRedirect {
 		resp, err := handler.s3PresignClient.PresignGetObject(ctx,
-			&s3.GetObjectInput{Bucket: util.PtrTo(bucket), Key: &key})
+			&s3.GetObjectInput{Bucket: util.PtrTo(handler.bucket), Key: &key})
 		if err != nil {
 			return nil, convertErrNotFound(err)
 		} else {
@@ -73,7 +87,7 @@ func (handler *blobHandler) Get(
 			}
 		}
 	} else {
-		obj, err := handler.s3Client.GetObject(ctx, &s3.GetObjectInput{Bucket: util.PtrTo(bucket), Key: &key})
+		obj, err := handler.s3Client.GetObject(ctx, &s3.GetObjectInput{Bucket: &handler.bucket, Key: &key})
 		if err != nil {
 			return nil, convertErrNotFound(err)
 		}
@@ -84,7 +98,7 @@ func (handler *blobHandler) Get(
 // Stat implements blob.BlobStatHandler.
 func (handler *blobHandler) Stat(ctx context.Context, repo string, h v1.Hash) (int64, error) {
 	key := h.String()
-	obj, err := handler.s3Client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: util.PtrTo(bucket), Key: &key})
+	obj, err := handler.s3Client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &handler.bucket, Key: &key})
 	if err != nil {
 		return 0, convertErrNotFound(err)
 	}
@@ -108,7 +122,7 @@ func (handler *blobHandler) Put(ctx context.Context, repo string, h v1.Hash, con
 	}
 
 	input := s3.PutObjectInput{
-		Bucket: util.PtrTo(bucket),
+		Bucket: &handler.bucket,
 		Key:    &key,
 		Body:   r,
 	}
@@ -144,7 +158,7 @@ func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader
 
 	if start == 0 {
 		if upload, err := handler.s3Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
-			Bucket: util.PtrTo(bucket),
+			Bucket: &handler.bucket,
 			Key:    &uploadKey,
 		}); err != nil {
 			return 0, err
@@ -182,7 +196,7 @@ func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader
 	}
 
 	if _, err := handler.s3Client.UploadPart(ctx, &s3.UploadPartInput{
-		Bucket:     util.PtrTo(bucket),
+		Bucket:     &handler.bucket,
 		Key:        &uploadKey,
 		UploadId:   uploadID,
 		PartNumber: &partNumber,
@@ -228,20 +242,20 @@ func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string
 		//   complete object which, unfortunately, is explicitly not supported.
 		//   https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html#Full-object-checksums
 		if _, err := handler.s3Client.CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
-			Bucket:          util.PtrTo(bucket),
+			Bucket:          &handler.bucket,
 			Key:             &uploadKey,
 			UploadId:        &uploadID,
 			MultipartUpload: &types.CompletedMultipartUpload{Parts: completionParts},
 		}); err != nil {
 			return err
 		} else if _, err := handler.s3Client.CopyObject(ctx, &s3.CopyObjectInput{
-			Bucket:     util.PtrTo(bucket),
+			Bucket:     &handler.bucket,
 			Key:        util.PtrTo(digest.String()),
-			CopySource: util.PtrTo(path.Join(bucket, uploadKey)),
+			CopySource: util.PtrTo(path.Join(handler.bucket, uploadKey)),
 		}); err != nil {
 			return err
 		} else if _, err := handler.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
-			Bucket: util.PtrTo(bucket),
+			Bucket: &handler.bucket,
 			Key:    &uploadKey,
 		}); err != nil {
 			return err
@@ -254,7 +268,7 @@ func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string
 // Delete implements blob.BlobDeleteHandler.
 func (handler *blobHandler) Delete(ctx context.Context, repo string, h v1.Hash) error {
 	key := h.String()
-	_, err := handler.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{Bucket: util.PtrTo(bucket), Key: &key})
+	_, err := handler.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{Bucket: &handler.bucket, Key: &key})
 	if err != nil {
 		return convertErrNotFound(err)
 	}
@@ -263,7 +277,7 @@ func (handler *blobHandler) Delete(ctx context.Context, repo string, h v1.Hash) 
 
 func (handler *blobHandler) getUploadID(ctx context.Context, uploadKey string) (string, error) {
 	if uploads, err := handler.s3Client.ListMultipartUploads(ctx, &s3.ListMultipartUploadsInput{
-		Bucket: util.PtrTo(bucket),
+		Bucket: &handler.bucket,
 	}); err != nil {
 		return "", err
 	} else {
@@ -288,7 +302,7 @@ func (handler *blobHandler) getExistingParts(
 	uploadID string,
 ) ([]types.Part, error) {
 	if result, err := handler.s3Client.ListParts(ctx, &s3.ListPartsInput{
-		Bucket:   util.PtrTo(bucket),
+		Bucket:   &handler.bucket,
 		Key:      &uploadKey,
 		UploadId: &uploadID,
 	}); err != nil {
