@@ -24,7 +24,6 @@ import (
 	"path"
 	"strings"
 
-	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/google/uuid"
 
 	"github.com/glasskube/distr/internal/registry/authz"
