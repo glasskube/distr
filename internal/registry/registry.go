@@ -129,6 +129,7 @@ func NewDefault(logger *zap.Logger, pool *pgxpool.Pool, mailer mail.Mailer) http
 			middleware.LoggingMiddleware,
 			middleware.ContextInjectorMiddleware(pool, mailer),
 			auth.ArtifactsAuthentication.Middleware,
+			middleware.RegistryEnabledMiddleware,
 		),
 	)
 }

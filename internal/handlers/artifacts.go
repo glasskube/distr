@@ -19,7 +19,7 @@ import (
 )
 
 func ArtifactsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgID, middleware.RequireUserRole, middleware.RegistryEnabledMiddleware)
 	r.Get("/", getArtifacts)
 	r.Get("/{artifactId}", getArtifact)
 }

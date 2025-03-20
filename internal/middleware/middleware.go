@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/distr/internal/db"
+
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/distr/internal/auth"
@@ -120,3 +122,25 @@ var RequireUserRole = auth.Authentication.ValidatorMiddleware(func(value authinf
 		return nil
 	}
 })
+
+func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) http.Handler {
+	return func(handler http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			if auth, err := auth.Authentication.Get(ctx); err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
+			} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
+				internalctx.GetLogger(ctx).Warn("could not get organization in feature flag middleware", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			} else if !org.HasFeature(feature) {
+				http.Error(w, fmt.Sprintf("%v not enabled for organization", feature), http.StatusForbidden)
+			} else {
+				handler.ServeHTTP(w, r)
+			}
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+var RegistryEnabledMiddleware = FeatureFlagMiddleware(types.FeatureRegistry)
