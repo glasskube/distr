@@ -292,7 +292,7 @@ func (handler *blobHandler) getUploadID(ctx context.Context, uploadKey string) (
 		if uploads.IsTruncated != nil && *uploads.IsTruncated {
 			return "", errors.New("too many concurrent uploads. please try again later")
 		}
-		return "", fmt.Errorf("%w: unknown upload session", blob.ErrNotFound)
+		return "", blob.NewErrBadUpload("unknown upload session")
 	}
 }
 
