@@ -24,6 +24,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -115,10 +116,10 @@ func New(opts ...Option) http.Handler {
 	return h
 }
 
-func NewDefault(logger *zap.Logger, pool *pgxpool.Pool, mailer mail.Mailer) http.Handler {
+func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mailer mail.Mailer) http.Handler {
 	return New(
 		WithLogger(logger),
-		WithBlobHandler(s3.NewBlobHandler(true)),
+		WithBlobHandler(s3.NewBlobHandler(ctx)),
 		WithManifestHandler(db.NewManifestHandler()),
 		WithAuthorizer(authz.NewAuthorizer()),
 		WithMiddlewares(
