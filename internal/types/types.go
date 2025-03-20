@@ -34,6 +34,7 @@ const (
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
 
 	FeatureLicensing Feature = "licensing"
+	FeatureRegistry  Feature = "registry"
 )
 
 type Base struct {

@@ -74,7 +74,8 @@ export class SideBarComponent {
 
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
-  protected showRequestAccessTooltip = false;
+  protected showLicenseRequestAccessTooltip = false;
+  protected showRegistryRequestAccessTooltip = false;
   protected readonly faChevronDown = faChevronDown;
   protected readonly faCodeFork = faCodeFork;
 }
