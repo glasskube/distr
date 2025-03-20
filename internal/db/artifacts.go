@@ -456,7 +456,7 @@ func GetDigestArtifactVersion(ctx context.Context, orgName, name, reference stri
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`SELECT`+artifactVersionOutputExpr+`
+		`SELECT DISTINCT `+artifactVersionOutputExpr+`
 		FROM Artifact a
 		JOIN Organization o ON o.id = a.organization_id
 		JOIN ArtifactVersion v ON a.id = v.artifact_id

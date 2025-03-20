@@ -330,6 +330,11 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 	if err != nil {
 		var rerr blob.RedirectError
 		if errors.As(err, &rerr) {
+			if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+				log := internalctx.GetLogger(ctx)
+				log.Warn("failed to audit-log pull", zap.Error(err))
+				sentry.GetHubFromContext(ctx)
+			}
 			http.Redirect(resp, req, rerr.Location, rerr.Code)
 			return nil
 		}

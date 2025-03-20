@@ -26,12 +26,9 @@ class UserAccountsReactiveList extends ReactiveList<UserAccountWithRole> {
 @Injectable({providedIn: 'root'})
 export class UsersService {
   private readonly baseUrl = '/api/v1/user-accounts';
-  private readonly cache: ReactiveList<UserAccountWithRole>;
+  private readonly httpClient = inject(HttpClient);
+  private readonly cache = new UserAccountsReactiveList(this.httpClient.get<UserAccountWithRole[]>(this.baseUrl));
   private readonly auth = inject(AuthService);
-
-  constructor(private readonly httpClient: HttpClient) {
-    this.cache = new UserAccountsReactiveList(this.httpClient.get<UserAccountWithRole[]>(this.baseUrl));
-  }
 
   public getUsers(): Observable<UserAccountWithRole[]> {
     if (this.auth.hasRole('customer')) {
@@ -58,6 +55,7 @@ export class UsersService {
   public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
     return this.httpClient.post<CreateUserAccountResponse>(this.baseUrl, request).pipe(
       tap((it) =>
+        // TODO: add user details to CreateUserAccountResponse
         this.cache.save({
           email: request.email,
           name: request.name,
@@ -73,17 +71,21 @@ export class UsersService {
     return this.httpClient.delete<void>(`${this.baseUrl}/${user.id}`).pipe(tap(() => this.cache.remove(user)));
   }
 
-  public getUserWithGravatarUrl(id: string): Observable<{user: UserAccountWithRole; gravatar: string} | undefined> {
+  public getUserWithGravatarUrl(id: string): Observable<UserAccountWithRole & {gravatar: string}> {
     return this.getUsers().pipe(
       map((users) => users.find((u) => u.id === id)),
-      switchMap(async (u) =>
-        u
-          ? {
-              user: u,
-              gravatar: `https://www.gravatar.com/avatar/${await digestMessage(u.email)}`,
-            }
-          : undefined
-      )
+      map((u) => {
+        if (!u) {
+          throw 'user not found';
+        }
+        return u;
+      }),
+      switchMap(async (user) => {
+        return {
+          ...user,
+          gravatar: `https://www.gravatar.com/avatar/${await digestMessage(user.email)}`,
+        };
+      })
     );
   }
 }

@@ -25,10 +25,11 @@ import (
 )
 
 type Registry struct {
-	dbPool           *pgxpool.Pool
-	logger           *zap.Logger
-	mailer           mail.Mailer
-	execDbMigrations bool
+	dbPool            *pgxpool.Pool
+	logger            *zap.Logger
+	mailer            mail.Mailer
+	execDbMigrations  bool
+	artifactsRegistry http.Handler
 }
 
 func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
@@ -69,6 +70,8 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 	} else {
 		reg.dbPool = db
 	}
+
+	reg.artifactsRegistry = createArtifactsRegistry(ctx, reg.logger, reg.dbPool, reg.mailer)
 
 	return reg, nil
 }
@@ -163,6 +166,16 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 	}
 }
 
+func createArtifactsRegistry(
+	ctx context.Context,
+	logger *zap.Logger,
+	pool *pgxpool.Pool,
+	mailer mail.Mailer,
+) http.Handler {
+	logger = logger.With(zap.String("component", "registry"))
+	return registry.NewDefault(ctx, logger, pool, mailer)
+}
+
 func (r *Registry) GetMailer() mail.Mailer {
 	return r.mailer
 }
@@ -182,11 +195,7 @@ func (r *Registry) GetRouter() http.Handler {
 }
 
 func (r *Registry) GetArtifactsRouter() http.Handler {
-	return registry.NewDefault(
-		r.logger.With(zap.String("component", "registry")),
-		r.dbPool,
-		r.mailer,
-	)
+	return r.artifactsRegistry
 }
 
 func (r *Registry) GetServer() server.Server {
