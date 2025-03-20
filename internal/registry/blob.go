@@ -200,7 +200,7 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 			return regErrInternal(err)
 		} else {
 			resp.Header().Set("Location", "/"+path.Join("v2", repo, "blobs/uploads", target))
-			resp.Header().Set("Range", fmt.Sprintf("0-%v", uploaded))
+			resp.Header().Set("Range", fmt.Sprintf("0-%v", uploaded-1))
 			resp.WriteHeader(http.StatusNoContent)
 			return nil
 		}
