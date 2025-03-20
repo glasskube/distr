@@ -18,7 +18,7 @@ func parseRegistrationMode(value string) (RegistrationMode, error) {
 	case string(RegistrationEnabled), string(RegistrationHidden), string(RegistrationDisabled):
 		return RegistrationMode(value), nil
 	default:
-		return "", fmt.Errorf("invalid value for environment variable REGISTRATION: %v", value)
+		return "", fmt.Errorf("invalid RegistrationMode: %v", value)
 	}
 }
 
@@ -35,7 +35,7 @@ func parseMailerType(value string) (MailerTypeString, error) {
 	case string(MailerTypeSES), string(MailerTypeSMTP), string(MailerTypeUnspecified):
 		return MailerTypeString(value), nil
 	default:
-		return "", fmt.Errorf("invalid value for environment variable MAILER_TYPE: %v", value)
+		return "", fmt.Errorf("invalid MailerTypeString: %v", value)
 	}
 }
 
