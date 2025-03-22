@@ -16,7 +16,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
-	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jackc/pgx/v5 v5.7.3
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.1.4
 	github.com/onsi/gomega v1.36.3
