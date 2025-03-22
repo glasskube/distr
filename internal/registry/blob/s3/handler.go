@@ -157,7 +157,10 @@ func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader
 	var size int64
 
 	if start == 0 {
-		if upload, err := handler.s3Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
+		if _, err := handler.getUploadID(ctx, uploadKey); !errors.Is(err, blob.ErrBadUpload) {
+			// when start == 0, we expect that there exists no upload session for this ID
+			return 0, blob.NewErrBadUpload("range is not as expected")
+		} else if upload, err := handler.s3Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
 			Bucket: &handler.bucket,
 			Key:    &uploadKey,
 		}); err != nil {
