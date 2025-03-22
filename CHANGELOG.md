@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1](https://github.com/glasskube/distr/compare/1.4.0...1.4.1) (2025-03-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @angular/cdk to v19.2.5 ([#673](https://github.com/glasskube/distr/issues/673)) ([877cd37](https://github.com/glasskube/distr/commit/877cd37ff78e63ed73319990e14638454ba44b75))
+* **deps:** update dependency @angular/cdk to v19.2.6 ([#675](https://github.com/glasskube/distr/issues/675)) ([884f887](https://github.com/glasskube/distr/commit/884f8870a6c98cbc022c39eda52654ddbc846706))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.3 ([#680](https://github.com/glasskube/distr/issues/680)) ([6f21c24](https://github.com/glasskube/distr/commit/6f21c24e33b886843bf9dc84febdbdb15a845f8a))
+* **deps:** update module github.com/onsi/gomega to v1.36.3 ([#679](https://github.com/glasskube/distr/issues/679)) ([8bbe99d](https://github.com/glasskube/distr/commit/8bbe99d36e9c4d5bf9a5c36ebe14f48d9026e2b4))
+
 ## [1.4.0](https://github.com/glasskube/distr/compare/1.3.3...1.4.0) (2025-03-20)
 
 
