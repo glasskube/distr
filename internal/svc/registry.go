@@ -198,11 +198,11 @@ func (r *Registry) GetArtifactsRouter() http.Handler {
 	return r.artifactsRegistry
 }
 
-func (r *Registry) GetServer() server.Servable {
+func (r *Registry) GetServer() server.Server {
 	return server.NewServer(r.GetRouter(), r.logger.With(zap.String("server", "main")))
 }
 
-func (r *Registry) GetArtifactsServer() server.Servable {
+func (r *Registry) GetArtifactsServer() server.Server {
 	if env.RegistryEnabled() {
 		return server.NewServer(r.GetArtifactsRouter(), r.logger.With(zap.String("server", "registry")))
 	} else {

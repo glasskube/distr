@@ -2,7 +2,7 @@ package server
 
 import "context"
 
-type Servable interface {
+type Server interface {
 	Start(addr string) error
 	Shutdown(ctx context.Context)
 	WaitForShutdown()

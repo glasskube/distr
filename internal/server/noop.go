@@ -14,6 +14,6 @@ func (s *noopServer) Shutdown(ctx context.Context) {
 func (s *noopServer) WaitForShutdown() {
 }
 
-func NewNoop() Servable {
+func NewNoop() Server {
 	return &noopServer{}
 }

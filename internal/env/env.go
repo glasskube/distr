@@ -14,7 +14,7 @@ var (
 	databaseUrl                   string
 	jwtSecret                     []byte
 	host                          string
-	artifactsHost                 string
+	registryHost                  string
 	mailerConfig                  MailerConfig
 	inviteTokenValidDuration      time.Duration
 	resetTokenValidDuration       time.Duration
@@ -47,7 +47,6 @@ func init() {
 	databaseUrl = requireEnv("DATABASE_URL")
 	jwtSecret = requireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
 	host = requireEnv("DISTR_HOST")
-	artifactsHost = getEnvOrDefault("DISTR_ARTIFACTS_HOST", host)
 	agentInterval = getEnvParsedOrDefault("AGENT_INTERVAL", getPositiveDuration, 5*time.Second)
 	statusEntriesMaxAge = getEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", getPositiveDuration)
 	enableQueryLogging = getEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
@@ -77,6 +76,7 @@ func init() {
 
 	registryEnabled = getEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
 	if registryEnabled {
+		registryHost = getEnvOrDefault("DISTR_REGISTRY_HOST", host, getEnvOpts{deprecatedAlias: "DISTR_ARTIFACTS_HOST"})
 		registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
 		registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
 		registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
@@ -105,7 +105,7 @@ func JWTSecret() []byte {
 
 func Host() string { return host }
 
-func ArtifactsHost() string { return artifactsHost }
+func RegistryHost() string { return registryHost }
 
 func GetMailerConfig() MailerConfig {
 	return mailerConfig

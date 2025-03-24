@@ -11,14 +11,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type Server struct {
+type server struct {
 	server           *http.Server
 	logger           *zap.Logger
 	shutdownComplete chan struct{}
 }
 
-func NewServer(handler http.Handler, logger *zap.Logger) Servable {
-	server := &Server{
+func NewServer(handler http.Handler, logger *zap.Logger) Server {
+	server := &server{
 		server: &http.Server{
 			Handler: handler,
 		},
@@ -28,7 +28,7 @@ func NewServer(handler http.Handler, logger *zap.Logger) Servable {
 	return server
 }
 
-func (s *Server) Start(addr string) error {
+func (s *server) Start(addr string) error {
 	s.server.Addr = addr
 	s.logger.Sugar().Infof("starting listener on %v", s.server.Addr)
 	if err := s.server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
@@ -38,7 +38,7 @@ func (s *Server) Start(addr string) error {
 	}
 }
 
-func (s *Server) Shutdown(ctx context.Context) {
+func (s *server) Shutdown(ctx context.Context) {
 	if d := env.ServerShutdownDelayDuration(); d != nil {
 		s.logger.Sugar().Warnf("shutting down HTTP server in %v", d)
 		time.Sleep(*d)
@@ -50,7 +50,7 @@ func (s *Server) Shutdown(ctx context.Context) {
 	close(s.shutdownComplete)
 }
 
-func (s *Server) WaitForShutdown() {
+func (s *server) WaitForShutdown() {
 	<-s.shutdownComplete
 	s.logger.Info("server shutdown complete")
 }
