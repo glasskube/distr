@@ -35,7 +35,7 @@ hub:
   env:
     - name: DISTR_HOST
       value: http://distr.local
-    - name: DISTR_ARTIFACTS_HOST
+    - name: DISTR_REGISTRY_HOST # only served if REGISTRY_ENABLED is true; defaults to the value of DISTR_HOST
       value: http://pkg.distr.local
     # The base64 encoded JWT secret
     # Can be generated with `openssl rand -base64 32`
@@ -62,7 +62,7 @@ hub:
     #    secretKeyRef:
     #      name: ""
     #      key: ""
-    # - name: REGISTRATION # can be one of "enabled" (default), "hidden", "disabled"
+    # - name: REGISTRATION # User Registration Mode – can be one of "enabled" (default), "hidden", "disabled"
     #   value: enabled
   envFrom: []
 

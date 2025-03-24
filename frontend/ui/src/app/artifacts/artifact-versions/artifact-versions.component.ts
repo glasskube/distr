@@ -117,7 +117,7 @@ export class ArtifactVersionsComponent {
     tag: TaggedArtifactVersion | undefined = artifact.versions.find((it) => it.tags.some((l) => l.name === 'latest'))
   ) {
     const orgName = this.org.value()?.slug;
-    let url = `oci://${this.remoteEnv.value()?.artifactsHost}/${orgName ?? 'ORG_SLUG'}/${artifact.name}`;
+    let url = `oci://${this.remoteEnv.value()?.registryHost}/${orgName ?? 'ORG_SLUG'}/${artifact.name}`;
     if (tag) {
       return `${url}:${tag.tags[0].name}`;
     } else {
