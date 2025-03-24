@@ -3,13 +3,16 @@ import {Component, inject} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faMagnifyingGlass} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, debounceTime, map, startWith} from 'rxjs';
+import {faBox, faDownload, faLightbulb, faMagnifyingGlass} from '@fortawesome/free-solid-svg-icons';
+import {combineLatest, map, startWith} from 'rxjs';
 import {UuidComponent} from '../../components/uuid';
 import {ArtifactsService} from '../../services/artifacts.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent} from '../components';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {getRemoteEnvironment} from '../../../env/remote';
+import {fromPromise} from 'rxjs/internal/observable/innerFrom';
+import {OrganizationService} from '../../services/organization.service';
 
 @Component({
   selector: 'app-artifacts',
@@ -46,4 +49,9 @@ export class ArtifactsComponent {
     )
   );
   protected readonly faDocker = faDocker;
+  protected readonly faLightbulb = faLightbulb;
+
+  private readonly organizationService = inject(OrganizationService);
+  protected readonly registrySlug$ = this.organizationService.get().pipe(map((o) => o.slug));
+  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.artifactsHost));
 }

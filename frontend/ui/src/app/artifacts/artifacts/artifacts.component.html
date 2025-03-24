@@ -1,5 +1,54 @@
 <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
   <div class="mx-auto max-w-screen-lg px-4">
+    <div
+      class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+      role="alert">
+      <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
+      <div>
+        @if (registrySlug$ | async; as slug) {
+          @if (registryHost$ | async; as host) {
+            <div class="font-medium">
+              To use the OCI Registry, make sure to create a
+              <a class="text-gray-600 dark:text-gray-400 underline" routerLink="/settings/access-tokens"
+                >personal access token</a
+              >
+              and log in to the registry from your machine:
+              <code class="mt-1 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                echo "your-personal-access-token-here" | docker login {{ host }}
+              </code>
+            </div>
+            <div class="font-medium mt-1">
+              Then you can start tagging and pushing your images. For example, you can try the following commands to
+              push your own
+              <a
+                href="https://hub.docker.com/_/hello-world"
+                target="_blank"
+                class="text-gray-600 dark:text-gray-400 underline"
+                >hello-world</a
+              >
+              image:
+              <code class="select-all mt-1 block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                docker pull hello-world
+              </code>
+              <code class="select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                docker tag hello-world {{ host }}/{{ slug }}/hello-world:v1.0.0
+              </code>
+              <code class="select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                docker push {{ host }}/{{ slug }}/hello-world:v1.0.0
+              </code>
+            </div>
+          } @else {
+            Your Distr Hub does not have the registry enabled. You can enable it by setting the corresponding
+            environment variables of the Distr Hub.
+            <!-- TODO link to docs -->
+          }
+        } @else {
+          It seems your organization does not have a slug set yet. To use the registry, please set a slug in
+          <a class="text-gray-600 dark:text-gray-400 underline" routerLink="/settings">Settings</a>.
+        }
+      </div>
+    </div>
+
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div
         class="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between mx-4 py-4 dark:border-gray-700">
@@ -41,7 +90,7 @@
                 </div>
                 <div class="flex flex-col items-end gap-1">
                   <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
-                  <app-artifacts-downloaded-by [source]="artifact"> </app-artifacts-downloaded-by>
+                  <app-artifacts-downloaded-by [source]="artifact"></app-artifacts-downloaded-by>
                 </div>
               </div>
             </li>
