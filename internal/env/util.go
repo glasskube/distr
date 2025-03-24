@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+type getEnvOpts struct {
+	deprecatedAlias string
+}
+
 func getEnv(key string) string {
 	return os.Getenv(key)
 }
@@ -16,9 +20,15 @@ func getEnvOrNil(key string) *string {
 	return nil
 }
 
-func getEnvOrDefault(key, defaultValue string) string {
+func getEnvOrDefault(key, defaultValue string, opts getEnvOpts) string {
 	if value := getEnv(key); value != "" {
 		return value
+	} else if opts.deprecatedAlias != "" {
+		if value := getEnv(opts.deprecatedAlias); value != "" {
+			fmt.Fprintf(os.Stderr, "\nWARNING: use of deprecated variable \"%v\", please use \"%v\" instead\n\n",
+				opts.deprecatedAlias, key)
+			return value
+		}
 	}
 	return defaultValue
 }
