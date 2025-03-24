@@ -17,7 +17,7 @@ type Server struct {
 	shutdownComplete chan struct{}
 }
 
-func NewServer(handler http.Handler, logger *zap.Logger) *Server {
+func NewServer(handler http.Handler, logger *zap.Logger) Servable {
 	server := &Server{
 		server: &http.Server{
 			Handler: handler,

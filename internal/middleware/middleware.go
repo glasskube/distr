@@ -143,4 +143,4 @@ func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) htt
 	}
 }
 
-var RegistryEnabledMiddleware = FeatureFlagMiddleware(types.FeatureRegistry)
+var RegistryFeatureFlagEnabledMiddleware = FeatureFlagMiddleware(types.FeatureRegistry)

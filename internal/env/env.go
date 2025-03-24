@@ -32,6 +32,7 @@ var (
 	userEmailVerificationRequired bool
 	serverShutdownDelayDuration   *time.Duration
 	registration                  RegistrationMode
+	registryEnabled               bool
 	registryS3Config              S3Config
 )
 
@@ -74,13 +75,16 @@ func init() {
 		}
 	}
 
-	registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
-	registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
-	registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
-	registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
-	registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
-	registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
-	registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
+	registryEnabled = getEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
+	if registryEnabled {
+		registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
+		registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
+		registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
+		registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
+		registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
+		registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
+		registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
+	}
 
 	sentryDSN = getEnv("SENTRY_DSN")
 	sentryDebug = getEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
@@ -168,6 +172,10 @@ func ServerShutdownDelayDuration() *time.Duration {
 
 func Registration() RegistrationMode {
 	return registration
+}
+
+func RegistryEnabled() bool {
+	return registryEnabled
 }
 
 func RegistryS3Config() S3Config {
