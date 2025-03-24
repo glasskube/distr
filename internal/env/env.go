@@ -76,7 +76,7 @@ func init() {
 
 	registryEnabled = getEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
 	if registryEnabled {
-		registryHost = getEnvOrDefault("DISTR_REGISTRY_HOST", host, getEnvOpts{deprecatedAlias: "DISTR_ARTIFACTS_HOST"})
+		registryHost = getEnvOrDefault("REGISTRY_HOST", host, getEnvOpts{deprecatedAlias: "DISTR_ARTIFACTS_HOST"})
 		registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
 		registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
 		registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
