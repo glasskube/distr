@@ -98,7 +98,7 @@ func (r *registry) v2(resp http.ResponseWriter, req *http.Request) *regError {
 func (r *registry) root(resp http.ResponseWriter, req *http.Request) {
 	if rerr := r.v2(resp, req); rerr != nil {
 		r.log.Warnf("%s %s %d %s %s", req.Method, req.URL, rerr.Status, rerr.Code, rerr.Message)
-		if rerr.Status == http.StatusInternalServerError {
+		if rerr.Status == http.StatusInternalServerError && rerr.Error != nil {
 			sentry.GetHubFromContext(req.Context()).CaptureException(rerr.Error)
 		}
 		_ = rerr.Write(resp)
