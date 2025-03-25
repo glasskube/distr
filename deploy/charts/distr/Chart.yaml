@@ -21,3 +21,7 @@ dependencies:
     repository: oci://registry-1.docker.io/bitnamicharts
     version: 16.x.x
     condition: postgresql.enabled
+  - name: minio
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 15.x.x
+    condition: minio.enabled
