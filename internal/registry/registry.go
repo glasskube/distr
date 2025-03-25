@@ -31,6 +31,9 @@ import (
 	"slices"
 
 	"github.com/getsentry/sentry-go"
+
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
+
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
@@ -129,7 +132,8 @@ func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mai
 		WithAuthorizer(authz.NewAuthorizer()),
 		WithAuditor(audit.NewAuditor()),
 		WithMiddlewares(
-			registryRecoverer,
+			chimiddleware.Recoverer,
+			chimiddleware.RequestID,
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,
