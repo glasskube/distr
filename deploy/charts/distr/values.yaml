@@ -38,13 +38,13 @@ hub:
     - name: REGISTRY_ENABLED
       value: 'true'
     - name: REGISTRY_HOST # only relevant if REGISTRY_ENABLED is true; defaults to the value of DISTR_HOST
-      value: http://pkg.distr.local
+      value: pkg.distr.local
     - name: REGISTRY_S3_BUCKET
       value: distr
     - name: REGISTRY_S3_REGION
       value: local
     - name: REGISTRY_S3_ENDPOINT
-      value: http://minio:9000
+      value: http://distr-minio:9000
     - name: REGISTRY_S3_ACCESS_KEY_ID
       value: distr
     - name: REGISTRY_S3_SECRET_ACCESS_KEY
@@ -52,7 +52,7 @@ hub:
     - name: REGISTRY_S3_USE_PATH_STYLE
       value: 'true'
     - name: REGISTRY_S3_ALLOW_REDIRECT
-      value: 'true'
+      value: 'false'
     # The base64 encoded JWT secret
     # Can be generated with `openssl rand -base64 32`
     - name: JWT_SECRET
@@ -202,14 +202,14 @@ minio:
   enabled: false
   auth:
     rootUser: distr
-    rootPassword: ''
-    existingSecret: ''
+    rootPassword: 'distr123'
   deploymentUpdate:
     type: Recreate
   mode: standalone
   persistence:
     size: 20Gi
   replicas: 1
+  defaultBuckets: distr
 
 externalDatabase:
   uri: ''
