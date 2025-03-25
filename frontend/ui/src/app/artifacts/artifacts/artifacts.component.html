@@ -14,7 +14,7 @@
               >
               and log in to the registry from your machine:
               <code class="mt-1 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                echo "your-personal-access-token-here" | docker login {{ host }}
+                echo "your-personal-access-token-here" | docker login {{ host }} --password-stdin -u -
               </code>
             </div>
             <div class="font-medium mt-1">
