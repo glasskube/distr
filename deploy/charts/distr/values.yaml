@@ -37,7 +37,8 @@ hub:
       value: http://distr.local
     - name: REGISTRY_ENABLED
       value: 'true'
-    - name: REGISTRY_HOST # only relevant if REGISTRY_ENABLED is true; defaults to the value of DISTR_HOST
+    # REGISTRY_* variables are only relevant if REGISTRY_ENABLED is true
+    - name: REGISTRY_HOST
       value: pkg.distr.local
     - name: REGISTRY_S3_BUCKET
       value: distr
@@ -202,7 +203,7 @@ minio:
   enabled: false
   auth:
     rootUser: distr
-    rootPassword: 'distr123'
+    rootPassword: 'distr123' # please change this
   deploymentUpdate:
     type: Recreate
   mode: standalone
