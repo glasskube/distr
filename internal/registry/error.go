@@ -17,12 +17,15 @@ package registry
 import (
 	"encoding/json"
 	"net/http"
+
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 type regError struct {
 	Status  int
 	Code    string
 	Message string
+	Error   error
 }
 
 func (r *regError) Write(resp http.ResponseWriter) error {
@@ -51,6 +54,7 @@ func regErrInternal(err error) *regError {
 		Status:  http.StatusInternalServerError,
 		Code:    "INTERNAL_SERVER_ERROR",
 		Message: err.Error(),
+		Error:   err,
 	}
 }
 
@@ -59,6 +63,7 @@ func regErrManifestInvalid(err error) *regError {
 		Status:  http.StatusBadRequest,
 		Code:    "MANIFEST_INVALID",
 		Message: err.Error(),
+		Error:   err,
 	}
 }
 
@@ -108,4 +113,24 @@ var regErrDenied = &regError{
 	Status:  http.StatusForbidden,
 	Code:    "DENIED",
 	Message: "Access to the resource has been denied",
+}
+
+// inspired by chimiddleware.Recoverer
+func registryRecoverer(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rvr := recover(); rvr != nil {
+				if rvr == http.ErrAbortHandler {
+					// we don't recover http.ErrAbortHandler so the response
+					// to the client is aborted, this should not be logged
+					panic(rvr)
+				}
+
+				chimiddleware.PrintPrettyStack(rvr)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }

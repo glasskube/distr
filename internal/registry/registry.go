@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
@@ -94,6 +95,9 @@ func (r *registry) v2(resp http.ResponseWriter, req *http.Request) *regError {
 func (r *registry) root(resp http.ResponseWriter, req *http.Request) {
 	if rerr := r.v2(resp, req); rerr != nil {
 		r.log.Warnf("%s %s %d %s %s", req.Method, req.URL, rerr.Status, rerr.Code, rerr.Message)
+		if rerr.Status == http.StatusInternalServerError {
+			sentry.GetHubFromContext(req.Context()).CaptureException(rerr.Error)
+		}
 		_ = rerr.Write(resp)
 		return
 	}
@@ -125,6 +129,7 @@ func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mai
 		WithAuthorizer(authz.NewAuthorizer()),
 		WithAuditor(audit.NewAuditor()),
 		WithMiddlewares(
+			registryRecoverer,
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,
