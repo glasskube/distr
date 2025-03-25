@@ -97,10 +97,8 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
-	restrictDownloads := false
-	if ownerID != nil {
-		restrictDownloads = true
-	}
+	restrictDownloads := ownerID != nil
+
 	if artifactRows, err := db.Query(ctx, `
 			SELECT `+artifactOutputWithSlugExpr+`,
 				ARRAY []::RECORD[] AS versions,`+artifactDownloadsOutExpr+`
@@ -167,10 +165,8 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 	[]types.TaggedArtifactVersion,
 	error,
 ) {
-	checkLicense := false
-	if ownerID != nil {
-		checkLicense = true
-	}
+	checkLicense := ownerID != nil
+
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT av.id, av.created_at, av.manifest_blob_digest,

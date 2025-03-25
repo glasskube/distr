@@ -59,14 +59,15 @@ func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err err
 }
 
 func (av ApplicationVersion) Validate(deplType DeploymentType) error {
-	if deplType == DeploymentTypeDocker {
+	switch deplType {
+	case DeploymentTypeDocker:
 		if av.ComposeFileData == nil {
 			return errors.New("missing compose file")
 		} else if av.ChartType != nil || av.ChartName != nil || av.ChartUrl != nil || av.ChartVersion != nil ||
 			av.ValuesFileData != nil {
 			return errors.New("unexpected kubernetes specifics in docker application")
 		}
-	} else if deplType == DepolymentTypeKubernetes {
+	case DepolymentTypeKubernetes:
 		if av.ChartType == nil || *av.ChartType == "" ||
 			av.ChartUrl == nil || *av.ChartUrl == "" ||
 			av.ChartVersion == nil || *av.ChartVersion == "" {
