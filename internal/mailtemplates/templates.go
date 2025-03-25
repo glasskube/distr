@@ -32,7 +32,7 @@ func init() {
 }
 
 func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
-	var t *template.Template = template.New("").Funcs(funcMap)
+	var t = template.New("").Funcs(funcMap)
 	for _, p := range patterns {
 		if files, err := fs.Glob(fsys, p); err != nil {
 			return nil, err
