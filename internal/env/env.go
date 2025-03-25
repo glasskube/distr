@@ -14,7 +14,7 @@ var (
 	databaseUrl                   string
 	jwtSecret                     []byte
 	host                          string
-	artifactsHost                 string
+	registryHost                  string
 	mailerConfig                  MailerConfig
 	inviteTokenValidDuration      time.Duration
 	resetTokenValidDuration       time.Duration
@@ -32,6 +32,7 @@ var (
 	userEmailVerificationRequired bool
 	serverShutdownDelayDuration   *time.Duration
 	registration                  RegistrationMode
+	registryEnabled               bool
 	registryS3Config              S3Config
 )
 
@@ -46,7 +47,6 @@ func init() {
 	databaseUrl = requireEnv("DATABASE_URL")
 	jwtSecret = requireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
 	host = requireEnv("DISTR_HOST")
-	artifactsHost = getEnvOrDefault("DISTR_ARTIFACTS_HOST", host)
 	agentInterval = getEnvParsedOrDefault("AGENT_INTERVAL", getPositiveDuration, 5*time.Second)
 	statusEntriesMaxAge = getEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", getPositiveDuration)
 	enableQueryLogging = getEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
@@ -74,13 +74,17 @@ func init() {
 		}
 	}
 
-	registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
-	registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
-	registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
-	registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
-	registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
-	registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
-	registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
+	registryEnabled = getEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
+	if registryEnabled {
+		registryHost = getEnvOrDefault("REGISTRY_HOST", host, getEnvOpts{deprecatedAlias: "DISTR_ARTIFACTS_HOST"})
+		registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
+		registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
+		registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
+		registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
+		registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
+		registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
+		registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
+	}
 
 	sentryDSN = getEnv("SENTRY_DSN")
 	sentryDebug = getEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
@@ -101,7 +105,7 @@ func JWTSecret() []byte {
 
 func Host() string { return host }
 
-func ArtifactsHost() string { return artifactsHost }
+func RegistryHost() string { return registryHost }
 
 func GetMailerConfig() MailerConfig {
 	return mailerConfig
@@ -168,6 +172,10 @@ func ServerShutdownDelayDuration() *time.Duration {
 
 func Registration() RegistrationMode {
 	return registration
+}
+
+func RegistryEnabled() bool {
+	return registryEnabled
 }
 
 func RegistryS3Config() S3Config {
