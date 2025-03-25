@@ -23,6 +23,7 @@ type regError struct {
 	Status  int
 	Code    string
 	Message string
+	Error   error
 }
 
 func (r *regError) Write(resp http.ResponseWriter) error {
@@ -51,6 +52,7 @@ func regErrInternal(err error) *regError {
 		Status:  http.StatusInternalServerError,
 		Code:    "INTERNAL_SERVER_ERROR",
 		Message: err.Error(),
+		Error:   err,
 	}
 }
 
@@ -59,6 +61,7 @@ func regErrManifestInvalid(err error) *regError {
 		Status:  http.StatusBadRequest,
 		Code:    "MANIFEST_INVALID",
 		Message: err.Error(),
+		Error:   err,
 	}
 }
 
