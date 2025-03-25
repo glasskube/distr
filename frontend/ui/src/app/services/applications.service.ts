@@ -73,6 +73,7 @@ export class ApplicationsService implements CrudService<Application> {
     if (template) {
       formData.append('templatefile', new Blob([template], {type: 'application/yaml'}));
     }
+   
     return this.doCreateVersion(application, applicationVersion, formData);
   }
 

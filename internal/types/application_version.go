@@ -11,16 +11,16 @@ import (
 
 type ApplicationVersion struct {
 	// unfortunately Base nested type doesn't work when ApplicationVersion is a nested row in an SQL query
-	ID            uuid.UUID  `db:"id" json:"id"`
-	CreatedAt     time.Time  `db:"created_at" json:"createdAt"`
-	ArchivedAt    *time.Time `db:"archived_at" json:"archivedAt,omitempty"`
-	Name          string     `db:"name" json:"name"`
-	ApplicationID uuid.UUID  `db:"application_id" json:"applicationId"`
-
-	ChartType    *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
-	ChartName    *string        `db:"chart_name" json:"chartName,omitempty"`
-	ChartUrl     *string        `db:"chart_url" json:"chartUrl,omitempty"`
-	ChartVersion *string        `db:"chart_version" json:"chartVersion,omitempty"`
+	ID            uuid.UUID      `db:"id" json:"id"`
+	CreatedAt     time.Time      `db:"created_at" json:"createdAt"`
+	ArchivedAt    *time.Time     `db:"archived_at" json:"archivedAt,omitempty"`
+	Name          string         `db:"name" json:"name"`
+	ApplicationID uuid.UUID      `db:"application_id" json:"applicationId"`
+	Docker_Type   *DockerType    `db:"docker_type" json:"dockerType,omitempty"`
+	ChartType     *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
+	ChartName     *string        `db:"chart_name" json:"chartName,omitempty"`
+	ChartUrl      *string        `db:"chart_url" json:"chartUrl,omitempty"`
+	ChartVersion  *string        `db:"chart_version" json:"chartVersion,omitempty"`
 
 	// awful but relevant: the following must be defined after the ChartType, because somehow order matters
 	// for pgx at collecting the subrows (relevant at getting application + list of its versions with these
@@ -60,8 +60,10 @@ func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err err
 
 func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 	if deplType == DeploymentTypeDocker {
-		if av.ComposeFileData == nil {
-			return errors.New("missing compose file")
+		if av.Docker_Type == nil || *av.Docker_Type == "" {
+			return errors.New("missing docker type")
+		} else if *av.Docker_Type == DockerTypeCompose && av.ComposeFileData == nil {
+			return errors.New("missing compose file for compose deployment")
 		} else if av.ChartType != nil || av.ChartName != nil || av.ChartUrl != nil || av.ChartVersion != nil ||
 			av.ValuesFileData != nil {
 			return errors.New("unexpected kubernetes specifics in docker application")
