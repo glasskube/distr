@@ -53,5 +53,5 @@ export class ArtifactsComponent {
 
   private readonly organizationService = inject(OrganizationService);
   protected readonly registrySlug$ = this.organizationService.get().pipe(map((o) => o.slug));
-  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.artifactsHost));
+  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.registryHost));
 }
