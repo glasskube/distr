@@ -201,16 +201,17 @@ postgresql:
 
 minio:
   enabled: false
-  auth:
-    rootUser: distr
-    rootPassword: 'distr123' # please change this
+  rootUser: distr
+  rootPassword: 'distr123' # please change this
   deploymentUpdate:
     type: Recreate
   mode: standalone
   persistence:
     size: 20Gi
   replicas: 1
-  defaultBuckets: distr
+  buckets:
+    - name: distr
+      purge: false
 
 externalDatabase:
   uri: ''
