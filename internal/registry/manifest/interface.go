@@ -20,6 +20,6 @@ type ManifestHandler interface {
 	ListTags(ctx context.Context, name string, n int, last string) ([]string, error)
 	ListDigests(ctx context.Context, name string) ([]v1.Hash, error)
 	Get(ctx context.Context, name string, reference string) (*Manifest, error)
-	Put(ctx context.Context, name string, reference string, manifest Manifest, blobs []v1.Hash) error
+	Put(ctx context.Context, name string, reference string, manifest Manifest, blobs []Blob) error
 	Delete(ctx context.Context, name string, reference string) error
 }
