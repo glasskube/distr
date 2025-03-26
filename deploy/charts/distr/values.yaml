@@ -81,6 +81,8 @@ hub:
     #      key: ""
     # - name: REGISTRATION # User Registration Mode – can be one of "enabled" (default), "hidden", "disabled"
     #   value: enabled
+    - name: USER_EMAIL_VERIFICATION_REQUIRED
+      value: 'false'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
