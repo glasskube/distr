@@ -6,6 +6,10 @@
           <div class="flex flex-col gap-3 py-3 px-6 sm:py-4">
             <div class="flex items-center">
               <div class="shrink-0">
+                <!--
+                TODO: show faDocker if the artifacts manifestContentType has the "docker" vendor prefix (vnd.docker).
+                  For this we have to add the manifestContentType of the most recently created version to each artifact.
+                -->
                 <fa-icon class="text-xl" [icon]="faBox"></fa-icon>
               </div>
               <div class="flex-1 min-w-0 ms-4">
