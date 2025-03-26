@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.4.1](https://github.com/glasskube/distr/compare/1.4.0...1.4.1) (2025-03-26)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#688](https://github.com/glasskube/distr/issues/688)) ([8756b28](https://github.com/glasskube/distr/commit/8756b28ea2c22dc72c2af4d45204d87856cf18d7))
+* **deps:** update aws-sdk-go-v2 monorepo ([#695](https://github.com/glasskube/distr/issues/695)) ([9e12f9f](https://github.com/glasskube/distr/commit/9e12f9f9c8fd6ee5755e8ff7496dfa4346ad202d))
+* **deps:** update dependency @angular/cdk to v19.2.5 ([#673](https://github.com/glasskube/distr/issues/673)) ([877cd37](https://github.com/glasskube/distr/commit/877cd37ff78e63ed73319990e14638454ba44b75))
+* **deps:** update dependency @angular/cdk to v19.2.6 ([#675](https://github.com/glasskube/distr/issues/675)) ([884f887](https://github.com/glasskube/distr/commit/884f8870a6c98cbc022c39eda52654ddbc846706))
+* **deps:** update dependency @angular/cdk to v19.2.7 ([#706](https://github.com/glasskube/distr/issues/706)) ([041b18a](https://github.com/glasskube/distr/commit/041b18a631e0a7eb2a02db668c6d25efe179673b))
+* **deps:** update dependency @sentry/angular to v9.8.0 ([#683](https://github.com/glasskube/distr/issues/683)) ([1a93b2c](https://github.com/glasskube/distr/commit/1a93b2ca4573b2fe6f1f61547d9ca30a91fc538f))
+* **deps:** update dependency globe.gl to v2.41.3 ([#698](https://github.com/glasskube/distr/issues/698)) ([ca6c630](https://github.com/glasskube/distr/commit/ca6c63053bb0aa40e11ddcdfc3115a81e15ed137))
+* **deps:** update dependency posthog-js to v1.232.4 ([#685](https://github.com/glasskube/distr/issues/685)) ([d9edc40](https://github.com/glasskube/distr/commit/d9edc4009b8d5ec662641d50a303b182332a01ff))
+* **deps:** update module github.com/docker/cli to v28.0.3+incompatible ([#694](https://github.com/glasskube/distr/issues/694)) ([66e6926](https://github.com/glasskube/distr/commit/66e692654d01166ff18cea1d669b2f19c4c58d64))
+* **deps:** update module github.com/docker/cli to v28.0.4+incompatible ([#696](https://github.com/glasskube/distr/issues/696)) ([8fc222d](https://github.com/glasskube/distr/commit/8fc222d4afeb4e9514afc73ed13092eac45d5e38))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.3 ([#680](https://github.com/glasskube/distr/issues/680)) ([6f21c24](https://github.com/glasskube/distr/commit/6f21c24e33b886843bf9dc84febdbdb15a845f8a))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.4 ([#689](https://github.com/glasskube/distr/issues/689)) ([4b98f8e](https://github.com/glasskube/distr/commit/4b98f8e8cfefe91c5b5e3393d7a992b66a66581e))
+* **deps:** update module github.com/onsi/gomega to v1.36.3 ([#679](https://github.com/glasskube/distr/issues/679)) ([8bbe99d](https://github.com/glasskube/distr/commit/8bbe99d36e9c4d5bf9a5c36ebe14f48d9026e2b4))
+* **ui:** cancel deployment polling when not in use ([#672](https://github.com/glasskube/distr/issues/672)) ([8c1bb25](https://github.com/glasskube/distr/commit/8c1bb25bb3598d41b6f28636ed1df9b510c97658))
+
+
+### Other
+
+* add registry settings to helm chart ([#693](https://github.com/glasskube/distr/issues/693)) ([2a1ffc9](https://github.com/glasskube/distr/commit/2a1ffc97bca5dd4e74ea6661fbae256aba580e80))
+* add registry to deploy docker compose ([#690](https://github.com/glasskube/distr/issues/690)) ([2dc1080](https://github.com/glasskube/distr/commit/2dc1080fa407aba2e73a43f413367df52a23b35a))
+* **chart:** set USER_EMAIL_VERIFICATION_REQUIRED=false ([#700](https://github.com/glasskube/distr/issues/700)) ([dd70cb5](https://github.com/glasskube/distr/commit/dd70cb5f15736db4ec88bf438d065a2b06c9f62b))
+* **deps:** update dependency @angular-devkit/build-angular to v19.2.5 ([#699](https://github.com/glasskube/distr/issues/699)) ([8cafb22](https://github.com/glasskube/distr/commit/8cafb2203495d14e5b2185f74c44f35beef8ef45))
+* **deps:** update dependency @angular/cli to v19.2.5 ([#701](https://github.com/glasskube/distr/issues/701)) ([90c6a5d](https://github.com/glasskube/distr/commit/90c6a5d3f649b8aad4dac7631293cc9dbd2796e4))
+* **deps:** update dependency @sentry/cli to v2.42.4 ([#682](https://github.com/glasskube/distr/issues/682)) ([8470240](https://github.com/glasskube/distr/commit/8470240438168c1ed12ea53537f614b95411d046))
+* **deps:** update dependency golangci-lint to v2 ([#686](https://github.com/glasskube/distr/issues/686)) ([4558638](https://github.com/glasskube/distr/commit/45586383b483b2d78b6ead2c3adf6292710446db))
+* **deps:** update dependency golangci-lint to v2.0.2 ([#697](https://github.com/glasskube/distr/issues/697)) ([a10a04e](https://github.com/glasskube/distr/commit/a10a04ea653c4b6798dff6cd0f211d54b154df6f))
+* **deps:** update dependency typedoc-plugin-markdown to v4.6.0 ([#681](https://github.com/glasskube/distr/issues/681)) ([ace69ec](https://github.com/glasskube/distr/commit/ace69ece97911a505f26398d722fb7fbdb6cf9bb))
+* **registry:** introduce optional tag limit per organization ([#703](https://github.com/glasskube/distr/issues/703)) ([0452f7c](https://github.com/glasskube/distr/commit/0452f7cdb18538fe6ffbcf0cc5758e3fe71394ae))
+* **registry:** record artifact size ([#705](https://github.com/glasskube/distr/issues/705)) ([43801fd](https://github.com/glasskube/distr/commit/43801fd887cea5bbb82844a1071c77a99f395880))
+* **registry:** recover and send internal errors to sentry ([#692](https://github.com/glasskube/distr/issues/692)) ([df542d3](https://github.com/glasskube/distr/commit/df542d35ba51bf9b00b7e48bdb6a5740bb295257))
+* **registry:** respond with 416 when uploading chunk multiple times ([#676](https://github.com/glasskube/distr/issues/676)) ([e79f8ef](https://github.com/glasskube/distr/commit/e79f8ef02722156d650ee0a227a91be4c50d6124))
+* **registry:** support REGISTRY_ENABLED env variable ([#684](https://github.com/glasskube/distr/issues/684)) ([a4dba7d](https://github.com/glasskube/distr/commit/a4dba7dc638bd4afa6073d633ccc0ef7c1a52db4))
+* **ui:** change artifact icon to `faBox` ([#702](https://github.com/glasskube/distr/issues/702)) ([f7472fe](https://github.com/glasskube/distr/commit/f7472fed453bd29af09b9ac838704ccc237fd8da))
+* **ui:** show registry instructions ([#691](https://github.com/glasskube/distr/issues/691)) ([d8af16f](https://github.com/glasskube/distr/commit/d8af16f938d22dd6e6a98a699106d45d95c6e3e7))
+
 ## [1.4.0](https://github.com/glasskube/distr/compare/1.3.3...1.4.0) (2025-03-20)
 
 
