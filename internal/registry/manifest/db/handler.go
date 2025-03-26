@@ -14,7 +14,6 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type handler struct{}
@@ -144,7 +143,7 @@ func (h *handler) Put(
 	if err != nil {
 		return err
 	}
-	return db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	return db.RunTx(ctx, func(ctx context.Context) error {
 		artifact, err := db.GetOrCreateArtifact(ctx, *auth.CurrentOrgID(), name.ArtifactName)
 		if err != nil {
 			return err

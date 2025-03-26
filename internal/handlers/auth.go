@@ -23,7 +23,6 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -104,7 +103,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Password: request.Password,
 		}
 
-		if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		if err := db.RunTx(ctx, func(ctx context.Context) error {
 			if err := security.HashPassword(&userAccount); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)

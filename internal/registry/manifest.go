@@ -37,7 +37,6 @@ import (
 	"github.com/glasskube/distr/internal/registry/manifest"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/types"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
@@ -477,7 +476,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 
 	// Allow future references by target (tag) and immutable digest.
 	// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
-	err := db.RunTx(req.Context(), pgx.TxOptions{}, func(ctx context.Context) error {
+	err := db.RunTx(req.Context(), func(ctx context.Context) error {
 		return multierr.Combine(
 			handler.manifestHandler.Put(ctx, repo, mf.BlobDigest.String(), mf, blobs),
 			handler.manifestHandler.Put(ctx, repo, target, mf, blobs),

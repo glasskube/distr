@@ -14,7 +14,6 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -61,7 +60,7 @@ func createArtifactLicense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.CreateArtifactLicense(ctx, &license.ArtifactLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "An artifact license with this name already exists", http.StatusBadRequest)
 			return err
@@ -105,7 +104,7 @@ func updateArtifactLicense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.UpdateArtifactLicense(ctx, &license.ArtifactLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "An artifact license with this name already exists", http.StatusBadRequest)
 			return err

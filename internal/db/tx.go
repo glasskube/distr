@@ -9,7 +9,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-func RunTx(ctx context.Context, txOptions pgx.TxOptions, f func(ctx context.Context) error) (finalErr error) {
+func RunTx(ctx context.Context, f func(ctx context.Context) error) (finalErr error) {
 	db := internalctx.GetDb(ctx)
 	if tx, err := db.Begin(ctx); err != nil {
 		return err
