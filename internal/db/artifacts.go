@@ -669,7 +669,10 @@ func EnsureArtifactTagLimitForInsert(ctx context.Context, orgID uuid.UUID) (bool
 		return false, fmt.Errorf("could not check quota: %w", err)
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Ok bool }])
-	if err != nil {
+	// If there are no rows, the organization has no tags yet, and the limit is not exceeded.
+	if errors.Is(err, pgx.ErrNoRows) {
+		return true, nil
+	} else if err != nil {
 		return false, fmt.Errorf("could not check quota: %w", err)
 	} else {
 		return result.Ok, nil
