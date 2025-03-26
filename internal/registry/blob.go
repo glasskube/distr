@@ -354,7 +354,7 @@ func (b *blobs) handlePost(
 	if id, err := bph.StartSession(req.Context(), repo); err != nil {
 		return regErrInternal(err)
 	} else {
-		resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-2]...), "blobs/uploads", id))
+		resp.Header().Set("Location", req.URL.JoinPath(id).Path)
 		resp.Header().Set("Range", "0-0")
 		resp.WriteHeader(http.StatusAccepted)
 		return nil
@@ -402,7 +402,7 @@ func (b *blobs) handlePatch(
 		return regErrInternal(err)
 	}
 
-	resp.Header().Set("Location", "/"+path.Join("v2", path.Join(elem[1:len(elem)-3]...), "blobs/uploads", target))
+	resp.Header().Set("Location", req.URL.Path)
 	resp.Header().Set("Range", fmt.Sprintf("0-%d", size-1))
 	resp.WriteHeader(http.StatusAccepted)
 	return nil
