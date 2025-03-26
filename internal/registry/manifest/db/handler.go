@@ -38,7 +38,10 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 		return nil, err
 	} else {
 		return &manifest.Manifest{
-			BlobDigest:  v1.Hash(av.ManifestBlobDigest),
+			Blob: manifest.Blob{
+				Digest: v1.Hash(av.ManifestBlobDigest),
+				Size:   av.ManifestBlobSize,
+			},
 			ContentType: av.ManifestContentType,
 		}, nil
 	}
@@ -136,7 +139,7 @@ func (h *handler) Put(
 	ctx context.Context,
 	nameStr, reference string,
 	manifest manifest.Manifest,
-	blobs []v1.Hash,
+	blobs []manifest.Blob,
 ) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	name, err := name.Parse(nameStr)
@@ -152,7 +155,8 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.BlobDigest),
+			ManifestBlobDigest:     types.Digest(manifest.Blob.Digest),
+			ManifestBlobSize:       manifest.Blob.Size,
 			ManifestContentType:    manifest.ContentType,
 			ArtifactID:             artifact.ID,
 		}
@@ -178,7 +182,8 @@ func (h *handler) Put(
 		for _, blob := range blobs {
 			part := types.ArtifactVersionPart{
 				ArtifactVersionID:  version.ID,
-				ArtifactBlobDigest: types.Digest(blob),
+				ArtifactBlobDigest: types.Digest(blob.Digest),
+				ArtifactBlobSize:   blob.Size,
 			}
 			if err := db.CreateArtifactVersionPart(ctx, &part); err != nil {
 				return err

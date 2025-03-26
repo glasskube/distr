@@ -28,6 +28,7 @@ const (
 		v.updated_by_useraccount_id,
 		v.name,
 		v.manifest_blob_digest,
+		v.manifest_blob_size,
 		v.manifest_content_type,
 		v.artifact_id
 	`
@@ -172,17 +173,34 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-			SELECT av.id, av.created_at, av.manifest_blob_digest,
+			SELECT
+				av.id,
+				av.created_at,
+				av.manifest_blob_digest,
 				coalesce((
 					SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
 					FROM ArtifactVersion avt
 					WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 					AND avt.artifact_id = av.artifact_id
 					AND avt.name NOT LIKE '%:%'
-				), ARRAY []::RECORD[]) as tags,`+artifactDownloadsOutExpr+`
+				), ARRAY []::RECORD[]) AS tags,
+				av.manifest_blob_size + sum(avp.artifact_blob_size) AS size,
+				`+artifactDownloadsOutExpr+`
 			FROM ArtifactVersion av
 			LEFT JOIN ArtifactVersionPull avpl ON av.id = avpl.artifact_version_id
 				AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
+			LEFT JOIN (
+				WITH RECURSIVE aggregate AS (
+					SELECT avp.artifact_version_id, avp.artifact_blob_digest, avp.artifact_blob_size
+					FROM ArtifactVersionPart avp
+				 UNION ALL
+					SELECT aggregate.artifact_version_id, avp.artifact_blob_digest, avp.artifact_blob_size
+					FROM aggregate
+					JOIN ArtifactVersion av ON av.manifest_blob_digest = aggregate.artifact_blob_digest
+					JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+				)
+				SELECT DISTINCT * FROM aggregate
+			) avp ON av.id = avp.artifact_version_id
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (
@@ -484,14 +502,20 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO ArtifactVersion AS av (
-            name, created_by_useraccount_id, manifest_blob_digest, manifest_content_type, artifact_id
+            name,
+			created_by_useraccount_id,
+			manifest_blob_digest,
+			manifest_blob_size,
+			manifest_content_type,
+			artifact_id
         ) VALUES (
-        	@name, @createdById, @manifestBlobDigest, @manifestContentType, @artifactId
+        	@name, @createdById, @manifestBlobDigest, @manifestBlobSize, @manifestContentType, @artifactId
         ) RETURNING *`,
 		pgx.NamedArgs{
 			"name":                av.Name,
 			"createdById":         av.CreatedByUserAccountID,
 			"manifestBlobDigest":  av.ManifestBlobDigest,
+			"manifestBlobSize":    av.ManifestBlobSize,
 			"manifestContentType": av.ManifestContentType,
 			"artifactId":          av.ArtifactID,
 		},
@@ -516,16 +540,18 @@ func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPa
 	if rows, err := db.Query(
 		ctx,
 		`INSERT INTO ArtifactVersionPart AS avp (
-        	artifact_version_id, artifact_blob_digest
-        ) VALUES (@versionId, @blobDigest)
+        	artifact_version_id, artifact_blob_digest, artifact_blob_size
+        ) VALUES (@versionId, @blobDigest, @blobSize)
 		ON CONFLICT (artifact_version_id, artifact_blob_digest)
 			DO UPDATE SET
 				artifact_version_id = @versionId,
-				artifact_blob_digest = @blobDigest
+				artifact_blob_digest = @blobDigest,
+				artifact_blob_size = @blobSize
 		RETURNING *`,
 		pgx.NamedArgs{
 			"versionId":  avp.ArtifactVersionID,
 			"blobDigest": avp.ArtifactBlobDigest,
+			"blobSize":   avp.ArtifactBlobSize,
 		},
 	); err != nil {
 		return fmt.Errorf("could not insert ArtifactVersionPart: %w", err)
