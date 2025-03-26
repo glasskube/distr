@@ -186,7 +186,18 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 			FROM ArtifactVersion av
 			LEFT JOIN ArtifactVersionPull avpl ON av.id = avpl.artifact_version_id
 				AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
-			LEFT JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+			LEFT JOIN (
+				WITH RECURSIVE aggregate AS (
+					SELECT avp.artifact_version_id, avp.artifact_blob_digest, avp.artifact_blob_size
+					FROM ArtifactVersionPart avp
+				 UNION ALL
+					SELECT aggregate.artifact_version_id, avp.artifact_blob_digest, avp.artifact_blob_size
+					FROM aggregate
+					JOIN ArtifactVersion av ON av.manifest_blob_digest = aggregate.artifact_blob_digest
+					JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+				)
+				SELECT DISTINCT * FROM aggregate
+			) avp ON av.id = avp.artifact_version_id
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (
