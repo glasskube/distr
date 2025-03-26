@@ -112,7 +112,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			}
 			return regErrInternal(err)
 		}
-		return b.handlePost(resp, req, repo, target, digest, elem)
+		return b.handlePost(resp, req, repo, target, digest)
 	case http.MethodPatch:
 		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
@@ -120,7 +120,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			}
 			return regErrInternal(err)
 		}
-		return b.handlePatch(resp, req, target, service, contentRange, elem)
+		return b.handlePatch(resp, req, target, service, contentRange)
 	case http.MethodPut:
 		if h, err := v1.NewHash(digest); err != nil {
 			return regErrDigestInvalid
@@ -305,12 +305,8 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 	}
 	return nil
 }
-func (b *blobs) handlePost(
-	resp http.ResponseWriter,
-	req *http.Request,
-	repo, target, digest string,
-	elem []string,
-) *regError {
+
+func (b *blobs) handlePost(resp http.ResponseWriter, req *http.Request, repo, target, digest string) *regError {
 	bph, ok := b.blobHandler.(blob.BlobPutHandler)
 	if !ok {
 		return regErrUnsupported
@@ -365,7 +361,6 @@ func (b *blobs) handlePatch(
 	resp http.ResponseWriter,
 	req *http.Request,
 	target, service, contentRange string,
-	elem []string,
 ) *regError {
 	bph, ok := b.blobHandler.(blob.BlobPutHandler)
 	if !ok {
