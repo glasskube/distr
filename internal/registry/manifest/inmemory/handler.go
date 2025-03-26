@@ -100,7 +100,13 @@ func (h *handler) ListDigests(ctx context.Context, name string) ([]v1.Hash, erro
 }
 
 // Put implements manifest.ManifestHandler.
-func (h *handler) Put(ctx context.Context, name string, reference string, m manifest.Manifest, _ []manifest.Blob) error {
+func (h *handler) Put(
+	ctx context.Context,
+	name string,
+	reference string,
+	m manifest.Manifest,
+	_ []manifest.Blob,
+) error {
 	if _, ok := h.manifests[name]; !ok {
 		h.manifests[name] = make(map[string]manifest.Manifest)
 	}
