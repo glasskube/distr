@@ -14,7 +14,6 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type handler struct{}
@@ -147,7 +146,7 @@ func (h *handler) Put(
 	if err != nil {
 		return err
 	}
-	return db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	return db.RunTx(ctx, func(ctx context.Context) error {
 		artifact, err := db.GetOrCreateArtifact(ctx, *auth.CurrentOrgID(), name.ArtifactName)
 		if err != nil {
 			return err
@@ -166,8 +165,11 @@ func (h *handler) Put(
 		if err != nil {
 			if !errors.Is(err, apierrors.ErrNotFound) {
 				return err
-			}
-			if err := db.CreateArtifactVersion(ctx, &version); err != nil {
+			} else if quotaOk, err := db.EnsureArtifactTagLimitForInsert(ctx, *auth.CurrentOrgID()); err != nil {
+				return err
+			} else if !quotaOk {
+				return apierrors.ErrQuotaExceeded
+			} else if err := db.CreateArtifactVersion(ctx, &version); err != nil {
 				return err
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||

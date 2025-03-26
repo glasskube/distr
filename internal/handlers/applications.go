@@ -18,7 +18,6 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -364,7 +363,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 		TemplateFileData: templateFileData,
 	}
 
-	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
