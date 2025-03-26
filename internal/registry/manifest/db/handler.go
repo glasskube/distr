@@ -162,8 +162,11 @@ func (h *handler) Put(
 		if err != nil {
 			if !errors.Is(err, apierrors.ErrNotFound) {
 				return err
-			}
-			if err := db.CreateArtifactVersion(ctx, &version); err != nil {
+			} else if quotaOk, err := db.EnsureArtifactTagLimitForInsert(ctx, *auth.CurrentOrgID()); err != nil {
+				return err
+			} else if !quotaOk {
+				return apierrors.ErrQuotaExceeded
+			} else if err := db.CreateArtifactVersion(ctx, &version); err != nil {
 				return err
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||

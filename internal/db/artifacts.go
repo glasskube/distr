@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+
+	"github.com/glasskube/distr/internal/env"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -616,4 +619,33 @@ func GetArtifactVersionPullers(ctx context.Context, versionID uuid.UUID) ([]type
 		return nil, fmt.Errorf("could not get pullers: %w", err)
 	}
 	return result, nil
+}
+
+func EnsureArtifactTagLimitForInsert(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(av.name) + 1 < coalesce(
+			o.artifact_tag_limit,
+			CASE WHEN @defaultLimit > 0 THEN @defaultLimit ELSE @maxLimit END
+		)
+		FROM ArtifactVersion av
+		JOIN Artifact a on av.artifact_id = a.id
+		JOIN Organization o ON a.organization_id = o.id
+		WHERE o.id = @orgId AND av.name NOT LIKE '%:%'
+		GROUP BY o.id;`,
+		pgx.NamedArgs{
+			"orgId":        orgID,
+			"defaultLimit": env.ArtifactTagsDefaultLimitPerOrg(),
+			"maxLimit":     math.MaxInt32,
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("could not check quota: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Ok bool }])
+	if err != nil {
+		return false, fmt.Errorf("could not check quota: %w", err)
+	} else {
+		return result.Ok, nil
+	}
 }

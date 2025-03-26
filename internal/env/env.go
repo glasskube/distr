@@ -11,29 +11,30 @@ import (
 )
 
 var (
-	databaseUrl                   string
-	jwtSecret                     []byte
-	host                          string
-	registryHost                  string
-	mailerConfig                  MailerConfig
-	inviteTokenValidDuration      time.Duration
-	resetTokenValidDuration       time.Duration
-	agentTokenMaxValidDuration    time.Duration
-	agentInterval                 time.Duration
-	statusEntriesMaxAge           *time.Duration
-	sentryDSN                     string
-	sentryDebug                   bool
-	enableQueryLogging            bool
-	agentDockerConfig             []byte
-	frontendSentryDSN             *string
-	frontendPosthogToken          *string
-	frontendPosthogAPIHost        *string
-	frontendPosthogUIHost         *string
-	userEmailVerificationRequired bool
-	serverShutdownDelayDuration   *time.Duration
-	registration                  RegistrationMode
-	registryEnabled               bool
-	registryS3Config              S3Config
+	databaseUrl                    string
+	jwtSecret                      []byte
+	host                           string
+	registryHost                   string
+	mailerConfig                   MailerConfig
+	inviteTokenValidDuration       time.Duration
+	resetTokenValidDuration        time.Duration
+	agentTokenMaxValidDuration     time.Duration
+	agentInterval                  time.Duration
+	statusEntriesMaxAge            *time.Duration
+	sentryDSN                      string
+	sentryDebug                    bool
+	enableQueryLogging             bool
+	agentDockerConfig              []byte
+	frontendSentryDSN              *string
+	frontendPosthogToken           *string
+	frontendPosthogAPIHost         *string
+	frontendPosthogUIHost          *string
+	userEmailVerificationRequired  bool
+	serverShutdownDelayDuration    *time.Duration
+	registration                   RegistrationMode
+	registryEnabled                bool
+	registryS3Config               S3Config
+	artifactTagsDefaultLimitPerOrg int
 )
 
 func init() {
@@ -85,6 +86,7 @@ func init() {
 		registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
 		registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
 	}
+	artifactTagsDefaultLimitPerOrg = getEnvParsedOrDefault("ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", getNonNegativeNumber, 0)
 
 	sentryDSN = getEnv("SENTRY_DSN")
 	sentryDebug = getEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
@@ -180,4 +182,8 @@ func RegistryEnabled() bool {
 
 func RegistryS3Config() S3Config {
 	return registryS3Config
+}
+
+func ArtifactTagsDefaultLimitPerOrg() int {
+	return artifactTagsDefaultLimitPerOrg
 }

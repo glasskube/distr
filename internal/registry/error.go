@@ -112,3 +112,11 @@ var regErrDenied = &regError{
 	Code:    "DENIED",
 	Message: "Access to the resource has been denied",
 }
+
+func regErrDeniedQuotaExceeded(msg string) *regError {
+	return &regError{
+		Status:  http.StatusForbidden,
+		Code:    "DENIED",
+		Message: msg,
+	}
+}

@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/glasskube/distr/internal/apierrors"
+
 	"github.com/getsentry/sentry-go"
 	internalctx "github.com/glasskube/distr/internal/context"
 
@@ -477,11 +479,13 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
 	err := db.RunTx(req.Context(), pgx.TxOptions{}, func(ctx context.Context) error {
 		return multierr.Combine(
-			handler.manifestHandler.Put(req.Context(), repo, mf.BlobDigest.String(), mf, blobs),
-			handler.manifestHandler.Put(req.Context(), repo, target, mf, blobs),
+			handler.manifestHandler.Put(ctx, repo, mf.BlobDigest.String(), mf, blobs),
+			handler.manifestHandler.Put(ctx, repo, target, mf, blobs),
 		)
 	})
-	if err != nil {
+	if errors.Is(err, apierrors.ErrQuotaExceeded) {
+		return regErrDeniedQuotaExceeded("Tag quota exceeded")
+	} else if err != nil {
 		return regErrInternal(err)
 	}
 
