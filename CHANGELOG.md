@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.2](https://github.com/glasskube/distr/compare/1.4.1...1.4.2) (2025-03-26)
+
+
+### Bug Fixes
+
+* artifact tag limit for organizations without artifacts ([#709](https://github.com/glasskube/distr/issues/709)) ([a40327b](https://github.com/glasskube/distr/commit/a40327b1a21a292f0c3180210e9cd4c0cf541f1f))
+
+
+### Other
+
+* **registry:** simplify location header ([#707](https://github.com/glasskube/distr/issues/707)) ([3b45bff](https://github.com/glasskube/distr/commit/3b45bff42757748d51617f2c9e2aa66192719868))
+
 ## [1.4.1](https://github.com/glasskube/distr/compare/1.4.0...1.4.1) (2025-03-26)
 
 
