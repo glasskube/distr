@@ -486,7 +486,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		)
 	})
 	if errors.Is(err, apierrors.ErrQuotaExceeded) {
-		return regErrDeniedQuotaExceeded("Tag quota exceeded")
+		return regErrDeniedQuotaExceeded
 	} else if err != nil {
 		return regErrInternal(err)
 	}
