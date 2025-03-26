@@ -73,6 +73,9 @@
                     </div>
                     <ul class="flex gap-3 mt-1 text-xs font-normal text-gray-500 truncate dark:text-gray-400">
                       <li>{{ version.createdAt | relativeDate }}</li>
+                      @if (version.size > 0) {
+                        <li>{{ version.size | bytes }}</li>
+                      }
                       <li><app-artifacts-hash [hash]="version.digest"></app-artifacts-hash></li>
                     </ul>
                   </div>

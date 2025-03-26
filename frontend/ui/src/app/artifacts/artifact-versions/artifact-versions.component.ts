@@ -4,28 +4,18 @@ import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faDownload, faFile, faLightbulb, faWarning} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import {
-  combineLatestWith,
-  distinctUntilChanged,
-  filter,
-  firstValueFrom,
-  map,
-  Observable,
-  of,
-  switchMap,
-  tap,
-  withLatestFrom,
-} from 'rxjs';
+import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
+import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
+import {BytesPipe} from '../../../util/units';
 import {ClipComponent} from '../../components/clip.component';
 import {UuidComponent} from '../../components/uuid';
-import {ArtifactsService, TaggedArtifactVersion, ArtifactWithTags} from '../../services/artifacts.service';
+import {ArtifactsService, ArtifactWithTags, TaggedArtifactVersion} from '../../services/artifacts.service';
 import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
-import {getRemoteEnvironment} from '../../../env/remote';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -39,6 +29,7 @@ import {getRemoteEnvironment} from '../../../env/remote';
     ArtifactsHashComponent,
     ArtifactsVulnerabilityReportComponent,
     ClipComponent,
+    BytesPipe,
   ],
   templateUrl: './artifact-versions.component.html',
 })
