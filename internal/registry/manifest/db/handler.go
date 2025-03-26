@@ -14,7 +14,6 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type handler struct{}
@@ -39,7 +38,10 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 		return nil, err
 	} else {
 		return &manifest.Manifest{
-			BlobDigest:  v1.Hash(av.ManifestBlobDigest),
+			Blob: manifest.Blob{
+				Digest: v1.Hash(av.ManifestBlobDigest),
+				Size:   av.ManifestBlobSize,
+			},
 			ContentType: av.ManifestContentType,
 		}, nil
 	}
@@ -137,14 +139,14 @@ func (h *handler) Put(
 	ctx context.Context,
 	nameStr, reference string,
 	manifest manifest.Manifest,
-	blobs []v1.Hash,
+	blobs []manifest.Blob,
 ) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	name, err := name.Parse(nameStr)
 	if err != nil {
 		return err
 	}
-	return db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	return db.RunTx(ctx, func(ctx context.Context) error {
 		artifact, err := db.GetOrCreateArtifact(ctx, *auth.CurrentOrgID(), name.ArtifactName)
 		if err != nil {
 			return err
@@ -153,7 +155,8 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.BlobDigest),
+			ManifestBlobDigest:     types.Digest(manifest.Blob.Digest),
+			ManifestBlobSize:       manifest.Blob.Size,
 			ManifestContentType:    manifest.ContentType,
 			ArtifactID:             artifact.ID,
 		}
@@ -162,8 +165,11 @@ func (h *handler) Put(
 		if err != nil {
 			if !errors.Is(err, apierrors.ErrNotFound) {
 				return err
-			}
-			if err := db.CreateArtifactVersion(ctx, &version); err != nil {
+			} else if quotaOk, err := db.EnsureArtifactTagLimitForInsert(ctx, *auth.CurrentOrgID()); err != nil {
+				return err
+			} else if !quotaOk {
+				return apierrors.ErrQuotaExceeded
+			} else if err := db.CreateArtifactVersion(ctx, &version); err != nil {
 				return err
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||
@@ -176,7 +182,8 @@ func (h *handler) Put(
 		for _, blob := range blobs {
 			part := types.ArtifactVersionPart{
 				ArtifactVersionID:  version.ID,
-				ArtifactBlobDigest: types.Digest(blob),
+				ArtifactBlobDigest: types.Digest(blob.Digest),
+				ArtifactBlobSize:   blob.Size,
 			}
 			if err := db.CreateArtifactVersionPart(ctx, &part); err != nil {
 				return err

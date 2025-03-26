@@ -17,7 +17,6 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -40,7 +39,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if err := validateDeploymentRequest(ctx, w, deploymentRequest); err != nil {
 			return err
 		}
@@ -74,7 +73,7 @@ func deleteDeploymentHandler() http.HandlerFunc {
 		auth := auth.Authentication.Require(ctx)
 		orgId := *auth.CurrentOrgID()
 		deployment := internalctx.GetDeployment(ctx)
-		_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		_ = db.RunTx(ctx, func(ctx context.Context) error {
 			target, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID)
 			if err != nil {
 				log.Warn("could not get DeploymentTarget", zap.Error(err))

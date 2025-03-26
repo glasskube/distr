@@ -112,3 +112,9 @@ var regErrDenied = &regError{
 	Code:    "DENIED",
 	Message: "Access to the resource has been denied",
 }
+
+var regErrDeniedQuotaExceeded = &regError{
+	Status:  http.StatusForbidden,
+	Code:    "DENIED",
+	Message: "You have exhausted your organizations tag quota",
+}
