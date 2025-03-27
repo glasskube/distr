@@ -33,10 +33,12 @@ const (
 		v.artifact_id
 	`
 	artifactDownloadsOutExpr = `
-		count(avpl.id) as downloads_total,
-		count(DISTINCT avpl.useraccount_id) as downloaded_by_count,
-		coalesce(array_agg(DISTINCT avpl.useraccount_id)
-			FILTER (WHERE avpl.useraccount_id IS NOT NULL), ARRAY[]::UUID[]) as downloaded_by_users
+		(row(
+			count(avpl.id),
+			count(DISTINCT avpl.useraccount_id),
+			coalesce(array_agg(DISTINCT avpl.useraccount_id)
+				FILTER (WHERE avpl.useraccount_id IS NOT NULL), ARRAY[]::UUID[])
+		)) as downloads
 	`
 )
 
@@ -185,10 +187,26 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 					AND avt.name NOT LIKE '%:%'
 				), ARRAY []::RECORD[]) AS tags,
 				av.manifest_blob_size + sum(avp.artifact_blob_size) AS size,
-				`+artifactDownloadsOutExpr+`
+				(
+					WITH RECURSIVE aggregate AS (
+						SELECT avp.artifact_version_id, avp.artifact_blob_digest
+						FROM ArtifactVersionPart avp
+						WHERE avp.artifact_version_id = av.id
+						UNION ALL
+						SELECT avx.id, avp.artifact_blob_digest
+						FROM aggregate
+								 JOIN ArtifactVersion avx ON avx.manifest_blob_digest = aggregate.artifact_blob_digest
+								 JOIN ArtifactVersionPart avp ON avx.id = avp.artifact_version_id
+					)
+					SELECT row(count(DISTINCT avpl.id),
+						   count(DISTINCT avpl.useraccount_id),
+						   coalesce(array_agg(DISTINCT avpl.useraccount_id)
+									FILTER (WHERE avpl.useraccount_id IS NOT NULL), ARRAY[]::UUID[]))
+					FROM aggregate a
+					LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = a.artifact_version_id
+						AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
+				) as downloads
 			FROM ArtifactVersion av
-			LEFT JOIN ArtifactVersionPull avpl ON av.id = avpl.artifact_version_id
-				AND (NOT @checkLicense OR avpl.useraccount_id = @ownerId)
 			LEFT JOIN (
 				WITH RECURSIVE aggregate AS (
 					SELECT avp.artifact_version_id, avp.artifact_blob_digest, avp.artifact_blob_size

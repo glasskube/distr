@@ -20,7 +20,7 @@
                   <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
                 </p>
               </div>
-              <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
+              <app-artifacts-download-count [source]="artifact.downloads"></app-artifacts-download-count>
             </div>
 
             <div>
@@ -84,8 +84,8 @@
                     </ul>
                   </div>
                   <div class="flex flex-col items-end gap-1">
-                    <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
-                    <app-artifacts-downloaded-by [source]="version"> </app-artifacts-downloaded-by>
+                    <app-artifacts-download-count [source]="version.downloads"></app-artifacts-download-count>
+                    <app-artifacts-downloaded-by [source]="version.downloads"> </app-artifacts-downloaded-by>
                   </div>
                 </div>
 

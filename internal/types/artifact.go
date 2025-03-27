@@ -18,24 +18,25 @@ type ArtifactVersionTag struct {
 	Name string    `db:"name" json:"name"`
 }
 
+type Downloads struct {
+	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
+	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
+	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
+}
+
 type TaggedArtifactVersion struct {
 	ID        uuid.UUID            `db:"id" json:"id"`
 	CreatedAt time.Time            `db:"created_at" json:"createdAt"`
 	Digest    string               `db:"manifest_blob_digest" json:"digest"`
 	Tags      []ArtifactVersionTag `db:"tags" json:"tags"`
 	Size      int64                `db:"size" json:"size"`
-
-	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
-	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
-	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
+	Downloads Downloads            `db:"downloads" json:"downloads"`
 }
 
 type ArtifactWithDownloads struct {
 	Artifact
-	OrganizationSlug  string      `db:"organization_slug" json:"-"`
-	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
-	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
-	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
+	OrganizationSlug string    `db:"organization_slug" json:"-"`
+	Downloads        Downloads `db:"downloads" json:"downloads"`
 }
 
 type ArtifactWithTaggedVersion struct {

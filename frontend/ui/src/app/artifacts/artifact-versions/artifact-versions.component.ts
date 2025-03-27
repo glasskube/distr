@@ -85,7 +85,7 @@ export class ArtifactVersionsComponent {
 
       const newer = tagsSorted.slice(
         0,
-        tagsSorted.findIndex((t) => (t.downloadedByUsers ?? []).some((u) => u === this.auth.getClaims()?.sub))
+        tagsSorted.findIndex((t) => (t.downloads.downloadedByUsers ?? []).some((u) => u === this.auth.getClaims()?.sub))
       );
 
       if (newer.length > 0) {
