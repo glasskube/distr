@@ -32,13 +32,12 @@ export interface Vulnerability {
   severity: VulnerabilitySeverity[];
 }
 
-export interface Artifact {
+export interface Artifact extends HasDownloads {
   id: string;
   name: string;
-  downloads: HasDownloads;
 }
 
-export interface TaggedArtifactVersion {
+export interface TaggedArtifactVersion extends HasDownloads {
   id: string;
   digest: string;
   sbom?: string;
@@ -47,7 +46,6 @@ export interface TaggedArtifactVersion {
   tags: {name: string}[];
   vulnerabilities: Vulnerability[];
   lastScannedAt?: string;
-  downloads: HasDownloads;
 }
 
 export interface ArtifactWithTags extends Artifact {
