@@ -184,8 +184,8 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 					AND avt.artifact_id = av.artifact_id
 					AND avt.name NOT LIKE '%:%'
 				), ARRAY []::RECORD[]) AS tags,
-				`+artifactDownloadsOutExpr+`,
-				av.manifest_blob_size + sum(avp.artifact_blob_size) AS size
+				av.manifest_blob_size + sum(avp.artifact_blob_size) AS size,
+				`+artifactDownloadsOutExpr+`
 			FROM ArtifactVersion av
 			LEFT JOIN (
 				WITH RECURSIVE aggregate AS (
