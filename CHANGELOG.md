@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.3](https://github.com/glasskube/distr/compare/1.4.2...1.4.3) (2025-03-27)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.4 ([#712](https://github.com/glasskube/distr/issues/712)) ([5d7045a](https://github.com/glasskube/distr/commit/5d7045a9f0cc2172c04c5ebb229a183b46c80f71))
+
+
+### Other
+
+* **deps:** update dependency @types/semver to v7.7.0 ([#708](https://github.com/glasskube/distr/issues/708)) ([208549e](https://github.com/glasskube/distr/commit/208549e8cfe4c52558c8079ed38fd306f65f1889))
+
+
+### Performance
+
+* **backend:** additional index for faster status sorting ([#713](https://github.com/glasskube/distr/issues/713)) ([1fbabe5](https://github.com/glasskube/distr/commit/1fbabe57bfe2f6a2f02ff63a57fbe89da3ca9f5d))
+
 ## [1.4.2](https://github.com/glasskube/distr/compare/1.4.1...1.4.2) (2025-03-26)
 
 
