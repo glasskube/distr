@@ -67,7 +67,7 @@ To get started quickly, do the following:
 <!-- x-release-please-start-version -->
 
 ```shell
-mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/1.4.2/deploy-docker.tar.bz2 | tar -jx
+mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/1.4.3/deploy-docker.tar.bz2 | tar -jx
 # make necessary changes to the .env file
 docker-compose up -d
 ```
