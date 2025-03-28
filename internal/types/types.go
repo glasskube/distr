@@ -5,9 +5,10 @@ import (
 	"errors"
 	"time"
 
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/opencontainers/go-digest"
 )
 
 type DeploymentType string
@@ -47,15 +48,15 @@ type Geolocation struct {
 	Lon float64 `json:"lon"`
 }
 
-type Digest v1.Hash
+type Digest digest.Digest
 
-var _ sql.Scanner = &Digest{}
-var _ pgtype.TextValuer = &Digest{}
+var _ sql.Scanner = util.PtrTo(Digest(""))
+var _ pgtype.TextValuer = util.PtrTo(Digest(""))
 
 func (target *Digest) Scan(src any) error {
 	if srcStr, ok := src.(string); !ok {
 		return errors.New("src must be a string")
-	} else if h, err := v1.NewHash(srcStr); err != nil {
+	} else if h, err := digest.Parse(srcStr); err != nil {
 		return err
 	} else {
 		*target = Digest(h)
@@ -65,5 +66,5 @@ func (target *Digest) Scan(src any) error {
 
 // TextValue implements pgtype.TextValuer.
 func (src Digest) TextValue() (pgtype.Text, error) {
-	return pgtype.Text{String: v1.Hash(src).String(), Valid: true}, nil
+	return pgtype.Text{String: string(src), Valid: true}, nil
 }

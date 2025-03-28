@@ -1,6 +1,8 @@
 package manifest
 
-import v1 "github.com/google/go-containerregistry/pkg/v1"
+import (
+	"github.com/opencontainers/go-digest"
+)
 
 type Manifest struct {
 	Blob        Blob
@@ -8,6 +10,6 @@ type Manifest struct {
 }
 
 type Blob struct {
-	Digest v1.Hash
+	Digest digest.Digest
 	Size   int64
 }
