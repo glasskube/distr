@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.4](https://github.com/glasskube/distr/compare/1.4.3...1.4.4) (2025-03-28)
+
+
+### Bug Fixes
+
+* **backend:** return correct download metrics for index manifest artifacts ([#715](https://github.com/glasskube/distr/issues/715)) ([1143363](https://github.com/glasskube/distr/commit/114336371f35cccf55a02f8248008e04aa2fae0f))
+* **deps:** update aws-sdk-go-v2 monorepo ([#718](https://github.com/glasskube/distr/issues/718)) ([cb3c481](https://github.com/glasskube/distr/commit/cb3c4810bc23b55c3f4b934e0a8c088f584b794d))
+* **deps:** update module github.com/go-chi/jwtauth/v5 to v5.3.3 ([#714](https://github.com/glasskube/distr/issues/714)) ([0e3382b](https://github.com/glasskube/distr/commit/0e3382b06d0a2030ab208ddad3c698f3084e001c))
+
+
+### Other
+
+* **backend:** add indices for artifact blob digest columns ([#717](https://github.com/glasskube/distr/issues/717)) ([23885ce](https://github.com/glasskube/distr/commit/23885cee90725cd5c4e92b6f359869a9cdc47e6f))
+
 ## [1.4.3](https://github.com/glasskube/distr/compare/1.4.2...1.4.3) (2025-03-27)
 
 
