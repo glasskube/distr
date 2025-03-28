@@ -1,0 +1,2 @@
+CREATE INDEX ArtifactVersionPart_artifact_blob_digest ON ArtifactVersionPart (artifact_blob_digest);
+CREATE INDEX ArtifactVersion_manifest_blob_digest ON ArtifactVersion (manifest_blob_digest);
