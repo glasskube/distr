@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.5](https://github.com/glasskube/distr/compare/1.4.4...1.4.5) (2025-03-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @codemirror/view to v6.36.5 ([#721](https://github.com/glasskube/distr/issues/721)) ([78e3bec](https://github.com/glasskube/distr/commit/78e3bec5c95f96fc04a56b0d7efc1bcd2007f33e))
+
 ## [1.4.4](https://github.com/glasskube/distr/compare/1.4.3...1.4.4) (2025-03-28)
 
 
