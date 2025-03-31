@@ -36,10 +36,6 @@ export class Client {
     }
   }
 
-  public whatever() {
-
-  }
-
   public async getApplications(): Promise<Application[]> {
     return this.get<Application[]>('applications');
   }
