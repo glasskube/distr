@@ -20,14 +20,20 @@ var Authentication = authn.New(
 			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
 			jwt.Authenticator(authjwt.JWTAuth),
 		),
-		authinfo.JWTAuthenticator(),
+		authn.Chain(
+			authinfo.JWTAuthenticator(),
+			authinfo.DbAuthenticator(),
+		),
 	),
 	authn.Chain(
 		authn.Chain(
 			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("AccessToken"))),
 			authkey.Authenticator(),
 		),
-		authinfo.AuthKeyAuthenticator(),
+		authn.Chain(
+			authinfo.AuthKeyAuthenticator(),
+			authinfo.DbAuthenticator(),
+		),
 	),
 )
 
@@ -40,7 +46,10 @@ var ArtifactsAuthentication = authn.New(
 			),
 			authkey.Authenticator(),
 		),
-		authinfo.AuthKeyAuthenticator(),
+		authn.Chain(
+			authinfo.AuthKeyAuthenticator(),
+			authinfo.DbAuthenticator(),
+		),
 	),
 )
 

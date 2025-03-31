@@ -55,6 +55,8 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 				httprate.Limit(10, 1*time.Second, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 				httprate.Limit(60, 1*time.Minute, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 				httprate.Limit(2000, 1*time.Hour, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
+
+				// TODO make org + user role MANDATORY in every "human" token and then use RequireOrgID and RequireUserRole on that level right here (with exceptions?)
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/application-licenses", handlers.ApplicationLicensesRouter)

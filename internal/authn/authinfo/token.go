@@ -23,6 +23,7 @@ func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {
 		return nil, errors.New("user must have exacly one organization")
 	} else {
 		org := orgs[0]
+		// TODO get user + db and use DbAuthInfo instead
 		return &SimpleAuthInfo{
 			userID:         at.UserAccount.ID,
 			userEmail:      at.UserAccount.Email,

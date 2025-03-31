@@ -12,4 +12,7 @@ type AuthInfo interface {
 	CurrentOrgID() *uuid.UUID
 	CurrentUserEmailVerified() bool
 	Token() any
+	// TODO dont know yet if this belongs here:
+	CurrentUser() *types.UserAccountWithUserRole
+	CurrentOrg() *types.Organization
 }
