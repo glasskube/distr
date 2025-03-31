@@ -32,6 +32,18 @@ jobs:
         run: npm ci
       - name: Build application
         run: npm run build
+      - name: Build docs
+        run: npm run docs
+      - name: Check if repository is clean
+        run: |
+          STATUS="$(git status --porcelain)"
+          if [ -z "$STATUS" ]; then
+            echo Repository is clean.
+          else
+            echo "Repository is not clean:
+          $STATUS"
+            exit 1
+          fi
       - name: Publish to npmjs
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: npm publish --access public
