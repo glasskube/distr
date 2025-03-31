@@ -10,7 +10,7 @@ The low-level Distr API client. Each method represents on API endpoint.
 
 ## Constructors
 
-### new Client()
+### Constructor
 
 > **new Client**(`config`): `Client`
 
