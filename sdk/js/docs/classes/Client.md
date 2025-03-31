@@ -179,3 +179,13 @@ The low-level Distr API client. Each method represents on API endpoint.
 #### Returns
 
 `Promise`\<[`Application`](../interfaces/Application.md)\>
+
+---
+
+### whatever()
+
+> **whatever**(): `void`
+
+#### Returns
+
+`void`

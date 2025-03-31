@@ -41,7 +41,8 @@ jobs:
             echo Repository is clean.
           else
             echo "Repository is not clean:
-          $STATUS"
+          $STATUS
+            You might want to run 'npm run docs' and try again"
             exit 1
           fi
       - name: Publish to npmjs
