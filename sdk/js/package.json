@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/semver": "^7.5.8",
+    "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
     "typedoc": "^0.28.0",
     "typedoc-plugin-markdown": "^4.5.0",
