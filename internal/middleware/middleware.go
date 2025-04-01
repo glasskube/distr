@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/glasskube/distr/internal/db"
-
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/distr/internal/auth"
@@ -115,6 +113,23 @@ var RequireOrgID = auth.Authentication.ValidatorMiddleware(func(value authinfo.A
 	}
 })
 
+var RequireUser = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
+	if value.CurrentUser() == nil {
+		return authn.ErrBadAuthentication
+	} else {
+		return nil
+	}
+})
+
+var RequireUserOrgRole = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
+	if value.CurrentOrgID() == nil || value.CurrentOrg() == nil ||
+		value.CurrentUser() == nil || value.CurrentUserRole() == nil {
+		return authn.ErrBadAuthentication
+	} else {
+		return nil
+	}
+})
+
 var RequireUserRole = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
 	if value.CurrentUserRole() == nil {
 		return authn.ErrBadAuthentication
@@ -127,13 +142,9 @@ func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) htt
 	return func(handler http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			if auth, err := auth.Authentication.Get(ctx); err != nil {
-				http.Error(w, err.Error(), http.StatusForbidden)
-			} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
-				internalctx.GetLogger(ctx).Warn("could not get organization in feature flag middleware", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, "internal server error", http.StatusInternalServerError)
-			} else if !org.HasFeature(feature) {
+			auth := auth.Authentication.Require(ctx)
+			org := auth.CurrentOrg()
+			if !org.HasFeature(feature) {
 				http.Error(w, fmt.Sprintf("%v not enabled for organization", feature), http.StatusForbidden)
 			} else {
 				handler.ServeHTTP(w, r)

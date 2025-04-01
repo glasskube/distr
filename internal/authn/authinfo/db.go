@@ -29,20 +29,17 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, AuthInfo] {
 		var user *types.UserAccount
 		var org *types.Organization
 		var err error
-		if a.CurrentOrgID() == nil {
-			if user, err = db.GetUserAccountByID(ctx, a.CurrentUserID()); errors.Is(err, apierrors.ErrNotFound) {
-				return nil, authn.ErrNoAuthentication
-			}
-		} else {
-			var userWithRole *types.UserAccountWithUserRole
-			if userWithRole, org, err = db.GetUserAccountAndOrgWithRole(
-				ctx, a.CurrentUserID(), *a.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
-				return nil, authn.ErrBadAuthentication
-			} else if err != nil {
-				return nil, err
-			} else if a.CurrentUserRole() != nil && userWithRole.UserRole != *a.CurrentUserRole() {
+		if a.CurrentOrgID() != nil {
+			if user, org, err = db.GetUserAccountAndOrg(
+				ctx, a.CurrentUserID(), *a.CurrentOrgID(), *a.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
 				return nil, authn.ErrBadAuthentication
 			}
+		} else if user, err = db.GetUserAccountByID(ctx, a.CurrentUserID()); errors.Is(err, apierrors.ErrNotFound) {
+			return nil, authn.ErrNoAuthentication
+		}
+
+		if err != nil {
+			return nil, err
 		}
 		return &DbAuthInfo{
 			AuthInfo: a,

@@ -25,6 +25,7 @@ import (
 )
 
 func SettingsRouter(r chi.Router) {
+	r.Use(middleware.RequireUser)
 	r.Post("/user", userSettingsUpdateHandler)
 	r.Route("/verify", func(r chi.Router) {
 		r.With(requestVerificationMailRateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
@@ -53,12 +54,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := db.GetUserAccountByID(ctx, auth.CurrentUserID())
-	if err != nil {
-		log.Error("failed to get current user", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	user := auth.CurrentUser()
 
 	if body.Name != "" {
 		user.Name = body.Name
@@ -86,10 +82,8 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 func userSettingsVerifyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if userAccount.EmailVerifiedAt != nil {
+	userAccount := auth.CurrentUser()
+	if userAccount.EmailVerifiedAt != nil {
 		w.WriteHeader(http.StatusNoContent)
 	} else if err := mailsending.SendUserVerificationMail(ctx, *userAccount); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -103,9 +97,8 @@ func userSettingsVerifyConfirmHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if !auth.CurrentUserEmailVerified() {
+	userAccount := auth.CurrentUser()
+	if !auth.CurrentUserEmailVerified() {
 		http.Error(w, "token does not have verified claim", http.StatusForbidden)
 	} else if userAccount.EmailVerifiedAt != nil {
 		w.WriteHeader(http.StatusNoContent)

@@ -22,7 +22,7 @@ import (
 )
 
 func ApplicationsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireUserOrgRole)
 	r.Get("/", getApplications)
 	r.With(requireUserRoleVendor).Post("/", createApplication)
 	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
@@ -114,14 +114,8 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	log := internalctx.GetLogger(ctx)
 
-	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	org := auth.CurrentOrg()
+	var err error
 	var applications []types.Application
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
 		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, auth.CurrentUserID())
@@ -143,16 +137,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	log := internalctx.GetLogger(ctx)
 
-	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	org := auth.CurrentOrg()
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-
 		if applicationID, err := uuid.Parse(r.PathValue("applicationId")); err != nil {
 			http.NotFound(w, r)
 			return
@@ -170,9 +156,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else {
-		RespondJSON(w, internalctx.GetApplication(r.Context()))
+		RespondJSON(w, internalctx.GetApplication(ctx))
 	}
-
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {

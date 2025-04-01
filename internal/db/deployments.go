@@ -41,13 +41,26 @@ func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetID u
 	}
 }
 
-func GetDeployment(ctx context.Context, id uuid.UUID) (*types.Deployment, error) {
+func GetDeployment(
+	ctx context.Context,
+	id uuid.UUID,
+	userID uuid.UUID,
+	orgID uuid.UUID,
+	userRole types.UserRole,
+) (*types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT"+deploymentOutputExpr+
 			"FROM Deployment d "+
-			"WHERE d.id = @id",
-		pgx.NamedArgs{"id": id})
+			"INNER JOIN DeploymentTarget dt ON d.deployment_target_id = d.id "+
+			"WHERE d.id = @id AND dt.organization_id = @orgId "+
+			"AND (@userRole = 'vendor' OR dt.created_by_user_account_id = @userID)",
+		pgx.NamedArgs{
+			"id":       id,
+			"userId":   userID,
+			"orgId":    orgID,
+			"userRole": userRole,
+		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
 	}
