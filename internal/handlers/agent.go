@@ -44,7 +44,7 @@ func AgentRouter(r chi.Router) {
 		r.Post("/login", agentLoginHandler)
 
 		r.With(
-			auth.Authentication.Middleware,
+			auth.AgentAuthentication.Middleware,
 			middleware.RequireOrgID,
 			middleware.SentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
@@ -327,7 +327,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		auth := auth.Authentication.Require(ctx)
+		auth := auth.AgentAuthentication.Require(ctx)
 		orgId := auth.CurrentOrgID()
 		targetId := auth.CurrentUserID()
 
