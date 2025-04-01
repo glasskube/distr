@@ -12,7 +12,7 @@ Under the hood it uses the low-level [Client](Client.md).
 
 ## Constructors
 
-### new DistrService()
+### Constructor
 
 > **new DistrService**(`config`, `latestVersionStrategy`): `DistrService`
 
