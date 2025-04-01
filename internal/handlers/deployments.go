@@ -324,7 +324,7 @@ func deploymentMiddleware(next http.Handler) http.Handler {
 			*auth.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get deployment", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get deployment", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {

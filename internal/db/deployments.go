@@ -52,9 +52,9 @@ func GetDeployment(
 	rows, err := db.Query(ctx,
 		"SELECT"+deploymentOutputExpr+
 			"FROM Deployment d "+
-			"INNER JOIN DeploymentTarget dt ON d.deployment_target_id = d.id "+
+			"INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id "+
 			"WHERE d.id = @id AND dt.organization_id = @orgId "+
-			"AND (@userRole = 'vendor' OR dt.created_by_user_account_id = @userID)",
+			"AND (@userRole = 'vendor' OR dt.created_by_user_account_id = @userId)",
 		pgx.NamedArgs{
 			"id":       id,
 			"userId":   userID,

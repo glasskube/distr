@@ -56,8 +56,8 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 				httprate.Limit(60, 1*time.Minute, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 				httprate.Limit(2000, 1*time.Hour, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 
-				// TODO maybe use RequireOrgID and RequireUserRole on that level right here (with exceptions?)
-				// otherwise introduce token audience and require it to be "api"/"user", such that agents cant access anything here
+				// TODO in the future, check token audience and require it to be "api"/"user",
+				// such that agents cant access anything here
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/application-licenses", handlers.ApplicationLicensesRouter)
