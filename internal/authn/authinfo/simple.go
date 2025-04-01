@@ -32,7 +32,7 @@ func (i *SimpleAuthInfo) CurrentUserRole() *types.UserRole { return i.userRole }
 // Token implements AuthInfo.
 func (i *SimpleAuthInfo) Token() any { return i.rawToken }
 
-func (i *SimpleAuthInfo) CurrentUser() *types.UserAccountWithUserRole {
+func (i *SimpleAuthInfo) CurrentUser() *types.UserAccount {
 	panic("SimpleAuthInfo does not contain the current user")
 }
 

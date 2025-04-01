@@ -3,6 +3,7 @@ package authinfo
 import (
 	"context"
 	"errors"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/authn"
 	"github.com/glasskube/distr/internal/db"
@@ -11,11 +12,11 @@ import (
 
 type DbAuthInfo struct {
 	AuthInfo
-	user *types.UserAccountWithUserRole
+	user *types.UserAccount
 	org  *types.Organization
 }
 
-func (a DbAuthInfo) CurrentUser() *types.UserAccountWithUserRole {
+func (a DbAuthInfo) CurrentUser() *types.UserAccount {
 	return a.user
 }
 
@@ -25,24 +26,28 @@ func (a DbAuthInfo) CurrentOrg() *types.Organization {
 
 func DbAuthenticator() authn.Authenticator[AuthInfo, AuthInfo] {
 	return authn.AuthenticatorFunc[AuthInfo, AuthInfo](func(ctx context.Context, a AuthInfo) (AuthInfo, error) {
-		// TODO also get org (possibly in the same db query?)
-		// TODO also check: user still in that org with that role?
+		var user *types.UserAccount
+		var org *types.Organization
+		var err error
 		if a.CurrentOrgID() == nil {
-			// TODO check: some tokens (e.g. invite) don't have the org ID?
-			return a, nil
-		}
-		if user, org, err := db.GetUserAccountAndOrgWithRole(ctx, a.CurrentUserID(), *a.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
-			return nil, authn.ErrBadAuthentication
-		} else if err != nil {
-			return nil, err
-		} else if user.UserRole != *a.CurrentUserRole() {
-			return nil, authn.ErrBadAuthentication // TODO ??
+			if user, err = db.GetUserAccountByID(ctx, a.CurrentUserID()); errors.Is(err, apierrors.ErrNotFound) {
+				return nil, authn.ErrNoAuthentication
+			}
 		} else {
-			return &DbAuthInfo{
-				AuthInfo: a,
-				user:     user,
-				org:      org,
-			}, nil
+			var userWithRole *types.UserAccountWithUserRole
+			if userWithRole, org, err = db.GetUserAccountAndOrgWithRole(
+				ctx, a.CurrentUserID(), *a.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
+				return nil, authn.ErrBadAuthentication
+			} else if err != nil {
+				return nil, err
+			} else if a.CurrentUserRole() != nil && userWithRole.UserRole != *a.CurrentUserRole() {
+				return nil, authn.ErrBadAuthentication
+			}
 		}
+		return &DbAuthInfo{
+			AuthInfo: a,
+			user:     user,
+			org:      org,
+		}, nil
 	})
 }

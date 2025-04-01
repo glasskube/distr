@@ -237,7 +237,10 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 	}
 }
 
-func GetUserAccountAndOrgWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, *types.Organization, error) {
+func GetUserAccountAndOrgWithRole(ctx context.Context, userID, orgID uuid.UUID) (
+	*types.UserAccountWithUserRole,
+	*types.Organization, error,
+) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT ("+userAccountWithRoleOutputExpr+`),
