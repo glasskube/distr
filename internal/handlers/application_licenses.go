@@ -20,7 +20,7 @@ import (
 )
 
 func ApplicationLicensesRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole) // TODO check again – I think these endpoints also need a feature flag check!
+	r.Use(middleware.RequireUserOrgRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
 	r.With(requireUserRoleVendor).Post("/", createApplicationLicense)
 	r.Route("/{applicationLicenseId}", func(r chi.Router) {

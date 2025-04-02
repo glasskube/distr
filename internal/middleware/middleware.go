@@ -142,12 +142,15 @@ func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) htt
 	return func(handler http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			auth := auth.Authentication.Require(ctx)
-			org := auth.CurrentOrg()
-			if !org.HasFeature(feature) {
-				http.Error(w, fmt.Sprintf("%v not enabled for organization", feature), http.StatusForbidden)
+			if auth, err := auth.Authentication.Get(ctx); err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
 			} else {
-				handler.ServeHTTP(w, r)
+				org := auth.CurrentOrg()
+				if !org.HasFeature(feature) {
+					http.Error(w, fmt.Sprintf("%v not enabled for organization", feature), http.StatusForbidden)
+				} else {
+					handler.ServeHTTP(w, r)
+				}
 			}
 		}
 		return http.HandlerFunc(fn)
@@ -155,3 +158,4 @@ func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) htt
 }
 
 var RegistryFeatureFlagEnabledMiddleware = FeatureFlagMiddleware(types.FeatureRegistry)
+var LicensingFeatureFlagEnabledMiddleware = FeatureFlagMiddleware(types.FeatureLicensing)
