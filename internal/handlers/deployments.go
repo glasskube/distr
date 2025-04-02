@@ -147,8 +147,6 @@ func validateDeploymentRequest(
 		}
 	}
 
-	// TODO validate that target can be accessed (same org && (user role vendor or user role customer and creator))
-
 	if target.Deployment != nil {
 		if request.ApplicationLicenseID == nil {
 			if target.Deployment.ApplicationLicenseID != nil {
