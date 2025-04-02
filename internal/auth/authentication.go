@@ -31,13 +31,13 @@ var Authentication = authn.New(
 	),
 )
 
-// AgentAuthentication supports Bearer JWT tokens
+// AgentAuthentication supports only Bearer JWT tokens
 var AgentAuthentication = authn.New(
 	authn.Chain3(
 		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
 		jwt.Authenticator(authjwt.JWTAuth),
 		authinfo.JWTAuthenticator(),
-		// TODO either a check for token audience or a new DbAuthenticator that verifies the given credentials against the DB
+		// for agents, db check is done in the agent auth middleware, therefore no DbAuthenticator here
 	),
 )
 
@@ -63,5 +63,6 @@ func handleUnknownError(w http.ResponseWriter, r *http.Request, err error) {
 
 func init() {
 	Authentication.SetUnknownErrorHandler(handleUnknownError)
+	AgentAuthentication.SetUnknownErrorHandler(handleUnknownError)
 	ArtifactsAuthentication.SetUnknownErrorHandler(handleUnknownError)
 }
