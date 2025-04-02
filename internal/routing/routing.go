@@ -55,6 +55,10 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 				httprate.Limit(10, 1*time.Second, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 				httprate.Limit(60, 1*time.Minute, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
 				httprate.Limit(2000, 1*time.Hour, httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc)),
+
+				// TODO (low-prio) in the future, additionally check token audience and require it to be "api"/"user",
+				// such that agents cant access anything here (they also can't now, because their tokens will not
+				// pass the Authentication chain (DbAuthenticator can't find the user -> 401)
 			)
 			r.Route("/applications", handlers.ApplicationsRouter)
 			r.Route("/application-licenses", handlers.ApplicationLicensesRouter)

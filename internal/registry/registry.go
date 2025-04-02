@@ -139,6 +139,7 @@ func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mai
 			middleware.LoggingMiddleware,
 			middleware.ContextInjectorMiddleware(pool, mailer),
 			auth.ArtifactsAuthentication.Middleware,
+			middleware.RequireOrgAndRole,
 			middleware.RegistryFeatureFlagEnabledMiddleware,
 		),
 	)

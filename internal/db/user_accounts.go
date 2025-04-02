@@ -236,3 +236,35 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 		return &userAccount, nil
 	}
 }
+
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) (
+	*types.UserAccount,
+	*types.Organization, error,
+) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT ("+userAccountOutputExpr+`),
+					(`+organizationOutputExpr+`)
+			FROM UserAccount u
+			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
+			INNER JOIN Organization o ON o.id = j.organization_id
+			WHERE u.id = @id AND j.organization_id = @orgId AND j.user_role = @role`,
+		pgx.NamedArgs{"id": userID, "orgId": orgID, "role": role},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := pgx.CollectExactlyOneRow[struct {
+		User types.UserAccount
+		Org  types.Organization
+	}](rows, pgx.RowToStructByPos)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, apierrors.ErrNotFound
+		} else {
+			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+		}
+	} else {
+		return &res.User, &res.Org, nil
+	}
+}

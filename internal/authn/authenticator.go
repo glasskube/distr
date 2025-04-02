@@ -26,3 +26,38 @@ func Chain[IN any, MID any, OUT any](a Authenticator[IN, MID], b Authenticator[M
 		}
 	})
 }
+
+func Chain3[IN any, MID1 any, MID2 any, OUT any](
+	a Authenticator[IN, MID1],
+	b Authenticator[MID1, MID2],
+	c Authenticator[MID2, OUT],
+) Authenticator[IN, OUT] {
+	return AuthenticatorFunc[IN, OUT](func(ctx context.Context, in IN) (out OUT, err error) {
+		if mid1, err := a.Authenticate(ctx, in); err != nil {
+			return out, err
+		} else if mid2, err := b.Authenticate(ctx, mid1); err != nil {
+			return out, err
+		} else {
+			return c.Authenticate(ctx, mid2)
+		}
+	})
+}
+
+func Chain4[IN any, MID1 any, MID2 any, MID3 any, OUT any](
+	a Authenticator[IN, MID1],
+	b Authenticator[MID1, MID2],
+	c Authenticator[MID2, MID3],
+	d Authenticator[MID3, OUT],
+) Authenticator[IN, OUT] {
+	return AuthenticatorFunc[IN, OUT](func(ctx context.Context, in IN) (out OUT, err error) {
+		if mid1, err := a.Authenticate(ctx, in); err != nil {
+			return out, err
+		} else if mid2, err := b.Authenticate(ctx, mid1); err != nil {
+			return out, err
+		} else if mid3, err := c.Authenticate(ctx, mid2); err != nil {
+			return out, err
+		} else {
+			return d.Authenticate(ctx, mid3)
+		}
+	})
+}
