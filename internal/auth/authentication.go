@@ -17,35 +17,25 @@ import (
 // Authentication supports Bearer (classic JWT) and AccessToken (PAT) headers and uses authinfo.DbAuthenticator
 // to verify the token against the database, thereby ensuring the user exists in the database.
 var Authentication = authn.New(
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
-			jwt.Authenticator(authjwt.JWTAuth),
-		),
-		authn.Chain(
-			authinfo.JWTAuthenticator(),
-			authinfo.DbAuthenticator(),
-		),
+	authn.Chain4(
+		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
+		jwt.Authenticator(authjwt.JWTAuth),
+		authinfo.JWTAuthenticator(),
+		authinfo.DbAuthenticator(),
 	),
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("AccessToken"))),
-			authkey.Authenticator(),
-		),
-		authn.Chain(
-			authinfo.AuthKeyAuthenticator(),
-			authinfo.DbAuthenticator(),
-		),
+	authn.Chain4(
+		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("AccessToken"))),
+		authkey.Authenticator(),
+		authinfo.AuthKeyAuthenticator(),
+		authinfo.DbAuthenticator(),
 	),
 )
 
 // AgentAuthentication supports Bearer JWT tokens
 var AgentAuthentication = authn.New(
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
-			jwt.Authenticator(authjwt.JWTAuth),
-		),
+	authn.Chain3(
+		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
+		jwt.Authenticator(authjwt.JWTAuth),
 		authinfo.JWTAuthenticator(),
 		// TODO either a check for token audience or a new DbAuthenticator that verifies the given credentials against the DB
 	),
@@ -54,18 +44,14 @@ var AgentAuthentication = authn.New(
 // ArtifactsAuthentication supports Basic auth login for OCI clients, where the password should be a PAT.
 // The given PAT is verified against the database, to make sure that the user still exists.
 var ArtifactsAuthentication = authn.New(
-	authn.Chain(
-		authn.Chain(
-			token.NewExtractor(
-				token.WithExtractorFuncs(token.FromBasicAuth()),
-				token.WithErrorHeaders(map[string]string{"WWW-Authenticate": "Basic realm=\"Distr\""}),
-			),
-			authkey.Authenticator(),
+	authn.Chain4(
+		token.NewExtractor(
+			token.WithExtractorFuncs(token.FromBasicAuth()),
+			token.WithErrorHeaders(map[string]string{"WWW-Authenticate": "Basic realm=\"Distr\""}),
 		),
-		authn.Chain(
-			authinfo.AuthKeyAuthenticator(),
-			authinfo.DbAuthenticator(),
-		),
+		authkey.Authenticator(),
+		authinfo.AuthKeyAuthenticator(),
+		authinfo.DbAuthenticator(),
 	),
 )
 

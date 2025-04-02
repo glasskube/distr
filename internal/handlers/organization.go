@@ -51,15 +51,17 @@ func updateOrganization(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if organization.Slug != nil {slugPattern := "^[a-z0-9]+((\\.|_|__|-+)[a-z0-9]+)*$"
-	slugMaxLength := 64
-	if matched, _ := regexp.MatchString(slugPattern, *organization.Slug); !matched {
-		http.Error(w, "Slug is invalid", http.StatusBadRequest)
-		return
-	} else if len(*organization.Slug) > slugMaxLength {
-		http.Error(w, "Slug too long (max 64 chars)", http.StatusBadRequest)
-		return
-	}}
+	if organization.Slug != nil {
+		slugPattern := "^[a-z0-9]+((\\.|_|__|-+)[a-z0-9]+)*$"
+		slugMaxLength := 64
+		if matched, _ := regexp.MatchString(slugPattern, *organization.Slug); !matched {
+			http.Error(w, "Slug is invalid", http.StatusBadRequest)
+			return
+		} else if len(*organization.Slug) > slugMaxLength {
+			http.Error(w, "Slug too long (max 64 chars)", http.StatusBadRequest)
+			return
+		}
+	}
 
 	if organization.ID == uuid.Nil {
 		organization.ID = existingOrganization.ID
