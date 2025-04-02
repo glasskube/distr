@@ -24,7 +24,7 @@ import (
 )
 
 func DeploymentTargetsRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getDeploymentTargets)
 	r.Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {

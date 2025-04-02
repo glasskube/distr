@@ -19,7 +19,7 @@ import (
 )
 
 func OrganizationRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganization)
 	r.With(requireUserRoleVendor).Put("/", updateOrganization)
 	r.Route("/branding", OrganizationBrandingRouter)

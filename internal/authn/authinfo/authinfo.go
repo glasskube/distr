@@ -12,8 +12,6 @@ type AuthInfo interface {
 	CurrentOrgID() *uuid.UUID
 	CurrentUserEmailVerified() bool
 	Token() any
-	CurrentUser() *types.UserAccount
-	CurrentOrg() *types.Organization
 }
 
 type AgentAuthInfo interface {

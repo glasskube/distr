@@ -25,7 +25,6 @@ import (
 )
 
 func SettingsRouter(r chi.Router) {
-	r.Use(middleware.RequireUser)
 	r.Post("/user", userSettingsUpdateHandler)
 	r.Route("/verify", func(r chi.Router) {
 		r.With(requestVerificationMailRateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)

@@ -24,8 +24,7 @@ import (
 )
 
 func UserAccountsRouter(r chi.Router) {
-	r.Use(middleware.RequireUser)
-	r.With(requireUserRoleVendor, middleware.RequireUserOrgRole).Group(func(r chi.Router) {
+	r.With(requireUserRoleVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
 		r.Route("/{userId}", func(r chi.Router) {

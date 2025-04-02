@@ -16,7 +16,7 @@ import (
 )
 
 func MetricsRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole, requireUserRoleVendor)
+	r.Use(middleware.RequireOrgAndRole, requireUserRoleVendor)
 	r.Get("/uptime", getUptime)
 }
 

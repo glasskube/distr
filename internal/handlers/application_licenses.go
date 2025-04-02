@@ -20,7 +20,7 @@ import (
 )
 
 func ApplicationLicensesRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole, middleware.LicensingFeatureFlagEnabledMiddleware)
+	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
 	r.With(requireUserRoleVendor).Post("/", createApplicationLicense)
 	r.Route("/{applicationLicenseId}", func(r chi.Router) {

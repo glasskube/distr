@@ -135,33 +135,8 @@ func getTokenIdKey(token any, id uuid.UUID) string {
 	return fmt.Sprintf("%v-%v", prefix, id)
 }
 
-var RequireOrgID = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
-	if value.CurrentOrgID() == nil {
-		return authn.ErrBadAuthentication
-	} else {
-		return nil
-	}
-})
-
-var RequireUser = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
-	if value.CurrentUser() == nil {
-		return authn.ErrBadAuthentication
-	} else {
-		return nil
-	}
-})
-
-var RequireUserOrgRole = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
-	if value.CurrentOrgID() == nil || value.CurrentOrg() == nil ||
-		value.CurrentUser() == nil || value.CurrentUserRole() == nil {
-		return authn.ErrBadAuthentication
-	} else {
-		return nil
-	}
-})
-
-var RequireUserRole = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
-	if value.CurrentUserRole() == nil {
+var RequireOrgAndRole = auth.Authentication.ValidatorMiddleware(func(value *authinfo.DbAuthInfo) error {
+	if value.CurrentOrgID() == nil || value.CurrentOrg() == nil || value.CurrentUserRole() == nil {
 		return authn.ErrBadAuthentication
 	} else {
 		return nil

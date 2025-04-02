@@ -21,7 +21,7 @@ import (
 )
 
 func DeploymentsRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)

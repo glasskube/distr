@@ -22,7 +22,7 @@ import (
 )
 
 func ApplicationsRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getApplications)
 	r.With(requireUserRoleVendor).Post("/", createApplication)
 	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)

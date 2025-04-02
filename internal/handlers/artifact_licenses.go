@@ -18,7 +18,7 @@ import (
 )
 
 func ArtifactLicensesRouter(r chi.Router) {
-	r.Use(middleware.RequireUserOrgRole, requireUserRoleVendor, middleware.RegistryFeatureFlagEnabledMiddleware)
+	r.Use(middleware.RequireOrgAndRole, requireUserRoleVendor, middleware.RegistryFeatureFlagEnabledMiddleware)
 	r.Get("/", getArtifactLicenses)
 	r.Post("/", createArtifactLicense)
 	r.Route("/{artifactLicenseId}", func(r chi.Router) {
