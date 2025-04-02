@@ -31,6 +31,7 @@ func SettingsRouter(r chi.Router) {
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
 	})
 	r.Route("/tokens", func(r chi.Router) {
+		r.Use(middleware.RequireOrgAndRole)
 		r.Get("/", getAccessTokensHandler())
 		r.Post("/", createAccessTokenHandler())
 		r.Route("/{id}", func(r chi.Router) {
