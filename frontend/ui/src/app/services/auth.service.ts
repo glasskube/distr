@@ -126,14 +126,14 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
             error: (e) => {
               if (e instanceof HttpErrorResponse && e.status == 401) {
                 auth.logout();
-                removeJwtQueryParamAndRefresh();
+                removeJwtQueryParamAndRefresh(claims?.email);
               }
             },
           })
         );
       } else {
         auth.logout();
-        removeJwtQueryParamAndRefresh();
+        removeJwtQueryParamAndRefresh(claims?.email);
         return throwError(() => new Error('no token or token has expired'));
       }
     } catch (cause) {
@@ -144,18 +144,23 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   }
 };
 
-function removeJwtQueryParamAndRefresh() {
+function removeJwtQueryParamAndRefresh(email?: string) {
   const url = new URL(location.href);
   if (url.searchParams.has('jwt')) {
     url.searchParams.delete('jwt');
   }
-  if (url.href.includes('/join')) {
+  if (url.pathname === '/join') {
+    url.pathname = '/forgot';
     url.searchParams.append('reason', 'invite-expired');
-  } else if (url.href.includes('/reset')) {
+  } else if (url.pathname === '/reset') {
+    url.pathname = '/forgot';
     url.searchParams.append('reason', 'reset-expired');
   } else {
+    url.pathname = '/login';
     url.searchParams.append('reason', 'session-expired');
   }
-  history.pushState({}, '', url);
-  location.reload();
+  if (email) {
+    url.searchParams.append('email', email);
+  }
+  location.assign(url);
 }

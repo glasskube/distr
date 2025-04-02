@@ -62,16 +62,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         takeUntil(this.destroyed$)
       )
       .subscribe((reason) => {
-        if (reason === 'invite-expired') {
-          this.toast.error(
-            'Your invite link has expired. To finalize your account setup, ' +
-              'please click on the Forgot Password link and enter your email address there.'
-          );
-        } else if (reason === 'reset-expired') {
-          this.toast.error(
-            'Your password reset link has expired. Please click on the Forgot Password link ' +
-              'to get a new reset link.'
-          );
+        if (reason === 'password-reset') {
+          this.toast.success('Your password has been updated, you can now log in.');
         } else if (reason === 'session-expired') {
           this.toast.success('You have been logged out because your session has expired.');
         }
