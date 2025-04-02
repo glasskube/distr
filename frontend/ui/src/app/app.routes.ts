@@ -83,7 +83,8 @@ const jwtAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: Route
       return true;
     }
   } else {
-    return router.createUrlTree(['/login']);
+    const reason = route.queryParamMap.get('reason');
+    return router.createUrlTree(['/login'], reason ? {queryParams: {reason}} : undefined);
   }
 };
 

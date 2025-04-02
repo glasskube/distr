@@ -54,6 +54,28 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.toast.success('Account activated successfully. You can now log in!');
         }
       });
+    this.route.queryParams
+      .pipe(
+        map((params) => params['reason']),
+        filter((reason) => reason),
+        distinctUntilChanged(),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((reason) => {
+        if (reason === 'invite-expired') {
+          this.toast.error(
+            'Your invite link has expired. To finalize your account setup, ' +
+              'please click on the Forgot Password link and enter your email address there.'
+          );
+        } else if (reason === 'reset-expired') {
+          this.toast.error(
+            'Your password reset link has expired. Please click on the Forgot Password link ' +
+              'to get a new reset link.'
+          );
+        } else if (reason === 'session-expired') {
+          this.toast.success('You have been logged out because your session has expired.');
+        }
+      });
   }
 
   public ngOnDestroy(): void {

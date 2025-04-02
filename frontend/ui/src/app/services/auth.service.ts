@@ -126,14 +126,14 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
             error: (e) => {
               if (e instanceof HttpErrorResponse && e.status == 401) {
                 auth.logout();
-                location.reload();
+                removeJwtQueryParamAndRefresh();
               }
             },
           })
         );
       } else {
         auth.logout();
-        location.reload();
+        removeJwtQueryParamAndRefresh();
         return throwError(() => new Error('no token or token has expired'));
       }
     } catch (cause) {
@@ -143,3 +143,19 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 };
+
+function removeJwtQueryParamAndRefresh() {
+  const url = new URL(location.href);
+  if (url.searchParams.has('jwt')) {
+    url.searchParams.delete('jwt');
+  }
+  if (url.href.includes('/join')) {
+    url.searchParams.append('reason', 'invite-expired');
+  } else if (url.href.includes('/reset')) {
+    url.searchParams.append('reason', 'reset-expired');
+  } else {
+    url.searchParams.append('reason', 'session-expired');
+  }
+  history.pushState({}, '', url);
+  location.reload();
+}
