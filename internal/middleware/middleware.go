@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/distr/internal/auth"
@@ -90,19 +92,47 @@ func SentryUser(h http.Handler) http.Handler {
 	})
 }
 
+func AgentSentryUser(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if hub := sentry.GetHubFromContext(ctx); hub != nil {
+			if auth, err := auth.AgentAuthentication.Get(ctx); err == nil {
+				hub.Scope().SetUser(sentry.User{
+					ID: auth.CurrentDeploymentTargetID().String(),
+				})
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 func RateLimitCurrentUserIdKeyFunc(r *http.Request) (string, error) {
 	if auth, err := auth.Authentication.Get(r.Context()); err != nil {
 		return "", err
 	} else {
-		prefix := ""
-		switch auth.Token().(type) {
-		case jwt.Token:
-			prefix = "jwt"
-		case authkey.Key:
-			prefix = "authkey"
-		}
-		return fmt.Sprintf("%v-%v", prefix, auth.CurrentUserID()), nil
+		return getTokenIdKey(auth.Token(), auth.CurrentUserID()), nil
 	}
+}
+
+func RateLimitCurrentDeploymentTargetIdKeyFunc(r *http.Request) (string, error) {
+	if auth, err := auth.AgentAuthentication.Get(r.Context()); err != nil {
+		return "", err
+	} else {
+		return getTokenIdKey(auth.Token(), auth.CurrentDeploymentTargetID()), nil
+	}
+}
+
+func getTokenIdKey(token any, id uuid.UUID) string {
+	prefix := ""
+	switch token.(type) {
+	case jwt.Token:
+		prefix = "jwt"
+	case authkey.Key:
+		prefix = "authkey"
+	default:
+		panic("unknown token type")
+	}
+	return fmt.Sprintf("%v-%v", prefix, id)
 }
 
 var RequireOrgID = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {

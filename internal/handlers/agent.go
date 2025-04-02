@@ -45,8 +45,7 @@ func AgentRouter(r chi.Router) {
 
 		r.With(
 			auth.AgentAuthentication.Middleware,
-			middleware.RequireOrgID,
-			middleware.SentryUser,
+			middleware.AgentSentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
 		).Group(func(r chi.Router) {
@@ -329,10 +328,10 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		log := internalctx.GetLogger(ctx)
 		auth := auth.AgentAuthentication.Require(ctx)
 		orgId := auth.CurrentOrgID()
-		targetId := auth.CurrentUserID()
+		targetId := auth.CurrentDeploymentTargetID()
 
 		if deploymentTarget, err :=
-			db.GetDeploymentTarget(ctx, targetId, orgId); errors.Is(err, apierrors.ErrNotFound) {
+			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
@@ -381,5 +380,5 @@ var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 var rateLimitPerAgent = httprate.Limit(
 	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
 	1*time.Minute,
-	httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc),
+	httprate.WithKeyFuncs(middleware.RateLimitCurrentDeploymentTargetIdKeyFunc),
 )

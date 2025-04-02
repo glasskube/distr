@@ -39,3 +39,24 @@ func (i *SimpleAuthInfo) CurrentUser() *types.UserAccount {
 func (i *SimpleAuthInfo) CurrentOrg() *types.Organization {
 	panic("SimpleAuthInfo does not contain the current org")
 }
+
+type SimpleAgentAuthInfo struct {
+	deploymentTargetID uuid.UUID
+	organizationID     uuid.UUID
+	rawToken           any
+}
+
+// CurrentDeploymentTargetID implements AgentAuthInfo.
+func (i *SimpleAgentAuthInfo) CurrentDeploymentTargetID() uuid.UUID {
+	return i.deploymentTargetID
+}
+
+// CurrentOrgID implements AgentAuthInfo.
+func (i *SimpleAgentAuthInfo) CurrentOrgID() uuid.UUID {
+	return i.organizationID
+}
+
+// Token implements AgentAuthInfo.
+func (i *SimpleAgentAuthInfo) Token() any {
+	return i.rawToken
+}

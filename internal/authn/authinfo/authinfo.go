@@ -15,3 +15,9 @@ type AuthInfo interface {
 	CurrentUser() *types.UserAccount
 	CurrentOrg() *types.Organization
 }
+
+type AgentAuthInfo interface {
+	CurrentDeploymentTargetID() uuid.UUID
+	CurrentOrgID() uuid.UUID
+	Token() any
+}

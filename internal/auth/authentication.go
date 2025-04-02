@@ -20,7 +20,7 @@ var Authentication = authn.New(
 	authn.Chain4(
 		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
 		jwt.Authenticator(authjwt.JWTAuth),
-		authinfo.JWTAuthenticator(),
+		authinfo.UserJWTAuthenticator(),
 		authinfo.DbAuthenticator(),
 	),
 	authn.Chain4(
@@ -36,7 +36,7 @@ var AgentAuthentication = authn.New(
 	authn.Chain3(
 		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
 		jwt.Authenticator(authjwt.JWTAuth),
-		authinfo.JWTAuthenticator(),
+		authinfo.AgentJWTAuthenticator(),
 		// for agents, db check is done in the agent auth middleware, therefore no DbAuthenticator here
 	),
 )
