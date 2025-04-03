@@ -268,3 +268,19 @@ func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role typ
 		return &res.User, &res.Org, nil
 	}
 }
+
+func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`UPDATE UserAccount SET last_logged_in_at = now() WHERE id = @id`,
+		pgx.NamedArgs{"id": userID},
+	)
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	if err != nil {
+		err = fmt.Errorf("could not update last_logged_in_at on UserAccount: %w", err)
+	}
+	return err
+}
