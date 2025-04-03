@@ -39,7 +39,10 @@ func GenerateDefaultToken(user types.UserAccount, org types.OrganizationWithUser
 }
 
 func GenerateResetToken(user types.UserAccount) (jwt.Token, string, error) {
-	return generateUserToken(user, nil, env.ResetTokenValidDuration(), map[string]any{PasswordResetKey: true})
+	return generateUserToken(user, nil, env.ResetTokenValidDuration(), map[string]any{
+		PasswordResetKey:     true,
+		UserEmailVerifiedKey: true,
+	})
 }
 
 func GenerateVerificationTokenValidFor(user types.UserAccount) (jwt.Token, string, error) {

@@ -77,15 +77,17 @@ func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 		SET email = @email,
 			name = @name,
 			password_hash = @password_hash,
-			password_salt = @password_salt
+			password_salt = @password_salt,
+			email_verified_at = @email_verified_at
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"id":            userAccount.ID,
-			"email":         userAccount.Email,
-			"password_hash": userAccount.PasswordHash,
-			"password_salt": userAccount.PasswordSalt,
-			"name":          userAccount.Name,
+			"id":                userAccount.ID,
+			"email":             userAccount.Email,
+			"password_hash":     userAccount.PasswordHash,
+			"password_salt":     userAccount.PasswordSalt,
+			"name":              userAccount.Name,
+			"email_verified_at": userAccount.EmailVerifiedAt,
 		},
 	)
 	if err != nil {

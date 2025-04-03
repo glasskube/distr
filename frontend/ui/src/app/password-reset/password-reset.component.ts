@@ -35,7 +35,7 @@ export class PasswordResetComponent {
       try {
         await lastValueFrom(this.settings.updateUserSettings({password: this.form.value.password!}));
         await lastValueFrom(this.auth.logout());
-        location.assign(`/login?email=${encodeURIComponent(this.email ?? '')}`);
+        location.assign(`/login?email=${encodeURIComponent(this.email ?? '')}&reason=password-reset`);
       } catch (e) {
         this.errorMessage = getFormDisplayedError(e);
       } finally {
