@@ -32,10 +32,17 @@ export interface Vulnerability {
   severity: VulnerabilitySeverity[];
 }
 
-export interface Artifact extends HasDownloads {
+export interface BaseArtifact {
   id: string;
   name: string;
 }
+
+export interface BaseArtifactVersion {
+  id: string;
+  name: string;
+}
+
+export interface Artifact extends BaseArtifact, HasDownloads {}
 
 export interface TaggedArtifactVersion extends HasDownloads {
   id: string;

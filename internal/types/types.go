@@ -67,3 +67,7 @@ func (target *Digest) Scan(src any) error {
 func (src Digest) TextValue() (pgtype.Text, error) {
 	return pgtype.Text{String: v1.Hash(src).String(), Valid: true}, nil
 }
+
+func (h Digest) MarshalJSON() ([]byte, error) {
+	return v1.Hash(h).MarshalJSON()
+}
