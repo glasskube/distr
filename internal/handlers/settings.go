@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/distr/internal/util"
+
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
 
@@ -66,6 +68,11 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error("failed to hash password", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	}
+
+	if user.EmailVerifiedAt == nil && auth.CurrentUserEmailVerified() {
+		// because reset tokens can also verify the users email address
+		user.EmailVerifiedAt = util.PtrTo(time.Now())
 	}
 
 	if err := db.UpdateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
