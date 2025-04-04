@@ -129,6 +129,8 @@
                       Error
                     } @else if (drs | isStale) {
                       Stale
+                    } @else if (drs.type === 'progressing') {
+                      Progressing
                     } @else {
                       OK
                     }

@@ -37,6 +37,6 @@ export type DeploymentType = 'docker' | 'kubernetes';
 
 export type HelmChartType = 'repository' | 'oci';
 
-export type DeploymentStatusType = 'ok' | 'error';
+export type DeploymentStatusType = 'ok' | 'progressing' | 'error';
 
 export type DeploymentTargetScope = 'cluster' | 'namespace';

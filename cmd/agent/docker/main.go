@@ -9,6 +9,7 @@ import (
 
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -58,7 +59,8 @@ loop:
 						logger.Error("self update failed", zap.Error(err))
 						// TODO: Support status without revision ID?
 						if resource.Deployment != nil {
-							if err := client.Status(ctx, resource.Deployment.RevisionID, "", err); err != nil {
+							if err :=
+								client.StatusWithError(ctx, resource.Deployment.RevisionID, "", err); err != nil {
 								logger.Error("failed to send status", zap.Error(err))
 							}
 						}
@@ -91,6 +93,29 @@ loop:
 				continue
 			}
 
+			progressCtx, progressCancel := context.WithCancel(ctx)
+			go func(ctx context.Context) {
+				tick := time.Tick(interval)
+				for {
+					select {
+					case <-progressCtx.Done():
+						logger.Info("stop sending progress updates")
+						return
+					case <-tick:
+						logger.Info("sending progress update")
+						err := client.Status(
+							ctx,
+							resource.Deployment.RevisionID,
+							types.DeploymentStatusTypeProgressing,
+							"applying docker compose…",
+						)
+						if err != nil {
+							logger.Warn("error updating status", zap.Error(err))
+						}
+					}
+				}
+			}(progressCtx)
+
 			var agentDeployment *AgentDeployment
 			var status string
 			_, err = agentauth.EnsureAuth(ctx, resource.Deployment.AgentDeployment)
@@ -100,7 +125,10 @@ loop:
 				multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
 			}
 
-			if statusErr := client.Status(ctx, resource.Deployment.RevisionID, status, err); statusErr != nil {
+			progressCancel()
+
+			if statusErr :=
+				client.StatusWithError(ctx, resource.Deployment.RevisionID, status, err); statusErr != nil {
 				logger.Error("failed to send status", zap.Error(statusErr))
 			}
 		}

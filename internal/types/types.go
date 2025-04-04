@@ -27,8 +27,9 @@ const (
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
 
-	DeploymentStatusTypeOK    DeploymentStatusType = "ok"
-	DeploymentStatusTypeError DeploymentStatusType = "error"
+	DeploymentStatusTypeOK          DeploymentStatusType = "ok"
+	DeploymentStatusTypeProgressing DeploymentStatusType = "progressing"
+	DeploymentStatusTypeError       DeploymentStatusType = "error"
 
 	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
