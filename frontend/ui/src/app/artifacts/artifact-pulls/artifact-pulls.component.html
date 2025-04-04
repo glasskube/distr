@@ -18,14 +18,18 @@
                   @if (pull.userAccount) {
                     {{ pull.userAccount.name ?? pull.userAccount.email }}
                   } @else {
-                    unknown
+                    <span class="text-gray-500 dark:text-gray-400">unknown</span>
                   }
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  {{ pull.remoteAddress }}
+                  @if (pull.remoteAddress) {
+                    {{ formatRemoteAddress(pull.remoteAddress) }}
+                  } @else {
+                    <span class="text-gray-500 dark:text-gray-400">unknown</span>
+                  }
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  {{ pull.createdAt | date: 'medium' }}
+                  {{ pull.createdAt | date: 'short' }}
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   {{ pull.artifact.name + '@' + pull.artifactVersion.name }}

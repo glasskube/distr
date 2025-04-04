@@ -473,32 +473,6 @@ func GetArtifactVersion(ctx context.Context, orgName, name, reference string) (*
 	return &result, nil
 }
 
-func GetDigestArtifactVersion(ctx context.Context, orgName, name, reference string) (*types.ArtifactVersion, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(
-		ctx,
-		`SELECT DISTINCT `+artifactVersionOutputExpr+`
-		FROM Artifact a
-		JOIN Organization o ON o.id = a.organization_id
-		JOIN ArtifactVersion v ON a.id = v.artifact_id
-		WHERE o.slug = @orgName
-			AND a.name = @name
-			AND v.name = @reference`,
-		pgx.NamedArgs{"orgName": orgName, "name": name, "reference": reference},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
-	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersion])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = apierrors.ErrNotFound
-		}
-		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
-	}
-	return &result, nil
-}
-
 func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
@@ -565,7 +539,7 @@ func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPa
 	}
 }
 
-func CreateArtifactPullLogEntry(ctx context.Context, versionID uuid.UUID, userID uuid.UUID, remoteAddress string) error {
+func CreateArtifactPullLogEntry(ctx context.Context, versionID, userID uuid.UUID, remoteAddress string) error {
 	db := internalctx.GetDb(ctx)
 	remoteAddressPtr := &remoteAddress
 	if remoteAddress == "" {

@@ -25,7 +25,7 @@ func (a *auditor) AuditPull(ctx context.Context, nameStr string, reference strin
 	if name, err := name.Parse(nameStr); err != nil {
 		return err
 	} else if digestVersion, err :=
-		db.GetDigestArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
+		db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
 		return err
 	} else {
 		return db.CreateArtifactPullLogEntry(

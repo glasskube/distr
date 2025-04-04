@@ -4,7 +4,7 @@ import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faDownload, faFile, faLightbulb, faWarning} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap, tap} from 'rxjs';
+import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
