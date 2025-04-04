@@ -80,7 +80,12 @@ func (c *Client) StatusWithError(ctx context.Context, revisionID uuid.UUID, mess
 	return c.Status(ctx, revisionID, statusType, message)
 }
 
-func (c *Client) Status(ctx context.Context, revisionID uuid.UUID, statusType types.DeploymentStatusType, message string) error {
+func (c *Client) Status(
+	ctx context.Context,
+	revisionID uuid.UUID,
+	statusType types.DeploymentStatusType,
+	message string,
+) error {
 	deploymentStatus := api.AgentDeploymentStatus{
 		RevisionID: revisionID,
 		Message:    message,
