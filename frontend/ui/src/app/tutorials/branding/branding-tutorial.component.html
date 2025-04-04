@@ -1,0 +1,45 @@
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
+  <div class="mx-auto max-w-screen-lg px-4">
+
+    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+      <div class="overflow-x-auto">
+
+        <app-tutorial-stepper
+          #stepper
+          [linear]="true"
+          class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          <cdk-step label="Welcome">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                some explanation bla bla bla
+
+                <button (click)="continueFromWelcome()">
+                  Next
+                </button>
+              </div>
+            </div>
+          </cdk-step>
+          <cdk-step label="Customize Branding" [stepControl]="brandingFormGroup">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                some explanation bla bla bla
+
+                <form [formGroup]="brandingFormGroup" (ngSubmit)="complete()">
+                  <button (click)="backToWelcome()" type="button">
+                    Previous
+                  </button>
+
+                  <button type="submit">
+                    Complete
+                  </button>
+                </form>
+
+              </div>
+            </div>
+          </cdk-step>
+        </app-tutorial-stepper>
+
+      </div>
+    </div>
+  </div>
+</section>
