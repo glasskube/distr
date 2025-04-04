@@ -636,7 +636,12 @@ func EnsureArtifactTagLimitForInsert(ctx context.Context, orgID uuid.UUID) (bool
 		return result.Ok, nil
 	}
 }
-func GetArtifactVersionPulls(ctx context.Context, orgID uuid.UUID, count int, before time.Time) ([]types.ArtifactVersionPull, error) {
+func GetArtifactVersionPulls(
+	ctx context.Context,
+	orgID uuid.UUID,
+	count int,
+	before time.Time,
+) ([]types.ArtifactVersionPull, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
