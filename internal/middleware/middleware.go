@@ -28,6 +28,7 @@ func ContextInjectorMiddleware(db *pgxpool.Pool, mailer mail.Mailer) func(next h
 			ctx := r.Context()
 			ctx = internalctx.WithDb(ctx, db)
 			ctx = internalctx.WithMailer(ctx, mailer)
+			ctx = internalctx.WithRequestIPAddress(ctx, r.RemoteAddr)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -134,6 +134,7 @@ func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mai
 		WithMiddlewares(
 			chimiddleware.Recoverer,
 			chimiddleware.RequestID,
+			chimiddleware.RealIP,
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,
