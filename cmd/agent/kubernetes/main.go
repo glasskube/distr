@@ -109,7 +109,24 @@ func main() {
 			}
 		}
 
+		progressCtx, progressCancel := context.WithCancel(ctx)
+		go func(ctx context.Context) {
+			tick := time.Tick(interval)
+			for {
+				select {
+				case <-progressCtx.Done():
+					logger.Info("stop sending progress updates")
+					break
+				case <-tick:
+					logger.Info("sending progress update")
+					pushProgressingStatus(ctx, *res.Deployment)
+				}
+			}
+		}(progressCtx)
+
 		runInstallOrUpgrade(ctx, res.Namespace, *res.Deployment, currentDeployment)
+
+		progressCancel()
 	}
 
 	logger.Info("shutting down")
@@ -207,12 +224,24 @@ func runInstallOrUpgrade(
 }
 
 func pushStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, status string) {
-	if err := agentClient.Status(ctx, deployment.RevisionID, status, nil); err != nil {
+	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeOK, status); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
 	}
 }
+
+func pushProgressingStatus(ctx context.Context, deployment api.KubernetesAgentDeployment) {
+	if err := agentClient.Status(
+		ctx,
+		deployment.RevisionID,
+		types.DeploymentStatusTypeOK,
+		"helm operation in progress",
+	); err != nil {
+		logger.Warn("status push failed", zap.Error(err))
+	}
+}
+
 func pushErrorStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, error error) {
-	if err := agentClient.Status(ctx, deployment.RevisionID, "", error); err != nil {
+	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeError, error.Error()); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
 	}
 }
