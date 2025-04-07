@@ -16,20 +16,20 @@ import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {AutotrimDirective} from "../../directives/autotrim.directive";
-import {faCircleCheck} from "@fortawesome/free-regular-svg-icons";
-import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from "rxjs";
-import {OrganizationBranding} from "../../../../../../sdk/js/src";
-import {base64ToBlob} from "../../../util/blob";
-import {getFormDisplayedError} from "../../../util/errors";
-import {HttpErrorResponse} from "@angular/common/http";
-import {ToastService} from "../../services/toast.service";
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
+import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
+import {OrganizationBranding} from '../../../../../../sdk/js/src';
+import {base64ToBlob} from '../../../util/blob';
+import {getFormDisplayedError} from '../../../util/errors';
+import {HttpErrorResponse} from '@angular/common/http';
+import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 
 const defaultBrandingDescription = `# Welcome
 
 In this Customer Portal you can manage your deployments.
-`
+`;
 
 @Component({
   selector: 'app-branding-tutorial',
@@ -75,19 +75,29 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   // (customer invite probably can't be checked, because even if one exists, they could have been invited by somebody else)
 
   async ngOnInit() {
-    this.brandingFormGroup.controls.title.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe(status => {
+    /*this.brandingFormGroup.controls.title.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe(status => {
       this.brandingFormGroup.controls.titleDone.patchValue(status !== 'INVALID');
     })
     this.brandingFormGroup.controls.description.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe(status => {
       this.brandingFormGroup.controls.descriptionDone.patchValue(status !== 'INVALID');
-    })
+    })*/
 
     try {
       this.organizationBranding = await lastValueFrom(this.brandingService.get());
       this.brandingFormGroup.patchValue({
         title: this.organizationBranding.title,
+        titleDone: !!this.organizationBranding.title,
         description: this.organizationBranding.description || defaultBrandingDescription,
+        descriptionDone: !!this.organizationBranding.description,
       });
+      if (this.organizationBranding.title) {
+        this.brandingFormGroup.controls.title.disable();
+        this.brandingFormGroup.controls.titleDone.disable();
+      }
+      if (this.organizationBranding.description) {
+        this.brandingFormGroup.controls.description.disable();
+        this.brandingFormGroup.controls.descriptionDone.disable();
+      }
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
@@ -105,25 +115,18 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     this.stepper.next();
   }
 
-  protected back() {
-    // const oldStep = this.stepper.selected!;
-    // const wasCompleted = oldStep.completed;
-    this.stepper.previous(); // why does this set completed to true if its not submitting ????
-    /*if (!wasCompleted) {
-      oldStep.completed = false;
-    }*/
-  }
-
   protected async continueFromBranding() {
     this.brandingFormGroup.markAllAsTouched();
+    console.log(this.brandingFormGroup);
     if (this.brandingFormGroup.valid) {
       // TODO put tutorial state
       // this.stepper.selected!.completed = true;
 
       this.loading.set(true);
+      const formVal = this.brandingFormGroup.getRawValue();
       const formData = new FormData();
-      formData.set('title', this.brandingFormGroup.value.title ?? '');
-      // formData.set('description', this.form.value.description ?? '');
+      formData.set('title', formVal.title);
+      formData.set('description', formVal.description);
 
       const id = this.organizationBranding?.id;
       let req: Observable<OrganizationBranding>;
@@ -144,12 +147,15 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
       } finally {
         this.loading.set(false);
       }
+    } else if (this.brandingFormGroup.disabled) {
+      this.stepper.selected!.completed = true;
+      this.stepper.next();
     }
   }
 
   protected async sendInviteMail() {
     this.inviteFormGroup.markAllAsTouched();
-    if(this.inviteFormGroup.valid) {
+    if (this.inviteFormGroup.valid) {
       this.loading.set(true);
       try {
         const result = await firstValueFrom(
