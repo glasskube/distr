@@ -17,7 +17,11 @@ import (
 var previousAuth = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
 var authClients = map[uuid.UUID]auth.Client{}
 
-func EnsureAuth(ctx context.Context, deployment api.AgentDeployment) (auth.Client, error) {
+func EnsureAuth(
+	ctx context.Context,
+	distrRegistryHost, jwt string,
+	deployment api.AgentDeployment,
+) (auth.Client, error) {
 	if err := os.MkdirAll(DockerConfigDir(deployment), 0o700); err != nil {
 		return nil, fmt.Errorf("could not create docker config dir for deployment: %w", err)
 	}
@@ -31,6 +35,16 @@ func EnsureAuth(ctx context.Context, deployment api.AgentDeployment) (auth.Clien
 		} else {
 			authClients[deployment.ID] = c
 			client = c
+		}
+
+		if distrRegistryHost != "" {
+			client.LoginWithOpts(
+				auth.WithLoginContext(ctx),
+				auth.WithLoginInsecure(),
+				auth.WithLoginHostname(distrRegistryHost),
+				auth.WithLoginUsername("unused"),
+				auth.WithLoginSecret(jwt),
+			)
 		}
 	}
 

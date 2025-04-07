@@ -22,14 +22,15 @@ import (
 )
 
 var (
-	interval         = 5 * time.Second
-	logger           = util.Require(zap.NewDevelopment())
-	agentClient      = util.Require(agentclient.NewFromEnv(logger))
-	k8sConfigFlags   = genericclioptions.NewConfigFlags(true)
-	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
-	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
-	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
-	agentVersionId   = os.Getenv("DISTR_AGENT_VERSION_ID")
+	interval          = 5 * time.Second
+	logger            = util.Require(zap.NewDevelopment())
+	agentClient       = util.Require(agentclient.NewFromEnv(logger))
+	k8sConfigFlags    = genericclioptions.NewConfigFlags(true)
+	k8sClient         = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	k8sDynamicClient  = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	k8sRestMapper     = util.Require(k8sConfigFlags.ToRESTMapper())
+	agentVersionId    = os.Getenv("DISTR_AGENT_VERSION_ID")
+	distrRegistryHost = os.Getenv("DISTR_REGISTRY_HOST")
 )
 
 func init() {

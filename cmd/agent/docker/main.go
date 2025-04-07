@@ -16,10 +16,11 @@ import (
 )
 
 var (
-	interval       = 5 * time.Second
-	logger         = util.Require(zap.NewDevelopment())
-	client         = util.Require(agentclient.NewFromEnv(logger))
-	agentVersionID = os.Getenv("DISTR_AGENT_VERSION_ID")
+	interval          = 5 * time.Second
+	logger            = util.Require(zap.NewDevelopment())
+	client            = util.Require(agentclient.NewFromEnv(logger))
+	agentVersionID    = os.Getenv("DISTR_AGENT_VERSION_ID")
+	distrRegistryHost = os.Getenv("DISTR_REGISTRY_HOST")
 )
 
 func init() {
@@ -118,7 +119,7 @@ loop:
 
 			var agentDeployment *AgentDeployment
 			var status string
-			_, err = agentauth.EnsureAuth(ctx, resource.Deployment.AgentDeployment)
+			_, err = agentauth.EnsureAuth(ctx, distrRegistryHost, client.RawToken(), resource.Deployment.AgentDeployment)
 			if err != nil {
 				logger.Error("docker auth error", zap.Error(err))
 			} else if agentDeployment, status, err = ApplyComposeFile(ctx, *resource.Deployment); err == nil {
