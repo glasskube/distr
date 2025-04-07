@@ -25,6 +25,8 @@ import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
+import {TutorialsService} from '../../services/tutorials.service';
+import {TutorialProgress} from '../../types/tutorials';
 
 const defaultBrandingDescription = `# Welcome
 
@@ -54,9 +56,11 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   protected readonly faB = faB;
   protected readonly faLightbulb = faLightbulb;
   @ViewChild('stepper') private stepper!: CdkStepper;
-  private toast = inject(ToastService);
+  protected readonly toast = inject(ToastService);
   protected readonly brandingService = inject(OrganizationBrandingService);
   protected readonly usersService = inject(UsersService);
+  protected readonly tutorialsService = inject(TutorialsService);
+  private progress?: TutorialProgress;
   private organizationBranding?: OrganizationBranding;
   protected readonly welcomeFormGroup = new FormGroup({});
   protected readonly brandingFormGroup = new FormGroup({
@@ -75,12 +79,15 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   // (customer invite probably can't be checked, because even if one exists, they could have been invited by somebody else)
 
   async ngOnInit() {
-    /*this.brandingFormGroup.controls.title.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe(status => {
-      this.brandingFormGroup.controls.titleDone.patchValue(status !== 'INVALID');
-    })
-    this.brandingFormGroup.controls.description.statusChanges.pipe(takeUntil(this.destroyed$)).subscribe(status => {
-      this.brandingFormGroup.controls.descriptionDone.patchValue(status !== 'INVALID');
-    })*/
+    try {
+      this.progress = await lastValueFrom(this.tutorialsService.get('branding'));
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
+        // it's a valid use case for a tutorial progress not to exist yet
+        this.toast.error(msg);
+      }
+    }
 
     try {
       this.organizationBranding = await lastValueFrom(this.brandingService.get());
@@ -109,9 +116,21 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected continueFromWelcome() {
-    // TODO put tutorial state
-    this.brandingService.get();
+  protected async continueFromWelcome() {
+    if(!this.progress) {
+      this.loading.set(true);
+      try {
+        this.progress = await lastValueFrom(this.tutorialsService.save({tutorial: 'branding', data: {welcome: true}}));
+        this.stepper.next();
+      } catch(e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.loading.set(false);
+      }
+    }
     this.stepper.next();
   }
 
