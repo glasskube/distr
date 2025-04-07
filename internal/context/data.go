@@ -90,3 +90,14 @@ func WithArtifactLicense(ctx context.Context, license *types.ArtifactLicense) co
 	ctx = context.WithValue(ctx, ctxKeyArtifactLicense, license)
 	return ctx
 }
+
+func GetRequestIPAddress(ctx context.Context) string {
+	if val, ok := ctx.Value(ctxKeyIPAddress).(string); ok {
+		return val
+	}
+	panic("no IP address in context")
+}
+
+func WithRequestIPAddress(ctx context.Context, address string) context.Context {
+	return context.WithValue(ctx, ctxKeyIPAddress, address)
+}
