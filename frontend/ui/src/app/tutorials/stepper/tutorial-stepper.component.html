@@ -1,7 +1,7 @@
-<div class="sm:max-w-180">
+<div class="">
   <div class="space-y-6 sm:space-y-8">
     <ol
-      class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800 sm:justify-center md:flex-row md:items-center lg:gap-6">
+      class="flex flex-col gap-4 rounded-lg p-4 dark:bg-gray-800 sm:justify-center md:flex-row md:items-center lg:gap-6">
       @for (step of steps; track i; let i = $index; let last = $last) {
         <li
           [class.text-gray-500]="!isCurrentStep(i)"
@@ -13,7 +13,7 @@
           <p class="text-sm font-medium leading-tight">{{ step.label }}</p>
         </li>
 
-        @if(!last) {
+        @if (!last) {
           <div class="hidden h-px w-4 shrink-0 bg-gray-200 dark:bg-gray-700 md:block lg:w-16"></div>
         }
       }

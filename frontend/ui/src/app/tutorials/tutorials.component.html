@@ -1,14 +1,11 @@
 <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
   <div class="mx-auto max-w-screen-lg px-4">
-
     <div
       class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
       role="alert">
       <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
       <div>
-        <div class="font-medium">
-          Learn how to use distr bla bla bla
-        </div>
+        <div class="font-medium">Learn how to use distr bla bla bla</div>
       </div>
     </div>
 
@@ -29,8 +26,9 @@
                   </a>
                 </div>
                 <div class="flex justify-stretch sm:justify-end space-x-2.5">
-                  <a [routerLink]="['/', 'tutorials', tutorial.id]"
-                     class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                  <a
+                    [routerLink]="['/', 'tutorials', tutorial.id]"
+                    class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                     Start Tutorial <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
                   </a>
                 </div>

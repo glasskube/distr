@@ -9,7 +9,7 @@ import {
   faBoxesStacked,
   faDownload,
   faLightbulb,
-  faPalette
+  faPalette,
 } from '@fortawesome/free-solid-svg-icons';
 
 interface Tutorial {
@@ -30,17 +30,21 @@ export class TutorialsComponent {
   protected readonly faLightbulb = faLightbulb;
   protected readonly faArrowRight = faArrowRight;
 
-  protected readonly tutorials: Tutorial[] = [{
-    name: 'Branding and Customer Portal',
-    id: 'branding',
-    icon: this.faPalette
-  }, {
-    name: 'Applications and Agents',
-    id: 'agents',
-    icon: this.faBoxesStacked
-  }, {
-    name: 'Artifact Registry',
-    id: 'registry',
-    icon: this.faBox
-  }]
+  protected readonly tutorials: Tutorial[] = [
+    {
+      name: 'Branding and Customer Portal',
+      id: 'branding',
+      icon: this.faPalette,
+    },
+    {
+      name: 'Applications and Agents',
+      id: 'agents',
+      icon: this.faBoxesStacked,
+    },
+    {
+      name: 'Artifact Registry',
+      id: 'registry',
+      icon: this.faBox,
+    },
+  ];
 }
