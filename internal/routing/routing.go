@@ -35,6 +35,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 	r := chi.NewRouter()
 	r.Use(
 		chimiddleware.RequestID,
+		chimiddleware.RealIP,
 		middleware.Sentry,
 		middleware.LoggerCtxMiddleware(logger),
 		middleware.LoggingMiddleware,
@@ -65,6 +66,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 			r.Route("/agent-versions", handlers.AgentVersionsRouter)
 			r.Route("/artifacts", handlers.ArtifactsRouter)
 			r.Route("/artifact-licenses", handlers.ArtifactLicensesRouter)
+			r.Route("/artifact-pulls", handlers.ArtifactPullsRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)
 			r.Route("/metrics", handlers.MetricsRouter)

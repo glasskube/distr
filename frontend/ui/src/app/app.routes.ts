@@ -32,6 +32,7 @@ import {VerifyComponent} from './verify/verify.component';
 import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
 import {UsersService} from './services/users.service';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
+import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 
@@ -204,6 +205,11 @@ export const routes: Routes = [
             path: 'artifact-licenses',
             children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
             data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
+          },
+          {
+            path: 'artifact-pulls',
+            component: ArtifactPullsComponent,
             canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
           },
           {
