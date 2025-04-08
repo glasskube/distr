@@ -3,9 +3,10 @@ package types
 import "time"
 
 type TutorialProgressEvent struct {
-	StepID string `json:"stepId"`
-	TaskID string `json:"taskId"`
-	Value  any    `json:"value,omitempty"`
+	StepID    string    `json:"stepId"`
+	TaskID    string    `json:"taskId"`
+	Value     any       `json:"value,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type TutorialProgressRequest struct {

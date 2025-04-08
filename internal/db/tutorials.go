@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -44,6 +45,7 @@ func SaveTutorialProgress(
 	progress *types.TutorialProgressRequest,
 ) (any, error) {
 	db := internalctx.GetDb(ctx)
+	progress.CreatedAt = time.Now()
 	rows, err := db.Query(ctx, `
 		INSERT INTO UserAccount_Tutorial as uat (useraccount_id, tutorial, events, completed_at)
 		VALUES (
