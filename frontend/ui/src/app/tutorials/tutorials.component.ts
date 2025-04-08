@@ -13,16 +13,30 @@ import {
   faPalette,
 } from '@fortawesome/free-solid-svg-icons';
 import {Tutorial, TutorialProgress} from '../types/tutorials';
-import {catchError, Observable, of} from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  from,
+  map,
+  Observable,
+  of,
+  reduce,
+  scan,
+  shareReplay,
+  startWith,
+  switchMap,
+  tap,
+  toArray,
+} from 'rxjs';
 import {TutorialsService} from '../services/tutorials.service';
 import {AsyncPipe} from '@angular/common';
 import {UuidComponent} from '../components/uuid';
 
 interface TutorialView {
-  id: string;
+  id: Tutorial;
   name: string;
   icon: IconDefinition;
-  progress: Observable<TutorialProgress | undefined>;
+  progress?: TutorialProgress;
 }
 
 @Component({
@@ -36,6 +50,7 @@ export class TutorialsComponent {
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faLightbulb = faLightbulb;
   protected readonly faArrowRight = faArrowRight;
+  protected readonly faCheck = faCheck;
   private readonly tutorialsService = inject(TutorialsService);
 
   protected readonly tutorials: TutorialView[] = [
@@ -43,20 +58,37 @@ export class TutorialsComponent {
       name: 'Branding and Customer Portal',
       id: 'branding',
       icon: this.faPalette,
-      progress: this.tutorialsService.get('branding').pipe(catchError(() => of({tutorial: 'branding' as Tutorial}))),
     },
     {
       name: 'Applications and Agents',
       id: 'agents',
       icon: this.faBoxesStacked,
-      progress: this.tutorialsService.get('agents').pipe(catchError(() => of({tutorial: 'agents' as Tutorial}))),
     },
     {
       name: 'Artifact Registry',
       id: 'registry',
       icon: this.faBox,
-      progress: this.tutorialsService.get('registry').pipe(catchError(() => of({tutorial: 'registry' as Tutorial}))),
     },
   ];
-  protected readonly faCheck = faCheck;
+
+  protected readonly tutorialsWithProgress$ = from(this.tutorials).pipe(
+    concatMap((t) => {
+      return this.tutorialsService.get(t.id).pipe(
+        map((progress) => {
+          return {
+            ...t,
+            progress,
+          } as TutorialView;
+        }),
+        catchError(() => of(t))
+      );
+    }),
+    reduce((acc, val) => [...acc, val], [] as TutorialView[]),
+    shareReplay(1)
+  );
+
+  protected readonly allCompleted$ = this.tutorialsWithProgress$.pipe(
+    map((tutorials) => !tutorials.some((t) => !t.progress?.completedAt)),
+    tap(console.log)
+  );
 }
