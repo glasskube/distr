@@ -75,7 +75,7 @@ architecture-beta
 
 ### Docker
 
-The Distr Hub is distributed as a Docker image distributed via ghcr.io.
+The Distr Hub is distributed as a Docker image via ghcr.io.
 Check out [`deploy/docker`](deploy/docker) for our example deployment using Docker Compose.
 To get started quickly, do the following:
 
