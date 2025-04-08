@@ -194,14 +194,12 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   private prepareCustomerStep() {
     // prepare the email form
-    const email = (this.progress?.events ?? []).find(
-      (e) => e.stepId === customerStep && e.taskId === customerTaskInvite
-    )?.value;
+    const email = (this.progress?.events ?? [])
+      .reverse()
+      .find((e) => e.stepId === customerStep && e.taskId === customerTaskInvite)?.value;
     if (email && typeof email === 'string') {
       this.inviteFormGroup.controls.customerEmail.patchValue(email);
       this.inviteFormGroup.controls.inviteDone.patchValue(true);
-      this.inviteFormGroup.controls.customerEmail.disable();
-      this.inviteFormGroup.controls.inviteDone.disable();
     }
 
     const login = (this.progress?.events ?? []).find(
@@ -209,8 +207,9 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     );
     if (login) {
       this.inviteFormGroup.controls.customerConfirmed.patchValue(true);
-      this.inviteFormGroup.controls.customerConfirmed.disable();
     }
+
+    this.inviteFormGroup.markAsPristine();
 
     const claims = this.auth.getClaims();
     if (claims?.email) {
@@ -222,7 +221,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   protected async sendInviteMail() {
     this.inviteFormGroup.markAllAsTouched();
-    if (this.inviteFormGroup.controls.customerEmail.valid) {
+    if (this.inviteFormGroup.controls.customerEmail.valid && this.inviteFormGroup.controls.customerEmail.dirty) {
       this.loading.set(true);
       try {
         const email = this.inviteFormGroup.value.customerEmail!;
@@ -233,6 +232,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
           })
         );
         this.inviteFormGroup.controls.inviteDone.patchValue(true);
+        this.inviteFormGroup.markAsPristine();
         this.progress = await lastValueFrom(
           this.tutorialsService.save(tutorialId, {
             stepId: customerStep,
@@ -253,7 +253,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   protected async completeAndExit() {
     this.inviteFormGroup.markAllAsTouched();
-    if (this.inviteFormGroup.valid) {
+    if (this.inviteFormGroup.valid && this.inviteFormGroup.dirty) {
       this.loading.set(true);
       this.progress = await lastValueFrom(
         this.tutorialsService.save(tutorialId, {
