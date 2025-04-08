@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.6](https://github.com/glasskube/distr/compare/1.4.5...1.4.6) (2025-04-08)
+
+
+### Other
+
+* **ui:** add loading spinner on deployment status modal ([#754](https://github.com/glasskube/distr/issues/754)) ([7fad29c](https://github.com/glasskube/distr/commit/7fad29c3709db5044fe4fa79d7a7ae3f97edda1d))
+
+
+### Performance
+
+* **backend:** optimize DB query to get DeploymentRevisionStatus ([#753](https://github.com/glasskube/distr/issues/753)) ([46be9e9](https://github.com/glasskube/distr/commit/46be9e98a3141b3f8b82eaf9cd51882e18b41b40))
+
 ## [1.4.5](https://github.com/glasskube/distr/compare/1.4.4...1.4.5) (2025-04-07)
 
 
