@@ -23,7 +23,7 @@ Distr is the easiest way to distribute enterprise software to customer-controlle
 - View & manage all deployments, artifacts, connected agents, self-managed & BYOC customers via the **intuitive web UI**
 - Let your customers control their deployments or download your artifacts via the **white-label customer portal**
 - Distribute specific versions of your application to specific customers with our licensing feature
-- Distribute OCI compatible artifacts (Docker images, Helm charts, Terraform Modules) to your customers with our **integrated OCI registry**
+- Distribute OCI compatible artifacts (Docker images, Helm charts, Terraform modules) to your customers with our **integrated OCI registry**
 - Access the API using our [**rich SDK**](#distr-sdk)
 - Fully open-source and [self-hostable](#self-hosting)
 
