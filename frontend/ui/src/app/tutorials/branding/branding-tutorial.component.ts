@@ -76,9 +76,9 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   private organizationBranding?: OrganizationBranding;
   protected readonly welcomeFormGroup = new FormGroup({});
   protected readonly brandingFormGroup = new FormGroup({
-    titleDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    titleDone: new FormControl<boolean>(false),
     title: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
-    descriptionDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    descriptionDone: new FormControl<boolean>(false),
     description: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
   });
   protected readonly inviteFormGroup = new FormGroup({
@@ -105,20 +105,15 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     // prepare branding step
     try {
       this.organizationBranding = await lastValueFrom(this.brandingService.get());
-      this.brandingFormGroup.patchValue({
-        title: this.organizationBranding.title,
-        titleDone: !!this.organizationBranding.title,
-        description: this.organizationBranding.description || defaultBrandingDescription,
-        descriptionDone: !!this.organizationBranding.description,
-      });
-      if (this.organizationBranding.title) {
-        this.brandingFormGroup.controls.title.disable();
-        this.brandingFormGroup.controls.titleDone.disable();
-      }
-      if (this.organizationBranding.description) {
-        this.brandingFormGroup.controls.description.disable();
-        this.brandingFormGroup.controls.descriptionDone.disable();
-      }
+      this.brandingFormGroup.patchValue(
+        {
+          title: this.organizationBranding.title,
+          titleDone: !!this.organizationBranding.title,
+          description: this.organizationBranding.description || defaultBrandingDescription,
+          descriptionDone: !!this.organizationBranding.description,
+        },
+        {emitEvent: false}
+      );
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
@@ -155,49 +150,44 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   protected async continueFromBranding() {
     this.brandingFormGroup.markAllAsTouched();
     if (this.brandingFormGroup.valid) {
-      this.loading.set(true);
-      const formVal = this.brandingFormGroup.getRawValue();
-      const formData = new FormData();
-      formData.set('title', formVal.title);
-      formData.set('description', formVal.description);
+      if (this.brandingFormGroup.dirty) {
+        this.loading.set(true);
+        const formVal = this.brandingFormGroup.getRawValue();
+        const formData = new FormData();
+        formData.set('title', formVal.title);
+        formData.set('description', formVal.description);
 
-      const id = this.organizationBranding?.id;
-      let req: Observable<OrganizationBranding>;
-      if (id) {
-        req = this.brandingService.update(formData);
-      } else {
-        req = this.brandingService.create(formData);
-      }
-
-      try {
-        this.organizationBranding = await lastValueFrom(req);
-        this.progress = await lastValueFrom(
-          this.tutorialsService.save(tutorialId, {
-            stepId: brandingStep,
-            taskId: brandingTaskSet,
-          })
-        );
-        this.brandingFormGroup.controls.title.disable();
-        this.brandingFormGroup.controls.titleDone.patchValue(true);
-        this.brandingFormGroup.controls.titleDone.disable();
-        this.brandingFormGroup.controls.description.disable();
-        this.brandingFormGroup.controls.descriptionDone.patchValue(true);
-        this.brandingFormGroup.controls.descriptionDone.disable();
-
-        this.prepareCustomerStep();
-        this.stepper.next();
-      } catch (e) {
-        const msg = getFormDisplayedError(e);
-        if (msg) {
-          this.toast.error(msg);
+        const id = this.organizationBranding?.id;
+        let req: Observable<OrganizationBranding>;
+        if (id) {
+          req = this.brandingService.update(formData);
+        } else {
+          req = this.brandingService.create(formData);
         }
-      } finally {
-        this.loading.set(false);
+
+        try {
+          this.organizationBranding = await lastValueFrom(req);
+          this.brandingFormGroup.markAsPristine();
+          this.progress = await lastValueFrom(
+            this.tutorialsService.save(tutorialId, {
+              stepId: brandingStep,
+              taskId: brandingTaskSet,
+            })
+          );
+        } catch (e) {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return;
+        } finally {
+          this.loading.set(false);
+        }
       }
-    } else if (this.brandingFormGroup.disabled) {
-      // when all inputs are disabled, the form group is disabled too, i.e. branding has already existed before
+
+      this.brandingFormGroup.controls.titleDone.patchValue(true);
+      this.brandingFormGroup.controls.descriptionDone.patchValue(true);
       this.prepareCustomerStep();
-      this.stepper.selected!.completed = true; // because completed is only true automatically, if form group status is valid
       this.stepper.next();
     }
   }

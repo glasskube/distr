@@ -68,6 +68,9 @@
                         name="title"
                         id="title"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                      @if (brandingFormGroup.controls.title.touched && brandingFormGroup.controls.title.errors) {
+                        <div class="mt-2 text-sm text-red-500">Please enter this field.</div>
+                      }
                     </div>
                   </li>
                   <li class="mb-10 ms-8">
@@ -87,6 +90,11 @@
                         id="description"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
                       </textarea>
+                      @if (
+                        brandingFormGroup.controls.description.touched && brandingFormGroup.controls.description.errors
+                      ) {
+                        <div class="mt-2 text-sm text-red-500">Please enter this field.</div>
+                      }
                     </div>
                   </li>
                 </ol>
