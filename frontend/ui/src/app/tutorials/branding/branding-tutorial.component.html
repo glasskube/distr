@@ -121,12 +121,12 @@
                       You can either choose another one of your email addresses, but a lot of providers also support
                       addresses in the form of username<b>+customer</b>&commat;provider.tld, i.e. you might be able to
                       append <b>+something</b> to the username of your email, and receive it in the same mailbox.
+                      <!-- TODO dynamically generate the email address -->
                     </p>
                     <div class="mt-2 flex">
                       <input
                         [formControl]="inviteFormGroup.controls.customerEmail"
                         autotrim
-                        [disabled]="inviteFormGroup.controls.inviteDone.value ?? false"
                         type="email"
                         name="customerEmail"
                         id="customerEmail"
@@ -171,7 +171,11 @@
                     [disabled]="loading()"
                     type="submit"
                     class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                    Complete Tutorial
+                    @if(progress?.completedAt) {
+                      Back to Tutorial Overview
+                    } @else {
+                      Complete Tutorial
+                    }
                     <fa-icon class="ml-2" [icon]="faCheck"></fa-icon>
                   </button>
                 </div>

@@ -44,21 +44,16 @@ func saveTutorialProgress(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	tutorial := r.PathValue("tutorial")
 
-	progress, err := JsonBody[types.TutorialProgress](w, r)
+	req, err := JsonBody[types.TutorialProgressRequest](w, r)
 	if err != nil {
 		return
 	}
 
-	if progress.Tutorial != types.Tutorial(tutorial) {
-		http.Error(w, "invalid tutorial type", http.StatusBadRequest)
-		return
-	}
-
-	if err := db.SaveTutorialProgress(ctx, auth.CurrentUserID(), &progress); err != nil {
+	if res, err := db.SaveTutorialProgress(ctx, auth.CurrentUserID(), types.Tutorial(tutorial), &req); err != nil {
 		log.Warn("could not save tutorial progress", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, progress)
+		RespondJSON(w, res)
 	}
 }
