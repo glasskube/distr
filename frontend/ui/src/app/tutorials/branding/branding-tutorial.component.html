@@ -4,31 +4,41 @@
       <div class="overflow-x-auto">
         <app-tutorial-stepper #stepper class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
           <cdk-step label="Welcome" [stepControl]="welcomeFormGroup">
-            <div class="p-4 w-full">
-              <div>asdf</div>
+            <div class="px-20 py-8 w-full">
+
+              <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Branding and Customer Portal</h3>
+
+              <div class="text-gray-900 dark:text-white mb-12">
+                <p>
+                  In this tutorial you will learn how to customize the Distr Customer Portal for your own customers,
+                  and you will invite a new customer (which for tutorial purposes, will be you yourself).
+                </p>
+                <p class="mt-8">
+                  You can find additional resources on this topic in our <a href="https://distr.sh/docs/product/customer-portal/" class="text-primary-600 underline" target="_blank">docs</a>.
+                </p>
+              </div>
 
               <div class="gap-4 sm:flex sm:items-center sm:justify-between">
                 <a
                   [routerLink]="['..']"
                   class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
                   Exit Tutorial
-                  <fa-icon class="ml-2" [icon]="faRightToBracket"></fa-icon>
                 </a>
                 <button
                   (click)="continueFromWelcome()"
                   type="submit"
                   class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                  Continue
+                  Let's Go
                   <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
                 </button>
               </div>
             </div>
           </cdk-step>
           <cdk-step label="Branding Options" [stepControl]="brandingFormGroup">
-            <div class="p-4 w-full">
+            <div class="p-8 w-full">
               <form [formGroup]="brandingFormGroup" (ngSubmit)="continueFromBranding()">
                 <ol
-                  class="ml-4 relative text-gray-500 border-s border-gray-200 dark:border-gray-700 dark:text-gray-400">
+                  class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700 ">
                   <li class="mb-10 ms-8">
                     <span
                       class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
@@ -94,10 +104,10 @@
             </div>
           </cdk-step>
           <cdk-step label="Invite Customer" [stepControl]="inviteFormGroup">
-            <div class="p-4 w-full">
+            <div class="p-8 w-full">
               <form [formGroup]="inviteFormGroup" (ngSubmit)="completeAndExit()">
                 <ol
-                  class="ml-4 relative text-gray-500 border-s border-gray-200 dark:border-gray-700 dark:text-gray-400">
+                  class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700 ">
                   <li class="mb-10 ms-8">
                     <span
                       class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
