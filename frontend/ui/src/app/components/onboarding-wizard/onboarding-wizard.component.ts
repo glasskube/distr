@@ -27,6 +27,7 @@ import {
   HelmChartType,
 } from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
+import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
 
 @Component({
   selector: 'app-onboarding-wizard',
@@ -93,7 +94,14 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     ]),
     namespace: new FormControl<string>(
       {value: '', disabled: true},
-      {nonNullable: true, validators: [Validators.required]}
+      {
+        nonNullable: true,
+        validators: [
+          Validators.required,
+          Validators.maxLength(KUBERNETES_RESOURCE_MAX_LENGTH),
+          Validators.pattern(KUBERNETES_RESOURCE_NAME_REGEX),
+        ],
+      }
     ),
     clusterScope: new FormControl(
       {value: false, disabled: true},
