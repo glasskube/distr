@@ -74,15 +74,15 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   private organizationBranding?: OrganizationBranding;
   protected readonly welcomeFormGroup = new FormGroup({});
   protected readonly brandingFormGroup = new FormGroup({
-    titleDone: new FormControl<boolean>(false),
+    titleDone: new FormControl<boolean>(false, Validators.requiredTrue),
     title: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
-    descriptionDone: new FormControl<boolean>(false),
+    descriptionDone: new FormControl<boolean>(false, Validators.requiredTrue),
     description: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
   });
   protected readonly inviteFormGroup = new FormGroup({
     customerEmail: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
-    inviteDone: new FormControl<boolean>(false),
-    customerConfirmed: new FormControl<boolean>(false, {nonNullable: true}),
+    inviteDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    customerConfirmed: new FormControl<boolean>(false, Validators.requiredTrue),
   });
 
   async ngOnInit() {
@@ -125,15 +125,17 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
       this.loading.set(false);
     }
 
-    if(!this.progress) {
+    if (!this.progress) {
       this.loading.set(true);
       try {
-        this.progress = await lastValueFrom(this.tutorialsService.save(tutorialId, {
-          stepId: welcomeStep,
-          taskId: welcomeTaskStart
-        }));
+        this.progress = await lastValueFrom(
+          this.tutorialsService.save(tutorialId, {
+            stepId: welcomeStep,
+            taskId: welcomeTaskStart,
+          })
+        );
         this.stepper.next();
-      } catch(e) {
+      } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
           this.toast.error(msg);
@@ -165,10 +167,12 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
       try {
         this.organizationBranding = await lastValueFrom(req);
-        this.progress = await lastValueFrom(this.tutorialsService.save(tutorialId, {
-          stepId: brandingStep,
-          taskId: brandingTaskSet,
-        }));
+        this.progress = await lastValueFrom(
+          this.tutorialsService.save(tutorialId, {
+            stepId: brandingStep,
+            taskId: brandingTaskSet,
+          })
+        );
         this.brandingFormGroup.controls.title.disable();
         this.brandingFormGroup.controls.titleDone.patchValue(true);
         this.brandingFormGroup.controls.titleDone.disable();
@@ -188,7 +192,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
       }
     } else if (this.brandingFormGroup.disabled) {
       // when all inputs are disabled, the form group is disabled too, i.e. branding has already existed before
-      this.prepareCustomerStep()
+      this.prepareCustomerStep();
       this.stepper.selected!.completed = true; // because completed is only true automatically, if form group status is valid
       this.stepper.next();
     }
@@ -196,16 +200,20 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   private prepareCustomerStep() {
     // prepare the email form
-    const email = (this.progress?.events ?? []).find(e => e.stepId === customerStep && e.taskId === customerTaskInvite)?.value
-    if(email && typeof email === "string") {
+    const email = (this.progress?.events ?? []).find(
+      (e) => e.stepId === customerStep && e.taskId === customerTaskInvite
+    )?.value;
+    if (email && typeof email === 'string') {
       this.inviteFormGroup.controls.customerEmail.patchValue(email);
       this.inviteFormGroup.controls.inviteDone.patchValue(true);
       this.inviteFormGroup.controls.customerEmail.disable();
       this.inviteFormGroup.controls.inviteDone.disable();
     }
 
-    const login = (this.progress?.events ?? []).find(e => e.stepId === customerStep && e.taskId === customerTaskLogin)
-    if(login) {
+    const login = (this.progress?.events ?? []).find(
+      (e) => e.stepId === customerStep && e.taskId === customerTaskLogin
+    );
+    if (login) {
       this.inviteFormGroup.controls.customerConfirmed.patchValue(true);
       this.inviteFormGroup.controls.customerConfirmed.disable();
     }
@@ -213,10 +221,10 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   protected async sendInviteMail() {
     this.inviteFormGroup.markAllAsTouched();
-    if (this.inviteFormGroup.valid) {
+    if (this.inviteFormGroup.controls.customerEmail.valid) {
       this.loading.set(true);
       try {
-        const email = this.inviteFormGroup.value.customerEmail!
+        const email = this.inviteFormGroup.value.customerEmail!;
         await lastValueFrom(
           this.usersService.addUser({
             email,
@@ -224,11 +232,13 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
           })
         );
         this.inviteFormGroup.controls.inviteDone.patchValue(true);
-        this.progress = await lastValueFrom(this.tutorialsService.save(tutorialId, {
-          stepId: customerStep,
-          taskId: customerTaskInvite,
-          value: email,
-        }));
+        this.progress = await lastValueFrom(
+          this.tutorialsService.save(tutorialId, {
+            stepId: customerStep,
+            taskId: customerTaskInvite,
+            value: email,
+          })
+        );
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
@@ -242,20 +252,20 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   protected async completeAndExit() {
     this.inviteFormGroup.markAllAsTouched();
-    console.log(this.inviteFormGroup);
-    console.log(this.progress);
     if (this.inviteFormGroup.valid) {
       this.loading.set(true);
-      this.progress = await lastValueFrom(this.tutorialsService.save(tutorialId, {
-        stepId: customerStep,
-        taskId: customerTaskLogin,
-        markCompleted: true
-      }));
+      this.progress = await lastValueFrom(
+        this.tutorialsService.save(tutorialId, {
+          stepId: customerStep,
+          taskId: customerTaskLogin,
+          markCompleted: true,
+        })
+      );
       this.stepper.selected!.completed = true;
       this.loading.set(false);
       this.router.navigate(['tutorials']);
       this.toast.success('Congrats on finishing the tutorial! Good Job!');
-    } else if(this.progress?.completedAt) {
+    } else if (this.progress?.completedAt) {
       this.router.navigate(['tutorials']);
     }
   }

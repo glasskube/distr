@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -11,7 +13,6 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func TutorialsRouter(r chi.Router) {
@@ -27,7 +28,8 @@ func getTutorialProgress(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 	tutorial := r.PathValue("tutorial")
-	if progress, err := db.GetTutorialProgress(ctx, auth.CurrentUserID(), types.Tutorial(tutorial)); errors.Is(err, apierrors.ErrNotFound) {
+	if progress, err := db.GetTutorialProgress(ctx, auth.CurrentUserID(),
+		types.Tutorial(tutorial)); errors.Is(err, apierrors.ErrNotFound) {
 		http.NotFound(w, r)
 	} else if err != nil {
 		log.Warn("could not get tutorial progress", zap.Error(err))

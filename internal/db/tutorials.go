@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -11,7 +12,10 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.Tutorial) (*types.TutorialProgress, error) {
+func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.Tutorial) (
+	*types.TutorialProgress,
+	error,
+) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT uat.tutorial, uat.created_at, uat.events, uat.completed_at
@@ -33,11 +37,20 @@ func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.T
 	}
 }
 
-func SaveTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.Tutorial, progress *types.TutorialProgressRequest) (any, error) {
+func SaveTutorialProgress(
+	ctx context.Context,
+	userID uuid.UUID,
+	tutorial types.Tutorial,
+	progress *types.TutorialProgressRequest,
+) (any, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		INSERT INTO UserAccount_Tutorial as uat (useraccount_id, tutorial, events, completed_at)
-		VALUES (@userId, @tutorial, jsonb_build_array(@event::jsonb), CASE WHEN @markCompleted THEN current_timestamp ELSE NULL END)
+		VALUES (
+			@userId,
+			@tutorial,
+			jsonb_build_array(@event::jsonb), CASE WHEN @markCompleted THEN current_timestamp ELSE NULL END
+		)
 		ON CONFLICT (useraccount_id, tutorial) DO UPDATE
 			SET events = uat.events::jsonb || @event::jsonb,
 			    completed_at = CASE WHEN @markCompleted THEN current_timestamp ELSE uat.completed_at END
