@@ -75,19 +75,33 @@ architecture-beta
 
 ### Docker
 
-The Distr Hub is distributed as a Docker image.
+The Distr Hub is distributed as a Docker image distributed via ghcr.io.
 Check out [`deploy/docker`](deploy/docker) for our example deployment using Docker Compose.
 To get started quickly, do the following:
 
-<!-- x-release-please-start-version -->
-
 ```shell
-mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/download/1.4.6/deploy-docker.tar.bz2 | tar -jx
+mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/latest/download/deploy-docker.tar.bz2 | tar -jx
 # make necessary changes to the .env file
 docker-compose up -d
 ```
 
-<!-- x-release-please-end -->
+### Kubernetes
+
+Distr is also available as a Helm chart distributed via ghcr.io.
+Check out [`deploy/charts/distr`](deploy/charts/distr) for our Helm Chart source code.
+To install Distr in Kubernetes, simply run:
+
+```shell
+helm upgrade --install --wait --namespace distr --create-namespace \
+  distr oci://ghcr.io/glasskube/charts/distr \
+  --set postgresql.enabled=true --set minio.enabled=true
+```
+
+For a quick testing setup, you don't have to modify the values.
+However, if you intend to use distr in production, please revisit all available configuration values and adapt them accordingly.
+You can find them in the reference [values.yaml](https://artifacthub.io/packages/helm/distr/distr?modal=values) file.
+
+<hr>
 
 Register your first account at http://localhost:8080/register
 
