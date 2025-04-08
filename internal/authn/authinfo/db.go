@@ -51,7 +51,7 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 }
 
 func AgentDbAuthenticator() authn.Authenticator[AgentAuthInfo, *DbAuthInfo] {
-	return authn.AuthenticatorFunc[AgentAuthInfo, *DbAuthInfo](func(ctx context.Context, a AgentAuthInfo) (*DbAuthInfo, error) {
+	fn := func(ctx context.Context, a AgentAuthInfo) (*DbAuthInfo, error) {
 		userWithRole, org, err := db.GetUserAccountAndOrgForDeploymentTarget(ctx, a.CurrentDeploymentTargetID())
 		if errors.Is(err, apierrors.ErrNotFound) {
 			return nil, authn.ErrBadAuthentication
@@ -70,5 +70,6 @@ func AgentDbAuthenticator() authn.Authenticator[AgentAuthInfo, *DbAuthInfo] {
 			user: util.PtrTo(userWithRole.AsUserAccount()),
 			org:  org,
 		}, nil
-	})
+	}
+	return authn.AuthenticatorFunc[AgentAuthInfo, *DbAuthInfo](fn)
 }

@@ -29,10 +29,11 @@ type Client struct {
 	resourceEndpoint string
 	statusEndpoint   string
 
-	httpClient *http.Client
-	logger     *zap.Logger
-	token      jwt.Token
-	rawToken   string
+	httpClient     *http.Client
+	logger         *zap.Logger
+	token          jwt.Token
+	rawToken       string
+	tokenRefreshCh chan<- struct{}
 }
 
 func (c *Client) DockerResource(ctx context.Context) (*api.DockerAgentResource, error) {
@@ -140,9 +141,19 @@ func (c *Client) EnsureToken(ctx context.Context) error {
 			}
 		} else {
 			c.logger.Info("token refreshed")
+			if c.tokenRefreshCh != nil {
+				c.tokenRefreshCh <- struct{}{}
+			}
 		}
 	}
 	return nil
+}
+
+func (c *Client) OnTokenRefresh(ch chan<- struct{}) {
+	if c.tokenRefreshCh != nil {
+		close(c.tokenRefreshCh)
+	}
+	c.tokenRefreshCh = ch
 }
 
 func (c *Client) HasTokenExpired() bool {

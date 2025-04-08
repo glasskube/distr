@@ -8,5 +8,6 @@ func PtrCopy[T any](ptr *T) *T {
 	if ptr == nil {
 		return nil
 	}
-	return &*ptr
+	v := *ptr
+	return &v
 }

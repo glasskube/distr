@@ -17,7 +17,10 @@ func Authenticator() authn.RequestAuthenticator[Auth] {
 			err = authn.NewHttpHeaderError(
 				authn.ErrNoAuthentication,
 				http.Header{
-					"WWW-Authenticate": []string{`Bearer realm="http://localhost:8585/v2/",service="localhost:8585"`, `Basic realm="Distr"`},
+					"WWW-Authenticate": []string{
+						`Bearer realm="http://localhost:8585/v2/",service="localhost:8585"`,
+						`Basic realm="Distr"`,
+					},
 				},
 			)
 		} else {

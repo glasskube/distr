@@ -7,8 +7,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/containerd/log"
 	dockerconfig "github.com/docker/cli/cli/config"
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/google/uuid"
 	"oras.land/oras-go/pkg/auth"
 	dockerauth "oras.land/oras-go/pkg/auth/docker"
@@ -17,9 +19,13 @@ import (
 var previousAuth = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
 var authClients = map[uuid.UUID]auth.Client{}
 
+func init() {
+	_ = log.SetLevel("warn")
+}
+
 func EnsureAuth(
 	ctx context.Context,
-	distrRegistryHost, jwt string,
+	jwt string,
 	deployment api.AgentDeployment,
 ) (auth.Client, error) {
 	if err := os.MkdirAll(DockerConfigDir(deployment), 0o700); err != nil {
@@ -36,15 +42,16 @@ func EnsureAuth(
 			authClients[deployment.ID] = c
 			client = c
 		}
+	}
 
-		if distrRegistryHost != "" {
-			client.LoginWithOpts(
-				auth.WithLoginContext(ctx),
-				auth.WithLoginInsecure(),
-				auth.WithLoginHostname(distrRegistryHost),
-				auth.WithLoginUsername("unused"),
-				auth.WithLoginSecret(jwt),
-			)
+	if agentenv.DistrRegistryHost != "" {
+		if err := client.LoginWithOpts(
+			auth.WithLoginContext(ctx),
+			auth.WithLoginHostname(agentenv.DistrRegistryHost),
+			auth.WithLoginUsername("unused"),
+			auth.WithLoginSecret(jwt),
+		); err != nil {
+			return nil, fmt.Errorf("docker login failed for %v: %w", agentenv.DistrRegistryHost, err)
 		}
 	}
 
@@ -82,12 +89,4 @@ func DockerConfigDir(deployment api.AgentDeployment) string {
 
 func DockerConfigPath(deployment api.AgentDeployment) string {
 	return path.Join(DockerConfigDir(deployment), dockerconfig.ConfigFileName)
-}
-
-func DockerConfigEnv(deployment api.AgentDeployment) []string {
-	if len(deployment.RegistryAuth) > 0 {
-		return []string{dockerconfig.EnvOverrideConfigDir + "=" + DockerConfigDir(deployment)}
-	} else {
-		return nil
-	}
 }

@@ -50,7 +50,7 @@ var ArtifactsAuthentication = authn.New(
 			token.WithErrorHeaders(http.Header{"WWW-Authenticate": []string{"Basic realm=\"Distr\""}}),
 		),
 		authn.Alternative(
-			// Auhtenticate UserAccount with PAT
+			// Authenticate UserAccount with PAT
 			authn.Chain3(
 				authkey.Authenticator(),
 				authinfo.AuthKeyAuthenticator(),

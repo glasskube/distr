@@ -11,6 +11,7 @@ import (
 
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient"
+	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
@@ -22,23 +23,17 @@ import (
 )
 
 var (
-	interval          = 5 * time.Second
-	logger            = util.Require(zap.NewDevelopment())
-	agentClient       = util.Require(agentclient.NewFromEnv(logger))
-	k8sConfigFlags    = genericclioptions.NewConfigFlags(true)
-	k8sClient         = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
-	k8sDynamicClient  = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
-	k8sRestMapper     = util.Require(k8sConfigFlags.ToRESTMapper())
-	agentVersionId    = os.Getenv("DISTR_AGENT_VERSION_ID")
-	distrRegistryHost = os.Getenv("DISTR_REGISTRY_HOST")
+	logger           = util.Require(zap.NewDevelopment())
+	agentClient      = util.Require(agentclient.NewFromEnv(logger))
+	k8sConfigFlags   = genericclioptions.NewConfigFlags(true)
+	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
 )
 
 func init() {
-	if intervalStr, ok := os.LookupEnv("DISTR_INTERVAL"); ok {
-		interval = util.Require(time.ParseDuration(intervalStr))
-	}
-	if agentVersionId == "" {
-		logger.Warn("DISTR_AGENT_VERSION_ID is not set. self updates will be disabled")
+	if agentenv.AgentVersionID == "" {
+		logger.Warn("AgentVersionID is not set. self updates will be disabled")
 	}
 }
 
@@ -51,7 +46,14 @@ func main() {
 		logger.Info("received termination signal")
 		cancel()
 	}()
-	tick := time.Tick(interval)
+	tokenRefresh := make(chan struct{})
+	agentClient.OnTokenRefresh(tokenRefresh)
+	go func() {
+		for range tokenRefresh {
+			logger.Info("token refresh triggered")
+		}
+	}()
+	tick := time.Tick(agentenv.Interval)
 
 	for ctx.Err() == nil {
 		select {
@@ -112,10 +114,10 @@ func main() {
 
 		progressCtx, progressCancel := context.WithCancel(ctx)
 		go func(ctx context.Context) {
-			tick := time.Tick(interval)
+			tick := time.Tick(agentenv.Interval)
 			for {
 				select {
-				case <-progressCtx.Done():
+				case <-ctx.Done():
 					logger.Info("stop sending progress updates")
 					break
 				case <-tick:
@@ -134,8 +136,8 @@ func main() {
 }
 
 func runSelfUpdateIfNeeded(ctx context.Context, namespace string, targetVersion types.AgentVersion) bool {
-	if agentVersionId != "" {
-		if agentVersionId != targetVersion.ID.String() {
+	if agentenv.AgentVersionID != "" {
+		if agentenv.AgentVersionID != targetVersion.ID.String() {
 			logger.Info("agent version has changed. starting self-update")
 			if manifest, err := agentClient.Manifest(ctx); err != nil {
 				logger.Error("error fetching agent manifest", zap.Error(err))

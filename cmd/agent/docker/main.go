@@ -9,6 +9,7 @@ import (
 
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
+	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/multierr"
@@ -16,19 +17,13 @@ import (
 )
 
 var (
-	interval          = 5 * time.Second
-	logger            = util.Require(zap.NewDevelopment())
-	client            = util.Require(agentclient.NewFromEnv(logger))
-	agentVersionID    = os.Getenv("DISTR_AGENT_VERSION_ID")
-	distrRegistryHost = os.Getenv("DISTR_REGISTRY_HOST")
+	logger = util.Require(zap.NewDevelopment())
+	client = util.Require(agentclient.NewFromEnv(logger))
 )
 
 func init() {
-	if intervalStr, ok := os.LookupEnv("DISTR_INTERVAL"); ok {
-		interval = util.Require(time.ParseDuration(intervalStr))
-	}
-	if agentVersionID == "" {
-		logger.Warn("DISTR_AGENT_VERSION_ID is not set. self updates will be disabled")
+	if agentenv.AgentVersionID == "" {
+		logger.Warn("AgentVersionID is not set. self updates will be disabled")
 	}
 }
 
@@ -41,7 +36,7 @@ func main() {
 		logger.Info("received termination signal")
 		cancel()
 	}()
-	tick := time.Tick(interval)
+	tick := time.Tick(agentenv.Interval)
 loop:
 	for ctx.Err() == nil {
 		select {
@@ -53,8 +48,8 @@ loop:
 		if resource, err := client.DockerResource(ctx); err != nil {
 			logger.Error("failed to get resource", zap.Error(err))
 		} else {
-			if agentVersionID != "" {
-				if agentVersionID != resource.Version.ID.String() {
+			if agentenv.AgentVersionID != "" {
+				if agentenv.AgentVersionID != resource.Version.ID.String() {
 					logger.Info("agent version has changed. starting self-update")
 					if err := RunAgentSelfUpdate(ctx); err != nil {
 						logger.Error("self update failed", zap.Error(err))
@@ -96,10 +91,10 @@ loop:
 
 			progressCtx, progressCancel := context.WithCancel(ctx)
 			go func(ctx context.Context) {
-				tick := time.Tick(interval)
+				tick := time.Tick(agentenv.Interval)
 				for {
 					select {
-					case <-progressCtx.Done():
+					case <-ctx.Done():
 						logger.Info("stop sending progress updates")
 						return
 					case <-tick:
@@ -119,7 +114,7 @@ loop:
 
 			var agentDeployment *AgentDeployment
 			var status string
-			_, err = agentauth.EnsureAuth(ctx, distrRegistryHost, client.RawToken(), resource.Deployment.AgentDeployment)
+			_, err = agentauth.EnsureAuth(ctx, client.RawToken(), resource.Deployment.AgentDeployment)
 			if err != nil {
 				logger.Error("docker auth error", zap.Error(err))
 			} else if agentDeployment, status, err = ApplyComposeFile(ctx, *resource.Deployment); err == nil {
