@@ -105,15 +105,6 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     // prepare branding step
     try {
       this.organizationBranding = await lastValueFrom(this.brandingService.get());
-      this.brandingFormGroup.patchValue(
-        {
-          title: this.organizationBranding.title,
-          titleDone: !!this.organizationBranding.title,
-          description: this.organizationBranding.description || defaultBrandingDescription,
-          descriptionDone: !!this.organizationBranding.description,
-        },
-        {emitEvent: false}
-      );
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
@@ -123,6 +114,13 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     } finally {
       this.loading.set(false);
     }
+
+    this.brandingFormGroup.patchValue({
+      title: this.organizationBranding?.title,
+      titleDone: !!this.organizationBranding?.title,
+      description: this.organizationBranding?.description || defaultBrandingDescription,
+      descriptionDone: !!this.organizationBranding?.description,
+    });
 
     if (!this.progress) {
       this.loading.set(true);
