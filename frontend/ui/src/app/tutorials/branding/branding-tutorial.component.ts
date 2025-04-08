@@ -27,6 +27,7 @@ import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {TutorialsService} from '../../services/tutorials.service';
 import {TutorialProgress} from '../../types/tutorials';
+import {AuthService} from '../../services/auth.service';
 
 const defaultBrandingDescription = `# Welcome
 
@@ -66,6 +67,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   protected readonly faLightbulb = faLightbulb;
   @ViewChild('stepper') private stepper!: CdkStepper;
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
   protected readonly toast = inject(ToastService);
   protected readonly brandingService = inject(OrganizationBrandingService);
   protected readonly usersService = inject(UsersService);
@@ -84,6 +86,8 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     inviteDone: new FormControl<boolean>(false, Validators.requiredTrue),
     customerConfirmed: new FormControl<boolean>(false, Validators.requiredTrue),
   });
+  protected emailUsername?: string;
+  protected emailDomain?: string;
 
   async ngOnInit() {
     try {
@@ -216,6 +220,13 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     if (login) {
       this.inviteFormGroup.controls.customerConfirmed.patchValue(true);
       this.inviteFormGroup.controls.customerConfirmed.disable();
+    }
+
+    const claims = this.auth.getClaims();
+    if (claims?.email) {
+      const parts = claims.email.split('@');
+      this.emailUsername = parts[0];
+      this.emailDomain = parts[1];
     }
   }
 

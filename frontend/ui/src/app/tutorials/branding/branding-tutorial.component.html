@@ -120,8 +120,8 @@
                     <p class="mt-1 text-xs">
                       You can either choose another one of your email addresses, but a lot of providers also support
                       addresses in the form of username<b>+customer</b>&commat;provider.tld, i.e. you might be able to
-                      append <b>+something</b> to the username of your email, and receive it in the same mailbox.
-                      <!-- TODO dynamically generate the email address -->
+                      use {{ emailUsername }}<b>+customer</b>&commat;{{ emailDomain }} and receive it in the same
+                      mailbox.
                     </p>
                     <div class="mt-2 flex">
                       <input
