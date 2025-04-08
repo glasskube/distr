@@ -23,6 +23,11 @@
           "jsonpath": "$.version"
         },
         {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
           "type": "yaml",
           "path": "deploy/charts/distr/Chart.yaml",
           "jsonpath": "$.version"
@@ -30,7 +35,7 @@
         {
           "type": "yaml",
           "path": "deploy/charts/distr/Chart.yaml",
-          "jsonpath": "$.appVersion"
+          "jsonpath": "$.packages.\"\".version"
         }
       ],
       "changelog-sections": [
