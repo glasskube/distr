@@ -15,7 +15,6 @@ import {
   combineLatestWith,
   debounceTime,
   distinctUntilChanged,
-  EMPTY,
   filter,
   map,
   NEVER,
@@ -24,7 +23,6 @@ import {
   Subject,
   switchMap,
   takeUntil,
-  tap,
   withLatestFrom,
 } from 'rxjs';
 import {EditorComponent} from '../components/editor.component';
@@ -34,6 +32,7 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {LicensesService} from '../services/licenses.service';
 import {isArchived} from '../../util/dates';
+import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../util/validation';
 
 export type DeploymentFormValue = Partial<{
   deploymentTargetId: string;
@@ -72,7 +71,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     applicationId: this.fb.nonNullable.control('', Validators.required),
     applicationVersionId: this.fb.nonNullable.control('', Validators.required),
     applicationLicenseId: this.fb.nonNullable.control('', Validators.required),
-    releaseName: this.fb.nonNullable.control('', Validators.required),
+    releaseName: this.fb.nonNullable.control('', [
+      Validators.required,
+      Validators.maxLength(HELM_RELEASE_NAME_MAX_LENGTH),
+      Validators.pattern(HELM_RELEASE_NAME_REGEX),
+    ]),
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
   });
