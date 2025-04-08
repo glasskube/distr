@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.4.7](https://github.com/glasskube/distr/compare/1.4.6...1.4.7) (2025-04-08)
+
+
+### Bug Fixes
+
+* **ui:** deployed version text overflow ([#759](https://github.com/glasskube/distr/issues/759)) ([ee45edf](https://github.com/glasskube/distr/commit/ee45edf597dfa6748471d589277e64f4b0492664))
+
+
+### Other
+
+* **ui:** add Helm release name validation ([#757](https://github.com/glasskube/distr/issues/757)) ([a8adff4](https://github.com/glasskube/distr/commit/a8adff40dd68654b7ec661d5fb77b3d7fe9ae1ad))
+* **ui:** increase stale timeout to 60 secs ([#758](https://github.com/glasskube/distr/issues/758)) ([117e288](https://github.com/glasskube/distr/commit/117e28829e376499b8f56cff0e33b6cde6f54f73))
+
+## [1.4.6](https://github.com/glasskube/distr/compare/1.4.5...1.4.6) (2025-04-08)
+
+
+### Other
+
+* **ui:** add loading spinner on deployment status modal ([#754](https://github.com/glasskube/distr/issues/754)) ([7fad29c](https://github.com/glasskube/distr/commit/7fad29c3709db5044fe4fa79d7a7ae3f97edda1d))
+
+
+### Performance
+
+* **backend:** optimize DB query to get DeploymentRevisionStatus ([#753](https://github.com/glasskube/distr/issues/753)) ([46be9e9](https://github.com/glasskube/distr/commit/46be9e98a3141b3f8b82eaf9cd51882e18b41b40))
+
 ## [1.4.5](https://github.com/glasskube/distr/compare/1.4.4...1.4.5) (2025-04-07)
 
 
