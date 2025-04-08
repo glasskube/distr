@@ -38,6 +38,7 @@ import {UuidComponent} from '../uuid';
 import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {digestMessage} from '../../../util/crypto';
 
 @Component({
   selector: 'app-users',
@@ -173,4 +174,5 @@ export class UsersComponent implements OnDestroy {
   }
 
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly digestMessage = digestMessage;
 }

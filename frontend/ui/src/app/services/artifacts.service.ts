@@ -1,10 +1,9 @@
 import {inject, Injectable} from '@angular/core';
-import {combineLatestWith, first, from, lastValueFrom, map, Observable, of, switchMap, tap, withLatestFrom} from 'rxjs';
+import {map, Observable, of, switchMap, tap} from 'rxjs';
 import {digestMessage} from '../../util/crypto';
 import {AuthService} from './auth.service';
 import {HttpClient} from '@angular/common/http';
 import {DefaultReactiveList, ReactiveList} from './cache';
-import {Application} from '../../../../../sdk/js/src';
 
 export interface HasDownloads {
   downloadsTotal?: number;
@@ -43,7 +42,7 @@ export interface TaggedArtifactVersion extends HasDownloads {
   sbom?: string;
   createdAt: string;
   size: number;
-  tags: {name: string}[];
+  tags: { name: string }[];
   vulnerabilities: Vulnerability[];
   lastScannedAt?: string;
 }

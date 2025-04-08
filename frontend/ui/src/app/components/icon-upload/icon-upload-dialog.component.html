@@ -1,0 +1,73 @@
+<div class="relative p-4 w-full max-w-2xl max-h-full lg:mt-32">
+  <!-- Modal content -->
+  <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+    <!-- Modal header -->
+    <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Upload Icon</h3>
+      <button
+        type="button"
+        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+        (click)="dialogRef.dismiss()">
+        <fa-icon [icon]="faXmark"></fa-icon>
+        <span class="sr-only">Close modal</span>
+      </button>
+    </div>
+    <!-- Modal body -->
+    <div class="p-4 md:p-5 space-y-4">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="grid gap-4 mb-4 sm:mb-6 mt-6">
+          <div class="space-y-4">
+            <h2 class="text-xl font-bold dark:text-white">Portal Header</h2>
+            <div>
+              <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">
+                Icon
+              </label>
+              <div>
+                @if (iconSrc | async; as icon) {
+                  <img class="h-8 mb-4" [src]="icon" alt="Icon" />
+                  <button
+                    type="button"
+                    (click)="deleteIcon()"
+                    class="px-3 py-2 text-xs font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    Delete
+                  </button>
+                } @else {
+                  <input
+                    accept="image/svg+xml,image/png,image/jpeg,image/gif"
+                    (change)="onIconChange($event)"
+                    class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                    aria-describedby="file_input_help"
+                    id="file_input"
+                    type="file" />
+                }
+              </div>
+
+              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
+                SVG, PNG, JPG or GIF (recommended size 32px x 32px - square).
+                If not set, Gravatar will be used as fallback.
+              </p>
+              <div class="flex items-center space-x-2.5"></div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+    </div>
+    <!-- Modal footer -->
+    <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600 gap-2">
+      <button
+        (click)="dialogRef.close(false)"
+        type="button"
+        class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+        Cancel
+      </button>
+      <button
+        (click)="dialogRef.close(true)"
+        type="button"
+        [disabled]="data.requiredConfirmInputText && data.requiredConfirmInputText !== confirmInput.value"
+        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        Upload
+      </button>
+    </div>
+  </div>
+</div>

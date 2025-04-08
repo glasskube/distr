@@ -7,6 +7,7 @@ import {
   ConfirmDialogComponent,
   ConfirmMessage,
 } from '../components/confirm-dialog/confirm-dialog.component';
+import {IconUploadDialogComponent} from '../components/icon-upload/icon-upload-dialog.component';
 
 type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
@@ -61,6 +62,10 @@ export class OverlayService {
   public confirm(messageOrConfig: ConfirmConfig | string) {
     const config = typeof messageOrConfig === 'string' ? {message: {message: messageOrConfig}} : messageOrConfig;
     return this.showModal<boolean>(ConfirmDialogComponent, {data: config}).result();
+  }
+
+  public uploadIcon(context: IconUploadContext) {
+    return this.showModal<boolean>(IconUploadDialogComponent, {data: context}).result();
   }
 
   /**

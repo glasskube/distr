@@ -16,3 +16,10 @@ export interface DeploymentTargetAccessResponse {
   targetId: string;
   targetSecret: string;
 }
+
+export interface WithIcon {
+  id: string;
+  icon?: string;
+  iconFileName?: string;
+  iconContentType?: string;
+}
