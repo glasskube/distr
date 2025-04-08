@@ -27,7 +27,7 @@ interface TutorialView {
 
 @Component({
   selector: 'app-tutorials',
-  imports: [ReactiveFormsModule, FaIconComponent, RouterLink, AsyncPipe, UuidComponent],
+  imports: [ReactiveFormsModule, FaIconComponent, RouterLink, AsyncPipe],
   templateUrl: './tutorials.component.html',
 })
 export class TutorialsComponent {
