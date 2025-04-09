@@ -92,6 +92,14 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     try {
       this.progress = await lastValueFrom(this.tutorialsService.get(tutorialId));
+      if (this.progress.createdAt) {
+        if (!this.progress.completedAt) {
+          await this.continueFromWelcome();
+          await this.continueFromBranding();
+        } else {
+          this.stepper.steps.forEach((s) => (s.completed = true));
+        }
+      }
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg && e instanceof HttpErrorResponse && e.status !== 404) {
