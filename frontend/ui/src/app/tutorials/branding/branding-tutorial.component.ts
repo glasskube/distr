@@ -172,6 +172,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
               taskId: brandingTaskSet,
             })
           );
+          this.toast.success('Branding options have been updated');
         } catch (e) {
           const msg = getFormDisplayedError(e);
           if (msg) {
@@ -231,6 +232,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
         );
         this.inviteFormGroup.controls.inviteDone.patchValue(true);
         this.inviteFormGroup.markAsPristine();
+        this.toast.success('Invite email has been sent');
         this.progress = await lastValueFrom(
           this.tutorialsService.save(tutorialId, {
             stepId: customerStep,
