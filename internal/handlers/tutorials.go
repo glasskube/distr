@@ -17,10 +17,24 @@ import (
 
 func TutorialsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole, requireUserRoleVendor)
+	r.Get("/", getTutorialProgresses)
 	r.Route("/{tutorial}", func(r chi.Router) {
 		r.Get("/", getTutorialProgress)
 		r.Put("/", saveTutorialProgress)
 	})
+}
+
+func getTutorialProgresses(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	auth := auth.Authentication.Require(ctx)
+	if progresses, err := db.GetTutorialProgresses(ctx, auth.CurrentUserID()); err != nil {
+		log.Warn("could not get tutorial progresses", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, progresses)
+	}
 }
 
 func getTutorialProgress(w http.ResponseWriter, r *http.Request) {

@@ -12,7 +12,7 @@
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div class="overflow-x-auto">
         <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-          @for (tutorial of tutorialsWithProgress$ | async; track tutorial.id) {
+          @for (tutorial of tutorialsService.tutorialsProgress$ | async; track tutorial.id) {
             <li class="py-3 px-6 sm:py-4">
               <div class="flex items-center">
                 <div class="shrink-0 text-gray-900 dark:text-white">
@@ -50,10 +50,6 @@
             </li>
           }
         </ul>
-
-        @if (allCompleted$ | async; as completed) {
-          <!-- TODO show something special? -->
-        }
       </div>
     </div>
   </div>

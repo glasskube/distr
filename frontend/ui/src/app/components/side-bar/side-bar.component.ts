@@ -24,6 +24,7 @@ import {buildConfig} from '../../../buildconfig';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {AsyncPipe} from '@angular/common';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {TutorialsService} from '../../services/tutorials.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -42,6 +43,7 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
   public readonly featureFlags = inject(FeatureFlagService);
+  protected readonly tutorialsService = inject(TutorialsService);
   public feedbackAlert = true;
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;

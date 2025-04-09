@@ -13,13 +13,36 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const tutorialProgressOutExpr = " uat.tutorial, uat.created_at, uat.events, uat.completed_at "
+
+func GetTutorialProgresses(ctx context.Context, userID uuid.UUID) (
+	[]types.TutorialProgress,
+	error,
+) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT `+tutorialProgressOutExpr+`
+		FROM UserAccount_Tutorial uat
+		WHERE uat.useraccount_id = @userId`, pgx.NamedArgs{
+		"userId": userID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tutorial progresses: %w", err)
+	}
+	if res, err := pgx.CollectRows[types.TutorialProgress](rows, pgx.RowToStructByName); err != nil {
+		return nil, err
+	} else {
+		return res, nil
+	}
+}
+
 func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.Tutorial) (
 	*types.TutorialProgress,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT uat.tutorial, uat.created_at, uat.events, uat.completed_at
+		SELECT `+tutorialProgressOutExpr+`
 		FROM UserAccount_Tutorial uat
 		WHERE uat.useraccount_id = @userId AND uat.tutorial = @tutorial`, pgx.NamedArgs{
 		"userId":   userID,
@@ -56,7 +79,7 @@ func SaveTutorialProgress(
 		ON CONFLICT (useraccount_id, tutorial) DO UPDATE
 			SET events = uat.events::jsonb || @event::jsonb,
 			    completed_at = CASE WHEN @markCompleted THEN current_timestamp ELSE uat.completed_at END
-		RETURNING uat.tutorial, uat.created_at, uat.events, uat.completed_at`,
+		RETURNING `+tutorialProgressOutExpr,
 		pgx.NamedArgs{
 			"userId":        userID,
 			"tutorial":      tutorial,
