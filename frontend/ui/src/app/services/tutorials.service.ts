@@ -52,11 +52,14 @@ export class TutorialsService {
         }
       });
     })
-    // catchError(() => of(this.tutorials))
   );
 
   public readonly notAllStarted$ = this.tutorialsProgress$.pipe(
     map((tutorials) => tutorials.some((t) => !t.progress?.createdAt))
+  );
+
+  public readonly allCompleted$ = this.tutorialsProgress$.pipe(
+    map((tutorials) => !tutorials.some((t) => !t.progress?.completedAt))
   );
 
   public list(): Observable<TutorialProgress[]> {

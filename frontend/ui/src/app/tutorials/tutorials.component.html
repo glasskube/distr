@@ -1,14 +1,5 @@
 <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
   <div class="mx-auto max-w-screen-lg px-4">
-    <div
-      class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-      role="alert">
-      <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
-      <div>
-        <div class="font-medium">Learn how to use distr with these tutorials.</div>
-      </div>
-    </div>
-
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div class="overflow-x-auto">
         <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -52,5 +43,33 @@
         </ul>
       </div>
     </div>
+
+    @if (tutorialsService.allCompleted$ | async) {
+      <div
+        class="flex p-4 mt-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+        role="alert">
+        <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
+        <div>
+          <div class="font-medium">
+            <p><b>Congratulations!</b> You have successfully completed all the tutorials.</p>
+            <p class="mt-2">
+              You are now eligible for a swag pack. Reach out to support&commat;glasskube.com for more information.
+            </p>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div
+        class="flex p-4 mt-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+        role="alert">
+        <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
+        <div>
+          <div class="font-medium">
+            After completing all 3 tutorials you are eligible for a Distr swag pack, including Socks, T-Shirt, stickers
+            and much more!
+          </div>
+        </div>
+      </div>
+    }
   </div>
 </section>
