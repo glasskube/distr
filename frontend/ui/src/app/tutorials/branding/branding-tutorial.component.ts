@@ -82,7 +82,10 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     description: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
   });
   protected readonly inviteFormGroup = new FormGroup({
-    customerEmail: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
+    customerEmail: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
     inviteDone: new FormControl<boolean>(false, Validators.requiredTrue),
     customerConfirmed: new FormControl<boolean>(false, Validators.requiredTrue),
   });

@@ -178,6 +178,11 @@
                         </button>
                       }
                     </div>
+                    @if (
+                      inviteFormGroup.controls.customerEmail.touched && inviteFormGroup.controls.customerEmail.errors
+                    ) {
+                      <div class="mt-2 text-sm text-red-500">Please enter a valid email address.</div>
+                    }
                   </li>
 
                   <li class="mb-10 ms-8">
@@ -197,6 +202,15 @@
                       In the customer portal, you should see the previously chosen title and welcome page.
                     </p>
                     <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
+                    @if (
+                      inviteFormGroup.controls.inviteDone &&
+                      inviteFormGroup.controls.customerConfirmed.touched &&
+                      inviteFormGroup.controls.customerConfirmed.invalid
+                    ) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
                     <div class="mt-2 flex"></div>
                   </li>
                 </ol>
