@@ -15,6 +15,7 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/glasskube/distr?style=flat)](https://github.com/glasskube/distr)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/docs-distr.sh-blue)](https://distr.sh/docs/?utm_source=github)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/distr)](https://artifacthub.io/packages/helm/distr/distr)
 
 Distr is the easiest way to distribute enterprise software to customer-controlled or shared-responsibility environments.
 
