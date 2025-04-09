@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -28,14 +27,7 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT)
-		<-sigint
-		logger.Info("received termination signal")
-		cancel()
-	}()
+	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	tick := time.Tick(agentenv.Interval)
 loop:
 	for ctx.Err() == nil {

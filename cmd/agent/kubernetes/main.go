@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/glasskube/distr/internal/types"
@@ -17,7 +18,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/storage/driver"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
@@ -38,23 +41,8 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT)
-		<-sigint
-		logger.Info("received termination signal")
-		cancel()
-	}()
-	tokenRefresh := make(chan struct{})
-	agentClient.OnTokenRefresh(tokenRefresh)
-	go func() {
-		for range tokenRefresh {
-			logger.Info("token refresh triggered")
-		}
-	}()
+	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	tick := time.Tick(agentenv.Interval)
-
 	for ctx.Err() == nil {
 		select {
 		case <-tick:
@@ -119,7 +107,7 @@ func main() {
 				select {
 				case <-ctx.Done():
 					logger.Info("stop sending progress updates")
-					break
+					return
 				case <-tick:
 					logger.Info("sending progress update")
 					pushProgressingStatus(ctx, *res.Deployment)
@@ -180,6 +168,16 @@ func runInstallOrUpgrade(
 	deployment api.KubernetesAgentDeployment,
 	currentDeployment *AgentDeployment,
 ) {
+	if _, err := agentauth.EnsureAuth(ctx, agentClient.RawToken(), deployment.AgentDeployment); err != nil {
+		logger.Error("failed to ensure docker auth", zap.Error(err))
+		pushErrorStatus(ctx, deployment, fmt.Errorf("failed to ensure docker auth: %w", err))
+	}
+
+	if err := ensureImagePullSecret(ctx, namespace, deployment); err != nil {
+		logger.Error("failed to ensure image pull secret", zap.Error(err))
+		pushErrorStatus(ctx, deployment, fmt.Errorf("failed to ensure image pull secret: %w", err))
+	}
+
 	if currentDeployment == nil {
 		if installedDeployment, err := RunHelmInstall(ctx, namespace, deployment); err != nil {
 			logger.Error("helm upgrade failed", zap.Error(err))
@@ -243,8 +241,34 @@ func pushProgressingStatus(ctx context.Context, deployment api.KubernetesAgentDe
 	}
 }
 
-func pushErrorStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, error error) {
-	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeError, error.Error()); err != nil {
+func pushErrorStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, err error) {
+	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeError, err.Error()); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
 	}
+}
+
+func ensureImagePullSecret(ctx context.Context, namespace string, deployment api.KubernetesAgentDeployment) error {
+	// It's easiest to simply copy the docker config from the file previously created by [agentauth.EnsureAuth].
+	// However, be aware that this will not work when running the angent locally when a docker credential helper is
+	// installed.
+	dockerConfigPath := agentauth.DockerConfigPath(deployment.AgentDeployment)
+	dockerConfigData, err := os.ReadFile(dockerConfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to read docker config from %v: %w", dockerConfigPath, err)
+	}
+	secretName := PullSecretName(deployment.ReleaseName)
+	secretCfg := applyconfigurationscorev1.Secret(secretName, namespace)
+	secretCfg.WithType("kubernetes.io/dockerconfigjson")
+	secretCfg.WithData(map[string][]byte{
+		".dockerconfigjson": dockerConfigData,
+	})
+	_, err = k8sClient.CoreV1().Secrets(namespace).Apply(
+		ctx,
+		secretCfg,
+		metav1.ApplyOptions{Force: true, FieldManager: "distr-agent"},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to apply secret resource %v: %w", secretName, err)
+	}
+	return nil
 }
