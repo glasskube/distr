@@ -1,0 +1,13 @@
+ALTER TABLE UserAccount
+  ADD COLUMN icon BYTEA DEFAULT NULL;
+ALTER TABLE UserAccount
+  ADD COLUMN icon_file_name TEXT DEFAULT NULL;
+ALTER TABLE UserAccount
+  ADD COLUMN icon_content_type TEXT DEFAULT NULL;
+
+ALTER TABLE Application
+  ADD COLUMN icon BYTEA DEFAULT NULL;
+ALTER TABLE Application
+  ADD COLUMN icon_file_name TEXT DEFAULT NULL;
+ALTER TABLE Application
+  ADD COLUMN icon_content_type TEXT DEFAULT NULL;

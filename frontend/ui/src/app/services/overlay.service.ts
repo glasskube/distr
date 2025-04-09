@@ -7,7 +7,7 @@ import {
   ConfirmDialogComponent,
   ConfirmMessage,
 } from '../components/confirm-dialog/confirm-dialog.component';
-import {IconUploadDialogComponent} from '../components/icon-upload/icon-upload-dialog.component';
+import {IconUploadContext, IconUploadDialogComponent} from '../components/icon-upload/icon-upload-dialog.component';
 
 type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
