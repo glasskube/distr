@@ -386,6 +386,12 @@ func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request
 		return regErrManifestUnknown
 	}
 
+	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+		log := internalctx.GetLogger(ctx)
+		log.Warn("failed to audit-log pull", zap.Error(err))
+		sentry.GetHubFromContext(ctx)
+	}
+
 	resp.Header().Set("Docker-Content-Digest", m.Blob.Digest.String())
 	resp.Header().Set("Content-Type", m.ContentType)
 	resp.Header().Set("Content-Length", fmt.Sprint(l))

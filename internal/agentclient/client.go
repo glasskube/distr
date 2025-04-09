@@ -71,16 +71,25 @@ func (c *Client) Manifest(ctx context.Context) ([]byte, error) {
 	}
 }
 
-func (c *Client) Status(ctx context.Context, revisionID uuid.UUID, status string, error error) error {
+func (c *Client) StatusWithError(ctx context.Context, revisionID uuid.UUID, message string, err error) error {
+	statusType := types.DeploymentStatusTypeOK
+	if err != nil {
+		statusType = types.DeploymentStatusTypeError
+		message = err.Error()
+	}
+	return c.Status(ctx, revisionID, statusType, message)
+}
+
+func (c *Client) Status(
+	ctx context.Context,
+	revisionID uuid.UUID,
+	statusType types.DeploymentStatusType,
+	message string,
+) error {
 	deploymentStatus := api.AgentDeploymentStatus{
 		RevisionID: revisionID,
-	}
-	if error != nil {
-		deploymentStatus.Type = types.DeploymentStatusTypeError
-		deploymentStatus.Message = error.Error()
-	} else {
-		deploymentStatus.Type = types.DeploymentStatusTypeOK
-		deploymentStatus.Message = status
+		Message:    message,
+		Type:       statusType,
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(deploymentStatus); err != nil {

@@ -19,10 +19,30 @@
         },
         {
           "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages.\"\".version"
+        },
+        {
+          "type": "json",
           "path": "sdk/js/package.json",
           "jsonpath": "$.version"
         },
         {
+          "type": "json",
+          "path": "sdk/js/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "sdk/js/package.json",
+          "jsonpath": "$.packages.\"\".version"
+        },
+        {
           "type": "yaml",
           "path": "deploy/charts/distr/Chart.yaml",
           "jsonpath": "$.version"
@@ -30,8 +50,7 @@
         {
           "type": "yaml",
           "path": "deploy/charts/distr/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        }
+          "jsonpath": "$.appVersion"        }
       ],
       "changelog-sections": [
         {
