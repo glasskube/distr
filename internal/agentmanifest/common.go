@@ -48,6 +48,7 @@ func getTemplateData(
 ) map[string]any {
 	result := map[string]any{
 		"agentInterval":     env.AgentInterval(),
+		"registryEnabled":   env.RegistryEnabled(),
 		"registryHost":      env.RegistryHost(),
 		"agentDockerConfig": base64.StdEncoding.EncodeToString(env.AgentDockerConfig()),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
