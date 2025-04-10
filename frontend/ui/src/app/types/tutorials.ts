@@ -1,7 +1,5 @@
 export type Tutorial = 'branding' | 'agents' | 'registry';
 
-export interface TutorialStepData {}
-
 export interface TutorialProgressEvent {
   stepId: string;
   taskId: string;
@@ -10,22 +8,6 @@ export interface TutorialProgressEvent {
 
 export interface TutorialProgressRequest extends TutorialProgressEvent {
   markCompleted?: boolean;
-}
-
-/*
-{
-
-}
- */
-
-export interface TutorialTaskData {
-  [key: string]: {
-    value?: boolean | string | number;
-  };
-}
-
-export interface TutorialProgressData {
-  [key: string]: TutorialTaskData;
 }
 
 export interface TutorialProgress {
