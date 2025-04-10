@@ -15,8 +15,8 @@ lint-frontend:
 lint-frontend-fix:
 	npm run lint:fix
 
-.PHONY: lint-go tidy
-lint-go:
+.PHONY: lint-go
+lint-go: tidy
 	golangci-lint run
 
 .PHONY: lint-go-fix
