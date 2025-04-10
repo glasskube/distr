@@ -233,7 +233,7 @@ func pushProgressingStatus(ctx context.Context, deployment api.KubernetesAgentDe
 	if err := agentClient.Status(
 		ctx,
 		deployment.RevisionID,
-		types.DeploymentStatusTypeOK,
+		types.DeploymentStatusTypeProgressing,
 		"helm operation in progress",
 	); err != nil {
 		logger.Warn("status push failed", zap.Error(err))

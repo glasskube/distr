@@ -85,8 +85,14 @@ var regErrDigestMismatch = &regError{
 
 var regErrDigestInvalid = &regError{
 	Status:  http.StatusBadRequest,
-	Code:    "NAME_INVALID",
+	Code:    "DIGEST_INVALID",
 	Message: "invalid digest",
+}
+
+var regErrNameInvalid = &regError{
+	Status:  http.StatusBadRequest,
+	Code:    "NAME_INVALID",
+	Message: "invalid name",
 }
 
 var regErrManifestUnknown = &regError{

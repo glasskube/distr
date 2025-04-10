@@ -24,6 +24,8 @@ import (
 	"path"
 	"strings"
 
+	registryerror "github.com/glasskube/distr/internal/registry/error"
+
 	"github.com/google/uuid"
 
 	"github.com/glasskube/distr/internal/registry/authz"
@@ -89,6 +91,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -98,6 +102,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionRead); err != nil {
 				if errors.Is(err, authz.ErrAccessDenied) {
 					return regErrDenied
+				} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+					return regErrNameInvalid
 				}
 				return regErrInternal(err)
 			}
@@ -109,6 +115,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -117,6 +125,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -127,6 +137,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
