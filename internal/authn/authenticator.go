@@ -70,7 +70,7 @@ func Alternative[A any, B any](authenticators ...Authenticator[A, B]) Authentica
 		for _, authenticator := range authenticators {
 			if out, err1 := authenticator.Authenticate(ctx, in); err1 != nil {
 				multierr.AppendInto(&err, err1)
-				if errors.Is(err, ErrNoAuthentication) || errors.Is(err, ErrBadAuthentication) {
+				if errors.Is(err1, ErrNoAuthentication) || errors.Is(err1, ErrBadAuthentication) {
 					continue
 				} else {
 					break
