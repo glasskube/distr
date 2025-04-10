@@ -9,6 +9,7 @@ import {
   faEllipsisVertical,
   faHeartPulse,
   faLightbulb,
+  faLink,
   faMagnifyingGlass,
   faPen,
   faPlus,
@@ -114,6 +115,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   protected readonly faTriangleExclamation = faTriangleExclamation;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faLightbulb = faLightbulb;
+  protected readonly faLink = faLink;
 
   private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
