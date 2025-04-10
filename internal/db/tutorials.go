@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glasskube/distr/api"
+
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
@@ -65,7 +67,7 @@ func SaveTutorialProgress(
 	ctx context.Context,
 	userID uuid.UUID,
 	tutorial types.Tutorial,
-	progress *types.TutorialProgressRequest,
+	progress *api.TutorialProgressRequest,
 ) (any, error) {
 	db := internalctx.GetDb(ctx)
 	progress.CreatedAt = time.Now()

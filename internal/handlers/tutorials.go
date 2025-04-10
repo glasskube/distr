@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/glasskube/distr/api"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -60,7 +62,7 @@ func saveTutorialProgress(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	tutorial := r.PathValue("tutorial")
 
-	req, err := JsonBody[types.TutorialProgressRequest](w, r)
+	req, err := JsonBody[api.TutorialProgressRequest](w, r)
 	if err != nil {
 		return
 	}

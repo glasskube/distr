@@ -9,11 +9,6 @@ type TutorialProgressEvent struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type TutorialProgressRequest struct {
-	TutorialProgressEvent
-	MarkCompleted bool `json:"markCompleted"`
-}
-
 type TutorialProgress struct {
 	Tutorial    Tutorial                `db:"tutorial" json:"tutorial"`
 	CreatedAt   time.Time               `db:"created_at" json:"createdAt"`
