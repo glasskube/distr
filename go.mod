@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.2
 	github.com/docker/cli v28.0.4+incompatible
-	github.com/getsentry/sentry-go v0.31.1
+	github.com/getsentry/sentry-go v0.32.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/httprate v0.15.0
 	github.com/go-chi/jwtauth/v5 v5.3.3
