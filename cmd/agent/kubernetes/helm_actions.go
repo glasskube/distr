@@ -198,7 +198,7 @@ func GetHelmManifest(
 
 func addImagePullSecretToValues(relaseName string, values map[string]any) {
 	if s, ok := values["imagePullSecrets"].([]any); ok {
-		values["imagePullSecrets"] = append(s, PullSecretName(relaseName))
+		values["imagePullSecrets"] = append(s, map[string]any{"name": PullSecretName(relaseName)})
 	}
 	for _, v := range values {
 		if m, ok := v.(map[string]any); ok {
