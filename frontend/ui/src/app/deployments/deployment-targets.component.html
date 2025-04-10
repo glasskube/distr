@@ -190,7 +190,7 @@
               }
               <td
                 class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
-                @if (dt.currentStatus) {
+                @if (dt.currentStatus && dt.deployment) {
                   <button
                     type="button"
                     (click)="openStatusModal(dt, deploymentStatusModal)"
@@ -210,16 +210,13 @@
                     <fa-icon [icon]="shipIcon" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
                     Deploy
                   </button>
-                } @else {
+                } @else if (!dt.currentStatus) {
                   <button
                     type="button"
                     (click)="openInstructionsModal(dt, instructionsModal)"
                     class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                    @if (dt.currentStatus) {
-                      Reconnect
-                    } @else {
-                      Connection instructions
-                    }
+                    <fa-icon [icon]="faLink" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Connection instructions
                   </button>
                 }
 
@@ -260,6 +257,18 @@
                           Edit
                         </button>
                       </li>
+                      @if (dt.currentStatus && (dt.currentStatus | isStale)) {
+                        <li
+                          class="text-yellow-400 hover:bg-yellow-500 hover:text-white dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400">
+                          <button
+                            type="button"
+                            (click)="showDropdownForId = undefined; openInstructionsModal(dt, instructionsModal)"
+                            class="text-start block w-full px-4 py-2 text-sm">
+                            <fa-icon [icon]="faLink" class="h-5 w-5 mr-2 -ml-0.5"></fa-icon>
+                            Reconnect
+                          </button>
+                        </li>
+                      }
                       @if (dt.deployment) {
                         <li>
                           @if (agentVersions$ | async; as agentVersions) {
