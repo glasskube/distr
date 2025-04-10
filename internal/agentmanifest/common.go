@@ -74,7 +74,7 @@ func getTemplate(deploymentTarget types.DeploymentTargetWithCreatedBy) (*templat
 		return resources.GetTemplate(path.Join(
 			"agent/docker",
 			deploymentTarget.AgentVersion.ComposeFileRevision,
-			"docker-compose.yaml",
+			"docker-compose.yaml.tmpl",
 		))
 	} else {
 		return resources.GetTemplate(path.Join(
