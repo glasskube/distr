@@ -205,6 +205,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   private prepareCustomerStep() {
     // prepare the email form
     const email = (this.progress?.events ?? [])
+      .concat()
       .reverse()
       .find((e) => e.stepId === customerStep && e.taskId === customerTaskInvite)?.value;
     if (email && typeof email === 'string') {
