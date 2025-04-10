@@ -1,0 +1,21 @@
+ALTER TABLE UserAccount
+  ADD COLUMN image BYTEA DEFAULT NULL;
+ALTER TABLE UserAccount
+  ADD COLUMN image_file_name TEXT DEFAULT NULL;
+ALTER TABLE UserAccount
+  ADD COLUMN image_content_type TEXT DEFAULT NULL;
+
+ALTER TABLE Application
+  ADD COLUMN image BYTEA DEFAULT NULL;
+ALTER TABLE Application
+  ADD COLUMN image_file_name TEXT DEFAULT NULL;
+ALTER TABLE Application
+  ADD COLUMN image_content_type TEXT DEFAULT NULL;
+
+
+ALTER TABLE Artifact
+  ADD COLUMN image BYTEA DEFAULT NULL;
+ALTER TABLE Artifact
+  ADD COLUMN image_file_name TEXT DEFAULT NULL;
+ALTER TABLE Artifact
+  ADD COLUMN image_content_type TEXT DEFAULT NULL;

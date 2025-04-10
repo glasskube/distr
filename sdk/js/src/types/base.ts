@@ -17,9 +17,9 @@ export interface DeploymentTargetAccessResponse {
   targetSecret: string;
 }
 
-export interface WithIcon {
-  id: string;
-  icon?: string;
-  iconFileName?: string;
-  iconContentType?: string;
+export interface Image {
+  id?: string;
+  image?: string;
+  imageFileName?: string;
+  imageContentType?: string;
 }

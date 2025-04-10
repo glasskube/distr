@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/glasskube/distr/internal/util"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -30,6 +32,7 @@ func UserAccountsRouter(r chi.Router) {
 		r.Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
 			r.Delete("/", deleteUserAccountHandler)
+			r.Patch("/image", patchImageUserAccountHandler)
 		})
 	})
 	r.Get("/status", getUserAccountStatusHandler)
@@ -151,6 +154,48 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func patchImageUserAccountHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	userAccount := internalctx.GetUserAccount(ctx)
+
+	if image, err := getImageFromMultipartForm(r); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if err := db.UpdateUserAccountImage(ctx, userAccount.ID, *image); err != nil {
+		log.Warn("error uploading user image", zap.Error(err))
+		if errors.Is(err, apierrors.ErrNotFound) {
+			w.WriteHeader(http.StatusNoContent)
+		} else if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func getImageFromMultipartForm(r *http.Request) (*types.Image, error) {
+	if err := r.ParseMultipartForm(102400); err != nil {
+		return nil, fmt.Errorf("failed to parse form: %w", err)
+	}
+
+	image := types.Image{}
+
+	if file, head, err := r.FormFile("image"); err != nil {
+		return nil, errors.New("image not found")
+	} else if head.Size > 102400 {
+		return nil, errors.New("file too large (max 100 KiB)")
+	} else if data, err := io.ReadAll(file); err != nil {
+		return nil, err
+	} else {
+		image.Image = data
+		image.ImageFileName = &head.Filename
+		image.ImageContentType = util.PtrTo(head.Header.Get("Content-Type"))
+	}
+
+	return &image, nil
 }
 
 func userAccountMiddleware(h http.Handler) http.Handler {

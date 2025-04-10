@@ -140,6 +140,13 @@ export class UsersComponent implements OnDestroy {
     }
   }
 
+  public async uploadImage(data: UserAccountWithRole) {
+    this.overlay
+      .uploadImage({data, type: 'user'})
+      .pipe(tap(() =>  {console.log('hi')}))
+      .subscribe();
+  }
+
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
       .confirm(`Really delete ${user.name ?? user.email}?`)

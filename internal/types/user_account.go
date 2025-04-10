@@ -17,15 +17,13 @@ type UserAccount struct {
 	Password        string     `db:"-" json:"-"`
 }
 
-type UserAccountWithIcon struct {
+type UserAccountWithImage struct {
 	UserAccount
-	Icon            []byte  `db:"icon" json:"icon"`
-	IconFileName    *string `db:"icon_file_name" json:"iconFileName"`
-	IconContentType *string `db:"icon_content_type" json:"iconContentType"`
+	Image
 }
 
 type UserAccountWithUserRole struct {
-	// copy+pasted from UserAccount because pgx does not like embedded strucs
+	// copy+pasted from UserAccount because pgx does not like embedded structs
 	ID              uuid.UUID  `db:"id" json:"id"`
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
