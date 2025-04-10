@@ -40,7 +40,7 @@ func (a *authorizer) Authorize(ctx context.Context, nameStr string, action Actio
 	}
 
 	if name, err := name.Parse(nameStr); err != nil {
-		return errors.New("name invalid")
+		return err
 	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
 		return err
 	} else if org.Slug == nil || *org.Slug != name.OrgName {
@@ -57,7 +57,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 	}
 
 	if name, err := name.Parse(nameStr); err != nil {
-		return errors.New("name invalid")
+		return err
 	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
 		return err
 	} else if org.Slug == nil || *org.Slug != name.OrgName {
