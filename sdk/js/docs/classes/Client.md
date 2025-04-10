@@ -60,7 +60,7 @@ The low-level Distr API client. Each method represents on API endpoint.
 
 ### createApplicationVersion()
 
-> **createApplicationVersion**(`applicationId`, `version`, `files`?): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
+> **createApplicationVersion**(`applicationId`, `version`, `files?`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
 #### Parameters
 
