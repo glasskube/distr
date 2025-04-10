@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	registryerror "github.com/glasskube/distr/internal/registry/error"
+
 	"github.com/glasskube/distr/internal/apierrors"
 
 	"github.com/getsentry/sentry-go"
@@ -109,6 +111,8 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -117,6 +121,8 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -125,6 +131,8 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -151,6 +159,8 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 		if err := m.authz.Authorize(req.Context(), repo, authz.ActionRead); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -236,6 +246,8 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	if err := m.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
 		if errors.Is(err, authz.ErrAccessDenied) {
 			return regErrDenied
+		} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+			return regErrNameInvalid
 		}
 		return regErrInternal(err)
 	}

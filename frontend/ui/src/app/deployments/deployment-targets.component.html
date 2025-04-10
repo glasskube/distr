@@ -153,9 +153,17 @@
 
               @if (dt.deployment; as deployment) {
                 <td
-                  class="px-4 py-3 max-w-32 overflow-ellipsis font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  class="px-4 py-3 max-w-128 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   [title]="deployment.applicationName + '&#64;' + deployment.applicationVersionName">
-                  {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
+                  <div class="flex">
+                    <div class="max-w-24 sm:max-w-64 overflow-hidden text-ellipsis">
+                      {{ deployment.applicationName }}
+                    </div>
+                    &#64;
+                    <div class="max-w-24 sm:max-w-64 overflow-hidden text-ellipsis">
+                      {{ deployment.applicationVersionName }}
+                    </div>
+                  </div>
                 </td>
               } @else {
                 <td></td>
@@ -182,7 +190,7 @@
               }
               <td
                 class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
-                @if (dt.deployment) {
+                @if (dt.currentStatus) {
                   <button
                     type="button"
                     (click)="openStatusModal(dt, deploymentStatusModal)"
