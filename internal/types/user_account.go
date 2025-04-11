@@ -17,8 +17,13 @@ type UserAccount struct {
 	Password        string     `db:"-" json:"-"`
 }
 
+type UserAccountWithImage struct {
+	UserAccount
+	Image
+}
+
 type UserAccountWithUserRole struct {
-	// copy+pasted from UserAccount because pgx does not like embedded strucs
+	// copy+pasted from UserAccount because pgx does not like embedded structs
 	ID              uuid.UUID  `db:"id" json:"id"`
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`

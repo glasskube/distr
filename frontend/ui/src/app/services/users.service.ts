@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {map, Observable, of, switchMap, tap} from 'rxjs';
-import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
+import {Image, UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {ReactiveList} from './cache';
 import {digestMessage} from '../../util/crypto';
 import {AuthService} from './auth.service';
@@ -69,6 +69,10 @@ export class UsersService {
 
   public delete(user: UserAccountWithRole): Observable<void> {
     return this.httpClient.delete<void>(`${this.baseUrl}/${user.id}`).pipe(tap(() => this.cache.remove(user)));
+  }
+
+  public patchImage(userId: string, image: FormData) {
+    return this.httpClient.patch<void>(`${this.baseUrl}/${userId}/image`, image);
   }
 
   public getUserWithGravatarUrl(id: string): Observable<UserAccountWithRole & {gravatar: string}> {

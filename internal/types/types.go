@@ -48,6 +48,12 @@ type Geolocation struct {
 	Lon float64 `json:"lon"`
 }
 
+type Image struct {
+	Image            []byte  `db:"image" json:"image"`
+	ImageFileName    *string `db:"image_file_name" json:"imageFileName"`
+	ImageContentType *string `db:"image_content_type" json:"imageContentType"`
+}
+
 type Digest v1.Hash
 
 var _ sql.Scanner = &Digest{}

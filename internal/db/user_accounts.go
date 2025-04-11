@@ -286,3 +286,28 @@ func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error 
 	}
 	return err
 }
+
+func UpdateUserAccountImage(ctx context.Context, userID uuid.UUID, image types.Image) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`UPDATE UserAccount
+				SET image = @image,
+				    image_file_name = @image_file_name,
+				    image_content_type = @image_content_type
+                WHERE id = @id`,
+		pgx.NamedArgs{
+			"image":              image.Image,
+			"image_file_name":    image.ImageFileName,
+			"image_content_type": image.ImageContentType,
+			"id":                 userID,
+		},
+	)
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	if err != nil {
+		err = fmt.Errorf("could not update image on UserAccount: %w", err)
+	}
+	return err
+}

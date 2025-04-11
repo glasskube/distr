@@ -38,6 +38,7 @@ import {UuidComponent} from '../uuid';
 import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {digestMessage} from '../../../util/crypto';
 
 @Component({
   selector: 'app-users',
@@ -139,6 +140,13 @@ export class UsersComponent implements OnDestroy {
     }
   }
 
+  public async uploadImage(data: UserAccountWithRole) {
+    this.overlay
+      .uploadImage({data, type: 'user'})
+      .pipe(tap(() =>  {console.log('hi')}))
+      .subscribe();
+  }
+
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
       .confirm(`Really delete ${user.name ?? user.email}?`)
@@ -173,4 +181,5 @@ export class UsersComponent implements OnDestroy {
   }
 
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly digestMessage = digestMessage;
 }

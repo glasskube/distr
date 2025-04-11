@@ -7,6 +7,8 @@ import {
   ConfirmDialogComponent,
   ConfirmMessage,
 } from '../components/confirm-dialog/confirm-dialog.component';
+import {ImageUploadContext, ImageUploadDialogComponent} from '../components/image-upload/image-upload-dialog.component';
+import {Image} from '../../../../../sdk/js/src';
 
 type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
@@ -61,6 +63,10 @@ export class OverlayService {
   public confirm(messageOrConfig: ConfirmConfig | string) {
     const config = typeof messageOrConfig === 'string' ? {message: {message: messageOrConfig}} : messageOrConfig;
     return this.showModal<boolean>(ConfirmDialogComponent, {data: config}).result();
+  }
+
+  public uploadImage(context: ImageUploadContext) {
+    return this.showModal<boolean>(ImageUploadDialogComponent, {data: context}).result();
   }
 
   /**

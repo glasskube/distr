@@ -16,3 +16,10 @@ export interface DeploymentTargetAccessResponse {
   targetId: string;
   targetSecret: string;
 }
+
+export interface Image {
+  id?: string;
+  image?: string;
+  imageFileName?: string;
+  imageContentType?: string;
+}
