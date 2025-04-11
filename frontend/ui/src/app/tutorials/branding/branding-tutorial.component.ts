@@ -276,11 +276,16 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
       );
       this.stepper.selected!.completed = true;
       this.loading.set(false);
-      this.router.navigate(['tutorials']);
       this.toast.success('Congrats on finishing the tutorial! Good Job!');
+      this.navigateToOverviewPage();
     } else if (this.progress?.completedAt) {
-      this.router.navigate(['tutorials']);
+      this.navigateToOverviewPage();
     }
+  }
+
+  protected navigateToOverviewPage() {
+    this.tutorialsService.refreshList();
+    this.router.navigate(['tutorials']);
   }
 
   protected readonly faArrowRight = faArrowRight;

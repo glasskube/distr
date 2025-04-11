@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Tutorial, TutorialProgress, TutorialProgressRequest} from '../types/tutorials';
-import {map, Observable} from 'rxjs';
+import {map, Observable, shareReplay, Subject, startWith, switchMap} from 'rxjs';
 import {IconDefinition} from '@fortawesome/angular-fontawesome';
 import {faBox, faBoxesStacked, faPalette} from '@fortawesome/free-solid-svg-icons';
 
@@ -38,7 +38,10 @@ export class TutorialsService {
     },
   ];
 
-  public readonly tutorialsProgress$ = this.list().pipe(
+  private readonly refresh$ = new Subject<void>();
+  public readonly tutorialsProgress$ = this.refresh$.pipe(
+    startWith(undefined),
+    switchMap(() => this.list()),
     map((progresses) => {
       return this.tutorials.map((t) => {
         const progress = progresses.find((p) => p.tutorial === t.id);
@@ -51,7 +54,8 @@ export class TutorialsService {
           return t;
         }
       });
-    })
+    }),
+    shareReplay(1)
   );
 
   public readonly notAllStarted$ = this.tutorialsProgress$.pipe(
@@ -62,8 +66,12 @@ export class TutorialsService {
     map((tutorials) => !tutorials.some((t) => !t.progress?.completedAt))
   );
 
-  public list(): Observable<TutorialProgress[]> {
+  private list(): Observable<TutorialProgress[]> {
     return this.httpClient.get<TutorialProgress[]>(`${this.baseUrl}`);
+  }
+
+  public refreshList() {
+    this.refresh$.next();
   }
 
   public get(tutorial: Tutorial): Observable<TutorialProgress> {
