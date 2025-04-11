@@ -49,7 +49,6 @@ const customerTaskLogin = 'login';
     ReactiveFormsModule,
     CdkStep,
     TutorialStepperComponent,
-    RouterLink,
     FaIconComponent,
     CdkStepperPrevious,
     AutotrimDirective,
