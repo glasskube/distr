@@ -34,6 +34,7 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {dropdownAnimation} from '../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {ArtifactLicense} from '../services/artifact-licenses.service';
+import {isArchived} from '../../util/dates';
 
 @Component({
   selector: 'app-edit-license',
@@ -125,8 +126,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.editForm.controls.subjectItems.controls.forEach((c) => c.patchValue(false, {emitEvent: false}));
       }
     });
-    this.editForm.controls.subjectItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
-      if (this.editForm.controls.includeAllItems.value && val.some((v) => !!v)) {
+    this.editForm.controls.subjectItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
+      const itemsIncludingArchived = this.editForm.controls.subjectItems.getRawValue()
+      if (this.editForm.controls.includeAllItems.value && itemsIncludingArchived.some((v) => !!v)) {
         this.editForm.controls.includeAllItems.patchValue(false, {emitEvent: false});
       }
     });
@@ -163,12 +165,17 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       .subscribe((selectedSubject) => {
         this.subjectItemsArray.clear({emitEvent: false});
         const allItems = (selectedSubject as Application)?.versions ?? [];
+        // TODO sort (first active, then archived) and make archive collapsable somehow in the dropdown?
         const licenseItems = (this.license() as ApplicationLicense)?.versions;
         let anySelected = false;
         for (let i = 0; i < allItems.length; i++) {
           const item = allItems[i];
           const selected = !!licenseItems?.some((v) => v.id === item.id);
-          this.subjectItemsArray.push(this.fb.control(selected), {emitEvent: i === allItems.length - 1});
+          const ctrl = this.fb.control(selected);
+          if(isArchived(item)) {
+            ctrl.disable({emitEvent: false});
+          }
+          this.subjectItemsArray.push(ctrl, {emitEvent: i === allItems.length - 1});
           anySelected = anySelected || selected;
         }
         if (!anySelected) {
@@ -263,4 +270,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       this.editForm.reset();
     }
   }
+
+  protected readonly isArchived = isArchived;
 }

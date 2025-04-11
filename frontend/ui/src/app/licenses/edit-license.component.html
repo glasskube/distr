@@ -106,6 +106,9 @@
                         for="version-checkbox-{{ i }}"
                         class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                         {{ itemLabel }}
+                        @if(isArchived(item!)) {
+                          (archived)
+                        }
                       </label>
                     </div>
                   </li>
