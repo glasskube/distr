@@ -33,6 +33,8 @@ import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-
 import {UsersService} from './services/users.service';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
 import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
+import {TutorialsComponent} from './tutorials/tutorials.component';
+import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -246,6 +248,21 @@ export const routes: Routes = [
               {
                 path: 'access-tokens',
                 component: AccessTokensComponent,
+              },
+            ],
+          },
+          {
+            path: 'tutorials',
+            canActivate: [requiredRoleGuard('vendor')],
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                component: TutorialsComponent,
+              },
+              {
+                path: 'branding',
+                component: BrandingTutorialComponent,
               },
             ],
           },

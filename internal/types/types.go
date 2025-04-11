@@ -16,6 +16,7 @@ type HelmChartType string
 type DeploymentStatusType string
 type DeploymentTargetScope string
 type Feature string
+type Tutorial string
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
@@ -36,6 +37,10 @@ const (
 
 	FeatureLicensing Feature = "licensing"
 	FeatureRegistry  Feature = "registry"
+
+	TutorialBranding Tutorial = "branding"
+	TutorialAgents   Tutorial = "agents"
+	TutorialRegistry Tutorial = "registry"
 )
 
 type Base struct {
