@@ -6,9 +6,13 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path"
+	"slices"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/types"
@@ -30,6 +34,7 @@ var (
 	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
 	agentVersionId   = os.Getenv("DISTR_AGENT_VERSION_ID")
+	agentConfigDirs  []string
 )
 
 func init() {
@@ -38,6 +43,12 @@ func init() {
 	}
 	if agentVersionId == "" {
 		logger.Warn("DISTR_AGENT_VERSION_ID is not set. self updates will be disabled")
+	}
+	if s := os.Getenv("DISTR_AGENT_CONFIG_DIRS"); s != "" {
+		agentConfigDirs = slices.DeleteFunc(
+			strings.Split(s, "\n"),
+			func(s string) bool { return strings.TrimSpace(s) == "" },
+		)
 	}
 }
 
@@ -50,6 +61,14 @@ func main() {
 		logger.Info("received termination signal")
 		cancel()
 	}()
+	go func() {
+		logger.Info("start config watch")
+		if err := watchConfigDirs(agentConfigDirs); err != nil {
+			logger.Error("config watch failed", zap.Error(err))
+		} else {
+			logger.Warn("config watch stopped")
+		}
+	}()
 	tick := time.Tick(interval)
 
 	for ctx.Err() == nil {
@@ -57,6 +76,14 @@ func main() {
 		case <-tick:
 		case <-ctx.Done():
 			continue
+		}
+
+		if changed, err := agentClient.ReloadFromEnv(); err != nil {
+			logger.Error("agent client config reload failed", zap.Error(err))
+		} else if changed {
+			logger.Info("agent client config reloaded")
+		} else {
+			logger.Debug("agent client config unchanged")
 		}
 
 		res, err := agentClient.KubernetesResource(ctx)
@@ -116,7 +143,7 @@ func main() {
 				select {
 				case <-progressCtx.Done():
 					logger.Info("stop sending progress updates")
-					break
+					return
 				case <-tick:
 					logger.Info("sending progress update")
 					pushProgressingStatus(ctx, *res.Deployment)
@@ -243,5 +270,51 @@ func pushProgressingStatus(ctx context.Context, deployment api.KubernetesAgentDe
 func pushErrorStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, error error) {
 	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeError, error.Error()); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
+	}
+}
+
+func watchConfigDirs(dirs []string) error {
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+	for _, dir := range dirs {
+		if err := w.Add(dir); err != nil {
+			return err
+		}
+	}
+	for {
+		select {
+		case err, ok := <-w.Errors:
+			if !ok {
+				return nil
+			}
+			return err
+		case event := <-w.Events:
+			if event.Op != fsnotify.Rename && event.Op != fsnotify.Write {
+				continue
+			}
+			for _, dir := range dirs {
+				logger := logger.With(zap.String("dir", dir))
+				entries, err := os.ReadDir(dir)
+				if err != nil {
+					logger.Warn("read dir failed", zap.Error(err))
+					continue
+				}
+				for _, e := range entries {
+					logger := logger.With(zap.String("entry", e.Name()))
+					if e.IsDir() {
+						continue
+					}
+					if data, err := os.ReadFile(path.Join(dir, e.Name())); err != nil {
+						logger.Warn("could not update config param", zap.Error(err))
+					} else {
+						logger.Debug("setting env variable from file", zap.String("value", string(data)))
+						os.Setenv(e.Name(), string(data))
+					}
+				}
+			}
+		}
 	}
 }
