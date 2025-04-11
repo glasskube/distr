@@ -48,6 +48,8 @@ func getTemplateData(
 ) map[string]any {
 	result := map[string]any{
 		"agentInterval":     env.AgentInterval(),
+		"registryEnabled":   env.RegistryEnabled(),
+		"registryHost":      env.RegistryHost(),
 		"agentDockerConfig": base64.StdEncoding.EncodeToString(env.AgentDockerConfig()),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
 		"agentVersionId":    deploymentTarget.AgentVersion.ID,
@@ -72,7 +74,7 @@ func getTemplate(deploymentTarget types.DeploymentTargetWithCreatedBy) (*templat
 		return resources.GetTemplate(path.Join(
 			"agent/docker",
 			deploymentTarget.AgentVersion.ComposeFileRevision,
-			"docker-compose.yaml",
+			"docker-compose.yaml.tmpl",
 		))
 	} else {
 		return resources.GetTemplate(path.Join(

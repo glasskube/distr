@@ -153,6 +153,10 @@ func (c *Client) HasTokenExpiredAfter(t time.Time) bool {
 	return c.token == nil || c.token.Expiration().Before(t)
 }
 
+func (c *Client) RawToken() string {
+	return c.rawToken
+}
+
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
 	if err := c.EnsureToken(ctx); err != nil {
 		return nil, err

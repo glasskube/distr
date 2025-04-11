@@ -44,14 +44,25 @@ var AgentAuthentication = authn.New(
 // ArtifactsAuthentication supports Basic auth login for OCI clients, where the password should be a PAT.
 // The given PAT is verified against the database, to make sure that the user still exists.
 var ArtifactsAuthentication = authn.New(
-	authn.Chain4(
+	authn.Chain(
 		token.NewExtractor(
 			token.WithExtractorFuncs(token.FromBasicAuth()),
-			token.WithErrorHeaders(map[string]string{"WWW-Authenticate": "Basic realm=\"Distr\""}),
+			token.WithErrorHeaders(http.Header{"WWW-Authenticate": []string{"Basic realm=\"Distr\""}}),
 		),
-		authkey.Authenticator(),
-		authinfo.AuthKeyAuthenticator(),
-		authinfo.DbAuthenticator(),
+		authn.Alternative(
+			// Authenticate UserAccount with PAT
+			authn.Chain3(
+				authkey.Authenticator(),
+				authinfo.AuthKeyAuthenticator(),
+				authinfo.DbAuthenticator(),
+			),
+			// Authenticate with Agent JWT
+			authn.Chain3(
+				jwt.Authenticator(authjwt.JWTAuth),
+				authinfo.AgentJWTAuthenticator(),
+				authinfo.AgentDbAuthenticator(),
+			),
+		),
 	),
 )
 

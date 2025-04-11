@@ -11,6 +11,9 @@ data:
   DISTR_STATUS_ENDPOINT: "{{ .statusEndpoint }}"
   DISTR_INTERVAL: "{{ .agentInterval }}"
   DISTR_AGENT_VERSION_ID: "{{ .agentVersionId }}"
+  {{- if .registryEnabled }}
+  DISTR_REGISTRY_HOST: "{{ .registryHost }}"
+  {{- end }}
 
 {{ if .targetSecret }}
 ---

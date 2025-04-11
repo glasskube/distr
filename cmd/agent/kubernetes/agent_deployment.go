@@ -23,6 +23,10 @@ func (d *AgentDeployment) SecretName() string {
 	return fmt.Sprintf("sh.distr.agent.v1.%v", d.ReleaseName)
 }
 
+func PullSecretName(releaseName string) string {
+	return fmt.Sprintf("sh.distr.agent.v1.%v.pull", releaseName)
+}
+
 func GetExistingDeployments(ctx context.Context, namespace string) ([]AgentDeployment, error) {
 	if secrets, err := k8sClient.CoreV1().Secrets(namespace).
 		List(ctx, metav1.ListOptions{LabelSelector: LabelDeplyoment}); err != nil {

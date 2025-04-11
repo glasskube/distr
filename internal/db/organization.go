@@ -58,7 +58,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
-func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.OrganizationWithUserRole, error) {
+func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT`+organizationOutputExpr+`, j.user_role
@@ -70,7 +70,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.Or
 	if err != nil {
 		return nil, err
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.OrganizationWithUserRole])
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.OrganizationWithUserRole])
 	if err != nil {
 		return nil, err
 	} else {
