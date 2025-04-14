@@ -163,6 +163,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         })
       )
       .subscribe((selectedSubject) => {
+        this.selectedSubject.set(selectedSubject);
         this.subjectItemsArray.clear({emitEvent: false});
         const allItems = (selectedSubject as Application)?.versions ?? [];
         // TODO sort (first active, then archived) and make archive collapsable somehow in the dropdown?
@@ -181,7 +182,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         if (!anySelected) {
           this.editForm.controls.includeAllItems.patchValue(true);
         }
-        this.selectedSubject.set(selectedSubject);
       });
   }
 
