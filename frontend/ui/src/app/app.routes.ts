@@ -35,6 +35,7 @@ import {OrganizationSettingsComponent} from './organization-settings/organizatio
 import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
+import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -263,6 +264,10 @@ export const routes: Routes = [
               {
                 path: 'branding',
                 component: BrandingTutorialComponent,
+              },
+              {
+                path: 'registry',
+                component: RegistryTutorialComponent,
               },
             ],
           },
