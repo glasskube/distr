@@ -127,7 +127,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
       }
     });
     this.editForm.controls.subjectItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
-      const itemsIncludingArchived = this.editForm.controls.subjectItems.getRawValue()
+      const itemsIncludingArchived = this.editForm.controls.subjectItems.getRawValue();
       if (this.editForm.controls.includeAllItems.value && itemsIncludingArchived.some((v) => !!v)) {
         this.editForm.controls.includeAllItems.patchValue(false, {emitEvent: false});
       }
@@ -166,14 +166,13 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.selectedSubject.set(selectedSubject);
         this.subjectItemsArray.clear({emitEvent: false});
         const allItems = (selectedSubject as Application)?.versions ?? [];
-        // TODO sort (first active, then archived) and make archive collapsable somehow in the dropdown?
         const licenseItems = (this.license() as ApplicationLicense)?.versions;
         let anySelected = false;
         for (let i = 0; i < allItems.length; i++) {
           const item = allItems[i];
           const selected = !!licenseItems?.some((v) => v.id === item.id);
           const ctrl = this.fb.control(selected);
-          if(isArchived(item)) {
+          if (isArchived(item)) {
             ctrl.disable({emitEvent: false});
           }
           this.subjectItemsArray.push(ctrl, {emitEvent: i === allItems.length - 1});
