@@ -6,7 +6,7 @@
 <h1 align="center">Distr
 <br> Software Distribution Platform </h1>
 
-Distr enables software and AI companies to distribute applications to self-managed customers with minimal setup. 
+Distr enables software and AI companies to distribute applications to self-managed customers with minimal setup.
 
 ### **[Website](https://glasskube.dev/)** • **[Quickstart](https://distr.sh/docs/getting-started/quickstart/?utm_source=github)** • **[Documentation](https://distr.sh/docs/getting-started/about/?utm_source=github)** • **[Blog](https://glasskube.dev/blog/)** • **[Twitter](https://x.com/glasskube)** • **[Discord](https://discord.gg/6qqBSAWZfW)**
 
@@ -22,7 +22,7 @@ Distr enables software and AI companies to distribute applications to self-manag
 
 - Centralized Management: View & manage all deployments, artifacts, connected agents, self-managed & BYOC customers via the intuitive web UI
 - Deployment Automation: Optional prebuilt Helm and Docker agents manage deployments, collect logs and metrics, and allow remote troubleshooting.
-- White-label customer portal: Let your customers control their deployments or download your artifacts 
+- White-label customer portal: Let your customers control their deployments or download your artifacts
 - Licnense Management: Distribute specific versions of your application to specific customers
 - Container registry: Distribute OCI-compatible artifacts (Docker images, Helm charts, Terraform modules) with built-in granular access control and analytics.
 - Access the API using our [**rich SDK**](#distr-sdk)
