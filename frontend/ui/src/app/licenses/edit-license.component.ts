@@ -23,7 +23,14 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
-import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faChevronDown,
+  faExclamationTriangle,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {first, firstValueFrom, map, Subject, switchMap, takeUntil} from 'rxjs';
 import {ApplicationLicense} from '../types/application-license';
 import {ApplicationsService} from '../services/applications.service';
@@ -93,6 +100,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   editFormLoading = false;
   readonly license = signal<ApplicationLicense | undefined>(undefined);
   readonly selectedSubject = signal<Application | undefined>(undefined);
+  readonly includedArchivedVersions = signal<ApplicationVersion[]>([]);
 
   dropdownOpen = signal(false);
   protected subjectItemsSelected = 0;
@@ -126,15 +134,15 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         this.editForm.controls.subjectItems.controls.forEach((c) => c.patchValue(false, {emitEvent: false}));
       }
     });
-    this.editForm.controls.subjectItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
-      const itemsIncludingArchived = this.editForm.controls.subjectItems.getRawValue();
-      if (this.editForm.controls.includeAllItems.value && itemsIncludingArchived.some((v) => !!v)) {
+    this.editForm.controls.subjectItems.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((val) => {
+      if (this.editForm.controls.includeAllItems.value && val.some((v) => !!v)) {
         this.editForm.controls.includeAllItems.patchValue(false, {emitEvent: false});
       }
     });
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.onTouched();
       const val = this.editForm.getRawValue();
+      console.log(val);
       if (!val.includeAllItems) {
         this.subjectItemsSelected = val.subjectItems.filter((v) => !!v).length;
       }
@@ -168,16 +176,17 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         const allItems = (selectedSubject as Application)?.versions ?? [];
         const licenseItems = (this.license() as ApplicationLicense)?.versions;
         let anySelected = false;
+        const archivedSelected = [];
         for (let i = 0; i < allItems.length; i++) {
           const item = allItems[i];
           const selected = !!licenseItems?.some((v) => v.id === item.id);
-          const ctrl = this.fb.control(selected);
-          if (isArchived(item)) {
-            ctrl.disable({emitEvent: false});
+          this.subjectItemsArray.push(this.fb.control(selected), {emitEvent: i === allItems.length - 1});
+          if (isArchived(item) && selected) {
+            archivedSelected.push(item);
           }
-          this.subjectItemsArray.push(ctrl, {emitEvent: i === allItems.length - 1});
           anySelected = anySelected || selected;
         }
+        this.includedArchivedVersions.set(archivedSelected);
         if (!anySelected) {
           this.editForm.controls.includeAllItems.patchValue(true);
         }
@@ -271,4 +280,5 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   }
 
   protected readonly isArchived = isArchived;
+  protected readonly faExclamationTriangle = faExclamationTriangle;
 }
