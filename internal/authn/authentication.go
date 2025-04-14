@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	"go.uber.org/multierr"
 )
 
 type contextKey struct{}
@@ -76,16 +78,25 @@ func (a *Authentication[T]) ValidatorMiddleware(fn func(value T) error) func(nex
 }
 
 func (a *Authentication[T]) handleError(w http.ResponseWriter, r *http.Request, err error) {
-	hhe := &HttpHeaderError{}
-	if errors.As(err, &hhe) {
-		hhe.WriteTo(w)
+	for _, err := range multierr.Errors(err) {
+		var rh WithResponseHeaders
+		if errors.As(err, &rh) {
+			for key, value := range rh.ResponseHeaders() {
+				for _, v := range value {
+					w.Header().Add(key, v)
+				}
+			}
+		}
 	}
 
+	statusCode := http.StatusInternalServerError
+
 	if errors.Is(err, ErrBadAuthentication) || errors.Is(err, ErrNoAuthentication) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-	} else if a.unknownErrorHandler == nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	} else {
+		statusCode = http.StatusUnauthorized
+	} else if a.unknownErrorHandler != nil {
 		a.unknownErrorHandler(w, r, err)
+		return
 	}
+
+	http.Error(w, http.StatusText(statusCode), statusCode)
 }
