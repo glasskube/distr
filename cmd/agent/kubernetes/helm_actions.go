@@ -64,7 +64,7 @@ func GetLatestHelmRelease(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) (*release.Release, error) {
-	cfg, err := GetHelmActionConfig(ctx, namespace, &deployment)
+	cfg, err := GetHelmActionConfig(ctx, namespace, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func GetHelmManifest(
 	namespace string,
 	deployment api.KubernetesAgentDeployment,
 ) ([]*unstructured.Unstructured, error) {
-	cfg, err := GetHelmActionConfig(ctx, namespace, &deployment)
+	cfg, err := GetHelmActionConfig(ctx, namespace, nil)
 	if err != nil {
 		return nil, err
 	}

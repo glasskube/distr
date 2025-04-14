@@ -171,9 +171,7 @@ func runInstallOrUpgrade(
 	if _, err := agentauth.EnsureAuth(ctx, agentClient.RawToken(), deployment.AgentDeployment); err != nil {
 		logger.Error("failed to ensure docker auth", zap.Error(err))
 		pushErrorStatus(ctx, deployment, fmt.Errorf("failed to ensure docker auth: %w", err))
-	}
-
-	if err := ensureImagePullSecret(ctx, namespace, deployment); err != nil {
+	} else if err := ensureImagePullSecret(ctx, namespace, deployment); err != nil {
 		logger.Error("failed to ensure image pull secret", zap.Error(err))
 		pushErrorStatus(ctx, deployment, fmt.Errorf("failed to ensure image pull secret: %w", err))
 	}

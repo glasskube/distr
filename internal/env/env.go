@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
 	"github.com/joho/godotenv"
 )
@@ -49,23 +50,23 @@ func init() {
 	databaseUrl = envutil.RequireEnv("DATABASE_URL")
 	jwtSecret = envutil.RequireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
 	host = envutil.RequireEnv("DISTR_HOST")
-	agentInterval = envutil.GetEnvParsedOrDefault("AGENT_INTERVAL", getPositiveDuration, 5*time.Second)
-	statusEntriesMaxAge = envutil.GetEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", getPositiveDuration)
+	agentInterval = envutil.GetEnvParsedOrDefault("AGENT_INTERVAL", envparse.PositiveDuration, 5*time.Second)
+	statusEntriesMaxAge = envutil.GetEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", envparse.PositiveDuration)
 	enableQueryLogging = envutil.GetEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
 	userEmailVerificationRequired =
 		envutil.GetEnvParsedOrDefault("USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true)
-	serverShutdownDelayDuration = envutil.GetEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", getPositiveDuration)
+	serverShutdownDelayDuration = envutil.GetEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", envparse.PositiveDuration)
 	registration = envutil.GetEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
 	inviteTokenValidDuration =
-		envutil.GetEnvParsedOrDefault("INVITE_TOKEN_VALID_DURATION", getPositiveDuration, 24*time.Hour)
+		envutil.GetEnvParsedOrDefault("INVITE_TOKEN_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour)
 	resetTokenValidDuration =
-		envutil.GetEnvParsedOrDefault("RESET_TOKEN_VALID_DURATION", getPositiveDuration, 1*time.Hour)
+		envutil.GetEnvParsedOrDefault("RESET_TOKEN_VALID_DURATION", envparse.PositiveDuration, 1*time.Hour)
 	agentTokenMaxValidDuration =
-		envutil.GetEnvParsedOrDefault("AGENT_TOKEN_MAX_VALID_DURATION", getPositiveDuration, 24*time.Hour)
+		envutil.GetEnvParsedOrDefault("AGENT_TOKEN_MAX_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour)
 
 	mailerConfig.Type = envutil.GetEnvParsedOrDefault("MAILER_TYPE", parseMailerType, MailerTypeUnspecified)
 	if mailerConfig.Type != MailerTypeUnspecified {
-		mailerConfig.FromAddress = envutil.RequireEnvParsed("MAILER_FROM_ADDRESS", parseMailAddress)
+		mailerConfig.FromAddress = envutil.RequireEnvParsed("MAILER_FROM_ADDRESS", envparse.MailAddress)
 	}
 	if mailerConfig.Type == MailerTypeSMTP {
 		mailerConfig.SmtpConfig = &MailerSMTPConfig{
@@ -89,11 +90,11 @@ func init() {
 		registryS3Config.AllowRedirect = envutil.GetEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
 	}
 	artifactTagsDefaultLimitPerOrg =
-		envutil.GetEnvParsedOrDefault("ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", getNonNegativeNumber, 0)
+		envutil.GetEnvParsedOrDefault("ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", envparse.NonNegativeNumber, 0)
 
 	sentryDSN = envutil.GetEnv("SENTRY_DSN")
 	sentryDebug = envutil.GetEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
-	agentDockerConfig = envutil.GetEnvParsedOrDefault("AGENT_DOCKER_CONFIG", asByteSlice, nil)
+	agentDockerConfig = envutil.GetEnvParsedOrDefault("AGENT_DOCKER_CONFIG", envparse.ByteSlice, nil)
 	frontendSentryDSN = envutil.GetEnvOrNil("FRONTEND_SENTRY_DSN")
 	frontendPosthogToken = envutil.GetEnvOrNil("FRONTEND_POSTHOG_TOKEN")
 	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")

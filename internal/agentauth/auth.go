@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/containerd/log"
+	containerdlog "github.com/containerd/log"
 	dockerconfig "github.com/docker/cli/cli/config"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentenv"
@@ -20,7 +20,7 @@ var previousAuth = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
 var authClients = map[uuid.UUID]auth.Client{}
 
 func init() {
-	_ = log.SetLevel("warn")
+	_ = containerdlog.SetLevel("warn")
 }
 
 func EnsureAuth(
@@ -45,12 +45,16 @@ func EnsureAuth(
 	}
 
 	if agentenv.DistrRegistryHost != "" {
-		if err := client.LoginWithOpts(
+		opts := []auth.LoginOption{
 			auth.WithLoginContext(ctx),
 			auth.WithLoginHostname(agentenv.DistrRegistryHost),
 			auth.WithLoginUsername("unused"),
 			auth.WithLoginSecret(jwt),
-		); err != nil {
+		}
+		if agentenv.DistrRegistryPlainHTTP {
+			opts = append(opts, auth.WithLoginInsecure())
+		}
+		if err := client.LoginWithOpts(opts...); err != nil {
 			return nil, fmt.Errorf("docker login failed for %v: %w", agentenv.DistrRegistryHost, err)
 		}
 	}
