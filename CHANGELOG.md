@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.5.0](https://github.com/glasskube/distr/compare/1.4.7...1.5.0) (2025-04-14)
+
+
+### Features
+
+* agent registry auth ([#747](https://github.com/glasskube/distr/issues/747)) ([e55005a](https://github.com/glasskube/distr/commit/e55005af477c4e0f95802fb6eaf2f88678b7b170))
+
+
+### Bug Fixes
+
+* **agent:** kubernetes agent sends wrong status type for "progressing" ([ff0a337](https://github.com/glasskube/distr/commit/ff0a337db48aa073948f214cd36526aa592ef5de))
+* **deps:** update angular monorepo to v19.2.6 ([#767](https://github.com/glasskube/distr/issues/767)) ([295bce3](https://github.com/glasskube/distr/commit/295bce3913898374cbd0429edf1e2287f29d4e28))
+* **deps:** update aws-sdk-go-v2 monorepo ([#776](https://github.com/glasskube/distr/issues/776)) ([9377f94](https://github.com/glasskube/distr/commit/9377f94fb8e86ce0a838d61988f5b0eb59214d67))
+* **deps:** update dependency @angular/cdk to v19.2.9 ([#770](https://github.com/glasskube/distr/issues/770)) ([51e3d82](https://github.com/glasskube/distr/commit/51e3d82f91def38f6676b6499ee332cfc66822bb))
+* **deps:** update dependency @sentry/angular to v9.12.0 ([#781](https://github.com/glasskube/distr/issues/781)) ([8adc88a](https://github.com/glasskube/distr/commit/8adc88abea66ceeb81149bb6923f7ded4861abae))
+* **deps:** update dependency posthog-js to v1.235.6 ([#783](https://github.com/glasskube/distr/issues/783)) ([a78c127](https://github.com/glasskube/distr/commit/a78c127cf804774afbdece6a08b3a40db4e07160))
+* **deps:** update module github.com/getsentry/sentry-go to v0.32.0 ([#773](https://github.com/glasskube/distr/issues/773)) ([01c5b58](https://github.com/glasskube/distr/commit/01c5b585bc3ab832a58196008be3807dd5dcf723))
+* **deps:** update module helm.sh/helm/v3 to v3.17.3 ([#772](https://github.com/glasskube/distr/issues/772)) ([6f611a3](https://github.com/glasskube/distr/commit/6f611a37aa085ae0a866ce03863b00e12db21655))
+
+
+### Other
+
+* **deps:** update actions/setup-node action to v4.4.0 ([#780](https://github.com/glasskube/distr/issues/780)) ([8dc422c](https://github.com/glasskube/distr/commit/8dc422c1d12c59e6dcff974d60e795ee2fc0261a))
+* **deps:** update angular-cli monorepo to v19.2.7 ([#769](https://github.com/glasskube/distr/issues/769)) ([ba499e2](https://github.com/glasskube/distr/commit/ba499e21af6c9075c03a5688839903214ec06eae))
+* **deps:** update axllent/mailpit docker tag to v1.24.1 ([#778](https://github.com/glasskube/distr/issues/778)) ([12cb796](https://github.com/glasskube/distr/commit/12cb7964ff274db09836cae4c1b14725284cc618))
+* **deps:** update dependency golangci-lint to v2.1.1 ([#779](https://github.com/glasskube/distr/issues/779)) ([6e26b4b](https://github.com/glasskube/distr/commit/6e26b4b2b1ca9f10614f81cf14d63ac5ed3ded25))
+* **deps:** update dependency typedoc-plugin-markdown to v4.6.2 ([#766](https://github.com/glasskube/distr/issues/766)) ([f675c1b](https://github.com/glasskube/distr/commit/f675c1b92ec85d246de5e44235ddf0880dbc1397))
+* **registry:** propagate invalid name errors and return 400 ([#765](https://github.com/glasskube/distr/issues/765)) ([110ff0d](https://github.com/glasskube/distr/commit/110ff0d929ac38ccc13ee53e4743cdd149bb7455))
+* **ui:** change stale message for empty deployment targets ([#771](https://github.com/glasskube/distr/issues/771)) ([f324d0b](https://github.com/glasskube/distr/commit/f324d0b2ca86f31d69e07c8b46e9e782c4c46167))
+* **ui:** reconnect in dropdown, hide status if target empty ([#768](https://github.com/glasskube/distr/issues/768)) ([7f9e6ac](https://github.com/glasskube/distr/commit/7f9e6ac993691cb18efc873a364dbf1247e135a6))
+
+
+### Docs
+
+* add registry to README.md ([#761](https://github.com/glasskube/distr/issues/761)) ([7d1a657](https://github.com/glasskube/distr/commit/7d1a65795c061f0301b1097c1782eadaa9c55ed9))
+
 ## [1.4.7](https://github.com/glasskube/distr/compare/1.4.6...1.4.7) (2025-04-08)
 
 
