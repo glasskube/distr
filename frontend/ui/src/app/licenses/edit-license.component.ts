@@ -142,7 +142,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     this.editForm.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(() => {
       this.onTouched();
       const val = this.editForm.getRawValue();
-      console.log(val);
       if (!val.includeAllItems) {
         this.subjectItemsSelected = val.subjectItems.filter((v) => !!v).length;
       }
