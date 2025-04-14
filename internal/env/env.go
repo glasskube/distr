@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/glasskube/distr/internal/envparse"
+	"github.com/glasskube/distr/internal/envutil"
 	"github.com/joho/godotenv"
 )
 
@@ -45,56 +47,58 @@ func init() {
 		}
 	}
 
-	databaseUrl = requireEnv("DATABASE_URL")
-	jwtSecret = requireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
-	host = requireEnv("DISTR_HOST")
-	agentInterval = getEnvParsedOrDefault("AGENT_INTERVAL", getPositiveDuration, 5*time.Second)
-	statusEntriesMaxAge = getEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", getPositiveDuration)
-	enableQueryLogging = getEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
+	databaseUrl = envutil.RequireEnv("DATABASE_URL")
+	jwtSecret = envutil.RequireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
+	host = envutil.RequireEnv("DISTR_HOST")
+	agentInterval = envutil.GetEnvParsedOrDefault("AGENT_INTERVAL", envparse.PositiveDuration, 5*time.Second)
+	statusEntriesMaxAge = envutil.GetEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", envparse.PositiveDuration)
+	enableQueryLogging = envutil.GetEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
 	userEmailVerificationRequired =
-		getEnvParsedOrDefault("USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true)
-	serverShutdownDelayDuration = getEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", getPositiveDuration)
-	registration = getEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
+		envutil.GetEnvParsedOrDefault("USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true)
+	serverShutdownDelayDuration = envutil.GetEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", envparse.PositiveDuration)
+	registration = envutil.GetEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
 	inviteTokenValidDuration =
-		getEnvParsedOrDefault("INVITE_TOKEN_VALID_DURATION", getPositiveDuration, 24*time.Hour)
+		envutil.GetEnvParsedOrDefault("INVITE_TOKEN_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour)
 	resetTokenValidDuration =
-		getEnvParsedOrDefault("RESET_TOKEN_VALID_DURATION", getPositiveDuration, 1*time.Hour)
+		envutil.GetEnvParsedOrDefault("RESET_TOKEN_VALID_DURATION", envparse.PositiveDuration, 1*time.Hour)
 	agentTokenMaxValidDuration =
-		getEnvParsedOrDefault("AGENT_TOKEN_MAX_VALID_DURATION", getPositiveDuration, 24*time.Hour)
+		envutil.GetEnvParsedOrDefault("AGENT_TOKEN_MAX_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour)
 
-	mailerConfig.Type = getEnvParsedOrDefault("MAILER_TYPE", parseMailerType, MailerTypeUnspecified)
+	mailerConfig.Type = envutil.GetEnvParsedOrDefault("MAILER_TYPE", parseMailerType, MailerTypeUnspecified)
 	if mailerConfig.Type != MailerTypeUnspecified {
-		mailerConfig.FromAddress = requireEnvParsed("MAILER_FROM_ADDRESS", parseMailAddress)
+		mailerConfig.FromAddress = envutil.RequireEnvParsed("MAILER_FROM_ADDRESS", envparse.MailAddress)
 	}
 	if mailerConfig.Type == MailerTypeSMTP {
 		mailerConfig.SmtpConfig = &MailerSMTPConfig{
-			Host:     getEnv("MAILER_SMTP_HOST"),
-			Port:     requireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
-			Username: getEnv("MAILER_SMTP_USERNAME"),
-			Password: getEnv("MAILER_SMTP_PASSWORD"),
+			Host:     envutil.GetEnv("MAILER_SMTP_HOST"),
+			Port:     envutil.RequireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
+			Username: envutil.GetEnv("MAILER_SMTP_USERNAME"),
+			Password: envutil.GetEnv("MAILER_SMTP_PASSWORD"),
 		}
 	}
 
-	registryEnabled = getEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
+	registryEnabled = envutil.GetEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
 	if registryEnabled {
-		registryHost = getEnvOrDefault("REGISTRY_HOST", host, getEnvOpts{deprecatedAlias: "DISTR_ARTIFACTS_HOST"})
-		registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
-		registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
-		registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
-		registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
-		registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
-		registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
-		registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
+		registryHost =
+			envutil.GetEnvOrDefault("REGISTRY_HOST", host, envutil.GetEnvOpts{DeprecatedAlias: "DISTR_ARTIFACTS_HOST"})
+		registryS3Config.Bucket = envutil.RequireEnv("REGISTRY_S3_BUCKET")
+		registryS3Config.Region = envutil.RequireEnv("REGISTRY_S3_REGION")
+		registryS3Config.Endpoint = envutil.GetEnvOrNil("REGISTRY_S3_ENDPOINT")
+		registryS3Config.AccessKeyID = envutil.GetEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
+		registryS3Config.SecretAccessKey = envutil.GetEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
+		registryS3Config.UsePathStyle = envutil.GetEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
+		registryS3Config.AllowRedirect = envutil.GetEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
 	}
-	artifactTagsDefaultLimitPerOrg = getEnvParsedOrDefault("ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", getNonNegativeNumber, 0)
+	artifactTagsDefaultLimitPerOrg =
+		envutil.GetEnvParsedOrDefault("ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", envparse.NonNegativeNumber, 0)
 
-	sentryDSN = getEnv("SENTRY_DSN")
-	sentryDebug = getEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
-	agentDockerConfig = getEnvParsedOrDefault("AGENT_DOCKER_CONFIG", asByteSlice, nil)
-	frontendSentryDSN = getEnvOrNil("FRONTEND_SENTRY_DSN")
-	frontendPosthogToken = getEnvOrNil("FRONTEND_POSTHOG_TOKEN")
-	frontendPosthogAPIHost = getEnvOrNil("FRONTEND_POSTHOG_API_HOST")
-	frontendPosthogUIHost = getEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
+	sentryDSN = envutil.GetEnv("SENTRY_DSN")
+	sentryDebug = envutil.GetEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
+	agentDockerConfig = envutil.GetEnvParsedOrDefault("AGENT_DOCKER_CONFIG", envparse.ByteSlice, nil)
+	frontendSentryDSN = envutil.GetEnvOrNil("FRONTEND_SENTRY_DSN")
+	frontendPosthogToken = envutil.GetEnvOrNil("FRONTEND_POSTHOG_TOKEN")
+	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")
+	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
 }
 
 func DatabaseUrl() string {
