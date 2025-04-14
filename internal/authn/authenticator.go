@@ -2,7 +2,10 @@ package authn
 
 import (
 	"context"
+	"errors"
 	"net/http"
+
+	"go.uber.org/multierr"
 )
 
 type Authenticator[IN any, OUT any] interface {
@@ -59,5 +62,25 @@ func Chain4[IN any, MID1 any, MID2 any, MID3 any, OUT any](
 		} else {
 			return d.Authenticate(ctx, mid3)
 		}
+	})
+}
+
+func Alternative[A any, B any](authenticators ...Authenticator[A, B]) Authenticator[A, B] {
+	return AuthenticatorFunc[A, B](func(ctx context.Context, in A) (result B, err error) {
+		for _, authenticator := range authenticators {
+			if out, err1 := authenticator.Authenticate(ctx, in); err1 != nil {
+				multierr.AppendInto(&err, err1)
+				if errors.Is(err1, ErrNoAuthentication) || errors.Is(err1, ErrBadAuthentication) {
+					continue
+				} else {
+					break
+				}
+			} else {
+				result = out
+				err = nil
+				break
+			}
+		}
+		return
 	})
 }

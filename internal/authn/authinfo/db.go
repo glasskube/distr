@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/internal/authn"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 )
 
 type DbAuthInfo struct {
@@ -47,4 +48,28 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 			org:      org,
 		}, nil
 	})
+}
+
+func AgentDbAuthenticator() authn.Authenticator[AgentAuthInfo, *DbAuthInfo] {
+	fn := func(ctx context.Context, a AgentAuthInfo) (*DbAuthInfo, error) {
+		userWithRole, org, err := db.GetUserAccountAndOrgForDeploymentTarget(ctx, a.CurrentDeploymentTargetID())
+		if errors.Is(err, apierrors.ErrNotFound) {
+			return nil, authn.ErrBadAuthentication
+		} else if err != nil {
+			return nil, err
+		}
+		return &DbAuthInfo{
+			AuthInfo: &SimpleAuthInfo{
+				organizationID: &org.ID,
+				userID:         userWithRole.ID,
+				userEmail:      userWithRole.Email,
+				emailVerified:  userWithRole.EmailVerifiedAt != nil,
+				userRole:       util.PtrTo(userWithRole.UserRole),
+				rawToken:       a.Token(),
+			},
+			user: util.PtrTo(userWithRole.AsUserAccount()),
+			org:  org,
+		}, nil
+	}
+	return authn.AuthenticatorFunc[AgentAuthInfo, *DbAuthInfo](fn)
 }
