@@ -95,12 +95,13 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
     pushDone: new FormControl<boolean>(false, Validators.requiredTrue),
     exploreDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
-  protected readonly registrySlug$ = this.organizationService.get().pipe(tap((o) => (this.slug = o.slug)));
   protected slug?: string;
-  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(tap((e) => (this.host = e.registryHost)));
   protected host?: string;
 
   ngOnInit() {
+    this.organizationService.get().pipe(tap((o) => (this.slug = o.slug)));
+    fromPromise(getRemoteEnvironment()).pipe(tap((e) => (this.host = e.registryHost)));
+
     this.usageFormGroup.controls.pullDone.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
