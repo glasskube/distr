@@ -60,7 +60,6 @@ const usageStepTaskExplore = 'explore';
     FaIconComponent,
     CdkStepperPrevious,
     AutotrimDirective,
-    RouterLink,
     AsyncPipe,
     ClipComponent,
   ],
@@ -109,6 +108,25 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
   protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.registryHost));
 
   async ngOnInit() {
+    this.usageFormGroup.controls.pullDone.valueChanges
+      .pipe(
+        takeUntil(this.destroyed$),
+        tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskPull))
+      )
+      .subscribe();
+    this.usageFormGroup.controls.tagDone.valueChanges
+      .pipe(
+        takeUntil(this.destroyed$),
+        tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskTag))
+      )
+      .subscribe();
+    this.usageFormGroup.controls.pushDone.valueChanges
+      .pipe(
+        takeUntil(this.destroyed$),
+        tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskPush))
+      )
+      .subscribe();
+
     try {
       this.progress = await lastValueFrom(this.tutorialsService.get(tutorialId));
       if (this.progress.createdAt) {
@@ -116,7 +134,6 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
           await this.continueFromWelcome();
           await this.continueFromPrepare();
           await this.continueFromLogin();
-          // TODO ?
         } else {
           this.stepper.steps.forEach((s) => (s.completed = true));
         }
@@ -127,6 +144,18 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
         // it's a valid use case for a tutorial progress not to exist yet
         this.toast.error(msg);
       }
+    }
+  }
+
+  private async saveDoneIfNotYetDone(done: boolean, stepId: string, taskId: string) {
+    const doneBefore = (this.progress?.events ?? []).find((e) => e.stepId === stepId && e.taskId === taskId);
+    if (done && !doneBefore) {
+      this.progress = await firstValueFrom(
+        this.tutorialsService.save(tutorialId, {
+          stepId: stepId,
+          taskId: taskId,
+        })
+      );
     }
   }
 
@@ -279,17 +308,18 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
 
   private prepareUsageStep() {
     const pull = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskPull);
-    if (pull) {
-      this.usageFormGroup.controls.pullDone.patchValue(true);
-    }
-
+    const tag = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskTag);
+    const push = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskPush);
     const explore = (this.progress?.events ?? []).find(
       (e) => e.stepId === usageStep && e.taskId === usageStepTaskExplore
     );
-    if (explore) {
-      this.usageFormGroup.controls.exploreDone.patchValue(true);
-    }
 
+    this.usageFormGroup.patchValue({
+      pullDone: !!pull,
+      tagDone: !!tag,
+      pushDone: !!push,
+      exploreDone: !!explore,
+    });
     this.usageFormGroup.markAsPristine();
   }
 

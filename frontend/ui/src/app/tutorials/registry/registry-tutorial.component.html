@@ -130,8 +130,8 @@
                         </span>
                         <h3 class="text-lg font-medium leading-tight">Create a Personal Access Token</h3>
                         <p class="mt-1 text-xs">
-                          <b>Note: </b>A Personal Access Token is like a password, anybody that has it, can access your
-                          account!
+                          <b>Note: </b>A Personal Access Token is like a password: Anybody with access to it can access
+                          your account!
                         </p>
                         @if (loginFormGroup.controls.tokenDone.value !== true) {
                           <p class="mt-1 text-xs">
@@ -179,17 +179,15 @@
                         </span>
                         <h3 class="text-lg font-medium leading-tight">Login</h3>
                         <p class="mt-1 text-xs">
-                          Use the previously created Personal Access Token, copy it and use it to log in to the registry
-                          with this command:
+                          Use the previously created Personal Access Token as password to log in to the registry with
+                          this command:
                           <code
                             class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                            echo "
-                            @if (loginFormGroup.controls.tokenDone.value === true && createdToken; as t) {
-                              {{ t.key }}
-                            } @else {
-                              your-personal-access-token-here
-                            }
-                            " | docker login {{ host }} --password-stdin -u -
+                            echo "{{
+                              loginFormGroup.controls.tokenDone.value === true && createdToken
+                                ? createdToken!.key
+                                : 'your-personal-access-token-here'
+                            }}" | docker login {{ host }} --password-stdin -u -
                           </code>
                         </p>
 
@@ -256,15 +254,13 @@
                             class="text-gray-600 dark:text-gray-400 underline"
                             target="_blank"
                             >hello-distr application</a
-                          >. Pull them to your machine's docker environment.
+                          >. Pull them from the Github Container Registry to your machine's docker environment, with:
                         </p>
-                        <p class="mt-1 text-xs">From your terminal, execute:</p>
                         <code
                           class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                          docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9 &&<br />
-                          docker pull ghcr.io/glasskube/hello-distr/proxy:0.1.9 && <br />
-                          docker pull ghcr.io/glasskube/hello-distr/frontend:0.1.9<br />
+                          docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9
                         </code>
+                        <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                         @if (usageFormGroup.controls.pullDone.touched && usageFormGroup.controls.pullDone.invalid) {
                           <div class="mt-2 text-sm text-red-500">
                             Please mark this as checked when you are done with it.
@@ -280,23 +276,14 @@
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                         </span>
                         <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
-                        <p class="mt-1 text-xs">
-                          This step will make the sample images "yours". You can of course do this with any image you
-                          like.
-                        </p>
-                        <p class="mt-1 text-xs">From your terminal, you can now execute:</p>
+                        <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
                         <code
                           class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                           docker tag ghcr.io/glasskube/hello-distr/backend:0.1.9 {{ host }}/{{
                             slug
-                          }}/hello-distr/backend:0.1.9 &&<br />
-                          docker tag ghcr.io/glasskube/hello-distr/proxy:0.1.9 {{ host }}/{{
-                            slug
-                          }}/hello-distr/proxy:0.1.9 && <br />
-                          docker tag ghcr.io/glasskube/hello-distr/frontend:0.1.9 {{ host }}/{{
-                            slug
-                          }}/hello-distr/frontend:0.1.9<br />
+                          }}/hello-distr/backend:0.1.9
                         </code>
+                        <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                         @if (usageFormGroup.controls.tagDone.touched && usageFormGroup.controls.tagDone.invalid) {
                           <div class="mt-2 text-sm text-red-500">
                             Please mark this as checked when you are done with it.
@@ -312,13 +299,11 @@
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                         </span>
                         <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
-                        <p class="mt-1 text-xs">From your terminal, you can now execute:</p>
                         <code
                           class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                          docker push {{ host }}/{{ slug }}/hello-distr/backend:0.1.9 &&<br />
-                          docker push {{ host }}/{{ slug }}/hello-distr/proxy:0.1.9 &&<br />
-                          docker push {{ host }}/{{ slug }}/hello-distr/frontend:0.1.9
+                          docker push {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
                         </code>
+                        <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                         @if (usageFormGroup.controls.pushDone.touched && usageFormGroup.controls.pushDone.invalid) {
                           <div class="mt-2 text-sm text-red-500">
                             Please mark this as checked when you are done with it.
@@ -333,14 +318,14 @@
                             [formControl]="usageFormGroup.controls.exploreDone"
                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                         </span>
-                        <h3 class="text-lg font-medium leading-tight">View artifacts page and download history</h3>
-                        <p class="mt-1 text-xs">
-                          Have a look at the Artifacts Overview page and verify that the three hello-distr images are
-                          there.
-                        </p>
-                        <p class="mt-1 text-xs">
-                          Once you pull these images from your registry, you will also see the pull appearing in the
-                          download history!
+                        <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
+                        <p class="mt-1 text-xs">Pull one of the pushed images:</p>
+                        <code
+                          class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                          docker pull {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
+                        </code>
+                        <p class="mt-2 text-xs">
+                          In the Artifacts Download History you will now see that you have pulled the image!
                         </p>
                         <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
                         @if (
