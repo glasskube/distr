@@ -99,8 +99,13 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   protected host?: string;
 
   ngOnInit() {
-    this.organizationService.get().pipe(tap((o) => (this.slug = o.slug))).subscribe();
-    fromPromise(getRemoteEnvironment()).pipe(tap((e) => (this.host = e.registryHost))).subscribe();
+    this.organizationService
+      .get()
+      .pipe(tap((o) => (this.slug = o.slug)))
+      .subscribe();
+    fromPromise(getRemoteEnvironment())
+      .pipe(tap((e) => (this.host = e.registryHost)))
+      .subscribe();
 
     this.usageFormGroup.controls.pullDone.valueChanges
       .pipe(
