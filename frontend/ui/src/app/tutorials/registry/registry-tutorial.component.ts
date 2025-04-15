@@ -1,4 +1,4 @@
-import {Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {
   faArrowRight,
@@ -13,27 +13,22 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
 import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {OrganizationBrandingService} from '../../services/organization-branding.service';
-import {Router, RouterLink} from '@angular/router';
+import {Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
-import {AccessTokenWithKey, OrganizationBranding} from '../../../../../../sdk/js/src';
-import {base64ToBlob} from '../../../util/blob';
+import {firstValueFrom, lastValueFrom, Subject, takeUntil, tap} from 'rxjs';
+import {AccessTokenWithKey} from '../../../../../../sdk/js/src';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../../services/toast.service';
-import {UsersService} from '../../services/users.service';
 import {TutorialsService} from '../../services/tutorials.service';
 import {TutorialProgress} from '../../types/tutorials';
-import {AuthService} from '../../services/auth.service';
 import {Organization} from '../../types/organization';
 import {OrganizationService} from '../../services/organization.service';
 import {slugMaxLength, slugPattern} from '../../../util/slug';
 import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {getRemoteEnvironment} from '../../../env/remote';
-import {AsyncPipe} from '@angular/common';
 import {AccessTokensService} from '../../services/access-tokens.service';
 import {ClipComponent} from '../../components/clip.component';
 
@@ -60,12 +55,11 @@ const usageStepTaskExplore = 'explore';
     FaIconComponent,
     CdkStepperPrevious,
     AutotrimDirective,
-    AsyncPipe,
     ClipComponent,
   ],
   templateUrl: './registry-tutorial.component.html',
 })
-export class RegistryTutorialComponent implements OnInit, OnDestroy {
+export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = signal(true);
   private readonly destroyed$ = new Subject<void>();
   protected readonly faBox = faBox;
@@ -74,12 +68,10 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faB = faB;
   protected readonly faLightbulb = faLightbulb;
-  @ViewChild('stepper') private stepper!: CdkStepper;
+  @ViewChild('stepper', {static: false}) private stepper?: CdkStepper;
   private readonly router = inject(Router);
-  private readonly auth = inject(AuthService);
   protected readonly toast = inject(ToastService);
   protected readonly organizationService = inject(OrganizationService);
-  protected readonly usersService = inject(UsersService);
   protected readonly tutorialsService = inject(TutorialsService);
   protected readonly tokenService = inject(AccessTokensService);
   protected createdToken?: AccessTokenWithKey;
@@ -98,16 +90,17 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
     loginDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   protected readonly usageFormGroup = new FormGroup({
-    // TODO instant save for these checkboxes??
     pullDone: new FormControl<boolean>(false, Validators.requiredTrue),
     tagDone: new FormControl<boolean>(false, Validators.requiredTrue),
     pushDone: new FormControl<boolean>(false, Validators.requiredTrue),
     exploreDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
-  protected readonly registrySlug$ = this.organizationService.get().pipe(map((o) => o.slug));
-  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.registryHost));
+  protected readonly registrySlug$ = this.organizationService.get().pipe(tap((o) => (this.slug = o.slug)));
+  protected slug?: string;
+  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(tap((e) => (this.host = e.registryHost)));
+  protected host?: string;
 
-  async ngOnInit() {
+  ngOnInit() {
     this.usageFormGroup.controls.pullDone.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
@@ -126,7 +119,9 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
         tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskPush))
       )
       .subscribe();
+  }
 
+  async ngAfterViewInit() {
     try {
       this.progress = await lastValueFrom(this.tutorialsService.get(tutorialId));
       if (this.progress.createdAt) {
@@ -135,7 +130,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
           await this.continueFromPrepare();
           await this.continueFromLogin();
         } else {
-          this.stepper.steps.forEach((s) => (s.completed = true));
+          this.stepper?.steps.forEach((s) => (s.completed = true));
         }
       }
     } catch (e) {
@@ -161,6 +156,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
 
   protected async continueFromWelcome() {
     try {
+      this.loading.set(true);
       this.organization = await firstValueFrom(this.organizationService.get());
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -186,7 +182,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
             taskId: welcomeTaskStart,
           })
         );
-        this.stepper.next();
+        this.stepper?.next();
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
@@ -196,7 +192,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       }
     } else {
-      this.stepper.next();
+      this.stepper?.next();
     }
   }
 
@@ -234,7 +230,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
 
       this.prepareFormGroup.controls.slugDone.patchValue(true);
       this.prepareLoginStep();
-      this.stepper.next();
+      this.stepper?.next();
     }
   }
 
@@ -302,7 +298,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
       }
 
       this.prepareUsageStep();
-      this.stepper.next();
+      this.stepper?.next();
     }
   }
 
@@ -334,7 +330,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
           markCompleted: true,
         })
       );
-      this.stepper.selected!.completed = true;
+      this.stepper!.selected!.completed = true;
       this.loading.set(false);
       this.toast.success('Congrats on finishing the tutorial! Good Job!');
       this.navigateToOverviewPage();
@@ -344,7 +340,6 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
   }
 
   protected navigateToOverviewPage() {
-    this.tutorialsService.refreshList();
     this.router.navigate(['tutorials']);
   }
 

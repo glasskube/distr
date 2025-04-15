@@ -2,370 +2,351 @@
   <div class="mx-auto max-w-screen-lg px-4">
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div class="overflow-x-auto">
-        @if (registrySlug$ | async; as slug) {
-          @if (registryHost$ | async; as host) {
-            <app-tutorial-stepper #stepper class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
-              <cdk-step label="Welcome" [stepControl]="welcomeFormGroup">
-                <div class="px-20 py-8 w-full">
-                  <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Artifact Registry</h3>
+        <app-tutorial-stepper #stepper class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          <cdk-step label="Welcome" [stepControl]="welcomeFormGroup">
+            <div class="px-20 py-8 w-full">
+              <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Artifact Registry</h3>
 
-                  <div class="text-gray-900 dark:text-white mb-12">
-                    <p>In this tutorial you will learn how to make use of the Artifact Registry.</p>
-                    <!-- TODO <p class="mt-8">
-                      You can find additional resources on this topic in our
+              <div class="text-gray-900 dark:text-white mb-12">
+                <p>In this tutorial you will learn how to make use of the Artifact Registry.</p>
+                <!-- TODO <p class="mt-8">
+                  You can find additional resources on this topic in our
+                  <a
+                    href="https://distr.sh/docs/product/customer-portal/"
+                    class="text-primary-600 underline"
+                    target="_blank"
+                    >docs</a
+                  >.
+                </p>-->
+              </div>
+
+              <div class="gap-4 sm:flex sm:items-center sm:justify-between">
+                <button
+                  (click)="navigateToOverviewPage()"
+                  class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
+                  Exit Tutorial
+                </button>
+                <button
+                  (click)="continueFromWelcome()"
+                  type="submit"
+                  class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
+                  Let's Go
+                  <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
+                </button>
+              </div>
+            </div>
+          </cdk-step>
+          <cdk-step label="Prepare Registry" [stepControl]="prepareFormGroup">
+            <div class="p-8 w-full">
+              <form [formGroup]="prepareFormGroup" (ngSubmit)="continueFromPrepare()">
+                <ol
+                  class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700">
+                  <li class="mb-10 ms-8">
+                    <span
+                      class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
+                      <fa-icon [icon]="faLightbulb"></fa-icon>
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Prepare Registry</h3>
+                    <p class="text-sm mt-2">
+                      Your organization needs to have a slug in order to use the registry. You only need to do this once
+                      for your organization.
+                    </p>
+                  </li>
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="prepareFormGroup.controls.slugDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Set Organization Slug</h3>
+                    <p class="mt-1 text-xs">
+                      The slug will used as part of the url for artifact registry. It must start with a lower case
+                      letter or digit and consist only of lowercase letters, digits, as well as the following special
+                      characters: “.”, “_”, “__”, “-”.
+                    </p>
+                    <div class="mt-2">
+                      <input
+                        [formControl]="prepareFormGroup.controls.slug"
+                        autotrim
+                        type="text"
+                        name="slug"
+                        id="slug"
+                        class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                      @if (prepareFormGroup.controls.slug.touched && prepareFormGroup.controls.slug.errors) {
+                        <div class="mt-2 text-sm text-red-500">Please enter a correct slug.</div>
+                      }
+                    </div>
+                  </li>
+                </ol>
+
+                <div class="gap-4 sm:flex sm:items-center sm:justify-between">
+                  <button
+                    cdkStepperPrevious
+                    class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    [disabled]="loading()"
+                    class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
+                    @if (prepareFormGroup.dirty) {
+                      Save and Continue
+                    } @else {
+                      Continue
+                    }
+                    <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </cdk-step>
+
+          <cdk-step label="Login" [stepControl]="loginFormGroup">
+            <div class="p-8 w-full">
+              <form [formGroup]="loginFormGroup" (ngSubmit)="continueFromLogin()">
+                <ol
+                  class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700">
+                  <li class="mb-10 ms-8">
+                    <span
+                      class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
+                      <fa-icon [icon]="faLightbulb"></fa-icon>
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Login</h3>
+                    <p class="text-sm mt-2">
+                      On your machine you have to log in to the Distr registry. To that end, you will create a personal
+                      access token, that authenticates you against the registry.
+                    </p>
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="loginFormGroup.controls.tokenDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Create a Personal Access Token</h3>
+                    <p class="mt-1 text-xs">
+                      <b>Note: </b>A Personal Access Token is like a password: Anybody with access to it can access your
+                      account!
+                    </p>
+                    @if (loginFormGroup.controls.tokenDone.value !== true) {
+                      <p class="mt-1 text-xs">
+                        After clicking the button the new token will be displayed to you – This is the only time you
+                        will see it!
+                      </p>
+                    }
+                    <div class="mt-2 flex">
+                      @if (loginFormGroup.controls.tokenDone.value !== true) {
+                        <button
+                          type="button"
+                          [disabled]="loading()"
+                          (click)="createToken()"
+                          class="flex items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
+                          Create New Token
+                        </button>
+                      }
+                    </div>
+
+                    @if (loginFormGroup.controls.tokenDone.value === true && createdToken; as t) {
+                      <div
+                        class="text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
+                        role="alert">
+                        <p>
+                          Your Personal Access Token:
+                          <code class="select-all">{{ t.key }}</code>
+                          <app-clip class="mx-2" [clip]="t.key"></app-clip>
+                        </p>
+                        <p>
+                          <strong>Important:</strong>
+                          This is the only time you will be able to see this token, so please make sure to note it down
+                          before closing this page.
+                        </p>
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <!-- TODO integrate better without leaving page -->
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="loginFormGroup.controls.loginDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Login</h3>
+                    <p class="mt-1 text-xs">
+                      Use the previously created Personal Access Token as password to log in to the registry with this
+                      command:
+                      <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                        echo "{{
+                          loginFormGroup.controls.tokenDone.value === true && createdToken
+                            ? createdToken!.key
+                            : 'your-personal-access-token-here'
+                        }}" | docker login {{ host }} --password-stdin -u -
+                      </code>
+                    </p>
+
+                    @if (loginFormGroup.controls.loginDone.touched && loginFormGroup.controls.loginDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+                </ol>
+
+                <div class="gap-4 sm:flex sm:items-center sm:justify-between">
+                  <button
+                    cdkStepperPrevious
+                    class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    [disabled]="loading()"
+                    class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
+                    @if (prepareFormGroup.dirty) {
+                      Save and Continue
+                    } @else {
+                      Continue
+                    }
+                    <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </cdk-step>
+
+          <cdk-step label="Manage Images" [stepControl]="usageFormGroup">
+            <div class="p-8 w-full">
+              <form [formGroup]="usageFormGroup" (ngSubmit)="completeAndExit()">
+                <ol
+                  class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700">
+                  <li class="mb-10 ms-8">
+                    <span
+                      class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
+                      <fa-icon [icon]="faLightbulb"></fa-icon>
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Manage Images</h3>
+                    <p class="text-sm mt-2">You are now ready to push and pull images stored in the Distr registry.</p>
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="usageFormGroup.controls.pullDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Pull hello-distr from Github Container Registry</h3>
+                    <p class="mt-1 text-xs">
+                      We have prepared three images for you, that all belong to the
                       <a
-                        href="https://distr.sh/docs/product/customer-portal/"
-                        class="text-primary-600 underline"
+                        href="https://github.com/glasskube/hello-distr"
+                        class="text-gray-600 dark:text-gray-400 underline"
                         target="_blank"
-                        >docs</a
-                      >.
-                    </p>-->
-                  </div>
+                        >hello-distr application</a
+                      >. Pull them from the Github Container Registry to your machine's docker environment, with:
+                    </p>
+                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9
+                    </code>
+                    <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
+                    @if (usageFormGroup.controls.pullDone.touched && usageFormGroup.controls.pullDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
 
-                  <div class="gap-4 sm:flex sm:items-center sm:justify-between">
-                    <button
-                      (click)="navigateToOverviewPage()"
-                      class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
-                      Exit Tutorial
-                    </button>
-                    <button
-                      (click)="continueFromWelcome()"
-                      type="submit"
-                      class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                      Let's Go
-                      <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
-                    </button>
-                  </div>
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="usageFormGroup.controls.tagDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
+                    <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
+                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      docker tag ghcr.io/glasskube/hello-distr/backend:0.1.9 {{ host }}/{{
+                        slug
+                      }}/hello-distr/backend:0.1.9
+                    </code>
+                    <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
+                    @if (usageFormGroup.controls.tagDone.touched && usageFormGroup.controls.tagDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="usageFormGroup.controls.pushDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
+                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      docker push {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
+                    </code>
+                    <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
+                    @if (usageFormGroup.controls.pushDone.touched && usageFormGroup.controls.pushDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="usageFormGroup.controls.exploreDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
+                    <p class="mt-1 text-xs">Pull one of the pushed images:</p>
+                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      docker pull {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
+                    </code>
+                    <p class="mt-2 text-xs">
+                      In the Artifacts Download History you will now see that you have pulled the image!
+                    </p>
+                    <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
+                    @if (usageFormGroup.controls.exploreDone.touched && usageFormGroup.controls.exploreDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+                </ol>
+
+                <div class="gap-4 sm:flex sm:items-center sm:justify-between">
+                  <button
+                    cdkStepperPrevious
+                    class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
+                    Back
+                  </button>
+                  <button
+                    [disabled]="loading()"
+                    type="submit"
+                    class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
+                    <fa-icon class="mr-2" [icon]="faCheck"></fa-icon>
+                    @if (progress?.completedAt) {
+                      Done
+                    } @else {
+                      Complete Tutorial
+                    }
+                  </button>
                 </div>
-              </cdk-step>
-              <cdk-step label="Prepare Registry" [stepControl]="prepareFormGroup">
-                <div class="p-8 w-full">
-                  <form [formGroup]="prepareFormGroup" (ngSubmit)="continueFromPrepare()">
-                    <ol
-                      class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700">
-                      <li class="mb-10 ms-8">
-                        <span
-                          class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
-                          <fa-icon [icon]="faLightbulb"></fa-icon>
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Prepare Registry</h3>
-                        <p class="text-sm mt-2">
-                          Your organization needs to have a slug in order to use the registry. You only need to do this
-                          once for your organization.
-                        </p>
-                      </li>
-                      <li class="mb-10 ms-8">
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="prepareFormGroup.controls.slugDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Set Organization Slug</h3>
-                        <p class="mt-1 text-xs">
-                          The slug will used as part of the url for artifact registry. It must start with a lower case
-                          letter or digit and consist only of lowercase letters, digits, as well as the following
-                          special characters: “.”, “_”, “__”, “-”.
-                        </p>
-                        <div class="mt-2">
-                          <input
-                            [formControl]="prepareFormGroup.controls.slug"
-                            autotrim
-                            type="text"
-                            name="slug"
-                            id="slug"
-                            class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                          @if (prepareFormGroup.controls.slug.touched && prepareFormGroup.controls.slug.errors) {
-                            <div class="mt-2 text-sm text-red-500">Please enter a correct slug.</div>
-                          }
-                        </div>
-                      </li>
-                    </ol>
-
-                    <div class="gap-4 sm:flex sm:items-center sm:justify-between">
-                      <button
-                        cdkStepperPrevious
-                        class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
-                        Back
-                      </button>
-                      <button
-                        type="submit"
-                        [disabled]="loading()"
-                        class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                        @if (prepareFormGroup.dirty) {
-                          Save and Continue
-                        } @else {
-                          Continue
-                        }
-                        <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </cdk-step>
-
-              <cdk-step label="Login" [stepControl]="loginFormGroup">
-                <div class="p-8 w-full">
-                  <form [formGroup]="loginFormGroup" (ngSubmit)="continueFromLogin()">
-                    <ol
-                      class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700">
-                      <li class="mb-10 ms-8">
-                        <span
-                          class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
-                          <fa-icon [icon]="faLightbulb"></fa-icon>
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Login</h3>
-                        <p class="text-sm mt-2">
-                          On your machine you have to log in to the Distr registry. To that end, you will create a
-                          personal access token, that authenticates you against the registry.
-                        </p>
-                      </li>
-
-                      <li class="mb-10 ms-8">
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="loginFormGroup.controls.tokenDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Create a Personal Access Token</h3>
-                        <p class="mt-1 text-xs">
-                          <b>Note: </b>A Personal Access Token is like a password: Anybody with access to it can access
-                          your account!
-                        </p>
-                        @if (loginFormGroup.controls.tokenDone.value !== true) {
-                          <p class="mt-1 text-xs">
-                            After clicking the button the new token will be displayed to you – This is the only time you
-                            will see it!
-                          </p>
-                        }
-                        <div class="mt-2 flex">
-                          @if (loginFormGroup.controls.tokenDone.value !== true) {
-                            <button
-                              type="button"
-                              [disabled]="loading()"
-                              (click)="createToken()"
-                              class="flex items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                              Create New Token
-                            </button>
-                          }
-                        </div>
-
-                        @if (loginFormGroup.controls.tokenDone.value === true && createdToken; as t) {
-                          <div
-                            class="text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
-                            role="alert">
-                            <p>
-                              Your Personal Access Token:
-                              <code class="select-all">{{ t.key }}</code>
-                              <app-clip class="mx-2" [clip]="t.key"></app-clip>
-                            </p>
-                            <p>
-                              <strong>Important:</strong>
-                              This is the only time you will be able to see this token, so please make sure to note it
-                              down before closing this page.
-                            </p>
-                          </div>
-                        }
-                      </li>
-
-                      <li class="mb-10 ms-8">
-                        <!-- TODO integrate better without leaving page -->
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="loginFormGroup.controls.loginDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Login</h3>
-                        <p class="mt-1 text-xs">
-                          Use the previously created Personal Access Token as password to log in to the registry with
-                          this command:
-                          <code
-                            class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                            echo "{{
-                              loginFormGroup.controls.tokenDone.value === true && createdToken
-                                ? createdToken!.key
-                                : 'your-personal-access-token-here'
-                            }}" | docker login {{ host }} --password-stdin -u -
-                          </code>
-                        </p>
-
-                        @if (loginFormGroup.controls.loginDone.touched && loginFormGroup.controls.loginDone.invalid) {
-                          <div class="mt-2 text-sm text-red-500">
-                            Please mark this as checked when you are done with it.
-                          </div>
-                        }
-                      </li>
-                    </ol>
-
-                    <div class="gap-4 sm:flex sm:items-center sm:justify-between">
-                      <button
-                        cdkStepperPrevious
-                        class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
-                        Back
-                      </button>
-                      <button
-                        type="submit"
-                        [disabled]="loading()"
-                        class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                        @if (prepareFormGroup.dirty) {
-                          Save and Continue
-                        } @else {
-                          Continue
-                        }
-                        <fa-icon class="ml-2" [icon]="faArrowRight"></fa-icon>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </cdk-step>
-
-              <cdk-step label="Manage Images" [stepControl]="usageFormGroup">
-                <div class="p-8 w-full">
-                  <form [formGroup]="usageFormGroup" (ngSubmit)="completeAndExit()">
-                    <ol
-                      class="ml-4 relative text-gray-900 dark:text-white mb-12 border-s border-gray-200 dark:border-gray-700">
-                      <li class="mb-10 ms-8">
-                        <span
-                          class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -start-4 ring-4 ring-white dark:ring-gray-900 dark:bg-gray-700">
-                          <fa-icon [icon]="faLightbulb"></fa-icon>
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Manage Images</h3>
-                        <p class="text-sm mt-2">
-                          You are now ready to push and pull images stored in the Distr registry.
-                        </p>
-                      </li>
-
-                      <li class="mb-10 ms-8">
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="usageFormGroup.controls.pullDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">
-                          Pull hello-distr from Github Container Registry
-                        </h3>
-                        <p class="mt-1 text-xs">
-                          We have prepared three images for you, that all belong to the
-                          <a
-                            href="https://github.com/glasskube/hello-distr"
-                            class="text-gray-600 dark:text-gray-400 underline"
-                            target="_blank"
-                            >hello-distr application</a
-                          >. Pull them from the Github Container Registry to your machine's docker environment, with:
-                        </p>
-                        <code
-                          class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                          docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9
-                        </code>
-                        <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
-                        @if (usageFormGroup.controls.pullDone.touched && usageFormGroup.controls.pullDone.invalid) {
-                          <div class="mt-2 text-sm text-red-500">
-                            Please mark this as checked when you are done with it.
-                          </div>
-                        }
-                      </li>
-
-                      <li class="mb-10 ms-8">
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="usageFormGroup.controls.tagDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
-                        <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
-                        <code
-                          class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                          docker tag ghcr.io/glasskube/hello-distr/backend:0.1.9 {{ host }}/{{
-                            slug
-                          }}/hello-distr/backend:0.1.9
-                        </code>
-                        <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
-                        @if (usageFormGroup.controls.tagDone.touched && usageFormGroup.controls.tagDone.invalid) {
-                          <div class="mt-2 text-sm text-red-500">
-                            Please mark this as checked when you are done with it.
-                          </div>
-                        }
-                      </li>
-
-                      <li class="mb-10 ms-8">
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="usageFormGroup.controls.pushDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
-                        <code
-                          class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                          docker push {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
-                        </code>
-                        <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
-                        @if (usageFormGroup.controls.pushDone.touched && usageFormGroup.controls.pushDone.invalid) {
-                          <div class="mt-2 text-sm text-red-500">
-                            Please mark this as checked when you are done with it.
-                          </div>
-                        }
-                      </li>
-
-                      <li class="mb-10 ms-8">
-                        <span class="absolute flex items-center justify-center -start-2">
-                          <input
-                            type="checkbox"
-                            [formControl]="usageFormGroup.controls.exploreDone"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                        </span>
-                        <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
-                        <p class="mt-1 text-xs">Pull one of the pushed images:</p>
-                        <code
-                          class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                          docker pull {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
-                        </code>
-                        <p class="mt-2 text-xs">
-                          In the Artifacts Download History you will now see that you have pulled the image!
-                        </p>
-                        <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
-                        @if (
-                          usageFormGroup.controls.exploreDone.touched && usageFormGroup.controls.exploreDone.invalid
-                        ) {
-                          <div class="mt-2 text-sm text-red-500">
-                            Please mark this as checked when you are done with it.
-                          </div>
-                        }
-                      </li>
-                    </ol>
-
-                    <div class="gap-4 sm:flex sm:items-center sm:justify-between">
-                      <button
-                        cdkStepperPrevious
-                        class="flex-1 sm:flex-none items-center justify-center w-full rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 sm:w-auto">
-                        Back
-                      </button>
-                      <button
-                        [disabled]="loading()"
-                        type="submit"
-                        class="flex w-full items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
-                        <fa-icon class="mr-2" [icon]="faCheck"></fa-icon>
-                        @if (progress?.completedAt) {
-                          Done
-                        } @else {
-                          Complete Tutorial
-                        }
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </cdk-step>
-            </app-tutorial-stepper>
-          } @else {
-            <!-- TODO ?? -->
-          }
-        } @else {
-          <!-- TODO ?? -->
-        }
+              </form>
+            </div>
+          </cdk-step>
+        </app-tutorial-stepper>
       </div>
     </div>
   </div>

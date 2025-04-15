@@ -283,7 +283,6 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   }
 
   protected navigateToOverviewPage() {
-    this.tutorialsService.refreshList();
     this.router.navigate(['tutorials']);
   }
 
