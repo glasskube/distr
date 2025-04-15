@@ -19,7 +19,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
-import {OrganizationBranding} from '../../../../../../sdk/js/src';
+import {AccessTokenWithKey, OrganizationBranding} from '../../../../../../sdk/js/src';
 import {base64ToBlob} from '../../../util/blob';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -30,15 +30,25 @@ import {TutorialProgress} from '../../types/tutorials';
 import {AuthService} from '../../services/auth.service';
 import {Organization} from '../../types/organization';
 import {OrganizationService} from '../../services/organization.service';
+import {slugMaxLength, slugPattern} from '../../../util/slug';
+import {fromPromise} from 'rxjs/internal/observable/innerFrom';
+import {getRemoteEnvironment} from '../../../env/remote';
+import {AsyncPipe} from '@angular/common';
+import {AccessTokensService} from '../../services/access-tokens.service';
+import {ClipComponent} from '../../components/clip.component';
 
 const tutorialId = 'registry';
 const welcomeStep = 'welcome';
 const welcomeTaskStart = 'start';
 const prepareStep = 'prepare';
 const prepareStepTaskSetSlug = 'set-slug';
+const loginStep = 'login';
+const loginStepTaskCreateToken = 'create-token';
+const loginStepTaskLogin = 'login';
 const usageStep = 'usage';
-const usageStepTaskLogin = 'login';
 const usageStepTaskPull = 'pull';
+const usageStepTaskTag = 'tag';
+const usageStepTaskPush = 'push';
 const usageStepTaskExplore = 'explore';
 
 @Component({
@@ -50,6 +60,9 @@ const usageStepTaskExplore = 'explore';
     FaIconComponent,
     CdkStepperPrevious,
     AutotrimDirective,
+    RouterLink,
+    AsyncPipe,
+    ClipComponent,
   ],
   templateUrl: './registry-tutorial.component.html',
 })
@@ -69,19 +82,31 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
   protected readonly organizationService = inject(OrganizationService);
   protected readonly usersService = inject(UsersService);
   protected readonly tutorialsService = inject(TutorialsService);
+  protected readonly tokenService = inject(AccessTokensService);
+  protected createdToken?: AccessTokenWithKey;
   protected progress?: TutorialProgress;
   private organization?: Organization;
   protected readonly welcomeFormGroup = new FormGroup({});
   protected readonly prepareFormGroup = new FormGroup({
     slugDone: new FormControl<boolean>(false),
-    slug: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
+    slug: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(slugPattern), Validators.maxLength(slugMaxLength)],
+    }),
+  });
+  protected readonly loginFormGroup = new FormGroup({
+    tokenDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    loginDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   protected readonly usageFormGroup = new FormGroup({
     // TODO instant save for these checkboxes??
-    loginDone: new FormControl<boolean>(false, Validators.requiredTrue),
     pullDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    tagDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    pushDone: new FormControl<boolean>(false, Validators.requiredTrue),
     exploreDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
+  protected readonly registrySlug$ = this.organizationService.get().pipe(map((o) => o.slug));
+  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.registryHost));
 
   async ngOnInit() {
     try {
@@ -90,6 +115,7 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
         if (!this.progress.completedAt) {
           await this.continueFromWelcome();
           await this.continueFromPrepare();
+          await this.continueFromLogin();
           // TODO ?
         } else {
           this.stepper.steps.forEach((s) => (s.completed = true));
@@ -105,7 +131,6 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
   }
 
   protected async continueFromWelcome() {
-    // TODO prepare hello-distr images around here somehow
     try {
       this.organization = await firstValueFrom(this.organizationService.get());
     } catch (e) {
@@ -153,10 +178,12 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
         this.loading.set(true);
         const formVal = this.prepareFormGroup.getRawValue();
         try {
-          this.organization = await lastValueFrom(this.organizationService.update({
-            ...this.organization!,
-            slug: formVal.slug!,
-          }));
+          this.organization = await lastValueFrom(
+            this.organizationService.update({
+              ...this.organization!,
+              slug: formVal.slug!,
+            })
+          );
           this.prepareFormGroup.markAsPristine();
           this.progress = await lastValueFrom(
             this.tutorialsService.save(tutorialId, {
@@ -177,22 +204,81 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
       }
 
       this.prepareFormGroup.controls.slugDone.patchValue(true);
+      this.prepareLoginStep();
+      this.stepper.next();
+    }
+  }
+
+  private prepareLoginStep() {
+    const token = (this.progress?.events ?? []).find(
+      (e) => e.stepId === loginStep && e.taskId === loginStepTaskCreateToken
+    );
+    const login = (this.progress?.events ?? []).find((e) => e.stepId === loginStep && e.taskId === loginStepTaskLogin);
+
+    this.loginFormGroup.patchValue({
+      tokenDone: !!token,
+      loginDone: !!login,
+    });
+  }
+
+  protected async createToken() {
+    this.loading.set(true);
+    try {
+      this.createdToken = await firstValueFrom(
+        this.tokenService.create({
+          label: 'tutorial-token',
+          // TODO expiry?
+        })
+      );
+      this.loginFormGroup.controls.tokenDone.patchValue(true);
+      this.toast.success('Personal Access Token created successfully');
+      this.progress = await lastValueFrom(
+        this.tutorialsService.save(tutorialId, {
+          stepId: loginStep,
+          taskId: loginStepTaskCreateToken,
+        })
+      );
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  protected async continueFromLogin() {
+    this.loginFormGroup.markAllAsTouched();
+    if (this.loginFormGroup.valid) {
+      if (this.loginFormGroup.dirty) {
+        this.loading.set(true);
+        try {
+          this.loginFormGroup.markAsPristine();
+          this.progress = await lastValueFrom(
+            this.tutorialsService.save(tutorialId, {
+              stepId: loginStep,
+              taskId: loginStepTaskLogin,
+            })
+          );
+        } catch (e) {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return;
+        } finally {
+          this.loading.set(false);
+        }
+      }
+
       this.prepareUsageStep();
       this.stepper.next();
     }
   }
 
   private prepareUsageStep() {
-    const login = (this.progress?.events ?? []).find(
-      (e) => e.stepId === usageStep && e.taskId === usageStepTaskLogin
-    );
-    if (login) {
-      this.usageFormGroup.controls.loginDone.patchValue(true);
-    }
-
-    const pull = (this.progress?.events ?? []).find(
-      (e) => e.stepId === usageStep && e.taskId === usageStepTaskPull
-    );
+    const pull = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskPull);
     if (pull) {
       this.usageFormGroup.controls.pullDone.patchValue(true);
     }
@@ -211,7 +297,6 @@ export class RegistryTutorialComponent implements OnInit, OnDestroy {
     this.usageFormGroup.markAllAsTouched();
     if (this.usageFormGroup.valid && this.usageFormGroup.dirty) {
       this.loading.set(true);
-      // TODO maybe change to instant save
       this.progress = await lastValueFrom(
         this.tutorialsService.save(tutorialId, {
           stepId: usageStep,

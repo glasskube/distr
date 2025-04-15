@@ -8,6 +8,7 @@ import {ToastService} from '../services/toast.service';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {OrganizationService} from '../services/organization.service';
 import {Organization} from '../types/organization';
+import {slugMaxLength, slugPattern} from '../../util/slug';
 
 @Component({
   selector: 'app-organization-settings',
@@ -21,12 +22,9 @@ export class OrganizationSettingsComponent implements OnInit {
   private organization?: Organization;
   private toast = inject(ToastService);
 
-  readonly slugPattern = /^[a-z0-9]+((\.|_|__|-+)[a-z0-9]+)*$/;
-  readonly slugMaxLength = 64;
-
   protected readonly form = new FormGroup({
     name: new FormControl('', [Validators.required]),
-    slug: new FormControl('', [Validators.pattern(this.slugPattern), Validators.maxLength(this.slugMaxLength)]),
+    slug: new FormControl('', [Validators.pattern(slugPattern), Validators.maxLength(slugMaxLength)]),
   });
   formLoading = signal(false);
 
