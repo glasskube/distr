@@ -291,7 +291,10 @@ func watchConfigDirs(dirs []string) error {
 				return nil
 			}
 			return err
-		case event := <-w.Events:
+		case event, ok := <-w.Events:
+			if !ok {
+				return nil
+			}
 			if event.Op != fsnotify.Rename && event.Op != fsnotify.Write {
 				continue
 			}
