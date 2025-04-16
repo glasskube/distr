@@ -31,6 +31,7 @@ import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {AccessTokensService} from '../../services/access-tokens.service';
 import {ClipComponent} from '../../components/clip.component';
+import {getExistingTask} from '../utils';
 
 const tutorialId = 'registry';
 const welcomeStep = 'welcome';
@@ -149,7 +150,7 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   private async saveDoneIfNotYetDone(done: boolean, stepId: string, taskId: string) {
-    const doneBefore = (this.progress?.events ?? []).find((e) => e.stepId === stepId && e.taskId === taskId);
+    const doneBefore = getExistingTask(this.progress, stepId, taskId);
     if (done && !doneBefore) {
       this.progress = await firstValueFrom(
         this.tutorialsService.save(tutorialId, {
@@ -241,10 +242,8 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   private prepareLoginStep() {
-    const token = (this.progress?.events ?? []).find(
-      (e) => e.stepId === loginStep && e.taskId === loginStepTaskCreateToken
-    );
-    const login = (this.progress?.events ?? []).find((e) => e.stepId === loginStep && e.taskId === loginStepTaskLogin);
+    const token = getExistingTask(this.progress, loginStep, loginStepTaskCreateToken);
+    const login = getExistingTask(this.progress, loginStep, loginStepTaskLogin);
 
     this.loginFormGroup.patchValue({
       tokenDone: !!token,
@@ -309,12 +308,10 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   private prepareUsageStep() {
-    const pull = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskPull);
-    const tag = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskTag);
-    const push = (this.progress?.events ?? []).find((e) => e.stepId === usageStep && e.taskId === usageStepTaskPush);
-    const explore = (this.progress?.events ?? []).find(
-      (e) => e.stepId === usageStep && e.taskId === usageStepTaskExplore
-    );
+    const pull = getExistingTask(this.progress, usageStep, usageStepTaskPull);
+    const tag = getExistingTask(this.progress, usageStep, usageStepTaskTag);
+    const push = getExistingTask(this.progress, usageStep, usageStepTaskPush);
+    const explore = getExistingTask(this.progress, usageStep, usageStepTaskExplore);
 
     this.usageFormGroup.patchValue({
       pullDone: !!pull,

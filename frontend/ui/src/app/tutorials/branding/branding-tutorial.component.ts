@@ -28,6 +28,7 @@ import {UsersService} from '../../services/users.service';
 import {TutorialsService} from '../../services/tutorials.service';
 import {TutorialProgress} from '../../types/tutorials';
 import {AuthService} from '../../services/auth.service';
+import {getExistingTask} from '../utils';
 
 const defaultBrandingDescription = `# Welcome
 
@@ -212,9 +213,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
       this.inviteFormGroup.controls.inviteDone.patchValue(true);
     }
 
-    const login = (this.progress?.events ?? []).find(
-      (e) => e.stepId === customerStep && e.taskId === customerTaskLogin
-    );
+    const login = getExistingTask(this.progress, customerStep, customerTaskLogin);
     if (login) {
       this.inviteFormGroup.controls.customerConfirmed.patchValue(true);
     }

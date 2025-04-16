@@ -169,14 +169,19 @@
                     <p class="mt-1 text-xs">
                       Use the previously created Personal Access Token as password to log in to the registry with this
                       command:
-                      <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                        echo "{{
-                          loginFormGroup.controls.tokenDone.value === true && createdToken
-                            ? createdToken!.key
-                            : 'your-personal-access-token-here'
-                        }}" | docker login {{ host }} --password-stdin -u -
-                      </code>
                     </p>
+                    <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      @let loginCmd =
+                        'echo "' +
+                        (loginFormGroup.controls.tokenDone.value === true && createdToken
+                          ? createdToken!.key
+                          : 'YOUR-ACCESS-TOKEN') +
+                        '" | docker login ' +
+                        host +
+                        ' --password-stdin -u - ';
+                      {{ loginCmd }}
+                    </code>
+                    <app-clip class="mx-2" [clip]="loginCmd"></app-clip>
 
                     @if (loginFormGroup.controls.loginDone.touched && loginFormGroup.controls.loginDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
@@ -239,9 +244,11 @@
                         >hello-distr application</a
                       >. Pull them from the Github Container Registry to your machine's docker environment, with:
                     </p>
-                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                      docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9
+                    @let pullCmd = 'docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9';
+                    <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      {{ pullCmd }}
                     </code>
+                    <app-clip class="mx-2" [clip]="pullCmd"></app-clip>
                     <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                     @if (usageFormGroup.controls.pullDone.touched && usageFormGroup.controls.pullDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
@@ -259,11 +266,16 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
                     <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
-                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                      docker tag ghcr.io/glasskube/hello-distr/backend:0.1.9 {{ host }}/{{
-                        slug
-                      }}/hello-distr/backend:0.1.9
+                    @let tagCmd =
+                      'docker tag ghcr.io/glasskube/hello-distr/backend:0.1.9 ' +
+                      host +
+                      '/' +
+                      slug +
+                      '/hello-distr/backend:0.1.9';
+                    <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      {{ tagCmd }}
                     </code>
+                    <app-clip class="mx-2" [clip]="tagCmd"></app-clip>
                     <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                     @if (usageFormGroup.controls.tagDone.touched && usageFormGroup.controls.tagDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
@@ -280,9 +292,11 @@
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
-                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                      docker push {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
+                    @let pushCmd = 'docker push ' + host + '/' + slug + '/hello-distr/backend:0.1.9';
+                    <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      {{ pushCmd }}
                     </code>
+                    <app-clip class="mx-2" [clip]="pushCmd"></app-clip>
                     <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                     @if (usageFormGroup.controls.pushDone.touched && usageFormGroup.controls.pushDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
@@ -300,9 +314,11 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
                     <p class="mt-1 text-xs">Pull one of the pushed images:</p>
-                    <code class="mt-2 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                      docker pull {{ host }}/{{ slug }}/hello-distr/backend:0.1.9
+                    @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/backend:0.1.9';
+                    <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                      {{ exploreCmd }}
                     </code>
+                    <app-clip class="mx-2" [clip]="exploreCmd"></app-clip>
                     <p class="mt-2 text-xs">
                       In the Artifacts Download History you will now see that you have pulled the image!
                     </p>
