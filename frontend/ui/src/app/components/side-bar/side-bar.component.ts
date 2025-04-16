@@ -30,15 +30,7 @@ import {TutorialsService} from '../../services/tutorials.service';
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [
-    RouterLink,
-    FaIconComponent,
-    RequireRoleDirective,
-    AsyncPipe,
-    CdkConnectedOverlay,
-    CdkOverlayOrigin,
-    RouterLinkActive,
-  ],
+  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe, RouterLinkActive],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
@@ -57,11 +49,14 @@ export class SideBarComponent {
   protected readonly faAddressBook = faAddressBook;
   protected readonly faBox = faBox;
   protected readonly buildConfig = buildConfig;
+  protected readonly faArrowRightLong = faArrowRightLong;
+  protected readonly faHome = faHome;
+  protected readonly faChevronDown = faChevronDown;
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
+  protected readonly agentsSubMenuOpen = signal(true);
 
-  protected readonly artifactsSubMenuOpen = signal(true);
-
+  protected readonly registrySubMenuOpen = signal(true);
   constructor() {
     effect(() => {
       const show = this.sidebar.showSidebar();
@@ -70,14 +65,11 @@ export class SideBarComponent {
     });
   }
 
-  protected toggleArtifactsSubMenu() {
-    this.artifactsSubMenuOpen.update((val) => !val);
+  protected toggleAgentsSubMenu() {
+    this.agentsSubMenuOpen.update((val) => !val);
   }
 
-  protected readonly faArrowRightLong = faArrowRightLong;
-  protected readonly faHome = faHome;
-  protected showLicenseRequestAccessTooltip = false;
-  protected showRegistryRequestAccessTooltip = false;
-  protected readonly faChevronDown = faChevronDown;
-  protected readonly faCodeFork = faCodeFork;
+  protected toggleRegistrySubMenu() {
+    this.registrySubMenuOpen.update((val) => !val);
+  }
 }

@@ -34,19 +34,108 @@
           <span class="ms-3">Dashboard</span>
         </a>
       </li>
+
       <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/applications"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+        <button
+          type="button"
+          (click)="toggleAgentsSubMenu()"
+          class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          aria-controls="dropdown-example">
           <fa-icon
             [icon]="faBoxesStacked"
             size="lg"
             class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Applications</span>
-        </a>
+          <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Agents</span>
+          <fa-icon [icon]="faChevronDown"></fa-icon>
+        </button>
+        @if (agentsSubMenuOpen()) {
+          <ul class="py-2 space-y-2">
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                routerLink="/applications"
+                class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Applications</span>
+              </a>
+            </li>
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                routerLink="/deployments"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Deployments</span>
+              </a>
+            </li>
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                routerLink="/licenses"
+                class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Licenses</span>
+                <span
+                  class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
+                  >Pro</span
+                >
+              </a>
+            </li>
+          </ul>
+        }
       </li>
+
+      <li>
+        <button
+          type="button"
+          (click)="toggleRegistrySubMenu()"
+          class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          aria-controls="dropdown-example">
+          <fa-icon
+            [icon]="faBox"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+          <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Registry</span>
+          <fa-icon [icon]="faChevronDown"></fa-icon>
+        </button>
+        @if (registrySubMenuOpen()) {
+          <ul class="py-2 space-y-2">
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                routerLink="/artifacts"
+                class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Artifacts</span>
+              </a>
+            </li>
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                routerLink="/artifact-pulls"
+                class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Downloads</span>
+              </a>
+            </li>
+            <li>
+              <a
+                (click)="sidebar.hide()"
+                routerLinkActive="bg-gray-100 dark:bg-gray-700"
+                routerLink="/artifact-licenses"
+                class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <span class="">Licenses</span>
+                <span
+                  class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
+                  >Pro</span
+                >
+              </a>
+            </li>
+          </ul>
+        }
+      </li>
+
       <li>
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
@@ -59,229 +148,20 @@
           <span class="ms-3">Customers</span>
         </a>
       </li>
-      <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/deployments"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <fa-icon
-            [icon]="faServer"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Deployments</span>
-        </a>
-      </li>
-      <li>
-        @if (featureFlags.isRegistryEnabled$ | async) {
-          <button
-            type="button"
-            (click)="toggleArtifactsSubMenu()"
-            class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-            aria-controls="dropdown-example">
-            <fa-icon
-              [icon]="faBox"
-              size="lg"
-              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-            <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Artifacts</span>
-            <span
-              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
-              Preview
-            </span>
-            <fa-icon [icon]="faChevronDown"></fa-icon>
-          </button>
-          @if (artifactsSubMenuOpen()) {
-            <ul class="py-2 space-y-2">
-              <li>
-                <a
-                  (click)="sidebar.hide()"
-                  routerLinkActive="bg-gray-100 dark:bg-gray-700"
-                  routerLink="/artifacts"
-                  class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                  <span class="">Overview</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  (click)="sidebar.hide()"
-                  routerLinkActive="bg-gray-100 dark:bg-gray-700"
-                  routerLink="/artifact-pulls"
-                  class="flex items-center p-2 pl-11 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                  <span class="">Download History</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  (click)="sidebar.hide()"
-                  routerLinkActive="bg-gray-100 dark:bg-gray-700"
-                  routerLink="/artifact-licenses"
-                  class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                  <span class="">Licenses</span>
-                </a>
-              </li>
-            </ul>
-          }
-        } @else {
-          <a
-            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"
-            title="Contact support to enable licensing"
-            (click)="showRegistryRequestAccessTooltip = true"
-            cdkOverlayOrigin
-            #tooltipTrigger="cdkOverlayOrigin">
-            <fa-icon
-              [icon]="faBox"
-              size="lg"
-              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-            <span class="ms-3">Artifacts</span>
-            <span
-              class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
-              >Beta</span
-            >
-            <ng-template
-              cdkConnectedOverlay
-              [cdkConnectedOverlayHasBackdrop]="true"
-              (backdropClick)="showRegistryRequestAccessTooltip = false"
-              [cdkConnectedOverlayPositions]="[
-                {originX: 'center', overlayX: 'start', originY: 'center', overlayY: 'center'},
-              ]"
-              [cdkConnectedOverlayOrigin]="tooltipTrigger"
-              [cdkConnectedOverlayBackdropClass]="'transparent'"
-              [cdkConnectedOverlayOpen]="showRegistryRequestAccessTooltip">
-              <div
-                role="tooltip"
-                class="p-3 text-sm font-medium text-gray-900 bg-white border border-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-w-64">
-                <div>
-                  The Artifacts feature is currently in
-                  <span
-                    class="bg-gray-300 text-gray-900 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100">
-                    Beta</span
-                  >.
-                </div>
-                To request access, reach out to us on
-                <a
-                  href="https://discord.gg/6qqBSAWZfW"
-                  target="_blank"
-                  class="text-gray-600 dark:text-gray-400 hover:underline"
-                  >Discord</a
-                >
-                or by email at
-                <a href="mailto:support@glasskube.com" class="text-gray-600 dark:text-gray-400 hover:underline"
-                  >support&#64;glasskube.com</a
-                >.
-              </div>
-            </ng-template>
-          </a>
-        }
-      </li>
-      <li>
-        @if (featureFlags.isLicensingEnabled$ | async) {
-          <a
-            (click)="sidebar.hide()"
-            routerLinkActive="bg-gray-100 dark:bg-gray-700"
-            routerLink="/licenses"
-            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-            <fa-icon
-              [icon]="faKey"
-              size="lg"
-              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-            <span class="ms-3">License Mgmt</span>
-            <span
-              class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
-              >Beta</span
-            >
-          </a>
-        } @else {
-          <a
-            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"
-            title="Contact support to enable licensing"
-            (click)="showLicenseRequestAccessTooltip = true"
-            cdkOverlayOrigin
-            #tooltipTrigger="cdkOverlayOrigin">
-            <fa-icon
-              [icon]="faKey"
-              size="lg"
-              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-            <span class="ms-3">License Mgmt</span>
-            <span
-              class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
-              >Beta</span
-            >
-            <ng-template
-              cdkConnectedOverlay
-              [cdkConnectedOverlayHasBackdrop]="true"
-              (backdropClick)="showLicenseRequestAccessTooltip = false"
-              [cdkConnectedOverlayPositions]="[
-                {originX: 'center', overlayX: 'start', originY: 'center', overlayY: 'center'},
-              ]"
-              [cdkConnectedOverlayOrigin]="tooltipTrigger"
-              [cdkConnectedOverlayBackdropClass]="'transparent'"
-              [cdkConnectedOverlayOpen]="showLicenseRequestAccessTooltip">
-              <div
-                role="tooltip"
-                class="p-3 text-sm font-medium text-gray-900 bg-white border border-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-w-64">
-                <div>
-                  The License Management feature is currently in
-                  <span
-                    class="bg-gray-300 text-gray-900 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100">
-                    Beta</span
-                  >.
-                </div>
-                <div class="my-3">
-                  <a
-                    href="https://distr.sh/docs/guides/license-mgmt/"
-                    target="_blank"
-                    class="text-gray-600 dark:text-gray-400 hover:underline"
-                    >Learn more in our docs</a
-                  >
-                </div>
-                To request access, reach out to us on
-                <a
-                  href="https://discord.gg/6qqBSAWZfW"
-                  target="_blank"
-                  class="text-gray-600 dark:text-gray-400 hover:underline"
-                  >Discord</a
-                >
-                or by email at
-                <a href="mailto:support@glasskube.com" class="text-gray-600 dark:text-gray-400 hover:underline"
-                  >support&#64;glasskube.com</a
-                >.
-              </div>
-            </ng-template>
-          </a>
-        }
-      </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faCodeFork" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Channels</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
-            Pro
-          </span>
-        </a>
-      </li>
+
       <li>
         <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
           <fa-icon [icon]="faCheckDouble" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Pre-Flight</span>
+          <span class="ms-3">Workflows</span>
           <span
             class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
             >Pro</span
           >
         </a>
       </li>
-      <li>
-        <a class="flex items-center p-2 text-gray-400 rounded-lg dark:text-gray-400">
-          <fa-icon [icon]="faLightbulb" size="lg" class="pl-0.5 w-6 h-6 text-gray-300 dark:text-gray-600"></fa-icon>
-          <span class="ms-3">Support Insights</span>
-          <span
-            class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
-            >Pro</span
-          >
-        </a>
-      </li>
+
       <hr class="dark:border-gray-600" />
+
       <li>
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
@@ -346,25 +226,19 @@
           <span class="ms-3">Deployments</span>
         </a>
       </li>
-      @if (featureFlags.isRegistryEnabled$ | async) {
-        <li>
-          <a
-            (click)="sidebar.hide()"
-            routerLinkActive="bg-gray-100 dark:bg-gray-700"
-            routerLink="/artifacts"
-            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-            <fa-icon
-              [icon]="faBox"
-              size="lg"
-              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-            <span class="ms-3">Artifacts</span>
-            <span
-              class="ml-2 bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">
-              Preview
-            </span>
-          </a>
-        </li>
-      }
+      <li>
+        <a
+          (click)="sidebar.hide()"
+          routerLinkActive="bg-gray-100 dark:bg-gray-700"
+          routerLink="/artifacts"
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+          <fa-icon
+            [icon]="faBox"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+          <span class="ms-3">Artifacts</span>
+        </a>
+      </li>
     </ul>
     @if (feedbackAlert) {
       <div
