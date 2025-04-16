@@ -162,7 +162,6 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           val.activeVersions.filter((v) => !!v).length + val.archivedVersions.filter((v) => !!v).length;
       }
       if (this.editForm.valid) {
-        console.log(val);
         this.onChange({
           id: val.id,
           name: val.name,

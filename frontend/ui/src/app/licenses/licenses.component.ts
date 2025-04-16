@@ -69,10 +69,6 @@ export class LicensesComponent implements OnDestroy {
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
 
-  ngOnInit() {
-    this.editForm.valueChanges.subscribe((x) => console.log(x));
-  }
-
   openDrawer(templateRef: TemplateRef<unknown>, license?: ApplicationLicense) {
     this.hideDrawer();
     if (license) {
