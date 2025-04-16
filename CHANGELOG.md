@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.5.1](https://github.com/glasskube/distr/compare/1.5.0...1.5.1) (2025-04-16)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.5 ([#789](https://github.com/glasskube/distr/issues/789)) ([2033559](https://github.com/glasskube/distr/commit/203355914f1ba09f3266d13becc1fac28343f4dd))
+
+
+### Other
+
+* **agent:** kubernetes agent client config reload ([#775](https://github.com/glasskube/distr/issues/775)) ([00b59b6](https://github.com/glasskube/distr/commit/00b59b66d6bff01542eaee93d5dfedad7b11e4c7))
+* **deps:** update dependency golangci-lint to v2.1.2 ([#787](https://github.com/glasskube/distr/issues/787)) ([215227a](https://github.com/glasskube/distr/commit/215227a9dba3ab42f5c0b033fec9e34ff72de868))
+* **ui:** don't display push instructions for non vendors ([#788](https://github.com/glasskube/distr/issues/788)) ([2aa786b](https://github.com/glasskube/distr/commit/2aa786bd954184a9ec25ca007e755325ea310bf7))
+
+
+### Docs
+
+* add Discord support link ([#785](https://github.com/glasskube/distr/issues/785)) ([13c8729](https://github.com/glasskube/distr/commit/13c87298fc621d73a4468de5b95c38ccaa7e30c0))
+* update readme ([#777](https://github.com/glasskube/distr/issues/777)) ([a00c8e2](https://github.com/glasskube/distr/commit/a00c8e273bcbd2c809acd6c2316c9f2455fb5cb0))
+
 ## [1.5.0](https://github.com/glasskube/distr/compare/1.4.7...1.5.0) (2025-04-14)
 
 
