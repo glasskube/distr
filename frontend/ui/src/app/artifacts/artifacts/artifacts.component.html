@@ -14,29 +14,38 @@
               >
               and log in to the registry from your machine:
               <code class="mt-1 select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                echo "your-personal-access-token-here" | docker login {{ host }} --password-stdin -u -
+                echo "YOUR-ACCESS-TOKEN" | docker login {{ host }} --password-stdin -u -
               </code>
             </div>
-            <div class="font-medium mt-1">
-              Then you can start tagging and pushing your images. For example, you can try the following commands to
-              push your own
-              <a
-                href="https://hub.docker.com/_/hello-world"
-                target="_blank"
-                class="text-gray-600 dark:text-gray-400 underline"
-                >hello-world</a
-              >
-              image:
+            @if (isVendor) {
+              <div class="font-medium mt-1">
+                Then you can start tagging and pushing your images. For example, you can try the following commands to
+                push your own
+                <a
+                  href="https://hub.docker.com/_/hello-world"
+                  target="_blank"
+                  class="text-gray-600 dark:text-gray-400 underline"
+                  >hello-world</a
+                >
+                image:
+                <code class="select-all mt-1 block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                  docker pull hello-world
+                </code>
+                <code class="select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                  docker tag hello-world {{ host }}/{{ slug }}/hello-world:v1.0.0
+                </code>
+                <code class="select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                  docker push {{ host }}/{{ slug }}/hello-world:v1.0.0
+                </code>
+              </div>
+            } @else {
+              <div class="font-medium mt-1">
+                After the login you can start pulling images from the registry. For example, you can try the following
+              </div>
               <code class="select-all mt-1 block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                docker pull hello-world
+                docker pull {{ host }}/{{ slug }}/IMAGE:VERSION
               </code>
-              <code class="select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                docker tag hello-world {{ host }}/{{ slug }}/hello-world:v1.0.0
-              </code>
-              <code class="select-all block text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
-                docker push {{ host }}/{{ slug }}/hello-world:v1.0.0
-              </code>
-            </div>
+            }
           } @else {
             Your Distr Hub does not have the registry enabled. You can enable it by setting the corresponding
             environment variables of the Distr Hub.
