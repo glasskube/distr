@@ -1,43 +1,47 @@
-<h1 align="center">
-  <a href="https://distr.sh/" target="_blank">
-    <img alt="" src="frontend/ui/public/distr-logo.svg" style="height: 5em;">
-  </a>
-  <br>
-  Distr
-</h1>
-
+<br>
 <div align="center">
+  <a href="https://glasskube.dev?utm_source=github">
+    <img src="https://github.com/glasskube/distr/blob/main/frontend/ui/public/distr-logo.svg" alt="Distr Logo" height="160">
+  </a>
+<h1 align="center">Distr</h1>
+<br>
+<h2>Software Distribution Platform</h2>
 
-**Software Distribution Platform**
+Distr enables software and AI companies to distribute applications to self-managed customers with minimal setup.
 
-</div>
+### **[Website](https://glasskube.dev/?utm_source=github)** • **[Quickstart](https://distr.sh/docs/getting-started/quickstart/?utm_source=github)** • **[Documentation](https://distr.sh/docs/getting-started/about/?utm_source=github)** • **[Blog](https://glasskube.dev/blog/)** • **[Twitter](https://x.com/glasskube)** • **[Discord](https://discord.gg/6qqBSAWZfW)**
+
+<hr>
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/glasskube/distr?style=flat)](https://github.com/glasskube/distr)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/docs-distr.sh-blue)](https://distr.sh/docs/?utm_source=github)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/distr)](https://artifacthub.io/packages/helm/distr/distr)
 
-Distr is the easiest way to distribute enterprise software to customer-controlled or shared-responsibility environments.
+![Deployment Overview](https://github.com/glasskube/glasskube.dev/blob/main/static/img/screenshots/distr/distr-deployments-light.webp)
+
+<hr>
+
+</div>
 
 ## Main features
 
-- View & manage all deployments, artifacts, connected agents, self-managed & BYOC customers via the **intuitive web UI**
-- Let your customers control their deployments or download your artifacts via the **white-label customer portal**
-- Distribute specific versions of your application to specific customers with our licensing feature
-- Distribute OCI compatible artifacts (Docker images, Helm charts, Terraform modules) to your customers with our **integrated OCI registry**
+- **Centralized Management:** View & manage all deployments, artifacts, connected agents, self-managed & BYOC customers via the intuitive web UI
+- **Deployment Automation:** Optional prebuilt Helm and Docker agents manage deployments, collect logs and metrics, and allow remote troubleshooting.
+- **White-label customer portal:** Let your customers control their deployments or download your artifacts
+- **License Management:** Distribute specific versions of your application to specific customers
+- **Container registry:** Distribute OCI-compatible artifacts (Docker images, Helm charts, Terraform modules) with built-in granular access control and analytics.
 - Access the API using our [**rich SDK**](#distr-sdk)
-- Fully open-source and [self-hostable](#self-hosting)
+- Fully Open Source and [self-hostable](#self-hosting)
 
 Check out the hosted version at https://signup.distr.sh/
 
 ## About
 
-Distr is an Open Source commercial software distribution platform designed for Independent Software Vendors (ISVs).
-It supports ISVs in delivering their software solutions to end customers operating in complex, customer-controlled environments.
+Distr is an Open Source software distribution platform that provides a ready-to-use setup with prebuilt components to help software and AI companies distribute applications to customers in complex, self-managed environments.
 
-Use cases include:
+**Use cases include:**
 
-- On-premises software deployments
+- On-premises, VPC and self-managed software deployments
 - Bring Your Own Cloud (BYOC) automation
 - Edge & Fleet management
 
@@ -73,6 +77,9 @@ architecture-beta
 ```
 
 ## Self-hosting
+
+In case you get stuck, have questions, or need help, we're happy to support you,
+drop by our [Discord](https://discord.gg/6qqBSAWZfW).
 
 ### Docker
 

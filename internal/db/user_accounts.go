@@ -241,7 +241,8 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 
 func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) (
 	*types.UserAccount,
-	*types.Organization, error,
+	*types.Organization,
+	error,
 ) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
@@ -258,6 +259,40 @@ func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role typ
 	}
 	res, err := pgx.CollectExactlyOneRow[struct {
 		User types.UserAccount
+		Org  types.Organization
+	}](rows, pgx.RowToStructByPos)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, apierrors.ErrNotFound
+		} else {
+			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+		}
+	} else {
+		return &res.User, &res.Org, nil
+	}
+}
+
+func GetUserAccountAndOrgForDeploymentTarget(
+	ctx context.Context,
+	id uuid.UUID,
+) (*types.UserAccountWithUserRole, *types.Organization, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT ("+userAccountWithRoleOutputExpr+`),
+					(`+organizationOutputExpr+`)
+			FROM DeploymentTarget dt
+			JOIN Organization o ON o.id = dt.organization_id
+			JOIN UserAccount u ON u.id = dt.created_by_user_account_id
+			JOIN Organization_UserAccount j ON u.id = j.user_account_id
+				AND o.id = j.organization_id
+			WHERE dt.id = @id`,
+		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := pgx.CollectExactlyOneRow[struct {
+		User types.UserAccountWithUserRole
 		Org  types.Organization
 	}](rows, pgx.RowToStructByPos)
 	if err != nil {

@@ -1,8 +1,10 @@
 package types
 
 import (
+	"slices"
 	"time"
 
+	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 )
 
@@ -33,4 +35,18 @@ type UserAccountWithUserRole struct {
 	Name            string     `db:"name" json:"name,omitempty"`
 	UserRole        UserRole   `db:"user_role" json:"userRole"` // not copy+pasted
 	Password        string     `db:"-" json:"-"`
+	// Don't forget to update AsUserAccount when adding fields!
+}
+
+func (u *UserAccountWithUserRole) AsUserAccount() UserAccount {
+	return UserAccount{
+		ID:              u.ID,
+		CreatedAt:       u.CreatedAt,
+		Email:           u.Email,
+		EmailVerifiedAt: util.PtrCopy(u.EmailVerifiedAt),
+		PasswordHash:    slices.Clone(u.PasswordHash),
+		PasswordSalt:    slices.Clone(u.PasswordSalt),
+		Name:            u.Name,
+		Password:        u.Password,
+	}
 }
