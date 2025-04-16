@@ -77,8 +77,9 @@ architecture-beta
 ```
 
 ## Self-hosting
-In case you get stuck, have questions, or need help, we're happy to support you however we can—just drop by our [Discord](https://discord.gg/6qqBSAWZfW).
 
+In case you get stuck, have questions, or need help, we're happy to support you,
+drop by our [Discord](https://discord.gg/6qqBSAWZfW).
 
 ### Docker
 
