@@ -1,20 +1,10 @@
 ALTER TABLE UserAccount
-  DROP COLUMN image;
-ALTER TABLE UserAccount
-  DROP COLUMN image_file_name;
-ALTER TABLE UserAccount
-  DROP COLUMN image_content_type;
+  DROP COLUMN image_id;
 
 ALTER TABLE Application
-  DROP COLUMN image;
-ALTER TABLE Application
-  DROP COLUMN image_file_name;
-ALTER TABLE Application
-  DROP COLUMN image_content_type;
+  DROP COLUMN image_id;
 
 ALTER TABLE Artifact
-  DROP COLUMN image;
-ALTER TABLE Artifact
-  DROP COLUMN image_file_name;
-ALTER TABLE Artifact
-  DROP COLUMN image_content_type;
+  DROP COLUMN image_id;
+
+DROP TABLE IF EXISTS File;

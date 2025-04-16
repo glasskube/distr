@@ -1,5 +1,5 @@
 import {AnimationEvent} from '@angular/animations';
-import {Component, HostBinding, HostListener, inject, OnInit, signal, TemplateRef} from '@angular/core';
+import {Component, HostBinding, HostListener, inject, OnInit, signal} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, lastValueFrom, map, Observable, Subject} from 'rxjs';
@@ -7,7 +7,7 @@ import {modalFlyInOut} from '../../animations/modal';
 import {DialogRef, OverlayData} from '../../services/overlay.service';
 import {AsyncPipe} from '@angular/common';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Image, UserAccountWithRole} from '@glasskube/distr-sdk';
+import {Image} from '@glasskube/distr-sdk';
 import {getFormDisplayedError} from '../../../util/errors';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';

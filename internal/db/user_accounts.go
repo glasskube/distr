@@ -18,6 +18,8 @@ const (
 	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
 		"u.password_salt, u.name"
 	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
+
+	userAccountWithRoleAndImageOutputExpr = userAccountWithRoleOutputExpr + ", u.image, u.image_file_name, u.image_content_type"
 )
 
 func CreateUserAccountWithOrganization(
@@ -158,7 +160,7 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID 
 	return err
 }
 
-func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.UserAccountWithUserRole, error) {
+func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.UserAccountWithImageAndUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountWithRoleOutputExpr+`
@@ -170,7 +172,7 @@ func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.UserA
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
-	} else if result, err := pgx.CollectRows[types.UserAccountWithUserRole](rows, pgx.RowToStructByName); err != nil {
+	} else if result, err := pgx.CollectRows[types.UserAccountWithImageAndUserRole](rows, pgx.RowToStructByName); err != nil {
 		return nil, fmt.Errorf("could not map users: %w", err)
 	} else {
 		return result, nil
