@@ -56,6 +56,8 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 		return ErrAccessDenied
 	}
 
+	// TODO change licensing logic here probably
+
 	if name, err := name.Parse(nameStr); err != nil {
 		return err
 	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
@@ -76,6 +78,9 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 // AuthorizeBlob implements ArtifactsAuthorizer.
 func (a *authorizer) AuthorizeBlob(ctx context.Context, digest v1.Hash, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
+
+	// TODO change licensing logic here probably
+
 	if *auth.CurrentUserRole() != types.UserRoleVendor {
 		if action == ActionWrite {
 			return ErrAccessDenied
