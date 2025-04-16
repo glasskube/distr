@@ -12,7 +12,7 @@ import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {OrganizationService} from '../../services/organization.service';
-import {AuthService} from '../../services/auth.service';
+import {RequireRoleDirective} from '../../directives/required-role.directive';
 
 @Component({
   selector: 'app-artifacts',
@@ -25,6 +25,7 @@ import {AuthService} from '../../services/auth.service';
     ArtifactsDownloadCountComponent,
     ArtifactsDownloadedByComponent,
     AutotrimDirective,
+    RequireRoleDirective,
   ],
   templateUrl: './artifacts.component.html',
 })
@@ -52,7 +53,4 @@ export class ArtifactsComponent {
   private readonly organizationService = inject(OrganizationService);
   protected readonly registrySlug$ = this.organizationService.get().pipe(map((o) => o.slug));
   protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.registryHost));
-
-  private readonly authService = inject(AuthService);
-  protected readonly isVendor = this.authService.hasRole('vendor');
 }
