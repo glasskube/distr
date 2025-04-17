@@ -35,6 +35,8 @@ import {OrganizationSettingsComponent} from './organization-settings/organizatio
 import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
+import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
+import {getRemoteEnvironment} from '../env/remote';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -124,6 +126,19 @@ function registryEnabledGuard(): CanActivateFn {
   return async () => {
     const featureFlags = inject(FeatureFlagService);
     return await firstValueFrom(featureFlags.isRegistryEnabled$);
+  };
+}
+
+function registryHostSetOrRedirectGuard(redirectTo: string): CanActivateFn {
+  return async () => {
+    const router = inject(Router);
+    const toast = inject(ToastService);
+    const env = await getRemoteEnvironment();
+    if ((env.registryHost ?? '').length > 0) {
+      return true;
+    }
+    toast.error('Registry must be enabled first!');
+    return router.createUrlTree([redirectTo]);
   };
 }
 
@@ -263,6 +278,11 @@ export const routes: Routes = [
               {
                 path: 'branding',
                 component: BrandingTutorialComponent,
+              },
+              {
+                path: 'registry',
+                canActivate: [registryHostSetOrRedirectGuard('/tutorials')],
+                component: RegistryTutorialComponent,
               },
             ],
           },

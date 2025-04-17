@@ -16,4 +16,8 @@ export class TutorialsComponent {
   protected readonly faArrowRight = faArrowRight;
   protected readonly faCheck = faCheck;
   protected readonly tutorialsService = inject(TutorialsService);
+
+  ngOnInit() {
+    this.tutorialsService.refreshList();
+  }
 }
