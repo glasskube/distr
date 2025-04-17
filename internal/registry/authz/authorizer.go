@@ -39,9 +39,8 @@ func (a *authorizer) Authorize(ctx context.Context, nameStr string, action Actio
 		return ErrAccessDenied
 	}
 
+	org := auth.CurrentOrg()
 	if name, err := name.Parse(nameStr); err != nil {
-		return err
-	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
 		return err
 	} else if org.Slug == nil || *org.Slug != name.OrgName {
 		return ErrAccessDenied
@@ -56,20 +55,19 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 		return ErrAccessDenied
 	}
 
-	// TODO change licensing logic here probably
-
+	org := auth.CurrentOrg()
 	if name, err := name.Parse(nameStr); err != nil {
-		return err
-	} else if org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID()); err != nil {
 		return err
 	} else if org.Slug == nil || *org.Slug != name.OrgName {
 		return ErrAccessDenied
 	} else if action != ActionWrite && *auth.CurrentUserRole() != types.UserRoleVendor {
-		err := db.CheckLicenseForArtifact(ctx, name.OrgName, name.ArtifactName, reference, auth.CurrentUserID())
-		if errors.Is(err, apierrors.ErrForbidden) {
-			return ErrAccessDenied
-		} else if err != nil {
-			return err
+		if org.HasFeature(types.FeatureLicensing) {
+			err := db.CheckLicenseForArtifact(ctx, name.OrgName, name.ArtifactName, reference, auth.CurrentUserID())
+			if errors.Is(err, apierrors.ErrForbidden) {
+				return ErrAccessDenied
+			} else if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -79,12 +77,10 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 func (a *authorizer) AuthorizeBlob(ctx context.Context, digest v1.Hash, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
-	// TODO change licensing logic here probably
-
 	if *auth.CurrentUserRole() != types.UserRoleVendor {
 		if action == ActionWrite {
 			return ErrAccessDenied
-		} else {
+		} else if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
 			err := db.CheckLicenseForArtifactBlob(ctx, digest.String(), auth.CurrentUserID())
 			if errors.Is(err, apierrors.ErrForbidden) {
 				return ErrAccessDenied
