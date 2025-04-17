@@ -319,6 +319,11 @@
                       {{ exploreCmd }}
                     </code>
                     <app-clip class="mx-2" [clip]="exploreCmd"></app-clip>
+                    <p class="mt-2 ml-4 text-xs">
+                      Note: As an additional test, you can delete the previously pulled backend image and tags with
+                      <code class="select-all">docker image rm b04ff0cd0287 -f</code>, and then execute the previous
+                      pull again. This time all the image blobs will be downloaded.
+                    </p>
                     <p class="mt-2 text-xs">
                       In the Artifacts Download History you will now see that you have pulled the image!
                     </p>
