@@ -48,5 +48,4 @@ module.exports = {
     'my-1',
     'text-lg',
   ],
-  plugins: [require('flowbite/plugin')],
 };

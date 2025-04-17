@@ -65,6 +65,7 @@
     "@angular/cli": "^19.0.0",
     "@angular/compiler-cli": "^19.0.0",
     "@sentry/cli": "^2.39.1",
+    "@tailwindcss/postcss": "^4.1.4",
     "@types/jasmine": "~5.1.0",
     "@types/semver": "^7.5.8",
     "autoprefixer": "^10.4.20",
@@ -74,7 +75,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.3",
     "prettier": "^3.3.3",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.8.0"
