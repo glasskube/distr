@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.2](https://github.com/glasskube/distr/compare/1.5.1...1.5.2) (2025-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.7 ([#794](https://github.com/glasskube/distr/issues/794)) ([dbffea2](https://github.com/glasskube/distr/commit/dbffea2a693d28f104ecbbb7d107e14e97d03932))
+* **deps:** update dependency @angular/cdk to v19.2.10 ([#791](https://github.com/glasskube/distr/issues/791)) ([4ccf8be](https://github.com/glasskube/distr/commit/4ccf8be6cff8c52b4b785158a94347ea8180fafe))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.2.8 ([#790](https://github.com/glasskube/distr/issues/790)) ([c243855](https://github.com/glasskube/distr/commit/c243855a4589c1d9fc9c3c6203b0dccb77003e01))
+* enable Distr registry for new organizations ([#796](https://github.com/glasskube/distr/issues/796)) ([29a27a3](https://github.com/glasskube/distr/commit/29a27a34ce0d223fa2d4585afb770e692840e231))
+* **ui:** disable archived versions in license edit form ([#782](https://github.com/glasskube/distr/issues/782)) ([4622fc9](https://github.com/glasskube/distr/commit/4622fc904a4e80e6e1f46f784c0d43089138a0d9))
+
 ## [1.5.1](https://github.com/glasskube/distr/compare/1.5.0...1.5.1) (2025-04-16)
 
 
