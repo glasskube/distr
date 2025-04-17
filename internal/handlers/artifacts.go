@@ -19,7 +19,7 @@ import (
 )
 
 func ArtifactsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgAndRole, middleware.RegistryFeatureFlagEnabledMiddleware)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getArtifacts)
 	r.Get("/{artifactId}", getArtifact)
 }
@@ -31,7 +31,7 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 
 	var artifacts []types.ArtifactWithDownloads
 	var err error
-	if *auth.CurrentUserRole() == types.UserRoleCustomer {
+	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
 		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), auth.CurrentUserID())
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
@@ -57,7 +57,7 @@ func getArtifact(w http.ResponseWriter, r *http.Request) {
 	if artifactId, parseErr := uuid.Parse(r.PathValue("artifactId")); parseErr != nil {
 		http.NotFound(w, r)
 		return
-	} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
+	} else if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
 		artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, util.PtrTo(auth.CurrentUserID()))
 	} else {
 		artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)

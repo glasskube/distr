@@ -122,13 +122,6 @@ function licensingEnabledGuard(): CanActivateFn {
   };
 }
 
-function registryEnabledGuard(): CanActivateFn {
-  return async () => {
-    const featureFlags = inject(FeatureFlagService);
-    return await firstValueFrom(featureFlags.isRegistryEnabled$);
-  };
-}
-
 function registryHostSetOrRedirectGuard(redirectTo: string): CanActivateFn {
   return async () => {
     const router = inject(Router);
@@ -214,18 +207,17 @@ export const routes: Routes = [
               {path: '', pathMatch: 'full', component: ArtifactsComponent},
               {path: ':id', component: ArtifactVersionsComponent},
             ],
-            canActivate: [registryEnabledGuard()],
           },
           {
             path: 'artifact-licenses',
             children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
             data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
+            canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
           },
           {
             path: 'artifact-pulls',
             component: ArtifactPullsComponent,
-            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
+            canActivate: [requiredRoleGuard('vendor')],
           },
           {
             path: 'customers',

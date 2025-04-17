@@ -1,0 +1,2 @@
+ALTER TYPE FEATURE
+  ADD VALUE 'registry';

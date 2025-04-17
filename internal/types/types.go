@@ -36,7 +36,6 @@ const (
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
 
 	FeatureLicensing Feature = "licensing"
-	FeatureRegistry  Feature = "registry"
 
 	TutorialBranding Tutorial = "branding"
 	TutorialAgents   Tutorial = "agents"
