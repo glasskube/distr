@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.5.2](https://github.com/glasskube/distr/compare/1.5.1...1.5.2) (2025-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.7 ([#794](https://github.com/glasskube/distr/issues/794)) ([dbffea2](https://github.com/glasskube/distr/commit/dbffea2a693d28f104ecbbb7d107e14e97d03932))
+* **deps:** update dependency @angular/cdk to v19.2.10 ([#791](https://github.com/glasskube/distr/issues/791)) ([4ccf8be](https://github.com/glasskube/distr/commit/4ccf8be6cff8c52b4b785158a94347ea8180fafe))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.2.8 ([#790](https://github.com/glasskube/distr/issues/790)) ([c243855](https://github.com/glasskube/distr/commit/c243855a4589c1d9fc9c3c6203b0dccb77003e01))
+* enable Distr registry for new organizations ([#796](https://github.com/glasskube/distr/issues/796)) ([29a27a3](https://github.com/glasskube/distr/commit/29a27a34ce0d223fa2d4585afb770e692840e231))
+* **ui:** disable archived versions in license edit form ([#782](https://github.com/glasskube/distr/issues/782)) ([4622fc9](https://github.com/glasskube/distr/commit/4622fc904a4e80e6e1f46f784c0d43089138a0d9))
+
+## [1.5.1](https://github.com/glasskube/distr/compare/1.5.0...1.5.1) (2025-04-16)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.5 ([#789](https://github.com/glasskube/distr/issues/789)) ([2033559](https://github.com/glasskube/distr/commit/203355914f1ba09f3266d13becc1fac28343f4dd))
+
+
+### Other
+
+* **agent:** kubernetes agent client config reload ([#775](https://github.com/glasskube/distr/issues/775)) ([00b59b6](https://github.com/glasskube/distr/commit/00b59b66d6bff01542eaee93d5dfedad7b11e4c7))
+* **deps:** update dependency golangci-lint to v2.1.2 ([#787](https://github.com/glasskube/distr/issues/787)) ([215227a](https://github.com/glasskube/distr/commit/215227a9dba3ab42f5c0b033fec9e34ff72de868))
+* **ui:** don't display push instructions for non vendors ([#788](https://github.com/glasskube/distr/issues/788)) ([2aa786b](https://github.com/glasskube/distr/commit/2aa786bd954184a9ec25ca007e755325ea310bf7))
+
+
+### Docs
+
+* add Discord support link ([#785](https://github.com/glasskube/distr/issues/785)) ([13c8729](https://github.com/glasskube/distr/commit/13c87298fc621d73a4468de5b95c38ccaa7e30c0))
+* update readme ([#777](https://github.com/glasskube/distr/issues/777)) ([a00c8e2](https://github.com/glasskube/distr/commit/a00c8e273bcbd2c809acd6c2316c9f2455fb5cb0))
+
 ## [1.5.0](https://github.com/glasskube/distr/compare/1.4.7...1.5.0) (2025-04-14)
 
 
