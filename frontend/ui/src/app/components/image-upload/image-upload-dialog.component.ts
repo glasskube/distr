@@ -58,8 +58,10 @@ export class ImageUploadDialogComponent implements OnInit {
 
 
   onImageChange(event: Event) {
+    console.log('change start')
     const file = (event.target as HTMLInputElement).files?.[0];
     this.form.patchValue({image: file ?? null});
+    console.log('change end')
   }
 
   deleteImage() {

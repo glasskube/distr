@@ -1,8 +1,8 @@
 <div class="relative p-4 w-full max-w-2xl max-h-full lg:mt-32">
-  <form [formGroup]="form" (ngSubmit)="save()">
 
-    <!-- Modal content -->
-    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+  <!-- Modal content -->
+  <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+    <form [formGroup]="form" (ngSubmit)="save()">
       <!-- Modal header -->
       <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Upload Image</h3>
@@ -19,9 +19,7 @@
         <div class="grid gap-4">
           <div class="space-y-4">
             <div>
-              <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">
-                Image
-              </label>
+
               <div>
                 @if (imageSrc | async; as image) {
                   <img class="h-48 mb-4" [src]="image" alt="Image" />
@@ -32,6 +30,9 @@
                     Delete
                   </button>
                 } @else {
+                  <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">
+                    Image
+                  </label>
                   <input
                     accept="image/svg+xml,image/png,image/jpeg,image/gif"
                     (change)="onImageChange($event)"
@@ -68,6 +69,7 @@
           Upload
         </button>
       </div>
-    </div>
-  </form>
+    </form>
+
+  </div>
 </div>

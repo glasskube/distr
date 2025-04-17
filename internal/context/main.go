@@ -18,6 +18,7 @@ const (
 	ctxKeyApplication
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget
+	ctxKeyFile
 	ctxKeyUserAccount
 	ctxKeyApplicationLicense
 	ctxKeyArtifactLicense

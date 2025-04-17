@@ -49,6 +49,16 @@ func GetDeploymentTarget(ctx context.Context) *types.DeploymentTargetWithCreated
 	}
 	panic("deployment target not contained in context")
 }
+func WithFile(ctx context.Context, file *types.File) context.Context {
+	return context.WithValue(ctx, ctxKeyFile, file)
+}
+
+func GetFile(ctx context.Context) *types.File {
+	if file, ok := ctx.Value(ctxKeyFile).(*types.File); ok {
+		return file
+	}
+	panic("no File found in context")
+}
 
 func WithUserAccount(ctx context.Context, userAccount *types.UserAccount) context.Context {
 	return context.WithValue(ctx, ctxKeyUserAccount, userAccount)

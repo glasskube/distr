@@ -16,7 +16,7 @@
             <div class="space-y-4">
               <h2 class="text-xl font-bold dark:text-white">Portal Header</h2>
               <div>
-                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="branding_logo">
                   Company Logo
                 </label>
                 <div>
@@ -33,13 +33,13 @@
                       accept="image/svg+xml,image/png,image/jpeg,image/gif"
                       (change)="onLogoChange($event)"
                       class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                      aria-describedby="file_input_help"
-                      id="file_input"
+                      aria-describedby="branding_logo_help"
+                      id="branding_logo"
                       type="file" />
                   }
                 </div>
 
-                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="file_input_help">
+                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400" id="branding_logo_help">
                   SVG, PNG, JPG or GIF (recommended height 32px). If not set, the Distr logo will be shown.
                 </p>
                 <div class="flex items-center space-x-2.5"></div>
