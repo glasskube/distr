@@ -1,4 +1,4 @@
-import {Component, effect, ElementRef, inject, signal, ViewChild} from '@angular/core';
+import {Component, effect, ElementRef, inject, signal, ViewChild, WritableSignal} from '@angular/core';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -22,7 +22,7 @@ import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
 import {buildConfig} from '../../../buildconfig';
 import {FeatureFlagService} from '../../services/feature-flag.service';
-import {AsyncPipe} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {TutorialsService} from '../../services/tutorials.service';
 
@@ -30,7 +30,16 @@ import {TutorialsService} from '../../services/tutorials.service';
   selector: 'app-side-bar',
   standalone: true,
   templateUrl: './side-bar.component.html',
-  imports: [RouterLink, FaIconComponent, RequireRoleDirective, AsyncPipe, RouterLinkActive],
+  imports: [
+    RouterLink,
+    FaIconComponent,
+    RequireRoleDirective,
+    AsyncPipe,
+    RouterLinkActive,
+    CdkOverlayOrigin,
+    CdkConnectedOverlay,
+    NgTemplateOutlet,
+  ],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
@@ -55,8 +64,10 @@ export class SideBarComponent {
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
   protected readonly agentsSubMenuOpen = signal(true);
-
   protected readonly registrySubMenuOpen = signal(true);
+  protected readonly appLicenseOverlayOpen = signal(false);
+  protected readonly registryLicenseOverlayOpen = signal(false);
+
   constructor() {
     effect(() => {
       const show = this.sidebar.showSidebar();
@@ -65,11 +76,7 @@ export class SideBarComponent {
     });
   }
 
-  protected toggleAgentsSubMenu() {
-    this.agentsSubMenuOpen.update((val) => !val);
-  }
-
-  protected toggleRegistrySubMenu() {
-    this.registrySubMenuOpen.update((val) => !val);
+  protected toggle(signal: WritableSignal<boolean>) {
+    signal.update((val) => !val);
   }
 }
