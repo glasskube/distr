@@ -46,7 +46,10 @@
             size="lg"
             class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
           <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Agents</span>
-          <fa-icon [icon]="faChevronDown"></fa-icon>
+          <fa-icon
+            [icon]="faChevronDown"
+            [class.rotate-180]="agentsSubMenuOpen()"
+            class="transition duration-150"></fa-icon>
         </button>
         @if (agentsSubMenuOpen()) {
           <ul class="py-2 space-y-2">
@@ -120,7 +123,10 @@
             size="lg"
             class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
           <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Registry</span>
-          <fa-icon [icon]="faChevronDown"></fa-icon>
+          <fa-icon
+            [icon]="faChevronDown"
+            [class.rotate-180]="registrySubMenuOpen()"
+            class="transition duration-150"></fa-icon>
         </button>
         @if (registrySubMenuOpen()) {
           <ul class="py-2 space-y-2">
