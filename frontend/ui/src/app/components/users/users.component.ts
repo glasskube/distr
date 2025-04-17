@@ -26,7 +26,7 @@ import {
   takeUntil,
   tap,
 } from 'rxjs';
-import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
+import {getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
@@ -35,7 +35,7 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
-import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
+import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {digestMessage} from '../../../util/crypto';
@@ -89,7 +89,12 @@ export class UsersComponent implements OnDestroy {
     this.userRole = computed(() => data()?.['userRole'] ?? null);
     const usersWithRefresh = this.refresh$.pipe(
       startWith(undefined),
-      switchMap(() => this.users.getUsers())
+      switchMap(() => this.users.getUsers().pipe(map((users) => {
+          users.forEach(user => {
+            user.imageUrl= `https://www.gravatar.com/avatar/${digestMessage(user.email)}`;
+          })
+          return users;
+      })))
     );
     const shownUserAccounts = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
       map(([userRole, users]) => users.filter((it) => userRole !== null && it.userRole === userRole))
@@ -143,7 +148,6 @@ export class UsersComponent implements OnDestroy {
   public async uploadImage(data: UserAccountWithRole) {
     this.overlay
       .uploadImage({data, type: 'user'})
-      .pipe(tap(() =>  {console.log('hi')}))
       .subscribe();
   }
 
