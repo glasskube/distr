@@ -22,11 +22,11 @@ const (
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization AS o (name) VALUES (@name) RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"name": org.Name},
+		"INSERT INTO Organization AS o (name, features) VALUES (@name, @features) RETURNING "+organizationOutputExpr,
+		pgx.NamedArgs{"name": org.Name, "features": "{" + types.FeatureRegistry + "}"},
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create orgnization: %w", err)
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
 	if err != nil {

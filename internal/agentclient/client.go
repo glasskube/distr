@@ -20,15 +20,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type Client struct {
-	authTarget string
-	authSecret string
-
+type clientData struct {
+	authTarget       string
+	authSecret       string
 	loginEndpoint    string
 	manifestEndpoint string
 	resourceEndpoint string
 	statusEndpoint   string
+}
 
+type Client struct {
+	clientData
 	httpClient *http.Client
 	logger     *zap.Logger
 	token      jwt.Token
@@ -171,28 +173,37 @@ func (c *Client) do(r *http.Request) (*http.Response, error) {
 	return checkStatus(c.httpClient.Do(r))
 }
 
+func (c *Client) ReloadFromEnv() (changed bool, err error) {
+	var d clientData
+	if d.authTarget, err = readEnvVar("DISTR_TARGET_ID"); err != nil {
+		return
+	} else if d.authSecret, err = readEnvVar("DISTR_TARGET_SECRET"); err != nil {
+		return
+	} else if d.loginEndpoint, err = readEnvVar("DISTR_LOGIN_ENDPOINT"); err != nil {
+		return
+	} else if d.manifestEndpoint, err = readEnvVar("DISTR_MANIFEST_ENDPOINT"); err != nil {
+		return
+	} else if d.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
+		return
+	} else if d.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+		return
+	} else {
+		changed = c.clientData != d
+		if changed {
+			c.clientData = d
+			c.token = nil
+			c.rawToken = ""
+		}
+		return
+	}
+}
+
 func NewFromEnv(logger *zap.Logger) (*Client, error) {
 	client := Client{
 		httpClient: &http.Client{},
 		logger:     logger,
 	}
-	var err error
-	if client.authTarget, err = readEnvVar("DISTR_TARGET_ID"); err != nil {
-		return nil, err
-	}
-	if client.authSecret, err = readEnvVar("DISTR_TARGET_SECRET"); err != nil {
-		return nil, err
-	}
-	if client.loginEndpoint, err = readEnvVar("DISTR_LOGIN_ENDPOINT"); err != nil {
-		return nil, err
-	}
-	if client.manifestEndpoint, err = readEnvVar("DISTR_MANIFEST_ENDPOINT"); err != nil {
-		return nil, err
-	}
-	if client.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
-		return nil, err
-	}
-	if client.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+	if _, err := client.ReloadFromEnv(); err != nil {
 		return nil, err
 	}
 	return &client, nil
