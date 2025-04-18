@@ -8,7 +8,7 @@
           autotrim
           type="text"
           id="name"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
           placeholder="License name" />
         @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
@@ -20,7 +20,7 @@
           formControlName="expiresAt"
           type="date"
           id="expiresAt"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
           placeholder="License Expiry Date" />
       </div>
     </div>
@@ -33,7 +33,7 @@
         <select
           id="subjectId"
           formControlName="subjectId"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500">
           @for (app of applications$ | async; track app.id) {
             <option [value]="app.id">{{ app.name }}</option>
           }
@@ -46,7 +46,7 @@
       <div class="w-full">
         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"> Application Versions * </label>
         <button
-          class="inline-flex w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+          class="inline-flex w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-500 focus:border-primary-500 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
           type="button"
           cdkOverlayOrigin
           #dropdownTriggerButton
@@ -73,7 +73,7 @@
           <div
             @dropdown
             style="transform-origin: top center"
-            class="w-full text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+            class="w-full text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
             <ul
               class="w-full text-sm font-medium text-gray-900 bg-white border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
               <li class="w-full border-gray-200 dark:border-gray-600">
@@ -82,7 +82,7 @@
                     id="all-versions-checkbox"
                     formControlName="includeAllItems"
                     type="checkbox"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-xs focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-700 dark:focus:ring-3-offset-gray-700 focus:ring-3-2 dark:bg-gray-600 dark:border-gray-500" />
                   <label
                     for="all-versions-checkbox"
                     class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
@@ -101,7 +101,7 @@
                         type="checkbox"
                         [formControlName]="i"
                         [value]="item"
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-xs focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-700 dark:focus:ring-3-offset-gray-700 focus:ring-3-2 dark:bg-gray-600 dark:border-gray-500" />
                       <label
                         for="version-checkbox-{{ i }}"
                         class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
@@ -132,7 +132,7 @@
                                   id="archived-checkbox-{{ i }}"
                                   [formControlName]="i"
                                   [value]="item"
-                                  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                                  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-xs focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-700 dark:focus:ring-3-offset-gray-700 focus:ring-3-2 dark:bg-gray-600 dark:border-gray-500" />
                                 <label
                                   for="archived-checkbox-{{ i }}"
                                   class="w-full py-1 ms-2 font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed"
@@ -159,7 +159,7 @@
     <select
       id="ownerUserAccountId"
       formControlName="ownerUserAccountId"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500">
       @for (customer of customers$ | async; track customer.id) {
         <option [value]="customer.id">{{ customer.name ?? customer.email }}</option>
       }
@@ -182,7 +182,7 @@
       autotrim
       type="text"
       id="registryUrl"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500" />
     @if (
       editForm.controls.registry.invalid &&
       editForm.controls.registry.controls.url.touched &&
@@ -201,7 +201,7 @@
       autotrim
       type="text"
       id="registryUsername"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500" />
     @if (
       editForm.controls.registry.invalid &&
       editForm.controls.registry.controls.username.touched &&
@@ -220,7 +220,7 @@
       autotrim
       type="text"
       id="registryPassword"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500" />
     @if (
       editForm.controls.registry.invalid &&
       editForm.controls.registry.controls.password.touched &&

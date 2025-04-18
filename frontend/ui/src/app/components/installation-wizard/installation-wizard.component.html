@@ -1,7 +1,7 @@
 <div
   @modalFlyInOut
   style="transform-origin: top center"
-  class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow dark:bg-gray-900">
+  class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow-sm dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create a new deployment</h2>
@@ -40,7 +40,7 @@
                           type="radio"
                           name="type"
                           value="docker"
-                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-3-2 focus:ring-3-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-3-offset-gray-800 dark:focus:ring-3-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
@@ -69,7 +69,7 @@
                           type="radio"
                           name="type"
                           value="kubernetes"
-                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-3-2 focus:ring-3-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-3-offset-gray-800 dark:focus:ring-3-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
@@ -94,7 +94,7 @@
                         aria-describedby="helper-checkbox-text"
                         type="checkbox"
                         value=""
-                        class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                        class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-800 focus:ring-3-2 dark:bg-gray-700 dark:border-gray-600" />
                     </div>
                     <div class="ms-4 text-sm">
                       <label for="helper-checkbox" class="text-sm font-medium text-gray-400 dark:text-gray-500">
@@ -116,7 +116,7 @@
                     type="text"
                     name="name"
                     id="name"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                     required
                     autotrim
                     autocomplete="off" />
@@ -135,7 +135,7 @@
                       type="text"
                       name="name"
                       id="name"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                       required
                       autotrim
                       autocomplete="off" />
@@ -159,7 +159,7 @@
                       id="checked-checkbox"
                       type="checkbox"
                       [formControl]="deploymentTargetForm.controls.clusterScope"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-800 focus:ring-3-2 dark:bg-gray-700 dark:border-gray-600" />
                     <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                       Enable cluster-scoped permissions
                     </label>

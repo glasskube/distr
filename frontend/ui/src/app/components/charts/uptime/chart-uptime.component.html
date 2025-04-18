@@ -7,7 +7,7 @@
     cdkOverlayOrigin
     #dropdownTrigger="cdkOverlayOrigin"
     (click)="showDropdown = !showDropdown"
-    class="inline-block absolute top-0 right-0 p-1 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+    class="inline-block absolute top-0 right-0 p-1 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-3-4 focus:outline-none dark:text-white focus:ring-3-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-3-gray-600"
     type="button">
     <fa-icon [icon]="faEllipsis"></fa-icon>
   </button>
@@ -23,7 +23,7 @@
   <div
     @dropdown
     style="transform-origin: top center"
-    class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+    class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
     <ul class="py-1" role="none">
       @for (dt of deploymentTargets$ | async; track dt.id) {
         <li>

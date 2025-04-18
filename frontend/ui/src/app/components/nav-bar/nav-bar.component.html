@@ -8,7 +8,7 @@
           aria-controls="logo-sidebar"
           type="button"
           (click)="sidebar.toggle()"
-          class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+          class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-3-2 focus:ring-3-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-3-gray-600">
           <span class="sr-only">Open sidebar</span>
           <fa-icon [icon]="faBarsStaggered" size="xl" class="h-6 w-6"></fa-icon>
         </button>
@@ -36,7 +36,7 @@
           <div class="ml-1">
             <button
               type="button"
-              class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+              class="flex text-sm bg-gray-800 rounded-full focus:ring-3-4 focus:ring-3-gray-300 dark:focus:ring-3-gray-600"
               aria-expanded="false"
               cdkOverlayOrigin
               #dropdownTrigger="cdkOverlayOrigin"
@@ -55,7 +55,7 @@
             <div
               @dropdown
               style="transform-origin: top center"
-              class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+              class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
               <div class="px-4 py-3" role="none">
                 <p class="text-sm text-gray-900 dark:text-white" role="none">{{ name }}</p>
                 <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">

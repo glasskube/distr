@@ -1,7 +1,7 @@
 <div
   @modalFlyInOut
   style="transform-origin: top center"
-  class="p-4 w-full my-auto max-h-full overflow-y-auto bg-white rounded-lg shadow dark:bg-gray-900">
+  class="p-4 w-full my-auto max-h-full overflow-y-auto bg-white rounded-lg shadow-sm dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Welcome to Distr</h2>
@@ -35,7 +35,7 @@
                       [formControl]="applicationForm.controls.sampleApplication"
                       id="process-type-checkbox"
                       type="checkbox"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-800 focus:ring-3-2 dark:bg-gray-700 dark:border-gray-600" />
                   </div>
                   <div class="ms-2 text-sm">
                     <label for="process-type-checkbox" class="text-sm font-medium text-gray-900 dark:text-white">
@@ -62,7 +62,7 @@
                             type="radio"
                             name="appType"
                             value="docker"
-                            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-3-2 focus:ring-3-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-3-offset-gray-800 dark:focus:ring-3-primary-600" />
                         </div>
 
                         <div class="ms-4 text-sm">
@@ -91,7 +91,7 @@
                             type="radio"
                             name="appType"
                             value="kubernetes"
-                            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                            class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-3-2 focus:ring-3-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-3-offset-gray-800 dark:focus:ring-3-primary-600"
                             checked />
                         </div>
 
@@ -129,7 +129,7 @@
                           type="text"
                           name="name"
                           id="kubernetesApplicationName"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                           placeholder="Security Scanner"
                           required />
                         @if (
@@ -151,7 +151,7 @@
                           type="text"
                           name="breadth"
                           id="kubernetesApplicationVersion"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                           placeholder="v4.2.0"
                           required />
                         @if (
@@ -173,7 +173,7 @@
                         <select
                           [formControl]="applicationForm.controls.kubernetes.controls.chartType"
                           id="chartTypeSelect"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500">
                           <option value="repository">Repository</option>
                           <option value="oci">OCI</option>
                         </select>
@@ -197,7 +197,7 @@
                             type="text"
                             name="chartName"
                             id="kubernetesChartName"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500" />
                           @if (
                             applicationForm.controls.kubernetes.controls.chartName.invalid &&
                             applicationForm.controls.kubernetes.controls.chartName.touched
@@ -221,7 +221,7 @@
                           type="text"
                           name="chartUrl"
                           id="kubernetesChartUrl"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500" />
                         @if (
                           applicationForm.controls.kubernetes.controls.chartUrl.invalid &&
                           applicationForm.controls.kubernetes.controls.chartUrl.touched
@@ -241,7 +241,7 @@
                           type="text"
                           name="chartVersion"
                           id="kubernetesChartVersion"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500" />
                         @if (
                           applicationForm.controls.kubernetes.controls.chartVersion.invalid &&
                           applicationForm.controls.kubernetes.controls.chartVersion.touched
@@ -260,7 +260,7 @@
                       <app-editor
                         id="base_values_input"
                         language="yaml"
-                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-3-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
                         [formControl]="applicationForm.controls.kubernetes.controls.baseValues">
                       </app-editor>
                     </div>
@@ -271,7 +271,7 @@
                       >
                       <app-editor
                         id="template_input"
-                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-3-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
                         [formControl]="applicationForm.controls.kubernetes.controls.template">
                       </app-editor>
                     </div>
@@ -289,7 +289,7 @@
                           type="text"
                           name="name"
                           id="applicationName"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                           placeholder="Security Scanner"
                           required />
                         @if (
@@ -311,7 +311,7 @@
                           type="text"
                           name="breadth"
                           id="applicationVersion"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                           placeholder="v4.2.0"
                           required />
                         @if (
@@ -330,7 +330,7 @@
                       <app-editor
                         id="compose_input"
                         language="yaml"
-                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-3-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
                         [formControl]="applicationForm.controls.docker.controls.compose">
                       </app-editor>
                       <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -353,7 +353,7 @@
                       >
                       <app-editor
                         id="docker_template_input"
-                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-3-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
                         [formControl]="applicationForm.controls.docker.controls.template">
                       </app-editor>
                       <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -381,7 +381,7 @@
                       type="text"
                       name="name"
                       id="customerName"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                       placeholder="Sustainable Corp Ltd."
                       required
                       autocomplete="off" />
@@ -410,7 +410,7 @@
                           type="radio"
                           name="appType"
                           value="full"
-                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-3-2 focus:ring-3-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-3-offset-gray-800 dark:focus:ring-3-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
@@ -437,7 +437,7 @@
                           type="radio"
                           name="appType"
                           value="none"
-                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
+                          class="h-4 w-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-3-2 focus:ring-3-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-3-offset-gray-800 dark:focus:ring-3-primary-600" />
                       </div>
 
                       <div class="ms-4 text-sm">
@@ -477,7 +477,7 @@
                         autotrim
                         type="email"
                         id="techContactEmail"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                         placeholder="michael.scott@corp.com" />
                       @if (
                         deploymentTargetForm.controls.technicalContactEmail.invalid &&
@@ -503,7 +503,7 @@
                           autotrim
                           type="text"
                           id="namespace"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
                           placeholder="Enter a namespace" />
                         @if (
                           deploymentTargetForm.controls.namespace.invalid &&
@@ -520,7 +520,7 @@
                           id="checked-checkbox"
                           type="checkbox"
                           [formControl]="deploymentTargetForm.controls.clusterScope"
-                          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-3-blue-500 dark:focus:ring-3-blue-600 dark:ring-3-offset-gray-800 focus:ring-3-2 dark:bg-gray-700 dark:border-gray-600" />
                         <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                           Enable cluster-scoped permissions
                         </label>
@@ -535,7 +535,7 @@
                         <app-editor
                           id="helm-values"
                           language="yaml"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-3-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
                           [formControl]="deploymentTargetForm.controls.valuesYaml">
                         </app-editor>
                       </div>
@@ -548,7 +548,7 @@
                         </label>
                         <app-editor
                           id="env-file-data"
-                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-3-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
                           [formControl]="deploymentTargetForm.controls.envFileData">
                         </app-editor>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
