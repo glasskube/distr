@@ -25,7 +25,7 @@
                     <button
                       type="button"
                       (click)="deleteLogo()"
-                      class="px-3 py-2 text-xs font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-3-4 focus:ring-3-gray-200 dark:focus:ring-3-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                      class="px-3 py-2 text-xs font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                       Delete
                     </button>
                   } @else {
@@ -53,7 +53,7 @@
                   type="text"
                   name="title"
                   id="title"
-                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-primary-500 dark:focus:border-primary-500"
+                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   placeholder="Customer Portal" />
                 <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
                   The title will be shown in the header next to the logo.
@@ -73,7 +73,7 @@
                       formControlName="description"
                       id="description"
                       rows="8"
-                      class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-3-0 dark:text-white dark:placeholder-gray-400"
+                      class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"
                       placeholder="# Welcome"></textarea>
                   </div>
                 </div>
@@ -82,7 +82,7 @@
                 <button
                   type="submit"
                   [disabled]="formLoading()"
-                  class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-3-4 focus:outline-none focus:ring-3-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-3-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                  class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
                   <fa-icon [icon]="faFloppyDisk" size="lg" class="h-4 w-4 mr-2 -ml-0.5 mb-1"></fa-icon>
                   Save
                 </button>

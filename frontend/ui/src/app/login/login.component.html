@@ -19,7 +19,7 @@
               autotrim
               id="email"
               autocomplete="email"
-              class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
+              class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="name@company.com"
               required />
             @if (formGroup.controls.email.touched && formGroup.controls.email.errors) {
@@ -34,7 +34,7 @@
               id="password"
               autocomplete="current-password"
               autotrim
-              class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-3-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-3-blue-500 dark:focus:border-blue-500"
+              class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               required />
             @if (formGroup.controls.password.touched && formGroup.controls.password.errors) {
               <div class="text-sm text-red-500">Please enter your password</div>
@@ -54,7 +54,7 @@
           <button
             type="submit"
             [disabled]="loading"
-            class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-3-4 focus:outline-none focus:ring-3-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-3-primary-800">
+            class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
             Sign in
           </button>
           @if (showRegistrationLink$ | async) {
