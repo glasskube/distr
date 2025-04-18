@@ -10,8 +10,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.2
 	github.com/containerd/log v0.1.0
 	github.com/docker/cli v28.1.0+incompatible
+	github.com/exaring/otelpgx v0.9.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.32.0
+	github.com/getsentry/sentry-go/otel v0.32.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/httprate v0.15.0
 	github.com/go-chi/jwtauth/v5 v5.3.3
@@ -24,6 +26,9 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/spf13/pflag v1.0.6
 	github.com/wneessen/go-mail v0.6.2
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0
+	go.opentelemetry.io/otel v1.35.0
+	go.opentelemetry.io/otel/sdk v1.35.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.37.0
@@ -161,11 +166,9 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.58.0 // indirect
-	go.opentelemetry.io/otel v1.33.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0 // indirect
-	go.opentelemetry.io/otel/metric v1.33.0 // indirect
-	go.opentelemetry.io/otel/trace v1.33.0 // indirect
+	go.opentelemetry.io/otel/metric v1.35.0 // indirect
+	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.4.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/net v0.38.0 // indirect

@@ -30,9 +30,11 @@ func main() {
 	ctx := context.Background()
 
 	util.Must(sentry.Init(sentry.ClientOptions{
-		Dsn:     env.SentryDSN(),
-		Debug:   env.SentryDebug(),
-		Release: buildconfig.Version(),
+		Dsn:              env.SentryDSN(),
+		Debug:            env.SentryDebug(),
+		EnableTracing:    true,
+		TracesSampleRate: 1.0,
+		Release:          buildconfig.Version(),
 	}))
 	defer sentry.Flush(5 * time.Second)
 	defer func() {

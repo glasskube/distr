@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/exaring/otelpgx"
+	sentryotel "github.com/getsentry/sentry-go/otel"
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
@@ -20,6 +22,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	gomail "github.com/wneessen/go-mail"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -30,6 +36,7 @@ type Registry struct {
 	mailer            mail.Mailer
 	execDbMigrations  bool
 	artifactsRegistry http.Handler
+	tracer            *trace.TracerProvider
 }
 
 func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
@@ -52,6 +59,8 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		zap.String("version", buildconfig.Version()),
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
+
+	reg.tracer = createTracer()
 
 	if mailer, err := createMailer(ctx); err != nil {
 		return nil, err
@@ -79,6 +88,9 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 func (r *Registry) Shutdown() error {
 	r.logger.Warn("shutting down database connections")
 	r.dbPool.Close()
+	if err := r.tracer.Shutdown(context.TODO()); err != nil {
+		r.logger.Warn("tracer shutdown failed", zap.Error(err))
+	}
 	// some devices like stdout and stderr can not be synced by the OS
 	if err := r.logger.Sync(); errors.Is(err, syscall.EINVAL) {
 		return nil
@@ -124,6 +136,8 @@ func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
 	}
 	if env.EnableQueryLogging() {
 		config.ConnConfig.Tracer = &loggingQueryTracer{log}
+	} else {
+		config.ConnConfig.Tracer = otelpgx.NewTracer()
 	}
 	db, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
@@ -181,9 +195,26 @@ func (r *Registry) GetMailer() mail.Mailer {
 }
 
 func createLogger() *zap.Logger {
-	config := zap.NewDevelopmentConfig()
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	return zap.Must(config.Build())
+	if buildconfig.IsRelease() {
+		config := zap.NewProductionConfig()
+		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+		return zap.Must(config.Build())
+	} else {
+		return zap.Must(zap.NewDevelopment())
+	}
+}
+
+func createTracer() *trace.TracerProvider {
+	// For the demonstration, use sdktrace.AlwaysSample sampler to sample all traces.
+	// In a production application, use sdktrace.ProbabilitySampler with a desired probability.
+	tp := trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceName("Distr"))),
+		trace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(sentryotel.NewSentryPropagator())
+	return tp
 }
 
 func (r *Registry) GetLogger() *zap.Logger {
@@ -191,7 +222,7 @@ func (r *Registry) GetLogger() *zap.Logger {
 }
 
 func (r *Registry) GetRouter() http.Handler {
-	return routing.NewRouter(r.logger, r.dbPool, r.mailer)
+	return routing.NewRouter(r.logger, r.dbPool, r.mailer, r.tracer)
 }
 
 func (r *Registry) GetArtifactsRouter() http.Handler {
@@ -208,4 +239,8 @@ func (r *Registry) GetArtifactsServer() server.Server {
 	} else {
 		return server.NewNoop()
 	}
+}
+
+func (r *Registry) GetTracer() *trace.TracerProvider {
+	return r.tracer
 }
