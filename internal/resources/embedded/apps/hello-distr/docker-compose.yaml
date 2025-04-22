@@ -47,7 +47,7 @@ services:
       - backend
     restart: unless-stopped
     extra_hosts:
-      - "${HELLO_DISTR_HOST:?error}=host-gateway"
+      - '${HELLO_DISTR_HOST:?error}=host-gateway'
     networks:
       - app_network
 
