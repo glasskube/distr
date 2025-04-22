@@ -2,13 +2,8 @@ import {BlockScrollStrategy, GlobalPositionStrategy, Overlay, OverlayConfig, Vie
 import {ComponentPortal, ComponentType, TemplatePortal} from '@angular/cdk/portal';
 import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainerRef} from '@angular/core';
 import {filter, fromEvent, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
-import {
-  ConfirmConfig,
-  ConfirmDialogComponent,
-  ConfirmMessage,
-} from '../components/confirm-dialog/confirm-dialog.component';
-import {ImageUploadContext, ImageUploadDialogComponent} from '../components/image-upload/image-upload-dialog.component';
-import {Image} from '../../../../../sdk/js/src';
+import {ConfirmConfig, ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
+import {ImageUploadDialogComponent} from '../components/image-upload/image-upload-dialog.component';
 
 type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
@@ -45,8 +40,6 @@ export class DialogRef<T = void> {
   }
 }
 
-export class CurrentOverlay extends DialogRef<unknown> {}
-
 export class ExtendedOverlayConfig extends OverlayConfig {
   backdropStyleOnly?: boolean;
   data?: unknown;
@@ -65,8 +58,8 @@ export class OverlayService {
     return this.showModal<boolean>(ConfirmDialogComponent, {data: config}).result();
   }
 
-  public uploadImage(context: ImageUploadContext) {
-    return this.showModal<boolean>(ImageUploadDialogComponent, {data: context}).result();
+  public uploadImage() {
+    return this.showModal<string>(ImageUploadDialogComponent, {data: {}}).result();
   }
 
   /**
@@ -105,12 +98,12 @@ export class OverlayService {
     const injector =
       config.data !== null && config.data !== undefined
         ? Injector.create({
-            parent: this.viewContainerRef.injector,
-            providers: [
-              {provide: DialogRef, useValue: dialogRef},
-              {provide: OverlayData, useValue: config.data},
-            ],
-          })
+          parent: this.viewContainerRef.injector,
+          providers: [
+            {provide: DialogRef, useValue: dialogRef},
+            {provide: OverlayData, useValue: config.data},
+          ],
+        })
         : null;
 
     if (templateRefOrComponentType instanceof TemplateRef) {

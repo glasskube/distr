@@ -1,4 +1,4 @@
-import {AsyncPipe, DatePipe} from '@angular/common';
+import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, computed, inject, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -39,6 +39,7 @@ import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {digestMessage} from '../../../util/crypto';
+import {SecureImagePipe} from '../../../util/secureImage';
 
 @Component({
   selector: 'app-users',
@@ -50,6 +51,8 @@ import {digestMessage} from '../../../util/crypto';
     RequireRoleDirective,
     AutotrimDirective,
     UuidComponent,
+    SecureImagePipe,
+    NgOptimizedImage,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
@@ -90,10 +93,10 @@ export class UsersComponent implements OnDestroy {
     const usersWithRefresh = this.refresh$.pipe(
       startWith(undefined),
       switchMap(() => this.users.getUsers().pipe(map((users) => {
-          users.forEach(user => {
-            user.imageUrl= `https://www.gravatar.com/avatar/${digestMessage(user.email)}`;
-          })
-          return users;
+        users.forEach(user => {
+          user.imageUrl = `https://www.gravatar.com/avatar/${digestMessage(user.email)}`;
+        })
+        return users;
       })))
     );
     const shownUserAccounts = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
@@ -145,11 +148,18 @@ export class UsersComponent implements OnDestroy {
     }
   }
 
+  // public async uploadImage(data: UserAccountWithRole) {
+  //   data.imageUrl = await firstValueFrom(this.overlay.uploadImage()
+  //     .pipe(map(async imageId => await firstValueFrom(this.users.patchImage(data.id!!, imageId!!))))
+  //   );
+  // }
+
   public async uploadImage(data: UserAccountWithRole) {
-    this.overlay
-      .uploadImage({data, type: 'user'})
-      .subscribe();
+    data.imageUrl = await firstValueFrom(this.overlay.uploadImage()
+      .pipe(map(async imageId => await firstValueFrom(this.users.patchImage(data.id!!, imageId!!))))
+    );
   }
+
 
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
@@ -185,5 +195,4 @@ export class UsersComponent implements OnDestroy {
   }
 
   protected readonly faCircleExclamation = faCircleExclamation;
-  protected readonly digestMessage = digestMessage;
 }

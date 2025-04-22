@@ -23,6 +23,10 @@ type UpdateUserAccountRequest struct {
 	Password *string `json:"password"`
 }
 
+type PatchUserAccountImageRequest struct {
+	ImageID uuid.UUID `json:"imageId"`
+}
+
 func (r UpdateUserAccountRequest) Validate() error {
 	if r.Password != nil {
 		if err := validation.ValidatePassword(*r.Password); err != nil {

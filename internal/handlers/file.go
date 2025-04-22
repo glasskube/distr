@@ -82,7 +82,10 @@ func createFileHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	} else {
+		RespondJSON(w, file.ID)
 	}
+
 }
 
 func getFileFromRequest(r *http.Request) (*types.File, error) {

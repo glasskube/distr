@@ -1,8 +1,8 @@
-import {BaseModel, Image} from './base';
+import {BaseModel} from './base';
 
 export type UserRole = 'vendor' | 'customer';
 
-export interface UserAccount extends BaseModel, Image {
+export interface UserAccount extends BaseModel {
   email: string;
   name?: string;
   imageUrl?: string;

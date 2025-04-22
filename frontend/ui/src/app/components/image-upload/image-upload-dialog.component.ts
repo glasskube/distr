@@ -7,15 +7,14 @@ import {modalFlyInOut} from '../../animations/modal';
 import {DialogRef, OverlayData} from '../../services/overlay.service';
 import {AsyncPipe} from '@angular/common';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Image} from '@glasskube/distr-sdk';
+import {DistrFile} from '@glasskube/distr-sdk';
 import {getFormDisplayedError} from '../../../util/errors';
 import {ToastService} from '../../services/toast.service';
-import {UsersService} from '../../services/users.service';
+import {FilesService} from '../../services/files.service';
 
 
 export interface ImageUploadContext {
-  data: Image;
-  type: 'user' | 'application';
+  data: DistrFile;
 }
 
 @Component({
@@ -25,12 +24,12 @@ export interface ImageUploadContext {
 })
 export class ImageUploadDialogComponent implements OnInit {
   public readonly faXmark = faXmark;
-  public readonly dialogRef = inject(DialogRef) as DialogRef<boolean>;
+  public readonly dialogRef = inject(DialogRef) as DialogRef<string>;
   public readonly data = inject(OverlayData) as ImageUploadContext;
   private readonly animationComplete$ = new Subject<void>();
 
   private toast = inject(ToastService);
-  private users = inject(UsersService)
+  private files = inject(FilesService);
 
   protected readonly form = new FormGroup({
     image: new FormControl<Blob | null>(null, Validators.required),
@@ -73,30 +72,12 @@ export class ImageUploadDialogComponent implements OnInit {
     if (this.form.valid) {
       this.formLoading.set(true);
       const formData = new FormData();
-      formData.set('image', this.form.value.image ? (this.form.value.image as File) : '');
-
-      let uploadResult: Observable<void>;
-
-      debugger;
-
-      switch (this.data.type) {
-        case 'user':
-          uploadResult = this.users.patchImage(this.data.data.id!!, formData);
-          break;
-        // case 'application':
-        //   break;
-        default:
-          this.toast.error('Unsupported image type');
-          this.formLoading.set(false);
-          return;
-      }
+      formData.set('file', this.form.value.image ? (this.form.value.image as File) : '');
 
       try {
-        console.log('upload');
-        await lastValueFrom(uploadResult);
-
+        let uploadResult = this.files.uploadFile(formData);
+        this.dialogRef.close(await lastValueFrom(uploadResult));
         this.toast.success('Image saved successfully');
-        await this.dialogRef.close(true);
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {

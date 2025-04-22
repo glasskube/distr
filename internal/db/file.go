@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	fileOutputExpr = "f.id, f.organization_id, f.created_at, f.content_type, f.data, f.file_name, f.file_size, "
+	fileOutputExpr = "f.id, f.organization_id, f.created_at, f.content_type, f.data, f.file_name, f.file_size"
 )
 
 func CreateFile(ctx context.Context, organizationID uuid.UUID, file *types.File) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"INSERT INTO File AS f (organization_id, content_type, data, file_name, file_size) "+
-			"VALUES (@organization_id, @content_type, @data, @file_name, @file_size, ) "+
+			"VALUES (@organization_id, @content_type, @data, @file_name, @file_size) "+
 			"RETURNING "+fileOutputExpr,
 		pgx.NamedArgs{
 			"organization_id": organizationID,
