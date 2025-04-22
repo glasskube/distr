@@ -73,7 +73,7 @@
       </thead>
       <tbody>
         @for (application of applications$ | async; track application.id) {
-          <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
             @if (fullVersion) {
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <app-uuid [uuid]="application.id!" />
@@ -136,7 +136,8 @@
     class="p-4 w-128 my-auto max-h-full overflow-y-auto bg-white rounded-lg shadow-sm dark:bg-gray-900">
     <div class="relative w-full max-h-full">
       <div class="relative rounded-lg">
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+        <div
+          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Create Application</h3>
           <button
             type="button"

@@ -54,7 +54,7 @@
           </thead>
           <tbody>
             @for (user of users$ | async; track user.id) {
-              <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <app-uuid [uuid]="user.id!" />
                 </td>
@@ -94,7 +94,7 @@
     style="transform-origin: top center"
     class="p-4 w-full mt-12 max-h-full bg-white rounded-lg shadow-sm dark:bg-gray-900">
     <!-- Modal header -->
-    <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+    <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
         @switch (userRole()) {
           @case ('customer') {

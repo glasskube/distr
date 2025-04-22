@@ -81,7 +81,7 @@
       </thead>
       <tbody>
         @for (dt of filteredDeploymentTargets$ | async; track dt.id) {
-          <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
             @if (fullVersion) {
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <app-uuid [uuid]="dt.id!" />
@@ -358,7 +358,8 @@
                 style="transform-origin: top center"
                 class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow-sm dark:bg-gray-700">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                <div
+                  class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
                   <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructions</h3>
                   <button
                     type="button"
@@ -513,7 +514,7 @@
       <!-- Modal content -->
       <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
         <!-- Modal header -->
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+        <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             @if (selectedDeploymentTarget()?.deployment?.id) {
               Update Deployment
@@ -574,7 +575,7 @@
       <!-- Modal content -->
       <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
         <!-- Modal header -->
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+        <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Status History: {{ selectedDeploymentTarget()?.name }}
             @if (selectedDeploymentTarget()?.deployment; as deployment) {
@@ -611,7 +612,7 @@
                 <tbody>
                   @for (status of statuses; track status.id) {
                     <tr
-                      class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                      class="bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                       <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                         {{ status.createdAt | date: 'medium' }}
                       </th>
