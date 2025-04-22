@@ -198,11 +198,11 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private prepareReleaseStep() {
-    const fork = getExistingTask(this.progress, deployStep, releaseStepTaskFork);
-    const pat = getExistingTask(this.progress, deployStep, releaseStepTaskPAT);
-    const copy = getExistingTask(this.progress, deployStep, releaseStepTaskCopyID);
-    const release = getExistingTask(this.progress, deployStep, releaseStepTaskRelease);
-    const verify = getExistingTask(this.progress, deployStep, releaseStepTaskVerify);
+    const fork = getExistingTask(this.progress, releaseStep, releaseStepTaskFork);
+    const pat = getExistingTask(this.progress, releaseStep, releaseStepTaskPAT);
+    const copy = getExistingTask(this.progress, releaseStep, releaseStepTaskCopyID);
+    const release = getExistingTask(this.progress, releaseStep, releaseStepTaskRelease);
+    const verify = getExistingTask(this.progress, releaseStep, releaseStepTaskVerify);
     this.releaseFormGroup.patchValue({
       forkDone: !!fork,
       patDone: !!pat,

@@ -151,7 +151,11 @@
                       <fa-icon [icon]="faLightbulb"></fa-icon>
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Automate Releases</h3>
-                    <p class="text-sm mt-2">You are now ready to push and pull images stored in the Distr registry.</p>
+                    <p class="text-sm mt-2">
+                      For future releases of your applications (in this case hello-distr), you probaly want to automate
+                      the creation of a new Distr application version, to avoid manually copying the released compose
+                      file to Distr. The steps below will give you an idea of what such an automation can look like.
+                    </p>
                   </li>
 
                   <li class="mb-10 ms-8">
@@ -163,15 +167,59 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Fork the hello-distr Application</h3>
                     <p class="mt-1 text-xs">
-                      We have prepared three images for you, that all belong to the
+                      Fork the previously deployed
                       <a
                         href="https://github.com/glasskube/hello-distr"
                         class="text-gray-600 dark:text-gray-400 underline"
                         target="_blank"
                         >hello-distr application</a
-                      >. Pull them from the Github Container Registry to your machine's docker environment, with:
+                      >
+                      on GitHub. You will use this fork to release a new version of your own hello-distr, and then sync
+                      this release into Distr.
                     </p>
                     @if (releaseFormGroup.controls.forkDone.touched && releaseFormGroup.controls.forkDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="releaseFormGroup.controls.patDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Add a Distr Personal Access Token to your fork</h3>
+                    <p class="mt-1 text-xs">
+                      Create a Personal Access Token and then copy it to your repositories secrets section to allow
+                      access of the GitHub action workflow to your Distr account. In the GitHub Settings you will find
+                      "Secrets and variables" for Actions. Add a repository secret with the name DISTR_TOKEN_SECRET with
+                      the previously created PAT as value.
+                    </p>
+                    @if (releaseFormGroup.controls.patDone.touched && releaseFormGroup.controls.patDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2">
+                      <input
+                        type="checkbox"
+                        [formControl]="releaseFormGroup.controls.copyIdDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <h3 class="text-lg font-medium leading-tight">Add Application ID as a variable to your fork</h3>
+                    <p class="mt-1 text-xs">
+                      The GitHub action workflow in your fork will try to create a new application version. For that to
+                      work, it needs to know which application the version should be appended to. Therefore, copy your
+                      hello-distr applications ID and add it to your repository as a repository variable with the name
+                      DISTR_APPLICATION_ID_VAR.
+                    </p>
+                    @if (releaseFormGroup.controls.copyIdDone.touched && releaseFormGroup.controls.copyIdDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
                         Please mark this as checked when you are done with it.
                       </div>
