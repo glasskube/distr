@@ -17,7 +17,7 @@ import {Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {firstValueFrom, lastValueFrom, Subject, takeUntil, tap} from 'rxjs';
+import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {AccessTokenWithKey} from '../../../../../../sdk/js/src';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -111,19 +111,46 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
     this.usageFormGroup.controls.pullDone.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskPull))
+        switchMap((done) =>
+          this.tutorialsService.saveDoneIfNotYetDone(
+            this.progress,
+            done ?? false,
+            tutorialId,
+            usageStep,
+            usageStepTaskPull
+          )
+        ),
+        tap((updated) => (this.progress = updated))
       )
       .subscribe();
     this.usageFormGroup.controls.tagDone.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskTag))
+        switchMap((done) =>
+          this.tutorialsService.saveDoneIfNotYetDone(
+            this.progress,
+            done ?? false,
+            tutorialId,
+            usageStep,
+            usageStepTaskTag
+          )
+        ),
+        tap((updated) => (this.progress = updated))
       )
       .subscribe();
     this.usageFormGroup.controls.pushDone.valueChanges
       .pipe(
         takeUntil(this.destroyed$),
-        tap((done) => this.saveDoneIfNotYetDone(done ?? false, usageStep, usageStepTaskPush))
+        switchMap((done) =>
+          this.tutorialsService.saveDoneIfNotYetDone(
+            this.progress,
+            done ?? false,
+            tutorialId,
+            usageStep,
+            usageStepTaskPush
+          )
+        ),
+        tap((updated) => (this.progress = updated))
       )
       .subscribe();
   }
@@ -146,18 +173,6 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
         // it's a valid use case for a tutorial progress not to exist yet
         this.toast.error(msg);
       }
-    }
-  }
-
-  private async saveDoneIfNotYetDone(done: boolean, stepId: string, taskId: string) {
-    const doneBefore = getExistingTask(this.progress, stepId, taskId);
-    if (done && !doneBefore) {
-      this.progress = await firstValueFrom(
-        this.tutorialsService.save(tutorialId, {
-          stepId: stepId,
-          taskId: taskId,
-        })
-      );
     }
   }
 
