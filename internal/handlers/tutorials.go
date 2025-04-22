@@ -186,11 +186,19 @@ func createHelloDistrDeploymentTarget(ctx context.Context) (*types.DeploymentTar
 	}
 }
 
+var helloDistrEnvironment = `
+# mandatory values:
+HELLO_DISTR_HOST=localhost
+HELLO_DISTR_DB_NAME=hello-distr
+HELLO_DISTR_DB_USER=distr
+HELLO_DISTR_DB_PASSWORD=distr123
+`
+
 func createHelloDistrDeploymentAndRevision(ctx context.Context, appVersionID uuid.UUID, dtID uuid.UUID) error {
 	deploymentRequest := &api.DeploymentRequest{
 		ApplicationVersionID: appVersionID,
 		DeploymentTargetID:   dtID,
-		// TODO environment
+		EnvFileData:          []byte(helloDistrEnvironment),
 	}
 	if err := db.CreateDeployment(ctx, deploymentRequest); err != nil {
 		return err
