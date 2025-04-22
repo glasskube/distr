@@ -31,9 +31,6 @@ import (
 	"slices"
 
 	"github.com/getsentry/sentry-go"
-
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
-
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
@@ -43,7 +40,10 @@ import (
 	"github.com/glasskube/distr/internal/registry/blob/s3"
 	"github.com/glasskube/distr/internal/registry/manifest"
 	"github.com/glasskube/distr/internal/registry/manifest/db"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )
 
@@ -124,7 +124,13 @@ func New(opts ...Option) http.Handler {
 	return h
 }
 
-func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mailer mail.Mailer) http.Handler {
+func NewDefault(
+	ctx context.Context,
+	logger *zap.Logger,
+	pool *pgxpool.Pool,
+	mailer mail.Mailer,
+	tracer *trace.TracerProvider,
+) http.Handler {
 	return New(
 		WithLogger(logger),
 		WithBlobHandler(s3.NewBlobHandler(ctx)),
@@ -135,6 +141,7 @@ func NewDefault(ctx context.Context, logger *zap.Logger, pool *pgxpool.Pool, mai
 			chimiddleware.Recoverer,
 			chimiddleware.RequestID,
 			chimiddleware.RealIP,
+			otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracer)),
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,

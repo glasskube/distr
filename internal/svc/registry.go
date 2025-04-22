@@ -19,13 +19,14 @@ import (
 	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
+	"github.com/go-logr/zapr"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	gomail "github.com/wneessen/go-mail"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -60,7 +61,11 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
 
-	reg.tracer = createTracer()
+	if tracer, err := reg.createTracer(ctx); err != nil {
+		return nil, err
+	} else {
+		reg.tracer = tracer
+	}
 
 	if mailer, err := createMailer(ctx); err != nil {
 		return nil, err
@@ -74,13 +79,13 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		}
 	}
 
-	if db, err := createDBPool(ctx, reg.logger); err != nil {
+	if db, err := reg.createDBPool(ctx); err != nil {
 		return nil, err
 	} else {
 		reg.dbPool = db
 	}
 
-	reg.artifactsRegistry = createArtifactsRegistry(ctx, reg.logger, reg.dbPool, reg.mailer)
+	reg.artifactsRegistry = reg.createArtifactsRegistry(ctx)
 
 	return reg, nil
 }
@@ -117,7 +122,7 @@ func (tracer *loggingQueryTracer) TraceQueryStart(
 func (tracer *loggingQueryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
 }
 
-func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
+func (reg *Registry) createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(env.DatabaseUrl())
 	if err != nil {
 		return nil, err
@@ -135,9 +140,9 @@ func createDBPool(ctx context.Context, log *zap.Logger) (*pgxpool.Pool, error) {
 		return nil
 	}
 	if env.EnableQueryLogging() {
-		config.ConnConfig.Tracer = &loggingQueryTracer{log}
+		config.ConnConfig.Tracer = &loggingQueryTracer{reg.logger}
 	} else {
-		config.ConnConfig.Tracer = otelpgx.NewTracer()
+		config.ConnConfig.Tracer = otelpgx.NewTracer(otelpgx.WithTracerProvider(reg.tracer))
 	}
 	db, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
@@ -180,14 +185,9 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 	}
 }
 
-func createArtifactsRegistry(
-	ctx context.Context,
-	logger *zap.Logger,
-	pool *pgxpool.Pool,
-	mailer mail.Mailer,
-) http.Handler {
-	logger = logger.With(zap.String("component", "registry"))
-	return registry.NewDefault(ctx, logger, pool, mailer)
+func (reg *Registry) createArtifactsRegistry(ctx context.Context) http.Handler {
+	logger := reg.logger.With(zap.String("component", "registry"))
+	return registry.NewDefault(ctx, logger, reg.dbPool, reg.mailer, reg.tracer)
 }
 
 func (r *Registry) GetMailer() mail.Mailer {
@@ -204,17 +204,30 @@ func createLogger() *zap.Logger {
 	}
 }
 
-func createTracer() *trace.TracerProvider {
-	// For the demonstration, use sdktrace.AlwaysSample sampler to sample all traces.
-	// In a production application, use sdktrace.ProbabilitySampler with a desired probability.
-	tp := trace.NewTracerProvider(
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceName("Distr"))),
-		trace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()),
-	)
+func (reg *Registry) createTracer(ctx context.Context) (*trace.TracerProvider, error) {
+	otel.SetLogger(zapr.NewLogger(reg.logger))
+
+	var tpopts []trace.TracerProviderOption
+	if env.OtelExporterOtlpEnabled() {
+		if exp, err := otlptracegrpc.New(ctx); err != nil {
+			return nil, err
+		} else {
+			tpopts = append(tpopts, trace.WithSpanProcessor(trace.NewBatchSpanProcessor(exp)))
+		}
+	}
+	if env.OtelExporterSentryEnabled() {
+		tpopts = append(tpopts, trace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()))
+	}
+	tp := trace.NewTracerProvider(tpopts...)
 	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(sentryotel.NewSentryPropagator())
-	return tp
+
+	tmps := []propagation.TextMapPropagator{propagation.TraceContext{}, propagation.Baggage{}}
+	if env.OtelExporterSentryEnabled() {
+		tmps = append(tmps, sentryotel.NewSentryPropagator())
+	}
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(tmps...))
+
+	return tp, nil
 }
 
 func (r *Registry) GetLogger() *zap.Logger {

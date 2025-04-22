@@ -23,9 +23,8 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
       enabled: environment.production,
       release: buildConfig.version ?? buildConfig.commit,
       dsn: remoteEnvironment.sentryDsn,
-      integrations: [Sentry.browserTracingIntegration({linkPreviousTrace: 'session-storage'})],
-      tracesSampleRate: 1,
-      tracePropagationTargets: [location.host],
+      integrations: [Sentry.browserTracingIntegration()],
+      tracesSampleRate: remoteEnvironment.sentryTraceSampleRate ?? 1,
     });
   }
 
