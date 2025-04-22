@@ -32,7 +32,7 @@ func main() {
 	util.Must(sentry.Init(sentry.ClientOptions{
 		Dsn:              env.SentryDSN(),
 		Debug:            env.SentryDebug(),
-		EnableTracing:    true,
+		EnableTracing:    env.OtelExporterSentryEnabled(),
 		TracesSampleRate: 1.0,
 		Release:          buildconfig.Version(),
 	}))
