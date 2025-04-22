@@ -71,6 +71,8 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
     forkDone: new FormControl<boolean>(false, Validators.requiredTrue),
     patDone: new FormControl<boolean>(false, Validators.requiredTrue),
     copyIdDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    // TODO note/step to update the deployed docker compose yaml
+    // TODO enable github actions
     releaseDone: new FormControl<boolean>(false, Validators.requiredTrue),
     verifyDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
