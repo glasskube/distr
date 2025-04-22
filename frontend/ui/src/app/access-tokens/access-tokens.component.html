@@ -47,7 +47,7 @@
           </thead>
           <tbody>
             @for (token of accessTokens$ | async; track token.id) {
-              <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <td class="px-4 py-3">{{ token.label }}</td>
                 <td class="px-4 py-3">{{ token.createdAt | date: 'medium' }}</td>
                 <td class="px-4 py-3">

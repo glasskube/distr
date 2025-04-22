@@ -65,7 +65,7 @@ export class ArtifactsDownloadedByComponent {
     @if (expandable()) {
       <button
         type="button"
-        class="inline-flex items-center justify-center h-3.5 ms-1 px-1 rounded-sm bg-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
+        class="inline-flex items-center justify-center h-3.5 ms-1 px-1 rounded-xs bg-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
         (click)="showFull.set(!showFull())">
         <fa-icon [icon]="faEllipsis"></fa-icon>
       </button>

@@ -1,9 +1,9 @@
 <div
   @modalFlyInOut
   style="transform-origin: top center"
-  class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow dark:bg-gray-900">
+  class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow-sm dark:bg-gray-900">
   <!-- Modal header -->
-  <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+  <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create a new deployment</h2>
     <button
       type="button"
@@ -94,7 +94,7 @@
                         aria-describedby="helper-checkbox-text"
                         type="checkbox"
                         value=""
-                        class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                        class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                     </div>
                     <div class="ms-4 text-sm">
                       <label for="helper-checkbox" class="text-sm font-medium text-gray-400 dark:text-gray-500">
@@ -159,7 +159,7 @@
                       id="checked-checkbox"
                       type="checkbox"
                       [formControl]="deploymentTargetForm.controls.clusterScope"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                     <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                       Enable cluster-scoped permissions
                     </label>
