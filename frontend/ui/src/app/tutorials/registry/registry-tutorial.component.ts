@@ -18,7 +18,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
-import {AccessTokenWithKey} from '../../../../../../sdk/js/src';
+import {AccessTokenWithKey} from '@glasskube/distr-sdk';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../../services/toast.service';

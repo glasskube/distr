@@ -4,7 +4,6 @@ import {digestMessage} from '../../util/crypto';
 import {AuthService} from './auth.service';
 import {HttpClient} from '@angular/common/http';
 import {DefaultReactiveList, ReactiveList} from './cache';
-import {Application} from '../../../../../sdk/js/src';
 
 export interface HasDownloads {
   downloadsTotal?: number;

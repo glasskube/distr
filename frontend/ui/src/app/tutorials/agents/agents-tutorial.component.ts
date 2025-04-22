@@ -18,7 +18,6 @@ import {Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, Observable, OperatorFunction, Subject, switchMap, takeUntil, tap} from 'rxjs';
-import {AccessTokenWithKey} from '../../../../../../sdk/js/src';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../../services/toast.service';
@@ -62,7 +61,6 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   protected readonly applicationsService = inject(ApplicationsService);
   protected readonly tutorialsService = inject(TutorialsService);
   private readonly deploymentTargetService = inject(DeploymentTargetsService);
-  protected createdToken?: AccessTokenWithKey;
   protected progress?: TutorialProgress;
   protected readonly welcomeFormGroup = new FormGroup({});
   protected readonly deployFormGroup = new FormGroup({

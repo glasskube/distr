@@ -19,7 +19,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
-import {OrganizationBranding} from '../../../../../../sdk/js/src';
+import {OrganizationBranding} from '@glasskube/distr-sdk';
 import {base64ToBlob} from '../../../util/blob';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
