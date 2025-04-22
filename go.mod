@@ -44,12 +44,6 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.41.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sns v1.34.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.1 // indirect
-	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -66,16 +60,21 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.34 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.34 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sns v1.34.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19 // indirect
 	github.com/aws/smithy-go v1.22.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/containerd/containerd v1.7.27 // indirect
@@ -117,6 +116,7 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
