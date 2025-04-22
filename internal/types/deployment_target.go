@@ -39,7 +39,9 @@ func (dt *DeploymentTarget) Validate() error {
 
 type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
-	CreatedBy    *UserAccountWithUserRole      `db:"created_by" json:"createdBy"`
-	Deployment   *DeploymentWithLatestRevision `db:"-" json:"deployment,omitempty"`
-	AgentVersion AgentVersion                  `db:"agent_version" json:"agentVersion"`
+	CreatedBy *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
+	// Deprecated: use Deployments instead
+	Deployment   *DeploymentWithLatestRevision  `db:"-" json:"deployment,omitempty"`
+	Deployments  []DeploymentWithLatestRevision `db:"-" json:"deployments,omitempty"`
+	AgentVersion AgentVersion                   `db:"agent_version" json:"agentVersion"`
 }

@@ -89,7 +89,7 @@ func GetDeploymentTargets(
 		return nil, fmt.Errorf("failed to get DeploymentTargets: %w", err)
 	} else {
 		for i := range result {
-			if err := addDeploymentToTarget(ctx, &result[i]); err != nil {
+			if err := addDeploymentsToTarget(ctx, &result[i]); err != nil {
 				return nil, err
 			}
 		}
@@ -121,7 +121,7 @@ func GetDeploymentTarget(
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
-		return &result, addDeploymentToTarget(ctx, &result)
+		return &result, addDeploymentsToTarget(ctx, &result)
 	}
 }
 
@@ -145,7 +145,7 @@ func GetDeploymentTargetForDeploymentID(
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
-		return &result, addDeploymentToTarget(ctx, &result)
+		return &result, addDeploymentsToTarget(ctx, &result)
 	}
 }
 
@@ -194,7 +194,7 @@ func CreateDeploymentTarget(
 		return fmt.Errorf("could not save DeploymentTarget: %w", err)
 	} else {
 		*dt = result
-		return addDeploymentToTarget(ctx, dt)
+		return addDeploymentsToTarget(ctx, dt)
 	}
 }
 
@@ -232,7 +232,7 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
-		return addDeploymentToTarget(ctx, dt)
+		return addDeploymentsToTarget(ctx, dt)
 	}
 }
 
@@ -322,13 +322,16 @@ func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarg
 	}
 }
 
-func addDeploymentToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
-	if latest, err := GetLatestDeploymentForDeploymentTarget(ctx, dt.ID); errors.Is(err, apierrors.ErrNotFound) {
+func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
+	if d, err := GetDeploymentsForDeploymentTarget(ctx, dt.ID); errors.Is(err, apierrors.ErrNotFound) {
 		return nil
 	} else if err != nil {
 		return err
 	} else {
-		dt.Deployment = latest
+		dt.Deployments = d
+		if len(d) > 0 {
+			dt.Deployment = &d[len(d)-1]
+		}
 		return nil
 	}
 }

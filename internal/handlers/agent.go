@@ -120,103 +120,96 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID.String()))
 
-	var statusMessage string
-	var appVersion *types.ApplicationVersion
-	deployment, err := db.GetLatestDeploymentForDeploymentTarget(ctx, deploymentTarget.ID)
-	if errors.Is(err, apierrors.ErrNotFound) {
-		log.Info("latest deployment not found", zap.Error(err))
-		statusMessage = "EMPTY"
-	} else if err != nil {
+	statusMessage := "OK"
+	deployments, err := db.GetDeploymentsForDeploymentTarget(ctx, deploymentTarget.ID)
+	if err != nil {
 		msg := "failed to get latest Deployment from DB"
 		log.Error(msg, zap.Error(err))
 		statusMessage = fmt.Sprintf("%v: %v", msg, err)
-		w.WriteHeader(http.StatusInternalServerError)
-	} else if av, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionID); err != nil {
-		msg := "failed to get ApplicationVersion from DB"
-		log.Error(msg, zap.Error(err))
-		statusMessage = fmt.Sprintf("%v: %v", msg, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		statusMessage = "OK"
-		appVersion = av
-	}
+		var agentResource = api.AgentResource{Version: deploymentTarget.AgentVersion}
+		if deploymentTarget.Namespace != nil {
+			agentResource.Namespace = *deploymentTarget.Namespace
+		}
 
-	var baseResource = api.AgentResource{Version: deploymentTarget.AgentVersion}
-	var baseDeployment api.AgentDeployment
-
-	if deployment != nil {
-		baseDeployment.ID = deployment.ID
-		baseDeployment.RevisionID = deployment.DeploymentRevisionID
-
-		if deployment.ApplicationLicenseID != nil {
-			if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
-				msg := "failed to get ApplicationLicense from DB"
+		for _, deployment := range deployments {
+			appVersion, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionID)
+			if err != nil {
+				msg := "failed to get ApplicationVersion from DB"
 				log.Error(msg, zap.Error(err))
 				statusMessage = fmt.Sprintf("%v: %v", msg, err)
-				w.WriteHeader(http.StatusInternalServerError)
-			} else if license.RegistryURL != nil {
-				baseDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
-					*license.RegistryURL: {
-						Username: *license.RegistryUsername,
-						Password: *license.RegistryPassword,
-					},
-				}
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				break
 			}
-		}
-	}
 
-	// TODO: Consider consolidating all types into the same response format
-	if deploymentTarget.Type == types.DeploymentTypeDocker {
-		response := api.DockerAgentResource{AgentResource: baseResource}
-		if deployment != nil && appVersion != nil {
-			if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
-				log.Warn("parse error", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else if patchedComposeFile, err := patchProjectName(composeYaml, deployment.ID); err != nil {
-				log.Warn("failed to patch project name", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else {
-				response.Deployment = &api.DockerAgentDeployment{
-					AgentDeployment: baseDeployment,
-					ComposeFile:     patchedComposeFile,
-					EnvFile:         deployment.EnvFileData,
+			agentDeployment := api.AgentDeployment{
+				ID:         deployment.ID,
+				RevisionID: deployment.DeploymentRevisionID,
+			}
+
+			if deployment.ApplicationLicenseID != nil {
+				if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
+					msg := "failed to get ApplicationLicense from DB"
+					log.Error(msg, zap.Error(err))
+					statusMessage = fmt.Sprintf("%v: %v", msg, err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					break
+				} else if license.RegistryURL != nil {
+					agentDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
+						*license.RegistryURL: {
+							Username: *license.RegistryUsername,
+							Password: *license.RegistryPassword,
+						},
+					}
 				}
 			}
-		} else {
-			log.Debug("compose file is empty")
-		}
-		RespondJSON(w, response)
-	} else {
-		response := api.KubernetesAgentResource{AgentResource: baseResource, Namespace: *deploymentTarget.Namespace}
-		if deployment != nil && appVersion != nil {
-			response.Deployment = &api.KubernetesAgentDeployment{
-				AgentDeployment: baseDeployment,
-				ReleaseName:     *deployment.ReleaseName,
-				ChartUrl:        *appVersion.ChartUrl,
-				ChartVersion:    *appVersion.ChartVersion,
-			}
-			if versionValues, err := appVersion.ParsedValuesFile(); err != nil {
-				log.Warn("parse error", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
-				log.Warn("parse error", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else if merged, err := util.MergeAllRecursive(versionValues, deploymentValues); err != nil {
-				log.Warn("merge error", zap.Error(err))
-				http.Error(w, fmt.Sprintf("error merging values files: %v", err), http.StatusInternalServerError)
-				return
+
+			if deploymentTarget.Type == types.DeploymentTypeDocker {
+				if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
+					log.Warn("parse error", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else if patchedComposeFile, err := patchProjectName(composeYaml, deployment.ID); err != nil {
+					log.Warn("failed to patch project name", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else {
+					agentDeployment.ComposeFile = patchedComposeFile
+					agentDeployment.EnvFile = deployment.EnvFileData
+				}
 			} else {
-				response.Deployment.Values = merged
+				agentDeployment.ReleaseName = *deployment.ReleaseName
+				agentDeployment.ChartUrl = *appVersion.ChartUrl
+				agentDeployment.ChartVersion = *appVersion.ChartVersion
+				if versionValues, err := appVersion.ParsedValuesFile(); err != nil {
+					log.Warn("parse error", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
+					log.Warn("parse error", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else if merged, err := util.MergeAllRecursive(versionValues, deploymentValues); err != nil {
+					log.Warn("merge error", zap.Error(err))
+					http.Error(w, fmt.Sprintf("error merging values files: %v", err), http.StatusInternalServerError)
+					return
+				} else {
+					agentDeployment.Values = merged
+				}
+				if *appVersion.ChartType == types.HelmChartTypeRepository {
+					agentDeployment.ChartName = *appVersion.ChartName
+				}
 			}
-			if *appVersion.ChartType == types.HelmChartTypeRepository {
-				response.Deployment.ChartName = *appVersion.ChartName
+			agentResource.Deployments = append(agentResource.Deployments, agentDeployment)
+			if agentResource.Deployment == nil {
+				agentResource.Deployment = &agentDeployment
 			}
 		}
-		RespondJSON(w, response)
+
+		if statusMessage == "OK" {
+			RespondJSON(w, agentResource)
+		}
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
