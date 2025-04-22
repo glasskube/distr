@@ -3,8 +3,11 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
+
+	"github.com/google/uuid"
 
 	"github.com/glasskube/distr/internal/resources"
 
@@ -73,19 +76,11 @@ func saveTutorialProgress(w http.ResponseWriter, r *http.Request) {
 
 	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if tutorial == types.TutorialAgents && req.StepID == "welcome" && req.TaskID == "start" {
-			var progress *types.TutorialProgress
-			if progress, err = db.GetTutorialProgress(ctx, auth.CurrentUserID(), tutorial); err != nil {
-				if !errors.Is(err, apierrors.ErrNotFound) {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return err
-				}
-			}
-			if progress == nil || !slices.ContainsFunc(progress.Events, func(event types.TutorialProgressEvent) bool {
-				return event.StepID == "welcome" && event.TaskID == "start"
-			}) {
-				if _, err := createHelloDistrApp(ctx); err != nil {
-					return err
-				}
+			if err := createSampleAppAndDeployment(ctx); err != nil {
+				log.Warn("could not create sample app and deployment", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, "could not create sample app and deployment", http.StatusInternalServerError)
+				return err
 			}
 		}
 
@@ -99,6 +94,29 @@ func saveTutorialProgress(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 	})
+}
+
+func createSampleAppAndDeployment(ctx context.Context) error {
+	auth := auth.Authentication.Require(ctx)
+	var progress *types.TutorialProgress
+	var err error
+	if progress, err = db.GetTutorialProgress(ctx, auth.CurrentUserID(), types.TutorialAgents); err != nil {
+		if !errors.Is(err, apierrors.ErrNotFound) {
+			return fmt.Errorf("failed to get existing tutorial progress: %w", err)
+		}
+	}
+	if progress == nil || !slices.ContainsFunc(progress.Events, func(event types.TutorialProgressEvent) bool {
+		return event.StepID == "welcome" && event.TaskID == "start"
+	}) {
+		if app, err := createHelloDistrApp(ctx); err != nil {
+			return fmt.Errorf("failed to create hello-distr app: %w", err)
+		} else if dt, err := createHelloDistrDeploymentTarget(ctx); err != nil {
+			return fmt.Errorf("failed to create hello-distr deployment target: %w", err)
+		} else if err := createHelloDistrDeploymentAndRevision(ctx, app.Versions[0].ID, dt.ID); err != nil {
+			return fmt.Errorf("failed to deploy hello-distr: %w", err)
+		}
+	}
+	return nil
 }
 
 func createHelloDistrApp(ctx context.Context) (*types.Application, error) {
@@ -139,4 +157,39 @@ func createHelloDistrApp(ctx context.Context) (*types.Application, error) {
 
 	application.Versions = append(application.Versions, version)
 	return &application, nil
+}
+
+func createHelloDistrDeploymentTarget(ctx context.Context) (*types.DeploymentTargetWithCreatedBy, error) {
+	auth := auth.Authentication.Require(ctx)
+	dt := types.DeploymentTargetWithCreatedBy{
+		DeploymentTarget: types.DeploymentTarget{
+			Name: "hello-distr-tutorial",
+			Type: types.DeploymentTypeDocker,
+		},
+	}
+	if agentVersion, err := db.GetCurrentAgentVersion(ctx); err != nil {
+		return nil, err
+	} else {
+		dt.AgentVersionID = &agentVersion.ID
+		if err := db.CreateDeploymentTarget(ctx, &dt, *auth.CurrentOrgID(), auth.CurrentUserID()); err != nil {
+			return nil, err
+		} else {
+			return &dt, nil
+		}
+	}
+}
+
+func createHelloDistrDeploymentAndRevision(ctx context.Context, appVersionID uuid.UUID, dtID uuid.UUID) error {
+	deploymentRequest := &api.DeploymentRequest{
+		ApplicationVersionID: appVersionID,
+		DeploymentTargetID:   dtID,
+		// TODO environment
+	}
+	if err := db.CreateDeployment(ctx, deploymentRequest); err != nil {
+		return err
+	} else if _, err := db.CreateDeploymentRevision(ctx, deploymentRequest); err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
