@@ -18,6 +18,33 @@ type CreateUserAccountResponse struct {
 	InviteURL string    `json:"inviteUrl"`
 }
 
+type UserAccountResponse struct {
+	types.UserAccountWithUserRole
+	ImageUrl string `json:"imageUrl"`
+}
+
+func AsUserAccount(u *types.UserAccountWithUserRole) UserAccountResponse {
+	return UserAccountResponse{
+		UserAccountWithUserRole: *u,
+		ImageUrl:                imageUrl(*u),
+	}
+}
+
+func imageUrl(u types.UserAccountWithUserRole) string {
+	if u.ImageID == nil {
+		return ""
+	}
+	return "/api/v1/files/" + u.ImageID.String()
+}
+
+func MapUserAccountsToResponse(userAccounts []types.UserAccountWithUserRole) []UserAccountResponse {
+	result := make([]UserAccountResponse, len(userAccounts))
+	for i, u := range userAccounts {
+		result[i] = AsUserAccount(&u)
+	}
+	return result
+}
+
 type UpdateUserAccountRequest struct {
 	Name     string  `json:"name"`
 	Password *string `json:"password"`

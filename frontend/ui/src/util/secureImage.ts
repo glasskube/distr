@@ -12,6 +12,8 @@ export class SecureImagePipe implements PipeTransform {
   private readonly domSanitizer = inject(DomSanitizer);
 
   transform(url?: string): Observable<SafeUrl> {
+    console.log('secure image url', url);
+
     if (!url || !url.length) {
       return of('/distr-logo.svg');
     }

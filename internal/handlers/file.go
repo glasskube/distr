@@ -133,9 +133,8 @@ func fileMiddleware(h http.Handler) http.Handler {
 			}
 		} else {
 			if file.OrganizationID != *auth.CurrentOrgID() {
-				if errors.Is(err, apierrors.ErrNotFound) {
-					http.NotFound(w, r)
-				}
+				http.NotFound(w, r)
+			} else {
 				h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))
 			}
 		}

@@ -92,12 +92,7 @@ export class UsersComponent implements OnDestroy {
     this.userRole = computed(() => data()?.['userRole'] ?? null);
     const usersWithRefresh = this.refresh$.pipe(
       startWith(undefined),
-      switchMap(() => this.users.getUsers().pipe(map((users) => {
-        users.forEach(user => {
-          user.imageUrl = `https://www.gravatar.com/avatar/${digestMessage(user.email)}`;
-        })
-        return users;
-      })))
+      switchMap(() => this.users.getUsers())
     );
     const shownUserAccounts = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
       map(([userRole, users]) => users.filter((it) => userRole !== null && it.userRole === userRole))
