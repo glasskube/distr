@@ -1,0 +1,524 @@
+<div
+  class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 font-medium text-gray-900 dark:text-white">
+  <div class="p-4 justify-between items-stretch md:flex lg:block xl:flex">
+    <div class="justify-between sm:flex sm:items-center md:mb-0 md:block lg:mb-4 lg:flex xl:mb-0 xl:block">
+      <div class="flex gap-3 items-start lg:items-center">
+        <div class="relative">
+          <img
+            [ngSrc]="'/' + deploymentTarget().type + '.png'"
+            [alt]="deploymentTarget().type"
+            class="size-10 rounded-sm max-w-none"
+            height="199"
+            width="199" />
+          <app-status-dot class="absolute size-2 -bottom-0.5 -end-0.5" [deploymentTarget]="deploymentTarget()">
+          </app-status-dot>
+        </div>
+        <div>
+          <h3 class="font-bold">{{ deploymentTarget().name }}</h3>
+          <div class="flex flex-col items-start lg:flex-row lg:items-center lg:gap-2">
+            @if (deploymentTarget().id; as id) {
+              <app-uuid [uuid]="id" [small]="true"></app-uuid>
+            }
+            <dl class="inline-flex gap-1 text-sm">
+              <dt>Created at:</dt>
+              <dd class="text-gray-500 dark:text-gray-400">
+                {{ deploymentTarget().createdAt | date: 'short' }}
+              </dd>
+            </dl>
+            <dl class="inline-flex gap-1 text-sm">
+              <dt>Managed by:</dt>
+              <dd class="text-gray-500 dark:text-gray-400">
+                {{ deploymentTarget().createdBy?.name ?? deploymentTarget().createdBy?.email }}
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+    @if (fullVersion()) {
+      <div class="space-y-4 sm:flex sm:space-x-2 sm:space-y-0 items-center">
+        @let status = deploymentTarget().currentStatus;
+        @if (status && !(status | isStale)) {
+          <button
+            type="button"
+            (click)="newDeployment()"
+            class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+            <fa-icon [icon]="faShip" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+            Deploy
+          </button>
+        }
+        @if (!status) {
+          <button
+            type="button"
+            (click)="openInstructionsModal()"
+            class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+            <fa-icon [icon]="faLink" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+            Connection instructions
+          </button>
+        }
+        <button
+          type="button"
+          aria-label="More actions"
+          class="p-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+          cdkOverlayOrigin
+          #dropdownTrigger="cdkOverlayOrigin"
+          (click)="showDeploymentTargetDropdown.set(true)">
+          <fa-icon [icon]="faEllipsisVertical" class="h-5 w-5 text-gray-500 dark:text-gray-400"></fa-icon>
+        </button>
+        <ng-template
+          cdkConnectedOverlay
+          [cdkConnectedOverlayHasBackdrop]="true"
+          (backdropClick)="showDeploymentTargetDropdown.set(false)"
+          (detach)="showDeploymentTargetDropdown.set(false)"
+          [cdkConnectedOverlayBackdropClass]="'transparent'"
+          [cdkConnectedOverlayOrigin]="dropdownTrigger"
+          [cdkConnectedOverlayPositions]="[{originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top'}]"
+          [cdkConnectedOverlayOpen]="showDeploymentTargetDropdown()">
+          <div
+            @dropdown
+            style="transform-origin: top center"
+            class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
+            <ul class="py-1" role="none">
+              <li>
+                <button
+                  type="button"
+                  (click)="showDeploymentTargetDropdown.set(false); openDrawer()"
+                  aria-controls="manage-deployment-target-drawer"
+                  class="text-start block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <fa-icon [icon]="faPen" class="inline-block w-4 mr-2 text-gray-500 dark:text-gray-400"></fa-icon>
+                  Edit
+                </button>
+              </li>
+              @let status = deploymentTarget().currentStatus;
+              @if (status && (status | isStale)) {
+                <li
+                  class="text-yellow-400 hover:bg-yellow-500 hover:text-white dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400">
+                  <button
+                    type="button"
+                    (click)="showDeploymentTargetDropdown.set(false); openInstructionsModal()"
+                    class="text-start block w-full px-4 py-2 text-sm">
+                    <fa-icon [icon]="faLink" class="h-5 w-5 mr-2 -ml-0.5"></fa-icon>
+                    Reconnect
+                  </button>
+                </li>
+              }
+              <li>
+                @let hasDeployments = deploymentTarget().deployments.length > 0;
+                <button
+                  type="button"
+                  aria-label="Delete"
+                  [disabled]="hasDeployments"
+                  [title]="hasDeployments ? 'Undeploy applications first' : ''"
+                  (click)="showDeploymentTargetDropdown.set(false); deleteDeploymentTarget()"
+                  class="text-start block w-full px-4 py-2 text-sm text-red-700 enabled:hover:text-white enabled:hover:bg-red-800 dark:text-red-500 dark:enabled:hover:text-white dark:enabled:hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <fa-icon [icon]="faTrash" class="inline-block w-4 mr-2"></fa-icon>
+                  Delete
+                </button>
+                <ng-template #deleteConfirmModal>
+                  <div
+                    class="p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+                    role="alert">
+                    <span class="font-semibold me-1">WARNING!</span>
+                    You are about to delete the deployment with name {{ deploymentTarget().name }}
+                    This will also delete all:
+                    <ul class="my-1.5 list-disc list-inside">
+                      <li>associated configuration</li>
+                      <li>revision history</li>
+                      <li>status logs</li>
+                    </ul>
+
+                    <p>
+                      Afterwards you will not be able to deploy to this target anymore. This does not undeploy the
+                      deployed application.
+                    </p>
+
+                    This action can not be undone. If you want to continue, please type <code>DELETE</code> into the
+                    text box and confirm.
+                  </div>
+                </ng-template>
+              </li>
+            </ul>
+          </div>
+        </ng-template>
+      </div>
+    }
+  </div>
+
+  @if (deploymentTarget().deployments.length > 0) {
+    <div class="items-center sm:flex sm:flex-wrap xl:flex">
+      <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+          <tr>
+            <th scope="col" class="px-4 py-2">Application</th>
+            @if (fullVersion()) {
+              <th scope="col" class="px-4 py-2">Installed At</th>
+            }
+            <th scope="col" class="px-4 py-2">Status</th>
+            @if (fullVersion()) {
+              <th scope="col" class="px-4 py-2"></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (deployment of deploymentTarget().deployments; track deployment.id) {
+            <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
+              </td>
+              @if (fullVersion()) {
+                <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  {{ deployment.createdAt | date: 'short' }}
+                </td>
+              }
+              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <button (click)="openStatusModal(deployment)" class="flex items-center">
+                  <app-deployment-status-dot class="size-4 me-1" [deployment]="deployment"></app-deployment-status-dot>
+                  @if (deployment.latestStatus; as drs) {
+                    @if (drs.type === 'error') {
+                      Error
+                    } @else if (drs | isStale) {
+                      Stale
+                    } @else if (drs.type === 'progressing') {
+                      Progressing
+                    } @else {
+                      OK
+                    }
+                  } @else {
+                    No status
+                  }
+                </button>
+              </td>
+              @if (fullVersion()) {
+                <td
+                  class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
+                  @let targetStatus = deploymentTarget().currentStatus;
+                  @if (deployment.latestStatus) {
+                    <button
+                      type="button"
+                      (click)="openStatusModal(deployment)"
+                      aria-controls="manage-deployment-target-drawer"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                      <fa-icon
+                        [icon]="faHeartPulse"
+                        class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                      Status
+                    </button>
+                  }
+                  @if (targetStatus && !(targetStatus | isStale)) {
+                    <button
+                      type="button"
+                      (click)="newDeployment()"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                      <fa-icon [icon]="faShip" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                      Deploy
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    aria-label="More actions"
+                    class="p-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                    cdkOverlayOrigin
+                    #dropdownTrigger="cdkOverlayOrigin"
+                    (click)="showDeploymentDropdownForId.set(deployment.id)">
+                    <fa-icon [icon]="faEllipsisVertical" class="h-5 w-5 text-gray-500 dark:text-gray-400"></fa-icon>
+                  </button>
+
+                  <ng-template
+                    cdkConnectedOverlay
+                    [cdkConnectedOverlayHasBackdrop]="true"
+                    (backdropClick)="showDeploymentDropdownForId.set(undefined)"
+                    (detach)="showDeploymentDropdownForId.set(undefined)"
+                    [cdkConnectedOverlayBackdropClass]="'transparent'"
+                    [cdkConnectedOverlayOrigin]="dropdownTrigger"
+                    [cdkConnectedOverlayPositions]="[
+                      {originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top'},
+                    ]"
+                    [cdkConnectedOverlayOpen]="showDeploymentDropdownForId() === deployment.id">
+                    <div
+                      @dropdown
+                      style="transform-origin: top center"
+                      class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
+                      <ul class="py-1" role="none">
+                        <li>
+                          <button
+                            type="button"
+                            aria-label="Delete"
+                            (click)="
+                              showDeploymentDropdownForId.set(undefined);
+                              deleteDeployment(deployment, undeployConfirmTemplate)
+                            "
+                            class="text-start block w-full px-4 py-2 text-sm text-red-700 enabled:hover:text-white enabled:hover:bg-red-800 dark:text-red-500 dark:enabled:hover:text-white dark:enabled:hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                            [title]="
+                              isUndeploySupported()
+                                ? ''
+                                : 'Agent must have version 1.3.0 or greater. Please update this agent.'
+                            "
+                            [disabled]="!isUndeploySupported()">
+                            <fa-icon [icon]="faTriangleExclamation" class="inline-block w-4 mr-2"></fa-icon>
+                            Undeploy
+                          </button>
+                          <ng-template #undeployConfirmTemplate>
+                            <div
+                              class="p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+                              role="alert">
+                              <span class="font-semibold me-1">WARNING!</span>
+                              You are about to uninstall the application installed on {{ deploymentTarget().name }}.
+                              This will also delete all:
+                              <ul class="my-1.5 list-disc list-inside">
+                                <li>associated configuration</li>
+                                <li>revision history</li>
+                                <li>status logs</li>
+                                <li>application data</li>
+                              </ul>
+
+                              <p>Afterwards you will be able to deploy a new application to this target.</p>
+
+                              This action can not be undone. If you want to continue, please type
+                              <code>UNDEPLOY</code> into the text box and confirm.
+                            </div>
+                          </ng-template>
+                        </li>
+                      </ul>
+                    </div>
+                  </ng-template>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<ng-template #instructionsModal>
+  <div
+    @modalFlyInOut
+    style="transform-origin: top center"
+    class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow-sm dark:bg-gray-700">
+    <!-- Modal header -->
+    <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructions</h3>
+      <button
+        type="button"
+        (click)="hideModal()"
+        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+        <fa-icon [icon]="faXmark"></fa-icon>
+        <span class="sr-only">Close modal</span>
+      </button>
+    </div>
+    <!-- Modal body -->
+    <div class="p-4 md:p-5 space-y-4">
+      <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+        To setup this Deployment, the Distr Agent must be installed on the target server/VM. Simply connect to the
+        target (e.g. via SSH) and execute the following:
+      </p>
+      <app-connect-instructions [deploymentTarget]="deploymentTarget()"></app-connect-instructions>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #deploymentStatusModal>
+  <div @modalFlyInOut class="z-50 w-full m-4 overflow-x-hidden">
+    <div class="relative w-full max-h-full">
+      <!-- Modal content -->
+      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+        <!-- Modal header -->
+        <div
+          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Status History: {{ deploymentTarget().name }}
+            @if (deploymentTarget().deployment; as deployment) {
+              ({{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }})
+            }
+          </h3>
+          <button
+            type="button"
+            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+            (click)="hideModal()">
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+            </svg>
+            <span class="sr-only">Close modal</span>
+          </button>
+        </div>
+        <!-- Modal body -->
+        <div class="p-4 md:p-5">
+          @if (statuses | async; as statuses) {
+            <div class="mb-5 relative overflow-x-auto shadow-md sm:rounded-lg">
+              <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
+                  <tr>
+                    <th scope="col" class="px-6 py-3">Date</th>
+                    <th scope="col" class="px-6 py-3">Status</th>
+                    <th scope="col" class="px-6 py-3">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (status of statuses; track status.id) {
+                    <tr
+                      class="bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                      <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ status.createdAt | date: 'medium' }}
+                      </th>
+                      <td class="px-6 py-4 uppercase">
+                        {{ status.type }}
+                      </td>
+                      <td class="px-6 py-4">
+                        {{ status.message }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div role="status" class="flex justify-center items-center gap-2 text-gray-700 dark:text-gray-400">
+              <svg
+                aria-hidden="true"
+                class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor" />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill" />
+              </svg>
+              <span>Loading&hellip;</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #manageDeploymentTargetDrawer>
+  <div
+    @drawerFlyInOut
+    id="manage-deployment-target-drawer"
+    class="h-screen p-4 overflow-y-auto bg-white w-80 dark:bg-gray-800"
+    tabindex="-1"
+    aria-labelledby="drawer-right-label">
+    <h5
+      id="drawer-label"
+      class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+      @if (editForm.value.id) {
+        Modify
+      } @else {
+        New
+      }
+      Deployment
+    </h5>
+    <button
+      type="button"
+      (click)="hideDrawer()"
+      aria-controls="manage-deployment-target-drawer"
+      class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+      <fa-icon [icon]="faXmark" class="w-5 h-5"></fa-icon>
+      <span class="sr-only">Close menu</span>
+    </button>
+    <form [formGroup]="editForm" (ngSubmit)="saveDeploymentTarget()">
+      <div class="mb-4 space-y-4">
+        @if (deploymentTarget().createdBy?.userRole === 'customer' && auth.hasRole('vendor')) {
+          <div
+            class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+            role="alert">
+            <fa-icon [icon]="faCircleExclamation" />
+            <span class="sr-only">Info</span>
+            <div class="ms-3 text-sm font-medium">{{ customerManagedWarning }}</div>
+          </div>
+        }
+        <div>
+          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name *</label>
+          <input
+            formControlName="name"
+            autotrim
+            type="text"
+            name="title"
+            id="name"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+            value=""
+            placeholder="Deployment name"
+            required="" />
+          @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+            <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+          }
+        </div>
+        <div>
+          <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type *</label>
+          <select
+            formControlName="type"
+            id="category"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+            <option value="docker">Docker</option>
+            <option value="kubernetes">Kubernetes</option>
+          </select>
+        </div>
+        <ng-container formGroupName="geolocation">
+          <div>
+            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Geolocation latitude
+            </label>
+            <input
+              formControlName="lat"
+              type="number"
+              step="0.000001"
+              id="lat"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              placeholder="Geolocation latitude" />
+          </div>
+          <div>
+            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Geolocation longitude
+            </label>
+            <input
+              formControlName="lon"
+              type="number"
+              step="0.000001"
+              id="lon"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              placeholder="Geolocation longitude" />
+          </div>
+        </ng-container>
+        @if (editForm.controls.type.value === 'kubernetes') {
+          <div>
+            <label for="namespace" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Namespace
+            </label>
+            <input
+              type="text"
+              id="namespace"
+              formControlName="namespace"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:select-none" />
+          </div>
+          <div>
+            <label for="scope" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Scope</label>
+            <input
+              type="text"
+              id="scope"
+              formControlName="scope"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:select-none" />
+          </div>
+        }
+      </div>
+      <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
+        <button
+          type="submit"
+          [disabled]="editFormLoading"
+          class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+          <fa-icon [icon]="faPen" class="h-4 w-4 mr-2 -ml-0.5"></fa-icon>
+          Update
+        </button>
+      </div>
+    </form>
+  </div>
+</ng-template>

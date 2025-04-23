@@ -1,92 +1,51 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage, UpperCasePipe} from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 import {AfterViewInit, Component, inject, Input, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCircleExclamation, faLightbulb, faMagnifyingGlass, faPlus, faShip} from '@fortawesome/free-solid-svg-icons';
 import {
-  faCircleExclamation,
-  faEllipsisVertical,
-  faHeartPulse,
-  faLightbulb,
-  faLink,
-  faMagnifyingGlass,
-  faPen,
-  faPlus,
-  faShip,
-  faTrash,
-  faTriangleExclamation,
-  faXmark,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  AgentVersion,
   Application,
   ApplicationVersion,
-  Deployment,
   DeploymentRequest,
-  DeploymentRevisionStatus,
   DeploymentTarget,
   DeploymentTargetScope,
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {
-  catchError,
-  combineLatest,
-  EMPTY,
-  filter,
-  first,
-  firstValueFrom,
-  lastValueFrom,
-  map,
-  Observable,
-  of,
-  Subject,
-  switchMap,
-  takeUntil,
-} from 'rxjs';
+import {combineLatest, first, firstValueFrom, map, Observable, of, Subject, switchMap, takeUntil} from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
-import {IsStalePipe} from '../../util/model';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
-import {ConnectInstructionsComponent} from '../components/connect-instructions/connect-instructions.component';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
-import {StatusDotComponent} from '../components/status-dot';
-import {UuidComponent} from '../components/uuid';
-import {DeploymentFormComponent, DeploymentFormValue} from '../deployment-form/deployment-form.component';
+import {DeploymentFormValue} from '../deployment-form/deployment-form.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
-import {DeploymentStatusService} from '../services/deployment-status.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
 
 @Component({
   selector: 'app-deployment-targets',
   imports: [
     AsyncPipe,
-    DatePipe,
     FaIconComponent,
     FormsModule,
     ReactiveFormsModule,
-    NgOptimizedImage,
-    IsStalePipe,
-    StatusDotComponent,
-    ConnectInstructionsComponent,
     InstallationWizardComponent,
-    UpperCasePipe,
     AutotrimDirective,
-    UuidComponent,
-    DeploymentFormComponent,
     OverlayModule,
+    DeploymentTargetCardComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -101,25 +60,16 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly deploymentStatuses = inject(DeploymentStatusService);
   private readonly agentVersions = inject(AgentVersionService);
 
-  readonly magnifyingGlassIcon = faMagnifyingGlass;
+  readonly faMagnifyingGlass = faMagnifyingGlass;
   readonly plusIcon = faPlus;
-  readonly penIcon = faPen;
   readonly shipIcon = faShip;
-  readonly xmarkIcon = faXmark;
-  protected readonly faHeartPulse = faHeartPulse;
-  protected readonly faTrash = faTrash;
-  protected readonly faEllipsisVertical = faEllipsisVertical;
-  protected readonly faTriangleExclamation = faTriangleExclamation;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faLightbulb = faLightbulb;
-  protected readonly faLink = faLink;
 
   private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
-  private manageDeploymentTargetRef?: DialogRef;
 
   private deploymentWizardOverlayRef?: DialogRef;
 
@@ -173,8 +123,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     toObservable(this.selectedDeploymentTarget),
   ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
 
-  statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
-
   protected deploymentTargetsWithUpdate$: Observable<{dt: DeploymentTarget; version: ApplicationVersion}[]> =
     this.deploymentTargets$.pipe(
       switchMap((deploymentTargets) =>
@@ -195,8 +143,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
       )
     );
 
-  protected showDropdownForId?: string;
-
   ngAfterViewInit() {
     if (this.fullVersion) {
       combineLatest([this.applications$, this.deploymentTargets$])
@@ -212,18 +158,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroyed$.next();
     this.destroyed$.complete();
-  }
-
-  openDrawer(templateRef: TemplateRef<unknown>, deploymentTarget: DeploymentTarget) {
-    this.hideDrawer();
-    this.selectedDeploymentTarget.set(deploymentTarget);
-    this.loadDeploymentTarget(deploymentTarget);
-    this.manageDeploymentTargetRef = this.overlay.showDrawer(templateRef);
-  }
-
-  hideDrawer() {
-    this.manageDeploymentTargetRef?.close();
-    this.resetEditForm();
   }
 
   openWizard() {
@@ -244,63 +178,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     this.editForm.patchValue({type: 'docker'});
   }
 
-  async deleteDeploymentTarget(dt: DeploymentTarget, confirmTemplate: TemplateRef<any>) {
-    const warning =
-      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
-        ? {message: this.customerManagedWarning}
-        : undefined;
-    this.overlay
-      .confirm({
-        customTemplate: confirmTemplate,
-        requiredConfirmInputText: 'DELETE',
-        message: {
-          warning,
-          message: '',
-        },
-      })
-      .pipe(
-        filter((result) => result === true),
-        switchMap(() => this.deploymentTargets.delete(dt)),
-        catchError((e) => {
-          const msg = getFormDisplayedError(e);
-          if (msg) {
-            this.toast.error(msg);
-          }
-          return EMPTY;
-        })
-      )
-      .subscribe();
-  }
-
-  async deleteDeployment(dt: DeploymentTarget, d: Deployment, confirmTemplate: TemplateRef<any>) {
-    const warning =
-      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
-        ? {message: this.customerManagedWarning}
-        : undefined;
-    if (d.id) {
-      if (
-        await firstValueFrom(
-          this.overlay.confirm({
-            customTemplate: confirmTemplate,
-            requiredConfirmInputText: 'UNDEPLOY',
-            message: {
-              warning,
-              message: '',
-            },
-          })
-        )
-      )
-        try {
-          await firstValueFrom(this.deploymentTargets.undeploy(d.id));
-        } catch (e) {
-          const msg = getFormDisplayedError(e);
-          if (msg) {
-            this.toast.error(msg);
-          }
-        }
-    }
-  }
-
   loadDeploymentTarget(dt: DeploymentTarget) {
     this.editForm.patchValue({
       // to reset the geolocation inputs in case dt has no geolocation
@@ -318,63 +195,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   hideModal(): void {
     this.modal?.close();
-  }
-
-  public isAgentVersionSnapshotOrAtLeast(
-    dt: DeploymentTarget,
-    agentVersions: AgentVersion[],
-    version: string
-  ): boolean {
-    if (!dt.reportedAgentVersionId) {
-      console.warn('reported agent version id is empty');
-      return true;
-    }
-    const reported = agentVersions.find((it) => it.id === dt.reportedAgentVersionId);
-    if (!reported) {
-      console.warn('agent version with id not found', dt.reportedAgentVersionId);
-      return false;
-    }
-    try {
-      return reported.name === 'snapshot' || new SemVer(reported.name).compare(version) >= 0;
-    } catch (e) {
-      console.warn(e);
-      return reported.name === 'snapshot';
-    }
-  }
-
-  async saveDeploymentTarget() {
-    this.editForm.markAllAsTouched();
-    if (this.editForm.valid) {
-      this.editFormLoading = true;
-      const val = this.editForm.value;
-      const dt: DeploymentTarget = {
-        id: val.id!,
-        name: val.name!,
-        type: val.type!,
-      };
-
-      if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
-        dt.geolocation = {
-          lat: val.geolocation.lat,
-          lon: val.geolocation.lon,
-        };
-      }
-
-      try {
-        this.loadDeploymentTarget(
-          await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
-        );
-        this.toast.success(`${dt.name} saved successfully`);
-        this.hideDrawer();
-      } catch (e) {
-        const msg = getFormDisplayedError(e);
-        if (msg) {
-          this.toast.error(msg);
-        }
-      } finally {
-        this.editFormLoading = false;
-      }
-    }
   }
 
   async newDeployment(
@@ -432,31 +252,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
 
   updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
     this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
-  }
-
-  openStatusModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
-    const deployment = deploymentTarget.deployment;
-    if (deployment?.id) {
-      this.selectedDeploymentTarget.set(deploymentTarget);
-      this.statuses = this.deploymentStatuses.pollStatuses(deployment);
-      this.showModal(modal);
-    }
-  }
-
-  async openInstructionsModal(deploymentTarget: DeploymentTarget, modal: TemplateRef<any>) {
-    if (deploymentTarget.currentStatus !== undefined) {
-      const message = `
-        If you continue, the previous authentication secret for ${deploymentTarget.name} becomes invalid.
-        Continue?`;
-      const warning =
-        deploymentTarget.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
-          ? {message: this.customerManagedWarning}
-          : undefined;
-      if (!(await firstValueFrom(this.overlay.confirm({message: {message, warning}})))) {
-        return;
-      }
-    }
-    this.showModal(modal);
   }
 
   public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {

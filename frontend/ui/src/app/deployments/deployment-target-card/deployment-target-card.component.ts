@@ -1,0 +1,296 @@
+import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
+import {Component, computed, inject, input, resource, signal, TemplateRef, ViewChild} from '@angular/core';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {
+  faCircleExclamation,
+  faEllipsisVertical,
+  faHeartPulse,
+  faLink,
+  faPen,
+  faShip,
+  faTrash,
+  faTriangleExclamation,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  Application,
+  DeploymentRevisionStatus,
+  DeploymentTarget,
+  DeploymentTargetScope,
+  DeploymentType,
+  DeploymentWithLatestRevision,
+} from '@glasskube/distr-sdk';
+import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap} from 'rxjs';
+import {SemVer} from 'semver';
+import {getFormDisplayedError} from '../../../util/errors';
+import {IsStalePipe} from '../../../util/model';
+import {drawerFlyInOut} from '../../animations/drawer';
+import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
+import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
+import {DeploymentStatusDot, StatusDotComponent} from '../../components/status-dot';
+import {UuidComponent} from '../../components/uuid';
+import {AgentVersionService} from '../../services/agent-version.service';
+import {ApplicationsService} from '../../services/applications.service';
+import {AuthService} from '../../services/auth.service';
+import {DeploymentStatusService} from '../../services/deployment-status.service';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
+import {ToastService} from '../../services/toast.service';
+import {FormGroup, FormControl, Validators, ReactiveFormsModule} from '@angular/forms';
+
+@Component({
+  selector: 'app-deployment-target-card',
+  templateUrl: './deployment-target-card.component.html',
+  imports: [
+    NgOptimizedImage,
+    StatusDotComponent,
+    UuidComponent,
+    DatePipe,
+    FaIconComponent,
+    IsStalePipe,
+    DeploymentStatusDot,
+    OverlayModule,
+    AsyncPipe,
+    ConnectInstructionsComponent,
+    ReactiveFormsModule,
+  ],
+  animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
+})
+export class DeploymentTargetCardComponent {
+  private readonly agentVersionsSvc = inject(AgentVersionService);
+  private readonly overlay = inject(OverlayService);
+  private readonly deploymentStatuses = inject(DeploymentStatusService);
+  protected readonly auth = inject(AuthService);
+  private readonly deploymentTargets = inject(DeploymentTargetsService);
+  private readonly toast = inject(ToastService);
+  private readonly applications = inject(ApplicationsService);
+
+  protected readonly customerManagedWarning = `
+    You are about to make changes to a customer-managed deployment.
+    Ensure this is done in coordination with the customer.`;
+
+  public readonly deploymentTarget = input.required<DeploymentTarget>();
+  public readonly fullVersion = input(true);
+
+  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<any>;
+  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<any>;
+  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<any>;
+  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<any>;
+
+  protected readonly showDeploymentTargetDropdown = signal(false);
+  protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
+
+  protected readonly faShip = faShip;
+  protected readonly faLink = faLink;
+  protected readonly faEllipsisVertical = faEllipsisVertical;
+  protected readonly faPen = faPen;
+  protected readonly faTrash = faTrash;
+  protected readonly faHeartPulse = faHeartPulse;
+  protected readonly faTriangleExclamation = faTriangleExclamation;
+  protected readonly faXmark = faXmark;
+  protected readonly faCircleExclamation = faCircleExclamation;
+
+  selectedApplication?: Application | null;
+  protected readonly selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
+  protected statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
+
+  protected readonly agentVersions = resource({
+    loader: () => firstValueFrom(this.agentVersionsSvc.list()),
+  });
+  private readonly applications$ = this.applications.list();
+
+  protected readonly isUndeploySupported = computed(() => {
+    if (!this.deploymentTarget().reportedAgentVersionId) {
+      console.warn('reported agent version id is empty');
+      return true;
+    }
+    const reported = this.agentVersions.value()?.find((it) => it.id === this.deploymentTarget().reportedAgentVersionId);
+    if (!reported) {
+      console.warn('agent version with id not found', this.deploymentTarget().reportedAgentVersionId);
+      return false;
+    }
+    try {
+      return reported.name === 'snapshot' || new SemVer(reported.name).compare('') >= 0;
+    } catch (e) {
+      console.warn(e);
+      return reported.name === 'snapshot';
+    }
+  });
+
+  private modal?: DialogRef;
+  private manageDeploymentTargetRef?: DialogRef;
+
+  readonly editForm = new FormGroup({
+    id: new FormControl<string | undefined>(undefined),
+    name: new FormControl('', Validators.required),
+    type: new FormControl<DeploymentType | undefined>({value: undefined, disabled: true}, Validators.required),
+    geolocation: new FormGroup({
+      lat: new FormControl<number | undefined>(undefined),
+      lon: new FormControl<number | undefined>(undefined),
+    }),
+    namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
+    scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
+  });
+  editFormLoading = false;
+
+  protected async newDeployment(deployment?: DeploymentWithLatestRevision) {}
+
+  protected async saveDeployment() {}
+
+  protected async saveDeploymentTarget() {
+    this.editForm.markAllAsTouched();
+    if (this.editForm.valid) {
+      this.editFormLoading = true;
+      const val = this.editForm.value;
+      const dt: DeploymentTarget = {
+        id: val.id!,
+        name: val.name!,
+        type: val.type!,
+        deployments: [],
+      };
+
+      if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
+        dt.geolocation = {
+          lat: val.geolocation.lat,
+          lon: val.geolocation.lon,
+        };
+      }
+
+      try {
+        this.loadDeploymentTarget(
+          await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
+        );
+        this.toast.success(`${dt.name} saved successfully`);
+        this.hideDrawer();
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editFormLoading = false;
+      }
+    }
+  }
+
+  private loadDeploymentTarget(dt: DeploymentTarget) {
+    this.editForm.patchValue({
+      // to reset the geolocation inputs in case dt has no geolocation
+      geolocation: {lat: undefined, lon: undefined},
+      ...dt,
+    });
+  }
+  protected async openInstructionsModal() {
+    const dt = this.deploymentTarget();
+    if (dt.currentStatus !== undefined) {
+      const message = `If you continue, the previous authentication secret for ${dt.name} becomes invalid. Continue?`;
+      const warning =
+        dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+          ? {message: this.customerManagedWarning}
+          : undefined;
+      if (!(await firstValueFrom(this.overlay.confirm({message: {message, warning}})))) {
+        return;
+      }
+    }
+    this.showModal(this.instructionsModal);
+  }
+
+  protected openStatusModal(deployment: DeploymentWithLatestRevision) {
+    if (deployment?.id) {
+      this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
+      this.showModal(this.deploymentStatusModal);
+    }
+  }
+
+  protected deleteDeploymentTarget() {
+    const dt = this.deploymentTarget();
+    const warning =
+      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        ? {message: this.customerManagedWarning}
+        : undefined;
+    this.overlay
+      .confirm({
+        customTemplate: this.deleteConfirmModal,
+        requiredConfirmInputText: 'DELETE',
+        message: {
+          warning,
+          message: '',
+        },
+      })
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.deploymentTargets.delete(dt))
+      )
+      .subscribe({
+        error: (e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
+  }
+
+  protected async deleteDeployment(d: DeploymentWithLatestRevision, confirmTemplate: TemplateRef<any>) {
+    const dt = this.deploymentTarget();
+    const warning =
+      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        ? {message: this.customerManagedWarning}
+        : undefined;
+    if (d.id) {
+      if (
+        await firstValueFrom(
+          this.overlay.confirm({
+            customTemplate: confirmTemplate,
+            requiredConfirmInputText: 'UNDEPLOY',
+            message: {
+              warning,
+              message: '',
+            },
+          })
+        )
+      )
+        try {
+          await firstValueFrom(this.deploymentTargets.undeploy(d.id));
+        } catch (e) {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        }
+    }
+  }
+
+  private updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
+    this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
+  }
+
+  private showModal(templateRef: TemplateRef<unknown>) {
+    this.hideModal();
+    this.modal = this.overlay.showModal(templateRef, {
+      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+    });
+  }
+
+  protected hideModal(): void {
+    this.modal?.close();
+  }
+
+  protected openDrawer() {
+    this.hideDrawer();
+    this.loadDeploymentTarget(this.deploymentTarget());
+    this.manageDeploymentTargetRef = this.overlay.showDrawer(this.manageDeploymentTargetDrawer);
+  }
+
+  protected hideDrawer() {
+    this.manageDeploymentTargetRef?.close();
+    this.resetEditForm();
+  }
+
+  private resetEditForm() {
+    this.editForm.reset();
+    this.editForm.patchValue({type: 'docker'});
+  }
+}

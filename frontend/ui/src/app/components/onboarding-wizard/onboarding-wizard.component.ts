@@ -370,6 +370,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         lon: 16.3633028,
       },
       scope: this.deploymentTargetForm.value.scope,
+      deployments: [],
     };
   }
 
