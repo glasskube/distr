@@ -4,10 +4,9 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {map, Observable, of} from 'rxjs';
 
 @Pipe({
-  name: 'secureImage'
+  name: 'secureImage',
 })
 export class SecureImagePipe implements PipeTransform {
-
   private readonly httpClient = inject(HttpClient);
   private readonly domSanitizer = inject(DomSanitizer);
 
@@ -16,8 +15,7 @@ export class SecureImagePipe implements PipeTransform {
       return of('/distr-logo.svg');
     }
     return this.httpClient
-      .get(url, {responseType: 'blob'}).pipe(
-        map(val => this.domSanitizer.bypassSecurityTrustUrl(URL.createObjectURL(val)))
-      );
+      .get(url, {responseType: 'blob'})
+      .pipe(map((val) => this.domSanitizer.bypassSecurityTrustUrl(URL.createObjectURL(val))));
   }
 }

@@ -129,7 +129,8 @@ export class ApplicationsService implements CrudService<Application> {
   }
 
   public patchImage(artifactsId: string, imageId: string) {
-    return this.httpClient.patch<Application>(`${this.applicationsUrl}/${artifactsId}/image`, {imageId})
+    return this.httpClient
+      .patch<Application>(`${this.applicationsUrl}/${artifactsId}/image`, {imageId})
       .pipe(tap((it) => this.cache.save(it)));
   }
 }

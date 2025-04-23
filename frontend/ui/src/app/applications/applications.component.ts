@@ -10,7 +10,7 @@ import {
   faPen,
   faPlus,
   faTrash,
-  faXmark
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {lastValueFrom, Observable, Subject, takeUntil} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';

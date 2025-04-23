@@ -10,7 +10,8 @@ import {
   faClipboard,
   faMagnifyingGlass,
   faPlus,
-  faTrash, faUserCircle,
+  faTrash,
+  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {

@@ -11,7 +11,6 @@ import {getFormDisplayedError} from '../../../util/errors';
 import {ToastService} from '../../services/toast.service';
 import {FilesService} from '../../services/files.service';
 
-
 export interface ImageUploadContext {
   imageUrl?: string;
 }
@@ -54,7 +53,6 @@ export class ImageUploadDialogComponent implements OnInit {
     });
   }
 
-
   onImageChange(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     this.form.patchValue({image: file ?? null});
@@ -85,6 +83,4 @@ export class ImageUploadDialogComponent implements OnInit {
       }
     }
   }
-
-
 }

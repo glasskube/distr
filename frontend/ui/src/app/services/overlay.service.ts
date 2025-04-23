@@ -98,12 +98,12 @@ export class OverlayService {
     const injector =
       config.data !== null && config.data !== undefined
         ? Injector.create({
-          parent: this.viewContainerRef.injector,
-          providers: [
-            {provide: DialogRef, useValue: dialogRef},
-            {provide: OverlayData, useValue: config.data},
-          ],
-        })
+            parent: this.viewContainerRef.injector,
+            providers: [
+              {provide: DialogRef, useValue: dialogRef},
+              {provide: OverlayData, useValue: config.data},
+            ],
+          })
         : null;
 
     if (templateRefOrComponentType instanceof TemplateRef) {

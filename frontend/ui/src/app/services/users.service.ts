@@ -48,8 +48,8 @@ export class UsersService {
     return this.cache.get();
   }
 
-  public getUserStatus(): Observable<{ active: boolean }> {
-    return this.httpClient.get<{ active: boolean }>(`${this.baseUrl}/status`);
+  public getUserStatus(): Observable<{active: boolean}> {
+    return this.httpClient.get<{active: boolean}>(`${this.baseUrl}/status`);
   }
 
   public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
@@ -72,11 +72,12 @@ export class UsersService {
   }
 
   public patchImage(userId: string, imageId: string) {
-    return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId})
+    return this.httpClient
+      .patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId})
       .pipe(tap((it) => this.cache.save(it)));
   }
 
-  public getUserWithGravatarUrl(id: string): Observable<UserAccountWithRole & { gravatar: string }> {
+  public getUserWithGravatarUrl(id: string): Observable<UserAccountWithRole & {gravatar: string}> {
     return this.getUsers().pipe(
       map((users) => users.find((u) => u.id === id)),
       map((u) => {

@@ -51,7 +51,7 @@ export interface TaggedArtifactVersion extends HasDownloads {
   sbom?: string;
   createdAt: string;
   size: number;
-  tags: { name: string }[];
+  tags: {name: string}[];
   vulnerabilities: Vulnerability[];
   lastScannedAt?: string;
   imageUrl?: string;
@@ -69,7 +69,6 @@ export class ArtifactsService {
   constructor(private readonly http: HttpClient) {
     this.cache = new DefaultReactiveList(this.http.get<ArtifactWithTags[]>(this.artifactsUrl));
   }
-
 
   public list(): Observable<ArtifactWithTags[]> {
     return this.cache.get();
@@ -91,7 +90,8 @@ export class ArtifactsService {
   }
 
   public patchImage(artifactsId: string, imageId: string) {
-    return this.http.patch<ArtifactWithTags>(`${this.artifactsUrl}/${artifactsId}/image`, {imageId})
+    return this.http
+      .patch<ArtifactWithTags>(`${this.artifactsUrl}/${artifactsId}/image`, {imageId})
       .pipe(tap((it) => this.cache.save(it)));
   }
 }

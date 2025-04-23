@@ -64,7 +64,8 @@
                     <img
                       (click)="uploadImage(user)"
                       class="w-8 h-8 rounded-full cursor-pointer"
-                      [attr.src]="user.imageUrl | secureImage | async" alt="" />
+                      [attr.src]="user.imageUrl | secureImage | async"
+                      alt="" />
                   } @else {
                     <div class="shrink-0 text-gray-900 dark:text-gray-400">
                       <fa-icon
