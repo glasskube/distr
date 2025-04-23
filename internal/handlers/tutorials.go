@@ -149,7 +149,7 @@ func createHelloDistrApp(ctx context.Context) (*types.Application, error) {
 	}
 
 	version := types.ApplicationVersion{
-		Name:             "0.1.9",
+		Name:             "0.1.10",
 		ComposeFileData:  composeFileData,
 		TemplateFileData: templateFileData,
 	}

@@ -98,6 +98,7 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   });
   protected slug?: string;
   protected host?: string;
+  protected helloDistrTag = '0.1.10';
 
   ngOnInit() {
     this.organizationService
