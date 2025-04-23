@@ -1,6 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 @use 'tailwindcss';
+
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 @theme {
   --spacing-108: 27rem;
   --spacing-128: 32rem;
@@ -26,6 +35,7 @@
   --font-display: 'Poppins', 'Inter', 'system-ui', 'sans-serif';
   --font-mono: 'monospace';
 }
+
 @plugin 'flowbite/plugin';
 @source '../../../node_modules/flowbite';
 
