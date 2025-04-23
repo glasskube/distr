@@ -26,15 +26,8 @@ type UserAccountResponse struct {
 func AsUserAccount(u *types.UserAccountWithUserRole) UserAccountResponse {
 	return UserAccountResponse{
 		UserAccountWithUserRole: *u,
-		ImageUrl:                imageUrl(*u),
+		ImageUrl:                types.WithImageUrl(u.ImageID),
 	}
-}
-
-func imageUrl(u types.UserAccountWithUserRole) string {
-	if u.ImageID == nil {
-		return ""
-	}
-	return "/api/v1/files/" + u.ImageID.String()
 }
 
 func MapUserAccountsToResponse(userAccounts []types.UserAccountWithUserRole) []UserAccountResponse {
@@ -48,10 +41,6 @@ func MapUserAccountsToResponse(userAccounts []types.UserAccountWithUserRole) []U
 type UpdateUserAccountRequest struct {
 	Name     string  `json:"name"`
 	Password *string `json:"password"`
-}
-
-type PatchUserAccountImageRequest struct {
-	ImageID uuid.UUID `json:"imageId"`
 }
 
 func (r UpdateUserAccountRequest) Validate() error {

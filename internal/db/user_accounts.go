@@ -322,21 +322,24 @@ func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error 
 	return err
 }
 
-func UpdateUserAccountImage(ctx context.Context, userID uuid.UUID, imageID uuid.UUID) error {
+func UpdateUserAccountImage(ctx context.Context, userAccount *types.UserAccountWithUserRole, imageID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	cmd, err := db.Exec(
-		ctx,
-		"UPDATE UserAccount SET image_id = @imageId WHERE id = @id",
+	rows, err := db.Query(ctx,
+		`UPDATE UserAccount as u SET image_id = @imageId WHERE id = @id RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
 			"imageId": imageID,
-			"id":      userID,
+			"id":      userAccount.ID,
 		},
 	)
-	if err == nil && cmd.RowsAffected() == 0 {
-		err = apierrors.ErrNotFound
-	}
 	if err != nil {
-		err = fmt.Errorf("could not update image id on UserAccount: %w", err)
+		return fmt.Errorf("could not query users: %w", err)
+	} else if updated, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apierrors.ErrNotFound
+		}
+		return fmt.Errorf("could not update user imageID: %w", err)
+	} else {
+		userAccount.ImageID = updated.ImageID
+		return nil
 	}
-	return err
 }

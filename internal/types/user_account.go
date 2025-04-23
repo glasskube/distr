@@ -16,7 +16,7 @@ type UserAccount struct {
 	PasswordHash    []byte     `db:"password_hash" json:"-"`
 	PasswordSalt    []byte     `db:"password_salt" json:"-"`
 	Name            string     `db:"name" json:"name,omitempty"`
-	ImageID         *uuid.UUID `db:"image_id" json:"imageId,omitempty"`
+	ImageID         *uuid.UUID `db:"image_id" json:"-"`
 	Password        string     `db:"-" json:"-"`
 }
 

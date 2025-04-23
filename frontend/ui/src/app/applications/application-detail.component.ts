@@ -24,6 +24,7 @@ import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-s
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArchive,
+  faBox,
   faBoxesStacked,
   faCheck,
   faChevronDown,
@@ -41,6 +42,8 @@ import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../uti
 import {dropdownAnimation} from '../animations/dropdown';
 import {OverlayService} from '../services/overlay.service';
 import {isArchived} from '../../util/dates';
+import {SecureImagePipe} from '../../util/secureImage';
+import {ArtifactWithTags} from '../services/artifacts.service';
 
 @Component({
   selector: 'app-application-detail',
@@ -55,6 +58,7 @@ import {isArchived} from '../../util/dates';
     AutotrimDirective,
     DatePipe,
     EditorComponent,
+    SecureImagePipe,
   ],
   templateUrl: './application-detail.component.html',
   animations: [dropdownAnimation],
@@ -129,12 +133,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
   protected readonly faArchive = faArchive;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faBox = faBox;
   protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
+
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
@@ -346,5 +353,11 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  public async uploadImage(data: Application) {
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    if (!fileId || data.imageUrl?.includes(fileId)) {
+      return;
+    }
+    await firstValueFrom(this.applicationService.patchImage(data.id!!, fileId));
+  }
 }

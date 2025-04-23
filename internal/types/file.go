@@ -15,3 +15,14 @@ type File struct {
 	FileName       string    `db:"file_name" json:"fileName"`
 	FileSize       int64     `db:"file_size" json:"fileSize"`
 }
+
+type PatchImageRequest struct {
+	ImageID uuid.UUID `json:"imageId"`
+}
+
+func WithImageUrl(imageID *uuid.UUID) string {
+	if imageID == nil || uuid.Nil == *imageID {
+		return ""
+	}
+	return "/api/v1/files/" + imageID.String()
+}

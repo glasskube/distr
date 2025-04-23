@@ -159,12 +159,17 @@ func patchImageUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	userAccount := internalctx.GetUserAccount(ctx)
 
-	body, err := JsonBody[api.PatchUserAccountImageRequest](w, r)
+	body, err := JsonBody[types.PatchImageRequest](w, r)
 	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if body.ImageID == uuid.Nil {
+		http.Error(w, "imageId can not be empty", http.StatusBadRequest)
 		return
 	}
 
-	if err := db.UpdateUserAccountImage(ctx, userAccount.ID, body.ImageID); err != nil {
+	if err := db.UpdateUserAccountImage(ctx, userAccount, body.ImageID); err != nil {
 		log.Warn("error patching user image id", zap.Error(err))
 		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNoContent)
@@ -174,18 +179,19 @@ func patchImageUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	} else {
+		RespondJSON(w, api.AsUserAccount(userAccount))
 	}
-
-	RespondJSON(w, "/api/auth/files/"+body.ImageID.String())
 }
 
 func userAccountMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		auth := auth.Authentication.Require(ctx)
 		log := internalctx.GetLogger(ctx)
 		if userId, err := uuid.Parse(r.PathValue("userId")); err != nil {
 			http.NotFound(w, r)
-		} else if userAccount, err := db.GetUserAccountByID(ctx, userId); err != nil {
+		} else if userAccount, err := db.GetUserAccountWithRole(ctx, userId, *auth.CurrentOrgID()); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else {

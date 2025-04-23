@@ -3,7 +3,15 @@ import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, inject, Input, OnDestroy, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBox,
+  faBoxArchive,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark
+} from '@fortawesome/free-solid-svg-icons';
 import {lastValueFrom, Observable, Subject, takeUntil} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
@@ -18,6 +26,7 @@ import {Application, DeploymentType} from '@glasskube/distr-sdk';
 import {UuidComponent} from '../components/uuid';
 import {RequireRoleDirective} from '../directives/required-role.directive';
 import {Router, RouterLink} from '@angular/router';
+import {SecureImagePipe} from '../../util/secureImage';
 
 @Component({
   selector: 'app-applications',
@@ -32,6 +41,7 @@ import {Router, RouterLink} from '@angular/router';
     UuidComponent,
     RequireRoleDirective,
     RouterLink,
+    SecureImagePipe,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
@@ -116,4 +126,6 @@ export class ApplicationsComponent implements OnDestroy {
       }
     }
   }
+
+  protected readonly faBox = faBox;
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"github.com/glasskube/distr/api"
 	"net/http"
 
 	"github.com/glasskube/distr/internal/apierrors"
@@ -21,7 +22,11 @@ import (
 func ArtifactsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole, middleware.RegistryFeatureFlagEnabledMiddleware)
 	r.Get("/", getArtifacts)
-	r.Get("/{artifactId}", getArtifact)
+	r.Route("/{artifactId}", func(r chi.Router) {
+		r.Use(artifactMiddleware)
+		r.Get("/", getArtifact)
+		r.With(requireUserRoleVendor).Patch("/image", patchImageArtifactHandler)
+	})
 }
 
 func getArtifacts(w http.ResponseWriter, r *http.Request) {
@@ -42,36 +47,74 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, artifacts)
+		RespondJSON(w, api.MapArtifactsToResponse(artifacts))
 	}
 }
 
 func getArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	RespondJSON(w, api.AsArtifact(internalctx.GetArtifact(ctx)))
+}
+
+func patchImageArtifactHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	auth := auth.Authentication.Require(ctx)
+	artifact := internalctx.GetArtifact(ctx)
 
-	var artifact *types.ArtifactWithTaggedVersion
-	var err error
-
-	if artifactId, parseErr := uuid.Parse(r.PathValue("artifactId")); parseErr != nil {
-		http.NotFound(w, r)
-		return
-	} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
-		artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, util.PtrTo(auth.CurrentUserID()))
-	} else {
-		artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)
-	}
+	body, err := JsonBody[types.PatchImageRequest](w, r)
 
 	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if body.ImageID == uuid.Nil {
+		http.Error(w, "imageId can not be empty", http.StatusBadRequest)
+		return
+	}
+
+	if err := db.UpdateArtifactImage(ctx, artifact, body.ImageID); err != nil {
+		log.Warn("error patching user image id", zap.Error(err))
 		if errors.Is(err, apierrors.ErrNotFound) {
-			http.NotFound(w, r)
+			w.WriteHeader(http.StatusNoContent)
+		} else if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
-			log.Error("failed to get artifact", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
-		RespondJSON(w, artifact)
+		RespondJSON(w, api.AsArtifact(artifact))
 	}
+}
+
+func artifactMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.Authentication.Require(ctx)
+
+		var artifact *types.ArtifactWithTaggedVersion
+		var err error
+
+		if artifactId, parseErr := uuid.Parse(r.PathValue("artifactId")); parseErr != nil {
+			http.NotFound(w, r)
+			return
+		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
+			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, util.PtrTo(auth.CurrentUserID()))
+		} else {
+			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)
+		}
+
+		if err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				http.NotFound(w, r)
+			} else {
+				log.Error("failed to get artifact", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+		} else {
+			h.ServeHTTP(w, r.WithContext(internalctx.WithArtifact(ctx, artifact)))
+		}
+	})
 }

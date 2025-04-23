@@ -6,11 +6,20 @@
           <div class="flex flex-col gap-3 py-3 px-6 sm:py-4">
             <div class="flex items-center">
               <div class="shrink-0">
-                <!--
-                TODO: show faDocker if the artifacts manifestContentType has the "docker" vendor prefix (vnd.docker).
-                  For this we have to add the manifestContentType of the most recently created version to each artifact.
-                -->
-                <fa-icon class="text-xl" [icon]="faBox"></fa-icon>
+                @if (artifact.imageUrl) {
+                  <img
+                    (click)="uploadImage(artifact)"
+                    class="w-8 h-8 rounded-full cursor-pointer"
+                    [attr.src]="artifact.imageUrl | secureImage | async" alt="" />
+                } @else {
+                  <div class="shrink-0 text-gray-900 dark:text-gray-400">
+                    <fa-icon
+                      (click)="uploadImage(artifact)"
+                      [icon]="faBox"
+                      size="xl"
+                      class="text-xl cursor-pointer"></fa-icon>
+                  </div>
+                }
               </div>
               <div class="flex-1 min-w-0 ms-4">
                 <h2 class="text-2xl font-semibold truncate">

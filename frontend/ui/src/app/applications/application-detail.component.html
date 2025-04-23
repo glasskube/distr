@@ -40,8 +40,8 @@
                       @for (app of applications$ | async; track app.id) {
                         <li class="block py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                           <a class="px-4 flex items-stretch" [routerLink]="['/', 'applications', app.id]">{{
-                            app.name
-                          }}</a>
+                              app.name
+                            }}</a>
                         </li>
                       }
                     </ul>
@@ -55,12 +55,22 @@
         <div class="my-4 gap-4 md:my-6 md:gap-12">
           <div class="space-y-4">
             <div class="flex space-x-4">
-              <img
-                [ngSrc]="'/' + application.type + '.png'"
-                [alt]="application.type"
-                class="h-16 w-16 rounded-sm"
-                height="199"
-                width="199" />
+
+              @if (application.imageUrl) {
+                <img
+                  (click)="uploadImage(application)"
+                  class="w-16 h-16 rounded-sm cursor-pointer" height="199" width="199"
+
+                  [attr.src]="application.imageUrl | secureImage | async" alt="" />
+              } @else {
+                <img
+                  (click)="uploadImage(application)"
+                  [ngSrc]="'/' + application.type + '.png'"
+                  [alt]="application.type"
+                  class="h-16 w-16 rounded-sm cursor-pointer"
+                  height="199"
+                  width="199" />
+              }
               <div>
                 @if (editForm.enabled) {
                   <form [formGroup]="editForm" (ngSubmit)="saveApplication(application)">
@@ -81,14 +91,14 @@
                       <button
                         type="submit"
                         [disabled]="editFormLoading()"
-                        class="ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        class="cursor-pointer ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         <fa-icon [icon]="faCheck" class="mr-2"></fa-icon>
                         Save
                       </button>
                       <button
                         type="button"
                         (click)="cancelApplicationEdit()"
-                        class="ml-2 font-medium rounded-lg text-sm p-2 text-gray-900 focus:outline-none bg-white border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                        class="cursor-pointer ml-2 font-medium rounded-lg text-sm p-2 text-gray-900 focus:outline-none bg-white border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                         <fa-icon [icon]="faXmark" class="mr-2"></fa-icon>
                         Cancel
                       </button>
@@ -102,7 +112,7 @@
                     <button
                       type="button"
                       (click)="enableApplicationEdit(application)"
-                      class="ml-2 text-sm py-1 px-2 text-gray-900 bg-white border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                      class="cursor-pointer ml-2 text-sm py-1 px-2 text-gray-900 bg-white border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
                       <fa-icon [icon]="faEdit"></fa-icon>
                     </button>
                   </div>
@@ -229,7 +239,7 @@
               <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                 <div class="w-full">
                   <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Version Name *</label
+                  >Version Name *</label
                   >
                   <input
                     [formControl]="newVersionForm.controls.versionName"
@@ -249,7 +259,7 @@
                   <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                     <div class="w-full">
                       <label for="chartTypeSelect" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart Type *</label
+                      >Chart Type *</label
                       >
                       <select
                         [formControl]="newVersionForm.controls.kubernetes.controls.chartType"
@@ -258,10 +268,8 @@
                         <option value="repository">Repository</option>
                         <option value="oci">OCI</option>
                       </select>
-                      @if (
-                        newVersionForm.controls.kubernetes.controls.chartType.invalid &&
-                        newVersionForm.controls.kubernetes.controls.chartType.touched
-                      ) {
+                      @if (newVersionForm.controls.kubernetes.controls.chartType.invalid &&
+                      newVersionForm.controls.kubernetes.controls.chartType.touched) {
                         <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                       }
                     </div>
@@ -270,7 +278,7 @@
                         <label
                           for="kubernetesChartName"
                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                          >Chart Name *</label
+                        >Chart Name *</label
                         >
                         <input
                           [formControl]="newVersionForm.controls.kubernetes.controls.chartName"
@@ -279,10 +287,8 @@
                           name="chartName"
                           id="kubernetesChartName"
                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                        @if (
-                          newVersionForm.controls.kubernetes.controls.chartName.invalid &&
-                          newVersionForm.controls.kubernetes.controls.chartName.touched
-                        ) {
+                        @if (newVersionForm.controls.kubernetes.controls.chartName.invalid &&
+                        newVersionForm.controls.kubernetes.controls.chartName.touched) {
                           <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                         }
                       }
@@ -294,7 +300,7 @@
                       <label
                         for="kubernetesChartUrl"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart URL *</label
+                      >Chart URL *</label
                       >
                       <input
                         [formControl]="newVersionForm.controls.kubernetes.controls.chartUrl"
@@ -303,10 +309,8 @@
                         name="chartUrl"
                         id="kubernetesChartUrl"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                      @if (
-                        newVersionForm.controls.kubernetes.controls.chartUrl.invalid &&
-                        newVersionForm.controls.kubernetes.controls.chartUrl.touched
-                      ) {
+                      @if (newVersionForm.controls.kubernetes.controls.chartUrl.invalid &&
+                      newVersionForm.controls.kubernetes.controls.chartUrl.touched) {
                         <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                       }
                     </div>
@@ -314,7 +318,7 @@
                       <label
                         for="kubernetesChartVersion"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart Version *</label
+                      >Chart Version *</label
                       >
                       <input
                         [formControl]="newVersionForm.controls.kubernetes.controls.chartVersion"
@@ -323,10 +327,8 @@
                         name="chartVersion"
                         id="kubernetesChartVersion"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                      @if (
-                        newVersionForm.controls.kubernetes.controls.chartVersion.invalid &&
-                        newVersionForm.controls.kubernetes.controls.chartVersion.touched
-                      ) {
+                      @if (newVersionForm.controls.kubernetes.controls.chartVersion.invalid &&
+                      newVersionForm.controls.kubernetes.controls.chartVersion.touched) {
                         <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                       }
                     </div>
@@ -334,7 +336,7 @@
 
                   <div class="w-full">
                     <label for="base_values_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Base Values</label
+                    >Base Values</label
                     >
                     <app-editor
                       id="base_values_input"
@@ -346,7 +348,7 @@
 
                   <div class="w-full">
                     <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Template</label
+                    >Template</label
                     >
                     <app-editor
                       id="template_input"
@@ -359,7 +361,7 @@
                 <div class="space-y-4 mt-4">
                   <div class="w-full">
                     <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Docker Compose *</label
+                    >Docker Compose *</label
                     >
                     <app-editor
                       id="compose_input"
@@ -370,10 +372,8 @@
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Paste your docker compose file here.
                     </div>
-                    @if (
-                      newVersionForm.controls.docker.controls.compose.invalid &&
-                      newVersionForm.controls.docker.controls.compose.touched
-                    ) {
+                    @if (newVersionForm.controls.docker.controls.compose.invalid &&
+                    newVersionForm.controls.docker.controls.compose.touched) {
                       <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                     }
                   </div>
@@ -382,7 +382,7 @@
                     <label
                       for="compose_template_input"
                       class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Environment Template</label
+                    >Environment Template</label
                     >
                     <app-editor
                       id="compose_template_input"

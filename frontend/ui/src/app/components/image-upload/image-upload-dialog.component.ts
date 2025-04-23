@@ -7,14 +7,13 @@ import {modalFlyInOut} from '../../animations/modal';
 import {DialogRef, OverlayData} from '../../services/overlay.service';
 import {AsyncPipe} from '@angular/common';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {DistrFile} from '@glasskube/distr-sdk';
 import {getFormDisplayedError} from '../../../util/errors';
 import {ToastService} from '../../services/toast.service';
 import {FilesService} from '../../services/files.service';
 
 
 export interface ImageUploadContext {
-  data: DistrFile;
+  imageUrl?: string;
 }
 
 @Component({
@@ -57,10 +56,8 @@ export class ImageUploadDialogComponent implements OnInit {
 
 
   onImageChange(event: Event) {
-    console.log('change start')
     const file = (event.target as HTMLInputElement).files?.[0];
     this.form.patchValue({image: file ?? null});
-    console.log('change end')
   }
 
   deleteImage() {

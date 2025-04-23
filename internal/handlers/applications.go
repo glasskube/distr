@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glasskube/distr/api"
 	"net/http"
 	"strings"
 
@@ -31,6 +32,7 @@ func ApplicationsRouter(r chi.Router) {
 			r.Get("/", getApplication)
 			r.With(requireUserRoleVendor).Delete("/", deleteApplication)
 			r.With(requireUserRoleVendor).Put("/", updateApplication)
+			r.With(requireUserRoleVendor).Patch("/image", patchImageApplicationHandler)
 		})
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
@@ -128,7 +130,7 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, applications)
+		RespondJSON(w, api.MapApplicationsToResponse(applications))
 	}
 }
 
@@ -151,12 +153,11 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			} else {
-				RespondJSON(w, application)
+				RespondJSON(w, api.AsApplication(application))
 			}
 		}
-
 	} else {
-		RespondJSON(w, internalctx.GetApplication(ctx))
+		RespondJSON(w, api.AsApplication(internalctx.GetApplication(ctx)))
 	}
 }
 
@@ -384,6 +385,37 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func patchImageApplicationHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	application := internalctx.GetApplication(ctx)
+
+	body, err := JsonBody[types.PatchImageRequest](w, r)
+
+	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if body.ImageID == uuid.Nil {
+		http.Error(w, "imageId can not be empty", http.StatusBadRequest)
+		return
+	}
+
+	if err := db.UpdateApplicationImage(ctx, application, body.ImageID); err != nil {
+		log.Warn("error patching user image id", zap.Error(err))
+		if errors.Is(err, apierrors.ErrNotFound) {
+			w.WriteHeader(http.StatusNoContent)
+		} else if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else {
+		RespondJSON(w, api.AsApplication(application))
 	}
 }
 

@@ -60,10 +60,20 @@
                   <app-uuid [uuid]="user.id!" />
                 </td>
                 <td>
-                  <img
-                    (click)="uploadImage(user)"
-                    class="w-8 h-8 rounded-full cursor-pointer"
-                    [attr.src]="user.imageUrl | secureImage | async" alt="" />
+                  @if (user.imageUrl) {
+                    <img
+                      (click)="uploadImage(user)"
+                      class="w-8 h-8 rounded-full cursor-pointer"
+                      [attr.src]="user.imageUrl | secureImage | async" alt="" />
+                  } @else {
+                    <div class="shrink-0 text-gray-900 dark:text-gray-400">
+                      <fa-icon
+                        (click)="uploadImage(user)"
+                        [icon]="faUserCircle"
+                        size="xl"
+                        class="text-xl cursor-pointer"></fa-icon>
+                    </div>
+                  }
                 </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white max-w-32 lg:max-w-64 xl:max-w-128 overflow-hidden text-ellipsis">

@@ -7,15 +7,11 @@ import (
 )
 
 type Artifact struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	CreatedAt      time.Time `db:"created_at" json:"createdAt"`
-	OrganizationID uuid.UUID `db:"organization_id" json:"-"`
-	Name           string    `db:"name" json:"name"`
-}
-
-type ArtifactWithImage struct {
-	Artifact
-	Image
+	ID             uuid.UUID  `db:"id" json:"id"`
+	CreatedAt      time.Time  `db:"created_at" json:"createdAt"`
+	OrganizationID uuid.UUID  `db:"organization_id" json:"-"`
+	Name           string     `db:"name" json:"name"`
+	ImageID        *uuid.UUID `db:"image_id" json:"-"`
 }
 
 type ArtifactVersionTag struct {

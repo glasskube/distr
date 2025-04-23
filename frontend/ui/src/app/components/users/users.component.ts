@@ -1,15 +1,16 @@
-import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
+import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, computed, inject, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
+  faBox,
   faCircleExclamation,
   faClipboard,
   faMagnifyingGlass,
   faPlus,
-  faTrash,
+  faTrash, faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -38,7 +39,6 @@ import {UuidComponent} from '../uuid';
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FeatureFlagService} from '../../services/feature-flag.service';
-import {digestMessage} from '../../../util/crypto';
 import {SecureImagePipe} from '../../../util/secureImage';
 
 @Component({
@@ -52,7 +52,6 @@ import {SecureImagePipe} from '../../../util/secureImage';
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
-    NgOptimizedImage,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
@@ -143,18 +142,13 @@ export class UsersComponent implements OnDestroy {
     }
   }
 
-  // public async uploadImage(data: UserAccountWithRole) {
-  //   data.imageUrl = await firstValueFrom(this.overlay.uploadImage()
-  //     .pipe(map(async imageId => await firstValueFrom(this.users.patchImage(data.id!!, imageId!!))))
-  //   );
-  // }
-
   public async uploadImage(data: UserAccountWithRole) {
-    data.imageUrl = await firstValueFrom(this.overlay.uploadImage()
-      .pipe(map(async imageId => await firstValueFrom(this.users.patchImage(data.id!!, imageId!!))))
-    );
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    if (!fileId || data.imageUrl?.includes(fileId)) {
+      return;
+    }
+    await firstValueFrom(this.users.patchImage(data.id!!, fileId));
   }
-
 
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
@@ -190,4 +184,6 @@ export class UsersComponent implements OnDestroy {
   }
 
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faUserCircle = faUserCircle;
+  protected readonly faBox = faBox;
 }

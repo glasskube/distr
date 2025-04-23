@@ -4,6 +4,7 @@ import {digestMessage} from '../../util/crypto';
 import {AuthService} from './auth.service';
 import {HttpClient} from '@angular/common/http';
 import {DefaultReactiveList, ReactiveList} from './cache';
+import {UserAccountWithRole} from '../../../../../sdk/js/src';
 
 export interface HasDownloads {
   downloadsTotal?: number;
@@ -34,6 +35,7 @@ export interface Vulnerability {
 export interface BaseArtifact {
   id: string;
   name: string;
+  imageUrl?: string;
 }
 
 export interface BaseArtifactVersion {
@@ -52,6 +54,7 @@ export interface TaggedArtifactVersion extends HasDownloads {
   tags: { name: string }[];
   vulnerabilities: Vulnerability[];
   lastScannedAt?: string;
+  imageUrl?: string;
 }
 
 export interface ArtifactWithTags extends Artifact {
@@ -60,7 +63,6 @@ export interface ArtifactWithTags extends Artifact {
 
 @Injectable({providedIn: 'root'})
 export class ArtifactsService {
-  private readonly auth = inject(AuthService);
   private readonly cache: ReactiveList<ArtifactWithTags>;
   private readonly artifactsUrl = '/api/v1/artifacts';
 
@@ -68,33 +70,6 @@ export class ArtifactsService {
     this.cache = new DefaultReactiveList(this.http.get<ArtifactWithTags[]>(this.artifactsUrl));
   }
 
-  private async getDownloadedByUsers(self: boolean = true, count = 3): Promise<ArtifactUser[]> {
-    if (this.auth.hasRole('vendor')) {
-      if (count === 1) {
-        return [{id: '4f21317b-61d5-44a8-a431-c220f3fd010f', avatarUrl: '/placeholders/company-4.jpg'}];
-      }
-
-      return [
-        {id: '4f21317b-61d5-44a8-a431-c220f3fd010f', avatarUrl: '/placeholders/company-1.jpg'},
-        {id: '45560805-6900-4160-ba32-1d9f09bafff6', avatarUrl: '/placeholders/company-2.jpg'},
-        {id: 'e3605a1d-4a91-4cba-9137-574f24d07c72', avatarUrl: '/placeholders/company-3.jpg'},
-      ];
-    }
-
-    if (self) {
-      const email = this.auth.getClaims()?.email;
-      if (email) {
-        return [
-          {
-            id: this.auth.getClaims()?.sub ?? '',
-            avatarUrl: `https://www.gravatar.com/avatar/${await digestMessage(email)}`,
-          },
-        ];
-      }
-    }
-
-    return [];
-  }
 
   public list(): Observable<ArtifactWithTags[]> {
     return this.cache.get();
@@ -113,5 +88,10 @@ export class ArtifactsService {
         }
       })
     );
+  }
+
+  public patchImage(artifactsId: string, imageId: string) {
+    return this.http.patch<ArtifactWithTags>(`${this.artifactsUrl}/${artifactsId}/image`, {imageId})
+      .pipe(tap((it) => this.cache.save(it)));
   }
 }

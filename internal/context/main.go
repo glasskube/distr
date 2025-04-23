@@ -16,6 +16,7 @@ const (
 	ctxKeyMailer
 	ctxKeyOrgId
 	ctxKeyApplication
+	ctxKeyArtifact
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget
 	ctxKeyFile

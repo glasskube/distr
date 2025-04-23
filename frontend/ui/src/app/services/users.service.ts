@@ -72,8 +72,8 @@ export class UsersService {
   }
 
   public patchImage(userId: string, imageId: string) {
-    console.log(`patchImage: ${userId} ${imageId}`);
-    return this.httpClient.patch<string>(`${this.baseUrl}/${userId}/image`, {imageId});
+    return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId})
+      .pipe(tap((it) => this.cache.save(it)));
   }
 
   public getUserWithGravatarUrl(id: string): Observable<UserAccountWithRole & { gravatar: string }> {
