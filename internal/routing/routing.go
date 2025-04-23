@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-chi/httprate"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/frontend"
@@ -14,10 +15,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )
 
-func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Handler {
+func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracer *trace.TracerProvider) http.Handler {
 	router := chi.NewRouter()
 	router.Use(
 		// Handles panics
@@ -25,18 +27,19 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Ha
 		// Reject bodies larger than 1MiB
 		chimiddleware.RequestSize(1048576),
 	)
-	router.Mount("/api", ApiRouter(logger, db, mailer))
+	router.Mount("/api", ApiRouter(logger, db, mailer, tracer))
 	router.Mount("/internal", InternalRouter())
 	router.Mount("/", FrontendRouter())
 	return router
 }
 
-func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer) http.Handler {
+func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracer *trace.TracerProvider) http.Handler {
 	r := chi.NewRouter()
 	r.Use(
 		chimiddleware.RequestID,
 		chimiddleware.RealIP,
 		middleware.Sentry,
+		otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracer)),
 		middleware.LoggerCtxMiddleware(logger),
 		middleware.LoggingMiddleware,
 		middleware.ContextInjectorMiddleware(db, mailer),
