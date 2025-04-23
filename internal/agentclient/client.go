@@ -17,6 +17,7 @@ import (
 
 	"github.com/glasskube/distr/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
@@ -155,11 +156,31 @@ func (c *Client) HasTokenExpiredAfter(t time.Time) bool {
 	return c.token == nil || c.token.Expiration().Before(t)
 }
 
+func (c *Client) ClearToken() {
+	c.token = nil
+	c.rawToken = ""
+}
+
 func (c *Client) RawToken() string {
 	return c.rawToken
 }
 
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
+	if resp, err := c.doAuthenticatedNoRetry(ctx, r); resp == nil || resp.StatusCode != 401 {
+		return resp, err
+	} else {
+		c.logger.Warn("got 401 response, try to regenerate token")
+		c.ClearToken()
+		resp, err1 := c.doAuthenticatedNoRetry(ctx, r)
+		if err1 != nil {
+			return resp, multierr.Append(err, err1)
+		} else {
+			return resp, nil
+		}
+	}
+}
+
+func (c *Client) doAuthenticatedNoRetry(ctx context.Context, r *http.Request) (*http.Response, error) {
 	if err := c.EnsureToken(ctx); err != nil {
 		return nil, err
 	} else {
@@ -191,8 +212,7 @@ func (c *Client) ReloadFromEnv() (changed bool, err error) {
 		changed = c.clientData != d
 		if changed {
 			c.clientData = d
-			c.token = nil
-			c.rawToken = ""
+			c.ClearToken()
 		}
 		return
 	}

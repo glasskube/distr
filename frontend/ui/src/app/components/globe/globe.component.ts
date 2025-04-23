@@ -116,7 +116,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
     });
     el.innerHTML = `
       <div class="relative">
-        <img src="/docker.png" alt="docker" class="w-6 h-6 rounded">
+        <img src="/docker.png" alt="docker" class="w-6 h-6 rounded-sm">
         <div class="dot-outlet absolute w-2 h-2 -bottom-0.5 -end-0.5"></div>
       </div>
       ${dt.name}`;
