@@ -25,9 +25,12 @@ var (
 	statusEntriesMaxAge            *time.Duration
 	sentryDSN                      string
 	sentryDebug                    bool
+	otelExporterSentryEnabled      bool
+	otelExporterOtlpEnabled        bool
 	enableQueryLogging             bool
 	agentDockerConfig              []byte
 	frontendSentryDSN              *string
+	frontendSentryTraceSampleRate  *float64
 	frontendPosthogToken           *string
 	frontendPosthogAPIHost         *string
 	frontendPosthogUIHost          *string
@@ -94,8 +97,11 @@ func init() {
 
 	sentryDSN = envutil.GetEnv("SENTRY_DSN")
 	sentryDebug = envutil.GetEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
+	otelExporterSentryEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_SENTRY_ENABLED", strconv.ParseBool, false)
+	otelExporterOtlpEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_OTLP_ENABLED", strconv.ParseBool, false)
 	agentDockerConfig = envutil.GetEnvParsedOrDefault("AGENT_DOCKER_CONFIG", envparse.ByteSlice, nil)
 	frontendSentryDSN = envutil.GetEnvOrNil("FRONTEND_SENTRY_DSN")
+	frontendSentryTraceSampleRate = envutil.GetEnvParsedOrNil("FRONTEND_SENTRY_TRACE_SAMPLE_RATE", envparse.Float)
 	frontendPosthogToken = envutil.GetEnvOrNil("FRONTEND_POSTHOG_TOKEN")
 	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
@@ -157,6 +163,10 @@ func FrontendSentryDSN() *string {
 	return frontendSentryDSN
 }
 
+func FrontendSentryTraceSampleRate() *float64 {
+	return frontendSentryTraceSampleRate
+}
+
 func FrontendPosthogToken() *string {
 	return frontendPosthogToken
 }
@@ -190,4 +200,12 @@ func RegistryS3Config() S3Config {
 
 func ArtifactTagsDefaultLimitPerOrg() int {
 	return artifactTagsDefaultLimitPerOrg
+}
+
+func OtelExporterSentryEnabled() bool {
+	return otelExporterSentryEnabled
+}
+
+func OtelExporterOtlpEnabled() bool {
+	return otelExporterOtlpEnabled
 }

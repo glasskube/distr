@@ -81,7 +81,7 @@
       </thead>
       <tbody>
         @for (dt of filteredDeploymentTargets$ | async; track dt.id) {
-          <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
             @if (fullVersion) {
               <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <app-uuid [uuid]="dt.id!" />
@@ -100,7 +100,7 @@
                   <img
                     [ngSrc]="'/' + dt.type + '.png'"
                     [alt]="dt.type"
-                    class="h-8 w-auto rounded max-w-none"
+                    class="h-8 w-auto rounded-sm max-w-none"
                     height="199"
                     width="199" />
                   <app-status-dot
@@ -243,7 +243,7 @@
                   <div
                     @dropdown
                     style="transform-origin: top center"
-                    class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+                    class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
                     <ul class="py-1" role="none">
                       <li>
                         <button
@@ -356,9 +356,10 @@
               <div
                 @modalFlyInOut
                 style="transform-origin: top center"
-                class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow dark:bg-gray-700">
+                class="p-4 w-full mt-12 max-w-4xl max-h-full bg-white rounded-lg shadow-sm dark:bg-gray-700">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                <div
+                  class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
                   <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Setup Instructions</h3>
                   <button
                     type="button"
@@ -511,9 +512,10 @@
   <div @modalFlyInOut class="z-50 w-256 max-w-full overflow-x-hidden overflow-y-auto">
     <div class="relative w-full max-h-full">
       <!-- Modal content -->
-      <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
         <!-- Modal header -->
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+        <div
+          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             @if (selectedDeploymentTarget()?.deployment?.id) {
               Update Deployment
@@ -572,9 +574,10 @@
   <div @modalFlyInOut class="z-50 w-full m-4 overflow-x-hidden">
     <div class="relative w-full max-h-full">
       <!-- Modal content -->
-      <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
         <!-- Modal header -->
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+        <div
+          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Status History: {{ selectedDeploymentTarget()?.name }}
             @if (selectedDeploymentTarget()?.deployment; as deployment) {
@@ -611,7 +614,7 @@
                 <tbody>
                   @for (status of statuses; track status.id) {
                     <tr
-                      class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                      class="bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                       <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                         {{ status.createdAt | date: 'medium' }}
                       </th>
