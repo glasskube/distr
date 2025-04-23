@@ -7,10 +7,10 @@
             <div class="flex items-center">
               <div class="shrink-0">
                 @if (artifact.imageUrl) {
-                  <img
-                    (click)="uploadImage(artifact)"
-                    class="w-8 h-8 rounded-full cursor-pointer"
-                    [attr.src]="artifact.imageUrl | secureImage | async" alt="" />
+                    <img
+                      (click)="uploadImage(artifact)"
+                      class="w-16 h-16 rounded-sm cursor-pointer" height="199" width="199"
+                      [attr.src]="artifact.imageUrl | secureImage | async" alt="" />
                 } @else {
                   <div class="shrink-0 text-gray-900 dark:text-gray-400">
                     <fa-icon

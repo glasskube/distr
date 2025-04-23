@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glasskube/distr/api"
 	"net/http"
 	"strings"
+
+	"github.com/glasskube/distr/api"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
@@ -393,14 +394,14 @@ func patchImageApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	application := internalctx.GetApplication(ctx)
 
-	body, err := JsonBody[types.PatchImageRequest](w, r)
+	body, err := JsonBody[api.PatchImageRequest](w, r)
 
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if body.ImageID == uuid.Nil {
-		http.Error(w, "imageId can not be empty", http.StatusBadRequest)
+		http.Error(w, "imageId can not be empty for application", http.StatusBadRequest)
 		return
 	}
 

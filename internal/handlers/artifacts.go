@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"errors"
-	"github.com/glasskube/distr/api"
 	"net/http"
+
+	"github.com/glasskube/distr/api"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/util"
@@ -61,19 +62,19 @@ func patchImageArtifactHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	artifact := internalctx.GetArtifact(ctx)
 
-	body, err := JsonBody[types.PatchImageRequest](w, r)
+	body, err := JsonBody[api.PatchImageRequest](w, r)
 
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if body.ImageID == uuid.Nil {
-		http.Error(w, "imageId can not be empty", http.StatusBadRequest)
+		http.Error(w, "imageId can not be empty for artifact", http.StatusBadRequest)
 		return
 	}
 
 	if err := db.UpdateArtifactImage(ctx, artifact, body.ImageID); err != nil {
-		log.Warn("error patching user image id", zap.Error(err))
+		log.Warn("error patching user artifact id", zap.Error(err))
 		if errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNoContent)
 		} else if errors.Is(err, apierrors.ErrConflict) {

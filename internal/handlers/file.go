@@ -3,6 +3,9 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -14,8 +17,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"io"
-	"net/http"
 )
 
 func FileRouter(r chi.Router) {

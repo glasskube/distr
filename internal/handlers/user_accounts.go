@@ -159,13 +159,13 @@ func patchImageUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	userAccount := internalctx.GetUserAccount(ctx)
 
-	body, err := JsonBody[types.PatchImageRequest](w, r)
+	body, err := JsonBody[api.PatchImageRequest](w, r)
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if body.ImageID == uuid.Nil {
-		http.Error(w, "imageId can not be empty", http.StatusBadRequest)
+		http.Error(w, "imageId can not be empty for user", http.StatusBadRequest)
 		return
 	}
 

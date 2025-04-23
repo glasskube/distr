@@ -10,7 +10,7 @@ type ApplicationResponse struct {
 func AsApplication(a *types.Application) ApplicationResponse {
 	return ApplicationResponse{
 		Application: *a,
-		ImageUrl:    types.WithImageUrl(a.ImageID),
+		ImageUrl:    WithImageUrl(a.ImageID),
 	}
 }
 
@@ -22,7 +22,7 @@ type ApplicationsResponse struct {
 func AsApplications(a *types.Application) ApplicationsResponse {
 	return ApplicationsResponse{
 		Application: *a,
-		ImageUrl:    types.WithImageUrl(a.ImageID),
+		ImageUrl:    WithImageUrl(a.ImageID),
 	}
 }
 

@@ -10,7 +10,7 @@ type ArtifactResponse struct {
 func AsArtifact(a *types.ArtifactWithTaggedVersion) ArtifactResponse {
 	return ArtifactResponse{
 		ArtifactWithTaggedVersion: *a,
-		ImageUrl:                  types.WithImageUrl(a.ImageID),
+		ImageUrl:                  WithImageUrl(a.ImageID),
 	}
 }
 
@@ -22,7 +22,7 @@ type ArtifactsResponse struct {
 func AsArtifacts(a *types.ArtifactWithDownloads) ArtifactsResponse {
 	return ArtifactsResponse{
 		ArtifactWithDownloads: *a,
-		ImageUrl:              types.WithImageUrl(a.ImageID),
+		ImageUrl:              WithImageUrl(a.ImageID),
 	}
 }
 

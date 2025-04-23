@@ -26,7 +26,7 @@ type UserAccountResponse struct {
 func AsUserAccount(u *types.UserAccountWithUserRole) UserAccountResponse {
 	return UserAccountResponse{
 		UserAccountWithUserRole: *u,
-		ImageUrl:                types.WithImageUrl(u.ImageID),
+		ImageUrl:                WithImageUrl(u.ImageID),
 	}
 }
 
