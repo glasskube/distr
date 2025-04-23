@@ -165,7 +165,7 @@ Returns the latest version of the given application according to the specified s
 
 ### getNewerVersions()
 
-> **getNewerVersions**(`appId`, `currentVersionId?`): `Promise`\<\{ `app`: [`Application`](../interfaces/Application.md); `newerVersions`: [`ApplicationVersion`](../interfaces/ApplicationVersion.md)[]; \}\>
+> **getNewerVersions**(`appId`, `currentVersionId`?): `Promise`\<\{ `app`: [`Application`](../interfaces/Application.md); `newerVersions`: [`ApplicationVersion`](../interfaces/ApplicationVersion.md)[]; \}\>
 
 Returns the application and all versions that are newer than the given version ID. If no version ID is given,
 all versions are considered. The versions are ordered ascending according to the given strategy.
