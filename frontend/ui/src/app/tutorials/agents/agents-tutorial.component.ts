@@ -38,8 +38,8 @@ const releaseStep = 'release';
 const releaseStepTaskFork = 'fork';
 const releaseStepTaskPAT = 'pat';
 const releaseStepTaskCopyID = 'copy-id';
+const releaseStepTaskPatchCompose = 'patch-compose';
 const releaseStepTaskRelease = 'release';
-const releaseStepTaskVerify = 'verify';
 
 @Component({
   selector: 'app-agents-tutorial',
@@ -71,10 +71,8 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
     forkDone: new FormControl<boolean>(false, Validators.requiredTrue),
     patDone: new FormControl<boolean>(false, Validators.requiredTrue),
     copyIdDone: new FormControl<boolean>(false, Validators.requiredTrue),
-    // TODO note/step to update the deployed docker compose yaml
-    // TODO enable github actions
+    patchComposeDone: new FormControl<boolean>(false, Validators.requiredTrue),
     releaseDone: new FormControl<boolean>(false, Validators.requiredTrue),
-    verifyDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   connectCommand?: string;
   targetId?: string;
@@ -88,8 +86,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
     this.registerTaskToggle(this.releaseFormGroup.controls.forkDone, releaseStep, releaseStepTaskFork);
     this.registerTaskToggle(this.releaseFormGroup.controls.patDone, releaseStep, releaseStepTaskPAT);
     this.registerTaskToggle(this.releaseFormGroup.controls.copyIdDone, releaseStep, releaseStepTaskCopyID);
-    this.registerTaskToggle(this.releaseFormGroup.controls.releaseDone, releaseStep, releaseStepTaskRelease);
-    this.registerTaskToggle(this.releaseFormGroup.controls.verifyDone, releaseStep, releaseStepTaskVerify);
+    this.registerTaskToggle(this.releaseFormGroup.controls.patchComposeDone, releaseStep, releaseStepTaskPatchCompose);
   }
 
   private registerTaskToggle(ctrl: FormControl<boolean | null>, stepId: string, taskId: string) {
@@ -203,14 +200,14 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
     const fork = getExistingTask(this.progress, releaseStep, releaseStepTaskFork);
     const pat = getExistingTask(this.progress, releaseStep, releaseStepTaskPAT);
     const copy = getExistingTask(this.progress, releaseStep, releaseStepTaskCopyID);
+    const patch = getExistingTask(this.progress, releaseStep, releaseStepTaskPatchCompose);
     const release = getExistingTask(this.progress, releaseStep, releaseStepTaskRelease);
-    const verify = getExistingTask(this.progress, releaseStep, releaseStepTaskVerify);
     this.releaseFormGroup.patchValue({
       forkDone: !!fork,
       patDone: !!pat,
       copyIdDone: !!copy,
+      patchComposeDone: !!patch,
       releaseDone: !!release,
-      verifyDone: !!verify,
     });
   }
 
@@ -221,7 +218,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
       this.progress = await lastValueFrom(
         this.tutorialsService.save(tutorialId, {
           stepId: releaseStep,
-          taskId: releaseStepTaskVerify,
+          taskId: releaseStepTaskRelease,
           markCompleted: true,
         })
       );
