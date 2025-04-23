@@ -2,31 +2,29 @@ import {AfterViewInit, Component, inject, OnDestroy, OnInit, signal, ViewChild} 
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {
   faArrowRight,
-  faB,
   faBox,
   faBoxesStacked,
   faCheck,
   faClipboardCheck,
-  faDownload,
   faLightbulb,
   faPalette,
-  faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
 import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
 import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
 import {Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
-import {firstValueFrom, lastValueFrom, Observable, OperatorFunction, Subject, switchMap, takeUntil, tap} from 'rxjs';
+import {faClipboard} from '@fortawesome/free-regular-svg-icons';
+import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../../services/toast.service';
 import {TutorialsService} from '../../services/tutorials.service';
 import {TutorialProgress} from '../../types/tutorials';
-import {getExistingTask} from '../utils';
+import {getExistingTask, getLastExistingTask} from '../utils';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ClipComponent} from '../../components/clip.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 
 const tutorialId = 'agents';
 const welcomeStep = 'welcome';
@@ -36,24 +34,27 @@ const deployStepTaskDeploy = 'deploy';
 const deployStepTaskVerify = 'verify';
 const releaseStep = 'release';
 const releaseStepTaskFork = 'fork';
-const releaseStepTaskPAT = 'pat';
-const releaseStepTaskCopyID = 'copy-id';
-const releaseStepTaskPatchCompose = 'patch-compose';
 const releaseStepTaskRelease = 'release';
 
 @Component({
   selector: 'app-agents-tutorial',
-  imports: [ReactiveFormsModule, CdkStep, TutorialStepperComponent, FaIconComponent, CdkStepperPrevious, ClipComponent],
+  imports: [
+    ReactiveFormsModule,
+    CdkStep,
+    TutorialStepperComponent,
+    FaIconComponent,
+    CdkStepperPrevious,
+    ClipComponent,
+    AutotrimDirective,
+  ],
   templateUrl: './agents-tutorial.component.html',
 })
 export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = signal(true);
   private readonly destroyed$ = new Subject<void>();
   protected readonly faBox = faBox;
-  protected readonly faDownload = faDownload;
   protected readonly faPalette = faPalette;
   protected readonly faBoxesStacked = faBoxesStacked;
-  protected readonly faB = faB;
   protected readonly faLightbulb = faLightbulb;
   @ViewChild('stepper', {static: false}) private stepper?: CdkStepper;
   private readonly router = inject(Router);
@@ -69,9 +70,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   });
   protected readonly releaseFormGroup = new FormGroup({
     forkDone: new FormControl<boolean>(false, Validators.requiredTrue),
-    patDone: new FormControl<boolean>(false, Validators.requiredTrue),
-    copyIdDone: new FormControl<boolean>(false, Validators.requiredTrue),
-    patchComposeDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    forkedRepo: new FormControl<string>('', {nonNullable: true}),
     releaseDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   connectCommand?: string;
@@ -82,11 +81,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   ngOnInit() {
     this.registerTaskToggle(this.deployFormGroup.controls.deployDone, deployStep, deployStepTaskDeploy);
     this.registerTaskToggle(this.deployFormGroup.controls.verifyDone, deployStep, deployStepTaskVerify);
-
     this.registerTaskToggle(this.releaseFormGroup.controls.forkDone, releaseStep, releaseStepTaskFork);
-    this.registerTaskToggle(this.releaseFormGroup.controls.patDone, releaseStep, releaseStepTaskPAT);
-    this.registerTaskToggle(this.releaseFormGroup.controls.copyIdDone, releaseStep, releaseStepTaskCopyID);
-    this.registerTaskToggle(this.releaseFormGroup.controls.patchComposeDone, releaseStep, releaseStepTaskPatchCompose);
   }
 
   private registerTaskToggle(ctrl: FormControl<boolean | null>, stepId: string, taskId: string) {
@@ -198,15 +193,10 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
 
   private prepareReleaseStep() {
     const fork = getExistingTask(this.progress, releaseStep, releaseStepTaskFork);
-    const pat = getExistingTask(this.progress, releaseStep, releaseStepTaskPAT);
-    const copy = getExistingTask(this.progress, releaseStep, releaseStepTaskCopyID);
-    const patch = getExistingTask(this.progress, releaseStep, releaseStepTaskPatchCompose);
-    const release = getExistingTask(this.progress, releaseStep, releaseStepTaskRelease);
+    const release = getLastExistingTask(this.progress, releaseStep, releaseStepTaskRelease);
     this.releaseFormGroup.patchValue({
       forkDone: !!fork,
-      patDone: !!pat,
-      copyIdDone: !!copy,
-      patchComposeDone: !!patch,
+      forkedRepo: release?.value,
       releaseDone: !!release,
     });
   }
@@ -219,6 +209,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
         this.tutorialsService.save(tutorialId, {
           stepId: releaseStep,
           taskId: releaseStepTaskRelease,
+          value: this.releaseFormGroup.value.forkedRepo,
           markCompleted: true,
         })
       );
@@ -236,9 +227,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   protected readonly faArrowRight = faArrowRight;
-  protected readonly faRightToBracket = faRightToBracket;
   protected readonly faCheck = faCheck;
-  protected readonly faCircleCheck = faCircleCheck;
 
   ngOnDestroy() {
     this.destroyed$.next();

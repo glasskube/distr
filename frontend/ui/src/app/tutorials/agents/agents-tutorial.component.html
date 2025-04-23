@@ -152,9 +152,12 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Automate Releases</h3>
                     <p class="text-sm mt-2">
+                      In this last step, it's time for you to experiment with the hello-distr repository.
+                    </p>
+                    <p class="text-sm mt-2">
                       For future releases of your applications (in this case hello-distr), you probaly want to automate
                       the creation of a new Distr application version, to avoid manually copying the released compose
-                      file to Distr. The steps below will give you an idea of what such an automation can look like.
+                      file to Distr.
                     </p>
                   </li>
 
@@ -188,94 +191,41 @@
                     <span class="absolute flex items-center justify-center -start-2">
                       <input
                         type="checkbox"
-                        [formControl]="releaseFormGroup.controls.patDone"
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                    </span>
-                    <h3 class="text-lg font-medium leading-tight">Add a Distr Personal Access Token to your fork</h3>
-                    <p class="mt-1 text-xs">
-                      Create a Distr Personal Access Token and then copy it to your repositories secrets section to
-                      allow access of the GitHub action workflow to your Distr account.
-                    </p>
-                    <p class="mt-1 text-xs">
-                      In the GitHub Settings you will find "Secrets and variables" for Actions. Add a repository secret
-                      with the name <code class="select-all">DISTR_TOKEN_SECRET</code> with the previously created PAT
-                      as value.
-                    </p>
-                    @if (releaseFormGroup.controls.patDone.touched && releaseFormGroup.controls.patDone.invalid) {
-                      <div class="mt-2 text-sm text-red-500">
-                        Please mark this as checked when you are done with it.
-                      </div>
-                    }
-                  </li>
-
-                  <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
-                      <input
-                        type="checkbox"
-                        [formControl]="releaseFormGroup.controls.copyIdDone"
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                    </span>
-                    <h3 class="text-lg font-medium leading-tight">Add Application ID as a variable to your fork</h3>
-                    <p class="mt-1 text-xs">
-                      The GitHub action workflow in your fork will create a new application version. It needs to know
-                      which application the version should be appended to.
-                    </p>
-                    <p class="mt-1 text-xs">
-                      Therefore, copy the ID of your hello-distr application and add it to your repository as a
-                      repository variable with the name
-                      <code class="select-all">DISTR_APPLICATION_ID_VAR</code>.
-                    </p>
-                    @if (releaseFormGroup.controls.copyIdDone.touched && releaseFormGroup.controls.copyIdDone.invalid) {
-                      <div class="mt-2 text-sm text-red-500">
-                        Please mark this as checked when you are done with it.
-                      </div>
-                    }
-                  </li>
-
-                  <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
-                      <input
-                        type="checkbox"
-                        [formControl]="releaseFormGroup.controls.patchComposeDone"
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                    </span>
-                    <h3 class="text-lg font-medium leading-tight">Adapt your docker-compose file</h3>
-                    <p class="mt-1 text-xs">
-                      Change the <code>deploy/docker-compose.yaml</code> file: Change the services to use your own
-                      repositories images, and set the tag to a newer version number (which you will release in the next
-                      task).
-                    </p>
-                    @if (
-                      releaseFormGroup.controls.patchComposeDone.touched &&
-                      releaseFormGroup.controls.patchComposeDone.invalid
-                    ) {
-                      <div class="mt-2 text-sm text-red-500">
-                        Please mark this as checked when you are done with it.
-                      </div>
-                    }
-                  </li>
-
-                  <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
-                      <input
-                        type="checkbox"
                         [formControl]="releaseFormGroup.controls.releaseDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Create a Release</h3>
+                    <h3 class="text-lg font-medium leading-tight">Push a hello-distr version to Distr</h3>
                     <p class="mt-1 text-xs">
-                      Enable GitHub Actions in the Actions tab of your repo. Then, create a Release in GitHub by pushing
-                      a new tag.
+                      The hello-distr README describes how all the pieces fit together. Experiment on your own and try
+                      to get to a state, where a release of your forked repository will create a new application version
+                      in Distr.
                     </p>
                     <p class="mt-1 text-xs">
-                      This will build the images, push them into the GitHub Container registry and push your
-                      <code>deploy/docker-compose.yaml</code> file to your Distr application, from where you will be
-                      able to deploy in your target environments.
+                      If you need any help or in case you have questions, don't hesitate to ask in
+                      <a
+                        href="https://discord.gg/6qqBSAWZfW"
+                        target="_blank"
+                        class="text-gray-600 dark:text-gray-400 hover:underline"
+                        >Discord</a
+                      >!
                     </p>
                     <p class="mt-1 text-xs">
-                      Note: If you want to further experiment with the repo, you can adapt the actions to push the
-                      images to the Distr registry instead.
+                      When you are done, you can show us by dropping your hello-distr fork in the text field below:
                     </p>
+                    <div class="mt-2">
+                      <input
+                        [formControl]="releaseFormGroup.controls.forkedRepo"
+                        autotrim
+                        type="url"
+                        name="title"
+                        id="title"
+                        class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                      @if (
+                        releaseFormGroup.controls.forkedRepo.touched && releaseFormGroup.controls.forkedRepo.errors
+                      ) {
+                        <div class="mt-2 text-sm text-red-500">Please enter this field.</div>
+                      }
+                    </div>
                     @if (
                       releaseFormGroup.controls.releaseDone.touched && releaseFormGroup.controls.releaseDone.invalid
                     ) {
