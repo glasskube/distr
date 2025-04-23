@@ -34,3 +34,7 @@ func NonNegativeNumber(value string) (int, error) {
 	}
 	return parsed, err
 }
+
+func Float(value string) (float64, error) {
+	return strconv.ParseFloat(value, 64)
+}

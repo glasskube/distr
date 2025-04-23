@@ -1,9 +1,9 @@
 <div
   @modalFlyInOut
   style="transform-origin: top center"
-  class="p-4 w-full my-auto max-h-full overflow-y-auto bg-white rounded-lg shadow dark:bg-gray-900">
+  class="p-4 w-full my-auto max-h-full overflow-y-auto bg-white rounded-lg shadow-sm dark:bg-gray-900">
   <!-- Modal header -->
-  <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+  <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Welcome to Distr</h2>
     <button
       type="button"
@@ -35,7 +35,7 @@
                       [formControl]="applicationForm.controls.sampleApplication"
                       id="process-type-checkbox"
                       type="checkbox"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                   </div>
                   <div class="ms-2 text-sm">
                     <label for="process-type-checkbox" class="text-sm font-medium text-gray-900 dark:text-white">
@@ -520,7 +520,7 @@
                           id="checked-checkbox"
                           type="checkbox"
                           [formControl]="deploymentTargetForm.controls.clusterScope"
-                          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                         <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                           Enable cluster-scoped permissions
                         </label>

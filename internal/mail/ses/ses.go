@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/util"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
 )
 
 type sesMailer struct {
@@ -34,6 +35,7 @@ func NewFromContext(ctx context.Context, config Config) (*sesMailer, error) {
 	if cfg, err := awsconfig.LoadDefaultConfig(ctx); err != nil {
 		return nil, err
 	} else {
+		otelaws.AppendMiddlewares(&cfg.APIOptions)
 		config.Aws = &cfg
 		return New(config), nil
 	}

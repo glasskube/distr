@@ -19,6 +19,7 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
 )
 
 const (
@@ -43,6 +44,7 @@ func NewBlobHandler(ctx context.Context) blob.BlobHandler {
 	if awsconfig, err := awsconfig.LoadDefaultConfig(ctx); err != nil {
 		s3Client = s3.New(s3.Options{}, clientOpts(s3Config))
 	} else {
+		otelaws.AppendMiddlewares(&awsconfig.APIOptions)
 		s3Client = s3.NewFromConfig(awsconfig, clientOpts(s3Config))
 	}
 
