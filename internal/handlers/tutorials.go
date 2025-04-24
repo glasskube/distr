@@ -186,7 +186,7 @@ func createHelloDistrDeploymentTarget(ctx context.Context) (*types.DeploymentTar
 	}
 }
 
-var helloDistrEnvironment = `
+const helloDistrEnvironment = `
 # mandatory values:
 HELLO_DISTR_HOST=localhost
 HELLO_DISTR_DB_NAME=hello-distr
