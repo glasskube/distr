@@ -1,8 +1,8 @@
 <div
-  class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 font-medium text-gray-900 dark:text-white">
-  <div class="p-4 justify-between items-stretch md:flex lg:block xl:flex">
-    <div class="justify-between sm:flex sm:items-center md:mb-0 md:block lg:mb-4 lg:flex xl:mb-0 xl:block">
-      <div class="flex gap-3 items-start lg:items-center">
+  class="h-full rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 font-medium text-gray-900 dark:text-white flex flex-col">
+  <div class="p-4 justify-between items-stretch md:flex">
+    <div class="justify-between sm:flex sm:items-center">
+      <div class="flex gap-3 items-start lg:items-center mb-2 md:mb-0">
         <div class="relative">
           <img
             [ngSrc]="'/' + deploymentTarget().type + '.png'"
@@ -14,20 +14,23 @@
           </app-status-dot>
         </div>
         <div>
-          <h3 class="font-bold">{{ deploymentTarget().name }}</h3>
-          <div class="flex flex-col items-start lg:flex-row lg:items-center lg:gap-2">
+          <div class="flex gap-2">
+            <h3 class="font-bold">{{ deploymentTarget().name }}</h3>
+
             @if (deploymentTarget().id; as id) {
               <app-uuid [uuid]="id" [small]="true"></app-uuid>
             }
+          </div>
+          <div class="flex flex-col items-start lg:flex-row lg:items-center lg:gap-2">
             <dl class="inline-flex gap-1 text-sm">
-              <dt>Created at:</dt>
-              <dd class="text-gray-500 dark:text-gray-400">
+              <dt class="text-gray-500 dark:text-gray-400">Created at:</dt>
+              <dd>
                 {{ deploymentTarget().createdAt | date: 'short' }}
               </dd>
             </dl>
             <dl class="inline-flex gap-1 text-sm">
-              <dt>Managed by:</dt>
-              <dd class="text-gray-500 dark:text-gray-400">
+              <dt class="text-gray-500 dark:text-gray-400">Managed by:</dt>
+              <dd>
                 {{ deploymentTarget().createdBy?.name ?? deploymentTarget().createdBy?.email }}
               </dd>
             </dl>
@@ -145,14 +148,13 @@
   </div>
 
   @if (deploymentTarget().deployments.length > 0) {
+    <hr class="border-b border-gray-200 dark:border-gray-600" />
     <div class="items-center sm:flex sm:flex-wrap xl:flex">
       <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+        <thead class="sr-only uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400 text-xs">
           <tr>
             <th scope="col" class="px-4 py-2">Application</th>
-            @if (fullVersion()) {
-              <th scope="col" class="px-4 py-2">Installed At</th>
-            }
+            <th scope="col" class="px-4 py-2">Installed At</th>
             <th scope="col" class="px-4 py-2">Status</th>
             @if (fullVersion()) {
               <th scope="col" class="px-4 py-2"></th>
@@ -162,14 +164,19 @@
         <tbody>
           @for (deployment of deploymentTarget().deployments; track deployment.id) {
             <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                {{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }}
+              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center gap-4">
+                <fa-icon class="text-gray-500 dark:text-gray-400" [icon]="faShip"></fa-icon>
+                <div class="leading-tight">
+                  {{ deployment.applicationName }}
+                  <div class="text-gray-500 dark:text-gray-400 text-xs">
+                    {{ deployment.applicationVersionName }}
+                  </div>
+                </div>
               </td>
-              @if (fullVersion()) {
-                <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  {{ deployment.createdAt | date: 'short' }}
-                </td>
-              }
+              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white text-xs">
+                <div class="text-gray-500 dark:text-gray-400">Last modified:</div>
+                {{ deployment.createdAt | date: 'short' }}
+              </td>
               <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <button (click)="openStatusModal(deployment)" class="flex items-center">
                   <app-deployment-status-dot class="size-4 me-1" [deployment]="deployment"></app-deployment-status-dot>
@@ -287,6 +294,10 @@
           }
         </tbody>
       </table>
+    </div>
+  } @else {
+    <div class="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm p-4">
+      No applications deployed.
     </div>
   }
 </div>
