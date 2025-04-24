@@ -70,6 +70,7 @@ func GetDeploymentsForDeploymentTarget(
 				dr.values_yaml as values_yaml,
 				dr.env_file_data as env_file_data,
 				dr.id as deployment_revision_id,
+				dr.created_at AS deployment_revision_created_at,
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,

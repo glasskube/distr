@@ -175,7 +175,7 @@
               </td>
               <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white text-xs">
                 <div class="text-gray-500 dark:text-gray-400">Last modified:</div>
-                {{ deployment.createdAt | date: 'short' }}
+                {{ deployment.deploymentRevisionCreatedAt | date: 'short' }}
               </td>
               <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <button (click)="openStatusModal(deployment)" class="flex items-center">
@@ -334,7 +334,7 @@
     @modalFlyInOut
     [deploymentTarget]="selectedDeploymentTarget()!"
     [deployment]="selectedDeployment()"
-    (close)="hideModal()">
+    (closed)="hideModal()">
   </app-deployment-modal>
 </ng-template>
 
