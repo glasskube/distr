@@ -1,14 +1,16 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Tutorial, TutorialProgress, TutorialProgressRequest} from '../types/tutorials';
-import {map, Observable, shareReplay, Subject, startWith, switchMap} from 'rxjs';
+import {map, Observable, shareReplay, Subject, startWith, switchMap, firstValueFrom} from 'rxjs';
 import {IconDefinition} from '@fortawesome/angular-fontawesome';
 import {faBox, faBoxesStacked, faPalette} from '@fortawesome/free-solid-svg-icons';
+import {getExistingTask} from '../tutorials/utils';
 
 interface TutorialView {
   id: Tutorial;
   name: string;
   icon: IconDefinition;
+  description: string;
   progress?: TutorialProgress;
 }
 
@@ -25,16 +27,19 @@ export class TutorialsService {
       name: 'Branding and Customer Portal',
       id: 'branding',
       icon: this.faPalette,
-    },
-    {
-      name: 'Applications and Agents',
-      id: 'agents',
-      icon: this.faBoxesStacked,
+      description: 'Learn how to customize your Customer Portal for your own customers, and invite a new Customer.',
     },
     {
       name: 'Artifact Registry',
       id: 'registry',
       icon: this.faBox,
+      description: 'Set up your the registry for your organization and manage images with it.',
+    },
+    {
+      name: 'Applications and Agents',
+      id: 'agents',
+      icon: this.faBoxesStacked,
+      description: 'Deploy a sample app and learn how to use release automation. ',
     },
   ];
 
@@ -80,5 +85,24 @@ export class TutorialsService {
 
   public save(tutorial: Tutorial, progress: TutorialProgressRequest): Observable<TutorialProgress> {
     return this.httpClient.put<TutorialProgress>(`${this.baseUrl}/${tutorial}`, progress);
+  }
+
+  public async saveDoneIfNotYetDone(
+    progress: TutorialProgress | undefined,
+    done: boolean,
+    tutorialId: Tutorial,
+    stepId: string,
+    taskId: string
+  ) {
+    const doneBefore = getExistingTask(progress, stepId, taskId);
+    if (done && !doneBefore) {
+      return await firstValueFrom(
+        this.save(tutorialId, {
+          stepId: stepId,
+          taskId: taskId,
+        })
+      );
+    }
+    return progress;
   }
 }

@@ -244,7 +244,7 @@
                         >hello-distr application</a
                       >. Pull them from the Github Container Registry to your machine's docker environment, with:
                     </p>
-                    @let pullCmd = 'docker pull ghcr.io/glasskube/hello-distr/backend:0.1.9';
+                    @let pullCmd = 'docker pull ghcr.io/glasskube/hello-distr/backend:' + helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ pullCmd }}
                     </code>
@@ -267,11 +267,14 @@
                     <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
                     <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
                     @let tagCmd =
-                      'docker tag ghcr.io/glasskube/hello-distr/backend:0.1.9 ' +
+                      'docker tag ghcr.io/glasskube/hello-distr/backend:' +
+                      helloDistrTag +
+                      ' ' +
                       host +
                       '/' +
                       slug +
-                      '/hello-distr/backend:0.1.9';
+                      '/hello-distr/backend:' +
+                      helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ tagCmd }}
                     </code>
@@ -292,7 +295,7 @@
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
-                    @let pushCmd = 'docker push ' + host + '/' + slug + '/hello-distr/backend:0.1.9';
+                    @let pushCmd = 'docker push ' + host + '/' + slug + '/hello-distr/backend:' + helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ pushCmd }}
                     </code>
@@ -314,14 +317,14 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
                     <p class="mt-1 text-xs">Pull one of the pushed images:</p>
-                    @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/backend:0.1.9';
+                    @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/backend:' + helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ exploreCmd }}
                     </code>
                     <app-clip class="mx-2" [clip]="exploreCmd"></app-clip>
                     <p class="mt-2 ml-4 text-xs">
                       Note: As an additional test, you can delete the previously pulled backend image and tags with
-                      <code class="select-all">docker image rm b04ff0cd0287 -f</code>, and then execute the previous
+                      <code class="select-all">docker image rm be5f5124c4ca -f</code>, and then execute the previous
                       pull again. This time all the image blobs will be downloaded.
                     </p>
                     <p class="mt-2 text-xs">

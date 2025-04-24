@@ -19,7 +19,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
-import {OrganizationBranding} from '../../../../../../sdk/js/src';
+import {OrganizationBranding} from '@glasskube/distr-sdk';
 import {base64ToBlob} from '../../../util/blob';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -28,7 +28,7 @@ import {UsersService} from '../../services/users.service';
 import {TutorialsService} from '../../services/tutorials.service';
 import {TutorialProgress} from '../../types/tutorials';
 import {AuthService} from '../../services/auth.service';
-import {getExistingTask} from '../utils';
+import {getExistingTask, getLastExistingTask} from '../utils';
 
 const defaultBrandingDescription = `# Welcome
 
@@ -204,12 +204,9 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
 
   private prepareCustomerStep() {
     // prepare the email form
-    const email = (this.progress?.events ?? [])
-      .concat()
-      .reverse()
-      .find((e) => e.stepId === customerStep && e.taskId === customerTaskInvite)?.value;
-    if (email && typeof email === 'string') {
-      this.inviteFormGroup.controls.customerEmail.patchValue(email);
+    const email = getLastExistingTask(this.progress, customerStep, customerTaskInvite);
+    if (email?.value && typeof email?.value === 'string') {
+      this.inviteFormGroup.controls.customerEmail.patchValue(email.value);
       this.inviteFormGroup.controls.inviteDone.patchValue(true);
     }
 

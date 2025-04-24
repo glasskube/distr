@@ -37,6 +37,7 @@ import {TutorialsComponent} from './tutorials/tutorials.component';
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
 import {getRemoteEnvironment} from '../env/remote';
+import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -266,6 +267,10 @@ export const routes: Routes = [
                 path: '',
                 pathMatch: 'full',
                 component: TutorialsComponent,
+              },
+              {
+                path: 'agents',
+                component: AgentsTutorialComponent,
               },
               {
                 path: 'branding',

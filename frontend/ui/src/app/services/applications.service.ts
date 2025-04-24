@@ -1,9 +1,9 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {catchError, Observable, of, tap, throwError} from 'rxjs';
+import {catchError, Observable, of, startWith, Subject, switchMap, tap, throwError} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion, DeploymentTarget} from '@glasskube/distr-sdk';
 
 @Injectable({
   providedIn: 'root',
@@ -11,13 +11,24 @@ import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
 export class ApplicationsService implements CrudService<Application> {
   private readonly applicationsUrl = '/api/v1/applications';
   private readonly cache: ReactiveList<Application>;
+  private readonly refresh$ = new Subject<void>();
 
   constructor(private readonly httpClient: HttpClient) {
     this.cache = new DefaultReactiveList(this.httpClient.get<Application[]>(this.applicationsUrl));
+    this.refresh$
+      .pipe(
+        switchMap(() => this.httpClient.get<Application[]>(this.applicationsUrl)),
+        tap((apps) => this.cache.reset(apps))
+      )
+      .subscribe();
   }
 
   list(): Observable<Application[]> {
     return this.cache.get();
+  }
+
+  refresh() {
+    this.refresh$.next();
   }
 
   create(application: Application): Observable<Application> {
