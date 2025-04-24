@@ -1,6 +1,7 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, computed, inject, input, resource, signal, TemplateRef, ViewChild} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faCircleExclamation,
@@ -14,7 +15,6 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
-  Application,
   DeploymentRevisionStatus,
   DeploymentTarget,
   DeploymentTargetScope,
@@ -32,13 +32,12 @@ import {ConnectInstructionsComponent} from '../../components/connect-instruction
 import {DeploymentStatusDot, StatusDotComponent} from '../../components/status-dot';
 import {UuidComponent} from '../../components/uuid';
 import {AgentVersionService} from '../../services/agent-version.service';
-import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
 import {DeploymentStatusService} from '../../services/deployment-status.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
-import {FormGroup, FormControl, Validators, ReactiveFormsModule} from '@angular/forms';
+import {DeploymentModalComponent} from '../deployment-modal.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -55,6 +54,7 @@ import {FormGroup, FormControl, Validators, ReactiveFormsModule} from '@angular/
     AsyncPipe,
     ConnectInstructionsComponent,
     ReactiveFormsModule,
+    DeploymentModalComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -65,7 +65,6 @@ export class DeploymentTargetCardComponent {
   protected readonly auth = inject(AuthService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly toast = inject(ToastService);
-  private readonly applications = inject(ApplicationsService);
 
   protected readonly customerManagedWarning = `
     You are about to make changes to a customer-managed deployment.
@@ -74,13 +73,11 @@ export class DeploymentTargetCardComponent {
   public readonly deploymentTarget = input.required<DeploymentTarget>();
   public readonly fullVersion = input(true);
 
+  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<any>;
   @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<any>;
   @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<any>;
   @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<any>;
   @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<any>;
-
-  protected readonly showDeploymentTargetDropdown = signal(false);
-  protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
 
   protected readonly faShip = faShip;
   protected readonly faLink = faLink;
@@ -92,14 +89,15 @@ export class DeploymentTargetCardComponent {
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
 
-  selectedApplication?: Application | null;
+  protected readonly showDeploymentTargetDropdown = signal(false);
+  protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
+  protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
   protected readonly selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
   protected statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
 
   protected readonly agentVersions = resource({
     loader: () => firstValueFrom(this.agentVersionsSvc.list()),
   });
-  private readonly applications$ = this.applications.list();
 
   protected readonly isUndeploySupported = computed(() => {
     if (!this.deploymentTarget().reportedAgentVersionId) {
@@ -135,9 +133,11 @@ export class DeploymentTargetCardComponent {
   });
   editFormLoading = false;
 
-  protected async newDeployment(deployment?: DeploymentWithLatestRevision) {}
-
-  protected async saveDeployment() {}
+  protected async showDeploymentModal(deployment?: DeploymentWithLatestRevision) {
+    this.selectedDeploymentTarget.set(this.deploymentTarget());
+    this.selectedDeployment.set(deployment);
+    this.showModal(this.deploymentModal);
+  }
 
   protected async saveDeploymentTarget() {
     this.editForm.markAllAsTouched();
@@ -263,11 +263,23 @@ export class DeploymentTargetCardComponent {
     }
   }
 
-  private updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
-    this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
+  public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {
+    try {
+      const agentVersions = this.agentVersions.value();
+      if (agentVersions?.length) {
+        const targetVersion = agentVersions[agentVersions.length - 1];
+        if (
+          await firstValueFrom(
+            this.overlay.confirm(`Update ${dt.name} agent from ${dt.agentVersion?.name} to ${targetVersion.name}?`)
+          )
+        ) {
+          dt.agentVersion = targetVersion;
+          await firstValueFrom(this.deploymentTargets.update(dt));
+        }
+      }
+    } catch (e) {}
   }
-
-  private showModal(templateRef: TemplateRef<unknown>) {
+  protected showModal(templateRef: TemplateRef<unknown>) {
     this.hideModal();
     this.modal = this.overlay.showModal(templateRef, {
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),

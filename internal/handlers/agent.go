@@ -374,7 +374,10 @@ var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 
 var rateLimitPerAgent = httprate.Limit(
-	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
+	// For a 5 second interval, per minute, the agent makes 12 resource calls and 12 status calls for each deployment.
+	// Adding 25% margin and assuming that people have at most 10 deployments on a single agent we arrive at
+	// (12+10*12)*1.25 = 11*12*1.25 = 11*15
+	11*15,
 	1*time.Minute,
 	httprate.WithKeyFuncs(middleware.RateLimitCurrentDeploymentTargetIdKeyFunc),
 )

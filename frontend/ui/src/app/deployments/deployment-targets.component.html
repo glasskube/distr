@@ -13,7 +13,7 @@
                 {{ u.dt.name }}: {{ u.dt.deployment?.applicationName }} &rarr; {{ u.version.name }} (<button
                   type="button"
                   class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                  (click)="newDeployment(u.dt, deploymentModal, u.version)">
+                  (click)="showDeploymentModal(u.dt, u.d, u.version)">
                   update now</button
                 >)
               </li>
@@ -66,63 +66,15 @@
 </div>
 
 <ng-template #deploymentModal>
-  <div @modalFlyInOut class="z-50 w-256 max-w-full overflow-x-hidden overflow-y-auto">
-    <div class="relative w-full max-h-full">
-      <!-- Modal content -->
-      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-        <!-- Modal header -->
-        <div
-          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            @if (selectedDeploymentTarget()?.deployment?.id) {
-              Update Deployment
-            } @else {
-              Deploy new application version
-            }
-          </h3>
-          <button
-            type="button"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-            (click)="hideModal()">
-            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-            </svg>
-            <span class="sr-only">Close modal</span>
-          </button>
-        </div>
-        <!-- Modal body -->
-        <form class="p-4 md:p-5" (ngSubmit)="saveDeployment()">
-          @if (selectedDeploymentTarget()?.createdBy?.userRole === 'customer' && auth.hasRole('vendor')) {
-            <div
-              class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
-              role="alert">
-              <fa-icon [icon]="faCircleExclamation" />
-              <span class="sr-only">Info</span>
-              <div class="ms-3 text-sm font-medium">
-                Warning: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination
-                with the customer.
-              </div>
-            </div>
-          }
-          <app-deployment-form [formControl]="deployForm"></app-deployment-form>
-          <button
-            type="submit"
-            [disabled]="deployFormLoading"
-            class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            <fa-icon [icon]="shipIcon" class="h-5 w-5 mr-2 -ml-0.5 dark:text-gray-400"></fa-icon>
-            Deploy
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
+  <app-deployment-modal
+    @modalFlyInOut
+    [deploymentTarget]="selectedDeploymentTarget()!"
+    [deployment]="selectedDeployment()"
+    [versionId]="selectedApplicationVersionId()"
+    (closed)="hideModal()">
+  </app-deployment-modal>
 </ng-template>
 
 <ng-template #deploymentWizard>
-  <app-installation-wizard (closed)="closeWizard()"></app-installation-wizard>
+  <app-installation-wizard (closed)="hideModal()"></app-installation-wizard>
 </ng-template>

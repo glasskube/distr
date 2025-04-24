@@ -1,39 +1,27 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
 import {AfterViewInit, Component, inject, Input, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
-import {toObservable} from '@angular/core/rxjs-interop';
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCircleExclamation, faLightbulb, faMagnifyingGlass, faPlus, faShip} from '@fortawesome/free-solid-svg-icons';
-import {
-  Application,
-  ApplicationVersion,
-  DeploymentRequest,
-  DeploymentTarget,
-  DeploymentTargetScope,
-  DeploymentType,
-  DeploymentWithLatestRevision,
-} from '@glasskube/distr-sdk';
-import {combineLatest, first, firstValueFrom, map, Observable, of, Subject, switchMap, takeUntil} from 'rxjs';
+import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
+import {ApplicationVersion, DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
+import {combineLatest, first, map, Observable, of, Subject, switchMap, takeUntil} from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
-import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
-import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
-import {DeploymentFormValue} from '../deployment-form/deployment-form.component';
-import {AutotrimDirective} from '../directives/autotrim.directive';
-import {AgentVersionService} from '../services/agent-version.service';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
-import {ToastService} from '../services/toast.service';
+import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
+
+type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
 
 @Component({
   selector: 'app-deployment-targets',
@@ -43,63 +31,40 @@ import {DeploymentTargetCardComponent} from './deployment-target-card/deployment
     FormsModule,
     ReactiveFormsModule,
     InstallationWizardComponent,
-    AutotrimDirective,
     OverlayModule,
     DeploymentTargetCardComponent,
+    DeploymentModalComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
-  animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
+  animations: [modalFlyInOut, drawerFlyInOut],
 })
 export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   @Input('fullVersion') fullVersion = false;
 
   public readonly auth = inject(AuthService);
-  private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
-  private readonly agentVersions = inject(AgentVersionService);
 
   readonly faMagnifyingGlass = faMagnifyingGlass;
   readonly plusIcon = faPlus;
-  readonly shipIcon = faShip;
-  protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faLightbulb = faLightbulb;
 
   private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
 
-  private deploymentWizardOverlayRef?: DialogRef;
+  @ViewChild('deploymentWizard') protected readonly deploymentWizard!: TemplateRef<unknown>;
+  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
 
-  protected readonly customerManagedWarning = `
-    You are about to make changes to a customer-managed deployment.
-    Ensure this is done in coordination with the customer.`;
-
-  @ViewChild('deploymentWizard') wizardRef?: TemplateRef<unknown>;
-  selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
-
-  selectedApplication?: Application | null;
+  selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
+  selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
+  selectedApplicationVersionId = signal<string | undefined>(undefined);
 
   readonly filterForm = new FormGroup({
     search: new FormControl(''),
   });
-  readonly editForm = new FormGroup({
-    id: new FormControl<string | undefined>(undefined),
-    name: new FormControl('', Validators.required),
-    type: new FormControl<DeploymentType | undefined>({value: undefined, disabled: true}, Validators.required),
-    geolocation: new FormGroup({
-      lat: new FormControl<number | undefined>(undefined),
-      lon: new FormControl<number | undefined>(undefined),
-    }),
-    namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
-    scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
-  });
-  editFormLoading = false;
-
-  readonly deployForm = new FormControl<DeploymentFormValue | undefined>(undefined, Validators.required);
-  deployFormLoading = false;
 
   readonly deploymentTargets$ = this.deploymentTargets.poll().pipe(takeUntil(this.destroyed$));
 
@@ -109,39 +74,23 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   );
   private readonly applications$ = this.applications.list();
-  public readonly agentVersions$ = this.agentVersions.list();
 
-  readonly showAgentUpdateColumn$ = combineLatest([this.filteredDeploymentTargets$, this.agentVersions$]).pipe(
-    map(
-      ([dts, avs]) =>
-        avs.length !== 0 && dts.some((dt) => dt.agentVersion?.id && dt.agentVersion?.id !== avs[avs.length - 1].id)
+  protected deploymentTargetsWithUpdate$: Observable<DeploymentWithNewerVersion[]> = this.deploymentTargets$.pipe(
+    switchMap((deploymentTargets) =>
+      combineLatest(
+        deploymentTargets
+          .map((dt) =>
+            dt.deployments.map((d) =>
+              this.getAvailableVersions(d).pipe(map((versions) => ({dt, d, version: this.findMaxVersion(versions)})))
+            )
+          )
+          .flat()
+      )
+    ),
+    map((result) =>
+      result.filter((it) => it.version?.id !== it.d.applicationVersionId).map((it) => ({...it, version: it.version!}))
     )
   );
-
-  readonly filteredApplications$ = combineLatest([
-    this.applications$,
-    toObservable(this.selectedDeploymentTarget),
-  ]).pipe(map(([apps, dt]) => apps.filter((app) => app.type === dt?.type)));
-
-  protected deploymentTargetsWithUpdate$: Observable<{dt: DeploymentTarget; version: ApplicationVersion}[]> =
-    this.deploymentTargets$.pipe(
-      switchMap((deploymentTargets) =>
-        combineLatest(
-          deploymentTargets
-            .filter((deplyomentTarget) => deplyomentTarget.id && deplyomentTarget.deployment)
-            .map((deploymentTarget) =>
-              this.getAvailableVersions(deploymentTarget.deployment!).pipe(
-                map((versions) => ({dt: deploymentTarget, version: this.findMaxVersion(versions)}))
-              )
-            )
-        )
-      ),
-      map((result) =>
-        result
-          .filter((it) => it.version && it.version.id !== it.dt.deployment?.applicationVersionId)
-          .map((it) => ({dt: it.dt, version: it.version!}))
-      )
-    );
 
   ngAfterViewInit() {
     if (this.fullVersion) {
@@ -160,115 +109,31 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     this.destroyed$.complete();
   }
 
-  openWizard() {
-    this.deploymentWizardOverlayRef?.close();
-    this.deploymentWizardOverlayRef = this.overlay.showModal(this.wizardRef!, {
+  protected showDeploymentModal(
+    deploymentTarget: DeploymentTarget,
+    deployment: DeploymentWithLatestRevision,
+    version: ApplicationVersion
+  ) {
+    this.selectedDeploymentTarget.set(deploymentTarget);
+    this.selectedDeployment.set(deployment);
+    this.selectedApplicationVersionId.set(version?.id);
+    this.hideModal();
+    this.modal = this.overlay.showModal(this.deploymentModal, {
+      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+    });
+  }
+
+  protected openWizard() {
+    this.hideModal();
+    this.modal = this.overlay.showModal(this.deploymentWizard, {
       hasBackdrop: true,
       backdropStyleOnly: true,
       positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
     });
   }
 
-  closeWizard() {
-    this.deploymentWizardOverlayRef?.close();
-  }
-
-  resetEditForm() {
-    this.editForm.reset();
-    this.editForm.patchValue({type: 'docker'});
-  }
-
-  loadDeploymentTarget(dt: DeploymentTarget) {
-    this.editForm.patchValue({
-      // to reset the geolocation inputs in case dt has no geolocation
-      geolocation: {lat: undefined, lon: undefined},
-      ...dt,
-    });
-  }
-
-  showModal(templateRef: TemplateRef<unknown>) {
-    this.hideModal();
-    this.modal = this.overlay.showModal(templateRef, {
-      positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
-    });
-  }
-
-  hideModal(): void {
+  protected hideModal(): void {
     this.modal?.close();
-  }
-
-  async newDeployment(
-    deploymentTarget: DeploymentTarget,
-    modalTemplate: TemplateRef<any>,
-    version?: ApplicationVersion
-  ) {
-    const apps = await firstValueFrom(this.applications$);
-    if (deploymentTarget.deployment) {
-      this.updatedSelectedApplication(apps, deploymentTarget.deployment.applicationId);
-    }
-    this.selectedDeploymentTarget.set(deploymentTarget);
-
-    this.deployForm.reset({
-      deploymentTargetId: deploymentTarget.id,
-      applicationId: deploymentTarget.deployment?.applicationId,
-      applicationVersionId: version?.id ?? deploymentTarget.deployment?.applicationVersionId,
-      applicationLicenseId: deploymentTarget.deployment?.applicationLicenseId,
-      releaseName: deploymentTarget.deployment?.releaseName,
-      valuesYaml: deploymentTarget.deployment?.valuesYaml ? atob(deploymentTarget.deployment.valuesYaml) : undefined,
-      envFileData: deploymentTarget.deployment?.envFileData ? atob(deploymentTarget.deployment.envFileData) : undefined,
-    });
-
-    this.showModal(modalTemplate);
-  }
-
-  async saveDeployment() {
-    this.deployForm.markAllAsTouched();
-    if (this.deployForm.valid) {
-      this.deployFormLoading = true;
-      const deployment: DeploymentRequest = {
-        deploymentId: this.selectedDeploymentTarget()?.deployment?.id,
-        ...(this.deployForm.value as Required<DeploymentFormValue>),
-      };
-      if (deployment.valuesYaml) {
-        deployment.valuesYaml = btoa(deployment.valuesYaml);
-      }
-      if (deployment.envFileData) {
-        deployment.envFileData = btoa(deployment.envFileData);
-      }
-      try {
-        await firstValueFrom(this.deploymentTargets.deploy(deployment as DeploymentRequest));
-        this.toast.success('Deployment saved successfully');
-        this.hideModal();
-      } catch (e) {
-        const msg = getFormDisplayedError(e);
-        if (msg) {
-          this.toast.error(msg);
-        }
-      } finally {
-        this.deployFormLoading = false;
-      }
-    }
-  }
-
-  updatedSelectedApplication(applications: Application[], applicationId?: string | null) {
-    this.selectedApplication = applications.find((a) => a.id === applicationId) || null;
-  }
-
-  public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {
-    try {
-      const agentVersions = await firstValueFrom(this.agentVersions$);
-      if (agentVersions.length > 0) {
-        const targetVersion = agentVersions[agentVersions.length - 1];
-        if (
-          await firstValueFrom(
-            this.overlay.confirm(`Update ${dt.name} agent from ${dt.agentVersion?.name} to ${targetVersion.name}?`)
-          )
-        ) {
-          dt.agentVersion = targetVersion;
-          await firstValueFrom(this.deploymentTargets.update(dt));
-        }
-      }
-    } catch (e) {}
   }
 
   private getAvailableVersions(deployment: DeploymentWithLatestRevision): Observable<ApplicationVersion[]> {
