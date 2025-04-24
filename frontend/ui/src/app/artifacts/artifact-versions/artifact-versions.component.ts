@@ -51,7 +51,19 @@ export class ArtifactVersionsComponent {
   protected readonly artifact$ = this.route.params.pipe(
     map((params) => params['id']?.trim()),
     distinctUntilChanged(),
-    switchMap((id: string) => this.artifacts.getByIdAndCache(id))
+    switchMap((id: string) => this.artifacts.getByIdAndCache(id)),
+    map((artifact) => {
+      if (artifact) {
+        return {
+          ...artifact,
+          versions: artifact.versions.map((v) => ({
+            ...v,
+            ...this.calcVersionDownloads(v),
+          })),
+        };
+      }
+      return undefined;
+    })
   );
 
   protected readonly updateTag$: Observable<TaggedArtifactVersion | null> = this.artifact$.pipe(

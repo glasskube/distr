@@ -57,7 +57,6 @@
         <div class="overflow-x-auto">
           <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
             @for (version of artifact.versions; track version.digest) {
-              @let downloads = calcVersionDownloads(version);
               <li class="py-3 px-6 sm:py-4">
                 <div class="flex items-center gap-2">
                   <div class="flex-1 min-w-0">
@@ -85,8 +84,8 @@
                     </ul>
                   </div>
                   <div class="flex flex-col items-end gap-1">
-                    <app-artifacts-download-count [source]="downloads"></app-artifacts-download-count>
-                    <app-artifacts-downloaded-by [source]="downloads"> </app-artifacts-downloaded-by>
+                    <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
+                    <app-artifacts-downloaded-by [source]="version"> </app-artifacts-downloaded-by>
                   </div>
                 </div>
 
