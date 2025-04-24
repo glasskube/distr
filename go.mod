@@ -38,9 +38,9 @@ require (
 	golang.org/x/crypto v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.17.3
-	k8s.io/apimachinery v0.32.3
-	k8s.io/cli-runtime v0.32.3
-	k8s.io/client-go v0.32.3
+	k8s.io/apimachinery v0.32.4
+	k8s.io/cli-runtime v0.32.4
+	k8s.io/client-go v0.32.4
 	oras.land/oras-go v1.2.6
 )
 
@@ -193,7 +193,7 @@ require (
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/api v0.32.3 // indirect
+	k8s.io/api v0.32.4 // indirect
 	k8s.io/apiextensions-apiserver v0.32.2 // indirect
 	k8s.io/apiserver v0.32.2 // indirect
 	k8s.io/component-base v0.32.2 // indirect
