@@ -91,14 +91,25 @@ func GetDeploymentsForDeploymentTarget(
 					AND dr.created_at = dr_max.max_created_at
 				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
+				-- Join the DeploymentRevision table again because we ALSO need the latest deployment revision for
+				-- which exists a status. Otherwise, the deployment is shown as "no status" after an update
+				LEFT JOIN (
+					SELECT deployment_id, max(created_at) AS max_created_at
+					FROM DeploymentRevision dr1
+					WHERE exists(SELECT id FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr1.id)
+					GROUP BY deployment_id
+				) dr_max_status ON d.id = dr_max_status.deployment_id
+				LEFT JOIN DeploymentRevision dr_status
+					ON d.id = dr_status.deployment_id
+					AND dr_status.created_at = dr_max_status.max_created_at
 				LEFT JOIN (
 					SELECT
 						dr1.id AS deployment_revision_id,
 						(SELECT max(created_at) FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr1.id) AS max_created_at
 					FROM DeploymentRevision dr1
-				) status_max ON dr.id = status_max.deployment_revision_id
+				) status_max ON dr_status.id = status_max.deployment_revision_id
 				LEFT JOIN DeploymentRevisionStatus drs
-					ON dr.id = drs.deployment_revision_id
+					ON dr_status.id = drs.deployment_revision_id
 					AND drs.created_at = status_max.max_created_at
 			WHERE d.deployment_target_id = @deploymentTargetId
 			ORDER BY d.created_at`,
