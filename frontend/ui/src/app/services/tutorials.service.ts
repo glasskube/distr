@@ -10,6 +10,7 @@ interface TutorialView {
   id: Tutorial;
   name: string;
   icon: IconDefinition;
+  description: string;
   progress?: TutorialProgress;
 }
 
@@ -26,16 +27,19 @@ export class TutorialsService {
       name: 'Branding and Customer Portal',
       id: 'branding',
       icon: this.faPalette,
+      description: 'Learn how to customize your Customer Portal for your own customers, and invite a new Customer.',
     },
     {
       name: 'Artifact Registry',
       id: 'registry',
       icon: this.faBox,
+      description: 'Set up your the registry for your organization and manage images with it.',
     },
     {
       name: 'Applications and Agents',
       id: 'agents',
       icon: this.faBoxesStacked,
+      description: 'Deploy a sample app and learn how to use release automation. ',
     },
   ];
 
