@@ -11,7 +11,12 @@ import {RelativeDatePipe} from '../../../util/dates';
 import {BytesPipe} from '../../../util/units';
 import {ClipComponent} from '../../components/clip.component';
 import {UuidComponent} from '../../components/uuid';
-import {ArtifactsService, ArtifactWithTags, TaggedArtifactVersion} from '../../services/artifacts.service';
+import {
+  ArtifactsService,
+  ArtifactWithTags,
+  HasDownloads,
+  TaggedArtifactVersion,
+} from '../../services/artifacts.service';
 import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
@@ -114,6 +119,22 @@ export class ArtifactVersionsComponent {
     } else {
       return url;
     }
+  }
+
+  protected calcVersionDownloads(version: TaggedArtifactVersion): HasDownloads {
+    let downloadsTotal = version.downloadsTotal ?? 0;
+    let downloadedBySet: {[id: string]: boolean} = {};
+    (version.downloadedByUsers ?? []).forEach((id: string) => (downloadedBySet[id] = true));
+    for (let tag of version.tags) {
+      (tag.downloads.downloadedByUsers ?? []).forEach((id: string) => (downloadedBySet[id] = true));
+      downloadsTotal = downloadsTotal + (tag.downloads.downloadsTotal ?? 0);
+    }
+    const downloadedByUsers = Object.keys(downloadedBySet);
+    return {
+      downloadsTotal,
+      downloadedByUsers,
+      downloadedByCount: downloadedByUsers.length,
+    };
   }
 
   protected readonly faWarning = faWarning;
