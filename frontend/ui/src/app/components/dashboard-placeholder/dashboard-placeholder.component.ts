@@ -1,10 +1,8 @@
 import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, inject, TemplateRef, ViewChild} from '@angular/core';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {AfterViewInit, Component, inject, OnDestroy, TemplateRef, ViewChild} from '@angular/core';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, first} from 'rxjs';
-import {ApplicationsComponent} from '../../applications/applications.component';
+import {combineLatest, first, map, Subject, takeUntil, withLatestFrom} from 'rxjs';
 import {DeploymentTargetsComponent} from '../../deployments/deployment-targets.component';
 import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
@@ -12,37 +10,57 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ChartTypeComponent} from '../charts/type/chart-type.component';
 import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
-import {GlobeComponent} from '../globe/globe.component';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 import {UsersService} from '../../services/users.service';
+import {ArtifactsService, ArtifactWithTags} from '../../services/artifacts.service';
+import {UserAccountWithRole} from '@glasskube/distr-sdk';
+import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-customer-card/artifacts-by-customer-card.component';
+
+interface ArtifactsByCustomer {
+  customer: UserAccountWithRole;
+  artifacts: ArtifactWithTags[];
+}
 
 @Component({
   selector: 'app-dashboard-placeholder',
   imports: [
-    ApplicationsComponent,
     DeploymentTargetsComponent,
-    GlobeComponent,
     AsyncPipe,
     OnboardingWizardComponent,
-    FaIconComponent,
     ChartUptimeComponent,
     ChartTypeComponent,
+    ArtifactsByCustomerCardComponent,
   ],
   templateUrl: './dashboard-placeholder.component.html',
 })
-export class DashboardPlaceholderComponent implements AfterViewInit {
+export class DashboardPlaceholderComponent implements AfterViewInit, OnDestroy {
+  private destoryed$ = new Subject<void>();
   private overlay = inject(OverlayService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   public readonly deploymentTargets$ = this.deploymentTargets.list();
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
   private readonly auth = inject(AuthService);
+  private readonly artifactsService = inject(ArtifactsService);
+  private readonly userService = inject(UsersService);
 
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
   private overlayRef?: DialogRef;
 
   protected readonly faPlus = faPlus;
+
+  protected readonly artifactsByCustomer$ = this.userService.getUsers().pipe(
+    takeUntil(this.destoryed$),
+    map(users => users.filter(u => u.userRole === 'customer')),
+    withLatestFrom(this.artifactsService.list()),
+    map(([customers, artifacts]) => {
+      return customers.map(customer => ({
+          customer,
+          artifacts: artifacts.filter(artifact => (artifact.downloadedByUsers ?? []).includes(customer?.id!))
+      } as ArtifactsByCustomer))
+    })
+  );
 
   ngAfterViewInit() {
     combineLatest([this.applications$])
@@ -53,6 +71,11 @@ export class DashboardPlaceholderComponent implements AfterViewInit {
           this.openWizard();
         }
       });
+  }
+
+  ngOnDestroy() {
+    this.destoryed$.next();
+    this.destoryed$.complete();
   }
 
   openWizard() {
