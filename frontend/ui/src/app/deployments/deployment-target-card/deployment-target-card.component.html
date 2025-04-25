@@ -23,13 +23,13 @@
           </div>
           <div class="flex flex-col items-start lg:flex-row lg:items-center lg:gap-2">
             <dl class="inline-flex gap-1 text-sm">
-              <dt class="text-gray-500 dark:text-gray-400">Created at:</dt>
+              <dt class="text-gray-500 dark:text-gray-400">Created:</dt>
               <dd>
                 {{ deploymentTarget().createdAt | date: 'short' }}
               </dd>
             </dl>
             <dl class="inline-flex gap-1 text-sm">
-              <dt class="text-gray-500 dark:text-gray-400">Managed by:</dt>
+              <dt class="text-gray-500 dark:text-gray-400">By:</dt>
               <dd>
                 {{ deploymentTarget().createdBy?.name ?? deploymentTarget().createdBy?.email }}
               </dd>
@@ -56,7 +56,7 @@
             (click)="openInstructionsModal()"
             class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
             <fa-icon [icon]="faLink" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-            Connection instructions
+            Connect
           </button>
         }
         <button
