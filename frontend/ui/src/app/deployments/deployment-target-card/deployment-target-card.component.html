@@ -62,11 +62,14 @@
         <button
           type="button"
           aria-label="More actions"
-          class="p-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+          class="relative p-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
           cdkOverlayOrigin
           #dropdownTrigger="cdkOverlayOrigin"
           (click)="showDeploymentTargetDropdown.set(true)">
           <fa-icon [icon]="faEllipsisVertical" class="h-5 w-5 text-gray-500 dark:text-gray-400"></fa-icon>
+          @if (agentUpdateAvailable() || agentUpdatePending()) {
+            <span class="rounded-full size-2 bg-blue-400 absolute -bottom-0.5 -right-0.5"></span>
+          }
         </button>
         <ng-template
           cdkConnectedOverlay
@@ -92,6 +95,25 @@
                   Edit
                 </button>
               </li>
+              @if (agentUpdateAvailable()) {
+                <li>
+                  <button
+                    type="button"
+                    (click)="showDeploymentTargetDropdown.set(false); updateDeploymentTargetAgent()"
+                    class="text-start block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                    <fa-icon [icon]="faRotate" class="inline-block w-4 mr-2 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Update Agent
+                  </button>
+                </li>
+              } @else if (agentUpdatePending()) {
+                <li>
+                  <span
+                    class="text-start block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                    <fa-icon [icon]="faRotate" class="inline-block w-4 mr-2 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Update pending&hellip;
+                  </span>
+                </li>
+              }
               @let status = deploymentTarget().currentStatus;
               @if (status && (status | isStale)) {
                 <li
