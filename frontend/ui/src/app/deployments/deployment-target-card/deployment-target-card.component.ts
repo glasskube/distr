@@ -9,6 +9,7 @@ import {
   faHeartPulse,
   faLink,
   faPen,
+  faRotate,
   faShip,
   faTrash,
   faTriangleExclamation,
@@ -88,6 +89,7 @@ export class DeploymentTargetCardComponent {
   protected readonly faTriangleExclamation = faTriangleExclamation;
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faRotate = faRotate;
 
   protected readonly showDeploymentTargetDropdown = signal(false);
   protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
@@ -116,6 +118,18 @@ export class DeploymentTargetCardComponent {
       return reported.name === 'snapshot';
     }
   });
+
+  protected readonly agentUpdateAvailable = computed(() => {
+    const agentVersions = this.agentVersions.value() ?? [];
+    return (
+      agentVersions.length > 0 &&
+      this.deploymentTarget().agentVersion?.id !== agentVersions[agentVersions.length - 1].id
+    );
+  });
+
+  protected readonly agentUpdatePending = computed(
+    () => this.deploymentTarget().agentVersion?.id !== this.deploymentTarget().reportedAgentVersionId
+  );
 
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
@@ -263,8 +277,9 @@ export class DeploymentTargetCardComponent {
     }
   }
 
-  public async updateDeploymentTargetAgent(dt: DeploymentTarget): Promise<void> {
+  public async updateDeploymentTargetAgent(): Promise<void> {
     try {
+      const dt = this.deploymentTarget();
       const agentVersions = this.agentVersions.value();
       if (agentVersions?.length) {
         const targetVersion = agentVersions[agentVersions.length - 1];
@@ -279,6 +294,7 @@ export class DeploymentTargetCardComponent {
       }
     } catch (e) {}
   }
+
   protected showModal(templateRef: TemplateRef<unknown>) {
     this.hideModal();
     this.modal = this.overlay.showModal(templateRef, {
