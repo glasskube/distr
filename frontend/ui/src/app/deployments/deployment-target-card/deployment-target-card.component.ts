@@ -101,23 +101,8 @@ export class DeploymentTargetCardComponent {
     loader: () => firstValueFrom(this.agentVersionsSvc.list()),
   });
 
-  protected readonly isUndeploySupported = computed(() => {
-    if (!this.deploymentTarget().reportedAgentVersionId) {
-      console.warn('reported agent version id is empty');
-      return true;
-    }
-    const reported = this.agentVersions.value()?.find((it) => it.id === this.deploymentTarget().reportedAgentVersionId);
-    if (!reported) {
-      console.warn('agent version with id not found', this.deploymentTarget().reportedAgentVersionId);
-      return false;
-    }
-    try {
-      return reported.name === 'snapshot' || new SemVer(reported.name).compare('') >= 0;
-    } catch (e) {
-      console.warn(e);
-      return reported.name === 'snapshot';
-    }
-  });
+  protected readonly isUndeploySupported = this.isAgentVersionAtLeast('1.3.0');
+  protected readonly isMultiDeploymentSupported = this.isAgentVersionAtLeast('1.6.0');
 
   protected readonly agentUpdateAvailable = computed(() => {
     const agentVersions = this.agentVersions.value() ?? [];
@@ -131,10 +116,7 @@ export class DeploymentTargetCardComponent {
     () => this.deploymentTarget().agentVersion?.id !== this.deploymentTarget().reportedAgentVersionId
   );
 
-  private modal?: DialogRef;
-  private manageDeploymentTargetRef?: DialogRef;
-
-  readonly editForm = new FormGroup({
+  protected readonly editForm = new FormGroup({
     id: new FormControl<string | undefined>(undefined),
     name: new FormControl('', Validators.required),
     type: new FormControl<DeploymentType | undefined>({value: undefined, disabled: true}, Validators.required),
@@ -145,7 +127,10 @@ export class DeploymentTargetCardComponent {
     namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
     scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
   });
-  editFormLoading = false;
+  protected editFormLoading = false;
+
+  private modal?: DialogRef;
+  private manageDeploymentTargetRef?: DialogRef;
 
   protected async showDeploymentModal(deployment?: DeploymentWithLatestRevision) {
     this.selectedDeploymentTarget.set(this.deploymentTarget());
@@ -320,5 +305,27 @@ export class DeploymentTargetCardComponent {
   private resetEditForm() {
     this.editForm.reset();
     this.editForm.patchValue({type: 'docker'});
+  }
+
+  private isAgentVersionAtLeast(version: string, allowSnapshot = true) {
+    return computed(() => {
+      if (!this.deploymentTarget().reportedAgentVersionId) {
+        console.warn('reported agent version id is empty');
+        return true;
+      }
+      const reported = this.agentVersions
+        .value()
+        ?.find((it) => it.id === this.deploymentTarget().reportedAgentVersionId);
+      if (!reported) {
+        console.warn('agent version with id not found', this.deploymentTarget().reportedAgentVersionId);
+        return false;
+      }
+      try {
+        return (allowSnapshot && reported.name === 'snapshot') || new SemVer(reported.name).compare(version) >= 0;
+      } catch (e) {
+        console.warn(e);
+        return allowSnapshot && reported.name === 'snapshot';
+      }
+    });
   }
 }
