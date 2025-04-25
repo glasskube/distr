@@ -179,7 +179,16 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				av.created_at,
 				av.manifest_blob_digest,
 				coalesce((
-					SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
+					SELECT array_agg(row (avt.id, avt.name, (
+						SELECT ROW(
+							count(distinct avplx.id),
+							count(DISTINCT avplx.useraccount_id),
+							coalesce(array_agg(DISTINCT avplx.useraccount_id)
+									 FILTER (WHERE avplx.useraccount_id IS NOT NULL), ARRAY[]::UUID[])
+						)
+						FROM ArtifactVersionPull avplx WHERE avplx.artifact_version_id = avt.id
+						)) ORDER BY avt.name
+					)
 					FROM ArtifactVersion avt
 					WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 					AND avt.artifact_id = av.artifact_id
