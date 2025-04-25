@@ -324,22 +324,12 @@ func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error 
 
 func UpdateUserAccountImage(ctx context.Context, userAccount *types.UserAccountWithUserRole, imageID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		`UPDATE UserAccount as u SET image_id = @imageId WHERE id = @id RETURNING `+userAccountOutputExpr,
-		pgx.NamedArgs{
-			"imageId": imageID,
-			"id":      userAccount.ID,
-		},
+	row := db.QueryRow(ctx,
+		`UPDATE UserAccount SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": userAccount.ID},
 	)
-	if err != nil {
-		return fmt.Errorf("could not query users: %w", err)
-	} else if updated, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return apierrors.ErrNotFound
-		}
-		return fmt.Errorf("could not update user imageID: %w", err)
-	} else {
-		userAccount.ImageID = updated.ImageID
-		return nil
+	if err := row.Scan(&userAccount.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to user account: %w", err)
 	}
+	return nil
 }

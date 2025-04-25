@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/glasskube/distr/api"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
@@ -75,18 +78,11 @@ func createFileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if err := db.CreateFile(ctx, *auth.CurrentOrgID(), file); err != nil {
 		log.Warn("error uploading file", zap.Error(err))
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
-		} else if errors.Is(err, apierrors.ErrConflict) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, file.ID)
 	}
-
 }
 
 func getFileFromRequest(r *http.Request) (*types.File, error) {
@@ -140,4 +136,35 @@ func fileMiddleware(h http.Handler) http.Handler {
 			}
 		}
 	})
+}
+
+func patchImageHandler(patchImage func(ctx context.Context, body api.PatchImageRequest) (any, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+
+		body, err := JsonBody[api.PatchImageRequest](w, r)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		} else if body.ImageID == uuid.Nil {
+			http.Error(w, "imageId can not be empty", http.StatusBadRequest)
+			return
+		}
+
+		if result, err := patchImage(ctx, body); err != nil {
+			log.Warn("error patching image id", zap.Error(err))
+			if errors.Is(err, apierrors.ErrNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+			} else if errors.Is(err, apierrors.ErrConflict) {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			} else {
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			RespondJSON(w, result)
+		}
+	}
 }

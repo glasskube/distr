@@ -29,7 +29,7 @@ type UserAccountWithUserRole struct {
 	PasswordHash    []byte     `db:"password_hash" json:"-"`
 	PasswordSalt    []byte     `db:"password_salt" json:"-"`
 	Name            string     `db:"name" json:"name,omitempty"`
-	ImageID         *uuid.UUID `db:"image_id" json:"imageId,omitempty"`
+	ImageID         *uuid.UUID `db:"image_id" json:"-"`
 	UserRole        UserRole   `db:"user_role" json:"userRole"` // not copy+pasted
 	Password        string     `db:"-" json:"-"`
 	// Remember to update AsUserAccount when adding fields!

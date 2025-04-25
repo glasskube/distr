@@ -8,14 +8,11 @@ import {map, Observable, of} from 'rxjs';
 })
 export class SecureImagePipe implements PipeTransform {
   private readonly httpClient = inject(HttpClient);
-  private readonly domSanitizer = inject(DomSanitizer);
 
   transform(url?: string): Observable<SafeUrl> {
     if (!url || !url.length) {
       return of('/distr-logo.svg');
     }
-    return this.httpClient
-      .get(url, {responseType: 'blob'})
-      .pipe(map((val) => this.domSanitizer.bypassSecurityTrustUrl(URL.createObjectURL(val))));
+    return this.httpClient.get(url, {responseType: 'blob'}).pipe(map((val) => URL.createObjectURL(val)));
   }
 }

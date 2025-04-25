@@ -30,7 +30,7 @@ func UserAccountsRouter(r chi.Router) {
 		r.Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
 			r.Delete("/", deleteUserAccountHandler)
-			r.Patch("/image", patchImageUserAccountHandler)
+			r.Patch("/image", patchImageUserAccount)
 		})
 	})
 	r.Get("/status", getUserAccountStatusHandler)
@@ -154,35 +154,14 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func patchImageUserAccountHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
-	userAccount := internalctx.GetUserAccount(ctx)
-
-	body, err := JsonBody[api.PatchImageRequest](w, r)
-	if err != nil {
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if body.ImageID == uuid.Nil {
-		http.Error(w, "imageId can not be empty for user", http.StatusBadRequest)
-		return
-	}
-
-	if err := db.UpdateUserAccountImage(ctx, userAccount, body.ImageID); err != nil {
-		log.Warn("error patching user image id", zap.Error(err))
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
-		} else if errors.Is(err, apierrors.ErrConflict) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+var patchImageUserAccount = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
+	user := internalctx.GetUserAccount(ctx)
+	if err := db.UpdateUserAccountImage(ctx, user, body.ImageID); err != nil {
+		return nil, err
 	} else {
-		RespondJSON(w, api.AsUserAccount(userAccount))
+		return api.AsUserAccount(user), nil
 	}
-}
+})
 
 func userAccountMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

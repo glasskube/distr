@@ -33,7 +33,7 @@ func ApplicationsRouter(r chi.Router) {
 			r.Get("/", getApplication)
 			r.With(requireUserRoleVendor).Delete("/", deleteApplication)
 			r.With(requireUserRoleVendor).Put("/", updateApplication)
-			r.With(requireUserRoleVendor).Patch("/image", patchImageApplicationHandler)
+			r.With(requireUserRoleVendor).Patch("/image", patchImageApplication)
 		})
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
@@ -107,7 +107,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	// there surely is some way to have the update command returning the versions too, but I don't think it's worth
 	// the work right now
 	application.Versions = existing.Versions
-	if err := json.NewEncoder(w).Encode(application); err != nil {
+	if err := json.NewEncoder(w).Encode(api.AsApplication(&application)); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
@@ -389,36 +389,14 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func patchImageApplicationHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
+var patchImageApplication = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
 	application := internalctx.GetApplication(ctx)
-
-	body, err := JsonBody[api.PatchImageRequest](w, r)
-
-	if err != nil {
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if body.ImageID == uuid.Nil {
-		http.Error(w, "imageId can not be empty for application", http.StatusBadRequest)
-		return
-	}
-
 	if err := db.UpdateApplicationImage(ctx, application, body.ImageID); err != nil {
-		log.Warn("error patching user image id", zap.Error(err))
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
-		} else if errors.Is(err, apierrors.ErrConflict) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		return nil, err
 	} else {
-		RespondJSON(w, api.AsApplication(application))
+		return api.AsApplication(application), nil
 	}
-}
+})
 
 func applicationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,8 +1,8 @@
 import {AnimationEvent} from '@angular/animations';
-import {Component, HostBinding, HostListener, inject, OnInit, signal} from '@angular/core';
+import {Component, HostBinding, HostListener, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom, lastValueFrom, map, Observable, Subject} from 'rxjs';
+import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
 import {DialogRef, OverlayData} from '../../services/overlay.service';
 import {AsyncPipe} from '@angular/common';
@@ -20,24 +20,25 @@ export interface ImageUploadContext {
   templateUrl: './image-upload-dialog.component.html',
   animations: [modalFlyInOut],
 })
-export class ImageUploadDialogComponent implements OnInit {
+export class ImageUploadDialogComponent implements OnInit, OnDestroy {
   public readonly faXmark = faXmark;
   public readonly dialogRef = inject(DialogRef) as DialogRef<string>;
   public readonly data = inject(OverlayData) as ImageUploadContext;
   private readonly animationComplete$ = new Subject<void>();
-
+  private readonly destroyed$ = new Subject<void>();
   private toast = inject(ToastService);
-  private files = inject(FilesService);
 
+  private files = inject(FilesService);
   protected readonly form = new FormGroup({
     image: new FormControl<Blob | null>(null, Validators.required),
   });
 
   formLoading = signal(false);
+
   protected readonly imageSrc: Observable<string | null> = this.form.controls.image.valueChanges.pipe(
+    takeUntil(this.destroyed$),
     map((image) => (image ? URL.createObjectURL(image) : null))
   );
-
   @HostBinding('@modalFlyInOut') public animationState = 'visible';
 
   @HostListener('@modalFlyInOut.done', ['$event']) onAnimationComplete(event: AnimationEvent) {
@@ -60,6 +61,11 @@ export class ImageUploadDialogComponent implements OnInit {
 
   deleteImage() {
     this.form.patchValue({image: null});
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   async save() {

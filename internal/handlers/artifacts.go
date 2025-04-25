@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -57,36 +58,14 @@ func getArtifact(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, api.AsArtifact(internalctx.GetArtifact(ctx)))
 }
 
-func patchImageArtifactHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
+var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
 	artifact := internalctx.GetArtifact(ctx)
-
-	body, err := JsonBody[api.PatchImageRequest](w, r)
-
-	if err != nil {
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if body.ImageID == uuid.Nil {
-		http.Error(w, "imageId can not be empty for artifact", http.StatusBadRequest)
-		return
-	}
-
 	if err := db.UpdateArtifactImage(ctx, artifact, body.ImageID); err != nil {
-		log.Warn("error patching user artifact id", zap.Error(err))
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
-		} else if errors.Is(err, apierrors.ErrConflict) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		return nil, err
 	} else {
-		RespondJSON(w, api.AsArtifact(artifact))
+		return api.AsArtifact(artifact), nil
 	}
-}
+})
 
 func artifactMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

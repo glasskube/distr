@@ -677,22 +677,12 @@ func GetArtifactVersionPulls(
 
 func UpdateArtifactImage(ctx context.Context, artifact *types.ArtifactWithTaggedVersion, imageID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		`UPDATE Artifact as a SET image_id = @imageId WHERE id = @id RETURNING `+artifactOutputExpr,
-		pgx.NamedArgs{
-			"imageId": imageID,
-			"id":      artifact.ID,
-		},
+	row := db.QueryRow(ctx,
+		`UPDATE Artifact SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": artifact.ID},
 	)
-	if err != nil {
-		return fmt.Errorf("could not query artifacts: %w", err)
-	} else if updated, err := pgx.CollectExactlyOneRow[types.Artifact](rows, pgx.RowToStructByName); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return apierrors.ErrNotFound
-		}
-		return fmt.Errorf("could not update artifact imageID: %w", err)
-	} else {
-		artifact.ImageID = updated.ImageID
-		return nil
+	if err := row.Scan(&artifact.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to artifact: %w", err)
 	}
+	return nil
 }

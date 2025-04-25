@@ -304,22 +304,12 @@ func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) 
 
 func UpdateApplicationImage(ctx context.Context, application *types.Application, imageID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		`UPDATE Application as a SET image_id = @imageId WHERE id = @id RETURNING *`,
-		pgx.NamedArgs{
-			"imageId": imageID,
-			"id":      application.ID,
-		},
+	row := db.QueryRow(ctx,
+		`UPDATE Application SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": application.ID},
 	)
-	if err != nil {
-		return fmt.Errorf("could not query applications: %w", err)
-	} else if updated, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.Application]); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return apierrors.ErrNotFound
-		}
-		return fmt.Errorf("could not update application imageID: %w", err)
-	} else {
-		application.ImageID = updated.ImageID
-		return nil
+	if err := row.Scan(&application.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to application: %w", err)
 	}
+	return nil
 }
