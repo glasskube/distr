@@ -14,9 +14,17 @@ type Artifact struct {
 	ImageID        *uuid.UUID `db:"image_id" json:"-"`
 }
 
+type DownloadMetrics struct {
+	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
+	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
+	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
+}
+
 type ArtifactVersionTag struct {
 	ID   uuid.UUID `db:"id" json:"id"`
 	Name string    `db:"name" json:"name"`
+
+	Downloads DownloadMetrics `json:"downloads"`
 }
 
 type TaggedArtifactVersion struct {

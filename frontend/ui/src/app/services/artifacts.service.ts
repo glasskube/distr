@@ -51,7 +51,7 @@ export interface TaggedArtifactVersion extends HasDownloads {
   sbom?: string;
   createdAt: string;
   size: number;
-  tags: {name: string}[];
+  tags: {name: string; downloads: HasDownloads}[];
   vulnerabilities: Vulnerability[];
   lastScannedAt?: string;
   imageUrl?: string;
