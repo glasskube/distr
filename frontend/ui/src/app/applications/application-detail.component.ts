@@ -43,7 +43,6 @@ import {dropdownAnimation} from '../animations/dropdown';
 import {OverlayService} from '../services/overlay.service';
 import {isArchived} from '../../util/dates';
 import {SecureImagePipe} from '../../util/secureImage';
-import {ArtifactWithTags} from '../services/artifacts.service';
 
 @Component({
   selector: 'app-application-detail',
