@@ -44,6 +44,7 @@ func (u *UserAccountWithUserRole) AsUserAccount() UserAccount {
 		PasswordHash:    slices.Clone(u.PasswordHash),
 		PasswordSalt:    slices.Clone(u.PasswordSalt),
 		Name:            u.Name,
+		ImageID:         u.ImageID,
 		Password:        u.Password,
 	}
 }
