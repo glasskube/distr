@@ -485,6 +485,11 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		}(); err != nil {
 			return err
 		}
+
+	}
+
+	if err := checkIncompatibleManifest(buf.Bytes()); err != nil {
+		return err
 	}
 
 	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
@@ -528,3 +533,15 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 // 	resp.WriteHeader(http.StatusAccepted)
 // 	return nil
 // }
+
+func checkIncompatibleManifest(data []byte) *regError {
+	var mf struct {
+		Blobs []any `json:"blobs"`
+	}
+	if err := json.Unmarshal(data, &mf); err != nil {
+		return regErrManifestInvalid(err)
+	} else if len(mf.Blobs) > 0 {
+		return regErrManifestInvalid(errors.New("non-compliant manifest with blobs entry detected"))
+	}
+	return nil
+}
