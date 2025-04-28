@@ -5,8 +5,7 @@ import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '@glasskube/distr-sdk';
-import {lastValueFrom} from 'rxjs';
-import {digestMessage} from '../../../util/crypto';
+import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
@@ -14,18 +13,23 @@ import {OrganizationBrandingService} from '../../services/organization-branding.
 import {SidebarService} from '../../services/sidebar.service';
 import {ToastService} from '../../services/toast.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
+import {UsersService} from '../../services/users.service';
+import {SecureImagePipe} from '../../../util/secureImage';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-nav-bar',
   standalone: true,
   templateUrl: './nav-bar.component.html',
-  imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent, RouterLink],
+  imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent, RouterLink, SecureImagePipe, AsyncPipe],
   animations: [dropdownAnimation],
 })
 export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
   public readonly sidebar = inject(SidebarService);
   private readonly toast = inject(ToastService);
+  private readonly users = inject(UsersService);
+
   private readonly organizationBranding = inject(OrganizationBrandingService);
   showDropdown = false;
   email?: string;
@@ -46,7 +50,7 @@ export class NavBarComponent implements OnInit {
         this.name = name;
         this.role = role;
         this.initBranding();
-        this.imageUrl = `https://www.gravatar.com/avatar/${await digestMessage(email)}`;
+        this.imageUrl = (await firstValueFrom(this.users.getUserByEmail(email))).imageUrl;
       }
     } catch (e) {
       console.error(e);

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/glasskube/distr/api"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -31,6 +33,7 @@ func ApplicationsRouter(r chi.Router) {
 			r.Get("/", getApplication)
 			r.With(requireUserRoleVendor).Delete("/", deleteApplication)
 			r.With(requireUserRoleVendor).Put("/", updateApplication)
+			r.With(requireUserRoleVendor).Patch("/image", patchImageApplication)
 		})
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
@@ -104,7 +107,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	// there surely is some way to have the update command returning the versions too, but I don't think it's worth
 	// the work right now
 	application.Versions = existing.Versions
-	if err := json.NewEncoder(w).Encode(application); err != nil {
+	if err := json.NewEncoder(w).Encode(api.AsApplication(application)); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
@@ -128,7 +131,7 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, applications)
+		RespondJSON(w, api.MapApplicationsToResponse(applications))
 	}
 }
 
@@ -151,12 +154,11 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			} else {
-				RespondJSON(w, application)
+				RespondJSON(w, api.AsApplication(*application))
 			}
 		}
-
 	} else {
-		RespondJSON(w, internalctx.GetApplication(ctx))
+		RespondJSON(w, api.AsApplication(*internalctx.GetApplication(ctx)))
 	}
 }
 
@@ -386,6 +388,15 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+var patchImageApplication = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
+	application := internalctx.GetApplication(ctx)
+	if err := db.UpdateApplicationImage(ctx, application, body.ImageID); err != nil {
+		return nil, err
+	} else {
+		return api.AsApplication(*application), nil
+	}
+})
 
 func applicationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

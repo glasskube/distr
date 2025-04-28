@@ -1,10 +1,18 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, inject, Input, OnDestroy, OnInit, TemplateRef} from '@angular/core';
+import {Component, inject, Input, OnDestroy, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBoxArchive, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {catchError, EMPTY, filter, lastValueFrom, Observable, Subject, switchMap, takeUntil} from 'rxjs';
+import {
+  faBox,
+  faBoxArchive,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
+import {lastValueFrom, Observable, Subject, takeUntil} from 'rxjs';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
@@ -18,6 +26,7 @@ import {Application, DeploymentType} from '@glasskube/distr-sdk';
 import {UuidComponent} from '../components/uuid';
 import {RequireRoleDirective} from '../directives/required-role.directive';
 import {Router, RouterLink} from '@angular/router';
+import {SecureImagePipe} from '../../util/secureImage';
 
 @Component({
   selector: 'app-applications',
@@ -32,11 +41,12 @@ import {Router, RouterLink} from '@angular/router';
     UuidComponent,
     RequireRoleDirective,
     RouterLink,
+    SecureImagePipe,
   ],
   templateUrl: './applications.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ApplicationsComponent implements OnInit, OnDestroy {
+export class ApplicationsComponent implements OnDestroy {
   @Input('fullVersion') fullVersion: boolean = false;
   private readonly router = inject(Router);
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
@@ -73,8 +83,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
-
-  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroyed$.next();
@@ -118,4 +126,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  protected readonly faBox = faBox;
 }

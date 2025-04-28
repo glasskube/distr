@@ -42,7 +42,7 @@
               #dropdownTrigger="cdkOverlayOrigin"
               (click)="showDropdown = !showDropdown">
               <span class="sr-only">Open user menu</span>
-              <img class="w-8 h-8 rounded-full" [src]="imageUrl" alt="user photo" />
+              <img class="w-8 h-8 rounded-full" [attr.src]="imageUrl | secureImage | async" alt="user photo" />
             </button>
           </div>
           <ng-template
