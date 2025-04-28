@@ -83,20 +83,16 @@
           <li class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg py-3 px-6 sm:py-4">
             <div class="flex items-center">
               @if (artifact.imageUrl) {
-                  <img
-                    [routerLink]="artifact.id"
-                    class="w-8 h-8 rounded-full cursor-pointer"
-                    [attr.src]="artifact.imageUrl | secureImage | async"
-                    alt="" />
-                } @else {
-                  <div class="shrink-0 text-gray-900 dark:text-gray-400">
-                    <fa-icon
-                      [routerLink]="artifact.id"
-                      [icon]="faBox"
-                      size="xl"
-                      class="text-xl cursor-pointer"></fa-icon>
-                  </div>
-                }
+                <img
+                  [routerLink]="artifact.id"
+                  class="w-8 h-8 rounded-full cursor-pointer"
+                  [attr.src]="artifact.imageUrl | secureImage | async"
+                  alt="" />
+              } @else {
+                <div class="shrink-0 text-gray-900 dark:text-gray-400">
+                  <fa-icon [routerLink]="artifact.id" [icon]="faBox" size="xl" class="text-xl cursor-pointer"></fa-icon>
+                </div>
+              }
               <div class="flex-1 min-w-0 ms-4">
                 <a
                   class="font-semibold text-gray-900 truncate dark:text-white hover:underline hover:text-blue-600 dark:hover:text-blue-500"
