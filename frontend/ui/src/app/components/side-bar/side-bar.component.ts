@@ -16,6 +16,7 @@ import {
   faLightbulb,
   faPalette,
   faServer,
+  faUserCheck,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
@@ -64,9 +65,9 @@ export class SideBarComponent {
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
   protected readonly agentsSubMenuOpen = signal(true);
+  protected readonly licenseSubMenuOpen = signal(true);
   protected readonly registrySubMenuOpen = signal(true);
-  protected readonly appLicenseOverlayOpen = signal(false);
-  protected readonly registryLicenseOverlayOpen = signal(false);
+  protected readonly licenseOverlayOpen = signal(false);
 
   constructor() {
     effect(() => {
@@ -79,4 +80,6 @@ export class SideBarComponent {
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);
   }
+
+  protected readonly faUserCheck = faUserCheck;
 }
