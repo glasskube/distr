@@ -5,18 +5,19 @@
         <app-tutorial-stepper #stepper class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
           <cdk-step label="Welcome" [stepControl]="welcomeFormGroup">
             <div class="px-20 py-8 w-full">
-              <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Applications and Agents</h3>
+              <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                Agents, Applications and Deployments
+              </h3>
 
               <div class="text-gray-900 dark:text-white mb-12">
                 <p>
-                  In this tutorial you will learn how to set up a Distr agent on your own machine and deploy a docker
-                  compose app with it.
+                  In this tutorial, you will learn how to set up the Distr agent deploy a Docker Compose app with it.
                 </p>
                 <p>
-                  We have prepared a sample app called
+                  We have already prepared a sample application called
                   <a href="https://github.com/glasskube/hello-distr" class="text-primary-600 underline" target="_blank"
                     >hello-distr</a
-                  >, that will be created in your Distr organization as soon as you start this tutorial.
+                  >.
                 </p>
               </div>
 
@@ -47,17 +48,23 @@
                       <fa-icon [icon]="faLightbulb"></fa-icon>
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Deploy hello-distr</h3>
-                    <p class="text-sm mt-2">Make sure to have docker installed on the target machine.</p>
-                    <p class="text-sm mt-2">
-                      If you are on Mac, please make sure to check
-                      <a
-                        href="https://distr.sh/docs/guides/distr-on-macos/"
-                        class="text-primary-600 underline"
-                        target="_blank"
-                        >this guide</a
-                      >
-                      first!
-                    </p>
+                    <div
+                      class="flex p-4 mb-2 mt-2 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-red-300 dark:text-red-600"
+                      role="alert">
+                      <fa-icon [icon]="faWarning" class="me-4"></fa-icon>
+                      <div>
+                        <p class="text-sm">
+                          If you are on Mac, please make sure to check
+                          <a
+                            href="https://distr.sh/docs/guides/distr-on-macos/"
+                            class="text-primary-600 underline"
+                            target="_blank"
+                            >this guide</a
+                          >
+                          first!
+                        </p>
+                      </div>
+                    </div>
                   </li>
                   <li class="mb-10 ms-8">
                     <span class="absolute flex items-center justify-center -start-2">

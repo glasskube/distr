@@ -8,12 +8,13 @@ import {
   faClipboardCheck,
   faLightbulb,
   faPalette,
+  faWarning,
 } from '@fortawesome/free-solid-svg-icons';
 import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
 import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
 import {Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faClipboard} from '@fortawesome/free-regular-svg-icons';
+import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -236,4 +237,6 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
 
   protected readonly faClipboard = faClipboard;
   protected readonly faClipboardCheck = faClipboardCheck;
+  protected readonly faCircleCheck = faCircleCheck;
+  protected readonly faWarning = faWarning;
 }

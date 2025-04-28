@@ -5,6 +5,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faArrowRight, faCheck, faLightbulb} from '@fortawesome/free-solid-svg-icons';
 import {TutorialsService} from '../services/tutorials.service';
 import {AsyncPipe} from '@angular/common';
+import {faCircle, faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 
 @Component({
   selector: 'app-tutorials',
@@ -20,4 +21,7 @@ export class TutorialsComponent {
   ngOnInit() {
     this.tutorialsService.refreshList();
   }
+
+  protected readonly faCircle = faCircle;
+  protected readonly faCircleCheck = faCircleCheck;
 }

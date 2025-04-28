@@ -24,22 +24,22 @@ export class TutorialsService {
 
   protected readonly tutorials: TutorialView[] = [
     {
-      name: 'Branding and Customer Portal',
-      id: 'branding',
-      icon: this.faPalette,
-      description: 'Learn how to customize your Customer Portal for your own customers, and invite a new Customer.',
-    },
-    {
       name: 'Artifact Registry',
       id: 'registry',
       icon: this.faBox,
-      description: 'Set up your the registry for your organization and manage images with it.',
+      description: 'Learn how to use the Distr registry to distribute OCI artifacts.',
     },
     {
-      name: 'Applications and Agents',
+      name: 'Agents, Applications and Deployments',
       id: 'agents',
       icon: this.faBoxesStacked,
-      description: 'Deploy a sample app and learn how to use release automation. ',
+      description: 'Learn how to integrate, deploy and monitor your applications with Distr.',
+    },
+    {
+      name: 'Invite your first customer',
+      id: 'branding',
+      icon: this.faPalette,
+      description: 'Create and customize your Customer Portal.',
     },
   ];
 

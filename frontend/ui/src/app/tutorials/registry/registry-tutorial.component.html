@@ -105,8 +105,8 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Login</h3>
                     <p class="text-sm mt-2">
-                      On your machine you have to log in to the Distr registry. To that end, you will create a personal
-                      access token, that authenticates you against the registry.
+                      You need to log in to the Distr registry to push and pull artifacts. To do this, you'll create a
+                      personal access token that authenticates you with the registry.
                     </p>
                   </li>
 
@@ -167,8 +167,8 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Login</h3>
                     <p class="mt-1 text-xs">
-                      Use the previously created Personal Access Token as password to log in to the registry with this
-                      command:
+                      Now we use the previously created Personal Access Token as password to log in to the registry with
+                      this command:
                     </p>
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       @let loginCmd =
@@ -224,7 +224,9 @@
                       <fa-icon [icon]="faLightbulb"></fa-icon>
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Manage Images</h3>
-                    <p class="text-sm mt-2">You are now ready to push and pull images stored in the Distr registry.</p>
+                    <p class="text-sm mt-2">
+                      You are now ready to push and pull images stored to and from the Distr registry.
+                    </p>
                   </li>
 
                   <li class="mb-10 ms-8">
@@ -234,7 +236,7 @@
                         [formControl]="usageFormGroup.controls.pullDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Pull hello-distr from Github Container Registry</h3>
+                    <h3 class="text-lg font-medium leading-tight">Pull hello-distr from GitHub Container Registry</h3>
                     <p class="mt-1 text-xs">
                       We have prepared three images for you, that all belong to the
                       <a
@@ -244,12 +246,14 @@
                         >hello-distr application</a
                       >. Pull them from the Github Container Registry to your machine's docker environment, with:
                     </p>
-                    @let pullCmd = 'docker pull ghcr.io/glasskube/hello-distr/backend:' + helloDistrTag;
+                    @let pullCmd =
+                      `docker pull ghcr.io/glasskube/hello-distr/proxy:${helloDistrTag}
+                      docker pull ghcr.io/glasskube/hello-distr/frontend:${helloDistrTag}
+                      docker pull ghcr.io/glasskube/hello-distr/backend:${helloDistrTag}`;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ pullCmd }}
                     </code>
-                    <app-clip class="mx-2" [clip]="pullCmd"></app-clip>
-                    <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
+                    <app-clip class="mx-2 text-end" [clip]="pullCmd"></app-clip>
                     @if (usageFormGroup.controls.pullDone.touched && usageFormGroup.controls.pullDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
                         Please mark this as checked when you are done with it.
@@ -267,19 +271,13 @@
                     <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
                     <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
                     @let tagCmd =
-                      'docker tag ghcr.io/glasskube/hello-distr/backend:' +
-                      helloDistrTag +
-                      ' ' +
-                      host +
-                      '/' +
-                      slug +
-                      '/hello-distr/backend:' +
-                      helloDistrTag;
+                      `docker tag ghcr.io/glasskube/hello-distr/proxy:${helloDistrTag} ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
+                      docker tag ghcr.io/glasskube/hello-distr/frontend:${helloDistrTag} ${host}/${slug}/hello-distr/frontend:${helloDistrTag}
+                      docker tag ghcr.io/glasskube/hello-distr/backend:${helloDistrTag} ${host}/${slug}/hello-distr/backend:${helloDistrTag}`;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ tagCmd }}
                     </code>
                     <app-clip class="mx-2" [clip]="tagCmd"></app-clip>
-                    <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                     @if (usageFormGroup.controls.tagDone.touched && usageFormGroup.controls.tagDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
                         Please mark this as checked when you are done with it.
@@ -295,12 +293,14 @@
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
-                    @let pushCmd = 'docker push ' + host + '/' + slug + '/hello-distr/backend:' + helloDistrTag;
+                    @let pushCmd =
+                      `docker push ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
+                      docker push ${host}/${slug}/hello-distr/frontend:${helloDistrTag}
+                      docker push ${host}/${slug}/hello-distr/backend:${helloDistrTag}`;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ pushCmd }}
                     </code>
                     <app-clip class="mx-2" [clip]="pushCmd"></app-clip>
-                    <p class="mt-2 text-xs">Do the same for hello-distr/proxy and hello-distr/frontend.</p>
                     @if (usageFormGroup.controls.pushDone.touched && usageFormGroup.controls.pushDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
                         Please mark this as checked when you are done with it.
@@ -317,7 +317,7 @@
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
                     <p class="mt-1 text-xs">Pull one of the pushed images:</p>
-                    @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/backend:' + helloDistrTag;
+                    @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/proxy:' + helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ exploreCmd }}
                     </code>

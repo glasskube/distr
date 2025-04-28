@@ -5,12 +5,14 @@
         <app-tutorial-stepper #stepper class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
           <cdk-step label="Welcome" [stepControl]="welcomeFormGroup">
             <div class="px-20 py-8 w-full">
-              <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Branding and Customer Portal</h3>
+              <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                Basic Branding for your Customer Portal
+              </h3>
 
               <div class="text-gray-900 dark:text-white mb-12">
                 <p>
-                  In this tutorial you will learn how to customize your Customer Portal for your own customers, and you
-                  will invite a new customer (which for tutorial purposes, will be you yourself).
+                  Before we can use the customer portal, we need to set it up. This tutorial will guide you through the
+                  process of setting up your Customer Portal and inviting a customer.
                 </p>
                 <p class="mt-8">
                   You can find additional resources on this topic in our
@@ -156,9 +158,8 @@
                     </p>
                     <p class="mt-1 text-xs">
                       You can either choose another one of your email addresses, but a lot of providers also support
-                      addresses in the form of username<b>+customer</b>&commat;provider.tld, i.e. you might be able to
-                      use {{ emailUsername }}<b>+customer</b>&commat;{{ emailDomain }} and receive it in the same
-                      mailbox.
+                      addresses in the form of username-customer&commat;provider.tld, i.e. you might be able to use
+                      {{ emailUsername }}-customer&commat;{{ emailDomain }} and receive it in the same mailbox.
                     </p>
                     <div class="mt-2 flex">
                       <input
