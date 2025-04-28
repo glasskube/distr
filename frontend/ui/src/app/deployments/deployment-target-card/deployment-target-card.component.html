@@ -386,7 +386,7 @@
           class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Status History: {{ deploymentTarget().name }}
-            @if (deploymentTarget().deployment; as deployment) {
+            @if (selectedDeployment(); as deployment) {
               ({{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }})
             }
           </h3>
