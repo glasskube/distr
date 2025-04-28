@@ -182,7 +182,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 					AgentDeployment: baseDeployment,
 					ComposeFile:     patchedComposeFile,
 					EnvFile:         deployment.EnvFileData,
-					DockerType:      *appVersion.Docker_Type,
+					DockerType:      *appVersion.DockerType,
 				}
 			}
 		} else {

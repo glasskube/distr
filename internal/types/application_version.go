@@ -16,7 +16,7 @@ type ApplicationVersion struct {
 	ArchivedAt    *time.Time     `db:"archived_at" json:"archivedAt,omitempty"`
 	Name          string         `db:"name" json:"name"`
 	ApplicationID uuid.UUID      `db:"application_id" json:"applicationId"`
-	Docker_Type   *DockerType    `db:"docker_type" json:"dockerType,omitempty"`
+	DockerType    *DockerType    `db:"docker_type" json:"dockerType,omitempty"`
 	ChartType     *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
 	ChartName     *string        `db:"chart_name" json:"chartName,omitempty"`
 	ChartUrl      *string        `db:"chart_url" json:"chartUrl,omitempty"`
@@ -61,9 +61,9 @@ func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err err
 func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 	switch deplType {
 	case DeploymentTypeDocker:
-		if av.Docker_Type == nil || *av.Docker_Type == "" {
+		if av.DockerType == nil || *av.DockerType == "" {
 			return errors.New("missing docker type")
-		} else if *av.Docker_Type == DockerTypeCompose && av.ComposeFileData == nil {
+		} else if av.ComposeFileData == nil {
 			return errors.New("missing compose file for compose deployment")
 		} else if av.ChartType != nil || av.ChartName != nil || av.ChartUrl != nil || av.ChartVersion != nil ||
 			av.ValuesFileData != nil {

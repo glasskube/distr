@@ -116,7 +116,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         validators: Validators.required,
       }),
       compose: new FormControl(''),
-      swarm: new FormControl(''),
       template: new FormControl(''),
     }),
   });

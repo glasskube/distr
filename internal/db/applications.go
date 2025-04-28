@@ -210,10 +210,6 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.U
 }
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
-	// defaultDockerType := DockerTypeCompose
-	// av.Docker_Type = &defaultDockerType
-	fmt.Println("----------------->>>>>>>>>>>>", applicationVersion.Docker_Type)
-
 	db := internalctx.GetDb(ctx)
 
 	args := pgx.NamedArgs{
@@ -223,7 +219,7 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 		"chartName":     applicationVersion.ChartName,
 		"chartUrl":      applicationVersion.ChartUrl,
 		"chartVersion":  applicationVersion.ChartVersion,
-		"dockerType":    applicationVersion.Docker_Type,
+		"dockerType":    applicationVersion.DockerType,
 	}
 	if applicationVersion.ComposeFileData != nil {
 		args["composeFileData"] = applicationVersion.ComposeFileData
@@ -270,7 +266,7 @@ func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.App
 			"id":         applicationVersion.ID,
 			"name":       applicationVersion.Name,
 			"archivedAt": applicationVersion.ArchivedAt,
-			"dockerType": applicationVersion.Docker_Type,
+			"dockerType": applicationVersion.DockerType,
 		})
 	if err != nil {
 		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
