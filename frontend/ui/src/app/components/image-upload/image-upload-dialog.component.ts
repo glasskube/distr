@@ -73,11 +73,11 @@ export class ImageUploadDialogComponent implements OnInit, OnDestroy {
     if (this.form.valid) {
       this.formLoading.set(true);
       const formData = new FormData();
-      formData.set('file', this.form.value.image ? (this.form.value.image as File) : '');
+      formData.set('file', this.form.value.image as File);
 
       try {
         let uploadResult = this.files.uploadFile(formData);
-        this.dialogRef.close(await lastValueFrom(uploadResult));
+        await this.dialogRef.close(await lastValueFrom(uploadResult));
         this.toast.success('Image saved successfully');
       } catch (e) {
         const msg = getFormDisplayedError(e);
