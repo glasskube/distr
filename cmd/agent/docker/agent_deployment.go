@@ -16,7 +16,7 @@ type AgentDeployment struct {
 	ID          uuid.UUID        `json:"id"`
 	RevisionID  uuid.UUID        `json:"revisionId"`
 	ProjectName string           `json:"projectName"`
-	DockerType  types.DockerType `json:"docker_type"`
+	DockerType  types.DockerType `json:"docker_type,omitempty"`
 }
 
 func (d *AgentDeployment) FileName() string {

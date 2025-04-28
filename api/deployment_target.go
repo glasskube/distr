@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 
+	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
@@ -14,13 +15,14 @@ type DeploymentTargetAccessTokenResponse struct {
 }
 
 type DeploymentRequest struct {
-	DeploymentID         *uuid.UUID `json:"deploymentId"`
-	DeploymentTargetID   uuid.UUID  `json:"deploymentTargetId"`
-	ApplicationVersionID uuid.UUID  `json:"applicationVersionId"`
-	ApplicationLicenseID *uuid.UUID `json:"applicationLicenseId"`
-	ReleaseName          *string    `json:"releaseName"`
-	ValuesYaml           []byte     `json:"valuesYaml"`
-	EnvFileData          []byte     `json:"envFileData"`
+	DeploymentID         *uuid.UUID        `json:"deploymentId"`
+	DeploymentTargetID   uuid.UUID         `json:"deploymentTargetId"`
+	ApplicationVersionID uuid.UUID         `json:"applicationVersionId"`
+	ApplicationLicenseID *uuid.UUID        `json:"applicationLicenseId"`
+	ReleaseName          *string           `json:"releaseName"`
+	ValuesYaml           []byte            `json:"valuesYaml"`
+	DockerType           *types.DockerType `json:"dockerType"`
+	EnvFileData          []byte            `json:"envFileData"`
 }
 
 func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {
