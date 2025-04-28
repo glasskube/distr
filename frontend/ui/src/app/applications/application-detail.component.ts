@@ -142,7 +142,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
-    
+
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -158,10 +158,8 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       .subscribe((type) => {
         if (type === 'compose') {
           this.newVersionForm.controls.docker.controls.compose.enable();
-        
         } else {
           this.newVersionForm.controls.docker.controls.compose.disable();
-          
         }
       });
   }
@@ -221,8 +219,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
             dockerType: this.newVersionForm.controls.docker.controls.dockerType.value!,
           },
           this.newVersionForm.controls.docker.controls.compose.value!,
-          this.newVersionForm.controls.docker.controls.template.value!,
-        
+          this.newVersionForm.controls.docker.controls.template.value!
         );
       } else {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;

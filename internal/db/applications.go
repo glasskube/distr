@@ -238,10 +238,11 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	row, err := db.Query(ctx,
 		`INSERT INTO ApplicationVersion AS av (name, application_id, chart_type, chart_name, chart_url, chart_version,
 				docker_type, compose_file_data, values_file_data, template_file_data)
-			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @dockerType, @composeFileData::bytea,
-				@valuesFileData::bytea, @templateFileData::bytea)
+			VALUES (@name, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @dockerType,
+				@composeFileData::bytea, @valuesFileData::bytea, @templateFileData::bytea)
 			RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url,
-				av.chart_version, av.docker_type, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+				av.chart_version, av.docker_type, av.values_file_data, av.template_file_data, av.compose_file_data,
+				av.application_id`,
 		args)
 	if err != nil {
 		return fmt.Errorf("can not create ApplicationVersion: %w", err)

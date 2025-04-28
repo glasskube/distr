@@ -31,7 +31,12 @@ func NewAgentDeployment(deployment api.DockerAgentDeployment) (*AgentDeployment,
 	if name, err := getProjectName(deployment.ComposeFile); err != nil {
 		return nil, err
 	} else {
-		return &AgentDeployment{ID: deployment.ID, RevisionID: deployment.RevisionID, ProjectName: name, DockerType: deployment.DockerType}, nil
+		return &AgentDeployment{
+			ID:          deployment.ID,
+			RevisionID:  deployment.RevisionID,
+			ProjectName: name,
+			DockerType:  deployment.DockerType,
+		}, nil
 	}
 }
 
