@@ -6,6 +6,7 @@ import {UsersService} from '../services/users.service';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {catchError, NEVER, switchMap, zip} from 'rxjs';
 import {AsyncPipe} from '@angular/common';
+import {SecureImagePipe} from '../../util/secureImage';
 
 @Component({
   selector: 'app-artifacts-download-count',
@@ -30,7 +31,7 @@ export class ArtifactsDownloadCountComponent {
       @for (user of downloadedBy$ | async; track user.id) {
         <img
           class="size-8 border-2 border-white rounded-full dark:border-gray-800 transition-all duration-100 ease-in-out"
-          [src]="user.gravatar"
+          [attr.src]="user.imageUrl | secureImage | async"
           [title]="user.name ?? user.email" />
       }
       @if ((source().downloadedByCount ?? 0) - (source().downloadedByUsers ?? []).length; as count) {
@@ -43,17 +44,17 @@ export class ArtifactsDownloadCountComponent {
       }
     </div>
   `,
-  imports: [AsyncPipe],
+  imports: [AsyncPipe, SecureImagePipe],
 })
 export class ArtifactsDownloadedByComponent {
   public readonly source = input.required<HasDownloads>();
   private readonly usersService = inject(UsersService);
   public readonly downloadedBy$ = toObservable(this.source).pipe(
     switchMap((dl) => {
-      const gravatarObservables = (dl.downloadedByUsers ?? []).map((id) =>
-        this.usersService.getUserWithGravatarUrl(id).pipe(catchError(() => NEVER))
+      const userObservables = (dl.downloadedByUsers ?? []).map((id) =>
+        this.usersService.getUser(id).pipe(catchError(() => NEVER))
       );
-      return zip(...gravatarObservables);
+      return zip(...userObservables);
     })
   );
 }

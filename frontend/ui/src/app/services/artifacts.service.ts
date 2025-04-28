@@ -1,10 +1,7 @@
-import {inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {map, Observable, of, switchMap, tap} from 'rxjs';
-import {digestMessage} from '../../util/crypto';
-import {AuthService} from './auth.service';
 import {HttpClient} from '@angular/common/http';
 import {DefaultReactiveList, ReactiveList} from './cache';
-import {UserAccountWithRole} from '../../../../../sdk/js/src';
 
 export interface HasDownloads {
   downloadsTotal?: number;
