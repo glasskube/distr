@@ -55,7 +55,7 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 
 func getArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	RespondJSON(w, api.AsArtifact(internalctx.GetArtifact(ctx)))
+	RespondJSON(w, api.AsArtifact(*internalctx.GetArtifact(ctx)))
 }
 
 var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
@@ -63,7 +63,7 @@ var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body
 	if err := db.UpdateArtifactImage(ctx, artifact, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsArtifact(artifact), nil
+		return api.AsArtifact(*artifact), nil
 	}
 })
 

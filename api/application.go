@@ -7,9 +7,9 @@ type ApplicationResponse struct {
 	ImageUrl string `json:"imageUrl"`
 }
 
-func AsApplication(a *types.Application) ApplicationResponse {
+func AsApplication(a types.Application) ApplicationResponse {
 	return ApplicationResponse{
-		Application: *a,
+		Application: a,
 		ImageUrl:    WithImageUrl(a.ImageID),
 	}
 }
@@ -19,9 +19,9 @@ type ApplicationsResponse struct {
 	ImageUrl string `json:"imageUrl"`
 }
 
-func AsApplications(a *types.Application) ApplicationsResponse {
+func AsApplications(a types.Application) ApplicationsResponse {
 	return ApplicationsResponse{
-		Application: *a,
+		Application: a,
 		ImageUrl:    WithImageUrl(a.ImageID),
 	}
 }
@@ -29,7 +29,7 @@ func AsApplications(a *types.Application) ApplicationsResponse {
 func MapApplicationsToResponse(applications []types.Application) []ApplicationsResponse {
 	result := make([]ApplicationsResponse, len(applications))
 	for i, a := range applications {
-		result[i] = AsApplications(&a)
+		result[i] = AsApplications(a)
 	}
 	return result
 }

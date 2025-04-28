@@ -107,7 +107,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	// there surely is some way to have the update command returning the versions too, but I don't think it's worth
 	// the work right now
 	application.Versions = existing.Versions
-	if err := json.NewEncoder(w).Encode(api.AsApplication(&application)); err != nil {
+	if err := json.NewEncoder(w).Encode(api.AsApplication(application)); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
 	}
 }
@@ -154,11 +154,11 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			} else {
-				RespondJSON(w, api.AsApplication(application))
+				RespondJSON(w, api.AsApplication(*application))
 			}
 		}
 	} else {
-		RespondJSON(w, api.AsApplication(internalctx.GetApplication(ctx)))
+		RespondJSON(w, api.AsApplication(*internalctx.GetApplication(ctx)))
 	}
 }
 
@@ -394,7 +394,7 @@ var patchImageApplication = patchImageHandler(func(ctx context.Context, body api
 	if err := db.UpdateApplicationImage(ctx, application, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsApplication(application), nil
+		return api.AsApplication(*application), nil
 	}
 })
 

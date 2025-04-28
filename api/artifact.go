@@ -7,9 +7,9 @@ type ArtifactResponse struct {
 	ImageUrl string `json:"imageUrl"`
 }
 
-func AsArtifact(a *types.ArtifactWithTaggedVersion) ArtifactResponse {
+func AsArtifact(a types.ArtifactWithTaggedVersion) ArtifactResponse {
 	return ArtifactResponse{
-		ArtifactWithTaggedVersion: *a,
+		ArtifactWithTaggedVersion: a,
 		ImageUrl:                  WithImageUrl(a.ImageID),
 	}
 }
@@ -19,9 +19,9 @@ type ArtifactsResponse struct {
 	ImageUrl string `json:"imageUrl"`
 }
 
-func AsArtifacts(a *types.ArtifactWithDownloads) ArtifactsResponse {
+func AsArtifacts(a types.ArtifactWithDownloads) ArtifactsResponse {
 	return ArtifactsResponse{
-		ArtifactWithDownloads: *a,
+		ArtifactWithDownloads: a,
 		ImageUrl:              WithImageUrl(a.ImageID),
 	}
 }
@@ -29,7 +29,7 @@ func AsArtifacts(a *types.ArtifactWithDownloads) ArtifactsResponse {
 func MapArtifactsToResponse(artifacts []types.ArtifactWithDownloads) []ArtifactsResponse {
 	result := make([]ArtifactsResponse, len(artifacts))
 	for i, a := range artifacts {
-		result[i] = AsArtifacts(&a)
+		result[i] = AsArtifacts(a)
 	}
 	return result
 }

@@ -159,7 +159,7 @@ var patchImageUserAccount = patchImageHandler(func(ctx context.Context, body api
 	if err := db.UpdateUserAccountImage(ctx, user, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsUserAccount(user), nil
+		return api.AsUserAccount(*user), nil
 	}
 })
 
