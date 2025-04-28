@@ -24,7 +24,7 @@ import (
 )
 
 func DeploymentTargetsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getDeploymentTargets)
 	r.Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
@@ -56,10 +56,7 @@ func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 
 func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	dt := internalctx.GetDeploymentTarget(r.Context())
-	err := json.NewEncoder(w).Encode(dt)
-	if err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-	}
+	RespondJSON(w, dt)
 }
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
@@ -223,7 +220,7 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get DeploymentTarget", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {

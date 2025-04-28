@@ -16,12 +16,11 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
 func ApplicationLicensesRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
 	r.With(requireUserRoleVendor).Post("/", createApplicationLicense)
 	r.Route("/{applicationLicenseId}", func(r chi.Router) {
@@ -45,7 +44,7 @@ func createApplicationLicense(w http.ResponseWriter, r *http.Request) {
 
 	sanitizeRegistryInput(license)
 
-	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.CreateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "A license with this name already exists", http.StatusBadRequest)
 			return err
@@ -102,7 +101,7 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	}
 	sanitizeRegistryInput(license)
 
-	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.UpdateApplicationLicense(ctx, &license.ApplicationLicenseBase); errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, "A license with this name already exists", http.StatusBadRequest)
 			return err
@@ -243,7 +242,7 @@ func applicationLicenseMiddleware(next http.Handler) http.Handler {
 		} else if license, err := db.GetApplicationLicenseByID(ctx, licenseId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get license", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get license", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if !canSeeLicense(auth, license) {

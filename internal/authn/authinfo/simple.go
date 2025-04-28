@@ -31,3 +31,24 @@ func (i *SimpleAuthInfo) CurrentUserRole() *types.UserRole { return i.userRole }
 
 // Token implements AuthInfo.
 func (i *SimpleAuthInfo) Token() any { return i.rawToken }
+
+type SimpleAgentAuthInfo struct {
+	deploymentTargetID uuid.UUID
+	organizationID     uuid.UUID
+	rawToken           any
+}
+
+// CurrentDeploymentTargetID implements AgentAuthInfo.
+func (i *SimpleAgentAuthInfo) CurrentDeploymentTargetID() uuid.UUID {
+	return i.deploymentTargetID
+}
+
+// CurrentOrgID implements AgentAuthInfo.
+func (i *SimpleAgentAuthInfo) CurrentOrgID() uuid.UUID {
+	return i.organizationID
+}
+
+// Token implements AgentAuthInfo.
+func (i *SimpleAgentAuthInfo) Token() any {
+	return i.rawToken
+}

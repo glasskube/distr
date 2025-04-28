@@ -23,6 +23,7 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
 import {ToastService} from '../../services/toast.service';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
+import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -54,7 +55,17 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   readonly deploymentTargetForm = new FormGroup({
     type: new FormControl<DeploymentType>('docker', Validators.required),
     name: new FormControl('', Validators.required),
-    namespace: new FormControl({value: '', disabled: true}, {nonNullable: true, validators: [Validators.required]}),
+    namespace: new FormControl(
+      {value: '', disabled: true},
+      {
+        nonNullable: true,
+        validators: [
+          Validators.required,
+          Validators.maxLength(KUBERNETES_RESOURCE_MAX_LENGTH),
+          Validators.pattern(KUBERNETES_RESOURCE_NAME_REGEX),
+        ],
+      }
+    ),
     clusterScope: new FormControl(
       {value: false, disabled: true},
       {nonNullable: true, validators: [Validators.required]}

@@ -13,3 +13,9 @@ type AuthInfo interface {
 	CurrentUserEmailVerified() bool
 	Token() any
 }
+
+type AgentAuthInfo interface {
+	CurrentDeploymentTargetID() uuid.UUID
+	CurrentOrgID() uuid.UUID
+	Token() any
+}

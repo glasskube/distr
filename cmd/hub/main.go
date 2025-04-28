@@ -30,9 +30,11 @@ func main() {
 	ctx := context.Background()
 
 	util.Must(sentry.Init(sentry.ClientOptions{
-		Dsn:     env.SentryDSN(),
-		Debug:   env.SentryDebug(),
-		Release: buildconfig.Version(),
+		Dsn:              env.SentryDSN(),
+		Debug:            env.SentryDebug(),
+		EnableTracing:    env.OtelExporterSentryEnabled(),
+		TracesSampleRate: 1.0,
+		Release:          buildconfig.Version(),
 	}))
 	defer sentry.Flush(5 * time.Second)
 	defer func() {
@@ -48,14 +50,18 @@ func main() {
 	util.Must(db.CreateAgentVersion(internalctx.WithDb(ctx, registry.GetDbPool())))
 
 	server := registry.GetServer()
+	artifactsServer := registry.GetArtifactsServer()
 	go onSigterm(func() {
 		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		server.Shutdown(ctx)
+		artifactsServer.Shutdown(ctx)
 		cancel()
 	})
 
-	util.Must(server.Start(":8080"))
+	go func() { util.Must(server.Start(":8080")) }()
+	go func() { util.Must(artifactsServer.Start(":8585")) }()
 	server.WaitForShutdown()
+	artifactsServer.WaitForShutdown()
 }
 
 func onSigterm(callback func()) {

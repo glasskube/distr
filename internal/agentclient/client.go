@@ -17,18 +17,21 @@ import (
 
 	"github.com/glasskube/distr/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
-type Client struct {
-	authTarget string
-	authSecret string
-
+type clientData struct {
+	authTarget       string
+	authSecret       string
 	loginEndpoint    string
 	manifestEndpoint string
 	resourceEndpoint string
 	statusEndpoint   string
+}
 
+type Client struct {
+	clientData
 	httpClient *http.Client
 	logger     *zap.Logger
 	token      jwt.Token
@@ -71,16 +74,25 @@ func (c *Client) Manifest(ctx context.Context) ([]byte, error) {
 	}
 }
 
-func (c *Client) Status(ctx context.Context, revisionID uuid.UUID, status string, error error) error {
+func (c *Client) StatusWithError(ctx context.Context, revisionID uuid.UUID, message string, err error) error {
+	statusType := types.DeploymentStatusTypeOK
+	if err != nil {
+		statusType = types.DeploymentStatusTypeError
+		message = err.Error()
+	}
+	return c.Status(ctx, revisionID, statusType, message)
+}
+
+func (c *Client) Status(
+	ctx context.Context,
+	revisionID uuid.UUID,
+	statusType types.DeploymentStatusType,
+	message string,
+) error {
 	deploymentStatus := api.AgentDeploymentStatus{
 		RevisionID: revisionID,
-	}
-	if error != nil {
-		deploymentStatus.Type = types.DeploymentStatusTypeError
-		deploymentStatus.Message = error.Error()
-	} else {
-		deploymentStatus.Type = types.DeploymentStatusTypeOK
-		deploymentStatus.Message = status
+		Message:    message,
+		Type:       statusType,
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(deploymentStatus); err != nil {
@@ -144,7 +156,31 @@ func (c *Client) HasTokenExpiredAfter(t time.Time) bool {
 	return c.token == nil || c.token.Expiration().Before(t)
 }
 
+func (c *Client) ClearToken() {
+	c.token = nil
+	c.rawToken = ""
+}
+
+func (c *Client) RawToken() string {
+	return c.rawToken
+}
+
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
+	if resp, err := c.doAuthenticatedNoRetry(ctx, r); resp == nil || resp.StatusCode != 401 {
+		return resp, err
+	} else {
+		c.logger.Warn("got 401 response, try to regenerate token")
+		c.ClearToken()
+		resp, err1 := c.doAuthenticatedNoRetry(ctx, r)
+		if err1 != nil {
+			return resp, multierr.Append(err, err1)
+		} else {
+			return resp, nil
+		}
+	}
+}
+
+func (c *Client) doAuthenticatedNoRetry(ctx context.Context, r *http.Request) (*http.Response, error) {
 	if err := c.EnsureToken(ctx); err != nil {
 		return nil, err
 	} else {
@@ -158,28 +194,36 @@ func (c *Client) do(r *http.Request) (*http.Response, error) {
 	return checkStatus(c.httpClient.Do(r))
 }
 
+func (c *Client) ReloadFromEnv() (changed bool, err error) {
+	var d clientData
+	if d.authTarget, err = readEnvVar("DISTR_TARGET_ID"); err != nil {
+		return
+	} else if d.authSecret, err = readEnvVar("DISTR_TARGET_SECRET"); err != nil {
+		return
+	} else if d.loginEndpoint, err = readEnvVar("DISTR_LOGIN_ENDPOINT"); err != nil {
+		return
+	} else if d.manifestEndpoint, err = readEnvVar("DISTR_MANIFEST_ENDPOINT"); err != nil {
+		return
+	} else if d.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
+		return
+	} else if d.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+		return
+	} else {
+		changed = c.clientData != d
+		if changed {
+			c.clientData = d
+			c.ClearToken()
+		}
+		return
+	}
+}
+
 func NewFromEnv(logger *zap.Logger) (*Client, error) {
 	client := Client{
 		httpClient: &http.Client{},
 		logger:     logger,
 	}
-	var err error
-	if client.authTarget, err = readEnvVar("DISTR_TARGET_ID"); err != nil {
-		return nil, err
-	}
-	if client.authSecret, err = readEnvVar("DISTR_TARGET_SECRET"); err != nil {
-		return nil, err
-	}
-	if client.loginEndpoint, err = readEnvVar("DISTR_LOGIN_ENDPOINT"); err != nil {
-		return nil, err
-	}
-	if client.manifestEndpoint, err = readEnvVar("DISTR_MANIFEST_ENDPOINT"); err != nil {
-		return nil, err
-	}
-	if client.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
-		return nil, err
-	}
-	if client.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+	if _, err := client.ReloadFromEnv(); err != nil {
 		return nil, err
 	}
 	return &client, nil

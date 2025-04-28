@@ -25,13 +25,7 @@
           <p>
             Your Personal Access Token:
             <code class="select-all">{{ t.key }}</code>
-            <button
-              type="button"
-              (click)="clip()"
-              class="mx-2 text-gray-500 hover:text-gray-400 dark:text-gray-400 hover:dark:text-gray-300"
-              title="Copy to clipboard">
-              <fa-icon [icon]="faClipboard"></fa-icon>
-            </button>
+            <app-clip class="mx-2" [clip]="t.key"></app-clip>
           </p>
           <p>
             <strong>Important:</strong>
@@ -53,7 +47,7 @@
           </thead>
           <tbody>
             @for (token of accessTokens$ | async; track token.id) {
-              <tr class="border-b dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <td class="px-4 py-3">{{ token.label }}</td>
                 <td class="px-4 py-3">{{ token.createdAt | date: 'medium' }}</td>
                 <td class="px-4 py-3">

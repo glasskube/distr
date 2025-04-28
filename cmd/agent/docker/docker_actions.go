@@ -10,8 +10,10 @@ import (
 	"os/exec"
 	"strings"
 
+	dockerconfig "github.com/docker/cli/cli/config"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
+	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -95,7 +97,7 @@ func ApplyComposeFile(
 
 	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
 	cmd.Stdin = bytes.NewReader(deployment.ComposeFile)
-	cmd.Env = append(os.Environ(), agentauth.DockerConfigEnv(deployment.AgentDeployment)...)
+	cmd.Env = append(os.Environ(), DockerConfigEnv(deployment)...)
 
 	var cmdOut []byte
 	cmdOut, err = cmd.CombinedOutput()
@@ -124,7 +126,7 @@ func ApplyComposeFileSwarm(
 
 	// Construct environment variables
 	envVars := os.Environ()
-	envVars = append(envVars, agentauth.DockerConfigEnv(deployment.AgentDeployment)...)
+	envVars = append(envVars, DockerConfigEnv(deployment)...)
 
 	// // If an env file is provided, load its values
 	if deployment.EnvFile != nil {
@@ -278,4 +280,33 @@ func PullSwarmMode(
 
 	fmt.Println("Image pulling complete.")
 	return pullLogs.String(), nil
+}
+
+func DockerConfigEnv(deployment api.DockerAgentDeployment) []string {
+	if len(deployment.RegistryAuth) > 0 || hasRegistryImages(deployment) {
+		return []string{
+			dockerconfig.EnvOverrideConfigDir + "=" + agentauth.DockerConfigDir(deployment.AgentDeployment),
+		}
+	} else {
+		return nil
+	}
+}
+
+// hasRegistryImages parses the compose file in order to check whether one of the services uses an image hosted on
+// [agentenv.DistrRegistryHost].
+func hasRegistryImages(deployment api.DockerAgentDeployment) bool {
+	var compose struct {
+		Services map[string]struct {
+			Image string
+		}
+	}
+	if err := yaml.Unmarshal(deployment.ComposeFile, &compose); err != nil {
+		return false
+	}
+	for _, svc := range compose.Services {
+		if strings.HasPrefix(svc.Image, agentenv.DistrRegistryHost) {
+			return true
+		}
+	}
+	return false
 }

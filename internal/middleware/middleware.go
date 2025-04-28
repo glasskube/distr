@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/distr/internal/auth"
@@ -26,6 +28,7 @@ func ContextInjectorMiddleware(db *pgxpool.Pool, mailer mail.Mailer) func(next h
 			ctx := r.Context()
 			ctx = internalctx.WithDb(ctx, db)
 			ctx = internalctx.WithMailer(ctx, mailer)
+			ctx = internalctx.WithRequestIPAddress(ctx, r.RemoteAddr)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -90,33 +93,75 @@ func SentryUser(h http.Handler) http.Handler {
 	})
 }
 
+func AgentSentryUser(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if hub := sentry.GetHubFromContext(ctx); hub != nil {
+			if auth, err := auth.AgentAuthentication.Get(ctx); err == nil {
+				hub.Scope().SetUser(sentry.User{
+					ID: auth.CurrentDeploymentTargetID().String(),
+				})
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 func RateLimitCurrentUserIdKeyFunc(r *http.Request) (string, error) {
 	if auth, err := auth.Authentication.Get(r.Context()); err != nil {
 		return "", err
 	} else {
-		prefix := ""
-		switch auth.Token().(type) {
-		case jwt.Token:
-			prefix = "jwt"
-		case authkey.Key:
-			prefix = "authkey"
-		}
-		return fmt.Sprintf("%v-%v", prefix, auth.CurrentUserID()), nil
+		return getTokenIdKey(auth.Token(), auth.CurrentUserID()), nil
 	}
 }
 
-var RequireOrgID = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
-	if value.CurrentOrgID() == nil {
+func RateLimitCurrentDeploymentTargetIdKeyFunc(r *http.Request) (string, error) {
+	if auth, err := auth.AgentAuthentication.Get(r.Context()); err != nil {
+		return "", err
+	} else {
+		return getTokenIdKey(auth.Token(), auth.CurrentDeploymentTargetID()), nil
+	}
+}
+
+func getTokenIdKey(token any, id uuid.UUID) string {
+	prefix := ""
+	switch token.(type) {
+	case jwt.Token:
+		prefix = "jwt"
+	case authkey.Key:
+		prefix = "authkey"
+	default:
+		panic("unknown token type")
+	}
+	return fmt.Sprintf("%v-%v", prefix, id)
+}
+
+var RequireOrgAndRole = auth.Authentication.ValidatorMiddleware(func(value *authinfo.DbAuthInfo) error {
+	if value.CurrentOrgID() == nil || value.CurrentOrg() == nil || value.CurrentUserRole() == nil {
 		return authn.ErrBadAuthentication
 	} else {
 		return nil
 	}
 })
 
-var RequireUserRole = auth.Authentication.ValidatorMiddleware(func(value authinfo.AuthInfo) error {
-	if value.CurrentUserRole() == nil {
-		return authn.ErrBadAuthentication
-	} else {
-		return nil
+func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) http.Handler {
+	return func(handler http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			if auth, err := auth.Authentication.Get(ctx); err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
+			} else {
+				org := auth.CurrentOrg()
+				if !org.HasFeature(feature) {
+					http.Error(w, fmt.Sprintf("%v not enabled for organization", feature), http.StatusForbidden)
+				} else {
+					handler.ServeHTTP(w, r)
+				}
+			}
+		}
+		return http.HandlerFunc(fn)
 	}
-})
+}
+
+var RegistryFeatureFlagEnabledMiddleware = FeatureFlagMiddleware(types.FeatureRegistry)
+var LicensingFeatureFlagEnabledMiddleware = FeatureFlagMiddleware(types.FeatureLicensing)

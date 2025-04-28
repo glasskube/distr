@@ -21,14 +21,14 @@ export class StatusDotComponent {
     if (dt !== undefined) {
       if (dt.deployment !== undefined) {
         if (dt.deployment.latestStatus !== undefined) {
-          if (dt.deployment.latestStatus.type === 'ok') {
-            if (isStale(dt.deployment.latestStatus)) {
-              return 'bg-yellow-300';
-            } else {
-              return 'bg-lime-600';
-            }
-          } else {
+          if (dt.deployment.latestStatus.type === 'error') {
             return 'bg-red-400';
+          } else if (isStale(dt.deployment.latestStatus)) {
+            return 'bg-yellow-300';
+          } else if (dt.deployment.latestStatus.type === 'progressing') {
+            return 'bg-blue-400';
+          } else {
+            return 'bg-lime-600';
           }
         }
       }

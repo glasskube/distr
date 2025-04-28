@@ -77,15 +77,17 @@ func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 		SET email = @email,
 			name = @name,
 			password_hash = @password_hash,
-			password_salt = @password_salt
+			password_salt = @password_salt,
+			email_verified_at = @email_verified_at
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"id":            userAccount.ID,
-			"email":         userAccount.Email,
-			"password_hash": userAccount.PasswordHash,
-			"password_salt": userAccount.PasswordSalt,
-			"name":          userAccount.Name,
+			"id":                userAccount.ID,
+			"email":             userAccount.Email,
+			"password_hash":     userAccount.PasswordHash,
+			"password_salt":     userAccount.PasswordSalt,
+			"name":              userAccount.Name,
+			"email_verified_at": userAccount.EmailVerifiedAt,
 		},
 	)
 	if err != nil {
@@ -235,4 +237,87 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 	} else {
 		return &userAccount, nil
 	}
+}
+
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) (
+	*types.UserAccount,
+	*types.Organization,
+	error,
+) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT ("+userAccountOutputExpr+`),
+					(`+organizationOutputExpr+`)
+			FROM UserAccount u
+			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
+			INNER JOIN Organization o ON o.id = j.organization_id
+			WHERE u.id = @id AND j.organization_id = @orgId AND j.user_role = @role`,
+		pgx.NamedArgs{"id": userID, "orgId": orgID, "role": role},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := pgx.CollectExactlyOneRow[struct {
+		User types.UserAccount
+		Org  types.Organization
+	}](rows, pgx.RowToStructByPos)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, apierrors.ErrNotFound
+		} else {
+			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+		}
+	} else {
+		return &res.User, &res.Org, nil
+	}
+}
+
+func GetUserAccountAndOrgForDeploymentTarget(
+	ctx context.Context,
+	id uuid.UUID,
+) (*types.UserAccountWithUserRole, *types.Organization, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT ("+userAccountWithRoleOutputExpr+`),
+					(`+organizationOutputExpr+`)
+			FROM DeploymentTarget dt
+			JOIN Organization o ON o.id = dt.organization_id
+			JOIN UserAccount u ON u.id = dt.created_by_user_account_id
+			JOIN Organization_UserAccount j ON u.id = j.user_account_id
+				AND o.id = j.organization_id
+			WHERE dt.id = @id`,
+		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := pgx.CollectExactlyOneRow[struct {
+		User types.UserAccountWithUserRole
+		Org  types.Organization
+	}](rows, pgx.RowToStructByPos)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, apierrors.ErrNotFound
+		} else {
+			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+		}
+	} else {
+		return &res.User, &res.Org, nil
+	}
+}
+
+func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`UPDATE UserAccount SET last_logged_in_at = now() WHERE id = @id`,
+		pgx.NamedArgs{"id": userID},
+	)
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	if err != nil {
+		err = fmt.Errorf("could not update last_logged_in_at on UserAccount: %w", err)
+	}
+	return err
 }

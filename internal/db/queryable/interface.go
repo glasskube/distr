@@ -14,4 +14,5 @@ type Queryable interface {
 	CopyFrom(
 		ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource,
 	) (int64, error)
+	Begin(ctx context.Context) (pgx.Tx, error)
 }

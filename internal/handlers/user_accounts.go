@@ -20,13 +20,11 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
 func UserAccountsRouter(r chi.Router) {
-	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
-		r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.With(requireUserRoleVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
 		r.Route("/{userId}", func(r chi.Router) {
@@ -51,14 +49,10 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 func getUserAccountStatusHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		RespondJSON(w, map[string]any{
-			"active": userAccount.PasswordHash != nil,
-		})
-	}
+	userAccount := auth.CurrentUser()
+	RespondJSON(w, map[string]any{
+		"active": userAccount.PasswordHash != nil,
+	})
 }
 
 func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +72,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var inviteURL string
 
-	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return err

@@ -21,7 +21,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
       [class.dark:border-red-800]="options.payload === 'error'"
       [class.border-green-300]="options.payload === 'success'"
       [class.dark:border-green-800]="options.payload === 'success'"
-      class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800  border"
+      class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
       role="alert">
       @switch (options.payload) {
         @case ('error') {

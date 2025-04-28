@@ -9,6 +9,7 @@ import {
   faEllipsisVertical,
   faHeartPulse,
   faLightbulb,
+  faLink,
   faMagnifyingGlass,
   faPen,
   faPlus,
@@ -42,6 +43,7 @@ import {
   of,
   Subject,
   switchMap,
+  takeUntil,
 } from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
@@ -113,6 +115,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   protected readonly faTriangleExclamation = faTriangleExclamation;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faLightbulb = faLightbulb;
+  protected readonly faLink = faLink;
 
   private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
@@ -148,7 +151,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   readonly deployForm = new FormControl<DeploymentFormValue | undefined>(undefined, Validators.required);
   deployFormLoading = false;
 
-  readonly deploymentTargets$ = this.deploymentTargets.poll();
+  readonly deploymentTargets$ = this.deploymentTargets.poll().pipe(takeUntil(this.destroyed$));
 
   readonly filteredDeploymentTargets$ = filteredByFormControl(
     this.deploymentTargets$,

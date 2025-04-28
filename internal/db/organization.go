@@ -22,11 +22,11 @@ const (
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization AS o (name) VALUES (@name) RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"name": org.Name},
+		"INSERT INTO Organization AS o (name, features) VALUES (@name, @features) RETURNING "+organizationOutputExpr,
+		pgx.NamedArgs{"name": org.Name, "features": "{" + types.FeatureRegistry + "}"},
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create orgnization: %w", err)
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
 	if err != nil {
@@ -58,7 +58,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
-func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.OrganizationWithUserRole, error) {
+func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT`+organizationOutputExpr+`, j.user_role
@@ -70,7 +70,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.Or
 	if err != nil {
 		return nil, err
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.OrganizationWithUserRole])
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.OrganizationWithUserRole])
 	if err != nil {
 		return nil, err
 	} else {

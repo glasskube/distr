@@ -22,6 +22,9 @@ const (
 	UserRoleKey          = "role"
 	OrgIdKey             = "org"
 	PasswordResetKey     = "password_reset"
+
+	audienceUserValue  = "user"
+	audienceAgentValue = "agent"
 )
 
 // JWTAuth is for generating/validating JWTs.
@@ -36,7 +39,10 @@ func GenerateDefaultToken(user types.UserAccount, org types.OrganizationWithUser
 }
 
 func GenerateResetToken(user types.UserAccount) (jwt.Token, string, error) {
-	return generateUserToken(user, nil, env.ResetTokenValidDuration(), map[string]any{PasswordResetKey: true})
+	return generateUserToken(user, nil, env.ResetTokenValidDuration(), map[string]any{
+		PasswordResetKey:     true,
+		UserEmailVerifiedKey: true,
+	})
 }
 
 func GenerateVerificationTokenValidFor(user types.UserAccount) (jwt.Token, string, error) {
@@ -55,6 +61,7 @@ func generateUserToken(
 		jwt.NotBeforeKey:     now,
 		jwt.ExpirationKey:    now.Add(validFor),
 		jwt.SubjectKey:       user.ID.String(),
+		jwt.AudienceKey:      audienceUserValue,
 		UserNameKey:          user.Name,
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
@@ -74,6 +81,7 @@ func GenerateAgentTokenValidFor(targetID, orgID uuid.UUID, validFor time.Duratio
 		jwt.NotBeforeKey:  now,
 		jwt.ExpirationKey: now.Add(validFor),
 		jwt.SubjectKey:    targetID.String(),
+		jwt.AudienceKey:   audienceAgentValue,
 		OrgIdKey:          orgID.String(),
 	}
 	return JWTAuth.Encode(claims)

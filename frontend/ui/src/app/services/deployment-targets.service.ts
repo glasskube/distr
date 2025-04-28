@@ -42,7 +42,10 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
           ? timer(Math.min(Math.pow(c, 2), 30) * 1000)
           : EMPTY,
     }),
-    shareReplay(1)
+    shareReplay({
+      bufferSize: 1,
+      refCount: true,
+    })
   );
 
   list(): Observable<DeploymentTarget[]> {

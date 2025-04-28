@@ -10,22 +10,43 @@ import (
 
 type TokenExtractorFunc func(r *http.Request) string
 
-type TokenExtractor []TokenExtractorFunc
+type TokenExtractor struct {
+	fns     []TokenExtractorFunc
+	headers http.Header
+}
 
 // Authenticate implements Provider.
-func (fns TokenExtractor) Authenticate(ctx context.Context, r *http.Request) (string, error) {
-	for _, fn := range fns {
+func (extractor *TokenExtractor) Authenticate(ctx context.Context, r *http.Request) (string, error) {
+	for _, fn := range extractor.fns {
 		if token := fn(r); token != "" {
 			return token, nil
 		}
 	}
-	return "", authn.ErrNoAuthentication
+	return "", authn.NewHttpHeaderError(authn.ErrNoAuthentication, extractor.headers)
 }
 
-var _ authn.RequestAuthenticator[string] = TokenExtractor{}
+var _ authn.RequestAuthenticator[string] = &TokenExtractor{}
 
-func NewExtractor(tokenFuncs ...TokenExtractorFunc) TokenExtractor {
-	return TokenExtractor(tokenFuncs)
+type ExtractorOption func(*TokenExtractor)
+
+func WithExtractorFuncs(fns ...TokenExtractorFunc) ExtractorOption {
+	return func(te *TokenExtractor) {
+		te.fns = append(te.fns, fns...)
+	}
+}
+
+func WithErrorHeaders(headers http.Header) ExtractorOption {
+	return func(te *TokenExtractor) {
+		te.headers = headers
+	}
+}
+
+func NewExtractor(opts ...ExtractorOption) *TokenExtractor {
+	extractor := TokenExtractor{}
+	for _, opt := range opts {
+		opt(&extractor)
+	}
+	return &extractor
 }
 
 func FromQuery(param string) TokenExtractorFunc {
@@ -40,5 +61,15 @@ func FromHeader(authenticationScheme string) TokenExtractorFunc {
 			return authorization[len(prefix):]
 		}
 		return ""
+	}
+}
+
+func FromBasicAuth() TokenExtractorFunc {
+	return func(r *http.Request) string {
+		if _, token, ok := r.BasicAuth(); ok {
+			return token
+		} else {
+			return ""
+		}
 	}
 }

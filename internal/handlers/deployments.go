@@ -17,12 +17,11 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
 func DeploymentsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
@@ -40,7 +39,7 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	_ = db.RunTx(ctx, func(ctx context.Context) error {
 		if err := validateDeploymentRequest(ctx, w, deploymentRequest); err != nil {
 			return err
 		}
@@ -74,7 +73,7 @@ func deleteDeploymentHandler() http.HandlerFunc {
 		auth := auth.Authentication.Require(ctx)
 		orgId := *auth.CurrentOrgID()
 		deployment := internalctx.GetDeployment(ctx)
-		_ = db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		_ = db.RunTx(ctx, func(ctx context.Context) error {
 			target, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID)
 			if err != nil {
 				log.Warn("could not get DeploymentTarget", zap.Error(err))
@@ -114,13 +113,8 @@ func validateDeploymentRequest(
 	var version *types.ApplicationVersion
 	var target *types.DeploymentTargetWithCreatedBy
 
-	org, err := db.GetOrganizationByID(ctx, orgId)
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return err
-	}
+	org := auth.CurrentOrg()
+	var err error
 
 	if app, err =
 		db.GetApplicationForApplicationVersionID(ctx, request.ApplicationVersionID, orgId); err != nil {
@@ -317,16 +311,18 @@ func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
 func deploymentMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		auth := auth.Authentication.Require(ctx)
 		deploymentId, err := uuid.Parse(r.PathValue("deploymentId"))
 		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
-		deployment, err := db.GetDeployment(ctx, deploymentId)
-		if errors.Is(err, apierrors.ErrNotFound) {
+
+		if deployment, err := db.GetDeployment(ctx, deploymentId, auth.CurrentUserID(), *auth.CurrentOrgID(),
+			*auth.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get deployment", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get deployment", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {

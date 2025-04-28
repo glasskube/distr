@@ -1,0 +1,2 @@
+DROP INDEX ArtifactVersionPart_artifact_blob_digest;
+DROP INDEX ArtifactVersion_manifest_blob_digest;

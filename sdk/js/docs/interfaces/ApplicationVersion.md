@@ -14,6 +14,12 @@
 
 ---
 
+### archivedAt?
+
+> `optional` **archivedAt**: `string`
+
+---
+
 ### chartName?
 
 > `optional` **chartName**: `string`
@@ -50,6 +56,6 @@
 
 ---
 
-### name?
+### name
 
-> `optional` **name**: `string`
+> **name**: `string`

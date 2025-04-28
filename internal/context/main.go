@@ -20,6 +20,8 @@ const (
 	ctxKeyDeploymentTarget
 	ctxKeyUserAccount
 	ctxKeyApplicationLicense
+	ctxKeyArtifactLicense
+	ctxKeyIPAddress
 )
 
 func GetDb(ctx context.Context) queryable.Queryable {

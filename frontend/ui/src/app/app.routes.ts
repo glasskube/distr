@@ -7,28 +7,32 @@ import {
   RouterStateSnapshot,
   Routes,
 } from '@angular/router';
+import {UserRole} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
+import {AccessTokensComponent} from './access-tokens/access-tokens.component';
+import {ApplicationDetailComponent} from './applications/application-detail.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
+import {ArtifactVersionsComponent} from './artifacts/artifact-versions/artifact-versions.component';
+import {ArtifactsComponent} from './artifacts/artifacts/artifacts.component';
 import {NavShellComponent} from './components/nav-shell.component';
 import {UsersComponent} from './components/users/users.component';
 import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 import {ForgotComponent} from './forgot/forgot.component';
 import {InviteComponent} from './invite/invite.component';
+import {LicensesComponent} from './licenses/licenses.component';
 import {LoginComponent} from './login/login.component';
+import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 import {PasswordResetComponent} from './password-reset/password-reset.component';
 import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
+import {FeatureFlagService} from './services/feature-flag.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {VerifyComponent} from './verify/verify.component';
-import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
-import {UserRole} from '@glasskube/distr-sdk';
-import {AccessTokensComponent} from './access-tokens/access-tokens.component';
-import {LicensesComponent} from './licenses/licenses.component';
-import {FeatureFlagService} from './services/feature-flag.service';
-import {ApplicationDetailComponent} from './applications/application-detail.component';
+import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
 import {UsersService} from './services/users.service';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
+import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -114,6 +118,13 @@ function licensingEnabledGuard(): CanActivateFn {
   };
 }
 
+function registryEnabledGuard(): CanActivateFn {
+  return async () => {
+    const featureFlags = inject(FeatureFlagService);
+    return await firstValueFrom(featureFlags.isRegistryEnabled$);
+  };
+}
+
 const baseRouteRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -180,6 +191,25 @@ export const routes: Routes = [
             ],
           },
           {path: 'deployments', component: DeploymentsPageComponent},
+          {
+            path: 'artifacts',
+            children: [
+              {path: '', pathMatch: 'full', component: ArtifactsComponent},
+              {path: ':id', component: ArtifactVersionsComponent},
+            ],
+            canActivate: [registryEnabledGuard()],
+          },
+          {
+            path: 'artifact-licenses',
+            children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
+            data: {userRole: 'vendor'},
+            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
+          },
+          {
+            path: 'artifact-pulls',
+            component: ArtifactPullsComponent,
+            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
+          },
           {
             path: 'customers',
             component: UsersComponent,

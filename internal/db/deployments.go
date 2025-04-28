@@ -41,13 +41,26 @@ func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetID u
 	}
 }
 
-func GetDeployment(ctx context.Context, id uuid.UUID) (*types.Deployment, error) {
+func GetDeployment(
+	ctx context.Context,
+	id uuid.UUID,
+	userID uuid.UUID,
+	orgID uuid.UUID,
+	userRole types.UserRole,
+) (*types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"SELECT"+deploymentOutputExpr+
 			"FROM Deployment d "+
-			"WHERE d.id = @id",
-		pgx.NamedArgs{"id": id})
+			"INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id "+
+			"WHERE d.id = @id AND dt.organization_id = @orgId "+
+			"AND (@userRole = 'vendor' OR dt.created_by_user_account_id = @userId)",
+		pgx.NamedArgs{
+			"id":       id,
+			"userId":   userID,
+			"orgId":    orgID,
+			"userRole": userRole,
+		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
 	}
@@ -238,14 +251,29 @@ func GetDeploymentStatus(
 	maxRows int,
 ) ([]types.DeploymentRevisionStatus, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, `
-		SELECT drs.id, drs.created_at, drs.deployment_revision_id, drs.type, drs.message
-		FROM DeploymentRevisionStatus drs
-			INNER JOIN DeploymentRevision dr ON dr.id = drs.deployment_revision_id
-		WHERE dr.deployment_id = @deploymentId
+
+	rows, err := db.Query(
+		ctx,
+		"SELECT id from DeploymentRevision WHERE deployment_id = @deploymentId",
+		pgx.NamedArgs{"deploymentId": deploymentID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query DeploymentRevision for status: %w", err)
+	}
+	deploymentRevisionIDs, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan DeploymentRevision for status: %w", err)
+	}
+
+	rows, err = db.Query(
+		ctx,
+		`SELECT id, created_at, deployment_revision_id, type, message
+		FROM DeploymentRevisionStatus
+		WHERE deployment_revision_id = ANY (@deploymentRevisionIds)
 		ORDER BY created_at DESC
 		LIMIT @maxRows`,
-		pgx.NamedArgs{"deploymentId": deploymentID, "maxRows": maxRows})
+		pgx.NamedArgs{"deploymentRevisionIds": deploymentRevisionIDs, "maxRows": maxRows},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
 	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentRevisionStatus]); err != nil {

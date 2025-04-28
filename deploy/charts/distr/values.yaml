@@ -35,6 +35,25 @@ hub:
   env:
     - name: DISTR_HOST
       value: http://distr.local
+    - name: REGISTRY_ENABLED
+      value: 'true'
+    # REGISTRY_* variables are only relevant if REGISTRY_ENABLED is true
+    - name: REGISTRY_HOST
+      value: pkg.distr.local
+    - name: REGISTRY_S3_BUCKET
+      value: distr
+    - name: REGISTRY_S3_REGION
+      value: local
+    - name: REGISTRY_S3_ENDPOINT
+      value: http://distr-registry-minio:9000
+    - name: REGISTRY_S3_ACCESS_KEY_ID
+      value: distr
+    - name: REGISTRY_S3_SECRET_ACCESS_KEY
+      value: distr123
+    - name: REGISTRY_S3_USE_PATH_STYLE
+      value: 'true'
+    - name: REGISTRY_S3_ALLOW_REDIRECT
+      value: 'false'
     # The base64 encoded JWT secret
     # Can be generated with `openssl rand -base64 32`
     - name: JWT_SECRET
@@ -60,8 +79,10 @@ hub:
     #    secretKeyRef:
     #      name: ""
     #      key: ""
-    # - name: REGISTRATION # can be one of "enabled" (default), "hidden", "disabled"
+    # - name: REGISTRATION # User Registration Mode – can be one of "enabled" (default), "hidden", "disabled"
     #   value: enabled
+    - name: USER_EMAIL_VERIFICATION_REQUIRED
+      value: 'false'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -90,6 +111,7 @@ service:
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
+  artifactsPort: 8585
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -104,6 +126,14 @@ ingress:
       paths:
         - path: /
           pathType: ImplementationSpecific
+          port:
+            name: http
+    - host: pkg.distr.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          port:
+            name: artifacts
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -170,6 +200,21 @@ postgresql:
   service:
     ports:
       postgresql: 5432
+
+minio:
+  enabled: false
+  fullnameOverride: distr-registry-minio
+  rootUser: distr
+  rootPassword: 'distr123' # please change this
+  deploymentUpdate:
+    type: Recreate
+  mode: standalone
+  persistence:
+    size: 20Gi
+  replicas: 1
+  buckets:
+    - name: distr
+      purge: false
 
 externalDatabase:
   uri: ''

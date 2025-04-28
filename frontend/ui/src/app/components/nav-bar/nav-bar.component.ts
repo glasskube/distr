@@ -1,18 +1,19 @@
 import {OverlayModule} from '@angular/cdk/overlay';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnInit} from '@angular/core';
-import {catchError, EMPTY, lastValueFrom} from 'rxjs';
-import {dropdownAnimation} from '../../animations/dropdown';
-import {AuthService} from '../../services/auth.service';
-import {SidebarService} from '../../services/sidebar.service';
-import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
+import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
-import {RouterLink} from '@angular/router';
-import {OrganizationBrandingService} from '../../services/organization-branding.service';
 import {UserRole} from '@glasskube/distr-sdk';
+import {lastValueFrom} from 'rxjs';
+import {digestMessage} from '../../../util/crypto';
 import {getFormDisplayedError} from '../../../util/errors';
-import {HttpErrorResponse} from '@angular/common/http';
+import {dropdownAnimation} from '../../animations/dropdown';
+import {AuthService} from '../../services/auth.service';
+import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {SidebarService} from '../../services/sidebar.service';
 import {ToastService} from '../../services/toast.service';
+import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 
 @Component({
   selector: 'app-nav-bar',
@@ -77,15 +78,4 @@ export class NavBarComponent implements OnInit {
     // TODO: implement flushing of services directly and switch to router.navigate(...)
     location.assign('/login');
   }
-}
-
-/**
- * From https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
- */
-async function digestMessage(message: string, alg: string = 'SHA-256'): Promise<string> {
-  const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
-  const hashBuffer = await crypto.subtle.digest(alg, msgUint8); // hash the message
-  const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
-  return hashHex;
 }

@@ -18,12 +18,11 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
 func ApplicationsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getApplications)
 	r.With(requireUserRoleVendor).Post("/", createApplication)
 	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
@@ -115,14 +114,8 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	log := internalctx.GetLogger(ctx)
 
-	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	org := auth.CurrentOrg()
+	var err error
 	var applications []types.Application
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
 		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, auth.CurrentUserID())
@@ -144,16 +137,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	log := internalctx.GetLogger(ctx)
 
-	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	org := auth.CurrentOrg()
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-
 		if applicationID, err := uuid.Parse(r.PathValue("applicationId")); err != nil {
 			http.NotFound(w, r)
 			return
@@ -171,9 +156,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else {
-		RespondJSON(w, internalctx.GetApplication(r.Context()))
+		RespondJSON(w, internalctx.GetApplication(ctx))
 	}
-
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
@@ -364,7 +348,7 @@ func createSampleApplication(w http.ResponseWriter, r *http.Request) {
 		TemplateFileData: templateFileData,
 	}
 
-	if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err

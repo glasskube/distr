@@ -35,7 +35,7 @@
                   [cdkConnectedOverlayOpen]="breadcrumbDropdown()">
                   <div
                     style="transform-origin: top center"
-                    class="z-10 w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700">
+                    class="z-10 w-full bg-white divide-y divide-gray-100 rounded-lg shadow-xs dark:bg-gray-700">
                     <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefault">
                       @for (app of applications$ | async; track app.id) {
                         <li class="block py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
@@ -58,7 +58,7 @@
               <img
                 [ngSrc]="'/' + application.type + '.png'"
                 [alt]="application.type"
-                class="h-16 w-16 rounded"
+                class="h-16 w-16 rounded-sm"
                 height="199"
                 width="199" />
               <div>
@@ -111,7 +111,7 @@
                   <app-uuid class="mr-2" [uuid]="application.id" [small]="true"></app-uuid>
                 }
                 <span
-                  class="me-2 inline-block rounded bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                  class="me-2 inline-block rounded-sm bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900 dark:text-primary-300">
                   {{ application.type }}
                 </span>
               </div>
@@ -137,7 +137,7 @@
                   formControlName="showArchived"
                   id="showArchived"
                   type="checkbox"
-                  class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800" />
+                  class="w-4 h-4 border border-gray-300 rounded-sm bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800" />
               </div>
               <div class="ml-3 my-3 text-sm">
                 <label for="showArchived" class="text-gray-500 dark:text-gray-300">Show Archived Versions</label>
@@ -165,7 +165,7 @@
                     <tr
                       [class.hover:bg-gray-50]="!archived"
                       [class.dark:hover:bg-gray-600]="!archived"
-                      class="bg-white border-t dark:bg-gray-800 dark:border-gray-700">
+                      class="bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                       <td class="px-1 py-4">
                         <app-uuid [uuid]="version.id!" [small]="true"></app-uuid>
                       </td>

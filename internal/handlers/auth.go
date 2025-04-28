@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -23,7 +23,6 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -42,35 +41,49 @@ func AuthRouter(r chi.Router) {
 }
 
 func authLoginHandler(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
-	if request, err := JsonBody[api.AuthLoginRequest](w, r); err != nil {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	request, err := JsonBody[api.AuthLoginRequest](w, r)
+	if err != nil {
 		return
-	} else if user, err := db.GetUserAccountByEmail(r.Context(), request.Email); errors.Is(err, apierrors.ErrNotFound) {
-		http.Error(w, "invalid username or password", http.StatusBadRequest)
-	} else if err != nil {
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Warn("user login failed", zap.Error(err))
-	} else if err = security.VerifyPassword(*user, request.Password); err != nil {
-		http.Error(w, "invalid username or password", http.StatusBadRequest)
-	} else if orgs, err := db.GetOrganizationsForUser(r.Context(), user.ID); err != nil {
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Warn("user login failed", zap.Error(err))
-	} else {
-		if len(orgs) < 1 {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Error("user has no organizations")
+	}
+	err = db.RunTx(ctx, func(ctx context.Context) error {
+		user, err := db.GetUserAccountByEmail(ctx, request.Email)
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.Error(w, "invalid username or password", http.StatusBadRequest)
+			return nil
+		} else if err != nil {
+			return err
+		}
+		log = log.With(zap.Any("userId", user.ID))
+		if err = security.VerifyPassword(*user, request.Password); err != nil {
+			http.Error(w, "invalid username or password", http.StatusBadRequest)
+			return nil
+		}
+
+		orgs, err := db.GetOrganizationsForUser(ctx, user.ID)
+		if err != nil {
+			return err
+		} else if len(orgs) < 1 {
+			return errors.New("user has no organizations")
 		} else if len(orgs) > 1 {
 			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
 		}
 		org := orgs[0]
-		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, *org); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Warn("token creation failed", zap.Error(err))
+
+		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {
+			return fmt.Errorf("token creation failed: %w", err)
+		} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
+			return err
 		} else {
-			_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: tokenString})
+			RespondJSON(w, api.AuthLoginResponse{Token: tokenString})
+			return nil
 		}
+	})
+	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		log.Warn("user login failed", zap.Error(err))
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
 
@@ -104,7 +117,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Password: request.Password,
 		}
 
-		if err := db.RunTx(ctx, pgx.TxOptions{}, func(ctx context.Context) error {
+		if err := db.RunTx(ctx, func(ctx context.Context) error {
 			if err := security.HashPassword(&userAccount); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)
