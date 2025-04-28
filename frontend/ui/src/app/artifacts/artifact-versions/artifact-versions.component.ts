@@ -158,6 +158,6 @@ export class ArtifactVersionsComponent {
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }
-    await firstValueFrom(this.artifacts.patchImage(data.id!!, fileId));
+    await firstValueFrom(this.artifacts.patchImage(data.id!, fileId));
   }
 }
