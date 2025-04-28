@@ -44,13 +44,14 @@
                     </p>
                   </li>
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="slugDone"
                         [formControl]="prepareFormGroup.controls.slugDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Set Organization Slug</h3>
+                    <label for="slugDone" class="text-lg font-medium leading-tight">Set Organization Slug</label>
                     <p class="mt-1 text-xs">
                       The slug will be used as part of the url for artifact registry. It must start with a lower case
                       letter or digit and consist only of lowercase letters, digits, as well as the following special
@@ -111,13 +112,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="tokenDone"
                         [formControl]="loginFormGroup.controls.tokenDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Create a Personal Access Token</h3>
+                    <label for="tokenDone" class="text-lg font-medium leading-tight"
+                      >Create a Personal Access Token</label
+                    >
                     <p class="mt-1 text-xs">
                       <b>Note: </b>A Personal Access Token is like a password: Anybody with access to it can access your
                       account!
@@ -159,13 +163,14 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="loginDone"
                         [formControl]="loginFormGroup.controls.loginDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Login</h3>
+                    <label for="loginDone" class="text-lg font-medium leading-tight">Login</label>
                     <p class="mt-1 text-xs">
                       Now we use the previously created Personal Access Token as password to log in to the registry with
                       this command:
@@ -230,13 +235,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="pullDone"
                         [formControl]="usageFormGroup.controls.pullDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Pull hello-distr from GitHub Container Registry</h3>
+                    <label for="pullDone" class="text-lg font-medium leading-tight"
+                      >Pull hello-distr from GitHub Container Registry</label
+                    >
                     <p class="mt-1 text-xs">
                       We have prepared three images for you, that all belong to the
                       <a
@@ -262,13 +270,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="tagDone"
                         [formControl]="usageFormGroup.controls.tagDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Tag images for your organization</h3>
+                    <label for="tagDone" class="text-lg font-medium leading-tight"
+                      >Tag images for your organization</label
+                    >
                     <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
                     @let tagCmd =
                       `docker tag ghcr.io/glasskube/hello-distr/proxy:${helloDistrTag} ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
@@ -286,13 +297,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="pushDone"
                         [formControl]="usageFormGroup.controls.pushDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Push tagged images to the Distr registry</h3>
+                    <label for="pushDone" class="text-lg font-medium leading-tight"
+                      >Push tagged images to the Distr registry</label
+                    >
                     @let pushCmd =
                       `docker push ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
                       docker push ${host}/${slug}/hello-distr/frontend:${helloDistrTag}
@@ -309,13 +323,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="exploreDone"
                         [formControl]="usageFormGroup.controls.exploreDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Pull image and view download history</h3>
+                    <label for="exploreDone" class="text-lg font-medium leading-tight"
+                      >Pull image and view download history</label
+                    >
                     <p class="mt-1 text-xs">Pull one of the pushed images:</p>
                     @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/proxy:' + helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
