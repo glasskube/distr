@@ -122,7 +122,7 @@ export class GlobeComponent implements OnInit, OnChanges, OnDestroy {
       ${dt.name}`;
     const cp = new ComponentPortal(StatusDotComponent);
     const ref = cp.attach(new DomPortalOutlet(el.querySelector('.dot-outlet')!, undefined, this.app));
-    ref.instance.deploymentTarget = dt;
+    ref.setInput('deploymentTarget', dt);
     return el;
   }
 

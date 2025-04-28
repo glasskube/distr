@@ -24,23 +24,6 @@ const (
 	`
 )
 
-func GetDeploymentsForDeploymentTarget(ctx context.Context, deploymentTargetID uuid.UUID) ([]types.Deployment, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		"SELECT"+deploymentOutputExpr+
-			"FROM Deployment d "+
-			"WHERE d.deployment_target_id = @deploymentTargetId "+
-			"ORDER BY d.created_at DESC",
-		pgx.NamedArgs{"deploymentTargetId": deploymentTargetID})
-	if err != nil {
-		return nil, fmt.Errorf("failed to query Deployments: %w", err)
-	} else if result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Deployment]); err != nil {
-		return nil, fmt.Errorf("failed to get Deployments: %w", err)
-	} else {
-		return result, nil
-	}
-}
-
 func GetDeployment(
 	ctx context.Context,
 	id uuid.UUID,
@@ -74,16 +57,20 @@ func GetDeployment(
 	}
 }
 
-func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTargetID uuid.UUID) (
-	*types.DeploymentWithLatestRevision, error) {
+func GetDeploymentsForDeploymentTarget(
+	ctx context.Context,
+	deploymentTargetID uuid.UUID,
+) ([]types.DeploymentWithLatestRevision, error) {
 	// TODO all these methods also need the orgId criteria
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
+	rows, err := db.Query(
+		ctx,
 		`SELECT`+deploymentOutputExpr+`,
 				dr.application_version_id as application_version_id,
 				dr.values_yaml as values_yaml,
 				dr.env_file_data as env_file_data,
 				dr.id as deployment_revision_id,
+				dr.created_at AS deployment_revision_created_at,
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,
@@ -94,30 +81,47 @@ func GetLatestDeploymentForDeploymentTarget(ctx context.Context, deploymentTarge
 					drs.type, drs.message
 				) END AS latest_status
 			FROM Deployment d
-				JOIN DeploymentRevision dr ON d.id = dr.deployment_id
+				LEFT JOIN (
+					SELECT deployment_id, max(created_at) AS max_created_at
+					FROM DeploymentRevision
+					GROUP BY deployment_id
+				) dr_max ON d.id = dr_max.deployment_id
+				JOIN DeploymentRevision dr
+					ON d.id = dr.deployment_id
+					AND dr.created_at = dr_max.max_created_at
 				JOIN ApplicationVersion av ON dr.application_version_id = av.id
 				JOIN Application a ON av.application_id = a.id
+				-- Join the DeploymentRevision table again because we ALSO need the latest deployment revision for
+				-- which exists a status. Otherwise, the deployment is shown as "no status" after an update
+				LEFT JOIN (
+					SELECT deployment_id, max(created_at) AS max_created_at
+					FROM DeploymentRevision dr1
+					WHERE exists(SELECT id FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr1.id)
+					GROUP BY deployment_id
+				) dr_max_status ON d.id = dr_max_status.deployment_id
+				LEFT JOIN DeploymentRevision dr_status
+					ON d.id = dr_status.deployment_id
+					AND dr_status.created_at = dr_max_status.max_created_at
 				LEFT JOIN (
 					SELECT
 						dr1.id AS deployment_revision_id,
 						(SELECT max(created_at) FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr1.id) AS max_created_at
 					FROM DeploymentRevision dr1
-				) status_max ON dr.id = status_max.deployment_revision_id
+				) status_max ON dr_status.id = status_max.deployment_revision_id
 				LEFT JOIN DeploymentRevisionStatus drs
-					ON dr.id = drs.deployment_revision_id AND drs.created_at = status_max.max_created_at
+					ON dr_status.id = drs.deployment_revision_id
+					AND drs.created_at = status_max.max_created_at
 			WHERE d.deployment_target_id = @deploymentTargetId
-			ORDER BY d.created_at DESC, dr.created_at DESC LIMIT 1`,
+			ORDER BY d.created_at`,
 		pgx.NamedArgs{"deploymentTargetId": deploymentTargetID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentWithLatestRevision])
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apierrors.ErrNotFound
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to get Deployment: %w", err)
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentWithLatestRevision])
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan Deployments: %w", err)
 	} else {
-		return &result, nil
+		return result, nil
 	}
 }
 
