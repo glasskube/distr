@@ -15,7 +15,6 @@ import {
 import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {modalFlyInOut} from '../../animations/modal';
-import {UuidComponent} from '../../components/uuid';
 import {AuthService} from '../../services/auth.service';
 import {UserAccountWithRole} from '@glasskube/distr-sdk';
 import {ArtifactWithTags} from '../../services/artifacts.service';
@@ -23,7 +22,7 @@ import {ArtifactWithTags} from '../../services/artifacts.service';
 @Component({
   selector: 'app-artifacts-by-customer-card',
   templateUrl: './artifacts-by-customer-card.component.html',
-  imports: [UuidComponent, FaIconComponent, OverlayModule, ReactiveFormsModule],
+  imports: [FaIconComponent, OverlayModule, ReactiveFormsModule],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
 export class ArtifactsByCustomerCardComponent {
