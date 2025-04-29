@@ -25,16 +25,17 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs';
+import {isArchived} from '../../util/dates';
+import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../util/validation';
 import {EditorComponent} from '../components/editor.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {LicensesService} from '../services/licenses.service';
-import {isArchived} from '../../util/dates';
-import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../util/validation';
 
 export type DeploymentFormValue = Partial<{
+  deploymentId: string;
   deploymentTargetId: string;
   applicationId: string;
   applicationVersionId: string;
@@ -67,6 +68,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   private readonly injector = inject(Injector);
 
   protected readonly deployForm = this.fb.nonNullable.group({
+    deploymentId: this.fb.nonNullable.control<string | undefined>(undefined),
     deploymentTargetId: this.fb.nonNullable.control('', Validators.required),
     applicationId: this.fb.nonNullable.control('', Validators.required),
     applicationVersionId: this.fb.nonNullable.control('', Validators.required),
@@ -82,6 +84,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
   private readonly deploymentTargetId$ = this.deployForm.controls.deploymentTargetId.valueChanges.pipe(
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  private readonly deploymentId$ = this.deployForm.controls.deploymentId.valueChanges.pipe(
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -107,6 +114,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
+  private readonly deployment$ = combineLatest([this.deploymentTarget$, this.deploymentId$]).pipe(
+    map(([dt, id]) => dt?.deployments.find((d) => d.id === id)),
+    shareReplay(1)
+  );
+
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
@@ -125,10 +137,10 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
    * deployment but they may only choose a license owned by the same customer.
    */
   private readonly licenseControlEnabled$ = this.featureFlags.isLicensingEnabled$.pipe(
-    combineLatestWith(this.deploymentTarget$),
+    combineLatestWith(this.deploymentTarget$, this.deployment$),
     map(
-      ([isLicensingEnabled, deploymentTarget]) =>
-        isLicensingEnabled && deploymentTarget?.createdBy?.userRole === 'customer' && !deploymentTarget?.deployment
+      ([isLicensingEnabled, deploymentTarget, deployment]) =>
+        isLicensingEnabled && !deployment && deploymentTarget?.createdBy?.userRole === 'customer'
     ),
     distinctUntilChanged()
   );
@@ -231,33 +243,32 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
             this.deployForm.controls.releaseName.disable();
             this.deployForm.controls.valuesYaml.disable();
           }
-          if (deploymentTarget.deployment) {
-            this.deployForm.controls.applicationId.disable();
-          } else {
-            this.deployForm.controls.applicationId.enable();
-          }
         }
       });
+
+    this.deployment$.pipe(takeUntil(this.destroyed$)).subscribe((deployment) => {
+      if (deployment) {
+        this.deployForm.controls.applicationId.disable();
+      } else {
+        this.deployForm.controls.applicationId.enable();
+      }
+    });
 
     combineLatest([
       this.applicationId$,
       this.applicationVersionId$,
-      this.deploymentTarget$.pipe(
-        distinctUntilChanged(
-          (a, b) =>
-            a?.id === b?.id &&
-            a?.deployment?.envFileData === b?.deployment?.envFileData &&
-            a?.deployment?.valuesYaml === b?.deployment?.valuesYaml
-        )
+      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
+      this.deployment$.pipe(
+        distinctUntilChanged((a, b) => a?.envFileData === b?.envFileData && a?.valuesYaml === b?.valuesYaml)
       ),
     ])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId, dt]) =>
+        switchMap(([applicationId, versionId, dt, d]) =>
           combineLatest([
             of(dt),
             // Only fill in the template if there is no existing deployment or the existing deployment has no values/env file
-            versionId && applicationId && !(dt?.deployment?.valuesYaml || dt?.deployment?.envFileData)
+            versionId && applicationId && !(d?.valuesYaml || d?.envFileData)
               ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
               : NEVER,
           ])

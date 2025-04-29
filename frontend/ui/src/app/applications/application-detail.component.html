@@ -55,12 +55,23 @@
         <div class="my-4 gap-4 md:my-6 md:gap-12">
           <div class="space-y-4">
             <div class="flex space-x-4">
-              <img
-                [ngSrc]="'/' + application.type + '.png'"
-                [alt]="application.type"
-                class="h-16 w-16 rounded-sm"
-                height="199"
-                width="199" />
+              @if (application.imageUrl) {
+                <img
+                  (click)="uploadImage(application)"
+                  class="w-16 h-16 rounded-sm cursor-pointer"
+                  height="199"
+                  width="199"
+                  [attr.src]="application.imageUrl | secureImage | async"
+                  alt="" />
+              } @else {
+                <img
+                  (click)="uploadImage(application)"
+                  [ngSrc]="'/' + application.type + '.png'"
+                  [alt]="application.type"
+                  class="h-16 w-16 rounded-sm cursor-pointer"
+                  height="199"
+                  width="199" />
+              }
               <div>
                 @if (editForm.enabled) {
                   <form [formGroup]="editForm" (ngSubmit)="saveApplication(application)">
@@ -81,14 +92,14 @@
                       <button
                         type="submit"
                         [disabled]="editFormLoading()"
-                        class="ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        class="cursor-pointer ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         <fa-icon [icon]="faCheck" class="mr-2"></fa-icon>
                         Save
                       </button>
                       <button
                         type="button"
                         (click)="cancelApplicationEdit()"
-                        class="ml-2 font-medium rounded-lg text-sm p-2 text-gray-900 focus:outline-none bg-white border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                        class="cursor-pointer ml-2 font-medium rounded-lg text-sm p-2 text-gray-900 focus:outline-none bg-white border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                         <fa-icon [icon]="faXmark" class="mr-2"></fa-icon>
                         Cancel
                       </button>
@@ -102,7 +113,7 @@
                     <button
                       type="button"
                       (click)="enableApplicationEdit(application)"
-                      class="ml-2 text-sm py-1 px-2 text-gray-900 bg-white border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                      class="cursor-pointer ml-2 text-sm py-1 px-2 text-gray-900 bg-white border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
                       <fa-icon [icon]="faEdit"></fa-icon>
                     </button>
                   </div>

@@ -49,16 +49,37 @@ func GetDeploymentTarget(ctx context.Context) *types.DeploymentTargetWithCreated
 	}
 	panic("deployment target not contained in context")
 }
+func WithFile(ctx context.Context, file *types.File) context.Context {
+	return context.WithValue(ctx, ctxKeyFile, file)
+}
 
-func WithUserAccount(ctx context.Context, userAccount *types.UserAccount) context.Context {
+func GetFile(ctx context.Context) *types.File {
+	if file, ok := ctx.Value(ctxKeyFile).(*types.File); ok {
+		return file
+	}
+	panic("no File found in context")
+}
+
+func WithUserAccount(ctx context.Context, userAccount *types.UserAccountWithUserRole) context.Context {
 	return context.WithValue(ctx, ctxKeyUserAccount, userAccount)
 }
 
-func GetUserAccount(ctx context.Context) *types.UserAccount {
-	if userAccount, ok := ctx.Value(ctxKeyUserAccount).(*types.UserAccount); ok {
+func GetUserAccount(ctx context.Context) *types.UserAccountWithUserRole {
+	if userAccount, ok := ctx.Value(ctxKeyUserAccount).(*types.UserAccountWithUserRole); ok {
 		return userAccount
 	}
 	panic("no UserAccount found in context")
+}
+
+func WithArtifact(ctx context.Context, userAccount *types.ArtifactWithTaggedVersion) context.Context {
+	return context.WithValue(ctx, ctxKeyArtifact, userAccount)
+}
+
+func GetArtifact(ctx context.Context) *types.ArtifactWithTaggedVersion {
+	if userAccount, ok := ctx.Value(ctxKeyArtifact).(*types.ArtifactWithTaggedVersion); ok {
+		return userAccount
+	}
+	panic("no Artifact found in context")
 }
 
 func GetApplicationLicense(ctx context.Context) *types.ApplicationLicense {

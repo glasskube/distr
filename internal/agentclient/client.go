@@ -38,16 +38,8 @@ type Client struct {
 	rawToken   string
 }
 
-func (c *Client) DockerResource(ctx context.Context) (*api.DockerAgentResource, error) {
-	return resource[api.DockerAgentResource](ctx, c)
-}
-
-func (c *Client) KubernetesResource(ctx context.Context) (*api.KubernetesAgentResource, error) {
-	return resource[api.KubernetesAgentResource](ctx, c)
-}
-
-func resource[T any](ctx context.Context, c *Client) (*T, error) {
-	var result T
+func (c *Client) Resource(ctx context.Context) (*api.AgentResource, error) {
+	var result api.AgentResource
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.resourceEndpoint, nil); err != nil {
 		return nil, err
 	} else {

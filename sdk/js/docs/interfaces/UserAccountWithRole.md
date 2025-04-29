@@ -42,6 +42,16 @@
 
 ---
 
+### imageUrl?
+
+> `optional` **imageUrl**: `string`
+
+#### Inherited from
+
+[`UserAccount`](UserAccount.md).[`imageUrl`](UserAccount.md#imageurl)
+
+---
+
 ### name?
 
 > `optional` **name**: `string`

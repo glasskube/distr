@@ -77,7 +77,7 @@ func main() {
 			logger.Debug("agent client config unchanged")
 		}
 
-		res, err := agentClient.KubernetesResource(ctx)
+		res, err := agentClient.Resource(ctx)
 		if err != nil {
 			logger.Error("could not get resource", zap.Error(err))
 			continue
@@ -87,64 +87,72 @@ func main() {
 			continue
 		}
 
-		deployments, err := GetExistingDeployments(ctx, res.Namespace)
+		existingDeployments, err := GetExistingDeployments(ctx, res.Namespace)
 		if err != nil {
 			logger.Error("could not get existing deployments", zap.Error(err))
 			continue
 		}
 
-		var currentDeployment *AgentDeployment
-		for _, d := range deployments {
+		for _, existing := range existingDeployments {
 			// Check if the deployment ID matches, but fall back to checking the release name if the agent
 			// deployment is missing the ID. This has the disadvantage that we would miss if a deployment is
 			// deleted and recreated with the same name very quickly.
-			if res.Deployment != nil &&
-				((d.ID != uuid.Nil && d.ID == res.Deployment.ID) ||
-					(d.ID == uuid.Nil && res.Deployment.ReleaseName == d.ReleaseName)) {
-				currentDeployment = &d
-			} else {
-				logger.Info("uninstalling orphan deployment", zap.String("id", d.ID.String()))
-				if err := RunHelmUninstall(ctx, res.Namespace, d.ReleaseName); err != nil {
+			resourceHasExistingDeployment := slices.ContainsFunc(
+				res.Deployments,
+				func(depl api.AgentDeployment) bool { return isSameDeployment(existing, depl) },
+			)
+			if !resourceHasExistingDeployment {
+				logger.Info("uninstalling orphan deployment", zap.String("id", existing.ID.String()))
+				if err := RunHelmUninstall(ctx, res.Namespace, existing.ReleaseName); err != nil {
 					logger.Warn("could not uninstall old deployment", zap.Error(err))
-				} else if err := DeleteDeployment(ctx, res.Namespace, d); err != nil {
+				} else if err := DeleteDeployment(ctx, res.Namespace, existing); err != nil {
 					logger.Warn("could not delete old AgentDeployment resource", zap.Error(err))
 				}
 			}
 		}
 
-		if res.Deployment == nil {
+		if len(res.Deployments) == 0 {
 			logger.Info("no deployment in resource response")
 			continue
 		}
 
-		if err := verifyLatestHelmRelease(ctx, res.Namespace, *res.Deployment, currentDeployment); err != nil {
-			if errors.Is(err, driver.ErrReleaseNotFound) {
-				logger.Info("current helm release does not exist")
-			} else {
-				logger.Warn("refusing to install or update", zap.Error(err))
-				pushErrorStatus(ctx, *res.Deployment, err)
-				continue
-			}
-		}
-
-		progressCtx, progressCancel := context.WithCancel(ctx)
-		go func(ctx context.Context) {
-			tick := time.Tick(agentenv.Interval)
-			for {
-				select {
-				case <-ctx.Done():
-					logger.Info("stop sending progress updates")
-					return
-				case <-tick:
-					logger.Info("sending progress update")
-					pushProgressingStatus(ctx, *res.Deployment)
+		for _, deployment := range res.Deployments {
+			var currentDeployment *AgentDeployment
+			for _, existing := range existingDeployments {
+				if isSameDeployment(existing, deployment) {
+					currentDeployment = &existing
+					break
 				}
 			}
-		}(progressCtx)
+			if err := verifyLatestHelmRelease(ctx, res.Namespace, deployment, currentDeployment); err != nil {
+				if errors.Is(err, driver.ErrReleaseNotFound) {
+					logger.Info("current helm release does not exist")
+				} else {
+					logger.Warn("refusing to install or update", zap.Error(err))
+					pushErrorStatus(ctx, deployment, err)
+					continue
+				}
+			}
 
-		runInstallOrUpgrade(ctx, res.Namespace, *res.Deployment, currentDeployment)
+			progressCtx, progressCancel := context.WithCancel(ctx)
+			go func(ctx context.Context) {
+				tick := time.Tick(agentenv.Interval)
+				for {
+					select {
+					case <-ctx.Done():
+						logger.Info("stop sending progress updates")
+						return
+					case <-tick:
+						logger.Info("sending progress update")
+						pushProgressingStatus(ctx, deployment)
+					}
+				}
+			}(progressCtx)
 
-		progressCancel()
+			runInstallOrUpgrade(ctx, res.Namespace, deployment, currentDeployment)
+
+			progressCancel()
+		}
 	}
 
 	logger.Info("shutting down")
@@ -174,7 +182,7 @@ func runSelfUpdateIfNeeded(ctx context.Context, namespace string, targetVersion 
 func verifyLatestHelmRelease(
 	ctx context.Context,
 	namespace string,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 	currentDeployment *AgentDeployment,
 ) error {
 	if latestRelease, err := GetLatestHelmRelease(ctx, namespace, deployment); err != nil {
@@ -192,10 +200,10 @@ func verifyLatestHelmRelease(
 func runInstallOrUpgrade(
 	ctx context.Context,
 	namespace string,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 	currentDeployment *AgentDeployment,
 ) {
-	if _, err := agentauth.EnsureAuth(ctx, agentClient.RawToken(), deployment.AgentDeployment); err != nil {
+	if _, err := agentauth.EnsureAuth(ctx, agentClient.RawToken(), deployment); err != nil {
 		logger.Error("failed to ensure docker auth", zap.Error(err))
 		pushErrorStatus(ctx, deployment, fmt.Errorf("failed to ensure docker auth: %w", err))
 	} else if err := ensureImagePullSecret(ctx, namespace, deployment); err != nil {
@@ -205,8 +213,8 @@ func runInstallOrUpgrade(
 
 	if currentDeployment == nil {
 		if installedDeployment, err := RunHelmInstall(ctx, namespace, deployment); err != nil {
-			logger.Error("helm upgrade failed", zap.Error(err))
-			pushErrorStatus(ctx, deployment, fmt.Errorf("helm upgrade failed: %w", err))
+			logger.Error("helm install failed", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("helm install failed: %w", err))
 		} else if err := SaveDeployment(ctx, namespace, *installedDeployment); err != nil {
 			logger.Error("could not save latest deployment", zap.Error(err))
 			pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
@@ -216,8 +224,8 @@ func runInstallOrUpgrade(
 		}
 	} else if currentDeployment.RevisionID != deployment.RevisionID {
 		if updatedDeployment, err := RunHelmUpgrade(ctx, namespace, deployment); err != nil {
-			logger.Error("helm install failed", zap.Error(err))
-			pushErrorStatus(ctx, deployment, fmt.Errorf("helm install failed: %w", err))
+			logger.Error("helm upgrade failed", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("helm upgrade failed: %w", err))
 		} else if err := SaveDeployment(ctx, namespace, *updatedDeployment); err != nil {
 			logger.Error("could not save latest deployment", zap.Error(err))
 			pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
@@ -249,13 +257,13 @@ func runInstallOrUpgrade(
 	}
 }
 
-func pushStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, status string) {
+func pushStatus(ctx context.Context, deployment api.AgentDeployment, status string) {
 	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeOK, status); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
 	}
 }
 
-func pushProgressingStatus(ctx context.Context, deployment api.KubernetesAgentDeployment) {
+func pushProgressingStatus(ctx context.Context, deployment api.AgentDeployment) {
 	if err := agentClient.Status(
 		ctx,
 		deployment.RevisionID,
@@ -266,17 +274,17 @@ func pushProgressingStatus(ctx context.Context, deployment api.KubernetesAgentDe
 	}
 }
 
-func pushErrorStatus(ctx context.Context, deployment api.KubernetesAgentDeployment, err error) {
+func pushErrorStatus(ctx context.Context, deployment api.AgentDeployment, err error) {
 	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeError, err.Error()); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
 	}
 }
 
-func ensureImagePullSecret(ctx context.Context, namespace string, deployment api.KubernetesAgentDeployment) error {
+func ensureImagePullSecret(ctx context.Context, namespace string, deployment api.AgentDeployment) error {
 	// It's easiest to simply copy the docker config from the file previously created by [agentauth.EnsureAuth].
 	// However, be aware that this will not work when running the angent locally when a docker credential helper is
 	// installed.
-	dockerConfigPath := agentauth.DockerConfigPath(deployment.AgentDeployment)
+	dockerConfigPath := agentauth.DockerConfigPath(deployment)
 	dockerConfigData, err := os.ReadFile(dockerConfigPath)
 	if err != nil {
 		return fmt.Errorf("failed to read docker config from %v: %w", dockerConfigPath, err)
@@ -345,4 +353,9 @@ func watchConfigDirs(dirs []string) error {
 			}
 		}
 	}
+}
+
+func isSameDeployment(existingDeployment AgentDeployment, resourceDeployment api.AgentDeployment) bool {
+	return (existingDeployment.ID != uuid.Nil && existingDeployment.ID == resourceDeployment.ID) ||
+		(existingDeployment.ID == uuid.Nil && resourceDeployment.ReleaseName == existingDeployment.ReleaseName)
 }

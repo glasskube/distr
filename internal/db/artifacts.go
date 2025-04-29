@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	artifactOutputExpr         = ` a.id, a.created_at, a.organization_id, a.name `
+	artifactOutputExpr         = ` a.id, a.created_at, a.organization_id, a.name, a.image_id `
 	artifactOutputWithSlugExpr = artifactOutputExpr + ", o.slug AS organization_slug"
 	artifactVersionOutputExpr  = `
 		v.id,
@@ -179,7 +179,16 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				av.created_at,
 				av.manifest_blob_digest,
 				coalesce((
-					SELECT array_agg(row (avt.id, avt.name) ORDER BY avt.name)
+					SELECT array_agg(row (avt.id, avt.name, (
+						SELECT ROW(
+							count(distinct avplx.id),
+							count(DISTINCT avplx.useraccount_id),
+							coalesce(array_agg(DISTINCT avplx.useraccount_id)
+									 FILTER (WHERE avplx.useraccount_id IS NOT NULL), ARRAY[]::UUID[])
+						)
+						FROM ArtifactVersionPull avplx WHERE avplx.artifact_version_id = avt.id
+						)) ORDER BY avt.name
+					)
 					FROM ArtifactVersion avt
 					WHERE avt.manifest_blob_digest = av.manifest_blob_digest
 					AND avt.artifact_id = av.artifact_id
@@ -673,4 +682,16 @@ func GetArtifactVersionPulls(
 		return nil, fmt.Errorf("could not scan ArtifactVersionPulls: %w", err)
 	}
 	return result, nil
+}
+
+func UpdateArtifactImage(ctx context.Context, artifact *types.ArtifactWithTaggedVersion, imageID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(ctx,
+		`UPDATE Artifact SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": artifact.ID},
+	)
+	if err := row.Scan(&artifact.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to artifact: %w", err)
+	}
+	return nil
 }

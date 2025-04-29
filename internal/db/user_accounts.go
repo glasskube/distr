@@ -16,7 +16,7 @@ import (
 
 const (
 	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
-		"u.password_salt, u.name"
+		"u.password_salt, u.name, u.image_id"
 	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
 )
 
@@ -320,4 +320,16 @@ func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error 
 		err = fmt.Errorf("could not update last_logged_in_at on UserAccount: %w", err)
 	}
 	return err
+}
+
+func UpdateUserAccountImage(ctx context.Context, userAccount *types.UserAccountWithUserRole, imageID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(ctx,
+		`UPDATE UserAccount SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": userAccount.ID},
+	)
+	if err := row.Scan(&userAccount.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to user account: %w", err)
+	}
+	return nil
 }
