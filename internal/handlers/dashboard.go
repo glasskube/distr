@@ -54,22 +54,22 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 			for _, artifact := range artifacts {
 				if slices.Contains(artifact.DownloadedByUsers, customer.ID) {
 					if latestPulled, err := db.GetLatestPullOfArtifactByUser(ctx, artifact.ID, customer.ID); err != nil {
-						// TODO
-						/*log.Error("failed to get latest artifact pull by user", zap.Error(err))
+						log.Error("failed to get latest artifact pull by user", zap.Error(err),
+							zap.Any("artifactId", artifact.ID), zap.Any("userId", customer.ID))
 						sentry.GetHubFromContext(ctx).CaptureException(err)
-						http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-						return*/
+						// TODO check again
+						continue
 					} else {
 						var licenseOwnerID *uuid.UUID
 						if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
 							licenseOwnerID = &customer.ID
 						}
 						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseOwnerID); err != nil {
-							// TODO
-							/*log.Error("failed to get latest artifact pull by user", zap.Error(err))
+							// TODO "cache" maybe?
+							log.Error("failed to get versions for artifact", zap.Error(err))
 							sentry.GetHubFromContext(ctx).CaptureException(err)
 							http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-							return*/
+							return
 						} else {
 							customerRes.Artifacts = append(customerRes.Artifacts, DashboardArtifact{
 								Artifact: api.AsArtifact(types.ArtifactWithTaggedVersion{
@@ -77,7 +77,6 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 									Versions:              versions,
 								}),
 								LatestPulledVersion: latestPulled,
-								// AvailableVersions:   versions,
 							})
 						}
 					}
