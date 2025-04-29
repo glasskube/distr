@@ -8,8 +8,6 @@ import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
-import {ChartTypeComponent} from '../charts/type/chart-type.component';
-import {ChartUptimeComponent} from '../charts/uptime/chart-uptime.component';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
 import {UsersService} from '../../services/users.service';
 import {ArtifactsService, ArtifactWithTags} from '../../services/artifacts.service';
@@ -27,8 +25,6 @@ interface ArtifactsByCustomer {
     DeploymentTargetsComponent,
     AsyncPipe,
     OnboardingWizardComponent,
-    ChartUptimeComponent,
-    ChartTypeComponent,
     ArtifactsByCustomerCardComponent,
   ],
   templateUrl: './dashboard-placeholder.component.html',
