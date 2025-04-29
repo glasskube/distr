@@ -165,6 +165,7 @@ export class DistrService {
       type: target.type,
       namespace: target.kubernetes?.namespace,
       scope: target.kubernetes?.scope,
+      deployments: [],
     });
     await this.client.createOrUpdateDeployment({
       deploymentTargetId: deploymentTarget.id!,

@@ -3,6 +3,7 @@ import {DeploymentType, HelmChartType, DockerType} from './deployment';
 
 export interface Application extends BaseModel, Named {
   type: DeploymentType;
+  imageUrl?: string;
   versions?: ApplicationVersion[];
 }
 

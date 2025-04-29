@@ -19,15 +19,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func DockerEngineApply(
-	ctx context.Context,
-	deployment api.DockerAgentDeployment,
-) (*AgentDeployment, string, error) {
-
+func DockerEngineApply(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
 	if deployment.DockerType == types.DockerTypeSwarm {
-
-		fmt.Println(deployment.RevisionID)
-
 		// Step 1 Ensure Docker Swarm is initialized
 		initCmd := exec.CommandContext(ctx, "docker", "info", "--format", "{{.Swarm.LocalNodeState}}")
 		initOutput, err := initCmd.CombinedOutput()
@@ -52,19 +45,8 @@ func DockerEngineApply(
 	return ApplyComposeFile(ctx, deployment)
 
 }
-func DockerEngineUninstall(
-	ctx context.Context, deployment AgentDeployment,
-) error {
-	if deployment.DockerType == types.DockerTypeSwarm {
-		return UninstallDockerSwarm(ctx, deployment)
-	}
-	return UninstallDockerCompose(ctx, deployment)
-}
-func ApplyComposeFile(
-	ctx context.Context,
-	deployment api.DockerAgentDeployment,
-) (*AgentDeployment, string, error) {
 
+func ApplyComposeFile(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
 	agentDeploymet, err := NewAgentDeployment(deployment)
 	if err != nil {
 		return nil, "", err
@@ -111,11 +93,7 @@ func ApplyComposeFile(
 	}
 }
 
-func ApplyComposeFileSwarm(
-	ctx context.Context,
-	deployment api.DockerAgentDeployment,
-) (*AgentDeployment, string, error) {
-
+func ApplyComposeFileSwarm(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
 	agentDeployment, err := NewAgentDeployment(deployment)
 	if err != nil {
 		return nil, "", err
@@ -164,9 +142,14 @@ func ApplyComposeFileSwarm(
 	return agentDeployment, statusStr, nil
 }
 
-func UninstallDockerCompose(
-	ctx context.Context, deployment AgentDeployment,
-) error {
+func DockerEngineUninstall(ctx context.Context, deployment AgentDeployment) error {
+	if deployment.DockerType == types.DockerTypeSwarm {
+		return UninstallDockerSwarm(ctx, deployment)
+	}
+	return UninstallDockerCompose(ctx, deployment)
+}
+
+func UninstallDockerCompose(ctx context.Context, deployment AgentDeployment) error {
 	cmd := exec.CommandContext(ctx, "docker", "compose", "--project-name", deployment.ProjectName, "down", "--volumes")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -175,10 +158,7 @@ func UninstallDockerCompose(
 	return nil
 }
 
-func UninstallDockerSwarm(
-	ctx context.Context, deployment AgentDeployment,
-) error {
-
+func UninstallDockerSwarm(ctx context.Context, deployment AgentDeployment) error {
 	cmd := exec.CommandContext(ctx, "docker", "stack", "rm", deployment.ProjectName)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -194,6 +174,7 @@ func UninstallDockerSwarm(
 
 	return nil
 }
+
 func cleanComposeFile(composeData []byte) []byte {
 	lines := strings.Split(string(composeData), "\n")
 	cleanedLines := make([]string, 0, 50)
@@ -207,6 +188,7 @@ func cleanComposeFile(composeData []byte) []byte {
 	}
 	return []byte(strings.Join(cleanedLines, "\n"))
 }
+
 func parseEnvFile(envData []byte) (map[string]string, error) {
 	envVars := make(map[string]string)
 	scanner := bufio.NewScanner(bytes.NewReader(envData))
@@ -233,10 +215,7 @@ type ComposeFile struct {
 	Services map[string]ComposeService `yaml:"services"`
 }
 
-func PullSwarmMode(
-	ctx context.Context, deployment api.DockerAgentDeployment,
-) (string, error) {
-
+func PullSwarmMode(ctx context.Context, deployment api.AgentDeployment) (string, error) {
 	// Parse the compose YAML file
 	var compose ComposeFile
 	err := yaml.Unmarshal(deployment.ComposeFile, &compose)
@@ -282,10 +261,10 @@ func PullSwarmMode(
 	return pullLogs.String(), nil
 }
 
-func DockerConfigEnv(deployment api.DockerAgentDeployment) []string {
+func DockerConfigEnv(deployment api.AgentDeployment) []string {
 	if len(deployment.RegistryAuth) > 0 || hasRegistryImages(deployment) {
 		return []string{
-			dockerconfig.EnvOverrideConfigDir + "=" + agentauth.DockerConfigDir(deployment.AgentDeployment),
+			dockerconfig.EnvOverrideConfigDir + "=" + agentauth.DockerConfigDir(deployment),
 		}
 	} else {
 		return nil
@@ -294,7 +273,7 @@ func DockerConfigEnv(deployment api.DockerAgentDeployment) []string {
 
 // hasRegistryImages parses the compose file in order to check whether one of the services uses an image hosted on
 // [agentenv.DistrRegistryHost].
-func hasRegistryImages(deployment api.DockerAgentDeployment) bool {
+func hasRegistryImages(deployment api.AgentDeployment) bool {
 	var compose struct {
 		Services map[string]struct {
 			Image string

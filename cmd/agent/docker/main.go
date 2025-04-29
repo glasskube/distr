@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"os/signal"
+	"slices"
 	"syscall"
 	"time"
 
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/agentenv"
@@ -37,7 +39,7 @@ loop:
 			break loop
 		}
 
-		if resource, err := client.DockerResource(ctx); err != nil {
+		if resource, err := client.Resource(ctx); err != nil {
 			logger.Error("failed to get resource", zap.Error(err))
 		} else {
 			if agentenv.AgentVersionID != "" {
@@ -46,9 +48,9 @@ loop:
 					if err := RunAgentSelfUpdate(ctx); err != nil {
 						logger.Error("self update failed", zap.Error(err))
 						// TODO: Support status without revision ID?
-						if resource.Deployment != nil {
+						if len(resource.Deployments) > 0 {
 							if err :=
-								client.StatusWithError(ctx, resource.Deployment.RevisionID, "", err); err != nil {
+								client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
 								logger.Error("failed to send status", zap.Error(err))
 							}
 						}
@@ -66,7 +68,11 @@ loop:
 				logger.Error("could not get existing deployments", zap.Error(err))
 			} else {
 				for _, deployment := range deployments {
-					if resource.Deployment == nil || resource.Deployment.ID != deployment.ID {
+					resourceHasExistingDeployment := slices.ContainsFunc(
+						resource.Deployments,
+						func(d api.AgentDeployment) bool { return d.ID == deployment.ID },
+					)
+					if !resourceHasExistingDeployment {
 						logger.Info("uninstalling old deployment", zap.String("id", deployment.ID.String()))
 						if err := DockerEngineUninstall(ctx, deployment); err != nil {
 							logger.Error("could not uninstall deployment", zap.Error(err))
@@ -77,55 +83,50 @@ loop:
 				}
 			}
 
-			if resource.Deployment == nil {
+			if len(resource.Deployments) == 0 {
 				logger.Info("no deployment in resource response")
 				continue
 			}
 
-			progressCtx, progressCancel := context.WithCancel(ctx)
-			go func(ctx context.Context) {
-				tick := time.Tick(agentenv.Interval)
-				for {
-					select {
-					case <-ctx.Done():
-						logger.Info("stop sending progress updates")
-						return
-					case <-tick:
-						logger.Info("sending progress update")
-						err := client.Status(
-							ctx,
-							resource.Deployment.RevisionID,
-							types.DeploymentStatusTypeProgressing,
-							"applying docker compose…",
-						)
-						if err != nil {
-							logger.Warn("error updating status", zap.Error(err))
+			for _, deployment := range resource.Deployments {
+				progressCtx, progressCancel := context.WithCancel(ctx)
+				go func(ctx context.Context) {
+					tick := time.Tick(agentenv.Interval)
+					for {
+						select {
+						case <-ctx.Done():
+							logger.Info("stop sending progress updates")
+							return
+						case <-tick:
+							logger.Info("sending progress update")
+							err := client.Status(
+								ctx,
+								deployment.RevisionID,
+								types.DeploymentStatusTypeProgressing,
+								"applying docker compose…",
+							)
+							if err != nil {
+								logger.Warn("error updating status", zap.Error(err))
+							}
 						}
 					}
-				}
-			}(progressCtx)
+				}(progressCtx)
 
-			var agentDeployment *AgentDeployment
-			var status string
-			_, err = agentauth.EnsureAuth(ctx, client.RawToken(), resource.Deployment.AgentDeployment)
-			if err != nil {
-				logger.Error("docker auth error", zap.Error(err))
-			}
-			if _, exists := deployments[resource.Deployment.RevisionID]; !exists {
-
-				agentDeployment, status, err = DockerEngineApply(ctx, *resource.Deployment)
-
-				if err == nil {
+				var agentDeployment *AgentDeployment
+				var status string
+				_, err = agentauth.EnsureAuth(ctx, client.RawToken(), deployment)
+				if err != nil {
+					logger.Error("docker auth error", zap.Error(err))
+				} else if agentDeployment, status, err = ApplyComposeFile(ctx, deployment); err == nil {
 					multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
 				}
 
-			}
+				progressCancel()
 
-			progressCancel()
-
-			if statusErr :=
-				client.StatusWithError(ctx, resource.Deployment.RevisionID, status, err); statusErr != nil {
-				logger.Error("failed to send status", zap.Error(statusErr))
+				if statusErr :=
+					client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
+					logger.Error("failed to send status", zap.Error(statusErr))
+				}
 			}
 		}
 	}

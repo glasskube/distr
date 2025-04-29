@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
@@ -17,14 +18,15 @@ type Deployment struct {
 
 type DeploymentWithLatestRevision struct {
 	Deployment
-	DeploymentRevisionID   uuid.UUID                 `db:"deployment_revision_id" json:"deploymentRevisionId"`
-	ApplicationID          uuid.UUID                 `db:"application_id" json:"applicationId"`
-	ApplicationName        string                    `db:"application_name" json:"applicationName"`
-	ApplicationVersionID   uuid.UUID                 `db:"application_version_id" json:"applicationVersionId"`
-	ApplicationVersionName string                    `db:"application_version_name" json:"applicationVersionName"`
-	ValuesYaml             []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
-	EnvFileData            []byte                    `db:"env_file_data" json:"envFileData,omitempty"`
-	LatestStatus           *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
+	DeploymentRevisionID        uuid.UUID                 `db:"deployment_revision_id" json:"deploymentRevisionId"`
+	DeploymentRevisionCreatedAt time.Time                 `db:"deployment_revision_created_at" json:"deploymentRevisionCreatedAt"` //nolint:lll
+	ApplicationID               uuid.UUID                 `db:"application_id" json:"applicationId"`
+	ApplicationName             string                    `db:"application_name" json:"applicationName"`
+	ApplicationVersionID        uuid.UUID                 `db:"application_version_id" json:"applicationVersionId"`
+	ApplicationVersionName      string                    `db:"application_version_name" json:"applicationVersionName"`
+	ValuesYaml                  []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
+	EnvFileData                 []byte                    `db:"env_file_data" json:"envFileData,omitempty"`
+	LatestStatus                *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
 }
 
 func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {

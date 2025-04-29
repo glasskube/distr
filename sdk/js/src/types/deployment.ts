@@ -25,6 +25,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   valuesYaml?: string;
   envFileData?: string;
   deploymentRevisionId?: string;
+  deploymentRevisionCreatedAt?: string;
   latestStatus?: DeploymentRevisionStatus;
 }
 

@@ -57,58 +57,60 @@
       </div>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-      <div
-        class="flex flex-col md:flex-row items-stretch md:items-center md:space-x-3 space-y-3 md:space-y-0 justify-between mx-4 py-4 dark:border-gray-700">
-        <div class="w-full md:w-1/2">
-          <form class="flex items-center" [formGroup]="filterForm">
-            <label for="simple-search" class="sr-only">Search</label>
-            <div class="relative w-full">
-              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <fa-icon [icon]="faMagnifyingGlass" class="text-gray-500 dark:text-gray-400"></fa-icon>
-              </div>
-              <input
-                [formControl]="filterForm.controls.search"
-                autotrim
-                type="text"
-                id="simple-search"
-                placeholder="Filter artifacts"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between dark:border-gray-700 mb-4">
+      <div class="w-full md:w-1/2">
+        <form class="flex items-center" [formGroup]="filterForm">
+          <label for="simple-search" class="sr-only">Search</label>
+          <div class="relative w-full">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <fa-icon [icon]="faMagnifyingGlass" class="text-gray-500 dark:text-gray-400"></fa-icon>
             </div>
-          </form>
-        </div>
+            <input
+              [formControl]="filterForm.controls.search"
+              autotrim
+              type="text"
+              id="simple-search"
+              placeholder="Filter artifacts"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+          </div>
+        </form>
       </div>
-      <div class="overflow-x-auto">
-        <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-          @for (artifact of filteredArtifacts$ | async; track artifact.id) {
-            <li class="py-3 px-6 sm:py-4">
-              <div class="flex items-center">
-                <div class="shrink-0 text-gray-900 dark:text-white">
-                  <!--
-                  TODO: show faDocker if the artifacts manifestContentType has the "docker" vendor prefix (vnd.docker).
-                    For this we have to add the manifestContentType of the most recently created version to each artifact.
-                  -->
-                  <fa-icon class="text-xl" [icon]="faBox"></fa-icon>
+    </div>
+
+    <div class="overflow-x-auto">
+      <ul role="list" class="flex flex-col gap-4">
+        @for (artifact of filteredArtifacts$ | async; track artifact.id) {
+          <li class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg py-3 px-6 sm:py-4">
+            <div class="flex items-center">
+              @if (artifact.imageUrl) {
+                <img
+                  [routerLink]="artifact.id"
+                  class="w-8 h-8 rounded-full cursor-pointer"
+                  [attr.src]="artifact.imageUrl | secureImage | async"
+                  alt="" />
+              } @else {
+                <div class="shrink-0 text-gray-900 dark:text-gray-400">
+                  <fa-icon [routerLink]="artifact.id" [icon]="faBox" size="xl" class="text-xl cursor-pointer"></fa-icon>
                 </div>
-                <div class="flex-1 min-w-0 ms-4">
-                  <a
-                    class="font-semibold text-gray-900 truncate dark:text-white hover:underline hover:text-blue-600 dark:hover:text-blue-500"
-                    [routerLink]="artifact.id">
-                    {{ artifact.name }}
-                  </a>
-                  <p class="text-sm text-gray-500 truncate dark:text-gray-400 mt-1">
-                    <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
-                  </p>
-                </div>
-                <div class="flex flex-col items-end gap-1">
-                  <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
-                  <app-artifacts-downloaded-by [source]="artifact"></app-artifacts-downloaded-by>
-                </div>
+              }
+              <div class="flex-1 min-w-0 ms-4">
+                <a
+                  class="font-semibold text-gray-900 truncate dark:text-white hover:underline hover:text-blue-600 dark:hover:text-blue-500"
+                  [routerLink]="artifact.id">
+                  {{ artifact.name }}
+                </a>
+                <p class="text-sm text-gray-500 truncate dark:text-gray-400 mt-1">
+                  <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
+                </p>
               </div>
-            </li>
-          }
-        </ul>
-      </div>
+              <div class="flex flex-col items-end gap-1">
+                <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
+                <app-artifacts-downloaded-by [source]="artifact"></app-artifacts-downloaded-by>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
     </div>
   </div>
 </section>

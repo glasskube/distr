@@ -6,7 +6,11 @@ import (
 )
 
 type AgentResource struct {
-	Version types.AgentVersion `json:"version"`
+	Version   types.AgentVersion `json:"version"`
+	Namespace string             `json:"namespace,omitempty"`
+	// Deprecated: This property will be removed in v2. Please consider using Deployments instead.
+	Deployment  *AgentDeployment  `json:"deployment,omitempty"`
+	Deployments []AgentDeployment `json:"deployments,omitempty"`
 }
 
 type AgentRegistryAuth struct {
@@ -18,28 +22,15 @@ type AgentDeployment struct {
 	ID           uuid.UUID                    `json:"id"`
 	RevisionID   uuid.UUID                    `json:"revisionId"`
 	RegistryAuth map[string]AgentRegistryAuth `json:"registryAuth"`
-}
 
-type DockerAgentResource struct {
-	AgentResource
-	Deployment *DockerAgentDeployment `json:"deployment"`
-}
+	// Docker specific data
 
-type DockerAgentDeployment struct {
-	AgentDeployment
 	ComposeFile []byte `json:"composeFile"`
 	EnvFile     []byte `json:"envFile"`
 	types.DockerType
-}
 
-type KubernetesAgentResource struct {
-	AgentResource
-	Namespace  string                     `json:"namespace"`
-	Deployment *KubernetesAgentDeployment `json:"deployment"`
-}
+	// Kubernetes specific data
 
-type KubernetesAgentDeployment struct {
-	AgentDeployment
 	ReleaseName  string         `json:"releaseName"`
 	ChartUrl     string         `json:"chartUrl"`
 	ChartName    string         `json:"chartName"`

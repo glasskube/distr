@@ -52,6 +52,12 @@
 
 ---
 
+### deploymentRevisionCreatedAt?
+
+> `optional` **deploymentRevisionCreatedAt**: `string`
+
+---
+
 ### deploymentRevisionId?
 
 > `optional` **deploymentRevisionId**: `string`

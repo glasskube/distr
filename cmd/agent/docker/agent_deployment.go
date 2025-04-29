@@ -27,7 +27,7 @@ func agentDeploymentDir() string {
 	return path.Join(ScratchDir(), "deployments")
 }
 
-func NewAgentDeployment(deployment api.DockerAgentDeployment) (*AgentDeployment, error) {
+func NewAgentDeployment(deployment api.AgentDeployment) (*AgentDeployment, error) {
 	if name, err := getProjectName(deployment.ComposeFile); err != nil {
 		return nil, err
 	} else {

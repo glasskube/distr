@@ -147,17 +147,30 @@ func validateDeploymentRequest(
 		}
 	}
 
-	if target.Deployment != nil {
-		if request.ApplicationLicenseID == nil {
-			if target.Deployment.ApplicationLicenseID != nil {
-				request.ApplicationLicenseID = target.Deployment.ApplicationLicenseID
+	var existingDeployment *types.DeploymentWithLatestRevision
+	if request.DeploymentID != nil {
+		for _, d := range target.Deployments {
+			if d.ID == *request.DeploymentID {
+				existingDeployment = &d
+				break
 			}
-		} else if target.Deployment.ApplicationLicenseID == nil {
+		}
+		if existingDeployment == nil {
+			return badRequestError(w, "DeploymentTarget doesn't have Deployment with the specified ID")
+		}
+	}
+
+	if existingDeployment != nil {
+		if request.ApplicationLicenseID == nil {
+			if existingDeployment.ApplicationLicenseID != nil {
+				request.ApplicationLicenseID = existingDeployment.ApplicationLicenseID
+			}
+		} else if existingDeployment.ApplicationLicenseID == nil {
 			return badRequestError(w, "can not update license")
-		} else if *request.ApplicationLicenseID != *target.Deployment.ApplicationLicenseID {
+		} else if *request.ApplicationLicenseID != *existingDeployment.ApplicationLicenseID {
 			return badRequestError(w, "can not update license")
 		}
-		if target.Deployment.ApplicationID != app.ID {
+		if existingDeployment.ApplicationID != app.ID {
 			return badRequestError(w, "can not change application of existing deployment")
 		}
 	}
@@ -183,7 +196,7 @@ func validateDeploymentRequest(
 		return badRequestError(w, "unexpected applicationLicenseId")
 	}
 
-	if err = validateDeploymentRequestLicense(ctx, w, request, license, app, target); err != nil {
+	if err = validateDeploymentRequestLicense(ctx, w, request, license, app, target, existingDeployment); err != nil {
 		return err
 	} else if err = validateDeploymentRequestDeploymentType(w, target, app); err != nil {
 		return err
@@ -216,6 +229,7 @@ func validateDeploymentRequestLicense(
 	license *types.ApplicationLicense,
 	app *types.Application,
 	target *types.DeploymentTargetWithCreatedBy,
+	deployment *types.DeploymentWithLatestRevision,
 ) error {
 	if license != nil {
 		auth := auth.Authentication.Require(ctx)
@@ -238,7 +252,7 @@ func validateDeploymentRequestLicense(
 		if app.ID != license.ApplicationID {
 			return invalidLicenseError(w)
 		}
-		if target.Deployment != nil && target.Deployment.ApplicationID != license.ApplicationID {
+		if deployment != nil && deployment.ApplicationID != license.ApplicationID {
 			return badRequestError(w, "license and deployment have applicationId mismatch")
 		}
 	}
@@ -266,17 +280,18 @@ func validateDeploymentRequestDeploymentTarget(
 
 	if *auth.CurrentUserRole() == types.UserRoleCustomer &&
 		target.CreatedByUserAccountID != auth.CurrentUserID() {
-		http.Error(w, "DeploymentTarget not found", http.StatusBadRequest)
+		err := errors.New("DeploymentTarget not found")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return err
 	}
-	if request.DeploymentID == nil {
-		if target.Deployment != nil {
-			return badRequestError(w, "only one deployment per target is supported right now")
+
+	if request.DeploymentID == nil && len(target.Deployments) > 0 {
+		if err := target.AgentVersion.CheckMultiDeploymentSupported(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return err
 		}
-	} else if target.Deployment == nil {
-		return badRequestError(w, "given deployment is not a deployment of the given target")
-	} else if target.Deployment.ID != *request.DeploymentID {
-		return badRequestError(w, "given deployment does not match deployment of the given target")
 	}
+
 	return nil
 }
 
