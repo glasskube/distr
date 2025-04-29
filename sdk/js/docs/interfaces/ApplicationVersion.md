@@ -50,6 +50,12 @@
 
 ---
 
+### dockerType?
+
+> `optional` **dockerType**: [`DockerType`](../type-aliases/DockerType.md)
+
+---
+
 ### id?
 
 > `optional` **id**: `string`
