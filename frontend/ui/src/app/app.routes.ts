@@ -210,12 +210,6 @@ export const routes: Routes = [
             ],
           },
           {
-            path: 'artifact-licenses',
-            children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
-            data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
-          },
-          {
             path: 'artifact-pulls',
             component: ArtifactPullsComponent,
             canActivate: [requiredRoleGuard('vendor')],
@@ -246,9 +240,18 @@ export const routes: Routes = [
           },
           {
             path: 'licenses',
-            component: LicensesComponent,
-            data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
+            data: {userRole: 'vendor'},
+            children: [
+              {
+                path: 'applications',
+                component: LicensesComponent,
+              },
+              {
+                path: 'artifacts',
+                component: ArtifactLicensesComponent,
+              },
+            ],
           },
           {
             path: 'settings',
