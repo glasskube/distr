@@ -4,7 +4,7 @@
   class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow-sm dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create a new deployment</h2>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Install a new Agent</h2>
     <button
       type="button"
       (click)="close()"
@@ -24,7 +24,7 @@
           <cdk-step [stepControl]="deploymentTargetForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4 w-full">
-                <h3 class="font-normal text-gray-900 dark:text-white">Choose Deployment Type</h3>
+                <h3 class="font-normal text-gray-900 dark:text-white">Choose Agent Type</h3>
 
                 <div class="mb-2 grid grid-cols-2 gap-4">
                   <label
@@ -109,7 +109,7 @@
 
                 <div>
                   <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                    Deployment Name
+                    Agent Name
                   </label>
                   <input
                     [formControl]="deploymentTargetForm.controls.name"
