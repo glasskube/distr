@@ -4,6 +4,7 @@ import {catchError, Observable, of, startWith, Subject, switchMap, tap, throwErr
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
 import {Application, ApplicationVersion, DeploymentTarget} from '@glasskube/distr-sdk';
+import {ArtifactWithTags} from './artifacts.service';
 
 @Injectable({
   providedIn: 'root',
@@ -136,5 +137,11 @@ export class ApplicationsService implements CrudService<Application> {
           this.cache.save(app);
         })
       );
+  }
+
+  public patchImage(artifactsId: string, imageId: string) {
+    return this.httpClient
+      .patch<Application>(`${this.applicationsUrl}/${artifactsId}/image`, {imageId})
+      .pipe(tap((it) => this.cache.save(it)));
   }
 }

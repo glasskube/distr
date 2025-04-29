@@ -16,8 +16,10 @@ const (
 	ctxKeyMailer
 	ctxKeyOrgId
 	ctxKeyApplication
+	ctxKeyArtifact
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget
+	ctxKeyFile
 	ctxKeyUserAccount
 	ctxKeyApplicationLicense
 	ctxKeyArtifactLicense

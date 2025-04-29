@@ -25,7 +25,7 @@ var (
 func GetHelmActionConfig(
 	ctx context.Context,
 	namespace string,
-	deployment *api.KubernetesAgentDeployment,
+	deployment *api.AgentDeployment,
 ) (*action.Configuration, error) {
 	if cfg, ok := helmActionConfigCache[namespace]; ok {
 		return cfg, nil
@@ -38,7 +38,7 @@ func GetHelmActionConfig(
 	}
 	if deployment != nil {
 		if authorizer, err :=
-			agentauth.EnsureAuth(ctx, agentClient.RawToken(), deployment.AgentDeployment); err != nil {
+			agentauth.EnsureAuth(ctx, agentClient.RawToken(), *deployment); err != nil {
 			return nil, err
 		} else if rc, err :=
 			registry.NewClient(append(clientOpts, registry.ClientOptAuthorizer(authorizer))...); err != nil {
@@ -62,7 +62,7 @@ func GetHelmActionConfig(
 func GetLatestHelmRelease(
 	ctx context.Context,
 	namespace string,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 ) (*release.Release, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, nil)
 	if err != nil {
@@ -78,7 +78,7 @@ func GetLatestHelmRelease(
 
 func RunHelmPreflight(
 	action *action.ChartPathOptions,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 ) (*chart.Chart, error) {
 	chartName := deployment.ChartName
 	action.Version = deployment.ChartVersion
@@ -100,7 +100,7 @@ func RunHelmPreflight(
 func RunHelmInstall(
 	ctx context.Context,
 	namespace string,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 ) (*AgentDeployment, error) {
 	config, err := GetHelmActionConfig(ctx, namespace, &deployment)
 	if err != nil {
@@ -132,7 +132,7 @@ func RunHelmInstall(
 func RunHelmUpgrade(
 	ctx context.Context,
 	namespace string,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 ) (*AgentDeployment, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, &deployment)
 	if err != nil {
@@ -181,7 +181,7 @@ func RunHelmUninstall(ctx context.Context, namespace, releaseName string) error 
 func GetHelmManifest(
 	ctx context.Context,
 	namespace string,
-	deployment api.KubernetesAgentDeployment,
+	deployment api.AgentDeployment,
 ) ([]*unstructured.Unstructured, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, nil)
 	if err != nil {

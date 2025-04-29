@@ -46,6 +46,7 @@
           <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
             <tr>
               <th scope="col" class="p-4">Id</th>
+              <th scope="col" class="p-4"></th>
               <th scope="col" class="p-4">Name</th>
               <th scope="col" class="p-4">E-Mail</th>
               <th scope="col" class="p-4">Creation Date</th>
@@ -57,6 +58,23 @@
               <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   <app-uuid [uuid]="user.id!" />
+                </td>
+                <td>
+                  @if (user.imageUrl) {
+                    <img
+                      (click)="uploadImage(user)"
+                      class="w-8 h-8 rounded-full cursor-pointer"
+                      [attr.src]="user.imageUrl | secureImage | async"
+                      alt="" />
+                  } @else {
+                    <div class="shrink-0 text-gray-900 dark:text-gray-400">
+                      <fa-icon
+                        (click)="uploadImage(user)"
+                        [icon]="faUserCircle"
+                        size="xl"
+                        class="text-xl cursor-pointer"></fa-icon>
+                    </div>
+                  }
                 </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white max-w-32 lg:max-w-64 xl:max-w-128 overflow-hidden text-ellipsis">

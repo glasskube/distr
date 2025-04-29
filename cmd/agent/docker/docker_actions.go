@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ApplyComposeFile(ctx context.Context, deployment api.DockerAgentDeployment) (*AgentDeployment, string, error) {
+func ApplyComposeFile(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
 	agentDeploymet, err := NewAgentDeployment(deployment)
 	if err != nil {
 		return nil, "", err
@@ -73,10 +73,10 @@ func UninstallDockerCompose(ctx context.Context, deployment AgentDeployment) err
 	return nil
 }
 
-func DockerConfigEnv(deployment api.DockerAgentDeployment) []string {
+func DockerConfigEnv(deployment api.AgentDeployment) []string {
 	if len(deployment.RegistryAuth) > 0 || hasRegistryImages(deployment) {
 		return []string{
-			dockerconfig.EnvOverrideConfigDir + "=" + agentauth.DockerConfigDir(deployment.AgentDeployment),
+			dockerconfig.EnvOverrideConfigDir + "=" + agentauth.DockerConfigDir(deployment),
 		}
 	} else {
 		return nil
@@ -85,7 +85,7 @@ func DockerConfigEnv(deployment api.DockerAgentDeployment) []string {
 
 // hasRegistryImages parses the compose file in order to check whether one of the services uses an image hosted on
 // [agentenv.DistrRegistryHost].
-func hasRegistryImages(deployment api.DockerAgentDeployment) bool {
+func hasRegistryImages(deployment api.AgentDeployment) bool {
 	var compose struct {
 		Services map[string]struct {
 			Image string
