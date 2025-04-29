@@ -10,7 +10,7 @@
             class="size-10 rounded-sm max-w-none"
             height="199"
             width="199" />
-          <app-status-dot class="absolute size-2 -bottom-0.5 -end-0.5" [deploymentTarget]="deploymentTarget()">
+          <app-status-dot class="absolute size-3 -bottom-1 -end-1" [deploymentTarget]="deploymentTarget()">
           </app-status-dot>
         </div>
         <div>
@@ -60,8 +60,8 @@
                 ? undefined
                 : 'Multiple deployments require agent version 1.6 or newer. Please consider updating.'
             ">
-            <fa-icon [icon]="faPlus" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-            New Deployment
+            <fa-icon [icon]="faPlus" class="h-5 w-5 mr-0.5 -ml-1 text-gray-500 dark:text-gray-400"></fa-icon>
+            Deployment
           </button>
         }
         @if (!status) {
@@ -69,7 +69,7 @@
             type="button"
             (click)="openInstructionsModal()"
             class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-            <fa-icon [icon]="faLink" class="h-5 w-5 mr-2 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+            <fa-icon [icon]="faLink" class="h-5 w-5 mr-1.5 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
             Connect
           </button>
         }
