@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.1](https://github.com/glasskube/distr/compare/1.6.0...1.6.1) (2025-04-29)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.79.3 ([#832](https://github.com/glasskube/distr/issues/832)) ([415c2f9](https://github.com/glasskube/distr/commit/415c2f980c1f1c6a13e8b957ac9384e637fd0037))
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.6 ([#835](https://github.com/glasskube/distr/issues/835)) ([5863f7f](https://github.com/glasskube/distr/commit/5863f7f897d5bb168a112ebda383605c014d43f2))
+* **ui:** make deployment modal scrollable ([#837](https://github.com/glasskube/distr/issues/837)) ([9fe543d](https://github.com/glasskube/distr/commit/9fe543d65313afa23a58df6583689a37c085dc59))
+
+
+### Other
+
+* **ui:** improve deploy button wording on deployment page ([#836](https://github.com/glasskube/distr/issues/836)) ([1b525d9](https://github.com/glasskube/distr/commit/1b525d9fdc091cd05951145f08361f97999dc87d))
+* **ui:** improve external registry wording ([#838](https://github.com/glasskube/distr/issues/838)) ([630afe2](https://github.com/glasskube/distr/commit/630afe22d4d32b272c4d42dcd3bd05556977ff50))
+
 ## [1.6.0](https://github.com/glasskube/distr/compare/1.5.2...1.6.0) (2025-04-28)
 
 
