@@ -4,10 +4,7 @@
     <div class="justify-between sm:flex sm:items-center">
       <div class="flex gap-3 items-start lg:items-center mb-2 md:mb-0">
         <div class="relative">
-          <fa-icon
-            [icon]="faUserCircle"
-            size="xl"
-            class="text-xl cursor-pointer"></fa-icon>
+          <fa-icon [icon]="faUserCircle" size="xl" class="text-xl cursor-pointer"></fa-icon>
         </div>
         <div>
           <div class="flex gap-2">
@@ -23,36 +20,30 @@
     <div class="items-center sm:flex sm:flex-wrap xl:flex">
       <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
         <tbody>
-          @for (artifact of artifacts(); track artifact.id) {
+          @for (artifact of artifacts(); track artifact.artifact.id) {
             <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
               <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center gap-4">
                 <fa-icon class="text-gray-500 dark:text-gray-400" [icon]="faBox"></fa-icon>
                 <div class="leading-tight">
-                  {{ artifact.name }}
+                  {{ artifact.artifact.name }}
                   <span
                     class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400">
-                    1.0.0
+                    {{ artifact.latestPulledVersion }}
                   </span>
                 </div>
               </td>
               <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white text-xs">
-                @if($count === 1) {
+                @if (isNewerAvailable(artifact)) {
                   <div class="flex items-center">
-                    <div class="size-2 -bottom-0.5 -end-0.5 rounded-full  bg-lime-600 me-1"></div>
-                    OK
-                  </div>
-                } @else if($even) {
-                  <div class="flex items-center">
-                    <div class="size-2 -bottom-0.5 -end-0.5 rounded-full  bg-yellow-300 me-1"></div>
+                    <div class="size-2 -bottom-0.5 -end-0.5 rounded-full bg-yellow-300 me-1"></div>
                     newer version available
                   </div>
                 } @else {
                   <div class="flex items-center">
-                    <div class="size-2 -bottom-0.5 -end-0.5 rounded-full  bg-yellow-300 me-1"></div>
-                    license expiring soon
+                    <div class="size-2 -bottom-0.5 -end-0.5 rounded-full bg-lime-600 me-1"></div>
+                    OK
                   </div>
                 }
-
               </td>
             </tr>
           }

@@ -2,31 +2,19 @@ import {GlobalPositionStrategy} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
 import {AfterViewInit, Component, inject, OnDestroy, TemplateRef, ViewChild} from '@angular/core';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
-import {combineLatest, first, map, Subject, takeUntil, withLatestFrom} from 'rxjs';
+import {combineLatest, first, Subject} from 'rxjs';
 import {DeploymentTargetsComponent} from '../../deployments/deployment-targets.component';
 import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {OnboardingWizardComponent} from '../onboarding-wizard/onboarding-wizard.component';
-import {UsersService} from '../../services/users.service';
-import {ArtifactsService, ArtifactWithTags} from '../../services/artifacts.service';
-import {UserAccountWithRole} from '@glasskube/distr-sdk';
 import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-customer-card/artifacts-by-customer-card.component';
-
-interface ArtifactsByCustomer {
-  customer: UserAccountWithRole;
-  artifacts: ArtifactWithTags[];
-}
+import {DashboardService} from '../../services/dashboard.service';
 
 @Component({
   selector: 'app-dashboard-placeholder',
-  imports: [
-    DeploymentTargetsComponent,
-    AsyncPipe,
-    OnboardingWizardComponent,
-    ArtifactsByCustomerCardComponent,
-  ],
+  imports: [DeploymentTargetsComponent, AsyncPipe, OnboardingWizardComponent, ArtifactsByCustomerCardComponent],
   templateUrl: './dashboard-placeholder.component.html',
 })
 export class DashboardPlaceholderComponent implements AfterViewInit, OnDestroy {
@@ -37,8 +25,7 @@ export class DashboardPlaceholderComponent implements AfterViewInit, OnDestroy {
   private readonly applications = inject(ApplicationsService);
   readonly applications$ = this.applications.list();
   private readonly auth = inject(AuthService);
-  private readonly artifactsService = inject(ArtifactsService);
-  private readonly userService = inject(UsersService);
+  private readonly dashboardService = inject(DashboardService);
 
   @ViewChild('onboardingWizard') wizardRef?: TemplateRef<unknown>;
 
@@ -46,17 +33,7 @@ export class DashboardPlaceholderComponent implements AfterViewInit, OnDestroy {
 
   protected readonly faPlus = faPlus;
 
-  protected readonly artifactsByCustomer$ = this.userService.getUsers().pipe(
-    takeUntil(this.destoryed$),
-    map(users => users.filter(u => u.userRole === 'customer')),
-    withLatestFrom(this.artifactsService.list()),
-    map(([customers, artifacts]) => {
-      return customers.map(customer => ({
-          customer,
-          artifacts: artifacts.filter(artifact => (artifact.downloadedByUsers ?? []).includes(customer?.id!))
-      } as ArtifactsByCustomer))
-    })
-  );
+  protected readonly artifactsByCustomer$ = this.dashboardService.getArtifactsByCustomer();
 
   ngAfterViewInit() {
     combineLatest([this.applications$])

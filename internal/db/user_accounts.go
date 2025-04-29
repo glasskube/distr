@@ -158,15 +158,19 @@ func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID 
 	return err
 }
 
-func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.UserAccountWithUserRole, error) {
+func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID, role *types.UserRole) (
+	[]types.UserAccountWithUserRole,
+	error,
+) {
 	db := internalctx.GetDb(ctx)
+	checkRole := role != nil
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountWithRoleOutputExpr+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
-		WHERE j.organization_id = @orgId
-		ORDER BY u.name`,
-		pgx.NamedArgs{"orgId": orgID},
+		WHERE j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)
+		ORDER BY u.name, u.email`,
+		pgx.NamedArgs{"orgId": orgID, "checkRole": checkRole, "role": role},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)

@@ -16,8 +16,11 @@ import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {modalFlyInOut} from '../../animations/modal';
 import {AuthService} from '../../services/auth.service';
-import {UserAccountWithRole} from '@glasskube/distr-sdk';
-import {ArtifactWithTags} from '../../services/artifacts.service';
+import {ApplicationVersion, UserAccountWithRole} from '@glasskube/distr-sdk';
+import {DashboardArtifact} from '../../services/dashboard.service';
+import {maxBy} from '../../../util/arrays';
+import {SemVer} from 'semver';
+import {TaggedArtifactVersion} from '../../services/artifacts.service';
 
 @Component({
   selector: 'app-artifacts-by-customer-card',
@@ -29,7 +32,40 @@ export class ArtifactsByCustomerCardComponent {
   protected readonly auth = inject(AuthService);
 
   public readonly customer = input.required<UserAccountWithRole>();
-  public readonly artifacts = input.required<ArtifactWithTags[]>();
+  public readonly artifacts = input.required<DashboardArtifact[]>();
+
+  protected isNewerAvailable(artifact: DashboardArtifact): boolean {
+    const max = this.findMaxVersion(artifact.availableVersions);
+    const includesPulled = max?.tags.map((t) => t.name).includes(artifact.latestPulledVersion) ?? false;
+    const pulledStillAvailable = artifact.availableVersions.some((v) =>
+      v.tags.find((t) => t.name === artifact.latestPulledVersion)
+    );
+    if (!includesPulled && !pulledStillAvailable) {
+      return false;
+    }
+    return !includesPulled;
+  }
+
+  private findMaxVersion(versions: TaggedArtifactVersion[]): TaggedArtifactVersion | undefined {
+    try {
+      return maxBy(
+        versions,
+        (version) => this.getFirstSemverTag(version),
+        (a, b) => a.compare(b) > 0
+      );
+    } catch (e) {
+      return maxBy(versions, (version) => new Date(version.createdAt!));
+    }
+  }
+
+  private getFirstSemverTag(version: TaggedArtifactVersion): SemVer {
+    for (let v of version.tags) {
+      try {
+        return new SemVer(v.name);
+      } catch (e) {}
+    }
+    throw 'no semver tag found';
+  }
 
   protected readonly faShip = faShip;
   protected readonly faPen = faPen;
