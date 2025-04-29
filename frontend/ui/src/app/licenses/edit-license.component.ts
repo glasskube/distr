@@ -26,6 +26,7 @@ import {
 import {
   faChevronDown,
   faExclamationTriangle,
+  faLightbulb,
   faMagnifyingGlass,
   faPen,
   faPlus,
@@ -338,4 +339,5 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
 
   protected readonly isArchived = isArchived;
   protected readonly faExclamationTriangle = faExclamationTriangle;
+  protected readonly faLightbulb = faLightbulb;
 }
