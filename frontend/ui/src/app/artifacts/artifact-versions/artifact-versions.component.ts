@@ -60,7 +60,7 @@ export class ArtifactVersionsComponent {
       if (artifact) {
         return {
           ...artifact,
-          versions: artifact.versions.map((v) => ({
+          versions: (artifact.versions ?? []).map((v) => ({
             ...v,
             ...this.calcVersionDownloads(v),
           })),
@@ -126,7 +126,9 @@ export class ArtifactVersionsComponent {
 
   getOciUrl(
     artifact: ArtifactWithTags,
-    tag: TaggedArtifactVersion | undefined = artifact.versions.find((it) => it.tags.some((l) => l.name === 'latest'))
+    tag: TaggedArtifactVersion | undefined = (artifact.versions ?? []).find((it) =>
+      it.tags.some((l) => l.name === 'latest')
+    )
   ) {
     const orgName = this.org.value()?.slug;
     let url = `oci://${this.remoteEnv.value()?.registryHost}/${orgName ?? 'ORG_SLUG'}/${artifact.name}`;

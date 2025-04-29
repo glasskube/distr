@@ -21,11 +21,13 @@ import {DashboardArtifact} from '../../services/dashboard.service';
 import {maxBy} from '../../../util/arrays';
 import {SemVer} from 'semver';
 import {TaggedArtifactVersion} from '../../services/artifacts.service';
+import {AsyncPipe} from '@angular/common';
+import {SecureImagePipe} from '../../../util/secureImage';
 
 @Component({
   selector: 'app-artifacts-by-customer-card',
   templateUrl: './artifacts-by-customer-card.component.html',
-  imports: [FaIconComponent, OverlayModule, ReactiveFormsModule],
+  imports: [FaIconComponent, OverlayModule, ReactiveFormsModule, AsyncPipe, SecureImagePipe],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
 export class ArtifactsByCustomerCardComponent {
@@ -35,9 +37,9 @@ export class ArtifactsByCustomerCardComponent {
   public readonly artifacts = input.required<DashboardArtifact[]>();
 
   protected isNewerAvailable(artifact: DashboardArtifact): boolean {
-    const max = this.findMaxVersion(artifact.availableVersions);
+    const max = this.findMaxVersion(artifact.artifact.versions ?? []);
     const includesPulled = max?.tags.map((t) => t.name).includes(artifact.latestPulledVersion) ?? false;
-    const pulledStillAvailable = artifact.availableVersions.some((v) =>
+    const pulledStillAvailable = (artifact.artifact.versions ?? []).some((v) =>
       v.tags.find((t) => t.name === artifact.latestPulledVersion)
     );
     if (!includesPulled && !pulledStillAvailable) {

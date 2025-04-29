@@ -55,7 +55,7 @@ export interface TaggedArtifactVersion extends HasDownloads {
 }
 
 export interface ArtifactWithTags extends Artifact {
-  versions: TaggedArtifactVersion[];
+  versions?: TaggedArtifactVersion[];
 }
 
 @Injectable({providedIn: 'root'})

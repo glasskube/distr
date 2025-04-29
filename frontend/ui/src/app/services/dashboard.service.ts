@@ -2,12 +2,12 @@ import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {UserAccount, UserAccountWithRole} from '@glasskube/distr-sdk';
-import {Artifact, TaggedArtifactVersion} from './artifacts.service';
+import {Artifact, ArtifactWithTags, TaggedArtifactVersion} from './artifacts.service';
 
 export interface DashboardArtifact {
-  artifact: Artifact;
+  artifact: ArtifactWithTags;
   latestPulledVersion: string;
-  availableVersions: TaggedArtifactVersion[];
+  // availableVersions: TaggedArtifactVersion[];
 }
 
 export interface ArtifactsByCustomer {

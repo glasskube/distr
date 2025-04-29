@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/glasskube/distr/api"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -23,14 +25,13 @@ func DashboardRouter(r chi.Router) {
 }
 
 type DashboardArtifact struct {
-	Artifact            types.Artifact                `json:"artifact"`
-	LatestPulledVersion string                        `json:"latestPulledVersion"`
-	AvailableVersions   []types.TaggedArtifactVersion `json:"availableVersions"`
+	Artifact            api.ArtifactResponse `json:"artifact"`
+	LatestPulledVersion string               `json:"latestPulledVersion"`
 }
 
 type ArtifactsByCustomer struct {
-	Customer  types.UserAccountWithUserRole `json:"customer"`
-	Artifacts []DashboardArtifact           `json:"artifacts,omitempty"`
+	Customer  api.UserAccountResponse `json:"customer"`
+	Artifacts []DashboardArtifact     `json:"artifacts,omitempty"`
 }
 
 func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +50,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var result []ArtifactsByCustomer
 		for _, customer := range customers {
-			customerRes := ArtifactsByCustomer{Customer: customer}
+			customerRes := ArtifactsByCustomer{Customer: api.AsUserAccount(customer)}
 			for _, artifact := range artifacts {
 				if slices.Contains(artifact.DownloadedByUsers, customer.ID) {
 					if latestPulled, err := db.GetLatestPullOfArtifactByUser(ctx, artifact.ID, customer.ID); err != nil {
@@ -71,9 +72,12 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 							return*/
 						} else {
 							customerRes.Artifacts = append(customerRes.Artifacts, DashboardArtifact{
-								Artifact:            artifact.Artifact,
+								Artifact: api.AsArtifact(types.ArtifactWithTaggedVersion{
+									ArtifactWithDownloads: artifact,
+									Versions:              versions,
+								}),
 								LatestPulledVersion: latestPulled,
-								AvailableVersions:   versions,
+								// AvailableVersions:   versions,
 							})
 						}
 					}
