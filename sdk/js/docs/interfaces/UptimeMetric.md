@@ -4,22 +4,26 @@
 
 [@glasskube/distr-sdk](../README.md) / UptimeMetric
 
-# Interface: UptimeMetric
+# Interface: ~~UptimeMetric~~
+
+## Deprecated
+
+this will be removed in v2.
 
 ## Properties
 
-### hour
+### ~~hour~~
 
 > **hour**: `string`
 
 ---
 
-### total
+### ~~total~~
 
 > **total**: `number`
 
 ---
 
-### unknown
+### ~~unknown~~
 
 > **unknown**: `number`
