@@ -345,7 +345,14 @@
                       pull again. This time all the image blobs will be downloaded.
                     </p>
                     <p class="mt-2 text-xs">
-                      In the Artifacts Download History you will now see that you have pulled the image!
+                      In the
+                      <a
+                        [routerLink]="['/artifact-pulls']"
+                        [queryParams]="{tutorial: this.route.snapshot.url[0].path}"
+                        class="text-primary-600 underline"
+                        >Artifacts Download History</a
+                      >
+                      you will now see that you have pulled the image!
                     </p>
                     <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
                     @if (usageFormGroup.controls.exploreDone.touched && usageFormGroup.controls.exploreDone.invalid) {

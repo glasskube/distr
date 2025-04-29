@@ -12,7 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
 import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
@@ -47,6 +47,7 @@ const releaseStepTaskRelease = 'release';
     CdkStepperPrevious,
     ClipComponent,
     AutotrimDirective,
+    RouterLink,
   ],
   templateUrl: './agents-tutorial.component.html',
 })
@@ -78,6 +79,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   targetId?: string;
   targetSecret?: string;
   commandCopied = false;
+  protected readonly route = inject(ActivatedRoute);
 
   ngOnInit() {
     this.registerTaskToggle(this.deployFormGroup.controls.deployDone, deployStep, deployStepTaskDeploy);

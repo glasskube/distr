@@ -118,10 +118,16 @@
                     </span>
                     <label for="verifyDone" class="text-lg font-medium leading-tight">Verify Deployment Status</label>
                     <p class="mt-1 text-xs">
-                      Now head over to the Deployments page, and look for the "hello-distr-tutorial" deployment. It
-                      should show a healthy status and the information that hello-distr is deployed. If this is correct,
-                      mark this step as done and move on. You have successfully deployed your first application with
-                      distr.
+                      Now head over to the
+                      <a
+                        [routerLink]="['/deployments']"
+                        [queryParams]="{tutorial: this.route.snapshot.url[0].path}"
+                        class="text-primary-600 underline"
+                        >Deployments</a
+                      >
+                      page, and look for the "hello-distr-tutorial" deployment. It should show a healthy status and the
+                      information that hello-distr is deployed. If this is correct, mark this step as done and move on.
+                      You have successfully deployed your first application with distr.
                     </p>
                     @if (deployFormGroup.controls.verifyDone.touched && deployFormGroup.controls.verifyDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
