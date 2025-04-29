@@ -74,7 +74,7 @@ func GetExistingDeployments() (map[uuid.UUID]AgentDeployment, error) {
 				if d, err := fn(entry.Name()); err != nil {
 					return nil, err
 				} else {
-					result[d.RevisionID] = *d
+					result[d.ID] = *d
 				}
 			}
 		}

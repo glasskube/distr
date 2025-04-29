@@ -33,12 +33,7 @@ func DockerEngineApply(ctx context.Context, deployment api.AgentDeployment) (*Ag
 			logger.Error("Docker Swarm not initialized", zap.String("output", string(initOutput)))
 			return nil, "", fmt.Errorf("docker Swarm not initialized: %s", string(initOutput))
 		}
-		// Step 2: Pull images before deployment
-		_, err = PullSwarmMode(ctx, deployment)
-		if err != nil {
-			logger.Error("Failed to Pull", zap.Error(err))
-			return nil, "", err
-		}
+
 		return ApplyComposeFileSwarm(ctx, deployment)
 
 	}
@@ -108,6 +103,9 @@ func ApplyComposeFileSwarm(ctx context.Context, deployment api.AgentDeployment) 
 
 	// // If an env file is provided, load its values
 	if deployment.EnvFile != nil {
+		// TODO: This is too brittle. need to find something better
+		// Worst case use the parser from here:
+		// https://github.com/compose-spec/compose-go/blob/main/dotenv/godotenv.go
 		parsedEnv, err := parseEnvFile(deployment.EnvFile)
 		if err != nil {
 			logger.Error("Failed to parse env file", zap.Error(err))
@@ -204,61 +202,6 @@ func parseEnvFile(envData []byte) (map[string]string, error) {
 		envVars[parts[0]] = parts[1]
 	}
 	return envVars, scanner.Err()
-}
-
-type ComposeService struct {
-	Image string `yaml:"image"`
-}
-
-// ComposeFile represents the structure of docker-compose.yml
-type ComposeFile struct {
-	Services map[string]ComposeService `yaml:"services"`
-}
-
-func PullSwarmMode(ctx context.Context, deployment api.AgentDeployment) (string, error) {
-	// Parse the compose YAML file
-	var compose ComposeFile
-	err := yaml.Unmarshal(deployment.ComposeFile, &compose)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse docker-compose.yml: %w", err)
-	}
-
-	// Extract image names
-	var images []string
-	for _, service := range compose.Services {
-		if service.Image != "" {
-			images = append(images, service.Image)
-		}
-	}
-
-	if len(images) == 0 {
-		return "", fmt.Errorf("no images found in the compose file")
-	}
-
-	// Pull images using Docker CLI
-	var pullLogs bytes.Buffer
-	for _, image := range images {
-		fmt.Println("Pulling image:", image)
-		logger.Info("Pulling image:", zap.String("id", image))
-		// Run `docker pull IMAGE_NAME`
-		cmd := exec.CommandContext(ctx, "docker", "pull", image)
-		var out bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &out
-
-		err := cmd.Run()
-		if err != nil {
-			logger.Error("failed to pull image", zap.Error(err))
-			return "", fmt.Errorf("failed to pull image %s: %w\nOutput: %s", image, err, out.String())
-		}
-
-		// Append logs
-		pullLogs.WriteString(out.String() + "\n")
-		fmt.Println(out.String())
-	}
-
-	fmt.Println("Image pulling complete.")
-	return pullLogs.String(), nil
 }
 
 func DockerConfigEnv(deployment api.AgentDeployment) []string {

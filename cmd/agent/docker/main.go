@@ -89,39 +89,52 @@ loop:
 			}
 
 			for _, deployment := range resource.Deployments {
-				progressCtx, progressCancel := context.WithCancel(ctx)
-				go func(ctx context.Context) {
-					tick := time.Tick(agentenv.Interval)
-					for {
-						select {
-						case <-ctx.Done():
-							logger.Info("stop sending progress updates")
-							return
-						case <-tick:
-							logger.Info("sending progress update")
-							err := client.Status(
-								ctx,
-								deployment.RevisionID,
-								types.DeploymentStatusTypeProgressing,
-								"applying docker compose…",
-							)
-							if err != nil {
-								logger.Warn("error updating status", zap.Error(err))
-							}
-						}
-					}
-				}(progressCtx)
-
 				var agentDeployment *AgentDeployment
 				var status string
 				_, err = agentauth.EnsureAuth(ctx, client.RawToken(), deployment)
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
-				} else if agentDeployment, status, err = ApplyComposeFile(ctx, deployment); err == nil {
-					multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
-				}
+				} else {
+					skipApply := false
+					if deployment.DockerType == types.DockerTypeSwarm {
+						existing, ok := deployments[deployment.ID]
+						skipApply = ok && existing.RevisionID == deployment.RevisionID
+					}
 
-				progressCancel()
+					if skipApply {
+						logger.Info("skip apply in swarm mode")
+						status = "status checks are not yet supported in swarm mode"
+					} else {
+						progressCtx, progressCancel := context.WithCancel(ctx)
+						go func(ctx context.Context) {
+							tick := time.Tick(agentenv.Interval)
+							for {
+								select {
+								case <-ctx.Done():
+									logger.Info("stop sending progress updates")
+									return
+								case <-tick:
+									logger.Info("sending progress update")
+									err := client.Status(
+										ctx,
+										deployment.RevisionID,
+										types.DeploymentStatusTypeProgressing,
+										"applying docker compose…",
+									)
+									if err != nil {
+										logger.Warn("error updating status", zap.Error(err))
+									}
+								}
+							}
+						}(progressCtx)
+
+						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
+							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+						}
+
+						progressCancel()
+					}
+				}
 
 				if statusErr :=
 					client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
