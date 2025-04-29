@@ -3,7 +3,7 @@ import {BaseModel} from './base';
 export interface Deployment extends BaseModel {
   deploymentTargetId: string;
   releaseName?: string;
-  note?: string;
+  dockerType?: DockerType;
 }
 
 export interface DeploymentRequest {
@@ -12,6 +12,7 @@ export interface DeploymentRequest {
   deploymentId?: string;
   applicationLicenseId?: string;
   releaseName?: string;
+  dockerType?: DockerType;
   valuesYaml?: string;
   envFileData?: string;
 }

@@ -385,6 +385,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       envFileData: this.deploymentTargetForm.value.envFileData
         ? btoa(this.deploymentTargetForm.value.envFileData)
         : undefined,
+      dockerType: 'compose',
     };
   }
 

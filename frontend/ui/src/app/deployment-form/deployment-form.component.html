@@ -1,11 +1,11 @@
-<div class="grid gap-4 mb-4 grid-cols-2">
+<div class="grid gap-4 mb-4 grid-cols-2" [formGroup]="deployForm">
   <div class="col-span-2 sm:col-span-1">
     <label for="applicationId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
       Application
     </label>
     <select
       id="applicationId"
-      [formControl]="deployForm.controls.applicationId"
+      formControlName="applicationId"
       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60">
       @for (app of applications$ | async; track app.id) {
         <option [value]="app.id">{{ app.name }}</option>
@@ -19,7 +19,7 @@
     <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Version</label>
     <select
       id="applicationVersion"
-      [formControl]="deployForm.controls.applicationVersionId"
+      formControlName="applicationVersionId"
       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60">
       @for (version of availableApplicationVersions$ | async; track version.id) {
         <option [value]="version.id">{{ version.name }}</option>
@@ -36,7 +36,7 @@
       </label>
       <select
         id="applicationLicense"
-        [formControl]="deployForm.controls.applicationLicenseId"
+        formControlName="applicationLicenseId"
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60">
         @for (license of licenses$ | async; track license.id) {
           <option [value]="license.id">{{ license.name }}</option>
@@ -56,7 +56,7 @@
         type="text"
         id="release-name"
         autotrim
-        [formControl]="deployForm.controls.releaseName"
+        formControlName="releaseName"
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
     </div>
     @if (deployForm.controls.releaseName.invalid && deployForm.controls.releaseName.touched) {
@@ -74,7 +74,7 @@
       <app-editor
         language="yaml"
         class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        [formControl]="deployForm.controls.valuesYaml">
+        formControlName="valuesYaml">
       </app-editor>
     </div>
   }
@@ -90,7 +90,7 @@
         <app-editor
           id="env-file"
           class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          [formControl]="deployForm.controls.envFileData">
+          formControlName="envFileData">
         </app-editor>
 
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -118,6 +118,18 @@
           [formControl]="composeFile">
         </app-editor>
       </div>
+    </div>
+  }
+
+  @if (swarmModeVisible$ | async) {
+    <div class="col-span-2">
+      <label class="inline-flex items-center has-disabled:opacity-60 not-has-disabled:cursor-pointer">
+        <input
+          type="checkbox"
+          class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          formControlName="swarmMode" />
+        <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Swarm mode</span>
+      </label>
     </div>
   }
 </div>

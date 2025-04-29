@@ -114,10 +114,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl(''),
     }),
     docker: new FormGroup({
-      dockerType: new FormControl<DockerType>('compose', {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
       compose: new FormControl(''),
       template: new FormControl(''),
     }),
@@ -155,16 +151,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.newVersionForm.controls.kubernetes.controls.chartName.enable();
         } else {
           this.newVersionForm.controls.kubernetes.controls.chartName.disable();
-        }
-      });
-
-    this.newVersionForm.controls.docker.controls.dockerType.valueChanges
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe((type) => {
-        if (type === 'compose') {
-          this.newVersionForm.controls.docker.controls.compose.enable();
-        } else {
-          this.newVersionForm.controls.docker.controls.compose.disable();
         }
       });
   }
@@ -219,10 +205,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       if (application.type === 'docker') {
         res = this.applicationService.createApplicationVersionForDocker(
           application,
-          {
-            name: this.newVersionForm.controls.versionName.value!,
-            dockerType: this.newVersionForm.controls.docker.controls.dockerType.value!,
-          },
+          {name: this.newVersionForm.controls.versionName.value!},
           this.newVersionForm.controls.docker.controls.compose.value!,
           this.newVersionForm.controls.docker.controls.template.value!
         );

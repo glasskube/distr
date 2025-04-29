@@ -14,7 +14,6 @@ export interface ApplicationVersion {
   archivedAt?: string;
   applicationId?: string;
   chartType?: HelmChartType;
-  dockerType?: DockerType;
   chartName?: string;
   chartUrl?: string;
   chartVersion?: string;
