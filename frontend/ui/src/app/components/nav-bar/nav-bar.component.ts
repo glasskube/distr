@@ -1,11 +1,11 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnInit} from '@angular/core';
-import {RouterLink} from '@angular/router';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBarsStaggered} from '@fortawesome/free-solid-svg-icons';
+import {faArrowLeft, faBarsStaggered, faLightbulb} from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '@glasskube/distr-sdk';
-import {firstValueFrom, lastValueFrom} from 'rxjs';
+import {distinctUntilChanged, filter, firstValueFrom, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
@@ -16,6 +16,7 @@ import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-schem
 import {UsersService} from '../../services/users.service';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {AsyncPipe} from '@angular/common';
+import {RequireRoleDirective} from '../../directives/required-role.directive';
 
 @Component({
   selector: 'app-nav-bar',
@@ -24,11 +25,12 @@ import {AsyncPipe} from '@angular/common';
   imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent, RouterLink, SecureImagePipe, AsyncPipe],
   animations: [dropdownAnimation],
 })
-export class NavBarComponent implements OnInit {
+export class NavBarComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   public readonly sidebar = inject(SidebarService);
   private readonly toast = inject(ToastService);
   private readonly users = inject(UsersService);
+  private readonly route = inject(ActivatedRoute);
 
   private readonly organizationBranding = inject(OrganizationBrandingService);
   showDropdown = false;
@@ -40,8 +42,20 @@ export class NavBarComponent implements OnInit {
   customerSubtitle = 'Customer Portal';
 
   protected readonly faBarsStaggered = faBarsStaggered;
+  private destroyed$ = new Subject<void>();
+  protected tutorial?: string;
 
   public async ngOnInit() {
+    this.route.queryParams
+      .pipe(
+        map((params) => params['tutorial']),
+        distinctUntilChanged(),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((tutorial) => {
+        this.tutorial = tutorial;
+      });
+
     try {
       const claims = this.auth.getClaims();
       if (claims) {
@@ -82,4 +96,12 @@ export class NavBarComponent implements OnInit {
     // TODO: implement flushing of services directly and switch to router.navigate(...)
     location.assign('/login');
   }
+
+  ngOnDestroy() {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
+
+  protected readonly faLightbulb = faLightbulb;
+  protected readonly faArrowLeft = faArrowLeft;
 }

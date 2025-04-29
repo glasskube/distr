@@ -67,13 +67,14 @@
                     </div>
                   </li>
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
                         type="checkbox"
+                        id="deployDone"
                         [formControl]="deployFormGroup.controls.deployDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Install Agent</h3>
+                    <label for="deployDone" class="text-lg font-medium leading-tight">Install Agent</label>
                     <p class="mt-1 text-xs">
                       In your terminal, execute the setup command to start the Distr agent and have it connect to the
                       Distr Hub.
@@ -108,20 +109,71 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
+                        id="verifyDone"
                         type="checkbox"
                         [formControl]="deployFormGroup.controls.verifyDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Verify Deployment Status</h3>
+                    <label for="verifyDone" class="text-lg font-medium leading-tight">Verify Deployment Status</label>
                     <p class="mt-1 text-xs">
-                      Now head over to the Deployments page, and look for the "hello-distr-tutorial" deployment. It
-                      should show a healthy status and the information that hello-distr is deployed. If this is correct,
-                      mark this step as done and move on. You have successfully deployed your first application with
-                      distr.
+                      Now head over to the
+                      <a
+                        [routerLink]="['/deployments']"
+                        [queryParams]="{tutorial: this.route.snapshot.url[0].path}"
+                        class="text-primary-600 underline"
+                        >Deployments</a
+                      >
+                      page, and look for the "hello-distr-tutorial" deployment. It should show a healthy status and the
+                      information that hello-distr is deployed. If this is correct, mark this step as done and move on.
+                      You have successfully deployed your first application with distr.
                     </p>
                     @if (deployFormGroup.controls.verifyDone.touched && deployFormGroup.controls.verifyDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
+                      <input
+                        id="dockerPsDone"
+                        type="checkbox"
+                        [formControl]="deployFormGroup.controls.dockerPsDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <label for="dockerPsDone" class="text-lg font-medium leading-tight"
+                      >Check your docker containers</label
+                    >
+                    <p class="mt-1 text-xs">
+                      Execute <code class="select-all">docker ps</code> on your machine and check that the three
+                      hello-distr containers are now running.
+                    </p>
+                    @if (
+                      deployFormGroup.controls.dockerPsDone.touched && deployFormGroup.controls.dockerPsDone.invalid
+                    ) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
+                      <input
+                        id="openDone"
+                        type="checkbox"
+                        [formControl]="deployFormGroup.controls.openDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <label for="openDone" class="text-lg font-medium leading-tight">Open hello-distr</label>
+                    <p class="mt-1 text-xs">
+                      hello-distr is now deployed on
+                      <a href="http://localhost" target="_blank" class="text-primary-600 underline">http://localhost</a>
+                    </p>
+                    @if (deployFormGroup.controls.openDone.touched && deployFormGroup.controls.openDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
                         Please mark this as checked when you are done with it.
                       </div>
@@ -169,13 +221,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
+                        id="forkDone"
                         type="checkbox"
                         [formControl]="releaseFormGroup.controls.forkDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Fork the hello-distr Application</h3>
+                    <label for="forkDone" class="text-lg font-medium leading-tight"
+                      >Fork the hello-distr Application</label
+                    >
                     <p class="mt-1 text-xs">
                       Fork the previously deployed
                       <a
@@ -195,13 +250,16 @@
                   </li>
 
                   <li class="mb-10 ms-8">
-                    <span class="absolute flex items-center justify-center -start-2">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
+                        id="releaseDone"
                         type="checkbox"
                         [formControl]="releaseFormGroup.controls.releaseDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <h3 class="text-lg font-medium leading-tight">Push a hello-distr version to Distr</h3>
+                    <label for="releaseDone" class="text-lg font-medium leading-tight"
+                      >Push a hello-distr version to Distr</label
+                    >
                     <p class="mt-1 text-xs">
                       The hello-distr README describes how all the pieces fit together. Experiment on your own and try
                       to get to a state, where a release of your forked repository will create a new application version

@@ -13,7 +13,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
 import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
@@ -57,6 +57,7 @@ const usageStepTaskExplore = 'explore';
     CdkStepperPrevious,
     AutotrimDirective,
     ClipComponent,
+    RouterLink,
   ],
   templateUrl: './registry-tutorial.component.html',
 })
@@ -99,6 +100,7 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   protected slug?: string;
   protected host?: string;
   protected helloDistrTag = '0.1.10';
+  protected readonly route = inject(ActivatedRoute);
 
   ngOnInit() {
     this.organizationService

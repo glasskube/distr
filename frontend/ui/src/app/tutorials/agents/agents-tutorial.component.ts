@@ -12,7 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
 import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
@@ -33,6 +33,8 @@ const welcomeTaskStart = 'start';
 const deployStep = 'deploy';
 const deployStepTaskDeploy = 'deploy';
 const deployStepTaskVerify = 'verify';
+const deployStepTaskDockerPs = 'docker-ps';
+const deployStepTaskOpen = 'open';
 const releaseStep = 'release';
 const releaseStepTaskFork = 'fork';
 const releaseStepTaskRelease = 'release';
@@ -47,6 +49,7 @@ const releaseStepTaskRelease = 'release';
     CdkStepperPrevious,
     ClipComponent,
     AutotrimDirective,
+    RouterLink,
   ],
   templateUrl: './agents-tutorial.component.html',
 })
@@ -68,6 +71,8 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   protected readonly deployFormGroup = new FormGroup({
     deployDone: new FormControl<boolean>(false, Validators.requiredTrue),
     verifyDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    dockerPsDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    openDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   protected readonly releaseFormGroup = new FormGroup({
     forkDone: new FormControl<boolean>(false, Validators.requiredTrue),
@@ -78,10 +83,13 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   targetId?: string;
   targetSecret?: string;
   commandCopied = false;
+  protected readonly route = inject(ActivatedRoute);
 
   ngOnInit() {
     this.registerTaskToggle(this.deployFormGroup.controls.deployDone, deployStep, deployStepTaskDeploy);
     this.registerTaskToggle(this.deployFormGroup.controls.verifyDone, deployStep, deployStepTaskVerify);
+    this.registerTaskToggle(this.deployFormGroup.controls.dockerPsDone, deployStep, deployStepTaskDockerPs);
+    this.registerTaskToggle(this.deployFormGroup.controls.openDone, deployStep, deployStepTaskOpen);
     this.registerTaskToggle(this.releaseFormGroup.controls.forkDone, releaseStep, releaseStepTaskFork);
   }
 
@@ -150,9 +158,13 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   private prepareDeployStep() {
     const deployed = getExistingTask(this.progress, deployStep, deployStepTaskDeploy);
     const verified = getExistingTask(this.progress, deployStep, deployStepTaskVerify);
+    const dockerPs = getExistingTask(this.progress, deployStep, deployStepTaskDockerPs);
+    const opened = getExistingTask(this.progress, deployStep, deployStepTaskOpen);
     this.deployFormGroup.patchValue({
       deployDone: !!deployed,
       verifyDone: !!verified,
+      dockerPsDone: !!dockerPs,
+      openDone: !!opened,
     });
   }
 
