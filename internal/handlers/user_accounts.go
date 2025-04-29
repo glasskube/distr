@@ -30,6 +30,7 @@ func UserAccountsRouter(r chi.Router) {
 		r.Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
 			r.Delete("/", deleteUserAccountHandler)
+			r.Patch("/image", patchImageUserAccount)
 		})
 	})
 	r.Get("/status", getUserAccountStatusHandler)
@@ -38,11 +39,11 @@ func UserAccountsRouter(r chi.Router) {
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if userAccoutns, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID()); err != nil {
+	if userAccounts, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID()); err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, userAccoutns)
+		RespondJSON(w, api.MapUserAccountsToResponse(userAccounts))
 	}
 }
 
@@ -153,13 +154,23 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var patchImageUserAccount = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
+	user := internalctx.GetUserAccount(ctx)
+	if err := db.UpdateUserAccountImage(ctx, user, body.ImageID); err != nil {
+		return nil, err
+	} else {
+		return api.AsUserAccount(*user), nil
+	}
+})
+
 func userAccountMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		auth := auth.Authentication.Require(ctx)
 		log := internalctx.GetLogger(ctx)
 		if userId, err := uuid.Parse(r.PathValue("userId")); err != nil {
 			http.NotFound(w, r)
-		} else if userAccount, err := db.GetUserAccountByID(ctx, userId); err != nil {
+		} else if userAccount, err := db.GetUserAccountWithRole(ctx, userId, *auth.CurrentOrgID()); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else {

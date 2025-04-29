@@ -93,7 +93,6 @@ export class DeploymentModalComponent {
   constructor() {
     effect(() => {
       const deployment = this.deployment();
-      console.log('effect called', {deployment});
       this.deployForm.reset({
         deploymentId: deployment?.id,
         deploymentTargetId: this.deploymentTarget().id,

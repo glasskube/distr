@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	applicationOutputExpr             = `a.id, a.created_at, a.organization_id, a.name, a.type`
+	applicationOutputExpr             = `a.id, a.created_at, a.organization_id, a.name, a.type, a.image_id`
 	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
@@ -300,4 +300,16 @@ func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) 
 	} else {
 		return &data, nil
 	}
+}
+
+func UpdateApplicationImage(ctx context.Context, application *types.Application, imageID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(ctx,
+		`UPDATE Application SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": application.ID},
+	)
+	if err := row.Scan(&application.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to application: %w", err)
+	}
+	return nil
 }

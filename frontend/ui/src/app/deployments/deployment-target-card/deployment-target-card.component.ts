@@ -198,6 +198,7 @@ export class DeploymentTargetCardComponent {
 
   protected openStatusModal(deployment: DeploymentWithLatestRevision) {
     if (deployment?.id) {
+      this.selectedDeployment.set(deployment);
       this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
       this.showModal(this.deploymentStatusModal);
     }

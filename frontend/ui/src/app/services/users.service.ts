@@ -3,7 +3,6 @@ import {inject, Injectable} from '@angular/core';
 import {map, Observable, of, switchMap, tap} from 'rxjs';
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {ReactiveList} from './cache';
-import {digestMessage} from '../../util/crypto';
 import {AuthService} from './auth.service';
 
 export interface CreateUserAccountRequest {
@@ -71,7 +70,13 @@ export class UsersService {
     return this.httpClient.delete<void>(`${this.baseUrl}/${user.id}`).pipe(tap(() => this.cache.remove(user)));
   }
 
-  public getUserWithGravatarUrl(id: string): Observable<UserAccountWithRole & {gravatar: string}> {
+  public patchImage(userId: string, imageId: string) {
+    return this.httpClient
+      .patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId})
+      .pipe(tap((it) => this.cache.save(it)));
+  }
+
+  public getUser(id: string): Observable<UserAccountWithRole> {
     return this.getUsers().pipe(
       map((users) => users.find((u) => u.id === id)),
       map((u) => {
@@ -79,12 +84,18 @@ export class UsersService {
           throw 'user not found';
         }
         return u;
-      }),
-      switchMap(async (user) => {
-        return {
-          ...user,
-          gravatar: `https://www.gravatar.com/avatar/${await digestMessage(user.email)}`,
-        };
+      })
+    );
+  }
+
+  public getUserByEmail(email: string): Observable<UserAccountWithRole> {
+    return this.getUsers().pipe(
+      map((users) => users.find((u) => u.email === email)),
+      map((u) => {
+        if (!u) {
+          throw 'user not found';
+        }
+        return u;
       })
     );
   }

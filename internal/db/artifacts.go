@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	artifactOutputExpr         = ` a.id, a.created_at, a.organization_id, a.name `
+	artifactOutputExpr         = ` a.id, a.created_at, a.organization_id, a.name, a.image_id `
 	artifactOutputWithSlugExpr = artifactOutputExpr + ", o.slug AS organization_slug"
 	artifactVersionOutputExpr  = `
 		v.id,
@@ -682,4 +682,16 @@ func GetArtifactVersionPulls(
 		return nil, fmt.Errorf("could not scan ArtifactVersionPulls: %w", err)
 	}
 	return result, nil
+}
+
+func UpdateArtifactImage(ctx context.Context, artifact *types.ArtifactWithTaggedVersion, imageID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(ctx,
+		`UPDATE Artifact SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": artifact.ID},
+	)
+	if err := row.Scan(&artifact.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to artifact: %w", err)
+	}
+	return nil
 }

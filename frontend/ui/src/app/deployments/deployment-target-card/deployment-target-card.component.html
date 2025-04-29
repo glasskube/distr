@@ -308,16 +308,15 @@
                               class="p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
                               role="alert">
                               <span class="font-semibold me-1">WARNING!</span>
-                              You are about to uninstall the application installed on {{ deploymentTarget().name }}.
-                              This will also delete all:
+                              You are about to uninstall
+                              {{ deployment.applicationName + '@' + deployment.applicationVersionName }} on
+                              {{ deploymentTarget().name }}. This will also delete all:
                               <ul class="my-1.5 list-disc list-inside">
                                 <li>associated configuration</li>
                                 <li>revision history</li>
                                 <li>status logs</li>
                                 <li>application data</li>
                               </ul>
-
-                              <p>Afterwards you will be able to deploy a new application to this target.</p>
 
                               This action can not be undone. If you want to continue, please type
                               <code>UNDEPLOY</code> into the text box and confirm.
@@ -387,7 +386,7 @@
           class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Status History: {{ deploymentTarget().name }}
-            @if (deploymentTarget().deployment; as deployment) {
+            @if (selectedDeployment(); as deployment) {
               ({{ deployment.applicationName }}&#64;{{ deployment.applicationVersionName }})
             }
           </h3>

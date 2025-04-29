@@ -2,7 +2,7 @@ import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faFile, faLightbulb, faWarning} from '@fortawesome/free-solid-svg-icons';
+import {faBox, faDownload, faFile} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
 import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
@@ -21,6 +21,8 @@ import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
+import {SecureImagePipe} from '../../../util/secureImage';
+import {OverlayService} from '../../services/overlay.service';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -35,6 +37,7 @@ import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, Artifac
     ArtifactsVulnerabilityReportComponent,
     ClipComponent,
     BytesPipe,
+    SecureImagePipe,
   ],
   templateUrl: './artifact-versions.component.html',
 })
@@ -43,10 +46,11 @@ export class ArtifactVersionsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly organization = inject(OrganizationService);
   private readonly auth = inject(AuthService);
+  private readonly overlay = inject(OverlayService);
 
   protected readonly faBox = faBox;
   protected readonly faDownload = faDownload;
-  protected readonly faLightbulb = faLightbulb;
+  protected readonly faFile = faFile;
 
   protected readonly artifact$ = this.route.params.pipe(
     map((params) => params['id']?.trim()),
@@ -149,6 +153,11 @@ export class ArtifactVersionsComponent {
     };
   }
 
-  protected readonly faWarning = faWarning;
-  protected readonly faFile = faFile;
+  public async uploadImage(data: ArtifactWithTags) {
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    if (!fileId || data.imageUrl?.includes(fileId)) {
+      return;
+    }
+    await firstValueFrom(this.artifacts.patchImage(data.id!, fileId));
+  }
 }
