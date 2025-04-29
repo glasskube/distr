@@ -23,7 +23,7 @@
         Artifacts
       </h1>
       <div class="grid grid-flow-col gap-4 mb-4">
-        <div class="grid gap-4 items-stretch xl:grid-cols-3">
+        <div class="grid gap-4 items-stretch xl:grid-cols-3 lg:grid-cols-2">
           @for (item of artifactsByCustomer$ | async; track item.customer.id) {
             <app-artifacts-by-customer-card [customer]="item.customer" [artifacts]="item.artifacts ?? []">
             </app-artifacts-by-customer-card>
