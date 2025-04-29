@@ -33,6 +33,8 @@ const welcomeTaskStart = 'start';
 const deployStep = 'deploy';
 const deployStepTaskDeploy = 'deploy';
 const deployStepTaskVerify = 'verify';
+const deployStepTaskDockerPs = 'docker-ps';
+const deployStepTaskOpen = 'open';
 const releaseStep = 'release';
 const releaseStepTaskFork = 'fork';
 const releaseStepTaskRelease = 'release';
@@ -69,6 +71,8 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   protected readonly deployFormGroup = new FormGroup({
     deployDone: new FormControl<boolean>(false, Validators.requiredTrue),
     verifyDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    dockerPsDone: new FormControl<boolean>(false, Validators.requiredTrue),
+    openDone: new FormControl<boolean>(false, Validators.requiredTrue),
   });
   protected readonly releaseFormGroup = new FormGroup({
     forkDone: new FormControl<boolean>(false, Validators.requiredTrue),
@@ -84,6 +88,8 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   ngOnInit() {
     this.registerTaskToggle(this.deployFormGroup.controls.deployDone, deployStep, deployStepTaskDeploy);
     this.registerTaskToggle(this.deployFormGroup.controls.verifyDone, deployStep, deployStepTaskVerify);
+    this.registerTaskToggle(this.deployFormGroup.controls.dockerPsDone, deployStep, deployStepTaskDockerPs);
+    this.registerTaskToggle(this.deployFormGroup.controls.openDone, deployStep, deployStepTaskOpen);
     this.registerTaskToggle(this.releaseFormGroup.controls.forkDone, releaseStep, releaseStepTaskFork);
   }
 
@@ -152,9 +158,13 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   private prepareDeployStep() {
     const deployed = getExistingTask(this.progress, deployStep, deployStepTaskDeploy);
     const verified = getExistingTask(this.progress, deployStep, deployStepTaskVerify);
+    const dockerPs = getExistingTask(this.progress, deployStep, deployStepTaskDockerPs);
+    const opened = getExistingTask(this.progress, deployStep, deployStepTaskOpen);
     this.deployFormGroup.patchValue({
       deployDone: !!deployed,
       verifyDone: !!verified,
+      dockerPsDone: !!dockerPs,
+      openDone: !!opened,
     });
   }
 

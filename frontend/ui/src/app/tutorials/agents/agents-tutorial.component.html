@@ -135,6 +135,50 @@
                       </div>
                     }
                   </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
+                      <input
+                        id="dockerPsDone"
+                        type="checkbox"
+                        [formControl]="deployFormGroup.controls.dockerPsDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <label for="dockerPsDone" class="text-lg font-medium leading-tight"
+                      >Check your docker containers</label
+                    >
+                    <p class="mt-1 text-xs">
+                      Execute <code class="select-all">docker ps</code> on your machine and check that the three
+                      hello-distr containers are now running.
+                    </p>
+                    @if (
+                      deployFormGroup.controls.dockerPsDone.touched && deployFormGroup.controls.dockerPsDone.invalid
+                    ) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
+                      <input
+                        id="openDone"
+                        type="checkbox"
+                        [formControl]="deployFormGroup.controls.openDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <label for="openDone" class="text-lg font-medium leading-tight">Open hello-distr</label>
+                    <p class="mt-1 text-xs">
+                      hello-distr is now deployed on
+                      <a href="http://localhost" target="_blank" class="text-primary-600 underline">http://localhost</a>
+                    </p>
+                    @if (deployFormGroup.controls.openDone.touched && deployFormGroup.controls.openDone.invalid) {
+                      <div class="mt-2 text-sm text-red-500">
+                        Please mark this as checked when you are done with it.
+                      </div>
+                    }
+                  </li>
                 </ol>
 
                 <div class="gap-4 sm:flex sm:items-center sm:justify-between">
