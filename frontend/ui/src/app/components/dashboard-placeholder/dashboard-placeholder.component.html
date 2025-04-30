@@ -1,13 +1,5 @@
 <div class="p-4 sm:ml-64 bg-gray-50 dark:bg-gray-900">
   <div class="p-4">
-    @if ((deploymentTargets$ | async)?.length === 0) {
-      <div
-        class="p-4 mb-4 text-sm text-blue-800 max-w-128 mx-auto rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-        role="alert">
-        Click <a class="cursor-pointer underline" (click)="openWizard()">here</a> to continue with the onboarding
-        wizard.
-      </div>
-    }
     <div class="grid grid-cols-3 mb-4 gap-4 h-60">
       <div class="flex items-center justify-center rounded-sm bg-white dark:bg-gray-800">
         <app-chart-type class="block max-w-full max-h-full"></app-chart-type>
@@ -43,7 +35,3 @@
     </div>
   </div>
 </div>
-
-<ng-template #onboardingWizard>
-  <app-onboarding-wizard (closed)="closeWizard()"></app-onboarding-wizard>
-</ng-template>

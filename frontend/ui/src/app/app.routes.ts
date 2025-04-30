@@ -33,6 +33,11 @@ import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-
 import {UsersService} from './services/users.service';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
 import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
+import {TutorialsComponent} from './tutorials/tutorials.component';
+import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
+import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
+import {getRemoteEnvironment} from '../env/remote';
+import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -118,10 +123,16 @@ function licensingEnabledGuard(): CanActivateFn {
   };
 }
 
-function registryEnabledGuard(): CanActivateFn {
+function registryHostSetOrRedirectGuard(redirectTo: string): CanActivateFn {
   return async () => {
-    const featureFlags = inject(FeatureFlagService);
-    return await firstValueFrom(featureFlags.isRegistryEnabled$);
+    const router = inject(Router);
+    const toast = inject(ToastService);
+    const env = await getRemoteEnvironment();
+    if ((env.registryHost ?? '').length > 0) {
+      return true;
+    }
+    toast.error('Registry must be enabled first!');
+    return router.createUrlTree([redirectTo]);
   };
 }
 
@@ -197,18 +208,11 @@ export const routes: Routes = [
               {path: '', pathMatch: 'full', component: ArtifactsComponent},
               {path: ':id', component: ArtifactVersionsComponent},
             ],
-            canActivate: [registryEnabledGuard()],
-          },
-          {
-            path: 'artifact-licenses',
-            children: [{path: '', pathMatch: 'full', component: ArtifactLicensesComponent}],
-            data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
           },
           {
             path: 'artifact-pulls',
             component: ArtifactPullsComponent,
-            canActivate: [requiredRoleGuard('vendor'), registryEnabledGuard()],
+            canActivate: [requiredRoleGuard('vendor')],
           },
           {
             path: 'customers',
@@ -236,9 +240,18 @@ export const routes: Routes = [
           },
           {
             path: 'licenses',
-            component: LicensesComponent,
-            data: {userRole: 'vendor'},
             canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
+            data: {userRole: 'vendor'},
+            children: [
+              {
+                path: 'applications',
+                component: LicensesComponent,
+              },
+              {
+                path: 'artifacts',
+                component: ArtifactLicensesComponent,
+              },
+            ],
           },
           {
             path: 'settings',
@@ -246,6 +259,30 @@ export const routes: Routes = [
               {
                 path: 'access-tokens',
                 component: AccessTokensComponent,
+              },
+            ],
+          },
+          {
+            path: 'tutorials',
+            canActivate: [requiredRoleGuard('vendor')],
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                component: TutorialsComponent,
+              },
+              {
+                path: 'agents',
+                component: AgentsTutorialComponent,
+              },
+              {
+                path: 'branding',
+                component: BrandingTutorialComponent,
+              },
+              {
+                path: 'registry',
+                canActivate: [registryHostSetOrRedirectGuard('/tutorials')],
+                component: RegistryTutorialComponent,
               },
             ],
           },
