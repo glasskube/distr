@@ -148,7 +148,6 @@ func NewDefault(
 			middleware.ContextInjectorMiddleware(pool, mailer),
 			auth.ArtifactsAuthentication.Middleware,
 			middleware.RequireOrgAndRole,
-			middleware.RegistryFeatureFlagEnabledMiddleware,
 		),
 	)
 }

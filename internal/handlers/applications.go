@@ -16,7 +16,6 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -27,7 +26,6 @@ func ApplicationsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getApplications)
 	r.With(requireUserRoleVendor).Post("/", createApplication)
-	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.With(applicationMiddleware).Group(func(r chi.Router) {
 			r.Get("/", getApplication)
@@ -318,56 +316,6 @@ func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion
 			}
 		}
 	}
-}
-
-func createSampleApplication(w http.ResponseWriter, r *http.Request) {
-	// TODO only serve request if user does not have a sample application yet
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
-	auth := auth.Authentication.Require(ctx)
-
-	application := types.Application{
-		Name: "Shiori",
-		Type: types.DeploymentTypeDocker,
-	}
-
-	var composeFileData []byte
-	var templateFileData []byte
-	if composeFile, err := resources.Get("apps/shiori/docker-compose.yaml"); err != nil {
-		log.Warn("failed to read shiori compose file", zap.Error(err))
-	} else {
-		composeFileData = composeFile
-	}
-	if templateFile, err := resources.Get("apps/shiori/template.env"); err != nil {
-		log.Warn("failed to read shiori template file", zap.Error(err))
-	} else {
-		templateFileData = templateFile
-	}
-
-	version := types.ApplicationVersion{
-		Name:             "v1.7.4",
-		ComposeFileData:  composeFileData,
-		TemplateFileData: templateFileData,
-	}
-
-	if err := db.RunTx(ctx, func(ctx context.Context) error {
-		if err := db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return err
-		}
-		version.ApplicationID = application.ID
-		if err := db.CreateApplicationVersion(ctx, &version); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return err
-		}
-		return nil
-	}); err != nil {
-		log.Warn("could not create sample application", zap.Error(err))
-		return
-	}
-
-	application.Versions = append(application.Versions, version)
-	RespondJSON(w, application)
 }
 
 func deleteApplication(w http.ResponseWriter, r *http.Request) {

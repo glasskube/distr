@@ -18,7 +18,6 @@ import (
 func ArtifactPullsRouter(r chi.Router) {
 	r.Use(
 		middleware.RequireOrgAndRole,
-		middleware.RegistryFeatureFlagEnabledMiddleware,
 		middleware.UserRoleMiddleware(types.UserRoleVendor),
 	)
 	r.Get("/", getArtifactPullsHandler())
