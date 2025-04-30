@@ -42,8 +42,8 @@ export class ArtifactsByCustomerCardComponent {
     if (includesPulled) {
       return true;
     }
-    const pulledStillAvailable = (artifact.artifact.versions ?? []).find((v) =>
-      v.tags.find((t) => t.name === artifact.latestPulledVersion)
+    const pulledStillAvailable = (artifact.artifact.versions ?? []).some((v) =>
+      v.tags.some((t) => t.name === artifact.latestPulledVersion)
     );
     return !pulledStillAvailable;
   }
