@@ -13,13 +13,14 @@ import (
 func GetLatestPullOfArtifactByUser(ctx context.Context, artifactId uuid.UUID, userId uuid.UUID) (string, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
-		select av.name
-		from ArtifactVersionPull avpl
-		join ArtifactVersion av on av.id = avpl.artifact_version_id
-		where av.artifact_id = @artifactId and avpl.useraccount_id = @userId
-		and av.name not like '%:%'
-		order by avpl.created_at desc
-		limit 1;
+		SELECT av.name
+		FROM ArtifactVersionPull avpl
+		JOIN ArtifactVersion av ON av.id = avpl.artifact_version_id
+		WHERE av.artifact_id = @artifactId 
+			AND avpl.useraccount_id = @userId
+			AND av.name NOT LIKE '%:%'
+		ORDER BY avpl.created_at DESC
+		LIMIT 1;
 	`, pgx.NamedArgs{
 		"artifactId": artifactId,
 		"userId":     userId,
