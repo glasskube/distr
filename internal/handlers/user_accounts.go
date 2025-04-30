@@ -39,7 +39,7 @@ func UserAccountsRouter(r chi.Router) {
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if userAccounts, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID()); err != nil {
+	if userAccounts, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID(), nil); err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {

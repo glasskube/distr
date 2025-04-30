@@ -7,37 +7,17 @@ import {
   RouterStateSnapshot,
   Routes,
 } from '@angular/router';
-import {UserRole} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
-import {AccessTokensComponent} from './access-tokens/access-tokens.component';
-import {ApplicationDetailComponent} from './applications/application-detail.component';
-import {ApplicationsPageComponent} from './applications/applications-page.component';
-import {ArtifactVersionsComponent} from './artifacts/artifact-versions/artifact-versions.component';
-import {ArtifactsComponent} from './artifacts/artifacts/artifacts.component';
-import {NavShellComponent} from './components/nav-shell.component';
-import {UsersComponent} from './components/users/users.component';
-import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 import {ForgotComponent} from './forgot/forgot.component';
 import {InviteComponent} from './invite/invite.component';
-import {LicensesComponent} from './licenses/licenses.component';
 import {LoginComponent} from './login/login.component';
-import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 import {PasswordResetComponent} from './password-reset/password-reset.component';
 import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
-import {FeatureFlagService} from './services/feature-flag.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
 import {VerifyComponent} from './verify/verify.component';
-import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
 import {UsersService} from './services/users.service';
-import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
-import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
-import {TutorialsComponent} from './tutorials/tutorials.component';
-import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
-import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
-import {getRemoteEnvironment} from '../env/remote';
-import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -107,35 +87,6 @@ const inviteComponentGuard: CanActivateFn = async () => {
   return router.createUrlTree(['/login']);
 };
 
-function requiredRoleGuard(userRole: UserRole): CanActivateFn {
-  return () => {
-    if (inject(AuthService).hasRole(userRole)) {
-      return true;
-    }
-    return inject(Router).createUrlTree(['/']);
-  };
-}
-
-function licensingEnabledGuard(): CanActivateFn {
-  return async () => {
-    const featureFlags = inject(FeatureFlagService);
-    return await firstValueFrom(featureFlags.isLicensingEnabled$);
-  };
-}
-
-function registryHostSetOrRedirectGuard(redirectTo: string): CanActivateFn {
-  return async () => {
-    const router = inject(Router);
-    const toast = inject(ToastService);
-    const env = await getRemoteEnvironment();
-    if ((env.registryHost ?? '').length > 0) {
-      return true;
-    }
-    toast.error('Registry must be enabled first!');
-    return router.createUrlTree([redirectTo]);
-  };
-}
-
 const baseRouteRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -172,121 +123,8 @@ export const routes: Routes = [
       {path: 'join', component: InviteComponent, canActivate: [inviteComponentGuard]},
       {
         path: '',
-        component: NavShellComponent,
-        children: [
-          {
-            path: 'dashboard',
-            loadComponent: async () =>
-              (await import('./components/dashboard-placeholder/dashboard-placeholder.component'))
-                .DashboardPlaceholderComponent,
-            canActivate: [requiredRoleGuard('vendor')],
-          },
-          {
-            path: 'home',
-            loadComponent: async () => (await import('./components/home/home.component')).HomeComponent,
-            canActivate: [requiredRoleGuard('customer')],
-          },
-          {
-            path: 'applications',
-            canActivate: [requiredRoleGuard('vendor')],
-            children: [
-              {
-                path: '',
-                pathMatch: 'full',
-                component: ApplicationsPageComponent,
-              },
-              {
-                path: ':applicationId',
-                component: ApplicationDetailComponent,
-              },
-            ],
-          },
-          {path: 'deployments', component: DeploymentsPageComponent},
-          {
-            path: 'artifacts',
-            children: [
-              {path: '', pathMatch: 'full', component: ArtifactsComponent},
-              {path: ':id', component: ArtifactVersionsComponent},
-            ],
-          },
-          {
-            path: 'artifact-pulls',
-            component: ArtifactPullsComponent,
-            canActivate: [requiredRoleGuard('vendor')],
-          },
-          {
-            path: 'customers',
-            component: UsersComponent,
-            data: {userRole: 'customer'},
-            canActivate: [requiredRoleGuard('vendor')],
-          },
-          {
-            path: 'users',
-            component: UsersComponent,
-            data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor')],
-          },
-          {
-            path: 'branding',
-            component: OrganizationBrandingComponent,
-            data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor')],
-          },
-          {
-            path: 'settings',
-            component: OrganizationSettingsComponent,
-            data: {userRole: 'vendor'},
-            canActivate: [requiredRoleGuard('vendor')],
-          },
-          {
-            path: 'licenses',
-            canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
-            data: {userRole: 'vendor'},
-            children: [
-              {
-                path: 'applications',
-                component: LicensesComponent,
-              },
-              {
-                path: 'artifacts',
-                component: ArtifactLicensesComponent,
-              },
-            ],
-          },
-          {
-            path: 'settings',
-            children: [
-              {
-                path: 'access-tokens',
-                component: AccessTokensComponent,
-              },
-            ],
-          },
-          {
-            path: 'tutorials',
-            canActivate: [requiredRoleGuard('vendor')],
-            children: [
-              {
-                path: '',
-                pathMatch: 'full',
-                component: TutorialsComponent,
-              },
-              {
-                path: 'agents',
-                component: AgentsTutorialComponent,
-              },
-              {
-                path: 'branding',
-                component: BrandingTutorialComponent,
-              },
-              {
-                path: 'registry',
-                canActivate: [registryHostSetOrRedirectGuard('/tutorials')],
-                component: RegistryTutorialComponent,
-              },
-            ],
-          },
-        ],
+        loadComponent: () => import('./components/nav-shell.component').then((m) => m.NavShellComponent),
+        loadChildren: () => import('./app-logged-in.routes').then((m) => m.routes),
       },
     ],
   },

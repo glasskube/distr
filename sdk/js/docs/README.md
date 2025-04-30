@@ -29,7 +29,6 @@
 - [Named](interfaces/Named.md)
 - [OrganizationBranding](interfaces/OrganizationBranding.md)
 - [TokenResponse](interfaces/TokenResponse.md)
-- [UptimeMetric](interfaces/UptimeMetric.md)
 - [UserAccount](interfaces/UserAccount.md)
 - [UserAccountWithRole](interfaces/UserAccountWithRole.md)
 
