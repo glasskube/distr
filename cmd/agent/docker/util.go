@@ -6,3 +6,7 @@ func DecodeComposeFile(manifest []byte) (result map[string]any, err error) {
 	err = yaml.Unmarshal(manifest, &result)
 	return
 }
+
+func EncodeComposeFile(compose map[string]any) (result []byte, err error) {
+	return yaml.Marshal(compose)
+}

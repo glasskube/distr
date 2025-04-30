@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -10,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/compose-spec/compose-go/v2/dotenv"
 	dockerconfig "github.com/docker/cli/cli/config"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
@@ -21,24 +21,9 @@ import (
 
 func DockerEngineApply(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
 	if deployment.DockerType == types.DockerTypeSwarm {
-		// Step 1 Ensure Docker Swarm is initialized
-		initCmd := exec.CommandContext(ctx, "docker", "info", "--format", "{{.Swarm.LocalNodeState}}")
-		initOutput, err := initCmd.CombinedOutput()
-		if err != nil {
-			logger.Error("Failed to check Docker Swarm state", zap.Error(err))
-			return nil, "", fmt.Errorf("failed to check Docker Swarm state: %w", err)
-		}
-
-		if !strings.Contains(strings.TrimSpace(string(initOutput)), "active") {
-			logger.Error("Docker Swarm not initialized", zap.String("output", string(initOutput)))
-			return nil, "", fmt.Errorf("docker Swarm not initialized: %s", string(initOutput))
-		}
-
 		return ApplyComposeFileSwarm(ctx, deployment)
-
 	}
 	return ApplyComposeFile(ctx, deployment)
-
 }
 
 func ApplyComposeFile(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
@@ -89,13 +74,28 @@ func ApplyComposeFile(ctx context.Context, deployment api.AgentDeployment) (*Age
 }
 
 func ApplyComposeFileSwarm(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
+	// Step 1 Ensure Docker Swarm is initialized
+	initCmd := exec.CommandContext(ctx, "docker", "info", "--format", "{{.Swarm.LocalNodeState}}")
+	initOutput, err := initCmd.CombinedOutput()
+	if err != nil {
+		logger.Error("Failed to check Docker Swarm state", zap.Error(err))
+		return nil, "", fmt.Errorf("failed to check Docker Swarm state: %w", err)
+	}
+
+	if !strings.Contains(strings.TrimSpace(string(initOutput)), "active") {
+		logger.Error("Docker Swarm not initialized", zap.String("output", string(initOutput)))
+		return nil, "", fmt.Errorf("docker Swarm not initialized: %s", string(initOutput))
+	}
+
 	agentDeployment, err := NewAgentDeployment(deployment)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// Read the Compose file without replacing environment variables
-	cleanedCompose := cleanComposeFile(deployment.ComposeFile)
+	cleanedComposeFile, err := cleanComposeFile(deployment.ComposeFile)
+	if err != nil {
+		return nil, "", err
+	}
 
 	// Construct environment variables
 	envVars := os.Environ()
@@ -103,12 +103,8 @@ func ApplyComposeFileSwarm(ctx context.Context, deployment api.AgentDeployment) 
 
 	// // If an env file is provided, load its values
 	if deployment.EnvFile != nil {
-		// TODO: This is too brittle. need to find something better
-		// Worst case use the parser from here:
-		// https://github.com/compose-spec/compose-go/blob/main/dotenv/godotenv.go
-		parsedEnv, err := parseEnvFile(deployment.EnvFile)
+		parsedEnv, err := dotenv.UnmarshalBytesWithLookup(deployment.EnvFile, nil)
 		if err != nil {
-			logger.Error("Failed to parse env file", zap.Error(err))
 			return nil, "", fmt.Errorf("failed to parse env file: %w", err)
 		}
 		for key, value := range parsedEnv {
@@ -125,7 +121,7 @@ func ApplyComposeFileSwarm(ctx context.Context, deployment api.AgentDeployment) 
 		agentDeployment.ProjectName,
 	}
 	cmd := exec.CommandContext(ctx, "docker", composeArgs...)
-	cmd.Stdin = bytes.NewReader(cleanedCompose)
+	cmd.Stdin = bytes.NewReader(cleanedComposeFile)
 	cmd.Env = envVars // Ensure the same env variables are used
 
 	// Execute the command and capture output
@@ -133,8 +129,10 @@ func ApplyComposeFileSwarm(ctx context.Context, deployment api.AgentDeployment) 
 	statusStr := string(cmdOut)
 
 	if err != nil {
-		logger.Error("Docker stack deploy failed", zap.String("output", statusStr))
+		logger.Error("docker stack deploy failed", zap.String("output", statusStr))
 		return nil, "", errors.New(statusStr)
+	} else {
+		logger.Debug("docker stack deploy returned", zap.String("output", statusStr), zap.Error(err))
 	}
 
 	return agentDeployment, statusStr, nil
@@ -173,35 +171,13 @@ func UninstallDockerSwarm(ctx context.Context, deployment AgentDeployment) error
 	return nil
 }
 
-func cleanComposeFile(composeData []byte) []byte {
-	lines := strings.Split(string(composeData), "\n")
-	cleanedLines := make([]string, 0, 50)
-
-	for _, line := range lines {
-		// Skip lines that define `name:`
-		if strings.HasPrefix(strings.TrimSpace(line), "name:") {
-			continue
-		}
-		cleanedLines = append(cleanedLines, line)
+func cleanComposeFile(composeData []byte) ([]byte, error) {
+	if compose, err := DecodeComposeFile(composeData); err != nil {
+		return nil, err
+	} else {
+		delete(compose, "name")
+		return EncodeComposeFile(compose)
 	}
-	return []byte(strings.Join(cleanedLines, "\n"))
-}
-
-func parseEnvFile(envData []byte) (map[string]string, error) {
-	envVars := make(map[string]string)
-	scanner := bufio.NewScanner(bytes.NewReader(envData))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.TrimSpace(line) == "" || strings.HasPrefix(line, "#") {
-			continue // Skip empty lines and comments
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid environment variable: %s", line)
-		}
-		envVars[parts[0]] = parts[1]
-	}
-	return envVars, scanner.Err()
 }
 
 func DockerConfigEnv(deployment api.AgentDeployment) []string {
