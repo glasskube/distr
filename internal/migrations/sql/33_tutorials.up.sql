@@ -1,6 +1,6 @@
 CREATE TYPE TUTORIAL AS ENUM ('branding', 'agents', 'registry');
 
-CREATE TABLE UserAccount_Tutorial (
+CREATE TABLE UserAccount_TutorialProgress (
   useraccount_id UUID NOT NULL REFERENCES UserAccount(id) ON DELETE CASCADE,
   tutorial TUTORIAL NOT NULL,
   events JSONB,
@@ -9,4 +9,4 @@ CREATE TABLE UserAccount_Tutorial (
   PRIMARY KEY (useraccount_id, tutorial)
 );
 
-CREATE INDEX IF NOT EXISTS UserAccount_Tutorial_useraccount_id ON UserAccount_Tutorial(useraccount_id);
+CREATE INDEX IF NOT EXISTS UserAccount_TutorialProgress_useraccount_id ON UserAccount_TutorialProgress(useraccount_id);

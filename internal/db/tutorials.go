@@ -24,7 +24,7 @@ func GetTutorialProgresses(ctx context.Context, userID uuid.UUID) (
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT `+tutorialProgressOutExpr+`
-		FROM UserAccount_Tutorial uat
+		FROM UserAccount_TutorialProgress uat
 		WHERE uat.useraccount_id = @userId`, pgx.NamedArgs{
 		"userId": userID,
 	})
@@ -45,7 +45,7 @@ func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.T
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT `+tutorialProgressOutExpr+`
-		FROM UserAccount_Tutorial uat
+		FROM UserAccount_TutorialProgress uat
 		WHERE uat.useraccount_id = @userId AND uat.tutorial = @tutorial`, pgx.NamedArgs{
 		"userId":   userID,
 		"tutorial": tutorial,
@@ -72,7 +72,7 @@ func SaveTutorialProgress(
 	db := internalctx.GetDb(ctx)
 	progress.CreatedAt = time.Now()
 	rows, err := db.Query(ctx, `
-		INSERT INTO UserAccount_Tutorial as uat (useraccount_id, tutorial, events, completed_at)
+		INSERT INTO UserAccount_TutorialProgress as uat (useraccount_id, tutorial, events, completed_at)
 		VALUES (
 			@userId,
 			@tutorial,

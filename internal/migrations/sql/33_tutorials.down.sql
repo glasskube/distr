@@ -1,3 +1,3 @@
-DROP TABLE IF EXISTS UserAccount_Tutorial;
+DROP TABLE IF EXISTS UserAccount_TutorialProgress;
 
 DROP TYPE IF EXISTS TUTORIAL;
