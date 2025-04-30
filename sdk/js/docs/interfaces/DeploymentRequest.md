@@ -32,6 +32,12 @@
 
 ---
 
+### dockerType?
+
+> `optional` **dockerType**: [`DockerType`](../type-aliases/DockerType.md)
+
+---
+
 ### envFileData?
 
 > `optional` **envFileData**: `string`

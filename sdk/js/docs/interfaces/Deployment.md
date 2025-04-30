@@ -32,6 +32,12 @@
 
 ---
 
+### dockerType?
+
+> `optional` **dockerType**: [`DockerType`](../type-aliases/DockerType.md)
+
+---
+
 ### id?
 
 > `optional` **id**: `string`
@@ -39,12 +45,6 @@
 #### Inherited from
 
 [`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
-
----
-
-### note?
-
-> `optional` **note**: `string`
 
 ---
 
