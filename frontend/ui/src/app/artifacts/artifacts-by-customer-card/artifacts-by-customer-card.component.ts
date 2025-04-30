@@ -52,7 +52,7 @@ export class ArtifactsByCustomerCardComponent {
     try {
       return maxBy(
         versions,
-        (version) => this.getFirstSemverTag(version),
+        (version) => this.getMaxSemverTag(version),
         (a, b) => a.compare(b) > 0
       );
     } catch (e) {
@@ -60,13 +60,16 @@ export class ArtifactsByCustomerCardComponent {
     }
   }
 
-  private getFirstSemverTag(version: TaggedArtifactVersion): SemVer {
-    for (let v of version.tags) {
-      try {
-        return new SemVer(v.name);
-      } catch (e) {}
+  private getMaxSemverTag(version: TaggedArtifactVersion) {
+    const maxSemver = maxBy(
+      version.tags,
+      (tag) => new SemVer(tag.name),
+      (a, b) => a.compare(b) > 0
+    );
+    if (!maxSemver) {
+      throw 'no semver tag';
     }
-    throw 'no semver tag found';
+    return new SemVer(maxSemver.name);
   }
 
   protected readonly faShip = faShip;
