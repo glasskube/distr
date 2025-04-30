@@ -1,14 +1,5 @@
 <div class="p-4 sm:ml-64 bg-gray-50 dark:bg-gray-900">
   <div class="p-4">
-    @if ((deploymentTargets$ | async)?.length === 0) {
-      <div
-        class="p-4 mb-4 text-sm text-blue-800 max-w-128 mx-auto rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-        role="alert">
-        Click <a class="cursor-pointer underline" (click)="openWizard()">here</a> to continue with the onboarding
-        wizard.
-      </div>
-    }
-
     <div class="flex flex-col gap-4">
       <h2 class="text-3xl font-extrabold leading-none tracking-tight text-gray-900 md:text-4xl dark:text-white">
         Agents
@@ -33,7 +24,3 @@
     </div>
   </div>
 </div>
-
-<ng-template #onboardingWizard>
-  <app-onboarding-wizard (closed)="closeWizard()"></app-onboarding-wizard>
-</ng-template>
