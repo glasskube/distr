@@ -48,23 +48,25 @@
                       <fa-icon [icon]="faLightbulb"></fa-icon>
                     </span>
                     <h3 class="text-lg font-medium leading-tight">Deploy hello-distr</h3>
-                    <div
-                      class="flex p-4 mb-2 mt-2 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-red-300 dark:text-red-600"
-                      role="alert">
-                      <fa-icon [icon]="faWarning" class="me-4"></fa-icon>
-                      <div>
-                        <p class="text-sm">
-                          If you are on Mac, please make sure to check
-                          <a
-                            href="https://distr.sh/docs/guides/distr-on-macos/"
-                            class="text-primary-600 underline"
-                            target="_blank"
-                            >this guide</a
-                          >
-                          first!
-                        </p>
+                    @if (!showMacOsWarning) {
+                      <div
+                        class="flex p-4 mb-2 mt-2 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800"
+                        role="alert">
+                        <fa-icon [icon]="faWarning" class="me-4"></fa-icon>
+                        <div>
+                          <p class="text-sm">
+                            If you are on Mac, please make sure to check
+                            <a
+                              href="https://distr.sh/docs/guides/distr-on-macos/"
+                              class="text-primary-600 underline"
+                              target="_blank"
+                              >this guide</a
+                            >
+                            first!
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    }
                   </li>
                   <li class="mb-10 ms-8">
                     <span class="absolute flex items-center justify-center -start-2 mt-0.75">
