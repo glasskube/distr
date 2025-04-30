@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.7.0](https://github.com/glasskube/distr/compare/1.6.1...1.7.0) (2025-04-30)
+
+
+### Features
+
+* add tutorials, adapt feature flag semantics and sidebar ([#814](https://github.com/glasskube/distr/issues/814)) ([f86f513](https://github.com/glasskube/distr/commit/f86f513bfdc29d1834f777a28b33334d261c1b6f))
+
+
+### Bug Fixes
+
+* **backend:** return image ID in GetArtifactByName ([#843](https://github.com/glasskube/distr/issues/843)) ([445e562](https://github.com/glasskube/distr/commit/445e5620d1569b73e4d0ad209eff3983c7b4c8f4))
+
+
+### Other
+
+* increase request limit ([#844](https://github.com/glasskube/distr/issues/844)) ([03ef0e9](https://github.com/glasskube/distr/commit/03ef0e999ed27fb1e02abe5976b85db4f0920853))
+* new design for vendor dashboard ([#840](https://github.com/glasskube/distr/issues/840)) ([a04615d](https://github.com/glasskube/distr/commit/a04615d80a276898ef57a03e388917e33fbc0dd4))
+* **ui:** make agent status indicator bigger ([#839](https://github.com/glasskube/distr/issues/839)) ([54ae61f](https://github.com/glasskube/distr/commit/54ae61f4635df34c89ee9a0941b842f8172ccdfd))
+* **ui:** update helm release name validation ([#842](https://github.com/glasskube/distr/issues/842)) ([39d0619](https://github.com/glasskube/distr/commit/39d061920082d86df7b15fe9b8b9391985b55f2d))
+
 ## [1.6.1](https://github.com/glasskube/distr/compare/1.6.0...1.6.1) (2025-04-29)
 
 
