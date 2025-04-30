@@ -36,16 +36,16 @@ export class ArtifactsByCustomerCardComponent {
   public readonly customer = input.required<UserAccountWithRole>();
   public readonly artifacts = input.required<DashboardArtifact[]>();
 
-  protected isNewerAvailable(artifact: DashboardArtifact): boolean {
+  protected isOnLatest(artifact: DashboardArtifact): boolean {
     const max = this.findMaxVersion(artifact.artifact.versions ?? []);
     const includesPulled = max?.tags.map((t) => t.name).includes(artifact.latestPulledVersion) ?? false;
-    const pulledStillAvailable = (artifact.artifact.versions ?? []).some((v) =>
+    if (includesPulled) {
+      return true;
+    }
+    const pulledStillAvailable = (artifact.artifact.versions ?? []).find((v) =>
       v.tags.find((t) => t.name === artifact.latestPulledVersion)
     );
-    if (!includesPulled && !pulledStillAvailable) {
-      return false;
-    }
-    return !includesPulled;
+    return !pulledStillAvailable;
   }
 
   private findMaxVersion(versions: TaggedArtifactVersion[]): TaggedArtifactVersion | undefined {
