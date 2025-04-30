@@ -33,6 +33,8 @@ import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-
 import {UsersService} from './services/users.service';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
 import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
+import {DashboardComponent} from './components/dashboard/dashboard.component';
+import {HomeComponent} from './components/home/home.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -165,14 +167,12 @@ export const routes: Routes = [
         children: [
           {
             path: 'dashboard',
-            loadComponent: async () =>
-              (await import('./components/dashboard-placeholder/dashboard-placeholder.component'))
-                .DashboardPlaceholderComponent,
+            component: DashboardComponent,
             canActivate: [requiredRoleGuard('vendor')],
           },
           {
             path: 'home',
-            loadComponent: async () => (await import('./components/home/home.component')).HomeComponent,
+            component: HomeComponent,
             canActivate: [requiredRoleGuard('customer')],
           },
           {

@@ -13,11 +13,11 @@ import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-cus
 import {DashboardService} from '../../services/dashboard.service';
 
 @Component({
-  selector: 'app-dashboard-placeholder',
+  selector: 'app-dashboard',
   imports: [DeploymentTargetsComponent, AsyncPipe, OnboardingWizardComponent, ArtifactsByCustomerCardComponent],
-  templateUrl: './dashboard-placeholder.component.html',
+  templateUrl: './dashboard.component.html',
 })
-export class DashboardPlaceholderComponent implements AfterViewInit, OnDestroy {
+export class DashboardComponent implements AfterViewInit, OnDestroy {
   private destoryed$ = new Subject<void>();
   private overlay = inject(OverlayService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
