@@ -1,0 +1,73 @@
+# this is a copy of https://github.com/glasskube/hello-distr/blob/0.1.10/deploy/docker-compose.yaml
+# note: the compose project name will be overridden by the distr agent, to create a unique name
+name: hello-distr
+
+# note: only share non-sensitive data to avoid accidental exposure of sensitive values (like passwords) to other containers
+x-shared-env: &shared-env
+  HELLO_DISTR_HOST: ${HELLO_DISTR_HOST:?error}
+  HELLO_DISTR_DB_NAME: ${HELLO_DISTR_DB_NAME:?error}
+
+services:
+  postgres:
+    image: 'postgres:17.4-alpine3.20'
+    environment:
+      <<: *shared-env
+      POSTGRES_USER: ${HELLO_DISTR_DB_USER:?error}
+      POSTGRES_PASSWORD: ${HELLO_DISTR_DB_PASSWORD:?error}
+      POSTGRES_DB: ${HELLO_DISTR_DB_NAME:?error}
+    restart: unless-stopped
+    healthcheck:
+      test: pg_isready -h localhost -U ${HELLO_DISTR_DB_USER:?error} -d ${HELLO_DISTR_DB_NAME:?error}
+      start_interval: 1s
+      interval: 5s
+      retries: 6
+    volumes:
+      - 'postgres:/var/lib/postgresql/data/'
+    networks:
+      - app_network
+
+  backend:
+    image: ghcr.io/glasskube/hello-distr/backend:0.1.10 # x-release-please-version
+    environment:
+      <<: *shared-env
+      DB_URL: postgresql://${HELLO_DISTR_DB_USER:?error}:${HELLO_DISTR_DB_PASSWORD:?error}@postgres/${HELLO_DISTR_DB_NAME:?error}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  frontend:
+    image: ghcr.io/glasskube/hello-distr/frontend:0.1.10 # x-release-please-version
+    environment:
+      <<: *shared-env
+      NEXT_PUBLIC_API_URL: 'http://${HELLO_DISTR_HOST:?error}/api'
+    depends_on:
+      - backend
+    restart: unless-stopped
+    extra_hosts:
+      - '${HELLO_DISTR_HOST:?error}=host-gateway'
+    networks:
+      - app_network
+
+  proxy:
+    image: ghcr.io/glasskube/hello-distr/proxy:0.1.10 # x-release-please-version
+    environment:
+      <<: *shared-env
+      HOST: ${HELLO_DISTR_HOST:?error}
+    ports:
+      - '80:80'
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - app_network
+
+volumes:
+  postgres:
+
+networks:
+  app_network:
+    driver: bridge

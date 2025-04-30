@@ -1,4 +1,4 @@
-import {Component, effect, ElementRef, inject, signal, ViewChild} from '@angular/core';
+import {Component, effect, ElementRef, inject, signal, ViewChild, WritableSignal} from '@angular/core';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -16,14 +16,16 @@ import {
   faLightbulb,
   faPalette,
   faServer,
+  faUserCheck,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
 import {buildConfig} from '../../../buildconfig';
 import {FeatureFlagService} from '../../services/feature-flag.service';
-import {AsyncPipe} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {TutorialsService} from '../../services/tutorials.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -34,14 +36,16 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
     FaIconComponent,
     RequireRoleDirective,
     AsyncPipe,
-    CdkConnectedOverlay,
-    CdkOverlayOrigin,
     RouterLinkActive,
+    CdkOverlayOrigin,
+    CdkConnectedOverlay,
+    NgTemplateOutlet,
   ],
 })
 export class SideBarComponent {
   public readonly sidebar = inject(SidebarService);
   public readonly featureFlags = inject(FeatureFlagService);
+  protected readonly tutorialsService = inject(TutorialsService);
   public feedbackAlert = true;
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;
@@ -55,10 +59,15 @@ export class SideBarComponent {
   protected readonly faAddressBook = faAddressBook;
   protected readonly faBox = faBox;
   protected readonly buildConfig = buildConfig;
+  protected readonly faArrowRightLong = faArrowRightLong;
+  protected readonly faHome = faHome;
+  protected readonly faChevronDown = faChevronDown;
 
   @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
-
-  protected readonly artifactsSubMenuOpen = signal(true);
+  protected readonly agentsSubMenuOpen = signal(true);
+  protected readonly licenseSubMenuOpen = signal(true);
+  protected readonly registrySubMenuOpen = signal(true);
+  protected readonly licenseOverlayOpen = signal(false);
 
   constructor() {
     effect(() => {
@@ -68,14 +77,9 @@ export class SideBarComponent {
     });
   }
 
-  protected toggleArtifactsSubMenu() {
-    this.artifactsSubMenuOpen.update((val) => !val);
+  protected toggle(signal: WritableSignal<boolean>) {
+    signal.update((val) => !val);
   }
 
-  protected readonly faArrowRightLong = faArrowRightLong;
-  protected readonly faHome = faHome;
-  protected showLicenseRequestAccessTooltip = false;
-  protected showRegistryRequestAccessTooltip = false;
-  protected readonly faChevronDown = faChevronDown;
-  protected readonly faCodeFork = faCodeFork;
+  protected readonly faUserCheck = faUserCheck;
 }

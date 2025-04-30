@@ -1,6 +1,6 @@
 import {Component, inject, input} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faClipboard} from '@fortawesome/free-solid-svg-icons';
+import {faClipboard, faClipboardCheck} from '@fortawesome/free-solid-svg-icons';
 import {ToastService} from '../services/toast.service';
 
 @Component({
@@ -12,7 +12,11 @@ import {ToastService} from '../services/toast.service';
       (click)="writeClip()"
       class="text-gray-500 hover:text-gray-400 dark:text-gray-400 hover:dark:text-gray-300"
       title="Copy to clipboard">
-      <fa-icon [icon]="faClipboard"></fa-icon>
+      @if (!copied) {
+        <fa-icon [icon]="faClipboard" />
+      } @else {
+        <fa-icon [icon]="faClipboardCheck" />
+      }
     </button>
   `,
 })
@@ -22,9 +26,14 @@ export class ClipComponent {
   private readonly toast = inject(ToastService);
 
   protected readonly faClipboard = faClipboard;
+  protected readonly faClipboardCheck = faClipboardCheck;
+
+  protected copied = false;
 
   public async writeClip() {
     await navigator.clipboard.writeText(this.clip());
     this.toast.success('copied to clipboard');
+    this.copied = true;
+    setTimeout(() => (this.copied = false), 2000);
   }
 }

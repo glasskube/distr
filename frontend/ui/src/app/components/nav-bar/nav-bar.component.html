@@ -28,6 +28,19 @@
           </h1>
         </a>
       </div>
+      @if (tutorial) {
+        <div
+          class="flex text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+          role="alert">
+          <div>
+            <div class="font-medium">
+              <a [routerLink]="['tutorials', tutorial]">
+                <fa-icon [icon]="faArrowLeft" class="me-4"></fa-icon>Continue Tutorial</a
+              >
+            </div>
+          </div>
+        </div>
+      }
       <div class="flex items-center">
         <div class="flex items-center ms-3">
           <div>
