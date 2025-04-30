@@ -139,12 +139,9 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 
 func GetArtifactByName(ctx context.Context, orgSlug, name string) (*types.Artifact, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, `
-			SELECT
-				a.id,
-				a.created_at,
-				a.organization_id,
-				a.name
+	rows, err := db.Query(
+		ctx,
+		`SELECT`+artifactOutputExpr+`
 			FROM Artifact a
 			JOIN Organization o on o.id = a.organization_id
 			WHERE o.slug = @orgSlug AND a.name = @name
@@ -152,7 +149,8 @@ func GetArtifactByName(ctx context.Context, orgSlug, name string) (*types.Artifa
 		pgx.NamedArgs{
 			"orgSlug": orgSlug,
 			"name":    name,
-		})
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
 	}
