@@ -25,7 +25,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
-	github.com/lestrrat-go/jwx/v2 v2.1.5
+	github.com/lestrrat-go/jwx/v2 v2.1.6
 	github.com/onsi/gomega v1.37.0
 	github.com/spf13/pflag v1.0.6
 	github.com/wneessen/go-mail v0.6.2

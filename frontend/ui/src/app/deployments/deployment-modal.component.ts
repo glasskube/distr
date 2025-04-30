@@ -21,7 +21,7 @@ import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-deployment-modal',
-  template: `<div class="z-50 w-256 max-w-full overflow-x-hidden overflow-y-auto">
+  template: `<div class="z-50 w-256 max-w-full max-h-full overflow-x-hidden overflow-y-auto">
     <div class="relative w-full max-h-full">
       <!-- Modal content -->
       <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">

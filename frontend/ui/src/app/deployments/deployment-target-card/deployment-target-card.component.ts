@@ -9,6 +9,7 @@ import {
   faHeartPulse,
   faLink,
   faPen,
+  faPlus,
   faRotate,
   faShip,
   faTrash,
@@ -329,4 +330,6 @@ export class DeploymentTargetCardComponent {
       }
     });
   }
+
+  protected readonly faPlus = faPlus;
 }
