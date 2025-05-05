@@ -14,6 +14,7 @@ import (
 
 var (
 	databaseUrl                    string
+	databaseMaxConns               *int
 	jwtSecret                      []byte
 	host                           string
 	registryHost                   string
@@ -51,6 +52,7 @@ func init() {
 	}
 
 	databaseUrl = envutil.RequireEnv("DATABASE_URL")
+	databaseMaxConns = envutil.GetEnvParsedOrNil("DATABASE_MAX_CONNS", strconv.Atoi)
 	jwtSecret = envutil.RequireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
 	host = envutil.RequireEnv("DISTR_HOST")
 	agentInterval = envutil.GetEnvParsedOrDefault("AGENT_INTERVAL", envparse.PositiveDuration, 5*time.Second)
@@ -109,6 +111,14 @@ func init() {
 
 func DatabaseUrl() string {
 	return databaseUrl
+}
+
+// DatabaseMaxConns allows to override the MaxConns parameter of the pgx pool config.
+//
+// Note that it should also be possible to set this value via the connection string
+// (like this: postgresql://...?pool_max_conns=10), but it doesn't work for some reason.
+func DatabaseMaxConns() *int {
+	return databaseMaxConns
 }
 
 func JWTSecret() []byte {

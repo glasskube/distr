@@ -139,6 +139,9 @@ func (reg *Registry) createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 		}
 		return nil
 	}
+	if maxConns := env.DatabaseMaxConns(); maxConns != nil {
+		config.MaxConns = int32(*maxConns)
+	}
 	if env.EnableQueryLogging() {
 		config.ConnConfig.Tracer = &loggingQueryTracer{reg.logger}
 	} else {
