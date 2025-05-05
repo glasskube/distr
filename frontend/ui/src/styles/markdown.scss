@@ -1,0 +1,111 @@
+@layer base {
+  .markdown {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply font-display;
+
+      &:not(h1) {
+        @apply font-bold;
+        @apply mb-1;
+      }
+    }
+
+    h1 {
+      @apply font-extrabold;
+      @apply text-4xl;
+      @apply mt-5;
+    }
+
+    h2 {
+      @apply text-3xl;
+      @apply mt-4;
+    }
+
+    h3 {
+      @apply text-2xl;
+      @apply mt-3;
+    }
+
+    h4 {
+      @apply text-xl;
+      @apply mt-2;
+    }
+
+    h5 {
+      @apply text-lg;
+      @apply mt-1;
+    }
+
+    pre {
+      @apply rounded-md;
+      @apply px-4;
+      @apply py-2;
+    }
+
+    code:not(a *),
+    strong {
+      @apply text-gray-900;
+      @apply dark:text-gray-200;
+    }
+
+    code {
+      @apply whitespace-pre-line;
+    }
+
+    code:not(pre *) {
+      @apply rounded-sm;
+      @apply px-1;
+    }
+
+    pre,
+    code {
+      @apply bg-gray-200;
+      @apply dark:bg-gray-800;
+    }
+
+    hr {
+      @apply h-px;
+      @apply my-3;
+      @apply bg-gray-300;
+      @apply border-0;
+      @apply dark:bg-gray-700;
+    }
+
+    ul,
+    ol {
+      @apply space-y-1;
+      @apply list-inside;
+    }
+
+    ul {
+      @apply list-disc;
+    }
+
+    ol {
+      @apply list-decimal;
+    }
+
+    pre,
+    p,
+    ol,
+    ul {
+      @apply mb-3;
+    }
+
+    a {
+      @apply text-primary-600;
+      @apply underline;
+    }
+
+    p,
+    ol,
+    ul {
+      @apply text-gray-600;
+      @apply dark:text-gray-300;
+    }
+  }
+}
