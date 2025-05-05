@@ -157,12 +157,16 @@
           }
         } @else {
           <a
-            class="flex items-center pl-11 p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group cursor-pointer"
             title="Contact support to enable licensing"
             (click)="toggle(licenseOverlayOpen)"
             cdkOverlayOrigin
             #tooltipTrigger="cdkOverlayOrigin">
-            <span class="">Licenses</span>
+            <fa-icon
+              [icon]="faKey"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Licenses</span>
             <span
               class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
               >Beta</span
