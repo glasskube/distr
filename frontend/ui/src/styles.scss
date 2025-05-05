@@ -33,7 +33,7 @@
 
   --font-sans: 'Inter', 'system-ui', 'sans-serif';
   --font-display: 'Poppins', 'Inter', 'system-ui', 'sans-serif';
-  --font-mono: 'monospace';
+  --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
 @plugin 'flowbite/plugin';
