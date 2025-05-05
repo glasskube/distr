@@ -1,13 +1,18 @@
 import {MarkedOptions, MarkedRenderer} from 'ngx-markdown';
 import {parseInline} from 'marked';
+import {captureException} from '@sentry/angular';
 
 export function markedOptionsFactory(): MarkedOptions {
   const renderer = new MarkedRenderer();
   const opts: MarkedOptions = {renderer: renderer};
 
-  renderer.link = (link) => {
-    const text = parseInline(link.text, {...opts, async: false});
-    return `<a href="${link.href}" target="_blank">${text}</a>`;
+  renderer.link = ({href, text}) => {
+    try {
+      text = text === href ? text : parseInline(text, {...opts, async: false});
+    } catch (e) {
+      captureException(e);
+    }
+    return `<a href="${href}" target="_blank">${text}</a>`;
   };
 
   return opts;
