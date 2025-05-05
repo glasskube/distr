@@ -39,6 +39,7 @@ export class UsersService {
             email: claims.email,
             name: claims.name,
             userRole: 'customer',
+            imageUrl: claims.image_url,
           },
         ]);
       }

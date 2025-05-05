@@ -4,6 +4,8 @@ import (
 	"maps"
 	"time"
 
+	"github.com/glasskube/distr/api"
+
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/jwtauth/v5"
@@ -20,6 +22,7 @@ const (
 	UserEmailKey         = "email"
 	UserEmailVerifiedKey = "email_verified"
 	UserRoleKey          = "role"
+	UserImageURLKey      = "image_url"
 	OrgIdKey             = "org"
 	PasswordResetKey     = "password_reset"
 
@@ -65,6 +68,9 @@ func generateUserToken(
 		UserNameKey:          user.Name,
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
+	}
+	if user.ImageID != nil {
+		claims[UserImageURLKey] = api.WithImageUrl(user.ImageID)
 	}
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole
