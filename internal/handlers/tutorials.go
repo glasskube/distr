@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 
 	"github.com/google/uuid"
 
@@ -102,28 +101,15 @@ func saveTutorialProgress(w http.ResponseWriter, r *http.Request) {
 }
 
 func createSampleAppAndDeployment(ctx context.Context) (*types.DeploymentTargetWithCreatedBy, error) {
-	auth := auth.Authentication.Require(ctx)
-	var progress *types.TutorialProgress
-	var err error
-	if progress, err = db.GetTutorialProgress(ctx, auth.CurrentUserID(), types.TutorialAgents); err != nil {
-		if !errors.Is(err, apierrors.ErrNotFound) {
-			return nil, fmt.Errorf("failed to get existing tutorial progress: %w", err)
-		}
+	if app, err := createHelloDistrApp(ctx); err != nil {
+		return nil, fmt.Errorf("failed to create hello-distr app: %w", err)
+	} else if dt, err := createHelloDistrDeploymentTarget(ctx); err != nil {
+		return nil, fmt.Errorf("failed to create hello-distr deployment target: %w", err)
+	} else if err := createHelloDistrDeploymentAndRevision(ctx, app.Versions[0].ID, dt.ID); err != nil {
+		return nil, fmt.Errorf("failed to deploy hello-distr: %w", err)
+	} else {
+		return dt, nil
 	}
-	if progress == nil || !slices.ContainsFunc(progress.Events, func(event types.TutorialProgressEvent) bool {
-		return event.StepID == "welcome" && event.TaskID == "start"
-	}) {
-		if app, err := createHelloDistrApp(ctx); err != nil {
-			return nil, fmt.Errorf("failed to create hello-distr app: %w", err)
-		} else if dt, err := createHelloDistrDeploymentTarget(ctx); err != nil {
-			return nil, fmt.Errorf("failed to create hello-distr deployment target: %w", err)
-		} else if err := createHelloDistrDeploymentAndRevision(ctx, app.Versions[0].ID, dt.ID); err != nil {
-			return nil, fmt.Errorf("failed to deploy hello-distr: %w", err)
-		} else {
-			return dt, nil
-		}
-	}
-	return nil, nil
 }
 
 func createHelloDistrApp(ctx context.Context) (*types.Application, error) {
