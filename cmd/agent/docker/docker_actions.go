@@ -20,7 +20,7 @@ import (
 )
 
 func DockerEngineApply(ctx context.Context, deployment api.AgentDeployment) (*AgentDeployment, string, error) {
-	if deployment.DockerType == types.DockerTypeSwarm {
+	if *deployment.DockerType == types.DockerTypeSwarm {
 		return ApplyComposeFileSwarm(ctx, deployment)
 	}
 	return ApplyComposeFile(ctx, deployment)

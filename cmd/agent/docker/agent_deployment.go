@@ -35,7 +35,7 @@ func NewAgentDeployment(deployment api.AgentDeployment) (*AgentDeployment, error
 			ID:          deployment.ID,
 			RevisionID:  deployment.RevisionID,
 			ProjectName: name,
-			DockerType:  deployment.DockerType,
+			DockerType:  *deployment.DockerType,
 		}, nil
 	}
 }
