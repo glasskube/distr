@@ -86,7 +86,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   commandCopied = false;
   protected readonly route = inject(ActivatedRoute);
   private platform: Platform = inject(Platform);
-  protected showMacOsWarning = this.platform.IOS || this.platform.SAFARI;
+  protected showMacOsWarning = this.platform.IOS || this.platform.SAFARI || /Mac/i.test(navigator.userAgent);
 
   ngOnInit() {
     this.registerTaskToggle(this.deployFormGroup.controls.deployDone, deployStep, deployStepTaskDeploy);
