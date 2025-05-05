@@ -23,6 +23,7 @@ import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {OverlayService} from '../../services/overlay.service';
+import {RequireRoleDirective} from '../../directives/required-role.directive';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -38,6 +39,7 @@ import {OverlayService} from '../../services/overlay.service';
     ClipComponent,
     BytesPipe,
     SecureImagePipe,
+    RequireRoleDirective,
   ],
   templateUrl: './artifact-versions.component.html',
 })

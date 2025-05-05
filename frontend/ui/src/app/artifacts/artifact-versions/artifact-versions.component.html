@@ -32,7 +32,9 @@
                   <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
                 </p>
               </div>
-              <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
+              <app-artifacts-download-count
+                *appRequiredRole="'vendor'"
+                [source]="artifact"></app-artifacts-download-count>
             </div>
 
             <div>
@@ -95,7 +97,7 @@
                       <li><app-artifacts-hash [hash]="version.digest"></app-artifacts-hash></li>
                     </ul>
                   </div>
-                  <div class="flex flex-col items-end gap-1">
+                  <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
                     <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
                     <app-artifacts-downloaded-by [source]="version"> </app-artifacts-downloaded-by>
                   </div>
