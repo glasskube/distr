@@ -52,7 +52,7 @@
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
                     <label for="slugDone" class="text-lg font-medium leading-tight">Set Organization Slug</label>
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       The slug will be used as part of the url for artifact registry. It must start with a lower case
                       letter or digit and consist only of lowercase letters, digits, as well as the following special
                       characters: “.”, “_”, “__”, “-”.
@@ -122,12 +122,12 @@
                     <label for="tokenDone" class="text-lg font-medium leading-tight"
                       >Create a Personal Access Token</label
                     >
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       <b>Note: </b>A Personal Access Token is like a password: Anybody with access to it can access your
                       account!
                     </p>
                     @if (loginFormGroup.controls.tokenDone.value !== true) {
-                      <p class="mt-1 text-xs">
+                      <p class="mt-1 text-sm">
                         After clicking the button the new token will be displayed to you – This is the only time you
                         will see it!
                       </p>
@@ -171,7 +171,7 @@
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
                     <label for="loginDone" class="text-lg font-medium leading-tight">Login</label>
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       Now we use the previously created Personal Access Token as password to log in to the registry with
                       this command:
                     </p>
@@ -245,7 +245,7 @@
                     <label for="pullDone" class="text-lg font-medium leading-tight"
                       >Pull hello-distr from GitHub Container Registry</label
                     >
-                    <p class="mt-1 text-xs">
+                    <p class="my-1 text-sm">
                       We have prepared three images for you, that all belong to the
                       <a
                         href="https://github.com/glasskube/hello-distr"
@@ -280,7 +280,7 @@
                     <label for="tagDone" class="text-lg font-medium leading-tight"
                       >Tag images for your organization</label
                     >
-                    <p class="mt-1 text-xs">This step will make the sample images "yours":</p>
+                    <p class="my-1 text-sm">This step will make the sample images "yours":</p>
                     @let tagCmd =
                       `docker tag ghcr.io/glasskube/hello-distr/proxy:${helloDistrTag} ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
                       docker tag ghcr.io/glasskube/hello-distr/frontend:${helloDistrTag} ${host}/${slug}/hello-distr/frontend:${helloDistrTag}
@@ -333,18 +333,18 @@
                     <label for="exploreDone" class="text-lg font-medium leading-tight"
                       >Pull image and view download history</label
                     >
-                    <p class="mt-1 text-xs">Pull one of the pushed images:</p>
+                    <p class="mt-1 text-sm">Pull one of the pushed images:</p>
                     @let exploreCmd = 'docker pull ' + host + '/' + slug + '/hello-distr/proxy:' + helloDistrTag;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ exploreCmd }}
                     </code>
                     <app-clip class="mx-2" [clip]="exploreCmd"></app-clip>
-                    <p class="mt-2 ml-4 text-xs">
+                    <p class="mt-2 ml-4 text-sm">
                       Note: As an additional test, you can delete the previously pulled backend image and tags with
                       <code class="select-all">docker image rm be5f5124c4ca -f</code>, and then execute the previous
                       pull again. This time all the image blobs will be downloaded.
                     </p>
-                    <p class="mt-2 text-xs">
+                    <p class="mt-2 text-sm">
                       In the
                       <a
                         [routerLink]="['/artifact-pulls']"
@@ -354,7 +354,7 @@
                       >
                       you will now see that you have pulled the image!
                     </p>
-                    <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
+                    <p class="mt-1 text-sm">When done, mark this checkbox and complete the tutorial.</p>
                     @if (usageFormGroup.controls.exploreDone.touched && usageFormGroup.controls.exploreDone.invalid) {
                       <div class="mt-2 text-sm text-red-500">
                         Please mark this as checked when you are done with it.

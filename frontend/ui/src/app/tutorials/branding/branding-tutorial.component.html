@@ -66,7 +66,7 @@
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
                     <label for="titleDone" class="text-lg font-medium leading-tight">Set Customer Portal Title</label>
-                    <p class="mt-1 text-xs">The title will be shown in the header next to the logo.</p>
+                    <p class="mt-1 text-sm">The title will be shown in the header next to the logo.</p>
                     <div class="mt-2">
                       <input
                         [formControl]="brandingFormGroup.controls.title"
@@ -91,7 +91,7 @@
                     <label for="descriptionDone" class="text-lg font-medium leading-tight"
                       >Write a short Welcome Page</label
                     >
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       This will be shown as the home page for your customers. Markdown is supported.
                     </p>
                     <div class="mt-2">
@@ -160,10 +160,10 @@
                     <label for="inviteDone" class="text-lg font-medium leading-tight"
                       >Send the customer invite mail (to yourself)</label
                     >
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       For the purpose of this tutorial, make sure to send this mail to yourself.
                     </p>
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       You can either choose another one of your email addresses, but a lot of providers also support
                       addresses in the form of username+customer&commat;provider.tld, i.e. you might be able to use
                       {{ emailUsername }}+customer&commat;{{ emailDomain }} and receive it in the same mailbox.
@@ -204,15 +204,15 @@
                     <label for="customerConfirmed" class="text-lg font-medium leading-tight"
                       >Open the Customer Portal in a different browser</label
                     >
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">
                       From the previously sent email invite, open the invite link
                       <b>in a different browser or in a private window</b>
                     </p>
-                    <p class="mt-1 text-xs">Please note: You are now mimicking to be a customer.</p>
-                    <p class="mt-1 text-xs">
+                    <p class="mt-1 text-sm">Please note: You are now mimicking to be a customer.</p>
+                    <p class="mt-1 text-sm">
                       In the customer portal, you should see the previously chosen title and welcome page.
                     </p>
-                    <p class="mt-1 text-xs">When done, mark this checkbox and complete the tutorial.</p>
+                    <p class="mt-1 text-sm">When done, mark this checkbox and complete the tutorial.</p>
                     @if (
                       inviteFormGroup.controls.inviteDone &&
                       inviteFormGroup.controls.customerConfirmed.touched &&
