@@ -68,12 +68,8 @@ func GetLatestHelmRelease(
 	if err != nil {
 		return nil, err
 	}
-	historyAction := action.NewHistory(cfg)
-	if releases, err := historyAction.Run(deployment.ReleaseName); err != nil {
-		return nil, err
-	} else {
-		return releases[len(releases)-1], nil
-	}
+	// Get returns the latest revision by default
+	return action.NewGet(cfg).Run(deployment.ReleaseName)
 }
 
 func RunHelmPreflight(
