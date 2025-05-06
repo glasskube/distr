@@ -23,7 +23,7 @@ import (
 )
 
 func FileRouter(r chi.Router) {
-	r.With(requireUserRoleVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Post("/", createFileHandler)
 		r.Route("/{fileId}", func(r chi.Router) {
 			r.Use(fileMiddleware)
