@@ -30,7 +30,8 @@ const (
 		dt.reported_agent_version_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
-			AS geolocation
+			AS geolocation,
+		dt.metrics_enabled
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
 		", (" + userAccountWithRoleOutputExpr + ") as created_by"

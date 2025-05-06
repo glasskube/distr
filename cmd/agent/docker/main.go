@@ -31,6 +31,9 @@ func init() {
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	tick := time.Tick(agentenv.Interval)
+
+	startMetrics(ctx)
+
 loop:
 	for ctx.Err() == nil {
 		select {

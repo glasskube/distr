@@ -28,6 +28,7 @@ type clientData struct {
 	manifestEndpoint string
 	resourceEndpoint string
 	statusEndpoint   string
+	metricsEndpoint  string
 }
 
 type Client struct {
@@ -157,6 +158,25 @@ func (c *Client) RawToken() string {
 	return c.rawToken
 }
 
+func (c *Client) ReportMetrics(ctx context.Context, metrics any) error {
+
+	// TODO client concurrency support (e.g. token handling!)
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(metrics); err != nil {
+		return err
+	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.metricsEndpoint, &buf); err != nil {
+		return err
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		if _, err := c.doAuthenticated(ctx, req); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}
+}
+
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
 	if resp, err := c.doAuthenticatedNoRetry(ctx, r); resp == nil || resp.StatusCode != 401 {
 		return resp, err
@@ -199,6 +219,8 @@ func (c *Client) ReloadFromEnv() (changed bool, err error) {
 	} else if d.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
 		return
 	} else if d.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+		return
+	} else if d.metricsEndpoint, err = readEnvVar("DISTR_METRICS_ENDPOINT"); err != nil {
 		return
 	} else {
 		changed = c.clientData != d

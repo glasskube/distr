@@ -3,11 +3,13 @@ package api
 import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
+	"time"
 )
 
 type AgentResource struct {
-	Version   types.AgentVersion `json:"version"`
-	Namespace string             `json:"namespace,omitempty"`
+	Version        types.AgentVersion `json:"version"`
+	Namespace      string             `json:"namespace,omitempty"`
+	MetricsEnabled bool               `json:"metricsEnabled"`
 	// Deprecated: This property will be removed in v2. Please consider using Deployments instead.
 	Deployment  *AgentDeployment  `json:"deployment,omitempty"`
 	Deployments []AgentDeployment `json:"deployments,omitempty"`
@@ -41,4 +43,8 @@ type AgentDeploymentStatus struct {
 	RevisionID uuid.UUID                  `json:"revisionId"`
 	Type       types.DeploymentStatusType `json:"type"`
 	Message    string                     `json:"message"`
+}
+
+type DockerHostMetrics struct {
+	Timestamp time.Time
 }

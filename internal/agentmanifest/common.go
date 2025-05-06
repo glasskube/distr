@@ -19,6 +19,7 @@ var (
 	manifestEndpoint  string
 	resourcesEndpoint string
 	statusEndpoint    string
+	metricsEndpoint   string
 )
 
 func init() {
@@ -30,6 +31,7 @@ func init() {
 		manifestEndpoint = u.JoinPath("manifest").String()
 		resourcesEndpoint = u.JoinPath("resources").String()
 		statusEndpoint = u.JoinPath("status").String()
+		metricsEndpoint = u.JoinPath("metrics").String()
 	}
 }
 
@@ -59,6 +61,7 @@ func getTemplateData(
 		"manifestEndpoint":  manifestEndpoint,
 		"resourcesEndpoint": resourcesEndpoint,
 		"statusEndpoint":    statusEndpoint,
+		"metricsEndpoint":   metricsEndpoint,
 	}
 	if deploymentTarget.Namespace != nil {
 		result["targetNamespace"] = *deploymentTarget.Namespace

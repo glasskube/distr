@@ -128,7 +128,10 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		statusMessage = fmt.Sprintf("%v: %v", msg, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		var agentResource = api.AgentResource{Version: deploymentTarget.AgentVersion}
+		var agentResource = api.AgentResource{
+			Version:        deploymentTarget.AgentVersion,
+			MetricsEnabled: deploymentTarget.MetricsEnabled,
+		}
 		if deploymentTarget.Namespace != nil {
 			agentResource.Namespace = *deploymentTarget.Namespace
 		}
