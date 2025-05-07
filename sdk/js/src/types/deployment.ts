@@ -3,7 +3,7 @@ import {BaseModel} from './base';
 export interface Deployment extends BaseModel {
   deploymentTargetId: string;
   releaseName?: string;
-  note?: string;
+  dockerType?: DockerType;
 }
 
 export interface DeploymentRequest {
@@ -12,6 +12,7 @@ export interface DeploymentRequest {
   deploymentId?: string;
   applicationLicenseId?: string;
   releaseName?: string;
+  dockerType?: DockerType;
   valuesYaml?: string;
   envFileData?: string;
 }
@@ -37,6 +38,8 @@ export interface DeploymentRevisionStatus extends BaseModel {
 export type DeploymentType = 'docker' | 'kubernetes';
 
 export type HelmChartType = 'repository' | 'oci';
+
+export type DockerType = 'compose' | 'swarm';
 
 export type DeploymentStatusType = 'ok' | 'progressing' | 'error';
 

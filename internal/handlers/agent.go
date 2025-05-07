@@ -177,6 +177,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				} else {
 					agentDeployment.ComposeFile = patchedComposeFile
 					agentDeployment.EnvFile = deployment.EnvFileData
+					agentDeployment.DockerType = util.PtrCopy(deployment.DockerType)
 				}
 			} else {
 				agentDeployment.ReleaseName = *deployment.ReleaseName
