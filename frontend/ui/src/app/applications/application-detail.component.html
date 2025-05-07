@@ -234,191 +234,208 @@
             </div>
           }
 
-          <form [formGroup]="newVersionForm" (ngSubmit)="createVersion(application)">
-            <div>
-              <h3 class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">New Version</h3>
-              <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                <div class="w-full">
-                  <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Version Name *</label
-                  >
-                  <input
-                    [formControl]="newVersionForm.controls.versionName"
-                    autotrim
-                    type="text"
-                    name="breadth"
-                    id="applicationVersion"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                  @if (newVersionForm.controls.versionName.invalid && newVersionForm.controls.versionName.touched) {
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                  }
-                </div>
-              </div>
+          <h3 class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">
+            <button
+              (click)="isVersionFormExpanded.set(!isVersionFormExpanded())"
+              [title]="'Click to ' + (isVersionFormExpanded() ? 'hide' : 'show') + ' the version form'">
+              <fa-icon
+                class="inline-block transition duration-100 ease-in-out"
+                [class.-rotate-90]="!isVersionFormExpanded()"
+                [icon]="faChevronDown"></fa-icon>
+              New Version
+            </button>
+          </h3>
 
-              @if (application.type === 'kubernetes') {
-                <div class="space-y-4 mt-4">
-                  <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                    <div class="w-full">
-                      <label for="chartTypeSelect" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart Type *</label
-                      >
-                      <select
-                        [formControl]="newVersionForm.controls.kubernetes.controls.chartType"
-                        id="chartTypeSelect"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                        <option value="repository">Repository</option>
-                        <option value="oci">OCI</option>
-                      </select>
-                      @if (
-                        newVersionForm.controls.kubernetes.controls.chartType.invalid &&
-                        newVersionForm.controls.kubernetes.controls.chartType.touched
-                      ) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
-                    </div>
-                    <div class="w-full">
-                      @if (newVersionForm.controls.kubernetes.controls.chartName.enabled) {
-                        <label
-                          for="kubernetesChartName"
-                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                          >Chart Name *</label
-                        >
-                        <input
-                          [formControl]="newVersionForm.controls.kubernetes.controls.chartName"
-                          autotrim
-                          type="text"
-                          name="chartName"
-                          id="kubernetesChartName"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                        @if (
-                          newVersionForm.controls.kubernetes.controls.chartName.invalid &&
-                          newVersionForm.controls.kubernetes.controls.chartName.touched
-                        ) {
-                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                        }
-                      }
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                    <div class="w-full">
-                      <label
-                        for="kubernetesChartUrl"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart URL *</label
-                      >
-                      <input
-                        [formControl]="newVersionForm.controls.kubernetes.controls.chartUrl"
-                        autotrim
-                        type="text"
-                        name="chartUrl"
-                        id="kubernetesChartUrl"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                      @if (
-                        newVersionForm.controls.kubernetes.controls.chartUrl.invalid &&
-                        newVersionForm.controls.kubernetes.controls.chartUrl.touched
-                      ) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
-                    </div>
-                    <div class="w-full">
-                      <label
-                        for="kubernetesChartVersion"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Chart Version *</label
-                      >
-                      <input
-                        [formControl]="newVersionForm.controls.kubernetes.controls.chartVersion"
-                        autotrim
-                        type="text"
-                        name="chartVersion"
-                        id="kubernetesChartVersion"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-                      @if (
-                        newVersionForm.controls.kubernetes.controls.chartVersion.invalid &&
-                        newVersionForm.controls.kubernetes.controls.chartVersion.touched
-                      ) {
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                      }
-                    </div>
-                  </div>
-
+          @if (isVersionFormExpanded()) {
+            <form [formGroup]="newVersionForm" (ngSubmit)="createVersion(application)">
+              <div>
+                <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
                   <div class="w-full">
-                    <label for="base_values_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Base Values</label
+                    <label for="applicationVersion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      >Version Name *</label
                     >
-                    <app-editor
-                      id="base_values_input"
-                      language="yaml"
-                      class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      [formControl]="newVersionForm.controls.kubernetes.controls.baseValues">
-                    </app-editor>
-                  </div>
-
-                  <div class="w-full">
-                    <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Template</label
-                    >
-                    <app-editor
-                      id="template_input"
-                      class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      [formControl]="newVersionForm.controls.kubernetes.controls.template">
-                    </app-editor>
-                  </div>
-                </div>
-              } @else {
-                <div class="space-y-4 mt-4">
-                  <div class="w-full">
-                    <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Docker Compose *</label
-                    >
-                    <app-editor
-                      id="compose_input"
-                      language="yaml"
-                      class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      [formControl]="newVersionForm.controls.docker.controls.compose">
-                    </app-editor>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Paste your docker compose file here.
-                    </div>
-                    @if (
-                      newVersionForm.controls.docker.controls.compose.invalid &&
-                      newVersionForm.controls.docker.controls.compose.touched
-                    ) {
+                    <input
+                      [formControl]="newVersionForm.controls.versionName"
+                      autotrim
+                      type="text"
+                      name="breadth"
+                      id="applicationVersion"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                    @if (newVersionForm.controls.versionName.invalid && newVersionForm.controls.versionName.touched) {
                       <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
                     }
                   </div>
+                </div>
 
-                  <div class="w-full">
-                    <label
-                      for="compose_template_input"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >Environment Template</label
-                    >
-                    <app-editor
-                      id="compose_template_input"
-                      class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      [formControl]="newVersionForm.controls.docker.controls.template">
-                    </app-editor>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      This template will be shown when somebody deploys this application.
+                @if (application.type === 'kubernetes') {
+                  <div class="space-y-4 mt-4">
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="chartTypeSelect"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Chart Type *</label
+                        >
+                        <select
+                          [formControl]="newVersionForm.controls.kubernetes.controls.chartType"
+                          id="chartTypeSelect"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                          <option value="repository">Repository</option>
+                          <option value="oci">OCI</option>
+                        </select>
+                        @if (
+                          newVersionForm.controls.kubernetes.controls.chartType.invalid &&
+                          newVersionForm.controls.kubernetes.controls.chartType.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        @if (newVersionForm.controls.kubernetes.controls.chartName.enabled) {
+                          <label
+                            for="kubernetesChartName"
+                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                            >Chart Name *</label
+                          >
+                          <input
+                            [formControl]="newVersionForm.controls.kubernetes.controls.chartName"
+                            autotrim
+                            type="text"
+                            name="chartName"
+                            id="kubernetesChartName"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                          @if (
+                            newVersionForm.controls.kubernetes.controls.chartName.invalid &&
+                            newVersionForm.controls.kubernetes.controls.chartName.touched
+                          ) {
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                          }
+                        }
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+                      <div class="w-full">
+                        <label
+                          for="kubernetesChartUrl"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Chart URL *</label
+                        >
+                        <input
+                          [formControl]="newVersionForm.controls.kubernetes.controls.chartUrl"
+                          autotrim
+                          type="text"
+                          name="chartUrl"
+                          id="kubernetesChartUrl"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                        @if (
+                          newVersionForm.controls.kubernetes.controls.chartUrl.invalid &&
+                          newVersionForm.controls.kubernetes.controls.chartUrl.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                      <div class="w-full">
+                        <label
+                          for="kubernetesChartVersion"
+                          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >Chart Version *</label
+                        >
+                        <input
+                          [formControl]="newVersionForm.controls.kubernetes.controls.chartVersion"
+                          autotrim
+                          type="text"
+                          name="chartVersion"
+                          id="kubernetesChartVersion"
+                          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                        @if (
+                          newVersionForm.controls.kubernetes.controls.chartVersion.invalid &&
+                          newVersionForm.controls.kubernetes.controls.chartVersion.touched
+                        ) {
+                          <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="w-full">
+                      <label
+                        for="base_values_input"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Base Values</label
+                      >
+                      <app-editor
+                        id="base_values_input"
+                        language="yaml"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="newVersionForm.controls.kubernetes.controls.baseValues">
+                      </app-editor>
+                    </div>
+
+                    <div class="w-full">
+                      <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Template</label
+                      >
+                      <app-editor
+                        id="template_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="newVersionForm.controls.kubernetes.controls.template">
+                      </app-editor>
                     </div>
                   </div>
+                } @else {
+                  <div class="space-y-4 mt-4">
+                    <div class="w-full">
+                      <label for="compose_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Docker Compose *</label
+                      >
+                      <app-editor
+                        id="compose_input"
+                        language="yaml"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="newVersionForm.controls.docker.controls.compose">
+                      </app-editor>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Paste your docker compose file here.
+                      </div>
+                      @if (
+                        newVersionForm.controls.docker.controls.compose.invalid &&
+                        newVersionForm.controls.docker.controls.compose.touched
+                      ) {
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                      }
+                    </div>
+
+                    <div class="w-full">
+                      <label
+                        for="compose_template_input"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Environment Template</label
+                      >
+                      <app-editor
+                        id="compose_template_input"
+                        class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        [formControl]="newVersionForm.controls.docker.controls.template">
+                      </app-editor>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        This template will be shown when somebody deploys this application.
+                      </div>
+                    </div>
+                  </div>
+                  <div class="space-y-4 mt-4">
+                    <div class="w-full"></div>
+                  </div>
+                }
+                <div class="flex justify-stretch sm:justify-end mt-5 space-x-2.5">
+                  <button
+                    type="submit"
+                    [disabled]="newVersionFormLoading()"
+                    class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                    Create New Version
+                  </button>
                 </div>
-                <div class="space-y-4 mt-4">
-                  <div class="w-full"></div>
-                </div>
-              }
-              <div class="flex justify-stretch sm:justify-end mt-5 space-x-2.5">
-                <button
-                  type="submit"
-                  [disabled]="newVersionFormLoading()"
-                  class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                  Create New Version
-                </button>
               </div>
-            </div>
-          </form>
+            </form>
+          }
         </div>
       }
     </div>
