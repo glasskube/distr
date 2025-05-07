@@ -158,7 +158,7 @@ func (c *Client) RawToken() string {
 	return c.rawToken
 }
 
-func (c *Client) ReportMetrics(ctx context.Context, metrics any) error {
+func (c *Client) ReportMetrics(ctx context.Context, metrics api.AgentSystemMetrics) error {
 
 	// TODO client concurrency support (e.g. token handling!)
 

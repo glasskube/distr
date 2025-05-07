@@ -24,6 +24,7 @@ var (
 	agentTokenMaxValidDuration     time.Duration
 	agentInterval                  time.Duration
 	statusEntriesMaxAge            *time.Duration
+	metricsEntriesMaxAge           *time.Duration
 	sentryDSN                      string
 	sentryDebug                    bool
 	otelExporterSentryEnabled      bool
@@ -57,6 +58,7 @@ func init() {
 	host = envutil.RequireEnv("DISTR_HOST")
 	agentInterval = envutil.GetEnvParsedOrDefault("AGENT_INTERVAL", envparse.PositiveDuration, 5*time.Second)
 	statusEntriesMaxAge = envutil.GetEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", envparse.PositiveDuration)
+	metricsEntriesMaxAge = envutil.GetEnvParsedOrNil("METRICS_ENTRIES_MAX_AGE", envparse.PositiveDuration)
 	enableQueryLogging = envutil.GetEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
 	userEmailVerificationRequired =
 		envutil.GetEnvParsedOrDefault("USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true)
@@ -163,6 +165,10 @@ func EnableQueryLogging() bool {
 
 func StatusEntriesMaxAge() *time.Duration {
 	return statusEntriesMaxAge
+}
+
+func MetricsEntriesMaxAge() *time.Duration {
+	return metricsEntriesMaxAge
 }
 
 func AgentDockerConfig() []byte {

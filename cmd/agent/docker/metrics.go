@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/glasskube/distr/api"
 	hmr "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componentstatus"
@@ -11,8 +12,10 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/otel"
+	"go.uber.org/zap"
 	"log"
 	"os"
+	"time"
 )
 
 type noopHost struct {
@@ -108,7 +111,16 @@ scrapers:
 
 		fmt.Fprintf(os.Stderr, "memory usage: %v (%v total)\n", memoryUsed, memoryTotal)
 
-		// TODO (here?) send metrics to backend
+		if err := client.ReportMetrics(ctx, api.AgentSystemMetrics{
+			MeasuredAt:  time.Now(), // TODO really needed?
+			CPUCoresM:   cores * 1000,
+			CPUUsage:    cpuUsed,
+			MemoryBytes: memoryTotal,
+			MemoryUsage: memoryUsed,
+		}); err != nil {
+			logger.Error("failed to report metrics", zap.Error(err))
+			return err
+		}
 
 		return nil
 	})

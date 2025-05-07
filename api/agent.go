@@ -45,6 +45,10 @@ type AgentDeploymentStatus struct {
 	Message    string                     `json:"message"`
 }
 
-type DockerHostMetrics struct {
-	Timestamp time.Time
+type AgentSystemMetrics struct {
+	MeasuredAt  time.Time `json:"measured_at"`
+	CPUCoresM   int64     `json:"cpuCoresM"`
+	CPUUsage    float64   `json:"cpuUsage"`
+	MemoryBytes int64     `json:"memoryBytes"`
+	MemoryUsage float64   `json:"memoryUsage"`
 }

@@ -53,6 +53,7 @@ func AgentRouter(r chi.Router) {
 			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
+			r.Post("/metrics", agentPostMetricsHandlinger)
 		})
 	})
 }
@@ -279,6 +280,40 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func agentPostMetricsHandlinger(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+
+	dt := internalctx.GetDeploymentTarget(ctx)
+
+	metrics, err := JsonBody[api.AgentSystemMetrics](w, r)
+	if err != nil {
+		return
+	}
+	if err := db.CreateDeploymentTargetMetrics(ctx, &dt.DeploymentTarget, &metrics); err != nil {
+		if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		} else {
+			log.Error("failed to create deployment target metrics – skipping cleanup of old metrics", zap.Error(err),
+				zap.Reflect("metrics", metrics))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	// not in a TX because insertion should not be rolled back when the cleanup fails
+	if cnt, err := db.CleanupDeploymentTargetMetrics(ctx, &dt.DeploymentTarget); err != nil {
+		log.Error("failed to cleanup old deployment target metrics", zap.Error(err), zap.Reflect("metrics", metrics))
+	} else if cnt > 0 {
+		log.Debug("old deployment target metrics deleted",
+			zap.String("deploymentTargetId", dt.ID.String()),
+			zap.Int64("count", cnt),
+			zap.Duration("maxAge", *env.MetricsEntriesMaxAge()))
+	}
+}
+
 func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -376,6 +411,7 @@ func getVerifiedDeploymentTarget(
 var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 
+// TODO update
 var rateLimitPerAgent = httprate.Limit(
 	// For a 5 second interval, per minute, the agent makes 12 resource calls and 12 status calls for each deployment.
 	// Adding 25% margin and assuming that people have at most 10 deployments on a single agent we arrive at

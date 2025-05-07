@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/glasskube/distr/api"
 	"maps"
 
 	"github.com/glasskube/distr/internal/apierrors"
@@ -335,5 +336,41 @@ func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 			dt.Deployment = &d[0] //nolint:staticcheck
 		}
 		return nil
+	}
+}
+
+func CreateDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarget, metrics *api.AgentSystemMetrics) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"INSERT INTO DeploymentTargetMetrics (deployment_target_id, cpu_cores_m, cpu_usage, memory_bytes, memory_usage) "+
+			"VALUES (@deploymentTargetId, @cpuCoresM, @cpuUsage, @memoryBytes, @memoryUsage)",
+		pgx.NamedArgs{
+			"deploymentTargetId": dt.ID,
+			"cpuCoresM":          metrics.CPUCoresM,
+			"cpuUsage":           metrics.CPUUsage,
+			"memoryBytes":        metrics.MemoryBytes,
+			"memoryUsage":        metrics.MemoryUsage,
+		})
+	if err != nil {
+		return err
+	} else {
+		rows.Close()
+		return nil
+	}
+}
+
+func CleanupDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarget) (int64, error) {
+	if env.MetricsEntriesMaxAge() == nil {
+		return 0, nil
+	}
+	db := internalctx.GetDb(ctx)
+	if cmd, err := db.Exec(ctx, `
+		DELETE FROM DeploymentTargetMetrics
+		       WHERE deployment_target_id = @deploymentTargetId AND
+		             current_timestamp - created_at > @metricsEntriesMaxAge`,
+		pgx.NamedArgs{"deploymentTargetId": dt.ID, "metricsEntriesMaxAge": env.MetricsEntriesMaxAge()}); err != nil {
+		return 0, err
+	} else {
+		return cmd.RowsAffected(), nil
 	}
 }
