@@ -4,50 +4,106 @@ import (
 	"context"
 	"time"
 
-	"github.com/docker/cli/cli/command"
-	"github.com/docker/compose/v2/pkg/api"
+	dockercommand "github.com/docker/cli/cli/command"
+	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentlogs"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
-var logsBackend = agentlogs.NewBatchingRecorder(agentlogs.NewLoggingRecorder(logger))
+type logsWatcher struct {
+	composeService composeapi.Service
+	logsExporter   agentlogs.Exporter
+	last           map[uuid.UUID]time.Time
+}
 
-func LogsTest(ctx context.Context, deployment AgentDeployment) error {
-	cli, err := command.NewDockerCli()
+func NewLogsWatcher() (*logsWatcher, error) {
+	cli, err := dockercommand.NewDockerCli()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	svc := compose.NewComposeService(cli)
-	return svc.Logs(
-		ctx,
-		deployment.ProjectName,
-		&composeLogAdapter{LogCollector: agentlogs.NewCollector(deployment.RevisionID, logsBackend)},
-		api.LogOptions{Tail: "0"},
-	)
+	return &logsWatcher{
+		composeService: compose.NewComposeService(cli),
+		logsExporter:   agentlogs.ChunkExporter(client, 100),
+	}, nil
 }
 
-type composeLogAdapter struct {
-	agentlogs.LogCollector
+func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
+	tick := time.Tick(d)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick:
+			deployments, err := GetExistingDeployments()
+			if err != nil {
+				logger.Warn("watch logs could not get deployments", zap.Error(err))
+				continue
+			}
+			var collector deploymentLogsCollector
+			for _, d := range deployments {
+				logOptions := composeapi.LogOptions{Timestamps: true}
+				if since, ok := lw.last[d.ID]; ok {
+					logOptions.Since = since.String()
+				}
+				err := lw.composeService.Logs(ctx, d.ProjectName, collector.ForDeployment(d), logOptions)
+				if err != nil {
+					logger.Warn("could not get logs from docker", zap.Error(err))
+				}
+			}
+			if err := lw.logsExporter.Logs(ctx, collector.LogRecords()); err != nil {
+				logger.Warn("error exporting logs", zap.Error(err))
+			}
+		}
+	}
 }
 
-var _ api.LogConsumer = &composeLogAdapter{}
+type composeLogsCollector struct {
+	logRecords []api.LogRecord
+}
+
+func (clc *composeLogsCollector) appendRecord(record api.LogRecord) {
+	clc.logRecords = append(clc.logRecords, record)
+}
+
+func (clc *composeLogsCollector) ForDeployment(deployment AgentDeployment) *deploymentLogsCollector {
+	return &deploymentLogsCollector{composeLogsCollector: clc, deployment: deployment}
+}
+
+func (clc *composeLogsCollector) LogRecords() []api.LogRecord {
+	return clc.logRecords
+}
+
+type deploymentLogsCollector struct {
+	*composeLogsCollector
+	deployment AgentDeployment
+}
 
 // Err implements api.LogConsumer.
-func (a *composeLogAdapter) Err(containerName string, message string) {
-	a.Collect(containerName, time.Now(), "Err", message)
+func (dlc *deploymentLogsCollector) Err(containerName string, message string) {
+	dlc.appendMessage(containerName, "Err", message)
 }
 
 // Log implements api.LogConsumer.
-func (a *composeLogAdapter) Log(containerName string, message string) {
-	a.Collect(containerName, time.Now(), "Log", message)
+func (dlc *deploymentLogsCollector) Log(containerName string, message string) {
+	dlc.appendMessage(containerName, "Log", message)
 }
 
 // Register implements api.LogConsumer.
-func (a *composeLogAdapter) Register(container string) {
-	a.Collect(container, time.Now(), "Register", "")
-}
+//
+// Noop for now
+func (dlc *deploymentLogsCollector) Register(containerName string) {}
 
 // Status implements api.LogConsumer.
-func (a *composeLogAdapter) Status(container string, msg string) {
-	a.Collect(container, time.Now(), "Status", msg)
+//
+// Noop for now
+func (dlc *deploymentLogsCollector) Status(containerName string, message string) {}
+
+func (dlc *deploymentLogsCollector) appendMessage(containerName, severity, message string) {
+	record := agentlogs.NewRecord(dlc.deployment.ID, dlc.deployment.RevisionID, containerName, severity, message)
+	if record.Body != "" {
+		dlc.appendRecord(record)
+	}
 }

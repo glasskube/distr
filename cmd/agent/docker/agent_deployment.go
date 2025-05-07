@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
 
 	"github.com/glasskube/distr/api"
 	"github.com/google/uuid"
@@ -43,7 +44,12 @@ func getProjectName(data []byte) (string, error) {
 	}
 }
 
+var agentDeploymentMutex = sync.RWMutex{}
+
 func GetExistingDeployments() ([]AgentDeployment, error) {
+	agentDeploymentMutex.RLock()
+	defer agentDeploymentMutex.RUnlock()
+
 	if entries, err := os.ReadDir(agentDeploymentDir()); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, nil
@@ -77,6 +83,9 @@ func GetExistingDeployments() ([]AgentDeployment, error) {
 }
 
 func SaveDeployment(deployment AgentDeployment) error {
+	agentDeploymentMutex.Lock()
+	defer agentDeploymentMutex.Unlock()
+
 	if err := os.MkdirAll(path.Dir(deployment.FileName()), 0o700); err != nil {
 		return err
 	}
