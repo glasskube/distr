@@ -3,23 +3,52 @@ package types
 import (
 	"encoding/base64"
 	"fmt"
+	"net/mail"
 	"slices"
 	"time"
 
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 )
 
 type Organization struct {
-	ID        uuid.UUID `db:"id" json:"id"`
-	CreatedAt time.Time `db:"created_at" json:"createdAt"`
-	Name      string    `db:"name" json:"name"`
-	Slug      *string   `db:"slug" json:"slug"`
-	Features  []Feature `db:"features" json:"features"`
+	ID               uuid.UUID `db:"id" json:"id"`
+	CreatedAt        time.Time `db:"created_at" json:"createdAt"`
+	Name             string    `db:"name" json:"name"`
+	Slug             *string   `db:"slug" json:"slug"`
+	Features         []Feature `db:"features" json:"features"`
+	AppDomain        *string   `db:"app_domain" json:"-"`
+	RegistryDomain   *string   `db:"registry_domain" json:"registryDomain"`
+	EmailFromAddress *string   `db:"email_from_address" json:"-"`
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {
 	return slices.Contains(org.Features, feature)
+}
+
+func (o Organization) AppDomainOrDefault() string {
+	if o.AppDomain != nil {
+		return *o.AppDomain
+	} else {
+		return env.Host()
+	}
+}
+
+func (o Organization) RegistryDomainOrDefault() string {
+	if o.RegistryDomain != nil {
+		return *o.RegistryDomain
+	} else {
+		return env.RegistryHost()
+	}
+}
+
+func (o Organization) EmailFromAddressParsedOrDefault() (*mail.Address, error) {
+	if o.EmailFromAddress != nil {
+		return mail.ParseAddress(*o.EmailFromAddress)
+	} else {
+		return util.PtrTo(env.GetMailerConfig().FromAddress), nil
+	}
 }
 
 type OrganizationWithUserRole struct {
