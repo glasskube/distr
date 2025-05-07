@@ -136,6 +136,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faBox = faBox;
   protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
+  readonly isVersionFormExpanded = signal(false);
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
@@ -245,6 +246,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   async fillVersionFormWith(application: Application, version: ApplicationVersion) {
+    this.isVersionFormExpanded.set(true);
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));

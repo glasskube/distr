@@ -17,6 +17,7 @@ export interface JWTClaims {
   name: string;
   exp: string;
   role: UserRole;
+  image_url: string | undefined;
   [claim: string]: unknown;
 }
 

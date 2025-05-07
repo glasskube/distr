@@ -134,13 +134,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
     if (!this.progress) {
       this.loading.set(true);
       try {
-        this.progress = await lastValueFrom(
-          this.tutorialsService.save(tutorialId, {
-            stepId: welcomeStep,
-            taskId: welcomeTaskStart,
-          })
-        );
-        this.applicationsService.refresh();
+        await this.saveWelcomeStep();
         this.stepper?.next();
       } catch (e) {
         const msg = getFormDisplayedError(e);
@@ -158,6 +152,16 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
     this.prepareDeployStep();
   }
 
+  private async saveWelcomeStep() {
+    this.progress = await lastValueFrom(
+      this.tutorialsService.save(tutorialId, {
+        stepId: welcomeStep,
+        taskId: welcomeTaskStart,
+      })
+    );
+    this.applicationsService.refresh();
+  }
+
   private prepareDeployStep() {
     const deployed = getExistingTask(this.progress, deployStep, deployStepTaskDeploy);
     const verified = getExistingTask(this.progress, deployStep, deployStepTaskVerify);
@@ -172,8 +176,8 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   protected async requestAccess() {
-    const startTask = getExistingTask(this.progress, welcomeStep, welcomeTaskStart);
-    if (startTask && 'deploymentTargetId' in startTask.value) {
+    const startTask = getLastExistingTask(this.progress, welcomeStep, welcomeTaskStart);
+    if (startTask?.value && 'deploymentTargetId' in startTask.value) {
       try {
         this.loading.set(true);
         const resp = await firstValueFrom(
@@ -182,7 +186,11 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
         this.connectCommand = `curl "${resp.connectUrl}" | docker compose -f - up -d`;
       } catch (e) {
         const msg = getFormDisplayedError(e);
-        if (msg) {
+        if (e instanceof HttpErrorResponse && e.status === 404) {
+          // old deployment might have been deleted already
+          await this.saveWelcomeStep();
+          await this.requestAccess();
+        } else if (msg) {
           this.toast.error(msg);
         }
       } finally {
