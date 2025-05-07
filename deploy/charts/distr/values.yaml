@@ -83,6 +83,8 @@ hub:
     #   value: enabled
     - name: USER_EMAIL_VERIFICATION_REQUIRED
       value: 'false'
+    - name: METRICS_ENTRIES_MAX_AGE
+      value: '1h'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
