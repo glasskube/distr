@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/fields"
 	"os"
 	"os/signal"
 	"path"
@@ -27,6 +30,8 @@ import (
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 var (
@@ -34,6 +39,7 @@ var (
 	agentClient      = util.Require(agentclient.NewFromEnv(logger))
 	k8sConfigFlags   = genericclioptions.NewConfigFlags(true)
 	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	metricsClientSet = util.Require(metricsv.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
 	agentConfigDirs  []string
@@ -51,6 +57,98 @@ func init() {
 	}
 }
 
+// inspired by kubernetes-dashboard (https://github.com/kubernetes/dashboard/blob/master/modules/api/pkg/resource/node/detail.go)
+
+func getNodePods(ctx context.Context, node v1.Node) (*v1.PodList, error) {
+	fieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name +
+		",status.phase!=" + string(v1.PodSucceeded) +
+		",status.phase!=" + string(v1.PodFailed))
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient.CoreV1().Pods(v1.NamespaceAll).List(context.TODO(), metav1.ListOptions{
+		FieldSelector: fieldSelector.String(),
+	})
+}
+
+type nodeAllocatedResources struct {
+}
+
+func podRequestsAndLimits(pod *v1.Pod) (reqs, limits v1.ResourceList, err error) {
+	reqs, limits = v1.ResourceList{}, v1.ResourceList{}
+	for _, container := range pod.Spec.Containers {
+		addResourceList(reqs, container.Resources.Requests)
+		addResourceList(limits, container.Resources.Limits)
+	}
+	// init containers define the minimum of any resource
+	for _, container := range pod.Spec.InitContainers {
+		maxResourceList(reqs, container.Resources.Requests)
+		maxResourceList(limits, container.Resources.Limits)
+	}
+
+	// Add overhead for running a pod to the sum of requests and to non-zero limits:
+	if pod.Spec.Overhead != nil {
+		addResourceList(reqs, pod.Spec.Overhead)
+
+		for name, quantity := range pod.Spec.Overhead {
+			if value, ok := limits[name]; ok && !value.IsZero() {
+				value.Add(quantity)
+				limits[name] = value
+			}
+		}
+	}
+	return
+}
+
+func getNodeAllocatedResources(node v1.Node, podList *v1.PodList) (nodeAllocatedResources, error) {
+	reqs, limits := map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
+
+	for _, p := range podList.Items {
+		podReqs, podLimits, err := pod.PodRequestsAndLimits(&p)
+		if err != nil {
+			return nodeAllocatedResources{}, err
+		}
+		for podReqName, podReqValue := range podReqs {
+			if value, ok := reqs[podReqName]; !ok {
+				reqs[podReqName] = podReqValue.DeepCopy()
+			} else {
+				value.Add(podReqValue)
+				reqs[podReqName] = value
+			}
+		}
+		for podLimitName, podLimitValue := range podLimits {
+			if value, ok := limits[podLimitName]; !ok {
+				limits[podLimitName] = podLimitValue.DeepCopy()
+			} else {
+				value.Add(podLimitValue)
+				limits[podLimitName] = value
+			}
+		}
+	}
+
+	cpuRequests, cpuLimits, memoryRequests, memoryLimits := reqs[v1.ResourceCPU],
+		limits[v1.ResourceCPU], reqs[v1.ResourceMemory], limits[v1.ResourceMemory]
+
+	var cpuRequestsFraction, cpuLimitsFraction float64 = 0, 0
+	if capacity := float64(node.Status.Allocatable.Cpu().MilliValue()); capacity > 0 {
+		cpuRequestsFraction = float64(cpuRequests.MilliValue()) / capacity * 100
+		cpuLimitsFraction = float64(cpuLimits.MilliValue()) / capacity * 100
+	}
+
+	var memoryRequestsFraction, memoryLimitsFraction float64 = 0, 0
+	if capacity := float64(node.Status.Allocatable.Memory().MilliValue()); capacity > 0 {
+		memoryRequestsFraction = float64(memoryRequests.MilliValue()) / capacity * 100
+		memoryLimitsFraction = float64(memoryLimits.MilliValue()) / capacity * 100
+	}
+
+	var podFraction float64 = 0
+	var podCapacity int64 = node.Status.Capacity.Pods().Value()
+	if podCapacity > 0 {
+		podFraction = float64(len(podList.Items)) / float64(podCapacity) * 100
+	}
+
+}
+
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	go func() {
@@ -61,6 +159,61 @@ func main() {
 			logger.Warn("config watch stopped")
 		}
 	}()
+
+	// TODO only if metrics enabled
+
+	var cpuCapacitySum int64
+	var cpuRequestSum int64
+	var memoryCapacitySum int64
+	var memoryRequestSum int64
+	if nodes, err := k8sClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{}); err != nil {
+		logger.Error("getting nodes failed", zap.Error(err))
+	} else {
+		for _, node := range nodes.Items {
+			logger.Info("node", zap.String("name", node.Name))
+			cpuCapacitySum = cpuCapacitySum + node.Status.Capacity.Cpu().MilliValue()
+			memoryCapacitySum = memoryCapacitySum + node.Status.Capacity.Memory().Value()
+
+			if pods, err := getNodePods(ctx, node); err != nil {
+				logger.Error("failed to get pods of node", zap.String("node", node.Name), zap.Error(err))
+			} else {
+				for _, pod := range pods.Items {
+					if pod.Spec.Resources != nil && pod.Spec.Resources.Requests.Cpu() != nil {
+						cpuRequestSum = cpuRequestSum + pod.Spec.Resources.Requests.Cpu().MilliValue()
+					} else {
+						logger.Debug("pod has no cpu request", zap.String("pod", pod.Name))
+					}
+					if pod.Spec.Resources != nil && pod.Spec.Resources.Requests.Memory() != nil {
+						memoryRequestSum = memoryRequestSum + pod.Spec.Resources.Requests.Memory().Value()
+					} else {
+						logger.Debug("pod has no memory request", zap.String("pod", pod.Name))
+					}
+				}
+			}
+
+			if nodeMetrics, err := metricsClientSet.MetricsV1beta1().NodeMetricses().Get(ctx, node.Name, metav1.GetOptions{}); err != nil {
+				logger.Error("getting node metrics failed", zap.Error(err))
+			} else {
+				if buf, err := nodeMetrics.Marshal(); err != nil {
+					logger.Error("failed to marshal ", zap.Error(err))
+				} else {
+					logger.Info("node metrics", zap.Any("res", buf))
+				}
+			}
+		}
+	}
+
+	if cpuCapacitySum > 0 && memoryCapacitySum > 0 {
+		if err := agentClient.ReportMetrics(ctx, api.AgentSystemMetrics{
+			CPUCoresM:   cpuCapacitySum,
+			CPUUsage:    float64(cpuRequestSum / cpuCapacitySum),
+			MemoryBytes: memoryCapacitySum,
+			MemoryUsage: float64(memoryRequestSum / memoryCapacitySum),
+		}); err != nil {
+			logger.Error("failed to report metrics", zap.Error(err))
+		}
+	}
+
 	tick := time.Tick(agentenv.Interval)
 	for ctx.Err() == nil {
 		select {

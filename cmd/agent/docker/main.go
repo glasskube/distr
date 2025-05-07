@@ -32,8 +32,6 @@ func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	tick := time.Tick(agentenv.Interval)
 
-	startMetrics(ctx)
-
 loop:
 	for ctx.Err() == nil {
 		select {
@@ -64,6 +62,12 @@ loop:
 				} else {
 					logger.Debug("agent version is up to date")
 				}
+			}
+
+			if resource.MetricsEnabled {
+				startMetrics(ctx)
+			} else {
+				stopMetrics(ctx)
 			}
 
 			deployments, err := GetExistingDeployments()

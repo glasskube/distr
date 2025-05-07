@@ -13,10 +13,11 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
-	"log"
 	"os"
 	"time"
 )
+
+var metrics receiver.Metrics
 
 type noopHost struct {
 	reportFunc func(event *componentstatus.Event)
@@ -31,6 +32,11 @@ func (nh *noopHost) Report(event *componentstatus.Event) {
 }
 
 func startMetrics(ctx context.Context) {
+	if metrics != nil {
+		return
+	}
+	logger.Info("starting metrics")
+
 	factory := hmr.NewFactory()
 	cfg := factory.CreateDefaultConfig().(*hmr.Config)
 
@@ -52,15 +58,17 @@ scrapers:
       system.memory.limit:
         enabled: true
 `)); err != nil {
-		panic(err)
+		logger.Error("failed to create yaml metrics config", zap.Error(err))
+		return
 	} else if cnf, err := retrieved.AsConf(); err != nil {
-		panic(err)
+		logger.Error("failed to parse metrics config", zap.Error(err))
+		return
 	} else if err := cfg.Unmarshal(cnf); err != nil {
-		panic(err)
+		logger.Error("failed to apply metrics config", zap.Error(err))
+		return
 	}
 
 	consmr, err := consumer.NewMetrics(func(ctx context.Context, md pmetric.Metrics) error {
-		fmt.Fprintf(os.Stderr, "consuming ---------------------------\n")
 		var cores int64
 		var cpuUsed float64
 		var memoryTotal int64
@@ -125,20 +133,30 @@ scrapers:
 		return nil
 	})
 
-	metrics, err := factory.CreateMetrics(ctx, receiver.Settings{
+	metrics, err = factory.CreateMetrics(ctx, receiver.Settings{
 		ID: component.NewID(factory.Type()),
 		TelemetrySettings: component.TelemetrySettings{
-			MeterProvider:  otel.GetMeterProvider(),
+			MeterProvider:  otel.GetMeterProvider(), // TODO no idea check again
 			TracerProvider: otel.GetTracerProvider(),
 			Logger:         logger,
 		},
 	}, cfg, consmr)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("failed to setup metrics", zap.Error(err))
 	}
 
 	err = metrics.Start(ctx, &noopHost{})
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("failed to start metrics", zap.Error(err))
+	}
+}
+
+func stopMetrics(ctx context.Context) {
+	if metrics != nil {
+		logger.Info("stopping metrics")
+		if err := metrics.Shutdown(ctx); err != nil {
+			logger.Error("failed to stop metrics", zap.Error(err))
+		}
+		metrics = nil
 	}
 }
