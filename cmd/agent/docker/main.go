@@ -66,7 +66,8 @@ loop:
 				}
 			}
 
-			if deployments, err := GetExistingDeployments(); err != nil {
+			deployments, err := GetExistingDeployments()
+			if err != nil {
 				logger.Error("could not get existing deployments", zap.Error(err))
 			} else {
 				for _, deployment := range deployments {
@@ -76,7 +77,7 @@ loop:
 					)
 					if !resourceHasExistingDeployment {
 						logger.Info("uninstalling old deployment", zap.String("id", deployment.ID.String()))
-						if err := UninstallDockerCompose(ctx, deployment); err != nil {
+						if err := DockerEngineUninstall(ctx, deployment); err != nil {
 							logger.Error("could not uninstall deployment", zap.Error(err))
 						} else if err := DeleteDeployment(deployment); err != nil {
 							logger.Error("could not delete deployment", zap.Error(err))
@@ -91,39 +92,52 @@ loop:
 			}
 
 			for _, deployment := range resource.Deployments {
-				progressCtx, progressCancel := context.WithCancel(ctx)
-				go func(ctx context.Context) {
-					tick := time.Tick(agentenv.Interval)
-					for {
-						select {
-						case <-ctx.Done():
-							logger.Info("stop sending progress updates")
-							return
-						case <-tick:
-							logger.Info("sending progress update")
-							err := client.Status(
-								ctx,
-								deployment.RevisionID,
-								types.DeploymentStatusTypeProgressing,
-								"applying docker compose…",
-							)
-							if err != nil {
-								logger.Warn("error updating status", zap.Error(err))
-							}
-						}
-					}
-				}(progressCtx)
-
 				var agentDeployment *AgentDeployment
 				var status string
 				_, err = agentauth.EnsureAuth(ctx, client.RawToken(), deployment)
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
-				} else if agentDeployment, status, err = ApplyComposeFile(ctx, deployment); err == nil {
-					multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
-				}
+				} else {
+					skipApply := false
+					if *deployment.DockerType == types.DockerTypeSwarm {
+						existing, ok := deployments[deployment.ID]
+						skipApply = ok && existing.RevisionID == deployment.RevisionID
+					}
 
-				progressCancel()
+					if skipApply {
+						logger.Info("skip apply in swarm mode")
+						status = "status checks are not yet supported in swarm mode"
+					} else {
+						progressCtx, progressCancel := context.WithCancel(ctx)
+						go func(ctx context.Context) {
+							tick := time.Tick(agentenv.Interval)
+							for {
+								select {
+								case <-ctx.Done():
+									logger.Info("stop sending progress updates")
+									return
+								case <-tick:
+									logger.Info("sending progress update")
+									err := client.Status(
+										ctx,
+										deployment.RevisionID,
+										types.DeploymentStatusTypeProgressing,
+										"applying docker compose…",
+									)
+									if err != nil {
+										logger.Warn("error updating status", zap.Error(err))
+									}
+								}
+							}
+						}(progressCtx)
+
+						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
+							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+						}
+
+						progressCancel()
+					}
+				}
 
 				if statusErr :=
 					client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {

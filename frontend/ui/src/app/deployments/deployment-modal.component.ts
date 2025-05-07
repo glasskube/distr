@@ -10,7 +10,11 @@ import {
 } from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
-import {DeploymentFormComponent, DeploymentFormValue} from '../deployment-form/deployment-form.component';
+import {
+  DeploymentFormComponent,
+  DeploymentFormValue,
+  mapToDeploymentRequest,
+} from '../deployment-form/deployment-form.component';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {ToastService} from '../services/toast.service';
@@ -101,6 +105,7 @@ export class DeploymentModalComponent {
         applicationLicenseId: deployment?.applicationLicenseId,
         releaseName: deployment?.releaseName,
         valuesYaml: deployment?.valuesYaml ? atob(deployment.valuesYaml) : undefined,
+        swarmMode: deployment?.dockerType === 'swarm',
         envFileData: deployment?.envFileData ? atob(deployment.envFileData) : undefined,
       });
     });
@@ -110,17 +115,9 @@ export class DeploymentModalComponent {
     this.deployForm.markAllAsTouched();
     if (this.deployForm.valid) {
       this.loading.set(true);
-      const deployment: DeploymentRequest = {
-        ...(this.deployForm.value as Required<DeploymentFormValue>),
-      };
-      if (deployment.valuesYaml) {
-        deployment.valuesYaml = btoa(deployment.valuesYaml);
-      }
-      if (deployment.envFileData) {
-        deployment.envFileData = btoa(deployment.envFileData);
-      }
+      const deployment = mapToDeploymentRequest(this.deployForm.value!);
       try {
-        await firstValueFrom(this.deploymentTargets.deploy(deployment as DeploymentRequest));
+        await firstValueFrom(this.deploymentTargets.deploy(deployment));
         this.toast.success('Deployment saved successfully');
         this.closed.emit();
       } catch (e) {

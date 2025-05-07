@@ -74,6 +74,16 @@
 
 ---
 
+### dockerType?
+
+> `optional` **dockerType**: [`DockerType`](../type-aliases/DockerType.md)
+
+#### Inherited from
+
+[`Deployment`](Deployment.md).[`dockerType`](Deployment.md#dockertype)
+
+---
+
 ### envFileData?
 
 > `optional` **envFileData**: `string`
@@ -93,16 +103,6 @@
 ### latestStatus?
 
 > `optional` **latestStatus**: [`DeploymentRevisionStatus`](DeploymentRevisionStatus.md)
-
----
-
-### note?
-
-> `optional` **note**: `string`
-
-#### Inherited from
-
-[`Deployment`](Deployment.md).[`note`](Deployment.md#note)
 
 ---
 

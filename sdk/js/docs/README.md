@@ -41,6 +41,7 @@
 - [DeploymentStatusType](type-aliases/DeploymentStatusType.md)
 - [DeploymentTargetScope](type-aliases/DeploymentTargetScope.md)
 - [DeploymentType](type-aliases/DeploymentType.md)
+- [DockerType](type-aliases/DockerType.md)
 - [HelmChartType](type-aliases/HelmChartType.md)
 - [IsOutdatedResult](type-aliases/IsOutdatedResult.md)
 - [LatestVersionStrategy](type-aliases/LatestVersionStrategy.md)

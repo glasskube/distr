@@ -27,8 +27,9 @@ type AgentDeployment struct {
 
 	// Docker specific data
 
-	ComposeFile []byte `json:"composeFile"`
-	EnvFile     []byte `json:"envFile"`
+	ComposeFile []byte            `json:"composeFile"`
+	EnvFile     []byte            `json:"envFile"`
+	DockerType  *types.DockerType `json:"dockerType"`
 
 	// Kubernetes specific data
 

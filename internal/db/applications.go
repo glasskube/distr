@@ -211,6 +211,7 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.U
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
+
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
 		"applicationId": applicationVersion.ApplicationID,
@@ -255,9 +256,10 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt WHERE id = @id
+		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt
+		WHERE id = @id
 		RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
-				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+			av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
 		pgx.NamedArgs{
 			"id":         applicationVersion.ID,
 			"name":       applicationVersion.Name,

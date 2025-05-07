@@ -16,6 +16,7 @@ type HelmChartType string
 type DeploymentStatusType string
 type DeploymentTargetScope string
 type Feature string
+type DockerType string
 type Tutorial string
 
 const (
@@ -27,6 +28,9 @@ const (
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
+
+	DockerTypeCompose DockerType = "compose"
+	DockerTypeSwarm   DockerType = "swarm"
 
 	DeploymentStatusTypeOK          DeploymentStatusType = "ok"
 	DeploymentStatusTypeProgressing DeploymentStatusType = "progressing"

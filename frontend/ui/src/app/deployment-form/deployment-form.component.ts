@@ -9,6 +9,7 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
+import {DeploymentRequest} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
@@ -43,7 +44,21 @@ export type DeploymentFormValue = Partial<{
   valuesYaml: string;
   releaseName: string;
   envFileData: string;
+  swarmMode: boolean;
 }>;
+
+export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRequest {
+  return {
+    deploymentTargetId: value.deploymentTargetId!,
+    applicationVersionId: value.applicationVersionId!,
+    applicationLicenseId: value.applicationLicenseId || undefined,
+    deploymentId: value.deploymentId || undefined,
+    releaseName: value.releaseName || undefined,
+    valuesYaml: value.valuesYaml ? btoa(value.valuesYaml) : undefined,
+    dockerType: value.swarmMode ? 'swarm' : 'compose',
+    envFileData: value.envFileData ? btoa(value.envFileData) : undefined,
+  };
+}
 
 type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 
@@ -80,6 +95,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     ]),
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
+    swarmMode: this.fb.nonNullable.control<boolean>(false),
   });
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
@@ -144,6 +160,8 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     ),
     distinctUntilChanged()
   );
+
+  protected readonly swarmModeVisible$ = this.deploymentTarget$.pipe(map((dt) => dt?.type === 'docker'));
 
   protected readonly applications$ = this.deploymentTarget$.pipe(
     map((dt) => dt?.type),
@@ -246,11 +264,13 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         }
       });
 
-    this.deployment$.pipe(takeUntil(this.destroyed$)).subscribe((deployment) => {
-      if (deployment) {
+    this.deploymentId$.pipe(takeUntil(this.destroyed$)).subscribe((id) => {
+      if (id) {
         this.deployForm.controls.applicationId.disable();
+        this.deployForm.controls.swarmMode.disable();
       } else {
         this.deployForm.controls.applicationId.enable();
+        this.deployForm.controls.swarmMode.enable();
       }
     });
 
