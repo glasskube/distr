@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, computed, inject, input, resource, signal, TemplateRef, ViewChild} from '@angular/core';
+import {Component, computed, inject, input, InputSignal, resource, signal, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -40,6 +40,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
+import {DeploymentTargetMetrics} from '../../services/deployment-target-metrics.service';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -74,6 +75,7 @@ export class DeploymentTargetCardComponent {
 
   public readonly deploymentTarget = input.required<DeploymentTarget>();
   public readonly fullVersion = input(true);
+  public readonly deploymentTargetMetrics = input<DeploymentTargetMetrics | undefined>(undefined);
 
   @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<any>;
   @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<any>;
