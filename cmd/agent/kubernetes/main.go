@@ -54,99 +54,6 @@ func init() {
 	}
 }
 
-/*
-// inspired by kubernetes-dashboard (https://github.com/kubernetes/dashboard/blob/master/modules/api/pkg/resource/node/detail.go)
-
-func getNodePods(ctx context.Context, node v1.Node) (*v1.PodList, error) {
-	fieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name +
-		",status.phase!=" + string(v1.PodSucceeded) +
-		",status.phase!=" + string(v1.PodFailed))
-	if err != nil {
-		return nil, err
-	}
-	return k8sClient.CoreV1().Pods(v1.NamespaceAll).List(context.TODO(), metav1.ListOptions{
-		FieldSelector: fieldSelector.String(),
-	})
-}
-
-type nodeAllocatedResources struct {
-}
-
-func podRequestsAndLimits(pod *v1.Pod) (reqs, limits v1.ResourceList, err error) {
-	reqs, limits = v1.ResourceList{}, v1.ResourceList{}
-	for _, container := range pod.Spec.Containers {
-		addResourceList(reqs, container.Resources.Requests)
-		addResourceList(limits, container.Resources.Limits)
-	}
-	// init containers define the minimum of any resource
-	for _, container := range pod.Spec.InitContainers {
-		maxResourceList(reqs, container.Resources.Requests)
-		maxResourceList(limits, container.Resources.Limits)
-	}
-
-	// Add overhead for running a pod to the sum of requests and to non-zero limits:
-	if pod.Spec.Overhead != nil {
-		addResourceList(reqs, pod.Spec.Overhead)
-
-		for name, quantity := range pod.Spec.Overhead {
-			if value, ok := limits[name]; ok && !value.IsZero() {
-				value.Add(quantity)
-				limits[name] = value
-			}
-		}
-	}
-	return
-}
-
-func getNodeAllocatedResources(node v1.Node, podList *v1.PodList) (nodeAllocatedResources, error) {
-	reqs, limits := map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
-
-	for _, p := range podList.Items {
-		podReqs, podLimits, err := pod.PodRequestsAndLimits(&p)
-		if err != nil {
-			return nodeAllocatedResources{}, err
-		}
-		for podReqName, podReqValue := range podReqs {
-			if value, ok := reqs[podReqName]; !ok {
-				reqs[podReqName] = podReqValue.DeepCopy()
-			} else {
-				value.Add(podReqValue)
-				reqs[podReqName] = value
-			}
-		}
-		for podLimitName, podLimitValue := range podLimits {
-			if value, ok := limits[podLimitName]; !ok {
-				limits[podLimitName] = podLimitValue.DeepCopy()
-			} else {
-				value.Add(podLimitValue)
-				limits[podLimitName] = value
-			}
-		}
-	}
-
-	cpuRequests, cpuLimits, memoryRequests, memoryLimits := reqs[v1.ResourceCPU],
-		limits[v1.ResourceCPU], reqs[v1.ResourceMemory], limits[v1.ResourceMemory]
-
-	var cpuRequestsFraction, cpuLimitsFraction float64 = 0, 0
-	if capacity := float64(node.Status.Allocatable.Cpu().MilliValue()); capacity > 0 {
-		cpuRequestsFraction = float64(cpuRequests.MilliValue()) / capacity * 100
-		cpuLimitsFraction = float64(cpuLimits.MilliValue()) / capacity * 100
-	}
-
-	var memoryRequestsFraction, memoryLimitsFraction float64 = 0, 0
-	if capacity := float64(node.Status.Allocatable.Memory().MilliValue()); capacity > 0 {
-		memoryRequestsFraction = float64(memoryRequests.MilliValue()) / capacity * 100
-		memoryLimitsFraction = float64(memoryLimits.MilliValue()) / capacity * 100
-	}
-
-	var podFraction float64 = 0
-	var podCapacity int64 = node.Status.Capacity.Pods().Value()
-	if podCapacity > 0 {
-		podFraction = float64(len(podList.Items)) / float64(podCapacity) * 100
-	}
-
-}*/
-
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	go func() {
@@ -185,7 +92,7 @@ func main() {
 		}
 
 		if res.MetricsEnabled {
-			startMetrics(ctx)
+			reportMetricsIfOutdated(ctx)
 		}
 
 		existingDeployments, err := GetExistingDeployments(ctx, res.Namespace)

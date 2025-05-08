@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/glasskube/distr/api"
 	hmr "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/component"
@@ -17,7 +18,7 @@ import (
 var metrics receiver.Metrics
 
 const hostMetricsReceiverConfig = `
-collection_interval: 10s
+collection_interval: 30s
 scrapers:
   cpu:
     metrics:
@@ -129,6 +130,9 @@ func startMetrics(ctx context.Context) {
 
 		return nil
 	})
+	if err != nil {
+		logger.Error("failed to create metrics consumer", zap.Error(err))
+	}
 
 	metrics, err = factory.CreateMetrics(ctx, receiver.Settings{
 		ID: component.NewID(factory.Type()),
@@ -139,7 +143,7 @@ func startMetrics(ctx context.Context) {
 		},
 	}, cfg, consmr)
 	if err != nil {
-		logger.Error("failed to setup metrics", zap.Error(err))
+		logger.Error("failed to create metrics", zap.Error(err))
 	}
 
 	err = metrics.Start(ctx, &noopHost{})

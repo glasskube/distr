@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/glasskube/distr/api"
 	"maps"
+
+	"github.com/glasskube/distr/api"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -339,7 +340,11 @@ func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	}
 }
 
-func CreateDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarget, metrics *api.AgentDeploymentTargetMetrics) error {
+func CreateDeploymentTargetMetrics(
+	ctx context.Context,
+	dt *types.DeploymentTarget,
+	metrics *api.AgentDeploymentTargetMetrics,
+) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"INSERT INTO DeploymentTargetMetrics (deployment_target_id, cpu_cores_m, cpu_usage, memory_bytes, memory_usage) "+
