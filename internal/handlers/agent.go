@@ -53,7 +53,7 @@ func AgentRouter(r chi.Router) {
 			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
-			r.Post("/metrics", agentPostMetricsHandlinger)
+			r.Post("/metrics", agentPostMetricsHander)
 		})
 	})
 }
@@ -281,13 +281,13 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func agentPostMetricsHandlinger(w http.ResponseWriter, r *http.Request) {
+func agentPostMetricsHander(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
 	dt := internalctx.GetDeploymentTarget(ctx)
 
-	metrics, err := JsonBody[api.AgentSystemMetrics](w, r)
+	metrics, err := JsonBody[api.AgentDeploymentTargetMetrics](w, r)
 	if err != nil {
 		return
 	}

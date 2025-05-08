@@ -339,7 +339,7 @@ func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	}
 }
 
-func CreateDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarget, metrics *api.AgentSystemMetrics) error {
+func CreateDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarget, metrics *api.AgentDeploymentTargetMetrics) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"INSERT INTO DeploymentTargetMetrics (deployment_target_id, cpu_cores_m, cpu_usage, memory_bytes, memory_usage) "+
@@ -354,6 +354,7 @@ func CreateDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarg
 	if err != nil {
 		return err
 	} else {
+		// TODO check error handling again
 		rows.Close()
 		return nil
 	}

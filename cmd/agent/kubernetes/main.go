@@ -204,7 +204,7 @@ func main() {
 	}
 
 	if cpuCapacitySum > 0 && memoryCapacitySum > 0 {
-		if err := agentClient.ReportMetrics(ctx, api.AgentSystemMetrics{
+		if err := agentClient.ReportMetrics(ctx, api.AgentDeploymentTargetMetrics{
 			CPUCoresM:   cpuCapacitySum,
 			CPUUsage:    float64(cpuRequestSum / cpuCapacitySum),
 			MemoryBytes: memoryCapacitySum,

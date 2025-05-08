@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/glasskube/distr/api"
 	hmr "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/component"
@@ -13,11 +12,28 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
-	"os"
-	"time"
 )
 
 var metrics receiver.Metrics
+
+const hostMetricsReceiverConfig = `
+collection_interval: 10s
+scrapers:
+  cpu:
+    metrics:
+      system.cpu.time:
+        enabled: false
+      system.cpu.logical.count:
+        enabled: true
+      system.cpu.utilization:
+        enabled: true
+  memory:
+    metrics:
+      system.memory.utilization:
+        enabled: true
+      system.memory.limit:
+        enabled: true
+`
 
 type noopHost struct {
 	reportFunc func(event *componentstatus.Event)
@@ -40,24 +56,7 @@ func startMetrics(ctx context.Context) {
 	factory := hmr.NewFactory()
 	cfg := factory.CreateDefaultConfig().(*hmr.Config)
 
-	if retrieved, err := confmap.NewRetrievedFromYAML([]byte(`
-collection_interval: 10s
-scrapers:
-  cpu:
-    metrics:
-      system.cpu.time:
-        enabled: false
-      system.cpu.logical.count:
-        enabled: true
-      system.cpu.utilization:
-        enabled: true
-  memory:
-    metrics:
-      system.memory.utilization:
-        enabled: true
-      system.memory.limit:
-        enabled: true
-`)); err != nil {
+	if retrieved, err := confmap.NewRetrievedFromYAML([]byte(hostMetricsReceiverConfig)); err != nil {
 		logger.Error("failed to create yaml metrics config", zap.Error(err))
 		return
 	} else if cnf, err := retrieved.AsConf(); err != nil {
@@ -114,13 +113,11 @@ scrapers:
 		}
 		if cores != 0 {
 			usage := cpuUsed / float64(cores)
-			fmt.Fprintf(os.Stderr, "cpu usage: %v (%v cores)\n", usage, cores)
+			logger.Debug("cpu usage", zap.Any("usage", usage), zap.Any("cores", cores))
 		}
+		logger.Debug("memory usage", zap.Any("usage", memoryUsed), zap.Any("total", memoryTotal))
 
-		fmt.Fprintf(os.Stderr, "memory usage: %v (%v total)\n", memoryUsed, memoryTotal)
-
-		if err := client.ReportMetrics(ctx, api.AgentSystemMetrics{
-			MeasuredAt:  time.Now(), // TODO really needed?
+		if err := client.ReportMetrics(ctx, api.AgentDeploymentTargetMetrics{
 			CPUCoresM:   cores * 1000,
 			CPUUsage:    cpuUsed,
 			MemoryBytes: memoryTotal,

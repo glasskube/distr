@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
-	"time"
 )
 
 type AgentResource struct {
@@ -46,10 +45,9 @@ type AgentDeploymentStatus struct {
 	Message    string                     `json:"message"`
 }
 
-type AgentSystemMetrics struct {
-	MeasuredAt  time.Time `json:"measured_at"`
-	CPUCoresM   int64     `json:"cpuCoresM"`
-	CPUUsage    float64   `json:"cpuUsage"`
-	MemoryBytes int64     `json:"memoryBytes"`
-	MemoryUsage float64   `json:"memoryUsage"`
+type AgentDeploymentTargetMetrics struct {
+	CPUCoresM   int64   `json:"cpuCoresM"`
+	CPUUsage    float64 `json:"cpuUsage"`
+	MemoryBytes int64   `json:"memoryBytes"`
+	MemoryUsage float64 `json:"memoryUsage"`
 }
