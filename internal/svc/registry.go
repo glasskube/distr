@@ -9,6 +9,7 @@ import (
 
 	"github.com/exaring/otelpgx"
 	sentryotel "github.com/getsentry/sentry-go/otel"
+	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
@@ -165,11 +166,24 @@ func (r *Registry) GetDbPool() *pgxpool.Pool {
 
 func createMailer(ctx context.Context) (mail.Mailer, error) {
 	config := env.GetMailerConfig()
+	authOrgOverrideFromAddress :=
+		func(ctx context.Context, mail mail.Mail) string {
+			if auth, err := auth.Authentication.Get(ctx); err == nil {
+				if org := auth.CurrentOrg(); org != nil && org.EmailFromAddress != nil {
+					return *org.EmailFromAddress
+				}
+			}
+			return ""
+		}
 	switch config.Type {
 	case env.MailerTypeSMTP:
 		smtpConfig := smtp.Config{
 			MailerConfig: mail.MailerConfig{
-				DefaultFromAddress: config.FromAddress,
+				FromAddressSrc: []mail.FromAddressSrcFn{
+					mail.MailOverrideFromAddress(),
+					authOrgOverrideFromAddress,
+					mail.StaticFromAddress(config.FromAddress.String()),
+				},
 			},
 			Host:      config.SmtpConfig.Host,
 			Port:      config.SmtpConfig.Port,
@@ -179,7 +193,15 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 		}
 		return smtp.New(smtpConfig)
 	case env.MailerTypeSES:
-		sesConfig := ses.Config{MailerConfig: mail.MailerConfig{DefaultFromAddress: config.FromAddress}}
+		sesConfig := ses.Config{
+			MailerConfig: mail.MailerConfig{
+				FromAddressSrc: []mail.FromAddressSrcFn{
+					mail.MailOverrideFromAddress(),
+					authOrgOverrideFromAddress,
+					mail.StaticFromAddress(config.FromAddress.String()),
+				},
+			},
+		}
 		return ses.NewFromContext(ctx, sesConfig)
 	case env.MailerTypeUnspecified:
 		return noop.New(), nil

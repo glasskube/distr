@@ -132,8 +132,9 @@ export class ArtifactVersionsComponent {
       it.tags.some((l) => l.name === 'latest')
     )
   ) {
-    const orgName = this.org.value()?.slug;
-    let url = `oci://${this.remoteEnv.value()?.registryHost}/${orgName ?? 'ORG_SLUG'}/${artifact.name}`;
+    const org = this.org.value();
+    const env = this.remoteEnv.value();
+    let url = `oci://${org?.registryDomain ?? env?.registryHost ?? 'REGISTRY_DOMAIN'}/${org?.slug ?? 'ORG_SLUG'}/${artifact.name}`;
     if (tag) {
       return `${url}:${tag.tags[0].name}`;
     } else {

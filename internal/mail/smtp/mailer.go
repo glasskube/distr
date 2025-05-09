@@ -54,14 +54,8 @@ func (s *smtpMailer) Send(ctx context.Context, mail mail.Mail) error {
 	if err := message.Bcc(mail.Bcc...); err != nil {
 		return err
 	}
-	if mail.From != nil {
-		if err := message.From(mail.From.String()); err != nil {
-			return err
-		}
-	} else {
-		if err := message.From(s.config.DefaultFromAddress.String()); err != nil {
-			return err
-		}
+	if err := message.From(s.config.GetActualFromAddress(ctx, mail)); err != nil {
+		return err
 	}
 	if mail.ReplyTo != "" {
 		if err := message.ReplyTo(mail.ReplyTo); err != nil {

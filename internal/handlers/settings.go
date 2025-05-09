@@ -92,7 +92,7 @@ func userSettingsVerifyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	userAccount := auth.CurrentUser()
 	if userAccount.EmailVerifiedAt != nil {
 		w.WriteHeader(http.StatusNoContent)
-	} else if err := mailsending.SendUserVerificationMail(ctx, *userAccount); err != nil {
+	} else if err := mailsending.SendUserVerificationMail(ctx, *userAccount, *auth.CurrentOrg()); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 	} else {

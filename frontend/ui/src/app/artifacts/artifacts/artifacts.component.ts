@@ -53,7 +53,10 @@ export class ArtifactsComponent {
   protected readonly faLightbulb = faLightbulb;
 
   private readonly organizationService = inject(OrganizationService);
-  protected readonly registrySlug$ = this.organizationService.get().pipe(map((o) => o.slug));
-  protected readonly registryHost$ = fromPromise(getRemoteEnvironment()).pipe(map((e) => e.registryHost));
+  protected readonly registrySlug$ = this.organizationService.get().pipe(map((org) => org.slug));
+  protected readonly registryHost$ = combineLatest([
+    fromPromise(getRemoteEnvironment()),
+    this.organizationService.get(),
+  ]).pipe(map(([env, org]) => org.registryDomain ?? env.registryHost));
   protected readonly faUserCircle = faUserCircle;
 }

@@ -53,11 +53,7 @@ func (s *sesMailer) Send(ctx context.Context, mail mail.Mail) error {
 			Body:    &types.Body{},
 		},
 	}
-	if mail.From != nil {
-		message.Source = util.PtrTo(mail.From.String())
-	} else {
-		message.Source = util.PtrTo(s.config.DefaultFromAddress.String())
-	}
+	message.Source = util.PtrTo(s.config.GetActualFromAddress(ctx, mail))
 	if mail.ReplyTo != "" {
 		message.ReplyToAddresses = []string{mail.ReplyTo}
 	}

@@ -16,7 +16,16 @@ import (
 )
 
 const (
-	organizationOutputExpr = ` o.id, o.created_at, o.name, o.slug, o.features `
+	organizationOutputExpr = `
+		o.id,
+		o.created_at,
+		o.name,
+		o.slug,
+		o.features,
+		o.app_domain,
+		o.registry_domain,
+		o.email_from_address
+	`
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
