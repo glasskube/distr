@@ -45,6 +45,51 @@ import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-me
 @Component({
   selector: 'app-deployment-target-card',
   templateUrl: './deployment-target-card.component.html',
+  styles: `
+    .gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 40px; /* Reduced size */
+    }
+
+    .gauge-circle {
+      width: 100%;
+      aspect-ratio: 1; /* Ensures a perfect circle */
+      border-radius: 50%;
+      // background: conic-gradient(#e0e0e0 0%, #e0e0e0 100%);
+      background: conic-gradient(var(--color-green-300), var(--color-red-400));
+      mask: radial-gradient(circle, transparent 45%, black 46%); /* Transparent center */
+      // -webkit-mask: radial-gradient(circle, transparent 45%, black 46%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @for $i from 0 through 100 {
+        &.percent-#{$i} {
+          $deg: ($i*3.6);
+          mask-image: conic-gradient(#e0e0e0 0deg #{$deg}deg, transparent #{$deg}deg 360deg);
+          // mask-image: conic-gradient(transparent 0deg #{$deg}deg, #e0e0e0 #{$deg}deg 360deg);
+          // mask-image: conic-gradient(from -90deg, #000000, #000000 #{$deg}deg, #00000036 #{$deg}deg, #00000036 180deg, transparent 180deg, transparent 360deg);
+        }
+      }
+    }
+
+    .gauge-inner-circle {
+      width:30px;
+      background: white;
+      border-radius: 50%;
+    }
+
+
+    .gauge-label {
+      margin-top: 4px; /* Adjusted spacing */
+      font-size: 10px; /* Reduced font size */
+      color: #333;
+      text-align: center;
+    }
+
+  `,
   imports: [
     NgOptimizedImage,
     StatusDotComponent,
@@ -333,5 +378,19 @@ export class DeploymentTargetCardComponent {
     });
   }
 
+  public getGaugeBackground(usage: number | undefined): string {
+    const percentage = Math.ceil((usage || 0) * 100);
+    const startHue = 120; // Green
+    const endHue = 0; // Red
+    const gradientColor = `hsl(${startHue - (percentage * (startHue - endHue)) / 100}, 100%, 50%)`;
+
+    return `conic-gradient(${gradientColor} 0% ${percentage}%, #e0e0e0 ${percentage}% 100%)`;
+  }
+
+  protected getPercent(usage: number | undefined): string {
+    return Math.ceil((usage || 0) * 100).toFixed();
+  }
+
   protected readonly faPlus = faPlus;
 }
+
