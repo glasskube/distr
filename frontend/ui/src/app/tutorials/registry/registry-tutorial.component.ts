@@ -17,7 +17,7 @@ import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
+import {combineLatest, firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {AccessTokenWithKey} from '@glasskube/distr-sdk';
 import {getFormDisplayedError} from '../../../util/errors';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -105,11 +105,11 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
   ngOnInit() {
     this.organizationService
       .get()
-      .pipe(tap((o) => (this.slug = o.slug)))
-      .subscribe();
-    fromPromise(getRemoteEnvironment())
-      .pipe(tap((e) => (this.host = e.registryHost)))
-      .subscribe();
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((o) => (this.slug = o.slug));
+    combineLatest([fromPromise(getRemoteEnvironment()), this.organizationService.get()])
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe(([env, org]) => (this.host = org.registryDomain ?? env.registryHost));
 
     this.usageFormGroup.controls.pullDone.valueChanges
       .pipe(

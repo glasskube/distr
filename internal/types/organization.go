@@ -18,9 +18,9 @@ type Organization struct {
 	Name             string    `db:"name" json:"name"`
 	Slug             *string   `db:"slug" json:"slug"`
 	Features         []Feature `db:"features" json:"features"`
-	AppDomain        *string   `db:"app_domain" json:"-"`
+	AppDomain        *string   `db:"app_domain" json:"appDomain"`
 	RegistryDomain   *string   `db:"registry_domain" json:"registryDomain"`
-	EmailFromAddress *string   `db:"email_from_address" json:"-"`
+	EmailFromAddress *string   `db:"email_from_address" json:"emailFromAddress"`
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {
