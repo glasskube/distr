@@ -63,9 +63,9 @@
   [class.xl:grid-cols-2]="fullVersion"
   [class.xl:grid-cols-3]="!fullVersion"
   [class.lg:grid-cols-2]="!fullVersion">
-  @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.target.id) {
+  @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
     <app-deployment-target-card
-      [deploymentTarget]="deploymentTarget.target"
+      [deploymentTarget]="deploymentTarget"
       [fullVersion]="fullVersion"
       [deploymentTargetMetrics]="deploymentTarget.metrics">
     </app-deployment-target-card>

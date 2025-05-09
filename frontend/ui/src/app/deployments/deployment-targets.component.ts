@@ -32,13 +32,15 @@ import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
-import {DeploymentTargetMetrics, DeploymentTargetsMetricsService} from '../services/deployment-target-metrics.service';
+import {
+  DeploymentTargetLatestMetrics,
+  DeploymentTargetsMetricsService,
+} from '../services/deployment-target-metrics.service';
 
 type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
 
-interface DeploymentTargetViewData {
-  target: DeploymentTarget;
-  metrics?: DeploymentTargetMetrics;
+interface DeploymentTargetViewData extends DeploymentTarget {
+  metrics?: DeploymentTargetLatestMetrics;
 }
 
 @Component({
@@ -100,7 +102,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     map(([deploymentTargets, deploymentTargetMetrics]) => {
       return deploymentTargets.map((dt) => {
         return {
-          target: dt,
+          ...dt,
           metrics: deploymentTargetMetrics.find((x) => x.id === dt.id),
         } as DeploymentTargetViewData;
       });

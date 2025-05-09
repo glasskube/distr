@@ -4,7 +4,7 @@ import {DeploymentTargetScope, DeploymentType, DeploymentWithLatestRevision} fro
 import {Geolocation} from './geolocation';
 import {UserAccountWithRole} from './user-account';
 
-export interface DeploymentTargetBase extends BaseModel, Named {
+export interface DeploymentTarget extends BaseModel, Named {
   name: string;
   type: DeploymentType;
   namespace?: string;
@@ -12,16 +12,13 @@ export interface DeploymentTargetBase extends BaseModel, Named {
   geolocation?: Geolocation;
   createdBy?: UserAccountWithRole;
   currentStatus?: DeploymentTargetStatus;
-  agentVersion?: AgentVersion;
-  reportedAgentVersionId?: string;
-}
-
-export interface DeploymentTarget extends DeploymentTargetBase {
   /**
    * @deprecated This property will be removed in v2. Please consider using `deployments` instead.
    */
   deployment?: DeploymentWithLatestRevision;
   deployments: DeploymentWithLatestRevision[];
+  agentVersion?: AgentVersion;
+  reportedAgentVersionId?: string;
 }
 
 export interface DeploymentTargetStatus extends BaseModel {
