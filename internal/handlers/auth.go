@@ -177,15 +177,24 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		log.Warn("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
-	} else if err := mailer.Send(ctx, mail.New(
-		mail.To(user.Email),
-		mail.Subject("Password reset"),
-		mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, orgs[0].Organization, token)),
-	)); err != nil {
-		log.Warn("could not send reset mail", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
-		w.WriteHeader(http.StatusNoContent)
+		org := orgs[0].Organization
+		mailOpts := []mail.MailOpt{
+			mail.To(user.Email),
+			mail.Subject("Password reset"),
+			mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)),
+		}
+		if from, err := org.EmailFromAddressParsedOrDefault(); err == nil {
+			mailOpts = append(mailOpts, mail.From(*from))
+		} else {
+			log.Warn("error parsing custom from address", zap.Error(err))
+		}
+		if err := mailer.Send(ctx, mail.New(mailOpts...)); err != nil {
+			log.Warn("could not send reset mail", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }
