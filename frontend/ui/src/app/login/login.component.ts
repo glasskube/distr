@@ -86,7 +86,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         if (this.auth.hasRole('customer')) {
           await this.router.navigate(['/home']);
         } else {
-          await this.router.navigate(['/dashboard']);
+          await this.router.navigate(['/dashboard'], {queryParams: {from: 'login'}});
         }
       } catch (e) {
         this.errorMessage = getFormDisplayedError(e);
