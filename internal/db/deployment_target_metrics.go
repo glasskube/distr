@@ -38,7 +38,7 @@ func GetLatestDeploymentTargetMetrics(ctx context.Context, orgID, userID uuid.UU
 				FROM DeploymentTarget dt1
 			) metrics_max
 				ON dt.id = metrics_max.deployment_target_id
-			LEFT JOIN DeploymentTargetMetrics dtm
+			INNER JOIN DeploymentTargetMetrics dtm
 				ON dt.id = dtm.deployment_target_id
 					AND dtm.created_at = metrics_max.max_created_at
 			WHERE dt.organization_id = @orgId
