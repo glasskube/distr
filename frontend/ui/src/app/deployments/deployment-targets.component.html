@@ -66,6 +66,14 @@
   @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
     <app-deployment-target-card [deploymentTarget]="deploymentTarget" [fullVersion]="fullVersion">
     </app-deployment-target-card>
+  } @empty {
+    <div class="text-gray-500 dark:text-gray-400">
+      @if (fullVersion) {
+        No agents found.
+      } @else {
+        Nothing to show yet.
+      }
+    </div>
   }
 </div>
 
