@@ -61,7 +61,6 @@ func connectHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		auth := auth.Authentication.Require(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
 		if deploymentTarget.CurrentStatus != nil &&
@@ -76,8 +75,16 @@ func connectHandler() http.HandlerFunc {
 			return
 		}
 
+		org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID)
+		if err != nil {
+			log.Error("could not get organization for deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		secret := r.URL.Query().Get("targetSecret")
-		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, *auth.CurrentOrg(), &secret); err != nil {
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, *org, &secret); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
