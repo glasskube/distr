@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/glasskube/distr/compare/1.8.0...1.8.1) (2025-05-12)
+
+
+### Bug Fixes
+
+* **agent:** prevent implicit import of `env` package ([#893](https://github.com/glasskube/distr/issues/893)) ([6eb1be6](https://github.com/glasskube/distr/commit/6eb1be67c7f7ff932f31d1b3ebeaece77be9e515))
+
 ## [1.8.0](https://github.com/glasskube/distr/compare/1.7.1...1.8.0) (2025-05-12)
 
 
