@@ -17,8 +17,7 @@
                     class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
                     (click)="showDeploymentModal(u.dt, u.d, u.version)">
                     update now
-                  </button
-                  >
+                  </button>
                   )
                 </li>
               }
@@ -27,7 +26,6 @@
         </div>
       }
     }
-
 
     <div class="w-full mb-4">
       <div class="items-center justify-between md:flex md:space-x-4">
@@ -43,7 +41,7 @@
               class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
               placeholder="Filter Agents"
               autotrim
-              formControlName="search"/>
+              formControlName="search" />
           </div>
         </form>
 
@@ -60,15 +58,12 @@
       </div>
     </div>
 
-    <div
-      class="grid gap-4 items-stretch xl:grid-cols-2">
+    <div class="grid gap-4 items-stretch xl:grid-cols-2">
       @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
         <app-deployment-target-card [deploymentTarget]="deploymentTarget" [fullVersion]="true">
         </app-deployment-target-card>
       } @empty {
-        <div class="text-gray-500 dark:text-gray-400">
-          No agents found.
-        </div>
+        <div class="text-gray-500 dark:text-gray-400">No agents found.</div>
       }
     </div>
 

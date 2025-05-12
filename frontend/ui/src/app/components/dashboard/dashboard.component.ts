@@ -19,7 +19,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   protected readonly artifactsByCustomer$ = this.dashboardService.getArtifactsByCustomer().pipe(shareReplay(1));
   private readonly deploymentTargetsService = inject(DeploymentTargetsService);
-  protected readonly deploymentTargets$ = this.deploymentTargetsService.poll().pipe(takeUntil(this.destroyed$), shareReplay(1));
+  protected readonly deploymentTargets$ = this.deploymentTargetsService
+    .poll()
+    .pipe(takeUntil(this.destroyed$), shareReplay(1));
 
   ngOnInit() {
     if (this.route.snapshot.queryParams?.['from'] === 'login') {
