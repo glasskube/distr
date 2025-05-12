@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.8.0](https://github.com/glasskube/distr/compare/1.7.1...1.8.0) (2025-05-12)
+
+
+### Features
+
+* add support for custom domains and email from address ([#882](https://github.com/glasskube/distr/issues/882)) ([b7974e6](https://github.com/glasskube/distr/commit/b7974e6e84796727aac3bc4673b4fb18d1f3e25a))
+* docker swarm support ([#645](https://github.com/glasskube/distr/issues/645)) ([d842dda](https://github.com/glasskube/distr/commit/d842dda44fd6b575d2586a5689ad2d2a83371d4e))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.10 ([#884](https://github.com/glasskube/distr/issues/884)) ([841865b](https://github.com/glasskube/distr/commit/841865bdf49ca935116d722d4580f62a10c35a74))
+* **deps:** update dependency @angular/cdk to v19.2.15 ([#883](https://github.com/glasskube/distr/issues/883)) ([5fec38a](https://github.com/glasskube/distr/commit/5fec38a4e75abcfe3aaa3a376606a77b0020638b))
+* **deps:** update dependency @sentry/angular to v9.17.0 ([#890](https://github.com/glasskube/distr/issues/890)) ([081c384](https://github.com/glasskube/distr/commit/081c3848fa1974351ab2ae1759bab7b2633050b0))
+* **deps:** update dependency posthog-js to v1.240.6 ([#891](https://github.com/glasskube/distr/issues/891)) ([1062edc](https://github.com/glasskube/distr/commit/1062edc9f58588f6c634043cab259310465d6e03))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.2 ([#880](https://github.com/glasskube/distr/issues/880)) ([9eb2e41](https://github.com/glasskube/distr/commit/9eb2e41f5b36325febbbcaccbdc5004d6897b640))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.2 ([#888](https://github.com/glasskube/distr/issues/888)) ([24f119a](https://github.com/glasskube/distr/commit/24f119a25862c2ca389da85ff30b3afe0d5f6e63))
+
+
+### Other
+
+* **deps:** update actions/setup-go action to v5.5.0 ([#885](https://github.com/glasskube/distr/issues/885)) ([33f72d9](https://github.com/glasskube/distr/commit/33f72d96b4f31a97b17ad5e0ed419f59c9f30187))
+* **deps:** update angular-cli monorepo to v19.2.11 ([#879](https://github.com/glasskube/distr/issues/879)) ([fe470f7](https://github.com/glasskube/distr/commit/fe470f76340fc6b2db764115158f59b693f76cf2))
+* **deps:** update dependency @sentry/cli to v2.45.0 ([#889](https://github.com/glasskube/distr/issues/889)) ([b7c9bd8](https://github.com/glasskube/distr/commit/b7c9bd8dd4707895150d938e028c2d978bb896dd))
+* **deps:** update postgres docker tag to v17.5 ([#886](https://github.com/glasskube/distr/issues/886)) ([c327a19](https://github.com/glasskube/distr/commit/c327a199e95c6c7fe83f7906d040d5166ed180c8))
+* **deps:** update tailwindcss monorepo to v4.1.6 ([#887](https://github.com/glasskube/distr/issues/887)) ([630a659](https://github.com/glasskube/distr/commit/630a6591d1e438404252ccf612514888ab7f3e1b))
+* redirect new users to tutorials ([#892](https://github.com/glasskube/distr/issues/892)) ([e69f3f9](https://github.com/glasskube/distr/commit/e69f3f91acd77e21d5365b0da935efd6173cf2d2))
+* **ui:** make tutorial backlink more prominent ([#873](https://github.com/glasskube/distr/issues/873)) ([dfa3453](https://github.com/glasskube/distr/commit/dfa3453ce1a11cfcaba48f9a8f7ff9718b0cf0d9))
+
 ## [1.7.1](https://github.com/glasskube/distr/compare/1.7.0...1.7.1) (2025-05-07)
 
 
