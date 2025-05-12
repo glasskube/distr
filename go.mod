@@ -9,10 +9,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.3
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.2
-	github.com/compose-spec/compose-go/v2 v2.6.1
+	github.com/compose-spec/compose-go/v2 v2.6.2
 	github.com/containerd/log v0.1.0
 	github.com/docker/cli v28.1.1+incompatible
-	github.com/exaring/otelpgx v0.9.1
+	github.com/exaring/otelpgx v0.9.2
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.32.0
 	github.com/getsentry/sentry-go/otel v0.32.0
