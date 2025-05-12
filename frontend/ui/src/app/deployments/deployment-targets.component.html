@@ -60,7 +60,10 @@
 
     <div class="grid gap-4 items-stretch xl:grid-cols-2">
       @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
-        <app-deployment-target-card [deploymentTarget]="deploymentTarget" [fullVersion]="true" [deploymentTargetMetrics]="deploymentTarget.metrics">
+        <app-deployment-target-card
+          [deploymentTarget]="deploymentTarget"
+          [fullVersion]="true"
+          [deploymentTargetMetrics]="deploymentTarget.metrics">
         </app-deployment-target-card>
       } @empty {
         <div class="text-gray-500 dark:text-gray-400">No agents found.</div>

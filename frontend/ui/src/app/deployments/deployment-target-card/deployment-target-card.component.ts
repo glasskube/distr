@@ -41,57 +41,11 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
+import {BytesPipe} from '../../../util/units';
 
 @Component({
   selector: 'app-deployment-target-card',
   templateUrl: './deployment-target-card.component.html',
-  styles: `
-    .gauge {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 45px; /* Reduced size */
-    }
-
-    // TODO fix pixelation
-    .gauge-circle {
-      width: 100%;
-      aspect-ratio: 1; /* Ensures a perfect circle */
-      border-radius: 50%;
-      // background: conic-gradient(#e0e0e0 0%, #e0e0e0 100%);
-      background: conic-gradient(var(--color-green-300), var(--color-red-400));
-      mask: radial-gradient(circle, transparent 45%, black 46%); /* Transparent center */
-      // -webkit-mask: radial-gradient(circle, transparent 45%, black 46%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      @for $i from 0 through 100 {
-        &.percent-#{$i} {
-          $deg: ($i*3.6);
-          mask-image: conic-gradient(#e0e0e0 0deg #{$deg}deg, transparent #{$deg}deg 360deg);
-          // mask-image: conic-gradient(transparent 0deg #{$deg}deg, #e0e0e0 #{$deg}deg 360deg);
-          // mask-image: conic-gradient(from -90deg, #000000, #000000 #{$deg}deg, #00000036 #{$deg}deg, #00000036 180deg, transparent 180deg, transparent 360deg);
-        }
-      }
-    }
-
-    .gauge-inner-circle {
-      width:30px;
-      aspect-ratio: 1;
-      background: var(--gray-900);
-      border-radius: 50%;
-    }
-
-
-    .gauge-label {
-      margin-top: 4px; /* Adjusted spacing */
-      font-size: 10px; /* Reduced font size */
-      color: #333;
-      text-align: center;
-    }
-
-  `,
   imports: [
     NgOptimizedImage,
     StatusDotComponent,
@@ -105,6 +59,7 @@ import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-me
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
+    BytesPipe,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -395,4 +350,3 @@ export class DeploymentTargetCardComponent {
 
   protected readonly faPlus = faPlus;
 }
-

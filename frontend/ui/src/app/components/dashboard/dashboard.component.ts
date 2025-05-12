@@ -6,13 +6,14 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {
   catchError,
   combineLatestWith,
-  first, map,
+  first,
+  map,
   of,
   shareReplay,
   Subject,
   switchMap,
   takeUntil,
-  withLatestFrom
+  withLatestFrom,
 } from 'rxjs';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentTargetCardComponent} from '../../deployments/deployment-target-card/deployment-target-card.component';
@@ -50,7 +51,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         } as DeploymentTargetViewData;
       });
     })
-  )
+  );
 
   ngOnInit() {
     if (this.route.snapshot.queryParams?.['from'] === 'login') {
