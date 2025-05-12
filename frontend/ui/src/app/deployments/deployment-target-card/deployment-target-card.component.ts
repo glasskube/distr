@@ -50,9 +50,10 @@ import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-me
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 40px; /* Reduced size */
+      width: 45px; /* Reduced size */
     }
 
+    // TODO fix pixelation
     .gauge-circle {
       width: 100%;
       aspect-ratio: 1; /* Ensures a perfect circle */
@@ -77,7 +78,8 @@ import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-me
 
     .gauge-inner-circle {
       width:30px;
-      background: white;
+      aspect-ratio: 1;
+      background: var(--gray-900);
       border-radius: 50%;
     }
 

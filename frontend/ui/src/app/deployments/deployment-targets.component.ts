@@ -39,7 +39,7 @@ import {
 
 type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
 
-interface DeploymentTargetViewData extends DeploymentTarget {
+export interface DeploymentTargetViewData extends DeploymentTarget {
   metrics?: DeploymentTargetLatestMetrics;
 }
 

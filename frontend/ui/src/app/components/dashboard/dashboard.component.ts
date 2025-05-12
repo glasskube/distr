@@ -3,9 +3,21 @@ import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-customer-card/artifacts-by-customer-card.component';
 import {DashboardService} from '../../services/dashboard.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {combineLatestWith, first, shareReplay, Subject, switchMap, takeUntil} from 'rxjs';
+import {
+  catchError,
+  combineLatestWith,
+  first, map,
+  of,
+  shareReplay,
+  Subject,
+  switchMap,
+  takeUntil,
+  withLatestFrom
+} from 'rxjs';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentTargetCardComponent} from '../../deployments/deployment-target-card/deployment-target-card.component';
+import {DeploymentTargetsMetricsService} from '../../services/deployment-target-metrics.service';
+import {DeploymentTargetViewData} from '../../deployments/deployment-targets.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,9 +31,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   protected readonly artifactsByCustomer$ = this.dashboardService.getArtifactsByCustomer().pipe(shareReplay(1));
   private readonly deploymentTargetsService = inject(DeploymentTargetsService);
+  private readonly deploymentTargetMetricsService = inject(DeploymentTargetsMetricsService);
   protected readonly deploymentTargets$ = this.deploymentTargetsService
     .poll()
     .pipe(takeUntil(this.destroyed$), shareReplay(1));
+  protected readonly deploymentTargetMetrics$ = this.deploymentTargetMetricsService.poll().pipe(
+    takeUntil(this.destroyed$),
+    catchError(() => of([]))
+  );
+  protected readonly deploymentTargetWithMetrics$ = this.deploymentTargets$.pipe(
+    withLatestFrom(this.deploymentTargetMetrics$),
+    map(([deploymentTargets, deploymentTargetMetrics]) => {
+      return deploymentTargets.map((dt) => {
+        return {
+          ...dt,
+          metrics: deploymentTargetMetrics.find((x) => x.id === dt.id),
+          // TODO deduplicate
+        } as DeploymentTargetViewData;
+      });
+    })
+  )
 
   ngOnInit() {
     if (this.route.snapshot.queryParams?.['from'] === 'login') {

@@ -56,10 +56,8 @@
         </div>
         <div class="gauge">
           <div
-            class="gauge-circle percent-{{getPercent(metrics.memoryUsage)}}">
-            <div class="gauge-inner-circle">
-
-            </div>
+            class="gauge-circle"
+            [style.background]="getGaugeBackground(metrics.memoryUsage)">
           </div>
         </div>
       </div>
