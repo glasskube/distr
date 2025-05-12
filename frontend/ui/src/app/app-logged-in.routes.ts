@@ -2,7 +2,6 @@ import {DashboardComponent} from './components/dashboard/dashboard.component';
 import {HomeComponent} from './components/home/home.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
-import {DeploymentsPageComponent} from './deployments/deployments-page.component';
 import {ArtifactsComponent} from './artifacts/artifacts/artifacts.component';
 import {ArtifactVersionsComponent} from './artifacts/artifact-versions/artifact-versions.component';
 import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
@@ -24,6 +23,7 @@ import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
+import {DeploymentTargetsComponent} from './deployments/deployment-targets.component';
 
 function requiredRoleGuard(userRole: UserRole): CanActivateFn {
   return () => {
@@ -80,7 +80,7 @@ export const routes: Routes = [
       },
     ],
   },
-  {path: 'deployments', component: DeploymentsPageComponent},
+  {path: 'deployments', component: DeploymentTargetsComponent},
   {
     path: 'artifacts',
     children: [

@@ -40,8 +40,6 @@ type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatest
   animations: [modalFlyInOut, drawerFlyInOut],
 })
 export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
-  @Input('fullVersion') fullVersion = false;
-
   public readonly auth = inject(AuthService);
   private readonly overlay = inject(OverlayService);
   private readonly applications = inject(ApplicationsService);
@@ -93,15 +91,13 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   );
 
   ngAfterViewInit() {
-    if (this.fullVersion) {
-      combineLatest([this.applications$, this.deploymentTargets$])
-        .pipe(first())
-        .subscribe(([apps, dts]) => {
-          if (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0) {
-            this.openWizard();
-          }
-        });
-    }
+    combineLatest([this.applications$, this.deploymentTargets$])
+      .pipe(first())
+      .subscribe(([apps, dts]) => {
+        if (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0) {
+          this.openWizard();
+        }
+      });
   }
 
   ngOnDestroy(): void {
