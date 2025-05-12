@@ -3,12 +3,9 @@ package types
 import (
 	"encoding/base64"
 	"fmt"
-	"net/mail"
-	"regexp"
 	"slices"
 	"time"
 
-	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 )
@@ -26,41 +23,6 @@ type Organization struct {
 
 func (org *Organization) HasFeature(feature Feature) bool {
 	return slices.Contains(org.Features, feature)
-}
-
-var urlSchemeRegex = regexp.MustCompile("^https?://")
-
-func (o Organization) AppDomainOrDefault() string {
-	if o.AppDomain != nil {
-		d := *o.AppDomain
-		if urlSchemeRegex.MatchString(d) {
-			return d
-		} else {
-			scheme := urlSchemeRegex.FindString(env.Host())
-			if scheme == "" {
-				scheme = "https://"
-			}
-			return scheme + d
-		}
-	} else {
-		return env.Host()
-	}
-}
-
-func (o Organization) RegistryDomainOrDefault() string {
-	if o.RegistryDomain != nil {
-		return *o.RegistryDomain
-	} else {
-		return env.RegistryHost()
-	}
-}
-
-func (o Organization) EmailFromAddressParsedOrDefault() (*mail.Address, error) {
-	if o.EmailFromAddress != nil {
-		return mail.ParseAddress(*o.EmailFromAddress)
-	} else {
-		return util.PtrTo(env.GetMailerConfig().FromAddress), nil
-	}
 }
 
 type OrganizationWithUserRole struct {

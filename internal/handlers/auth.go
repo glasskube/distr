@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 
 	"github.com/go-chi/httprate"
@@ -184,7 +185,7 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			mail.Subject("Password reset"),
 			mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)),
 		}
-		if from, err := org.EmailFromAddressParsedOrDefault(); err == nil {
+		if from, err := customdomains.EmailFromAddressParsedOrDefault(org); err == nil {
 			mailOpts = append(mailOpts, mail.From(*from))
 		} else {
 			log.Warn("error parsing custom from address", zap.Error(err))

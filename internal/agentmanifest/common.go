@@ -9,6 +9,7 @@ import (
 	"path"
 	"text/template"
 
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
@@ -42,7 +43,7 @@ func getTemplateData(
 		statusEndpoint    string
 	)
 
-	if u, err := url.Parse(org.AppDomainOrDefault()); err != nil {
+	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
 		return nil, err
 	} else {
 		u = u.JoinPath("api/v1/agent")
@@ -55,7 +56,7 @@ func getTemplateData(
 	result := map[string]any{
 		"agentInterval":     env.AgentInterval(),
 		"registryEnabled":   env.RegistryEnabled(),
-		"registryHost":      org.RegistryDomainOrDefault(),
+		"registryHost":      customdomains.RegistryDomainOrDefault(org),
 		"agentDockerConfig": base64.StdEncoding.EncodeToString(env.AgentDockerConfig()),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
 		"agentVersionId":    deploymentTarget.AgentVersion.ID,
