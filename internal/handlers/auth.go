@@ -23,6 +23,7 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
@@ -116,13 +117,14 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Email:    request.Email,
 			Password: request.Password,
 		}
+		var org *types.Organization
 
 		if err := db.RunTx(ctx, func(ctx context.Context) error {
 			if err := security.HashPassword(&userAccount); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return err
-			} else if _, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
+			} else if org, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
 				if errors.Is(err, apierrors.ErrAlreadyExists) {
 					w.WriteHeader(http.StatusBadRequest)
 				} else {
@@ -137,7 +139,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := mailsending.SendUserVerificationMail(ctx, userAccount); err != nil {
+		if err := mailsending.SendUserVerificationMail(ctx, userAccount, *org); err != nil {
 			log.Warn("could not send verification mail", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 		}
@@ -164,19 +166,35 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 		}
+	} else if orgs, err := db.GetOrganizationsForUser(ctx, user.ID); err != nil || len(orgs) != 1 {
+		if len(orgs) != 1 {
+			multierr.AppendInto(&err, errors.New("user must have exacly one organization"))
+		}
+		log.Warn("could not send reset mail", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else if _, token, err := authjwt.GenerateResetToken(*user); err != nil {
 		log.Warn("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
-	} else if err := mailer.Send(ctx, mail.New(
-		mail.To(user.Email),
-		mail.Subject("Password reset"),
-		mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, token)),
-	)); err != nil {
-		log.Warn("could not send reset mail", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
-		w.WriteHeader(http.StatusNoContent)
+		org := orgs[0].Organization
+		mailOpts := []mail.MailOpt{
+			mail.To(user.Email),
+			mail.Subject("Password reset"),
+			mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)),
+		}
+		if from, err := org.EmailFromAddressParsedOrDefault(); err == nil {
+			mailOpts = append(mailOpts, mail.From(*from))
+		} else {
+			log.Warn("error parsing custom from address", zap.Error(err))
+		}
+		if err := mailer.Send(ctx, mail.New(mailOpts...)); err != nil {
+			log.Warn("could not send reset mail", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }

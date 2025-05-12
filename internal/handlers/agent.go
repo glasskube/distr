@@ -75,8 +75,16 @@ func connectHandler() http.HandlerFunc {
 			return
 		}
 
+		org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID)
+		if err != nil {
+			log.Error("could not get organization for deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		secret := r.URL.Query().Get("targetSecret")
-		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, &secret); err != nil {
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, *org, &secret); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -305,8 +313,11 @@ func agentManifestHandler() http.HandlerFunc {
 		ctx := r.Context()
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 		log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID.String()))
-
-		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, nil); err != nil {
+		if org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID); err != nil {
+			log.Error("could not get org for deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, *org, nil); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
