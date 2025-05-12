@@ -6,6 +6,7 @@ import (
 
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mailtemplates"
@@ -25,7 +26,7 @@ func SendUserInviteMail(
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 
-	from, err := organization.EmailFromAddressParsedOrDefault()
+	from, err := customdomains.EmailFromAddressParsedOrDefault(organization.Organization)
 	if err != nil {
 		return err
 	}

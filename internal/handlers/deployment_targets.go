@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
@@ -195,7 +196,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 }
 
 func buildConnectUrl(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
-	if u, err := url.Parse(org.AppDomainOrDefault()); err != nil {
+	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
 		return "", err
 	} else {
 		query := url.Values{}

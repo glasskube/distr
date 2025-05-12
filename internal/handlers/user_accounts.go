@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mailsending"
 	"github.com/glasskube/distr/internal/middleware"
@@ -107,7 +108,11 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		} else {
-			inviteURL = fmt.Sprintf("%v/join?jwt=%v", organization.AppDomainOrDefault(), url.QueryEscape(token))
+			inviteURL = fmt.Sprintf(
+				"%v/join?jwt=%v",
+				customdomains.AppDomainOrDefault(organization.Organization),
+				url.QueryEscape(token),
+			)
 			if err := mailsending.SendUserInviteMail(
 				ctx,
 				userAccount,
