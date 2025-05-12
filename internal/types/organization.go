@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/mail"
+	"regexp"
 	"slices"
 	"time"
 
@@ -27,9 +28,20 @@ func (org *Organization) HasFeature(feature Feature) bool {
 	return slices.Contains(org.Features, feature)
 }
 
+var urlSchemeRegex = regexp.MustCompile("^https?://")
+
 func (o Organization) AppDomainOrDefault() string {
 	if o.AppDomain != nil {
-		return *o.AppDomain
+		d := *o.AppDomain
+		if urlSchemeRegex.MatchString(d) {
+			return d
+		} else {
+			scheme := urlSchemeRegex.FindString(env.Host())
+			if scheme == "" {
+				scheme = "https://"
+			}
+			return scheme + d
+		}
 	} else {
 		return env.Host()
 	}
