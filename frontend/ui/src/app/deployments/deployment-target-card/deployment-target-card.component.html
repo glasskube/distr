@@ -50,28 +50,30 @@
       @if (deploymentTargetMetrics(); as metrics) {
         @let cpu = getPercent(metrics.cpuUsage);
         @let memory = getPercent(metrics.memoryUsage);
-        <div class="flex -space-x-0 items-center justify-end hover:space-x-3 rtl:space-x-reverse">
+        <div class="flex space-x-1 items-center justify-end rtl:space-x-reverse">
           <div class="transition-all duration-100 ease-in-out">
-            <div class="gauge percent-{{ cpu }}">
-              <div class="gauge-center bg-white dark:bg-gray-800 text-xs content-center text-center font-thin">
+            <div class="relative">
+              <div class="gauge z-0 percent-{{ cpu }} relative">
+                <div class="gauge-center bg-white dark:bg-gray-800"></div>
+              </div>
+              <div
+                class="absolute inset-0 z-1000 flex items-center justify-center text-xs font-thin text-black dark:text-white">
                 {{ cpu }}%
               </div>
-              <div class="text-xs gauge-center-text"></div>
             </div>
-
             <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">CPU</div>
-            <!--<div class="text-xs gauge-center-text">{{ metrics.cpuCoresM / 1000 }} Cores</div>-->
           </div>
           <div class="transition-all duration-100 ease-in-out">
-            <div class="gauge percent-{{ memory }}">
-              <div class="gauge-center bg-white dark:bg-gray-800 text-xs content-center text-center font-thin">
+            <div class="relative">
+              <div class="gauge percent-{{ memory }} relative">
+                <div class="gauge-center bg-white dark:bg-gray-800"></div>
+              </div>
+              <div
+                class="absolute inset-0 z-1000 flex items-center justify-center text-xs font-thin text-black dark:text-white">
                 {{ memory }}%
               </div>
             </div>
-
-            <!--<div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">{{ metrics.memoryBytes | bytes:'1.0-0' }}</div>-->
             <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">RAM</div>
-            <!--<div class="text-xs">{{ metrics.memoryBytes | bytes }}</div>-->
           </div>
         </div>
       }
