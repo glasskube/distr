@@ -288,6 +288,9 @@
                       class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
                       <ul class="py-1" role="none">
                         <li>
+                          <button type="button" (click)="openLogsModal(deployment)">Logs</button>
+                        </li>
+                        <li>
                           <button
                             type="button"
                             aria-label="Delete"
@@ -376,6 +379,10 @@
     [deployment]="selectedDeployment()"
     (closed)="hideModal()">
   </app-deployment-modal>
+</ng-template>
+
+<ng-template #deploymentLogsModal>
+  <app-deployment-logs @modalFlyInOut [deployment]="selectedDeployment()!" (closed)="hideModal()" />
 </ng-template>
 
 <ng-template #deploymentStatusModal>

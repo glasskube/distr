@@ -40,6 +40,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
+import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -57,6 +58,7 @@ import {DeploymentModalComponent} from '../deployment-modal.component';
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
+    DeploymentLogsComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -75,11 +77,12 @@ export class DeploymentTargetCardComponent {
   public readonly deploymentTarget = input.required<DeploymentTarget>();
   public readonly fullVersion = input(true);
 
-  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<any>;
-  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<any>;
-  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<any>;
-  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<any>;
-  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<any>;
+  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
+  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<unknown>;
+  @ViewChild('deploymentLogsModal') protected readonly deploymentLogsModal!: TemplateRef<unknown>;
+  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<unknown>;
+  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<unknown>;
+  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<unknown>;
 
   protected readonly faShip = faShip;
   protected readonly faLink = faLink;
@@ -202,6 +205,15 @@ export class DeploymentTargetCardComponent {
       this.selectedDeployment.set(deployment);
       this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
       this.showModal(this.deploymentStatusModal);
+    }
+  }
+
+  protected openLogsModal(deployment: DeploymentWithLatestRevision) {
+    if (deployment?.id) {
+      this.selectedDeployment.set(deployment);
+      this.showDeploymentDropdownForId.set(undefined);
+      this.hideModal();
+      this.showModal(this.deploymentLogsModal);
     }
   }
 

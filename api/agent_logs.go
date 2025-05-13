@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type LogRecord struct {
+type DeploymentLogRecord struct {
 	DeploymentID         uuid.UUID `json:"deploymentId"`
 	DeploymentRevisionID uuid.UUID `json:"deploymentRevisionId"`
 	Resource             string    `json:"resource"`

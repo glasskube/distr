@@ -9,7 +9,7 @@ import (
 )
 
 type Exporter interface {
-	Logs(ctx context.Context, logs []api.LogRecord) error
+	Logs(ctx context.Context, logs []api.DeploymentLogRecord) error
 }
 
 type chunkExporter struct {
@@ -23,7 +23,7 @@ func ChunkExporter(exporter Exporter, chunkSize int) Exporter {
 	return &chunkExporter{chunkSize: chunkSize, delegate: exporter}
 }
 
-func (be *chunkExporter) Logs(ctx context.Context, logs []api.LogRecord) (err error) {
+func (be *chunkExporter) Logs(ctx context.Context, logs []api.DeploymentLogRecord) (err error) {
 	if len(logs) == 0 {
 		return
 	}

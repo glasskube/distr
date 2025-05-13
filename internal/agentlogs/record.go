@@ -8,22 +8,22 @@ import (
 	"github.com/google/uuid"
 )
 
-type LogRecordOption func(lr *api.LogRecord)
+type LogRecordOption func(lr *api.DeploymentLogRecord)
 
 func WithSeverity(severity string) LogRecordOption {
-	return func(lr *api.LogRecord) {
+	return func(lr *api.DeploymentLogRecord) {
 		lr.Severity = severity
 	}
 }
 
 func WithTimestamp(ts time.Time) LogRecordOption {
-	return func(lr *api.LogRecord) {
+	return func(lr *api.DeploymentLogRecord) {
 		lr.Timestamp = ts
 	}
 }
 
-func NewRecord(deploymentID, deploymentRevisionID uuid.UUID, resource, severity, body string) api.LogRecord {
-	record := api.LogRecord{
+func NewRecord(deploymentID, deploymentRevisionID uuid.UUID, resource, severity, body string) api.DeploymentLogRecord {
+	record := api.DeploymentLogRecord{
 		DeploymentID:         deploymentID,
 		DeploymentRevisionID: deploymentRevisionID,
 		Resource:             resource,

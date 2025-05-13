@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -29,6 +28,7 @@ type clientData struct {
 	manifestEndpoint string
 	resourceEndpoint string
 	statusEndpoint   string
+	logsEndpoint     string
 }
 
 type Client struct {
@@ -102,9 +102,17 @@ func (c *Client) Status(
 	}
 }
 
-func (c *Client) Logs(ctx context.Context, logs []api.LogRecord) error {
-	log.Printf("pushing logs: %v", logs)
-	return nil
+func (c *Client) Logs(ctx context.Context, logs []api.DeploymentLogRecord) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(logs); err != nil {
+		return err
+	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.logsEndpoint, &buf); err != nil {
+		return err
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		_, err := c.doAuthenticated(ctx, req)
+		return err
+	}
 }
 
 func (c *Client) Login(ctx context.Context) error {
@@ -205,6 +213,8 @@ func (c *Client) ReloadFromEnv() (changed bool, err error) {
 	} else if d.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
 		return
 	} else if d.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+		return
+	} else if d.logsEndpoint, err = readEnvVar("DISTR_LOGS_ENDPOINT"); err != nil {
 		return
 	} else {
 		changed = c.clientData != d

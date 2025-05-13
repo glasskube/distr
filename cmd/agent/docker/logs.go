@@ -29,6 +29,7 @@ func NewLogsWatcher() (*logsWatcher, error) {
 		return &logsWatcher{
 			composeService: compose.NewComposeService(cli),
 			logsExporter:   agentlogs.ChunkExporter(client, 100),
+			last:           make(map[uuid.UUID]time.Time),
 		}, nil
 	}
 }
@@ -49,11 +50,14 @@ func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
 			for _, d := range deployments {
 				logOptions := composeapi.LogOptions{Timestamps: true}
 				if since, ok := lw.last[d.ID]; ok {
-					logOptions.Since = since.String()
+					logOptions.Since = since.Format(time.RFC3339Nano)
 				}
+				now := time.Now()
 				err := lw.composeService.Logs(ctx, d.ProjectName, collector.ForDeployment(d), logOptions)
 				if err != nil {
 					logger.Warn("could not get logs from docker", zap.Error(err))
+				} else {
+					lw.last[d.ID] = now
 				}
 			}
 			if err := lw.logsExporter.Logs(ctx, collector.LogRecords()); err != nil {
@@ -64,10 +68,10 @@ func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
 }
 
 type composeLogsCollector struct {
-	logRecords []api.LogRecord
+	logRecords []api.DeploymentLogRecord
 }
 
-func (clc *composeLogsCollector) appendRecord(record api.LogRecord) {
+func (clc *composeLogsCollector) appendRecord(record api.DeploymentLogRecord) {
 	clc.logRecords = append(clc.logRecords, record)
 }
 
@@ -75,7 +79,7 @@ func (clc *composeLogsCollector) ForDeployment(deployment AgentDeployment) *depl
 	return &deploymentLogsCollector{composeLogsCollector: clc, deployment: deployment}
 }
 
-func (clc *composeLogsCollector) LogRecords() []api.LogRecord {
+func (clc *composeLogsCollector) LogRecords() []api.DeploymentLogRecord {
 	return clc.logRecords
 }
 
