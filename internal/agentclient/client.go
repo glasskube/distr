@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/glasskube/distr/internal/agentclient/useragent"
@@ -37,6 +38,7 @@ type Client struct {
 	logger     *zap.Logger
 	token      jwt.Token
 	rawToken   string
+	mutex      sync.Mutex
 }
 
 func (c *Client) Resource(ctx context.Context) (*api.AgentResource, error) {
@@ -126,6 +128,8 @@ func (c *Client) Login(ctx context.Context) error {
 }
 
 func (c *Client) EnsureToken(ctx context.Context) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	if c.HasTokenExpiredAfter(time.Now().Add(30 * time.Second)) {
 		c.logger.Info("token has expired or is about to expire")
 		if err := c.Login(ctx); err != nil {
@@ -159,9 +163,6 @@ func (c *Client) RawToken() string {
 }
 
 func (c *Client) ReportMetrics(ctx context.Context, metrics api.AgentDeploymentTargetMetrics) error {
-
-	// TODO client concurrency support (e.g. token handling!)
-
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(metrics); err != nil {
 		return err
