@@ -72,6 +72,12 @@ This property will be removed in v2. Please consider using `deployments` instead
 
 ---
 
+### metricsEnabled
+
+> **metricsEnabled**: `boolean`
+
+---
+
 ### name
 
 > **name**: `string`
