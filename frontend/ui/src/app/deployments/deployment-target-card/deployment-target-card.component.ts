@@ -1,5 +1,5 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
+import {AsyncPipe, DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {
   Component,
   computed,
@@ -11,6 +11,7 @@ import {
   signal,
   TemplateRef,
   ViewChild,
+  WritableSignal,
 } from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -53,6 +54,7 @@ import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
 import {BytesPipe} from '../../../util/units';
+import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -71,6 +73,8 @@ import {BytesPipe} from '../../../util/units';
     ReactiveFormsModule,
     DeploymentModalComponent,
     BytesPipe,
+    DeploymentTargetMetricsComponent,
+    NgTemplateOutlet,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -112,6 +116,8 @@ export class DeploymentTargetCardComponent {
   protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
   protected readonly selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
   protected statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
+
+  protected readonly metricsOpened = signal(false);
 
   protected readonly agentVersions = resource({
     loader: () => firstValueFrom(this.agentVersionsSvc.list()),
@@ -353,8 +359,8 @@ export class DeploymentTargetCardComponent {
     });
   }
 
-  protected getPercent(usage: number | undefined): string {
-    return Math.ceil((usage || 0) * 100).toFixed();
+  protected toggle(signal: WritableSignal<boolean>) {
+    signal.update((val) => !val);
   }
 
   protected readonly faPlus = faPlus;

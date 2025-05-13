@@ -46,41 +46,42 @@
       </div>
     </div>
 
-    @if (deploymentTarget().metricsEnabled) {
+    @if (!fullVersion() && deploymentTarget().metricsEnabled) {
       @if (deploymentTargetMetrics(); as metrics) {
-        @let cpu = getPercent(metrics.cpuUsage);
-        @let memory = getPercent(metrics.memoryUsage);
-        <div class="flex space-x-1 items-center justify-end rtl:space-x-reverse">
-          <div class="transition-all duration-100 ease-in-out">
-            <div class="relative">
-              <div class="gauge z-0 percent-{{ cpu }} relative">
-                <div class="gauge-center bg-white dark:bg-gray-800"></div>
-              </div>
-              <div
-                class="absolute inset-0 z-1000 flex items-center justify-center text-xs font-thin text-black dark:text-white">
-                {{ cpu }}%
-              </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">CPU</div>
-          </div>
-          <div class="transition-all duration-100 ease-in-out">
-            <div class="relative">
-              <div class="gauge percent-{{ memory }} relative">
-                <div class="gauge-center bg-white dark:bg-gray-800"></div>
-              </div>
-              <div
-                class="absolute inset-0 z-1000 flex items-center justify-center text-xs font-thin text-black dark:text-white">
-                {{ memory }}%
-              </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">RAM</div>
-          </div>
-        </div>
+        <app-deployment-target-metrics [metrics]="metrics"></app-deployment-target-metrics>
       }
     }
 
     @if (fullVersion()) {
       <div class="space-y-4 sm:flex sm:space-x-2 sm:space-y-0 items-center">
+        @if (deploymentTarget().metricsEnabled) {
+          @if (deploymentTargetMetrics(); as metrics) {
+            <button
+              type="button"
+              (click)="toggle(metricsOpened)"
+              cdkOverlayOrigin
+              #tooltipTrigger="cdkOverlayOrigin"
+              class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+              <fa-icon [icon]="faHeartPulse" class="text-gray-500 dark:text-gray-400"></fa-icon>
+            </button>
+            <ng-template
+              cdkConnectedOverlay
+              [cdkConnectedOverlayHasBackdrop]="true"
+              (backdropClick)="toggle(metricsOpened)"
+              [cdkConnectedOverlayOrigin]="tooltipTrigger"
+              [cdkConnectedOverlayBackdropClass]="'transparent'"
+              [cdkConnectedOverlayOpen]="metricsOpened()">
+              <ng-container *ngTemplateOutlet="metricsOverlay"></ng-container>
+            </ng-template>
+            <ng-template #metricsOverlay>
+              <div
+                role="tooltip"
+                class="p-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 font-medium border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-w-64">
+                <app-deployment-target-metrics [metrics]="metrics" [fullVersion]="true"></app-deployment-target-metrics>
+              </div>
+            </ng-template>
+          }
+        }
         @let status = deploymentTarget().currentStatus;
         @if (status && !(status | isStale)) {
           @let deployEnabled = isMultiDeploymentSupported() || deploymentTarget().deployments.length === 0;
