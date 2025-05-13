@@ -1,0 +1,4 @@
+ALTER TABLE Deployment
+  DROP COLUMN docker_type;
+
+DROP TYPE DOCKER_TYPE;

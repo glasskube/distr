@@ -7,9 +7,8 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/types"
-
-	"github.com/glasskube/distr/internal/env"
 )
 
 //go:embed templates/*
@@ -50,13 +49,6 @@ func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
 	return t, nil
 }
 
-func Welcome() (*template.Template, any) {
-	return templates.Lookup("welcome.html"),
-		map[string]any{
-			"Host": env.Host(),
-		}
-}
-
 func InviteUser(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
@@ -66,7 +58,7 @@ func InviteUser(
 		map[string]any{
 			"UserAccount":  userAccount,
 			"Organization": organization,
-			"Host":         env.Host(),
+			"Host":         customdomains.AppDomainOrDefault(organization.Organization),
 			"InviteURL":    inviteURL,
 		}
 }
@@ -82,23 +74,23 @@ func InviteCustomer(
 			"UserAccount":     userAccount,
 			"Organization":    organization,
 			"ApplicationName": applicationName,
-			"Host":            env.Host(),
+			"Host":            customdomains.AppDomainOrDefault(organization.Organization),
 			"InviteURL":       inviteURL,
 		}
 }
 
-func VerifyEmail(userAccount types.UserAccount, token string) (*template.Template, any) {
+func VerifyEmail(userAccount types.UserAccount, org types.Organization, token string) (*template.Template, any) {
 	return templates.Lookup("verify-email-registration.html"), map[string]any{
 		"UserAccount": userAccount,
-		"Host":        env.Host(),
+		"Host":        customdomains.AppDomainOrDefault(org),
 		"Token":       token,
 	}
 }
 
-func PasswordReset(userAccount types.UserAccount, token string) (*template.Template, any) {
+func PasswordReset(userAccount types.UserAccount, org types.Organization, token string) (*template.Template, any) {
 	return templates.Lookup("password-reset.html"), map[string]any{
 		"UserAccount": userAccount,
-		"Host":        env.Host(),
+		"Host":        customdomains.AppDomainOrDefault(org),
 		"Token":       token,
 	}
 }

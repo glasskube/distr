@@ -1,5 +1,81 @@
 # Changelog
 
+## [1.8.1](https://github.com/glasskube/distr/compare/1.8.0...1.8.1) (2025-05-12)
+
+
+### Bug Fixes
+
+* **agent:** prevent implicit import of `env` package ([#893](https://github.com/glasskube/distr/issues/893)) ([6eb1be6](https://github.com/glasskube/distr/commit/6eb1be67c7f7ff932f31d1b3ebeaece77be9e515))
+
+## [1.8.0](https://github.com/glasskube/distr/compare/1.7.1...1.8.0) (2025-05-12)
+
+
+### Features
+
+* add support for custom domains and email from address ([#882](https://github.com/glasskube/distr/issues/882)) ([b7974e6](https://github.com/glasskube/distr/commit/b7974e6e84796727aac3bc4673b4fb18d1f3e25a))
+* docker swarm support ([#645](https://github.com/glasskube/distr/issues/645)) ([d842dda](https://github.com/glasskube/distr/commit/d842dda44fd6b575d2586a5689ad2d2a83371d4e))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.10 ([#884](https://github.com/glasskube/distr/issues/884)) ([841865b](https://github.com/glasskube/distr/commit/841865bdf49ca935116d722d4580f62a10c35a74))
+* **deps:** update dependency @angular/cdk to v19.2.15 ([#883](https://github.com/glasskube/distr/issues/883)) ([5fec38a](https://github.com/glasskube/distr/commit/5fec38a4e75abcfe3aaa3a376606a77b0020638b))
+* **deps:** update dependency @sentry/angular to v9.17.0 ([#890](https://github.com/glasskube/distr/issues/890)) ([081c384](https://github.com/glasskube/distr/commit/081c3848fa1974351ab2ae1759bab7b2633050b0))
+* **deps:** update dependency posthog-js to v1.240.6 ([#891](https://github.com/glasskube/distr/issues/891)) ([1062edc](https://github.com/glasskube/distr/commit/1062edc9f58588f6c634043cab259310465d6e03))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.2 ([#880](https://github.com/glasskube/distr/issues/880)) ([9eb2e41](https://github.com/glasskube/distr/commit/9eb2e41f5b36325febbbcaccbdc5004d6897b640))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.2 ([#888](https://github.com/glasskube/distr/issues/888)) ([24f119a](https://github.com/glasskube/distr/commit/24f119a25862c2ca389da85ff30b3afe0d5f6e63))
+
+
+### Other
+
+* **deps:** update actions/setup-go action to v5.5.0 ([#885](https://github.com/glasskube/distr/issues/885)) ([33f72d9](https://github.com/glasskube/distr/commit/33f72d96b4f31a97b17ad5e0ed419f59c9f30187))
+* **deps:** update angular-cli monorepo to v19.2.11 ([#879](https://github.com/glasskube/distr/issues/879)) ([fe470f7](https://github.com/glasskube/distr/commit/fe470f76340fc6b2db764115158f59b693f76cf2))
+* **deps:** update dependency @sentry/cli to v2.45.0 ([#889](https://github.com/glasskube/distr/issues/889)) ([b7c9bd8](https://github.com/glasskube/distr/commit/b7c9bd8dd4707895150d938e028c2d978bb896dd))
+* **deps:** update postgres docker tag to v17.5 ([#886](https://github.com/glasskube/distr/issues/886)) ([c327a19](https://github.com/glasskube/distr/commit/c327a199e95c6c7fe83f7906d040d5166ed180c8))
+* **deps:** update tailwindcss monorepo to v4.1.6 ([#887](https://github.com/glasskube/distr/issues/887)) ([630a659](https://github.com/glasskube/distr/commit/630a6591d1e438404252ccf612514888ab7f3e1b))
+* redirect new users to tutorials ([#892](https://github.com/glasskube/distr/issues/892)) ([e69f3f9](https://github.com/glasskube/distr/commit/e69f3f91acd77e21d5365b0da935efd6173cf2d2))
+* **ui:** make tutorial backlink more prominent ([#873](https://github.com/glasskube/distr/issues/873)) ([dfa3453](https://github.com/glasskube/distr/commit/dfa3453ce1a11cfcaba48f9a8f7ff9718b0cf0d9))
+
+## [1.7.1](https://github.com/glasskube/distr/compare/1.7.0...1.7.1) (2025-05-07)
+
+
+### Bug Fixes
+
+* **agent:** kubernetes agent GetLatestHelmRelease supports more than 10 revisions ([#876](https://github.com/glasskube/distr/issues/876)) ([7558784](https://github.com/glasskube/distr/commit/75587844f59c770e45238e7292b29c1bd22da876))
+* **deps:** update angular monorepo to v19.2.9 ([#846](https://github.com/glasskube/distr/issues/846)) ([2528080](https://github.com/glasskube/distr/commit/252808084f29df27e8efce0dbbc86376bcae661a))
+* **deps:** update dependency @angular/cdk to v19.2.14 ([#848](https://github.com/glasskube/distr/issues/848)) ([245ddbb](https://github.com/glasskube/distr/commit/245ddbb22dee168f5e5d0d4472136737db8dc3be))
+* **deps:** update dependency @codemirror/view to v6.36.7 ([#851](https://github.com/glasskube/distr/issues/851)) ([73c396a](https://github.com/glasskube/distr/commit/73c396a15c0f0599427736af6a41bb2e2ff33c9a))
+* **deps:** update dependency @fontsource/poppins to v5.2.6 ([#860](https://github.com/glasskube/distr/issues/860)) ([c16818d](https://github.com/glasskube/distr/commit/c16818d64e6b36942e1ff4a10f700f5ced71f82d))
+* **deps:** update dependency @sentry/angular to v9.15.0 ([#863](https://github.com/glasskube/distr/issues/863)) ([0b6b206](https://github.com/glasskube/distr/commit/0b6b206f137f103a346e32d9802d88fc727ee6f6))
+* **deps:** update dependency posthog-js to v1.239.1 ([#864](https://github.com/glasskube/distr/issues/864)) ([78ced57](https://github.com/glasskube/distr/commit/78ced579fb319725aecd9e9919e8ffba3f60a919))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.1 ([#853](https://github.com/glasskube/distr/issues/853)) ([2ae5ac6](https://github.com/glasskube/distr/commit/2ae5ac6a91cf05ca44b4d9df79f25db2734cc217))
+* **deps:** update module golang.org/x/crypto to v0.38.0 ([#871](https://github.com/glasskube/distr/issues/871)) ([728f7f1](https://github.com/glasskube/distr/commit/728f7f1272d6f71a1b3c0e3f958d0d77682956a8))
+* recreate tutorial resources if deleted ([#869](https://github.com/glasskube/distr/issues/869)) ([25047a1](https://github.com/glasskube/distr/commit/25047a123700eba88003b2c384981d6f04253b25))
+* show customer image in navbar ([#866](https://github.com/glasskube/distr/issues/866)) ([258e807](https://github.com/glasskube/distr/commit/258e8070cdfc815c70ef767bcff4e08222b8f86a))
+* **ui:** add missing icon when licensing disabled ([#858](https://github.com/glasskube/distr/issues/858)) ([72bbf0f](https://github.com/glasskube/distr/commit/72bbf0f9daafa3e937b2d45042047b09c90e9550))
+* **ui:** improve markdown rendering on customer "home" page ([#867](https://github.com/glasskube/distr/issues/867)) ([cb23725](https://github.com/glasskube/distr/commit/cb2372570d92ab069bce35f8ef81056a5ab27b5a))
+* **ui:** show hint for mac users ([#861](https://github.com/glasskube/distr/issues/861)) ([e696033](https://github.com/glasskube/distr/commit/e696033fe1f3f709f007592a810c149297757287))
+
+
+### Other
+
+* **backend:** add `DATABASE_MAX_CONNS` override parameter ([#868](https://github.com/glasskube/distr/issues/868)) ([4e8fb82](https://github.com/glasskube/distr/commit/4e8fb82546b8e304986434fb2b24c63840781428))
+* **deps:** update angular-cli monorepo to v19.2.10 ([#849](https://github.com/glasskube/distr/issues/849)) ([70b0bc8](https://github.com/glasskube/distr/commit/70b0bc83ced6be374e51a3e82863dc90393ddd57))
+* **deps:** update axllent/mailpit docker tag to v1.24.2 ([#852](https://github.com/glasskube/distr/issues/852)) ([c675495](https://github.com/glasskube/distr/commit/c675495939c16b2a71daf763d4e7015b2c9b51f9))
+* **deps:** update dependency @sentry/cli to v2.44.0 ([#859](https://github.com/glasskube/distr/issues/859)) ([8c25ab4](https://github.com/glasskube/distr/commit/8c25ab41db1f5bf03f38c79aca66bcf0263e0fce))
+* **deps:** update dependency @types/jasmine to v5.1.8 ([#870](https://github.com/glasskube/distr/issues/870)) ([a644901](https://github.com/glasskube/distr/commit/a644901641ed17589ab7540c1c1fa54bc15b9a5c))
+* **deps:** update dependency go to v1.24.3 ([#877](https://github.com/glasskube/distr/issues/877)) ([21f90d1](https://github.com/glasskube/distr/commit/21f90d14e1807c3850fd406927672c776e787c4e))
+* **deps:** update dependency golangci-lint to v2.1.6 ([#855](https://github.com/glasskube/distr/issues/855)) ([94abaf2](https://github.com/glasskube/distr/commit/94abaf233bd764faf98e023cf50f15d0465d5040))
+* **deps:** update dependency jasmine-core to v5.7.1 ([#850](https://github.com/glasskube/distr/issues/850)) ([971b79a](https://github.com/glasskube/distr/commit/971b79a2c4371f3f0a3e79d002d53a7b82abb8a1))
+* **deps:** update dependency typedoc to v0.28.4 ([#854](https://github.com/glasskube/distr/issues/854)) ([9bab574](https://github.com/glasskube/distr/commit/9bab574105e8197c2190ca816acf614e44501bfb))
+* **deps:** update golangci/golangci-lint-action action to v7.0.1 ([#856](https://github.com/glasskube/distr/issues/856)) ([351a857](https://github.com/glasskube/distr/commit/351a857be7dc69375e29e18b194793c0c8881213))
+* **deps:** update golangci/golangci-lint-action action to v8 ([#857](https://github.com/glasskube/distr/issues/857)) ([1c5d369](https://github.com/glasskube/distr/commit/1c5d369b5329ab2e6e6174b2b4fe33d1d7b40e18))
+* **deps:** update tailwindcss monorepo to v4.1.5 ([#845](https://github.com/glasskube/distr/issues/845)) ([fb960ae](https://github.com/glasskube/distr/commit/fb960ae940015d2c623d210a5742d7827e01b51a))
+* **ui:** hide application version form by default ([#875](https://github.com/glasskube/distr/issues/875)) ([6eec16b](https://github.com/glasskube/distr/commit/6eec16b1b04b2b163454ed94017b980de9075779))
+* **ui:** hide artifact download information in customer portal ([#862](https://github.com/glasskube/distr/issues/862)) ([2aef7d4](https://github.com/glasskube/distr/commit/2aef7d45e30ce3b604170770df16df67352c9772))
+* **ui:** increase font sizes in tutorials ([#874](https://github.com/glasskube/distr/issues/874)) ([c6fad6a](https://github.com/glasskube/distr/commit/c6fad6ab2a07bc15d5c08881e61c7c68d702e36c))
+* **ui:** use explicit monospace font stack ([#865](https://github.com/glasskube/distr/issues/865)) ([2097d31](https://github.com/glasskube/distr/commit/2097d318bbc710bb5becd66fd402bf1d5fd23acc))
+
 ## [1.7.0](https://github.com/glasskube/distr/compare/1.6.1...1.7.0) (2025-04-30)
 
 

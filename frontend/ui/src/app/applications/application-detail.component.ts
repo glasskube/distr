@@ -20,7 +20,7 @@ import {
 } from 'rxjs';
 import {ApplicationsService} from '../services/applications.service';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion, DockerType, HelmChartType} from '@glasskube/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArchive,
@@ -114,7 +114,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl(''),
     }),
     docker: new FormGroup({
-      compose: new FormControl('', Validators.required),
+      compose: new FormControl(''),
       template: new FormControl(''),
     }),
   });
@@ -136,6 +136,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faBox = faBox;
   protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
+  readonly isVersionFormExpanded = signal(false);
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
@@ -143,6 +144,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
+
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -153,7 +155,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         }
       });
   }
-
   ngOnDestroy() {
     this.destroyed$.next();
     this.destroyed$.complete();
@@ -205,9 +206,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       if (application.type === 'docker') {
         res = this.applicationService.createApplicationVersionForDocker(
           application,
-          {
-            name: this.newVersionForm.controls.versionName.value!,
-          },
+          {name: this.newVersionForm.controls.versionName.value!},
           this.newVersionForm.controls.docker.controls.compose.value!,
           this.newVersionForm.controls.docker.controls.template.value!
         );
@@ -245,6 +244,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   async fillVersionFormWith(application: Application, version: ApplicationVersion) {
+    this.isVersionFormExpanded.set(true);
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));

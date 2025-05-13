@@ -9,21 +9,42 @@ import (
 	"path"
 	"text/template"
 
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
 )
 
-var (
-	loginEndpoint     string
-	manifestEndpoint  string
-	resourcesEndpoint string
-	statusEndpoint    string
-)
+func Get(
+	ctx context.Context,
+	deploymentTarget types.DeploymentTargetWithCreatedBy,
+	org types.Organization,
+	secret *string,
+) (io.Reader, error) {
+	if tmpl, err := getTemplate(deploymentTarget); err != nil {
+		return nil, err
+	} else if data, err := getTemplateData(deploymentTarget, org, secret); err != nil {
+		return nil, err
+	} else {
+		var buf bytes.Buffer
+		return &buf, tmpl.Execute(&buf, data)
+	}
+}
 
-func init() {
-	if u, err := url.Parse(env.Host()); err != nil {
-		panic(err)
+func getTemplateData(
+	deploymentTarget types.DeploymentTargetWithCreatedBy,
+	org types.Organization,
+	secret *string,
+) (map[string]any, error) {
+	var (
+		loginEndpoint     string
+		manifestEndpoint  string
+		resourcesEndpoint string
+		statusEndpoint    string
+	)
+
+	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
+		return nil, err
 	} else {
 		u = u.JoinPath("api/v1/agent")
 		loginEndpoint = u.JoinPath("login").String()
@@ -31,25 +52,11 @@ func init() {
 		resourcesEndpoint = u.JoinPath("resources").String()
 		statusEndpoint = u.JoinPath("status").String()
 	}
-}
 
-func Get(ctx context.Context, deploymentTarget types.DeploymentTargetWithCreatedBy, secret *string) (io.Reader, error) {
-	if tmpl, err := getTemplate(deploymentTarget); err != nil {
-		return nil, err
-	} else {
-		var buf bytes.Buffer
-		return &buf, tmpl.Execute(&buf, getTemplateData(deploymentTarget, secret))
-	}
-}
-
-func getTemplateData(
-	deploymentTarget types.DeploymentTargetWithCreatedBy,
-	secret *string,
-) map[string]any {
 	result := map[string]any{
 		"agentInterval":     env.AgentInterval(),
 		"registryEnabled":   env.RegistryEnabled(),
-		"registryHost":      env.RegistryHost(),
+		"registryHost":      customdomains.RegistryDomainOrDefault(org),
 		"agentDockerConfig": base64.StdEncoding.EncodeToString(env.AgentDockerConfig()),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
 		"agentVersionId":    deploymentTarget.AgentVersion.ID,
@@ -66,7 +73,7 @@ func getTemplateData(
 	if deploymentTarget.Scope != nil {
 		result["targetScope"] = *deploymentTarget.Scope
 	}
-	return result
+	return result, nil
 }
 
 func getTemplate(deploymentTarget types.DeploymentTargetWithCreatedBy) (*template.Template, error) {

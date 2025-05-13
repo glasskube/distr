@@ -1,84 +1,84 @@
-@if (fullVersion) {
-  @if (deploymentTargetsWithUpdate$ | async; as updates) {
-    @if (updates.length > 0) {
-      <div
-        class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-        role="alert">
-        <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
-        <div>
-          <span class="font-medium">Some deployments can be updated:</span>
-          <ul class="mt-1.5 list-disc list-inside">
-            @for (u of updates; track u.dt.id) {
-              <li>
-                {{ u.dt.name }}: {{ u.dt.deployment?.applicationName }} &rarr; {{ u.version.name }} (<button
-                  type="button"
-                  class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                  (click)="showDeploymentModal(u.dt, u.d, u.version)">
-                  update now</button
-                >)
-              </li>
-            }
-          </ul>
-        </div>
-      </div>
-    }
-  }
-}
-
-@if (fullVersion) {
-  <div class="w-full mb-4">
-    <div class="items-center justify-between md:flex md:space-x-4">
-      <form class="w-full flex-1 md:mr-4 md:max-w-md" [formGroup]="filterForm">
-        <label for="default-search" class="sr-only text-sm font-medium text-gray-900 dark:text-white">Search</label>
-        <div class="relative">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <fa-icon [icon]="faMagnifyingGlass" class="text-gray-500 dark:text-gray-400"></fa-icon>
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
+  <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
+    @if (deploymentTargetsWithUpdate$ | async; as updates) {
+      @if (updates.length > 0) {
+        <div
+          class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+          role="alert">
+          <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
+          <div>
+            <span class="font-medium">Some deployments can be updated:</span>
+            <ul class="mt-1.5 list-disc list-inside">
+              @for (u of updates; track u.dt.id) {
+                <li>
+                  {{ u.dt.name }}: {{ u.dt.deployment?.applicationName }} &rarr; {{ u.version.name }} (
+                  <button
+                    type="button"
+                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                    (click)="showDeploymentModal(u.dt, u.d, u.version)">
+                    update now
+                  </button>
+                  )
+                </li>
+              }
+            </ul>
           </div>
-          <input
-            type="search"
-            id="default-search"
-            class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
-            placeholder="Filter Agents"
-            autotrim
-            formControlName="search" />
         </div>
-      </form>
+      }
+    }
 
-      <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 md:mt-0">
-        <button
-          (click)="openWizard()"
-          type="button"
-          id="createDeploymentTargetButton2"
-          class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-          <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-          New Agent
-        </button>
+    <div class="w-full mb-4">
+      <div class="items-center justify-between md:flex md:space-x-4">
+        <form class="w-full flex-1 md:mr-4 md:max-w-md" [formGroup]="filterForm">
+          <label for="default-search" class="sr-only text-sm font-medium text-gray-900 dark:text-white">Search</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <fa-icon [icon]="faMagnifyingGlass" class="text-gray-500 dark:text-gray-400"></fa-icon>
+            </div>
+            <input
+              type="search"
+              id="default-search"
+              class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+              placeholder="Filter Agents"
+              autotrim
+              formControlName="search" />
+          </div>
+        </form>
+
+        <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 md:mt-0">
+          <button
+            (click)="openWizard()"
+            type="button"
+            id="createDeploymentTargetButton2"
+            class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+            <fa-icon [icon]="plusIcon" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
+            New Agent
+          </button>
+        </div>
       </div>
     </div>
+
+    <div class="grid gap-4 items-stretch xl:grid-cols-2">
+      @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
+        <app-deployment-target-card [deploymentTarget]="deploymentTarget" [fullVersion]="true">
+        </app-deployment-target-card>
+      } @empty {
+        <div class="text-gray-500 dark:text-gray-400">No agents found.</div>
+      }
+    </div>
+
+    <ng-template #deploymentModal>
+      <app-deployment-modal
+        @modalFlyInOut
+        [deploymentTarget]="selectedDeploymentTarget()!"
+        [deployment]="selectedDeployment()"
+        [versionId]="selectedApplicationVersionId()"
+        (closed)="hideModal()">
+      </app-deployment-modal>
+    </ng-template>
+
+    <ng-template #deploymentWizard>
+      <app-installation-wizard (closed)="hideModal()"></app-installation-wizard>
+    </ng-template>
   </div>
-}
-
-<div
-  class="grid gap-4 items-stretch"
-  [class.xl:grid-cols-2]="fullVersion"
-  [class.xl:grid-cols-3]="!fullVersion"
-  [class.lg:grid-cols-2]="!fullVersion">
-  @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
-    <app-deployment-target-card [deploymentTarget]="deploymentTarget" [fullVersion]="fullVersion">
-    </app-deployment-target-card>
-  }
-</div>
-
-<ng-template #deploymentModal>
-  <app-deployment-modal
-    @modalFlyInOut
-    [deploymentTarget]="selectedDeploymentTarget()!"
-    [deployment]="selectedDeployment()"
-    [versionId]="selectedApplicationVersionId()"
-    (closed)="hideModal()">
-  </app-deployment-modal>
-</ng-template>
-
-<ng-template #deploymentWizard>
-  <app-installation-wizard (closed)="hideModal()"></app-installation-wizard>
-</ng-template>
+</section>

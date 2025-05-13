@@ -124,8 +124,8 @@ github.com/cloudflare/cfssl v0.0.0-20180223231731-4e2dcbde5004 h1:lkAMpLVBDaj17e
 github.com/cloudflare/cfssl v0.0.0-20180223231731-4e2dcbde5004/go.mod h1:yMWuSON2oQp+43nFtAV/uvKQIFpSPerB57DCt9t8sSA=
 github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb h1:EDmT6Q9Zs+SbUoc7Ik9EfrFqcylYqgPZ9ANSbTAntnE=
 github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb/go.mod h1:ZjrT6AXHbDs86ZSdt/osfBi5qfexBrKUdONk989Wnk4=
-github.com/compose-spec/compose-go/v2 v2.6.0 h1:/+oBD2ixSENOeN/TlJqWZmUak0xM8A7J08w/z661Wd4=
-github.com/compose-spec/compose-go/v2 v2.6.0/go.mod h1:vPlkN0i+0LjLf9rv52lodNMUTJF5YHVfHVGLLIP67NA=
+github.com/compose-spec/compose-go/v2 v2.6.2 h1:31uZNNLeRrKjtUCc56CzPpPykW1Tm6SxLn4gx9Jjzqw=
+github.com/compose-spec/compose-go/v2 v2.6.2/go.mod h1:vPlkN0i+0LjLf9rv52lodNMUTJF5YHVfHVGLLIP67NA=
 github.com/containerd/cgroups v1.1.0 h1:v8rEWFl6EoqHB+swVNjVoCJE8o3jX7e8nqBGPLaDFBM=
 github.com/containerd/cgroups/v3 v3.0.5 h1:44na7Ud+VwyE7LIoJ8JTNQOa549a8543BmzaJHo6Bzo=
 github.com/containerd/cgroups/v3 v3.0.5/go.mod h1:SA5DLYnXO8pTGYiAHXz94qvLQTKfVM5GEVisn4jpins=
@@ -221,8 +221,8 @@ github.com/emicklei/go-restful/v3 v3.11.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRr
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
 github.com/evanphx/json-patch v5.9.0+incompatible h1:fBXyNpNMuTTDdquAq/uisOr2lShz4oaXpDTX2bLe7ls=
 github.com/evanphx/json-patch v5.9.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
-github.com/exaring/otelpgx v0.9.1 h1:S/1rUD76cXGG5GZISNazVjANpP14dIH4Bpvdb433T9Y=
-github.com/exaring/otelpgx v0.9.1/go.mod h1:+uyddQfZ+rsZGqfQ5TWvShOfkOT3kZLMu7FDzDoN1DY=
+github.com/exaring/otelpgx v0.9.2 h1:/+w5+UfhiP5MBvg7gkxuZR0aGEQBx2QwS0SoMk5GqeM=
+github.com/exaring/otelpgx v0.9.2/go.mod h1:+uyddQfZ+rsZGqfQ5TWvShOfkOT3kZLMu7FDzDoN1DY=
 github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f h1:Wl78ApPPB2Wvf/TIe2xdyJxTlb6obmF18d8QdkxNDu4=
 github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f/go.mod h1:OSYXu++VVOHnXeitef/D8n/6y4QV8uLHSFXX4NeXMGc=
 github.com/fatih/camelcase v1.0.0 h1:hxNvNX/xYBp0ovncs8WyWZrOrpBNub/JfaMvbURyft8=

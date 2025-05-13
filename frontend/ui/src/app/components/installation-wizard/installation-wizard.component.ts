@@ -15,7 +15,11 @@ import {
 import {combineLatest, firstValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {modalFlyInOut} from '../../animations/modal';
-import {DeploymentFormComponent, DeploymentFormValue} from '../../deployment-form/deployment-form.component';
+import {
+  mapToDeploymentRequest,
+  DeploymentFormComponent,
+  DeploymentFormValue,
+} from '../../deployment-form/deployment-form.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
@@ -173,18 +177,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
     try {
       this.loading = true;
-      const deployment = this.deployForm.value!;
-      if (deployment.valuesYaml) {
-        deployment.valuesYaml = btoa(deployment.valuesYaml);
-      } else {
-        deployment.valuesYaml = undefined;
-      }
-      if (deployment.envFileData) {
-        deployment.envFileData = btoa(deployment.envFileData);
-      } else {
-        deployment.envFileData = undefined;
-      }
-      await firstValueFrom(this.deploymentTargets.deploy(deployment as DeploymentRequest));
+      const deployment = mapToDeploymentRequest(this.deployForm.value!);
+      await firstValueFrom(this.deploymentTargets.deploy(deployment));
       this.toast.success('Deployment saved successfully');
       this.close();
     } catch (e) {

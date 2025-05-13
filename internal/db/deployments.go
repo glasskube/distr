@@ -20,7 +20,7 @@ import (
 
 const (
 	deploymentOutputExpr = `
-		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id
+		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id, d.docker_type
 	`
 )
 
@@ -130,13 +130,14 @@ func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO Deployment AS d
-			(deployment_target_id, release_name, application_license_id)
-			VALUES (@deploymentTargetId, @releaseName, @applicationLicenseId)
+			(deployment_target_id, release_name, application_license_id, docker_type)
+			VALUES (@deploymentTargetId, @releaseName, @applicationLicenseId, @dockerType)
 			RETURNING`+deploymentOutputExpr,
 		pgx.NamedArgs{
 			"deploymentTargetId":   request.DeploymentTargetID,
 			"releaseName":          request.ReleaseName,
 			"applicationLicenseId": request.ApplicationLicenseID,
+			"dockerType":           request.DockerType,
 		},
 	)
 	if err != nil {

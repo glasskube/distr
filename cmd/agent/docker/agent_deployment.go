@@ -9,13 +9,15 @@ import (
 	"sync"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 )
 
 type AgentDeployment struct {
-	ID          uuid.UUID `json:"id"`
-	RevisionID  uuid.UUID `json:"revisionId"`
-	ProjectName string    `json:"projectName"`
+	ID          uuid.UUID        `json:"id"`
+	RevisionID  uuid.UUID        `json:"revisionId"`
+	ProjectName string           `json:"projectName"`
+	DockerType  types.DockerType `json:"docker_type,omitempty"`
 }
 
 func (d *AgentDeployment) FileName() string {
@@ -30,7 +32,12 @@ func NewAgentDeployment(deployment api.AgentDeployment) (*AgentDeployment, error
 	if name, err := getProjectName(deployment.ComposeFile); err != nil {
 		return nil, err
 	} else {
-		return &AgentDeployment{ID: deployment.ID, RevisionID: deployment.RevisionID, ProjectName: name}, nil
+		return &AgentDeployment{
+			ID:          deployment.ID,
+			RevisionID:  deployment.RevisionID,
+			ProjectName: name,
+			DockerType:  *deployment.DockerType,
+		}, nil
 	}
 }
 
@@ -46,7 +53,7 @@ func getProjectName(data []byte) (string, error) {
 
 var agentDeploymentMutex = sync.RWMutex{}
 
-func GetExistingDeployments() ([]AgentDeployment, error) {
+func GetExistingDeployments() (map[uuid.UUID]AgentDeployment, error) {
 	agentDeploymentMutex.RLock()
 	defer agentDeploymentMutex.RUnlock()
 
@@ -68,13 +75,13 @@ func GetExistingDeployments() ([]AgentDeployment, error) {
 				return &d, nil
 			}
 		}
-		result := make([]AgentDeployment, 0, len(entries))
+		result := make(map[uuid.UUID]AgentDeployment, len(entries))
 		for _, entry := range entries {
 			if !entry.IsDir() {
 				if d, err := fn(entry.Name()); err != nil {
 					return nil, err
 				} else {
-					result = append(result, *d)
+					result[d.ID] = *d
 				}
 			}
 		}

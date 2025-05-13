@@ -41,7 +41,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		var result []api.ArtifactsByCustomer
+		result := make([]api.ArtifactsByCustomer, 0)
 		for _, customer := range customers {
 			customerRes := api.ArtifactsByCustomer{Customer: api.AsUserAccount(customer)}
 			for _, artifact := range artifacts {

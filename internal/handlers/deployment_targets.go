@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
@@ -181,7 +182,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, targetSecret); err != nil {
+	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, *auth.CurrentOrg(), targetSecret); err != nil {
 		log.Error("could not create connecturl", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -194,8 +195,8 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func buildConnectUrl(targetID uuid.UUID, targetSecret string) (string, error) {
-	if u, err := url.Parse(env.Host()); err != nil {
+func buildConnectUrl(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
+	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
 		return "", err
 	} else {
 		query := url.Values{}

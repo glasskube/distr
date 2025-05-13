@@ -6,8 +6,8 @@ import (
 
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mailtemplates"
 	"github.com/glasskube/distr/internal/types"
@@ -26,7 +26,10 @@ func SendUserInviteMail(
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 
-	from := env.GetMailerConfig().FromAddress
+	from, err := customdomains.EmailFromAddressParsedOrDefault(organization.Organization)
+	if err != nil {
+		return err
+	}
 	from.Name = organization.Name
 	var email mail.Mail
 	switch userRole {
@@ -37,7 +40,7 @@ func SendUserInviteMail(
 		} else {
 			email = mail.New(
 				mail.To(userAccount.Email),
-				mail.From(from),
+				mail.From(*from),
 				mail.Bcc(currentUser.Email),
 				mail.ReplyTo(currentUser.Email),
 				mail.Subject("Welcome to Distr"),
@@ -47,7 +50,7 @@ func SendUserInviteMail(
 	case types.UserRoleVendor:
 		email = mail.New(
 			mail.To(userAccount.Email),
-			mail.From(from),
+			mail.From(*from),
 			mail.Subject("Welcome to Distr"),
 			mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, inviteURL)),
 		)
