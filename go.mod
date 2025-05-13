@@ -12,7 +12,7 @@ require (
 	github.com/compose-spec/compose-go/v2 v2.6.2
 	github.com/containerd/log v0.1.0
 	github.com/docker/cli v28.1.1+incompatible
-	github.com/exaring/otelpgx v0.9.2
+	github.com/exaring/otelpgx v0.9.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.32.0
 	github.com/getsentry/sentry-go/otel v0.32.0
