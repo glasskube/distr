@@ -152,6 +152,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
           namespace: this.deploymentTargetForm.value.namespace,
           scope: this.deploymentTargetForm.value.scope,
           deployments: [],
+          metricsEnabled: this.deploymentTargetForm.value.scope !== 'namespace',
         })
       );
       this.selectedDeploymentTarget.set(created as DeploymentTarget);

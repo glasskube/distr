@@ -1,6 +1,17 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, computed, inject, input, InputSignal, resource, signal, TemplateRef, ViewChild} from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  InputSignal,
+  OnInit,
+  resource,
+  signal,
+  TemplateRef,
+  ViewChild,
+} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -23,7 +34,7 @@ import {
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap} from 'rxjs';
+import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap, takeUntil} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
@@ -131,6 +142,7 @@ export class DeploymentTargetCardComponent {
     }),
     namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
     scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
+    metricsEnabled: new FormControl<boolean>(true),
   });
   protected editFormLoading = false;
 
@@ -153,6 +165,7 @@ export class DeploymentTargetCardComponent {
         name: val.name!,
         type: val.type!,
         deployments: [],
+        metricsEnabled: val.metricsEnabled ?? false,
       };
 
       if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
@@ -185,6 +198,11 @@ export class DeploymentTargetCardComponent {
       geolocation: {lat: undefined, lon: undefined},
       ...dt,
     });
+    if (dt.scope === 'namespace') {
+      this.editForm.controls.metricsEnabled.disable();
+    } else {
+      this.editForm.controls.metricsEnabled.enable();
+    }
   }
   protected async openInstructionsModal() {
     const dt = this.deploymentTarget();

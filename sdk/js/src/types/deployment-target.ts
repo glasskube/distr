@@ -19,6 +19,7 @@ export interface DeploymentTarget extends BaseModel, Named {
   deployments: DeploymentWithLatestRevision[];
   agentVersion?: AgentVersion;
   reportedAgentVersionId?: string;
+  metricsEnabled: boolean;
 }
 
 export interface DeploymentTargetStatus extends BaseModel {
