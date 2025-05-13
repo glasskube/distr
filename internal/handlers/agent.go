@@ -423,12 +423,12 @@ func getVerifiedDeploymentTarget(
 var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
 
-// TODO update
 var rateLimitPerAgent = httprate.Limit(
 	// For a 5 second interval, per minute, the agent makes 12 resource calls and 12 status calls for each deployment.
 	// Adding 25% margin and assuming that people have at most 10 deployments on a single agent we arrive at
 	// (12+10*12)*1.25 = 11*12*1.25 = 11*15
-	11*15,
+	// also adding 2 for the metric reports
+	(11*15)+2,
 	1*time.Minute,
 	httprate.WithKeyFuncs(middleware.RateLimitCurrentDeploymentTargetIdKeyFunc),
 )
