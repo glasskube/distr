@@ -306,7 +306,7 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 		return err
 	} else {
 		rows.Close()
-		return nil
+		return rows.Err()
 	}
 }
 

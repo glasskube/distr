@@ -77,9 +77,8 @@ func CreateDeploymentTargetMetrics(
 	if err != nil {
 		return err
 	} else {
-		// TODO check error handling again
 		rows.Close()
-		return nil
+		return rows.Err()
 	}
 }
 
