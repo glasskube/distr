@@ -15,7 +15,7 @@
         </div>
         <div>
           <div class="flex gap-2">
-            <h3 class="font-bold">{{ deploymentTarget().name }}</h3>
+            <h3 class="font-bold break-words overflow-hidden text-ellipsis">{{ deploymentTarget().name }}</h3>
             @if (fullVersion() && deploymentTarget().id; as id) {
               <app-uuid [uuid]="id" [small]="true"></app-uuid>
             }
@@ -50,7 +50,7 @@
       @if (deploymentTargetMetrics(); as metrics) {
         @let cpu = getPercent(metrics.cpuUsage);
         @let memory = getPercent(metrics.memoryUsage);
-        <div class="flex space-x-1 items-center justify-end rtl:space-x-reverse">
+        <div class="flex -space-x-0 items-center justify-end hover:space-x-3 rtl:space-x-reverse">
           <div class="transition-all duration-100 ease-in-out">
             <div class="gauge percent-{{ cpu }}">
               <div class="gauge-center bg-white dark:bg-gray-800 text-xs content-center text-center font-thin">
@@ -624,3 +624,4 @@
     </form>
   </div>
 </ng-template>
+
