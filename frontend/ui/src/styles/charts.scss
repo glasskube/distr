@@ -1,6 +1,6 @@
 .gauge {
   position: relative;
-  width: 30px;
+  width: 40px;
   aspect-ratio: 1;
   border-radius: 50%;
   background: conic-gradient(green 0%, yellow 50%, red 100%);
@@ -20,4 +20,12 @@
   width: 80%;
   height: 80%;
   border-radius: 50%;
+}
+
+.gauge-center-text {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 40px;
+  // height: 80%;
 }

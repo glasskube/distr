@@ -12,6 +12,6 @@ CREATE TABLE DeploymentTargetMetrics (
   memory_usage FLOAT NOT NULL
 );
 
--- TODO Probably another index depending on the query
+CREATE INDEX DeploymentTargetMetrics_created_at ON DeploymentRevisionStatus (created_at DESC);
 
 CREATE INDEX DeploymentTargetMetrics_deployment_target_id ON DeploymentTargetMetrics(deployment_target_id);
