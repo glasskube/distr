@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -102,7 +103,8 @@ func (c *Client) Status(
 }
 
 func (c *Client) Logs(ctx context.Context, logs []api.LogRecord) error {
-	panic("TODO: not implemented")
+	log.Printf("pushing logs: %v", logs)
+	return nil
 }
 
 func (c *Client) Login(ctx context.Context) error {

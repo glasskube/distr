@@ -5,6 +5,7 @@ import (
 	"time"
 
 	dockercommand "github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
 	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/glasskube/distr/api"
@@ -20,14 +21,16 @@ type logsWatcher struct {
 }
 
 func NewLogsWatcher() (*logsWatcher, error) {
-	cli, err := dockercommand.NewDockerCli()
-	if err != nil {
+	if cli, err := dockercommand.NewDockerCli(); err != nil {
 		return nil, err
+	} else if err := cli.Initialize(flags.NewClientOptions()); err != nil {
+		return nil, err
+	} else {
+		return &logsWatcher{
+			composeService: compose.NewComposeService(cli),
+			logsExporter:   agentlogs.ChunkExporter(client, 100),
+		}, nil
 	}
-	return &logsWatcher{
-		composeService: compose.NewComposeService(cli),
-		logsExporter:   agentlogs.ChunkExporter(client, 100),
-	}, nil
 }
 
 func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
@@ -42,7 +45,7 @@ func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
 				logger.Warn("watch logs could not get deployments", zap.Error(err))
 				continue
 			}
-			var collector deploymentLogsCollector
+			var collector composeLogsCollector
 			for _, d := range deployments {
 				logOptions := composeapi.LogOptions{Timestamps: true}
 				if since, ok := lw.last[d.ID]; ok {
