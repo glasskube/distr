@@ -353,15 +353,6 @@ export class DeploymentTargetCardComponent {
     });
   }
 
-  public getGaugeBackground(usage: number | undefined): string {
-    const percentage = Math.ceil((usage || 0) * 100);
-    const startHue = 120; // Green
-    const endHue = 0; // Red
-    const gradientColor = `hsl(${startHue - (percentage * (startHue - endHue)) / 100}, 100%, 50%)`;
-
-    return `conic-gradient(${gradientColor} 0% ${percentage}%, #e0e0e0 ${percentage}% 100%)`;
-  }
-
   protected getPercent(usage: number | undefined): string {
     return Math.ceil((usage || 0) * 100).toFixed();
   }

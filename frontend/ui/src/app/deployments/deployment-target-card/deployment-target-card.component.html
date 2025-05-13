@@ -50,19 +50,27 @@
       @if (deploymentTargetMetrics(); as metrics) {
         @let cpu = getPercent(metrics.cpuUsage);
         @let memory = getPercent(metrics.memoryUsage);
-        <div class="flex space-x-2 items-center justify-end hover:space-x-4 rtl:space-x-reverse">
+        <div class="flex space-x-1 items-center justify-end rtl:space-x-reverse">
           <div class="transition-all duration-100 ease-in-out">
             <div class="gauge percent-{{ cpu }}">
-              <div class="gauge-center bg-white dark:bg-gray-800 text-xs font-thin"></div>
+              <div class="gauge-center bg-white dark:bg-gray-800 text-xs content-center text-center font-thin">
+                {{ cpu }}%
+              </div>
+              <div class="text-xs gauge-center-text"></div>
             </div>
-            <!-- <div class="text-xs">{{ metrics.cpuCoresM / 1000 }} Cores</div>-->
+
+            <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">CPU</div>
+            <!--<div class="text-xs gauge-center-text">{{ metrics.cpuCoresM / 1000 }} Cores</div>-->
           </div>
           <div class="transition-all duration-100 ease-in-out">
             <div class="gauge percent-{{ memory }}">
-              <div class="gauge-center bg-white dark:bg-gray-800 text-xs">
-                <div class="inline-flex text-center justify-center"></div>
+              <div class="gauge-center bg-white dark:bg-gray-800 text-xs content-center text-center font-thin">
+                {{ memory }}%
               </div>
             </div>
+
+            <!--<div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">{{ metrics.memoryBytes | bytes:'1.0-0' }}</div>-->
+            <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">RAM</div>
             <!--<div class="text-xs">{{ metrics.memoryBytes | bytes }}</div>-->
           </div>
         </div>
