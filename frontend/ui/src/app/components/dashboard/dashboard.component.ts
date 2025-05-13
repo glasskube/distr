@@ -3,18 +3,7 @@ import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-customer-card/artifacts-by-customer-card.component';
 import {DashboardService} from '../../services/dashboard.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {
-  catchError,
-  combineLatestWith,
-  first,
-  map,
-  of,
-  shareReplay,
-  Subject,
-  switchMap,
-  takeUntil,
-  withLatestFrom,
-} from 'rxjs';
+import {catchError, combineLatestWith, first, map, of, shareReplay, Subject, switchMap, takeUntil} from 'rxjs';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DeploymentTargetCardComponent} from '../../deployments/deployment-target-card/deployment-target-card.component';
 import {DeploymentTargetsMetricsService} from '../../services/deployment-target-metrics.service';
@@ -41,7 +30,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     catchError(() => of([]))
   );
   protected readonly deploymentTargetWithMetrics$ = this.deploymentTargets$.pipe(
-    withLatestFrom(this.deploymentTargetMetrics$),
+    combineLatestWith(this.deploymentTargetMetrics$),
     map(([deploymentTargets, deploymentTargetMetrics]) => {
       return deploymentTargets.map((dt) => {
         return {

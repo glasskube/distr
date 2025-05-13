@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, inject, Input, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, inject, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
@@ -8,7 +8,7 @@ import {ApplicationVersion, DeploymentTarget, DeploymentWithLatestRevision} from
 import {
   catchError,
   combineLatest,
-  EMPTY,
+  combineLatestWith,
   first,
   map,
   Observable,
@@ -16,7 +16,7 @@ import {
   Subject,
   switchMap,
   takeUntil,
-  withLatestFrom,
+  tap,
 } from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
@@ -96,7 +96,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     this.filterForm.controls.search,
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
   ).pipe(
-    withLatestFrom(this.deploymentTargetMetrics$),
+    combineLatestWith(this.deploymentTargetMetrics$),
     map(([deploymentTargets, deploymentTargetMetrics]) => {
       return deploymentTargets.map((dt) => {
         return {
