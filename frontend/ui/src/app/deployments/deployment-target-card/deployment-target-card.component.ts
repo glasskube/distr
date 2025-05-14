@@ -72,7 +72,6 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
-    BytesPipe,
     DeploymentTargetMetricsComponent,
     NgTemplateOutlet,
   ],
