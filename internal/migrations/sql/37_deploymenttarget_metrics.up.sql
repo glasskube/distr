@@ -12,6 +12,6 @@ CREATE TABLE DeploymentTargetMetrics (
   memory_usage FLOAT NOT NULL
 );
 
-CREATE INDEX DeploymentTargetMetrics_created_at ON DeploymentRevisionStatus (created_at DESC);
+CREATE INDEX IF NOT EXISTS DeploymentTargetMetrics_created_at ON DeploymentRevisionStatus (created_at DESC);
 
-CREATE INDEX DeploymentTargetMetrics_deployment_target_id ON DeploymentTargetMetrics(deployment_target_id);
+CREATE INDEX IF NOT EXISTS DeploymentTargetMetrics_deployment_target_id ON DeploymentTargetMetrics(deployment_target_id);
