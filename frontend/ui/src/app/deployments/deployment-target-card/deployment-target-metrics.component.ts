@@ -21,4 +21,10 @@ export class DeploymentTargetMetricsComponent {
   protected getPercent(usage: number | undefined): string {
     return Math.ceil((usage || 0) * 100).toFixed();
   }
+
+  protected getPercentClass(usage: number | undefined): string {
+    const val = Math.ceil((usage || 0) * 100);
+    const mod5 = val % 5;
+    return (mod5 === 0 ? val : val - mod5 + 5).toFixed();
+  }
 }

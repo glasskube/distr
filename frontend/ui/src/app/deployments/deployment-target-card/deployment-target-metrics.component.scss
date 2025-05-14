@@ -6,9 +6,11 @@
   background: conic-gradient(green 0%, yellow 50%, red 100%);
 
   @for $i from 0 through 100 {
-    &.percent-#{$i} {
-      $deg: ($i * 3.6);
-      mask: conic-gradient(white 0deg #{$deg}deg, #00000036 #{$deg}deg 360deg);
+    @if ($i % 5 == 0) {
+      &.percent-#{$i} {
+        $deg: ($i * 3.6);
+        mask: conic-gradient(white 0deg #{$deg}deg, #00000036 #{$deg}deg 360deg);
+      }
     }
   }
 }
