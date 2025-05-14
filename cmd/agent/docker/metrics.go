@@ -132,7 +132,7 @@ func startMetrics(ctx context.Context) {
 	metrics, err = factory.CreateMetrics(ctx, receiver.Settings{
 		ID: component.NewID(factory.Type()),
 		TelemetrySettings: component.TelemetrySettings{
-			MeterProvider:  otel.GetMeterProvider(), // TODO no idea check again
+			MeterProvider:  otel.GetMeterProvider(),
 			TracerProvider: otel.GetTracerProvider(),
 			Logger:         logger,
 		},
