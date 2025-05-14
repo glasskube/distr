@@ -36,7 +36,7 @@ import {BytesPipe} from '../../../util/units';
       height: 80%;
       border-radius: 50%;
     }
-  `
+  `,
 })
 export class DeploymentTargetMetricsComponent {
   public readonly fullVersion = input(false);
