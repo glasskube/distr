@@ -12,31 +12,7 @@ import {BytesPipe} from '../../../util/units';
   templateUrl: './deployment-target-metrics.component.html',
   imports: [OverlayModule, ReactiveFormsModule, BytesPipe],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
-  styles: `
-    .gauge {
-      position: relative;
-      width: 40px;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background: conic-gradient(green 0%, yellow 50%, red 100%);
-
-      @for $i from 0 through 100 {
-        &.percent-#{$i} {
-          $deg: ($i * 3.6);
-          mask: conic-gradient(white 0deg #{$deg}deg, #00000036 #{$deg}deg 360deg);
-        }
-      }
-    }
-
-    .gauge-center {
-      position: absolute;
-      top: 10%;
-      left: 10%;
-      width: 80%;
-      height: 80%;
-      border-radius: 50%;
-    }
-  `,
+  styleUrls: ['./deployment-target-metrics.component.scss'],
 })
 export class DeploymentTargetMetricsComponent {
   public readonly fullVersion = input(false);
