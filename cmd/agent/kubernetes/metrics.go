@@ -53,10 +53,10 @@ func doReportMetrics(ctx context.Context) {
 
 	if cpuCapacityM > 0 && memoryCapacityBytes > 0 {
 		if err := agentClient.ReportMetrics(ctx, api.AgentDeploymentTargetMetrics{
-			CPUCoresM:   cpuCapacityM,
-			CPUUsage:    float64(cpuUsageM) / float64(cpuCapacityM),
-			MemoryBytes: memoryCapacityBytes,
-			MemoryUsage: float64(memoryUsageBytes) / float64(memoryCapacityBytes),
+			CPUCoresMillis: cpuCapacityM,
+			CPUUsage:       float64(cpuUsageM) / float64(cpuCapacityM),
+			MemoryBytes:    memoryCapacityBytes,
+			MemoryUsage:    float64(memoryUsageBytes) / float64(memoryCapacityBytes),
 		}); err != nil {
 			logger.Error("failed to report metrics", zap.Error(err))
 		} else {

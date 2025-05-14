@@ -46,8 +46,8 @@ type AgentDeploymentStatus struct {
 }
 
 type AgentDeploymentTargetMetrics struct {
-	CPUCoresM   int64   `json:"cpuCoresM" db:"cpu_cores_m"`
-	CPUUsage    float64 `json:"cpuUsage" db:"cpu_usage"`
-	MemoryBytes int64   `json:"memoryBytes" db:"memory_bytes"`
-	MemoryUsage float64 `json:"memoryUsage" db:"memory_usage"`
+	CPUCoresMillis int64   `json:"cpuCoresMillis" db:"cpu_cores_millis"`
+	CPUUsage       float64 `json:"cpuUsage" db:"cpu_usage"`
+	MemoryBytes    int64   `json:"memoryBytes" db:"memory_bytes"`
+	MemoryUsage    float64 `json:"memoryUsage" db:"memory_usage"`
 }

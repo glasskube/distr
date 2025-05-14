@@ -114,10 +114,10 @@ func startMetrics(ctx context.Context) {
 		logger.Debug("memory usage", zap.Any("usage", memoryUsed), zap.Any("total", memoryTotal))
 
 		if err := client.ReportMetrics(ctx, api.AgentDeploymentTargetMetrics{
-			CPUCoresM:   cores * 1000,
-			CPUUsage:    usage,
-			MemoryBytes: memoryTotal,
-			MemoryUsage: memoryUsed,
+			CPUCoresMillis: cores * 1000,
+			CPUUsage:       usage,
+			MemoryBytes:    memoryTotal,
+			MemoryUsage:    memoryUsed,
 		}); err != nil {
 			logger.Error("failed to report metrics", zap.Error(err))
 			return err

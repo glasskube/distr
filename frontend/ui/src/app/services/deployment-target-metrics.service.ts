@@ -4,7 +4,7 @@ import {merge, Observable, shareReplay, Subject, switchMap, tap, timer} from 'rx
 import {DefaultReactiveList} from './cache';
 
 interface AgentDeploymentTargetMetrics {
-  cpuCoresM: number;
+  cpuCoresMillis: number;
   cpuUsage: number;
   memoryBytes: number;
   memoryUsage: number;

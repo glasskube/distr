@@ -21,7 +21,7 @@ func GetLatestDeploymentTargetMetrics(ctx context.Context, orgID, userID uuid.UU
 	[]DeploymentTargetLatestMetrics, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
-		`SELECT dt.id, dtm.cpu_cores_m, dtm.cpu_usage, dtm.memory_bytes, dtm.memory_usage FROM
+		`SELECT dt.id, dtm.cpu_cores_millis, dtm.cpu_usage, dtm.memory_bytes, dtm.memory_usage FROM
 			DeploymentTarget dt
 			LEFT JOIN UserAccount u
 				ON dt.created_by_user_account_id = u.id
@@ -65,11 +65,12 @@ func CreateDeploymentTargetMetrics(
 ) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO DeploymentTargetMetrics (deployment_target_id, cpu_cores_m, cpu_usage, memory_bytes, memory_usage) "+
-			"VALUES (@deploymentTargetId, @cpuCoresM, @cpuUsage, @memoryBytes, @memoryUsage)",
+		"INSERT INTO DeploymentTargetMetrics "+
+			"(deployment_target_id, cpu_cores_millis, cpu_usage, memory_bytes, memory_usage) "+
+			"VALUES (@deploymentTargetId, @cpuCoresMillis, @cpuUsage, @memoryBytes, @memoryUsage)",
 		pgx.NamedArgs{
 			"deploymentTargetId": dt.ID,
-			"cpuCoresM":          metrics.CPUCoresM,
+			"cpuCoresMillis":     metrics.CPUCoresMillis,
 			"cpuUsage":           metrics.CPUUsage,
 			"memoryBytes":        metrics.MemoryBytes,
 			"memoryUsage":        metrics.MemoryUsage,

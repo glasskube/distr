@@ -12,7 +12,7 @@
     </div>
     <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">
       @if (fullVersion()) {
-        CPU<br />{{ metrics().cpuCoresM / 1000 }} Cores
+        CPU<br />{{ metrics().cpuCoresMillis / 1000 }} Cores
       } @else {
         CPU
       }
