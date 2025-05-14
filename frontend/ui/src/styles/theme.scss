@@ -23,8 +23,9 @@
   --font-display: 'Poppins', 'Inter', 'system-ui', 'sans-serif';
   --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-  --breakpoint-3xl: 120rem;
-  --breakpoint-4xl: 164rem;
+  --breakpoint-3xl: 112rem;
+  --breakpoint-4xl: 128rem;
+  --breakpoint-5xl: 144rem;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
