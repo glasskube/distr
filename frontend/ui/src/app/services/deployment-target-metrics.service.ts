@@ -20,13 +20,9 @@ export interface DeploymentTargetLatestMetrics extends AgentDeploymentTargetMetr
 export class DeploymentTargetsMetricsService {
   private readonly deploymentTargetMetricsBaseUrl = '/api/v1/deployment-target-metrics';
   private readonly httpClient = inject(HttpClient);
-  private readonly cache = new DefaultReactiveList<DeploymentTargetLatestMetrics>(
-    this.httpClient.get<DeploymentTargetLatestMetrics[]>(this.deploymentTargetMetricsBaseUrl)
-  );
 
   private readonly sharedPolling$ = timer(0, 30_000).pipe(
     switchMap(() => this.httpClient.get<DeploymentTargetLatestMetrics[]>(this.deploymentTargetMetricsBaseUrl)),
-    tap((dts) => this.cache.reset(dts)),
     shareReplay({
       bufferSize: 1,
       refCount: true,
