@@ -31,7 +31,6 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/wneessen/go-mail v0.6.2
 	go.opentelemetry.io/collector/component v1.31.0
-	go.opentelemetry.io/collector/component/componentstatus v0.125.0
 	go.opentelemetry.io/collector/confmap v1.31.0
 	go.opentelemetry.io/collector/consumer v1.31.0
 	go.opentelemetry.io/collector/pdata v1.31.0
