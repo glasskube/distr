@@ -5,18 +5,22 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var metricsLastReported *time.Time
-
-func reportMetricsIfOutdated(ctx context.Context) {
-	if metricsLastReported != nil && (*metricsLastReported).After(time.Now().Add(-30*time.Second)) {
-		return
+func watchMetrics(ctx context.Context) {
+	logger.Info("starting metrics watch")
+	tick := time.Tick(30 * time.Second)
+	for ctx.Err() == nil {
+		select {
+		case <-tick:
+			doReportMetrics(ctx)
+		case <-ctx.Done():
+			logger.Info("stopping to watch metrics")
+			return
+		}
 	}
-	go doReportMetrics(ctx)
 }
 
 func doReportMetrics(ctx context.Context) {
@@ -48,7 +52,7 @@ func doReportMetrics(ctx context.Context) {
 		}
 	}
 
-	logger.Debug("pod metrics", zap.Any("cpuUsageSum", cpuUsageM),
+	logger.Debug("node metric sum", zap.Any("cpuUsageSum", cpuUsageM),
 		zap.Any("memUsageSum", memoryUsageBytes))
 
 	if cpuCapacityM > 0 && memoryCapacityBytes > 0 {
@@ -59,8 +63,6 @@ func doReportMetrics(ctx context.Context) {
 			MemoryUsage:    float64(memoryUsageBytes) / float64(memoryCapacityBytes),
 		}); err != nil {
 			logger.Error("failed to report metrics", zap.Error(err))
-		} else {
-			metricsLastReported = util.PtrTo(time.Now())
 		}
 	}
 }

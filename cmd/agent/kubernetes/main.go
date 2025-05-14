@@ -65,6 +65,7 @@ func main() {
 		}
 	}()
 
+	var metricsCancelFn context.CancelFunc
 	tick := time.Tick(agentenv.Interval)
 	for ctx.Err() == nil {
 		select {
@@ -91,8 +92,13 @@ func main() {
 			continue
 		}
 
-		if res.MetricsEnabled {
-			reportMetricsIfOutdated(ctx)
+		if res.MetricsEnabled && metricsCancelFn == nil {
+			var metricsCtx context.Context
+			metricsCtx, metricsCancelFn = context.WithCancel(ctx)
+			go watchMetrics(metricsCtx)
+		} else if !res.MetricsEnabled && metricsCancelFn != nil {
+			metricsCancelFn()
+			metricsCancelFn = nil
 		}
 
 		existingDeployments, err := GetExistingDeployments(ctx, res.Namespace)
