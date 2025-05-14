@@ -112,15 +112,16 @@ func startMetrics(ctx context.Context) {
 				}
 			}
 		}
+		var usage float64
 		if cores != 0 {
-			usage := cpuUsed / float64(cores)
-			logger.Debug("cpu usage", zap.Any("usage", usage), zap.Any("cores", cores))
+			usage = cpuUsed / float64(cores)
 		}
+		logger.Debug("cpu usage", zap.Any("usage", usage), zap.Any("cores", cores))
 		logger.Debug("memory usage", zap.Any("usage", memoryUsed), zap.Any("total", memoryTotal))
 
 		if err := client.ReportMetrics(ctx, api.AgentDeploymentTargetMetrics{
 			CPUCoresM:   cores * 1000,
-			CPUUsage:    cpuUsed,
+			CPUUsage:    usage,
 			MemoryBytes: memoryTotal,
 			MemoryUsage: memoryUsed,
 		}); err != nil {
