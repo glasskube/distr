@@ -6,7 +6,6 @@ import (
 	"github.com/glasskube/distr/api"
 	hmr "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/component/componentstatus"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pmetric"
@@ -36,16 +35,11 @@ scrapers:
         enabled: true
 `
 
-type noopHost struct {
-	reportFunc func(event *componentstatus.Event)
+type defaultHost struct {
 }
 
-func (nh *noopHost) GetExtensions() map[component.ID]component.Component {
+func (nh *defaultHost) GetExtensions() map[component.ID]component.Component {
 	return nil
-}
-
-func (nh *noopHost) Report(event *componentstatus.Event) {
-	nh.reportFunc(event)
 }
 
 func startMetrics(ctx context.Context) {
@@ -147,7 +141,7 @@ func startMetrics(ctx context.Context) {
 		logger.Error("failed to create metrics", zap.Error(err))
 	}
 
-	err = metrics.Start(ctx, &noopHost{})
+	err = metrics.Start(ctx, &defaultHost{})
 	if err != nil {
 		logger.Error("failed to start metrics", zap.Error(err))
 	}
