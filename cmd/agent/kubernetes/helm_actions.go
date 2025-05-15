@@ -174,17 +174,13 @@ func RunHelmUninstall(ctx context.Context, namespace, releaseName string) error 
 	return nil
 }
 
-func GetHelmManifest(
-	ctx context.Context,
-	namespace string,
-	deployment api.AgentDeployment,
-) ([]*unstructured.Unstructured, error) {
+func GetHelmManifest(ctx context.Context, namespace, releaseName string) ([]*unstructured.Unstructured, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, nil)
 	if err != nil {
 		return nil, err
 	}
 	getAction := action.NewGet(cfg)
-	if release, err := getAction.Run(deployment.ReleaseName); err != nil {
+	if release, err := getAction.Run(releaseName); err != nil {
 		return nil, err
 	} else {
 		// decode the release manifests which is represented as multi-document YAML

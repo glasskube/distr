@@ -19,6 +19,14 @@ type AgentDeployment struct {
 	HelmRevision int       `json:"helmRevision"`
 }
 
+func (d AgentDeployment) GetDeploymentID() uuid.UUID {
+	return d.ID
+}
+
+func (d AgentDeployment) GetDeploymentRevisionID() uuid.UUID {
+	return d.RevisionID
+}
+
 func (d *AgentDeployment) SecretName() string {
 	return fmt.Sprintf("sh.distr.agent.v1.%v", d.ReleaseName)
 }

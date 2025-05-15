@@ -20,6 +20,14 @@ type AgentDeployment struct {
 	DockerType  types.DockerType `json:"docker_type,omitempty"`
 }
 
+func (d AgentDeployment) GetDeploymentID() uuid.UUID {
+	return d.ID
+}
+
+func (d AgentDeployment) GetDeploymentRevisionID() uuid.UUID {
+	return d.RevisionID
+}
+
 func (d *AgentDeployment) FileName() string {
 	return path.Join(agentDeploymentDir(), d.ID.String())
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentlogs"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
@@ -64,80 +63,114 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		return
 	}
 
-	var collector composeLogsCollector
+	collector := agentlogs.NewCollector()
+
 	for _, d := range deployments {
-		deploymentCollector := collector.ForDeployment(d)
+		deploymentCollector := collector.For(d)
 		now := time.Now()
-		var err error
+		var toplevelErr error
 
 		switch d.DockerType {
 		case types.DockerTypeCompose:
 			logOptions := composeapi.LogOptions{Timestamps: true}
 			if since, ok := lw.last[d.ID]; ok {
 				logOptions.Since = since.Format(time.RFC3339Nano)
+			} else {
+				logOptions.Since = now.Format(time.RFC3339Nano)
 			}
-			err = lw.composeService.Logs(ctx, d.ProjectName, deploymentCollector, logOptions)
+			toplevelErr =
+				lw.composeService.Logs(ctx, d.ProjectName, &composeCollector{deploymentCollector}, logOptions)
+			if toplevelErr != nil {
+				logger.Warn("could not get compose logs", zap.Error(toplevelErr))
+			}
 		case types.DockerTypeSwarm:
 			// Since there is no "docker stack logs" we have to take a small detour:
 			// Getting the list of swarm services for the stack and then getting the logs for each service.
 			// Because we are interacting with the API directly, we also have to decode the raw stream into its
 			// stdout and stderr components.
-			services, err1 := swarm.GetServices(
+			services, err := swarm.GetServices(
 				ctx,
 				lw.dockerCli,
 				options.Services{Namespace: d.ProjectName, Filter: opts.NewFilterOpt()},
 			)
-			if err1 != nil {
+			if err != nil {
 				logger.Warn("could not get services for docker stack", zap.Error(err))
-				err = err1
+				toplevelErr = err
 			} else {
 				apiClient := lw.dockerCli.Client()
 				for _, svc := range services {
 					// fake closure to close the ReadCloser returned by ServiceLogs after each iteration
-					err = func() error {
+					err := func() error {
 						logOptions := container.LogsOptions{Timestamps: true, ShowStdout: true, ShowStderr: true}
 						if since, ok := lw.last[d.ID]; ok {
 							logOptions.Since = since.Format(time.RFC3339Nano)
 						}
 						rc, err := apiClient.ServiceLogs(ctx, svc.ID, logOptions)
 						if err != nil {
-							logger.Warn("could not get service logs", zap.String("service", svc.ID), zap.Error(err))
 							return err
 						}
 						defer rc.Close()
-						return decodeLogs(svc.Spec.Name, rc, deploymentCollector)
+						return decodeServiceLogs(svc.Spec.Name, rc, deploymentCollector)
 					}()
 					if err != nil {
+						logger.Warn("could not get service logs", zap.Error(err))
+						toplevelErr = err
 						break
 					}
 				}
 			}
 		}
 
-		if err != nil {
-			logger.Warn("could not get logs from docker", zap.Error(err))
-		} else {
+		if toplevelErr == nil {
 			lw.last[d.ID] = now
 		}
 	}
+
 	if err := lw.logsExporter.Logs(ctx, collector.LogRecords()); err != nil {
 		logger.Warn("error exporting logs", zap.Error(err))
 	}
 }
 
-func decodeLogs(resource string, r io.Reader, consumer composeapi.LogConsumer) error {
+type composeCollector struct {
+	agentlogs.DeploymentCollector
+}
+
+// Err implements api.LogConsumer.
+func (cc *composeCollector) Err(containerName string, message string) {
+	cc.AppendMessage(containerName, "Err", message)
+}
+
+// Log implements api.LogConsumer.
+func (cc *composeCollector) Log(containerName string, message string) {
+	cc.AppendMessage(containerName, "Log", message)
+}
+
+// Register implements api.LogConsumer.
+//
+// Noop for now
+func (*composeCollector) Register(containerName string) {}
+
+// Status implements api.LogConsumer.
+//
+// Noop for now
+func (*composeCollector) Status(containerName string, message string) {}
+
+func decodeServiceLogs(resource string, r io.Reader, consumer agentlogs.DeploymentCollector) error {
 	// The docker api provides a multipexed stream for logs which must be demuxed. StdCopy does that.
 	var outBuf bytes.Buffer
 	var errBuf bytes.Buffer
 	if _, err := stdcopy.StdCopy(&outBuf, &errBuf, r); err != nil {
 		return err
 	}
+	collectFunc := func(name string) func(r, m string) {
+		return func(r, m string) { consumer.AppendMessage(r, name, m) }
+	}
 	streams := []struct {
 		*bufio.Scanner
 		Collect func(r, m string)
 	}{
-		{bufio.NewScanner(&outBuf), consumer.Log},
-		{bufio.NewScanner(&errBuf), consumer.Err},
+		{bufio.NewScanner(&outBuf), collectFunc("stdout")},
+		{bufio.NewScanner(&errBuf), collectFunc("stderr")},
 	}
 	for _, stream := range streams {
 		for stream.Scan() {
@@ -148,52 +181,4 @@ func decodeLogs(resource string, r io.Reader, consumer composeapi.LogConsumer) e
 		}
 	}
 	return nil
-}
-
-type composeLogsCollector struct {
-	logRecords []api.DeploymentLogRecord
-}
-
-func (clc *composeLogsCollector) appendRecord(record api.DeploymentLogRecord) {
-	clc.logRecords = append(clc.logRecords, record)
-}
-
-func (clc *composeLogsCollector) ForDeployment(deployment AgentDeployment) *deploymentLogsCollector {
-	return &deploymentLogsCollector{composeLogsCollector: clc, deployment: deployment}
-}
-
-func (clc *composeLogsCollector) LogRecords() []api.DeploymentLogRecord {
-	return clc.logRecords
-}
-
-type deploymentLogsCollector struct {
-	*composeLogsCollector
-	deployment AgentDeployment
-}
-
-// Err implements api.LogConsumer.
-func (dlc *deploymentLogsCollector) Err(containerName string, message string) {
-	dlc.appendMessage(containerName, "Err", message)
-}
-
-// Log implements api.LogConsumer.
-func (dlc *deploymentLogsCollector) Log(containerName string, message string) {
-	dlc.appendMessage(containerName, "Log", message)
-}
-
-// Register implements api.LogConsumer.
-//
-// Noop for now
-func (dlc *deploymentLogsCollector) Register(containerName string) {}
-
-// Status implements api.LogConsumer.
-//
-// Noop for now
-func (dlc *deploymentLogsCollector) Status(containerName string, message string) {}
-
-func (dlc *deploymentLogsCollector) appendMessage(containerName, severity, message string) {
-	record := agentlogs.NewRecord(dlc.deployment.ID, dlc.deployment.RevisionID, containerName, severity, message)
-	if record.Body != "" {
-		dlc.appendRecord(record)
-	}
 }
