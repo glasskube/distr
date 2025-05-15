@@ -8,6 +8,7 @@ import (
 
 	"github.com/glasskube/distr/api"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -88,4 +89,45 @@ func GetDeploymentLogRecords(
 		return nil, fmt.Errorf("could not collect DeploymentLogRecord: %w", err)
 	}
 	return result, nil
+}
+
+// CleanupDeploymentLogRecords deletes logrecords for all deployments of the specified deployment target but keeps the
+// last [env.LogRecordEntriesMaxCount] records for each (deployment_id, resource) group.
+//
+// If [env.LogRecordEntriesMaxCount] is nil, no cleanup is performed.
+func CleanupDeploymentLogRecords(ctx context.Context, deploymentTargetID uuid.UUID) (int64, error) {
+	limit := env.LogRecordEntriesMaxCount()
+	if limit == nil {
+		return 0, nil
+	}
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM DeploymentLogRecord
+		WHERE deployment_id IN (SELECT id FROM Deployment WHERE deployment_target_id = @deploymentTargetId)
+		AND id NOT IN (
+			SELECT keep.id FROM (
+				SELECT DISTINCT lr.deployment_id, lr.resource
+				FROM DeploymentLogRecord lr
+				JOIN Deployment d ON d.id = lr.deployment_id
+				WHERE d.deployment_target_id = @deploymentTargetId
+			) rn
+			JOIN LATERAL (
+				SELECT *
+				FROM DeploymentLogRecord lr
+				WHERE lr.deployment_id = rn.deployment_id AND lr.resource = rn.resource
+				ORDER BY lr.timestamp DESC
+				LIMIT @limit
+			) keep ON true
+		)`,
+		pgx.NamedArgs{
+			"deploymentTargetId": deploymentTargetID,
+			"limit":              limit,
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("error cleaning up DeploymentLogRecords: %w", err)
+	} else {
+		return cmd.RowsAffected(), nil
+	}
 }
