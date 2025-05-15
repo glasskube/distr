@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentenv"
+	"github.com/glasskube/distr/internal/util"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -116,12 +117,7 @@ func RunHelmInstall(
 	} else if release, err := installAction.RunWithContext(ctx, chart, deployment.Values); err != nil {
 		return nil, fmt.Errorf("helm install failed: %w", err)
 	} else {
-		return &AgentDeployment{
-			ReleaseName:  release.Name,
-			HelmRevision: release.Version,
-			ID:           deployment.ID,
-			RevisionID:   deployment.RevisionID,
-		}, nil
+		return util.PtrTo(NewAgentDeployment(deployment, release)), nil
 	}
 }
 
@@ -149,12 +145,7 @@ func RunHelmUpgrade(
 		ctx, deployment.ReleaseName, chart, deployment.Values); err != nil {
 		return nil, fmt.Errorf("helm upgrade failed: %w", err)
 	} else {
-		return &AgentDeployment{
-			ReleaseName:  release.Name,
-			HelmRevision: release.Version,
-			ID:           deployment.ID,
-			RevisionID:   deployment.RevisionID,
-		}, nil
+		return util.PtrTo(NewAgentDeployment(deployment, release)), nil
 	}
 }
 

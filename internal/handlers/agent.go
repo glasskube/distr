@@ -158,8 +158,9 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			agentDeployment := api.AgentDeployment{
-				ID:         deployment.ID,
-				RevisionID: deployment.DeploymentRevisionID,
+				ID:          deployment.ID,
+				RevisionID:  deployment.DeploymentRevisionID,
+				LogsEnabled: deployment.LogsEnabled,
 			}
 
 			if deployment.ApplicationLicenseID != nil {

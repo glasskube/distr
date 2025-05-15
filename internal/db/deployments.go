@@ -20,7 +20,8 @@ import (
 
 const (
 	deploymentOutputExpr = `
-		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id, d.docker_type
+		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id, d.docker_type,
+		d.logs_enabled
 	`
 )
 
@@ -148,6 +149,33 @@ func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error
 		return fmt.Errorf("could not save Deployment: %w", err)
 	} else {
 		request.DeploymentID = &result.ID
+		return nil
+	}
+}
+
+func UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`UPDATE Deployment AS d
+		SET logs_enabled = @logsEnabled
+		WHERE id = @id
+		RETURNING`+deploymentOutputExpr,
+		pgx.NamedArgs{
+			"id":          deployment.ID,
+			"logsEnabled": deployment.LogsEnabled,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Deployment]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return fmt.Errorf("could not update Deployment: %w", err)
+	} else {
+		*deployment = result
 		return nil
 	}
 }

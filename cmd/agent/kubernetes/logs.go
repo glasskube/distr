@@ -51,6 +51,9 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 	collector := agentlogs.NewCollector()
 
 	for _, d := range existingDeployments {
+		if !d.LogsEnabled {
+			continue
+		}
 
 		var resources []runtime.Object
 		if resUnstr, err := GetHelmManifest(ctx, lw.namespace, d.ReleaseName); err != nil {

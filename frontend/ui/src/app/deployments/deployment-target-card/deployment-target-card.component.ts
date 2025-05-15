@@ -127,6 +127,7 @@ export class DeploymentTargetCardComponent {
 
   protected readonly isUndeploySupported = this.isAgentVersionAtLeast('1.3.0');
   protected readonly isMultiDeploymentSupported = this.isAgentVersionAtLeast('1.6.0');
+  protected readonly isLoggingSupported = this.isAgentVersionAtLeast('1.9.0');
 
   protected readonly agentUpdateAvailable = computed(() => {
     const agentVersions = this.agentVersions.value() ?? [];
@@ -241,6 +242,20 @@ export class DeploymentTargetCardComponent {
       this.showDeploymentDropdownForId.set(undefined);
       this.hideModal();
       this.showModal(this.deploymentLogsModal);
+    }
+  }
+
+  protected setLogsEnabled(deplyoment: DeploymentWithLatestRevision, logsEnabled: boolean) {
+    if (deplyoment.id) {
+      this.deploymentTargets.patchDeployment(deplyoment.id, {logsEnabled}).subscribe({
+        next: () => this.toast.success('Deployment has been updated.'),
+        error: (e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
     }
   }
 

@@ -66,6 +66,10 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 	collector := agentlogs.NewCollector()
 
 	for _, d := range deployments {
+		if !d.LogsEnabled {
+			continue
+		}
+
 		deploymentCollector := collector.For(d)
 		now := time.Now()
 		var toplevelErr error

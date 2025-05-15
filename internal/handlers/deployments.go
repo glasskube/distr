@@ -27,6 +27,7 @@ func DeploymentsRouter(r chi.Router) {
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
+		r.Patch("/", patchDeploymentHandler())
 		r.Delete("/", deleteDeploymentHandler())
 		r.Get("/status", getDeploymentStatus)
 		r.Get("/logs", getDeploymentLogsHandler())
@@ -68,6 +69,36 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	})
+}
+
+func patchDeploymentHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		deployment := internalctx.GetDeployment(ctx)
+		req, err := JsonBody[api.PatchDeploymentRequest](w, r)
+		if err != nil {
+			return
+		}
+
+		needsUpdate := false
+
+		if req.LogsEnabled != nil && *req.LogsEnabled != deployment.LogsEnabled {
+			deployment.LogsEnabled = *req.LogsEnabled
+			needsUpdate = true
+		}
+
+		if needsUpdate {
+			if err := db.UpdateDeployment(ctx, deployment); err != nil {
+				log.Warn("deployment update failed", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		RespondJSON(w, deployment)
+	}
 }
 
 func deleteDeploymentHandler() http.HandlerFunc {

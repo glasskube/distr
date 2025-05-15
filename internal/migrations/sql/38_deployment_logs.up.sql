@@ -12,3 +12,6 @@ CREATE TABLE DeploymentLogRecord (
 CREATE INDEX fk_DeploymentLogRecord_deployment_id ON DeploymentLogRecord (deployment_id);
 CREATE INDEX fk_DeploymentLogRecord_deployment_revision_id ON DeploymentLogRecord (deployment_revision_id);
 CREATE INDEX DeploymentLogRecord_created_at ON DeploymentLogRecord (deployment_id, created_at);
+
+ALTER TABLE Deployment
+  ADD COLUMN logs_enabled BOOLEAN NOT NULL DEFAULT false;
