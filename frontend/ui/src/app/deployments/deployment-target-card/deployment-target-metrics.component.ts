@@ -6,21 +6,18 @@ import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
 import {BytesPipe} from '../../../util/units';
+import {PercentPipe} from '@angular/common';
 
 @Component({
   selector: 'app-deployment-target-metrics',
   templateUrl: './deployment-target-metrics.component.html',
-  imports: [OverlayModule, ReactiveFormsModule, BytesPipe],
+  imports: [OverlayModule, ReactiveFormsModule, BytesPipe, PercentPipe],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
   styleUrls: ['./deployment-target-metrics.component.scss'],
 })
 export class DeploymentTargetMetricsComponent {
   public readonly fullVersion = input(false);
   public readonly metrics = input.required<DeploymentTargetLatestMetrics>();
-
-  protected getPercent(usage: number | undefined): string {
-    return Math.ceil((usage || 0) * 100).toFixed();
-  }
 
   protected getPercentClass(usage: number | undefined): string {
     const val = Math.ceil((usage || 0) * 100);

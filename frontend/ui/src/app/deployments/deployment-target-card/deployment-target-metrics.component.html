@@ -5,7 +5,7 @@
         <div class="gauge-center bg-white dark:bg-gray-800"></div>
       </div>
       <div class="absolute inset-0 flex items-center justify-center text-xs font-thin text-black dark:text-white">
-        {{ getPercent(metrics().cpuUsage) }}%
+        {{ metrics().cpuUsage | percent }}
       </div>
     </div>
     <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">
@@ -22,7 +22,7 @@
         <div class="gauge-center bg-white dark:bg-gray-800"></div>
       </div>
       <div class="absolute inset-0 flex items-center justify-center text-xs font-thin text-black dark:text-white">
-        {{ getPercent(metrics().memoryUsage) }}%
+        {{ metrics().memoryUsage | percent }}
       </div>
     </div>
     <div class="bg-white dark:bg-gray-800 text-xs content-center text-center mt-1 font-thin">
