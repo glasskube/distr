@@ -56,6 +56,7 @@ import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-me
 import {BytesPipe} from '../../../util/units';
 import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
 import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.component';
+import {DeploymentStatusModalComponent} from '../deployment-status-modal/deployment-status-modal.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -69,13 +70,13 @@ import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.com
     IsStalePipe,
     DeploymentStatusDot,
     OverlayModule,
-    AsyncPipe,
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
     DeploymentTargetMetricsComponent,
     NgTemplateOutlet,
     DeploymentLogsComponent,
+    DeploymentStatusModalComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
