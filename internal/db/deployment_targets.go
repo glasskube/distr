@@ -30,7 +30,8 @@ const (
 		dt.reported_agent_version_id,
 		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
 		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
-			AS geolocation
+			AS geolocation,
+		dt.metrics_enabled
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
 		", (" + userAccountWithRoleOutputExpr + ") as created_by"
@@ -170,6 +171,7 @@ func CreateDeploymentTarget(
 		"lat":            nil,
 		"lon":            nil,
 		"agentVersionId": dt.AgentVersionID,
+		"metricsEnabled": dt.MetricsEnabled,
 	}
 	if dt.Geolocation != nil {
 		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
@@ -179,8 +181,8 @@ func CreateDeploymentTarget(
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
 			(name, type, organization_id, created_by_user_account_id, namespace, scope, geolocation_lat,
-				geolocation_lon, agent_version_id)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @lat, @lon, @agentVersionId)
+				geolocation_lon, agent_version_id, metrics_enabled)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @lat, @lon, @agentVersionId, @metricsEnabled)
 			RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
@@ -202,11 +204,12 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	agentUpdateStr := ""
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
-		"id":    dt.ID,
-		"name":  dt.Name,
-		"orgId": orgID,
-		"lat":   nil,
-		"lon":   nil,
+		"id":             dt.ID,
+		"name":           dt.Name,
+		"orgId":          orgID,
+		"lat":            nil,
+		"lon":            nil,
+		"metricsEnabled": dt.MetricsEnabled,
 	}
 	if dt.AgentVersionID != nil {
 		args["agentVersionId"] = dt.AgentVersionID
@@ -220,7 +223,8 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 			UPDATE DeploymentTarget AS dt SET
 				name = @name,
 				geolocation_lat = @lat,
-				geolocation_lon = @lon `+agentUpdateStr+`
+				geolocation_lon = @lon,
+				metrics_enabled = @metricsEnabled `+agentUpdateStr+`
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
 		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
@@ -302,7 +306,7 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 		return err
 	} else {
 		rows.Close()
-		return nil
+		return rows.Err()
 	}
 }
 

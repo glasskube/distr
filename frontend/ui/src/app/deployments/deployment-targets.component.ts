@@ -1,11 +1,23 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, inject, Input, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, inject, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
 import {ApplicationVersion, DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
-import {combineLatest, first, map, Observable, of, Subject, switchMap, takeUntil} from 'rxjs';
+import {
+  catchError,
+  combineLatest,
+  combineLatestWith,
+  first,
+  map,
+  Observable,
+  of,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
@@ -20,8 +32,16 @@ import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
+import {
+  DeploymentTargetLatestMetrics,
+  DeploymentTargetsMetricsService,
+} from '../services/deployment-target-metrics.service';
 
 type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
+
+export interface DeploymentTargetViewData extends DeploymentTarget {
+  metrics?: DeploymentTargetLatestMetrics;
+}
 
 @Component({
   selector: 'app-deployment-targets',
@@ -45,6 +65,7 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
+  private readonly deploymentTargetMetrics = inject(DeploymentTargetsMetricsService);
 
   readonly faMagnifyingGlass = faMagnifyingGlass;
   readonly plusIcon = faPlus;
@@ -65,11 +86,25 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
   });
 
   readonly deploymentTargets$ = this.deploymentTargets.poll().pipe(takeUntil(this.destroyed$));
+  readonly deploymentTargetMetrics$ = this.deploymentTargetMetrics.poll().pipe(
+    takeUntil(this.destroyed$),
+    catchError(() => of([]))
+  );
 
-  readonly filteredDeploymentTargets$ = filteredByFormControl(
+  readonly filteredDeploymentTargets$: Observable<DeploymentTargetViewData[]> = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
     (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
+  ).pipe(
+    combineLatestWith(this.deploymentTargetMetrics$),
+    map(([deploymentTargets, deploymentTargetMetrics]) => {
+      return deploymentTargets.map((dt) => {
+        return {
+          ...dt,
+          metrics: deploymentTargetMetrics.find((x) => x.id === dt.id),
+        } as DeploymentTargetViewData;
+      });
+    })
   );
   private readonly applications$ = this.applications.list();
 

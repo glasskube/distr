@@ -7,8 +7,11 @@
       <div class="grid grid-flow-col gap-4 mb-4">
         <div
           class="grid gap-4 items-stretch 5xl:grid-cols-6 4xl:grid-cols-5 3xl:grid-cols-4 xl:grid-cols-3 lg:grid-cols-2">
-          @for (deploymentTarget of deploymentTargets$ | async; track deploymentTarget.id) {
-            <app-deployment-target-card [deploymentTarget]="deploymentTarget" [fullVersion]="false">
+          @for (deploymentTarget of deploymentTargetWithMetrics$ | async; track deploymentTarget.id) {
+            <app-deployment-target-card
+              [deploymentTarget]="deploymentTarget"
+              [fullVersion]="false"
+              [deploymentTargetMetrics]="deploymentTarget.metrics">
             </app-deployment-target-card>
           } @empty {
             <div class="text-gray-500 dark:text-gray-400">Nothing to show yet.</div>
