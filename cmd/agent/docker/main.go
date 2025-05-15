@@ -34,6 +34,7 @@ func main() {
 	go util.Require(NewLogsWatcher()).Watch(ctx, 30*time.Second)
 
 	tick := time.Tick(agentenv.Interval)
+
 loop:
 	for ctx.Err() == nil {
 		select {
@@ -64,6 +65,12 @@ loop:
 				} else {
 					logger.Debug("agent version is up to date")
 				}
+			}
+
+			if resource.MetricsEnabled {
+				startMetrics(ctx)
+			} else {
+				stopMetrics(ctx)
 			}
 
 			deployments, err := GetExistingDeployments()

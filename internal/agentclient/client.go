@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/glasskube/distr/internal/agentclient/useragent"
@@ -28,6 +29,7 @@ type clientData struct {
 	manifestEndpoint string
 	resourceEndpoint string
 	statusEndpoint   string
+	metricsEndpoint  string
 	logsEndpoint     string
 }
 
@@ -37,6 +39,7 @@ type Client struct {
 	logger     *zap.Logger
 	token      jwt.Token
 	rawToken   string
+	mutex      sync.Mutex
 }
 
 func (c *Client) Resource(ctx context.Context) (*api.AgentResource, error) {
@@ -139,6 +142,8 @@ func (c *Client) Login(ctx context.Context) error {
 }
 
 func (c *Client) EnsureToken(ctx context.Context) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	if c.HasTokenExpiredAfter(time.Now().Add(30 * time.Second)) {
 		c.logger.Info("token has expired or is about to expire")
 		if err := c.Login(ctx); err != nil {
@@ -169,6 +174,22 @@ func (c *Client) ClearToken() {
 
 func (c *Client) RawToken() string {
 	return c.rawToken
+}
+
+func (c *Client) ReportMetrics(ctx context.Context, metrics api.AgentDeploymentTargetMetrics) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(metrics); err != nil {
+		return err
+	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.metricsEndpoint, &buf); err != nil {
+		return err
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		if _, err := c.doAuthenticated(ctx, req); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}
 }
 
 func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
@@ -213,6 +234,8 @@ func (c *Client) ReloadFromEnv() (changed bool, err error) {
 	} else if d.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
 		return
 	} else if d.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
+		return
+	} else if d.metricsEndpoint, err = readEnvVar("DISTR_METRICS_ENDPOINT"); err != nil {
 		return
 	} else if d.logsEndpoint, err = readEnvVar("DISTR_LOGS_ENDPOINT"); err != nil {
 		return

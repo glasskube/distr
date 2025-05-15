@@ -71,11 +71,11 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
       }
     ),
     clusterScope: new FormControl(
-      {value: false, disabled: true},
+      {value: true, disabled: true},
       {nonNullable: true, validators: [Validators.required]}
     ),
     scope: new FormControl<DeploymentTargetScope>(
-      {value: 'namespace', disabled: true},
+      {value: 'cluster', disabled: true},
       {nonNullable: true, validators: [Validators.required]}
     ),
   });
@@ -152,6 +152,7 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
           namespace: this.deploymentTargetForm.value.namespace,
           scope: this.deploymentTargetForm.value.scope,
           deployments: [],
+          metricsEnabled: this.deploymentTargetForm.value.scope !== 'namespace',
         })
       );
       this.selectedDeploymentTarget.set(created as DeploymentTarget);

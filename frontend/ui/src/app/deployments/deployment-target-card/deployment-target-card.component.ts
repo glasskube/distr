@@ -1,6 +1,18 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, computed, inject, input, resource, signal, TemplateRef, ViewChild} from '@angular/core';
+import {AsyncPipe, DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  InputSignal,
+  OnInit,
+  resource,
+  signal,
+  TemplateRef,
+  ViewChild,
+  WritableSignal,
+} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -23,7 +35,7 @@ import {
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap} from 'rxjs';
+import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap, takeUntil} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
@@ -40,6 +52,9 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
+import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
+import {BytesPipe} from '../../../util/units';
+import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
 import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.component';
 
 @Component({
@@ -58,6 +73,8 @@ import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.com
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
+    DeploymentTargetMetricsComponent,
+    NgTemplateOutlet,
     DeploymentLogsComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
@@ -76,6 +93,7 @@ export class DeploymentTargetCardComponent {
 
   public readonly deploymentTarget = input.required<DeploymentTarget>();
   public readonly fullVersion = input(true);
+  public readonly deploymentTargetMetrics = input<DeploymentTargetLatestMetrics | undefined>(undefined);
 
   @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
   @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<unknown>;
@@ -100,6 +118,8 @@ export class DeploymentTargetCardComponent {
   protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
   protected readonly selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
   protected statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
+
+  protected readonly metricsOpened = signal(false);
 
   protected readonly agentVersions = resource({
     loader: () => firstValueFrom(this.agentVersionsSvc.list()),
@@ -130,6 +150,7 @@ export class DeploymentTargetCardComponent {
     }),
     namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
     scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
+    metricsEnabled: new FormControl<boolean>(true),
   });
   protected editFormLoading = false;
 
@@ -152,6 +173,7 @@ export class DeploymentTargetCardComponent {
         name: val.name!,
         type: val.type!,
         deployments: [],
+        metricsEnabled: val.metricsEnabled ?? false,
       };
 
       if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
@@ -184,6 +206,11 @@ export class DeploymentTargetCardComponent {
       geolocation: {lat: undefined, lon: undefined},
       ...dt,
     });
+    if (dt.scope === 'namespace') {
+      this.editForm.controls.metricsEnabled.disable();
+    } else {
+      this.editForm.controls.metricsEnabled.enable();
+    }
   }
   protected async openInstructionsModal() {
     const dt = this.deploymentTarget();
@@ -341,6 +368,10 @@ export class DeploymentTargetCardComponent {
         return allowSnapshot && reported.name === 'snapshot';
       }
     });
+  }
+
+  protected toggle(signal: WritableSignal<boolean>) {
+    signal.update((val) => !val);
   }
 
   protected readonly faPlus = faPlus;

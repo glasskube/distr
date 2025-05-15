@@ -19,6 +19,7 @@ type DeploymentTarget struct {
 	CreatedByUserAccountID uuid.UUID               `db:"created_by_user_account_id" json:"-"`
 	AgentVersionID         *uuid.UUID              `db:"agent_version_id" json:"-"`
 	ReportedAgentVersionID *uuid.UUID              `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"`
+	MetricsEnabled         bool                    `db:"metrics_enabled" json:"metricsEnabled"`
 }
 
 func (dt *DeploymentTarget) Validate() error {

@@ -27,6 +27,8 @@ import (
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 var (
@@ -34,6 +36,7 @@ var (
 	agentClient      = util.Require(agentclient.NewFromEnv(logger))
 	k8sConfigFlags   = genericclioptions.NewConfigFlags(true)
 	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
+	metricsClientSet = util.Require(metricsv.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sDynamicClient = util.Require(dynamic.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
 	k8sRestMapper    = util.Require(k8sConfigFlags.ToRESTMapper())
 	agentConfigDirs  []string
@@ -61,6 +64,8 @@ func main() {
 			logger.Warn("config watch stopped")
 		}
 	}()
+
+	var metricsCancelFn context.CancelFunc
 	tick := time.Tick(agentenv.Interval)
 	for ctx.Err() == nil {
 		select {
@@ -85,6 +90,15 @@ func main() {
 
 		if runSelfUpdateIfNeeded(ctx, res.Namespace, res.Version) {
 			continue
+		}
+
+		if res.MetricsEnabled && metricsCancelFn == nil {
+			var metricsCtx context.Context
+			metricsCtx, metricsCancelFn = context.WithCancel(ctx)
+			go watchMetrics(metricsCtx)
+		} else if !res.MetricsEnabled && metricsCancelFn != nil {
+			metricsCancelFn()
+			metricsCancelFn = nil
 		}
 
 		existingDeployments, err := GetExistingDeployments(ctx, res.Namespace)
