@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/glasskube/distr/internal/util"
+
 	"github.com/google/uuid"
 
 	"github.com/glasskube/distr/internal/resources"
@@ -185,6 +187,7 @@ func createHelloDistrDeploymentAndRevision(ctx context.Context, appVersionID uui
 		ApplicationVersionID: appVersionID,
 		DeploymentTargetID:   dtID,
 		EnvFileData:          []byte(helloDistrEnvironment),
+		DockerType:           util.PtrTo(types.DockerTypeCompose),
 	}
 	if err := db.CreateDeployment(ctx, deploymentRequest); err != nil {
 		return err
