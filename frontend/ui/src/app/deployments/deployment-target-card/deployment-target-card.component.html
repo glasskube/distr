@@ -1,9 +1,9 @@
 <div
   class="h-full rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 font-medium text-gray-900 dark:text-white flex flex-col">
   <div class="p-4 justify-between items-stretch md:flex">
-    <div class="justify-between sm:flex sm:items-center max-w-2/3">
+    <div class="justify-between sm:flex sm:items-center">
       <div class="flex gap-3 items-start lg:items-center mb-2 md:mb-0">
-        <div class="relative">
+        <div class="relative self-start">
           <img
             [ngSrc]="'/' + deploymentTarget().type + '.png'"
             [alt]="deploymentTarget().type"
@@ -15,7 +15,7 @@
         </div>
         <div>
           <div class="flex gap-2">
-            <h3 class="font-bold break-words overflow-hidden text-ellipsis">{{ deploymentTarget().name }}</h3>
+            <h3 class="font-bold break-all ">{{ deploymentTarget().name }}</h3>
             @if (fullVersion() && deploymentTarget().id; as id) {
               <app-uuid [uuid]="id" [small]="true"></app-uuid>
             }
@@ -53,7 +53,7 @@
     }
 
     @if (fullVersion()) {
-      <div class="space-y-4 sm:flex sm:space-x-2 sm:space-y-0 items-center">
+      <div class="space-y-4 sm:flex sm:space-x-2 sm:space-y-0 items-center self-start">
         @if (deploymentTarget().metricsEnabled) {
           @if (deploymentTargetMetrics(); as metrics) {
             <button
