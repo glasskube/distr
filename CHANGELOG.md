@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.9.0](https://github.com/glasskube/distr/compare/1.8.1...1.9.0) (2025-05-16)
+
+
+### Features
+
+* add host system metrics collection for deployment targets ([#899](https://github.com/glasskube/distr/issues/899)) ([1d03c3a](https://github.com/glasskube/distr/commit/1d03c3ab25c4b62de126909127bb5442025c8c3d))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.11 ([#909](https://github.com/glasskube/distr/issues/909)) ([b587766](https://github.com/glasskube/distr/commit/b5877663ed0ef6c2cac4596ea3551e1900357c8b))
+* **deps:** update dependency @angular/cdk to v19.2.16 ([#903](https://github.com/glasskube/distr/issues/903)) ([7243289](https://github.com/glasskube/distr/commit/7243289293bc85f5e9cb1b4cca3686bbf59242fb))
+* **deps:** update dependency @codemirror/view to v6.36.8 ([#895](https://github.com/glasskube/distr/issues/895)) ([88b2a84](https://github.com/glasskube/distr/commit/88b2a84feed918f0166c46f0af28a7323ef9c233))
+* **deps:** update dependency semver to v7.7.2 ([#897](https://github.com/glasskube/distr/issues/897)) ([68814a5](https://github.com/glasskube/distr/commit/68814a5e03b8b1a5a4c794d8d2890d3d9a697e7a))
+* **deps:** update kubernetes packages to v0.33.1 ([#912](https://github.com/glasskube/distr/issues/912)) ([e241943](https://github.com/glasskube/distr/commit/e2419434154b2f7d023ff9c8516cec75cc36d24a))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.3 ([#898](https://github.com/glasskube/distr/issues/898)) ([4f47e0d](https://github.com/glasskube/distr/commit/4f47e0d1ecaf520a9d90c726e5d0753f324e0fd0))
+* **deps:** update module github.com/getsentry/sentry-go to v0.33.0 ([#910](https://github.com/glasskube/distr/issues/910)) ([f389821](https://github.com/glasskube/distr/commit/f38982160165990460c4fc066c043e80da45d3eb))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.33.0 ([#911](https://github.com/glasskube/distr/issues/911)) ([4ef490b](https://github.com/glasskube/distr/commit/4ef490bfad5278a41fa19e953cad102dc7bc7740))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.126.0 ([#904](https://github.com/glasskube/distr/issues/904)) ([55288c4](https://github.com/glasskube/distr/commit/55288c4050f03fd69d24a01db20375a7e2535552))
+* **deps:** update module k8s.io/metrics to v0.33.0 ([#906](https://github.com/glasskube/distr/issues/906)) ([ef8b17d](https://github.com/glasskube/distr/commit/ef8b17d97004952c5b2b2283445168677f195ecd))
+* set tutorial deployment docker type ([#916](https://github.com/glasskube/distr/issues/916)) ([46aeebe](https://github.com/glasskube/distr/commit/46aeebea79a1320416222ddf4faed9ab2ef3be7c))
+* **ui:** break long texts to avoid layout disruption ([#914](https://github.com/glasskube/distr/issues/914)) ([5fd2d08](https://github.com/glasskube/distr/commit/5fd2d081c72fc6c8cef5dfd9e6a43d4d8688ac8b))
+* **ui:** optimize deployments view for smaller devices ([#901](https://github.com/glasskube/distr/issues/901)) ([47794b1](https://github.com/glasskube/distr/commit/47794b1af5c90eabf91a5d83d084cd4dbbf0b9ef))
+
+
+### Other
+
+* **agent:** rename cluster role binding ([#913](https://github.com/glasskube/distr/issues/913)) ([39ecbdf](https://github.com/glasskube/distr/commit/39ecbdf7938152a5c70921ea61395b6dc4e6abf0))
+* **deps:** update angular-cli monorepo to v19.2.12 ([#902](https://github.com/glasskube/distr/issues/902)) ([27ef621](https://github.com/glasskube/distr/commit/27ef62128a03826dd225bff65d2e56f62461ef94))
+* **deps:** update docker/build-push-action action to v6.17.0 ([#908](https://github.com/glasskube/distr/issues/908)) ([804be8b](https://github.com/glasskube/distr/commit/804be8bc9eba096aefa685852ae851d57a117d14))
+* **deps:** update tailwindcss monorepo to v4.1.7 ([#907](https://github.com/glasskube/distr/issues/907)) ([8c0580d](https://github.com/glasskube/distr/commit/8c0580df60d90afd88405199c41baaeae39e36d6))
+* **deps:** update webpack due to vuln ([#900](https://github.com/glasskube/distr/issues/900)) ([21ae03d](https://github.com/glasskube/distr/commit/21ae03de80bfe60d081d5dc0ec850834f043be13))
+
 ## [1.8.1](https://github.com/glasskube/distr/compare/1.8.0...1.8.1) (2025-05-12)
 
 
