@@ -236,9 +236,9 @@
         <tbody>
           @for (deployment of deploymentTarget().deployments; track deployment.id) {
             <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center gap-4">
+              <td class="px-4 py-2 font-medium text-gray-900 whitespace-normal dark:text-white flex items-center gap-4">
                 <fa-icon class="text-gray-500 dark:text-gray-400" [icon]="faShip"></fa-icon>
-                <div class="leading-tight">
+                <div class="leading-tight break-all">
                   {{ deployment.applicationName }}
                   <div class="text-gray-500 dark:text-gray-400 text-xs">
                     {{ deployment.applicationVersionName }}
@@ -246,8 +246,8 @@
                 </div>
               </td>
               @if (fullVersion()) {
-                <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white text-xs">
-                  <div class="text-gray-500 dark:text-gray-400">Last modified:</div>
+                <td class="px-4 py-2 font-medium text-gray-900 whitespace-normal dark:text-white text-xs">
+                  <div class="text-gray-500 dark:text-gray-400 break-words">Last modified:</div>
                   {{ deployment.deploymentRevisionCreatedAt | date: 'short' }}
                 </td>
               }
@@ -627,3 +627,4 @@
     </form>
   </div>
 </ng-template>
+
