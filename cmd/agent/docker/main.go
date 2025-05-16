@@ -103,6 +103,11 @@ loop:
 					logger.Error("docker auth error", zap.Error(err))
 				} else {
 					skipApply := false
+					if deployment.DockerType == nil {
+						logger.Error("cannot apply deployment because docker type is nil",
+							zap.Any("deploymentRevisionId", deployment.RevisionID))
+						continue
+					}
 					if *deployment.DockerType == types.DockerTypeSwarm {
 						existing, ok := deployments[deployment.ID]
 						skipApply = ok && existing.RevisionID == deployment.RevisionID
