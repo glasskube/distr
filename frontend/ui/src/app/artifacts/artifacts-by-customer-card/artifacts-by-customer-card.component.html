@@ -12,7 +12,7 @@
         </div>
         <div>
           <div class="flex gap-2">
-            <h3 class="font-bold">{{ customer().name ?? customer().email }}</h3>
+            <h3 class="font-bold break-all">{{ customer().name ?? customer().email }}</h3>
           </div>
         </div>
       </div>
@@ -26,7 +26,7 @@
         <tbody>
           @for (artifact of artifacts(); track artifact.artifact.id) {
             <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center gap-4">
+              <td class="px-4 py-2 font-medium text-gray-900 whitespace-normal dark:text-white flex items-center gap-4">
                 @if (artifact.artifact.imageUrl) {
                   <img class="w-4 h-4 rounded-full" [attr.src]="artifact.artifact.imageUrl | secureImage | async" />
                 } @else {
@@ -34,7 +34,7 @@
                     <fa-icon [icon]="faBox" size="lg" class="text-gray-500 dark:text-gray-400"></fa-icon>
                   </div>
                 }
-                <div class="leading-tight">
+                <div class="leading-tight break-all">
                   {{ artifact.artifact.name }}
                   <span
                     class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400">
