@@ -65,7 +65,9 @@ func main() {
 		}
 	}()
 
-	var metricsCancelFn context.CancelFunc
+	var metricsCancelFunc context.CancelFunc
+	var logsWatcher *logsWatcher
+	var logsCancelFunc context.CancelFunc
 	tick := time.Tick(agentenv.Interval)
 	for ctx.Err() == nil {
 		select {
@@ -92,13 +94,23 @@ func main() {
 			continue
 		}
 
-		if res.MetricsEnabled && metricsCancelFn == nil {
+		if res.MetricsEnabled && metricsCancelFunc == nil {
 			var metricsCtx context.Context
-			metricsCtx, metricsCancelFn = context.WithCancel(ctx)
+			metricsCtx, metricsCancelFunc = context.WithCancel(ctx)
 			go watchMetrics(metricsCtx)
-		} else if !res.MetricsEnabled && metricsCancelFn != nil {
-			metricsCancelFn()
-			metricsCancelFn = nil
+		} else if !res.MetricsEnabled && metricsCancelFunc != nil {
+			metricsCancelFunc()
+			metricsCancelFunc = nil
+		}
+
+		if logsWatcher == nil || logsWatcher.namespace != res.Namespace {
+			if logsCancelFunc != nil {
+				logsCancelFunc()
+			}
+			ctx, cancel := context.WithCancel(ctx)
+			logsWatcher = NewLogsWatcher(res.Namespace)
+			logsCancelFunc = cancel
+			go logsWatcher.Watch(ctx, 30*time.Second)
 		}
 
 		existingDeployments, err := GetExistingDeployments(ctx, res.Namespace)
@@ -249,7 +261,7 @@ func runInstallOrUpgrade(
 		}
 	} else {
 		logger.Info("no action required. running status check")
-		if resources, err := GetHelmManifest(ctx, namespace, deployment); err != nil {
+		if resources, err := GetHelmManifest(ctx, namespace, deployment.ReleaseName); err != nil {
 			logger.Warn("could not get helm manifest", zap.Error(err))
 			pushErrorStatus(ctx, deployment, fmt.Errorf("could not get helm manifest: %w", err))
 		} else {

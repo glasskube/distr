@@ -48,6 +48,12 @@
 
 ---
 
+### logsEnabled
+
+> **logsEnabled**: `boolean`
+
+---
+
 ### releaseName?
 
 > `optional` **releaseName**: `string`

@@ -4,6 +4,7 @@ export interface Deployment extends BaseModel {
   deploymentTargetId: string;
   releaseName?: string;
   dockerType?: DockerType;
+  logsEnabled: boolean;
 }
 
 export interface DeploymentRequest {
@@ -15,6 +16,10 @@ export interface DeploymentRequest {
   dockerType?: DockerType;
   valuesYaml?: string;
   envFileData?: string;
+}
+
+export interface PatchDeploymentRequest {
+  logsEnabled?: boolean;
 }
 
 export interface DeploymentWithLatestRevision extends Deployment {

@@ -106,6 +106,16 @@
 
 ---
 
+### logsEnabled
+
+> **logsEnabled**: `boolean`
+
+#### Inherited from
+
+[`Deployment`](Deployment.md).[`logsEnabled`](Deployment.md#logsenabled)
+
+---
+
 ### releaseName?
 
 > `optional` **releaseName**: `string`

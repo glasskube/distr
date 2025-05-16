@@ -55,6 +55,8 @@ import {DeploymentModalComponent} from '../deployment-modal.component';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
 import {BytesPipe} from '../../../util/units';
 import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
+import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.component';
+import {DeploymentStatusModalComponent} from '../deployment-status-modal/deployment-status-modal.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -68,12 +70,13 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
     IsStalePipe,
     DeploymentStatusDot,
     OverlayModule,
-    AsyncPipe,
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
     DeploymentTargetMetricsComponent,
     NgTemplateOutlet,
+    DeploymentLogsComponent,
+    DeploymentStatusModalComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -93,11 +96,12 @@ export class DeploymentTargetCardComponent {
   public readonly fullVersion = input(true);
   public readonly deploymentTargetMetrics = input<DeploymentTargetLatestMetrics | undefined>(undefined);
 
-  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<any>;
-  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<any>;
-  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<any>;
-  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<any>;
-  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<any>;
+  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
+  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<unknown>;
+  @ViewChild('deploymentLogsModal') protected readonly deploymentLogsModal!: TemplateRef<unknown>;
+  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<unknown>;
+  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<unknown>;
+  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<unknown>;
 
   protected readonly faShip = faShip;
   protected readonly faLink = faLink;
@@ -124,6 +128,7 @@ export class DeploymentTargetCardComponent {
 
   protected readonly isUndeploySupported = this.isAgentVersionAtLeast('1.3.0');
   protected readonly isMultiDeploymentSupported = this.isAgentVersionAtLeast('1.6.0');
+  protected readonly isLoggingSupported = this.isAgentVersionAtLeast('1.9.0');
 
   protected readonly agentUpdateAvailable = computed(() => {
     const agentVersions = this.agentVersions.value() ?? [];
@@ -229,6 +234,29 @@ export class DeploymentTargetCardComponent {
       this.selectedDeployment.set(deployment);
       this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
       this.showModal(this.deploymentStatusModal);
+    }
+  }
+
+  protected openLogsModal(deployment: DeploymentWithLatestRevision) {
+    if (deployment?.id) {
+      this.selectedDeployment.set(deployment);
+      this.showDeploymentDropdownForId.set(undefined);
+      this.hideModal();
+      this.showModal(this.deploymentLogsModal);
+    }
+  }
+
+  protected setLogsEnabled(deplyoment: DeploymentWithLatestRevision, logsEnabled: boolean) {
+    if (deplyoment.id) {
+      this.deploymentTargets.patchDeployment(deplyoment.id, {logsEnabled}).subscribe({
+        next: () => this.toast.success('Deployment has been updated.'),
+        error: (e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
     }
   }
 

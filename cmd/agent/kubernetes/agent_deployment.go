@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/glasskube/distr/api"
 	"github.com/google/uuid"
+	"helm.sh/helm/v3/pkg/release"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 )
@@ -17,10 +19,29 @@ type AgentDeployment struct {
 	RevisionID   uuid.UUID `json:"revisionId"`
 	ReleaseName  string    `json:"releaseName"`
 	HelmRevision int       `json:"helmRevision"`
+	LogsEnabled  bool      `json:"logsEnabled"`
+}
+
+func (d AgentDeployment) GetDeploymentID() uuid.UUID {
+	return d.ID
+}
+
+func (d AgentDeployment) GetDeploymentRevisionID() uuid.UUID {
+	return d.RevisionID
 }
 
 func (d *AgentDeployment) SecretName() string {
 	return fmt.Sprintf("sh.distr.agent.v1.%v", d.ReleaseName)
+}
+
+func NewAgentDeployment(deployment api.AgentDeployment, release *release.Release) AgentDeployment {
+	return AgentDeployment{
+		ReleaseName:  release.Name,
+		HelmRevision: release.Version,
+		ID:           deployment.ID,
+		RevisionID:   deployment.RevisionID,
+		LogsEnabled:  deployment.LogsEnabled,
+	}
 }
 
 func PullSecretName(releaseName string) string {
