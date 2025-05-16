@@ -15,7 +15,7 @@
         </div>
         <div>
           <div class="flex gap-2">
-            <h3 class="font-bold break-all ">{{ deploymentTarget().name }}</h3>
+            <h3 class="font-bold break-all">{{ deploymentTarget().name }}</h3>
             @if (fullVersion() && deploymentTarget().id; as id) {
               <app-uuid [uuid]="id" [small]="true"></app-uuid>
             }
@@ -627,4 +627,3 @@
     </form>
   </div>
 </ng-template>
-
