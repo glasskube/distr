@@ -567,6 +567,11 @@
             Report Metrics
           </label>
         </div>
+        @if (editForm.controls.metricsEnabled.disabled) {
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Metrics reporting is not available for a namespace scoped agent.
+          </p>
+        }
       </div>
       <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
         <button

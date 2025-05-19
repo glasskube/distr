@@ -154,7 +154,7 @@
                 }
 
                 @if (deploymentTargetForm.controls.clusterScope.enabled) {
-                  <div class="flex items-center">
+                  <div class="flex items-center mb-1">
                     <input
                       id="checked-checkbox"
                       type="checkbox"
@@ -164,6 +164,11 @@
                       Enable cluster-scoped permissions
                     </label>
                   </div>
+                  @if (!deploymentTargetForm.controls.clusterScope.value) {
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Note that metrics reporting will not be available for a namespace scoped agent.
+                    </p>
+                  }
                 }
               </div>
             </div>
