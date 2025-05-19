@@ -154,20 +154,43 @@
                 <label for="showArchived" class="text-gray-500 dark:text-gray-300">Show Archived Versions</label>
               </div>
             </form>
+
             <div class="mb-5 relative overflow-x-auto sm:rounded-lg">
               <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
-                    <th scope="col" class="px-6 py-3">ID</th>
-                    <th scope="col" class="px-6 py-3">Version</th>
-                    @if (application.type === 'kubernetes') {
-                      <th scope="col" class="px-6 py-3">Chart URL</th>
-                      <th scope="col" class="px-6 py-3">Chart Name</th>
-                      <th scope="col" class="px-6 py-3">Chart Version</th>
+                    <td class="px-1 py-3">
+                      @let versions = this.visibleVersions$ | async;
+                      @let all = isAllVersionsSelected(versions ?? []);
+                      <input
+                        type="checkbox"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        [checked]="all"
+                        [indeterminate]="!all && selectedVersionIds().size > 0"
+                        (change)="toggleAllVersionsSelected(versions ?? [])" />
+                    </td>
+                    @if (selectedVersionIds().size > 0) {
+                      <td class="px-3 normal-case text-sm" [attr.colspan]="application.type === 'kubernetes' ? 8 : 5">
+                        {{ selectedVersionIds().size }} selected
+                        <button
+                          (click)="bulkArchiveVersions(application)"
+                          class="py-1 px-3 ms-2 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                          <fa-icon [icon]="faArchive" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
+                          Archive
+                        </button>
+                      </td>
+                    } @else {
+                      <th scope="col" class="px-6 py-3">ID</th>
+                      <th scope="col" class="px-6 py-3">Version</th>
+                      @if (application.type === 'kubernetes') {
+                        <th scope="col" class="px-6 py-3">Chart URL</th>
+                        <th scope="col" class="px-6 py-3">Chart Name</th>
+                        <th scope="col" class="px-6 py-3">Chart Version</th>
+                      }
+                      <th scope="col" class="px-6 py-3">Created At</th>
+                      <th scope="col" class="px-6 py-3">Status</th>
+                      <th scope="col" class="px-6 py-3"></th>
                     }
-                    <th scope="col" class="px-6 py-3">Created At</th>
-                    <th scope="col" class="px-6 py-3">Status</th>
-                    <th scope="col" class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -177,6 +200,15 @@
                       [class.hover:bg-gray-50]="!archived"
                       [class.dark:hover:bg-gray-600]="!archived"
                       class="bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                      <td class="px-1 py-4">
+                        @if (!archived) {
+                          <input
+                            type="checkbox"
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                            [checked]="isVersionSelected(version)"
+                            (change)="toggleVersionSelected(version)" />
+                        }
+                      </td>
                       <td class="px-1 py-4">
                         <app-uuid [uuid]="version.id!" [small]="true"></app-uuid>
                       </td>
