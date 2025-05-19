@@ -1,12 +1,10 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
+import {DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {
   Component,
   computed,
   inject,
   input,
-  InputSignal,
-  OnInit,
   resource,
   signal,
   TemplateRef,
@@ -35,7 +33,7 @@ import {
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap, takeUntil} from 'rxjs';
+import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
@@ -53,9 +51,7 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
-import {BytesPipe} from '../../../util/units';
 import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
-import {DeploymentLogsComponent} from '../../deployment-logs/deployment-logs.component';
 import {DeploymentStatusModalComponent} from '../deployment-status-modal/deployment-status-modal.component';
 
 @Component({
@@ -75,7 +71,6 @@ import {DeploymentStatusModalComponent} from '../deployment-status-modal/deploym
     DeploymentModalComponent,
     DeploymentTargetMetricsComponent,
     NgTemplateOutlet,
-    DeploymentLogsComponent,
     DeploymentStatusModalComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
@@ -98,7 +93,6 @@ export class DeploymentTargetCardComponent {
 
   @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
   @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<unknown>;
-  @ViewChild('deploymentLogsModal') protected readonly deploymentLogsModal!: TemplateRef<unknown>;
   @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<unknown>;
   @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<unknown>;
   @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<unknown>;
@@ -214,6 +208,7 @@ export class DeploymentTargetCardComponent {
       this.editForm.controls.metricsEnabled.enable();
     }
   }
+
   protected async openInstructionsModal() {
     const dt = this.deploymentTarget();
     if (dt.currentStatus !== undefined) {
@@ -234,15 +229,6 @@ export class DeploymentTargetCardComponent {
       this.selectedDeployment.set(deployment);
       this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
       this.showModal(this.deploymentStatusModal);
-    }
-  }
-
-  protected openLogsModal(deployment: DeploymentWithLatestRevision) {
-    if (deployment?.id) {
-      this.selectedDeployment.set(deployment);
-      this.showDeploymentDropdownForId.set(undefined);
-      this.hideModal();
-      this.showModal(this.deploymentLogsModal);
     }
   }
 

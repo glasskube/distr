@@ -434,10 +434,6 @@
   </app-deployment-modal>
 </ng-template>
 
-<ng-template #deploymentLogsModal>
-  <app-deployment-logs @modalFlyInOut [deployment]="selectedDeployment()!" (closed)="hideModal()" />
-</ng-template>
-
 <ng-template #deploymentStatusModal>
   @if (selectedDeployment(); as d) {
     <app-deployment-status-modal
