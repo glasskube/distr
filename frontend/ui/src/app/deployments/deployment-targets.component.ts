@@ -9,6 +9,7 @@ import {
   catchError,
   combineLatest,
   combineLatestWith,
+  filter,
   first,
   map,
   Observable,
@@ -114,14 +115,23 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
         deploymentTargets
           .map((dt) =>
             dt.deployments.map((d) =>
-              this.getAvailableVersions(d).pipe(map((versions) => ({dt, d, version: this.findMaxVersion(versions)})))
+              this.getAvailableVersions(d).pipe(
+                map((versions) => {
+                  const version = this.findMaxVersion(versions);
+                  if (version) {
+                    return {dt, d, version};
+                  }
+                  return undefined;
+                })
+              )
             )
           )
           .flat()
       )
     ),
+    map((dts) => dts.filter((dt) => !!dt)),
     map((result) =>
-      result.filter((it) => it.version?.id !== it.d.applicationVersionId).map((it) => ({...it, version: it.version!}))
+      result.filter((it) => it.version.id !== it.d.applicationVersionId).map((it) => ({...it, version: it.version}))
     )
   );
 
