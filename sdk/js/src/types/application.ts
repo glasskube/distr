@@ -18,3 +18,8 @@ export interface ApplicationVersion {
   chartUrl?: string;
   chartVersion?: string;
 }
+
+export interface PatchApplicationRequest {
+  name?: string;
+  versions?: {id: string; archivedAt?: string}[];
+}
