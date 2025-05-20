@@ -332,15 +332,13 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  async bulkArchiveVersions(application: Application) {
+  async bulkArchiveVersions(app: Application) {
     this.overlay
       .confirm(`Really archive ${this.selectedVersionIds().size} versions? Existing deployments will continue to work.`)
       .pipe(
         filter((it) => it === true),
-        switchMap(() => this.application$),
-        take(1),
-        switchMap((app) =>
-          this.applicationService.patch(app!.id!, {
+        switchMap(() =>
+          this.applicationService.patch(app.id!, {
             versions: app?.versions
               ?.filter((version) => this.isVersionSelected(version))
               .map((version) => ({id: version.id!, archivedAt: new Date().toISOString()})),
