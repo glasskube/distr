@@ -261,7 +261,13 @@ func runInstallOrUpgrade(
 		}
 	} else {
 		logger.Info("no action required. running status check")
-		if resources, err := GetHelmManifest(ctx, namespace, deployment.ReleaseName); err != nil {
+		if currentDeployment.LogsEnabled != deployment.LogsEnabled {
+			currentDeployment.LogsEnabled = deployment.LogsEnabled
+			if err := SaveDeployment(ctx, namespace, *currentDeployment); err != nil {
+				logger.Error("could not save latest deployment", zap.Error(err))
+				pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
+			}
+		} else if resources, err := GetHelmManifest(ctx, namespace, deployment.ReleaseName); err != nil {
 			logger.Warn("could not get helm manifest", zap.Error(err))
 			pushErrorStatus(ctx, deployment, fmt.Errorf("could not get helm manifest: %w", err))
 		} else {
@@ -272,6 +278,7 @@ func runInstallOrUpgrade(
 					break
 				}
 			}
+
 			if err != nil {
 				logger.Warn("resource status error", zap.Error(err))
 				pushErrorStatus(ctx, deployment, fmt.Errorf("resource status error: %w", err))
