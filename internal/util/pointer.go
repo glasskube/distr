@@ -11,3 +11,8 @@ func PtrCopy[T any](ptr *T) *T {
 	v := *ptr
 	return &v
 }
+
+// PtrEq returns true iff both a and b are nil pointers or their dereferenced values are equal
+func PtrEq[T comparable](a, b *T) bool {
+	return (a == nil && b == nil) || (a != nil && b != nil && *a == *b)
+}

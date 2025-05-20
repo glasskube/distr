@@ -8,17 +8,18 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/glasskube/distr/api"
-
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -29,9 +30,12 @@ func ApplicationsRouter(r chi.Router) {
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.With(applicationMiddleware).Group(func(r chi.Router) {
 			r.Get("/", getApplication)
-			r.With(requireUserRoleVendor).Delete("/", deleteApplication)
-			r.With(requireUserRoleVendor).Put("/", updateApplication)
-			r.With(requireUserRoleVendor).Patch("/image", patchImageApplication)
+			r.With(requireUserRoleVendor).Group(func(r chi.Router) {
+				r.Delete("/", deleteApplication)
+				r.Put("/", updateApplication)
+				r.Patch("/", patchApplicationHandler())
+				r.Patch("/image", patchImageApplication)
+			})
 		})
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
@@ -97,8 +101,7 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	if err := db.UpdateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 		log.Warn("could not update application", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// TODO ?
@@ -107,6 +110,75 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	application.Versions = existing.Versions
 	if err := json.NewEncoder(w).Encode(api.AsApplication(application)); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
+	}
+}
+
+func patchApplicationHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.Authentication.Require(ctx)
+		existing := internalctx.GetApplication(ctx)
+		patch, err := JsonBody[api.PatchApplicationRequest](w, r)
+		if err != nil {
+			return
+		}
+
+		if err := db.RunTx(ctx, func(ctx context.Context) error {
+			appliationNeedsUpdate := false
+			if patch.Name != nil && patch.Name != &existing.Name {
+				existing.Name = *patch.Name
+				appliationNeedsUpdate = true
+			}
+
+			if appliationNeedsUpdate {
+				if err := db.UpdateApplication(ctx, existing, *auth.CurrentOrgID()); err != nil {
+					log.Warn("could not update application", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return err
+				}
+			}
+
+			for _, vp := range patch.Versions {
+				var ev *types.ApplicationVersion
+				for i, v := range existing.Versions {
+					if v.ID == vp.ID {
+						ev = &existing.Versions[i]
+						break
+					}
+				}
+				if ev == nil {
+					http.Error(w, fmt.Sprintf("no ApplicationVersion found with ID %v", vp.ID), http.StatusBadRequest)
+					return errors.New("bad request")
+				}
+
+				versionNeedsUpdate := false
+				if !util.PtrEq(ev.ArchivedAt, vp.ArchivedAt) {
+					ev.ArchivedAt = vp.ArchivedAt
+					versionNeedsUpdate = true
+				}
+
+				if versionNeedsUpdate {
+					if err := db.UpdateApplicationVersion(ctx, ev); err != nil {
+						log.Warn("could not update application version", zap.Error(err))
+						sentry.GetHubFromContext(ctx).CaptureException(err)
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return err
+					}
+				}
+			}
+			return nil
+		}); err != nil {
+			if errors.Is(err, pgx.ErrTxCommitRollback) {
+				log.Warn("could not commit db transaction", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		RespondJSON(w, existing)
 	}
 }
 

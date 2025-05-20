@@ -3,7 +3,7 @@ import {Injectable} from '@angular/core';
 import {catchError, Observable, of, startWith, Subject, switchMap, tap, throwError} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {Application, ApplicationVersion, DeploymentTarget} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion, DeploymentTarget, PatchApplicationRequest} from '@glasskube/distr-sdk';
 import {ArtifactWithTags} from './artifacts.service';
 
 @Injectable({
@@ -39,6 +39,12 @@ export class ApplicationsService implements CrudService<Application> {
   update(application: Application): Observable<Application> {
     return this.httpClient
       .put<Application>(`${this.applicationsUrl}/${application.id}`, application)
+      .pipe(tap((it) => this.cache.save(it)));
+  }
+
+  patch(applicationId: string, patch: PatchApplicationRequest): Observable<Application> {
+    return this.httpClient
+      .patch<Application>(`${this.applicationsUrl}/${applicationId}`, patch)
       .pipe(tap((it) => this.cache.save(it)));
   }
 
