@@ -169,10 +169,12 @@ func patchApplicationHandler() http.HandlerFunc {
 				}
 			}
 			return nil
-		}); errors.Is(err, pgx.ErrTxCommitRollback) {
-			log.Warn("could not commit db transaction", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}); err != nil {
+			if errors.Is(err, pgx.ErrTxCommitRollback) {
+				log.Warn("could not commit db transaction", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 
