@@ -62,7 +62,7 @@ const (
 		LEFT JOIN UserAccount u
 			ON dt.created_by_user_account_id = u.id
 		LEFT JOIN Organization_UserAccount j
-			ON u.id = j.user_account_id
+			ON u.id = j.user_account_id AND j.organization_id = @orgId
 	`
 	deploymentTargetFromExpr = `
 		DeploymentTarget dt
@@ -110,6 +110,7 @@ func GetDeploymentTarget(
 		args = pgx.NamedArgs{"id": id, "orgId": *orgID}
 		query = query + " AND dt.organization_id = @orgId"
 	} else {
+		// TODO won't work?
 		args = pgx.NamedArgs{"id": id}
 	}
 	rows, err := db.Query(ctx, query, args)
@@ -137,6 +138,7 @@ func GetDeploymentTargetForDeploymentID(
 			deploymentTargetWithStatusOutputExpr, deploymentTargetFromExpr),
 		pgx.NamedArgs{"id": id},
 	)
+	// TODO will also need orgId
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}
@@ -286,6 +288,7 @@ func UpdateDeploymentTargetReportedAgentVersionID(
 		SELECT`+deploymentTargetWithStatusOutputExpr+`FROM updated dt`+deploymentTargetJoinExpr,
 		pgx.NamedArgs{"id": dt.ID, "agentVersionId": agentVersionID},
 	)
+	// TODO might also be missing orgId ?
 	if err != nil {
 		return err
 	} else if updated, err := pgx.CollectExactlyOneRow(rows,
