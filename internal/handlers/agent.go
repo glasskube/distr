@@ -259,6 +259,7 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 		deployments, err := db.GetDeploymentsForDeploymentTarget(ctx, auth.CurrentDeploymentTargetID())
 		if err != nil {
 			log.Error("error getting deployments", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -274,11 +275,13 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 		}
 		if err := db.SaveDeploymentLogRecords(ctx, records); err != nil {
 			log.Error("error saving log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
 		if deleted, err := db.CleanupDeploymentLogRecords(ctx, auth.CurrentDeploymentTargetID()); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Warn("log record cleanup error", zap.Error(err))
 		} else {
 			log.Info("log record cleanup finished", zap.Int64("deletedCount", deleted))
