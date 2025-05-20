@@ -9,6 +9,8 @@ import (
 	"path"
 	"text/template"
 
+	"github.com/glasskube/distr/internal/buildconfig"
+
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/resources"
@@ -56,19 +58,20 @@ func getTemplateData(
 	}
 
 	result := map[string]any{
-		"agentInterval":     env.AgentInterval(),
-		"registryEnabled":   env.RegistryEnabled(),
-		"registryHost":      customdomains.RegistryDomainOrDefault(org),
 		"agentDockerConfig": base64.StdEncoding.EncodeToString(env.AgentDockerConfig()),
+		"agentInterval":     env.AgentInterval(),
 		"agentVersion":      deploymentTarget.AgentVersion.Name,
 		"agentVersionId":    deploymentTarget.AgentVersion.ID,
-		"targetId":          deploymentTarget.ID,
-		"targetSecret":      secret,
 		"loginEndpoint":     loginEndpoint,
 		"manifestEndpoint":  manifestEndpoint,
+		"metricsEndpoint":   metricsEndpoint,
+		"registryEnabled":   env.RegistryEnabled(),
+		"registryHost":      customdomains.RegistryDomainOrDefault(org),
+		"registryPlainHttp": buildconfig.IsDevelopment(),
 		"resourcesEndpoint": resourcesEndpoint,
 		"statusEndpoint":    statusEndpoint,
-		"metricsEndpoint":   metricsEndpoint,
+		"targetId":          deploymentTarget.ID,
+		"targetSecret":      secret,
 	}
 	if deploymentTarget.Namespace != nil {
 		result["targetNamespace"] = *deploymentTarget.Namespace

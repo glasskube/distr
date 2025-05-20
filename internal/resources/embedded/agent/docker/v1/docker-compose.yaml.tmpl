@@ -17,6 +17,7 @@ services:
       DISTR_AGENT_SCRATCH_DIR: /scratch
       {{- if .registryEnabled }}
       DISTR_REGISTRY_HOST: '{{ .registryHost }}'
+      DISTR_REGISTRY_PLAIN_HTTP: '{{ .registryPlainHttp }}'
       {{- end }}
       HOST_DOCKER_CONFIG_DIR: ${HOST_DOCKER_CONFIG_DIR-${HOME}/.docker}
     volumes:
