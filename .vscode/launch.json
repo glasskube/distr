@@ -8,6 +8,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/hub",
+      "args": ["serve"],
       "cwd": "${workspaceFolder}",
       "env": {
         "DISTR_ENV": ".env.development.local"
