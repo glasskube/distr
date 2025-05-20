@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.9.1](https://github.com/glasskube/distr/compare/1.9.0...1.9.1) (2025-05-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v9.19.0 ([#922](https://github.com/glasskube/distr/issues/922)) ([86d253a](https://github.com/glasskube/distr/commit/86d253a07801954a07d71790a8cf7e016be37ce9))
+* **deps:** update dependency posthog-js to v1.242.3 ([#923](https://github.com/glasskube/distr/issues/923)) ([7c9db6f](https://github.com/glasskube/distr/commit/7c9db6f0432683f2907bf507020d50c525734482))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.3 ([#925](https://github.com/glasskube/distr/issues/925)) ([0e7695b](https://github.com/glasskube/distr/commit/0e7695b61dd2544813466cf611620568b0855a05))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.5 ([#918](https://github.com/glasskube/distr/issues/918)) ([6ebe47a](https://github.com/glasskube/distr/commit/6ebe47a5edeacb673a5b8f08b5a992dcc3ddce38))
+* **ui:** deployments page handles archived version scenarios better ([#927](https://github.com/glasskube/distr/issues/927)) ([c966b22](https://github.com/glasskube/distr/commit/c966b22c756b0acb2ebf36228d104e7d7213f936))
+
+
+### Other
+
+* **backend:** use registry plain http for development ([#928](https://github.com/glasskube/distr/issues/928)) ([5eb1129](https://github.com/glasskube/distr/commit/5eb112961ba218b8f3c47de7234f25189b811ebf))
+* **deps:** update axllent/mailpit docker tag to v1.25.0 ([#919](https://github.com/glasskube/distr/issues/919)) ([09748bc](https://github.com/glasskube/distr/commit/09748bcf322a2a261e317709b0b1693555bc964b))
+* **deps:** update gcr.io/distroless/static-debian12:nonroot docker digest to 188ddfb ([#921](https://github.com/glasskube/distr/issues/921)) ([78421a8](https://github.com/glasskube/distr/commit/78421a801ca13591481eaabf4dbb67507c300d43))
+* **ui:** hint that metrics reporting needs cluster scope ([#915](https://github.com/glasskube/distr/issues/915)) ([99efdae](https://github.com/glasskube/distr/commit/99efdae91c73abe148707e0f14569496bfd25f5d))
+
 ## [1.9.0](https://github.com/glasskube/distr/compare/1.8.1...1.9.0) (2025-05-16)
 
 

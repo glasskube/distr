@@ -15,6 +15,7 @@ data:
   DISTR_AGENT_VERSION_ID: "{{ .agentVersionId }}"
   {{- if .registryEnabled }}
   DISTR_REGISTRY_HOST: "{{ .registryHost }}"
+  DISTR_REGISTRY_PLAIN_HTTP: "{{ .registryPlainHttp }}"
   {{- end }}
 
 {{ if .targetSecret }}
