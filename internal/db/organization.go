@@ -75,6 +75,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.Org
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
 			WHERE u.id = @id
+			ORDER BY o.created_at
 	`, pgx.NamedArgs{"id": userID})
 	if err != nil {
 		return nil, err

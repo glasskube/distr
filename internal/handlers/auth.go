@@ -67,9 +67,8 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		} else if len(orgs) < 1 {
+			// TODO flow for this case?
 			return errors.New("user has no organizations")
-		} else if len(orgs) > 1 {
-			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
 		}
 		org := orgs[0]
 
