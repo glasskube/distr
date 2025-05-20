@@ -30,6 +30,9 @@ func NewLogsWatcher(namespace string) *logsWatcher {
 }
 
 func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
+	logger.Debug("logs watcher is starting to watch",
+		zap.String("namespace", lw.namespace),
+		zap.Duration("interval", d))
 	tick := time.Tick(d)
 	for {
 		select {
@@ -42,6 +45,7 @@ func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {
 }
 
 func (lw *logsWatcher) collect(ctx context.Context) {
+	logger.Debug("getting logs")
 	existingDeployments, err := GetExistingDeployments(ctx, lw.namespace)
 	if err != nil {
 		logger.Error("could not get existing deployments", zap.Error(err))
@@ -51,13 +55,15 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 	collector := agentlogs.NewCollector()
 
 	for _, d := range existingDeployments {
+		logger := logger.With(zap.Any("deploymentId", d.ID))
 		if !d.LogsEnabled {
+			logger.Debug("skip deployment with logs disabled")
 			continue
 		}
 
 		var resources []runtime.Object
 		if resUnstr, err := GetHelmManifest(ctx, lw.namespace, d.ReleaseName); err != nil {
-			logger.Error("could not get existing deployments", zap.Error(err))
+			logger.Error("could not get helm manifest for deployment", zap.Error(err))
 			continue
 		} else {
 			resources = FromUnstructuredSlice(resUnstr)
@@ -77,6 +83,8 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 			} else {
 				logOptions.SinceTime = &now
 			}
+
+			logger.Sugar().Debugf("get logs since %v", logOptions.SinceTime)
 
 			responseMap, err :=
 				polymorphichelpers.AllPodLogsForObjectFn(k8sConfigFlags, obj, &logOptions, 10*time.Second, true)
@@ -122,6 +130,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		}
 	}
 
+	logger.Sugar().Debugf("exporting %v log records", len(collector.LogRecords()))
 	if err := lw.logsExporter.Logs(ctx, collector.LogRecords()); err != nil {
 		logger.Warn("error exporting logs", zap.Error(err))
 	}
