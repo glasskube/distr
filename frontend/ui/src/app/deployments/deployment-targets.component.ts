@@ -9,7 +9,6 @@ import {
   catchError,
   combineLatest,
   combineLatestWith,
-  filter,
   first,
   map,
   Observable,
@@ -17,7 +16,6 @@ import {
   Subject,
   switchMap,
   takeUntil,
-  tap,
 } from 'rxjs';
 import {SemVer} from 'semver';
 import {maxBy} from '../../util/arrays';
@@ -129,10 +127,8 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
           .flat()
       )
     ),
-    map((dts) => dts.filter((dt) => !!dt)),
-    map((result) =>
-      result.filter((it) => it.version.id !== it.d.applicationVersionId).map((it) => ({...it, version: it.version}))
-    )
+    map((dts) => dts.filter((dt) => dt !== undefined)),
+    map((result) => result.filter((it) => it.version.id !== it.d.applicationVersionId))
   );
 
   ngAfterViewInit() {
