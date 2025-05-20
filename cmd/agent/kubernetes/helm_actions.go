@@ -41,7 +41,7 @@ func GetHelmActionConfig(
 			agentauth.EnsureAuth(ctx, agentClient.RawToken(), *deployment); err != nil {
 			return nil, err
 		} else if rc, err :=
-			registry.NewClient(append(clientOpts, registry.ClientOptAuthorizer(authorizer))...); err != nil {
+			registry.NewClient(append(clientOpts, registry.ClientOptAuthorizer(*authorizer))...); err != nil {
 			return nil, err
 		} else {
 			cfg.RegistryClient = rc
