@@ -11,7 +11,9 @@ import (
 	sentryotel "github.com/getsentry/sentry-go/otel"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/buildconfig"
+	"github.com/glasskube/distr/internal/cleanup"
 	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/jobs"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mail/noop"
 	"github.com/glasskube/distr/internal/mail/ses"
@@ -57,7 +59,7 @@ func NewDefault(ctx context.Context) (*Registry, error) {
 func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 	reg.logger = createLogger()
 
-	reg.logger.Info("initializing server",
+	reg.logger.Info("initializing service registry",
 		zap.String("version", buildconfig.Version()),
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
@@ -277,6 +279,14 @@ func (r *Registry) GetArtifactsServer() server.Server {
 	} else {
 		return server.NewNoop()
 	}
+}
+
+func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
+	scheduler := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
+	if cron := env.CleanupStatusCron(); cron != nil {
+		scheduler.RegisterCronJob(*cron, jobs.NewJob("StatusCleanup", cleanup.RunStatusCleanup))
+	}
+	return scheduler
 }
 
 func (r *Registry) GetTracer() *trace.TracerProvider {

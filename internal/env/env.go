@@ -42,6 +42,7 @@ var (
 	registryEnabled                bool
 	registryS3Config               S3Config
 	artifactTagsDefaultLimitPerOrg int
+	cleanupStatusCron              *string
 )
 
 func Initialize() {
@@ -109,6 +110,8 @@ func Initialize() {
 	frontendPosthogToken = envutil.GetEnvOrNil("FRONTEND_POSTHOG_TOKEN")
 	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
+
+	cleanupStatusCron = envutil.GetEnvOrNil("CLEANUP_STATUS_CRON")
 }
 
 func DatabaseUrl() string {
@@ -224,4 +227,8 @@ func OtelExporterSentryEnabled() bool {
 
 func OtelExporterOtlpEnabled() bool {
 	return otelExporterOtlpEnabled
+}
+
+func CleanupStatusCron() *string {
+	return cleanupStatusCron
 }

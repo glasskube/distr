@@ -61,14 +61,18 @@ func runServe(ctx context.Context, opts ServeOptions) {
 	server := registry.GetServer()
 	artifactsServer := registry.GetArtifactsServer()
 
+	jobs := registry.GetJobsScheduler()
+
 	sigCtx, _ := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	context.AfterFunc(sigCtx, func() {
 		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		jobs.Shutdown()
 		server.Shutdown(ctx)
 		artifactsServer.Shutdown(ctx)
 		cancel()
 	})
 
+	go jobs.Start()
 	go func() { util.Must(server.Start(":8080")) }()
 	go func() { util.Must(artifactsServer.Start(":8585")) }()
 	server.WaitForShutdown()
