@@ -18,10 +18,10 @@ export class DeploymentStatusModalComponent {
   private readonly deploymentLogs = inject(DeploymentLogsService);
 
   public readonly deploymentTarget = input.required<DeploymentTarget>();
-  public readonly selectedDeployment = input.required<DeploymentWithLatestRevision>();
+  public readonly deployment = input.required<DeploymentWithLatestRevision>();
   public readonly closed = output<void>();
 
-  private readonly deploymentId$ = toObservable(this.selectedDeployment).pipe(
+  private readonly deploymentId$ = toObservable(this.deployment).pipe(
     map((d) => d.id),
     filter((id) => id !== undefined),
     distinctUntilChanged()

@@ -22,7 +22,7 @@ export interface TimeseriesSource {
   selector: 'app-timeseries-table',
   template: `
     @if (entries$ | async; as entries) {
-      <div class=" -mx-4 md:-mx-5 relative overflow-x-auto">
+      <div class="relative overflow-x-auto">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400 sr-only">
             <tr>

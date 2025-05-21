@@ -435,14 +435,12 @@
 </ng-template>
 
 <ng-template #deploymentStatusModal>
-  @if (selectedDeployment(); as d) {
-    <app-deployment-status-modal
-      @modalFlyInOut
-      class="w-full m-4 overflow-x-hidden"
-      [deploymentTarget]="deploymentTarget()"
-      [selectedDeployment]="d"
-      (closed)="hideModal()" />
-  }
+  <app-deployment-status-modal
+    @modalFlyInOut
+    class="w-full m-4"
+    [deploymentTarget]="deploymentTarget()"
+    [deployment]="selectedDeployment()!"
+    (closed)="hideModal()" />
 </ng-template>
 
 <ng-template #manageDeploymentTargetDrawer>
