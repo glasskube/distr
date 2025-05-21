@@ -9,7 +9,12 @@ import (
 
 var ErrParamNotDefined = errors.New("parameter not defined")
 
-func QueryParam[T any](r *http.Request, name string, parseFunc func(string) (T, error), validatorFunc ...func(T) error) (T, error) {
+func QueryParam[T any](
+	r *http.Request,
+	name string,
+	parseFunc func(string) (T, error),
+	validatorFunc ...func(T) error,
+) (T, error) {
 	if stringValue := r.FormValue(name); stringValue == "" {
 		var v T
 		return v, ErrParamNotDefined
