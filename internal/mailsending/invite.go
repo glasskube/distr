@@ -19,7 +19,6 @@ func SendUserInviteMail(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
 	userRole types.UserRole,
-	applicationName string,
 	inviteURL string,
 ) error {
 	mailer := internalctx.GetMailer(ctx)
@@ -44,7 +43,7 @@ func SendUserInviteMail(
 				mail.Bcc(currentUser.Email),
 				mail.ReplyTo(currentUser.Email),
 				mail.Subject("Welcome to Distr"),
-				mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, inviteURL, applicationName)),
+				mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, inviteURL)),
 			)
 		}
 	case types.UserRoleVendor:

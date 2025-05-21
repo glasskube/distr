@@ -67,15 +67,13 @@ func InviteCustomer(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
 	inviteURL string,
-	applicationName string,
 ) (*template.Template, any) {
 	return templates.Lookup("invite-customer.html"),
 		map[string]any{
-			"UserAccount":     userAccount,
-			"Organization":    organization,
-			"ApplicationName": applicationName,
-			"Host":            customdomains.AppDomainOrDefault(organization.Organization),
-			"InviteURL":       inviteURL,
+			"UserAccount":  userAccount,
+			"Organization": organization,
+			"Host":         customdomains.AppDomainOrDefault(organization.Organization),
+			"InviteURL":    inviteURL,
 		}
 }
 

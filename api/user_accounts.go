@@ -7,8 +7,9 @@ import (
 )
 
 type CreateUserAccountRequest struct {
-	Email           string         `json:"email"`
-	Name            string         `json:"name"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	// Deprecated: This property will be removed in v2.
 	ApplicationName string         `json:"applicationName"`
 	UserRole        types.UserRole `json:"userRole"`
 }

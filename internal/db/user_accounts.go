@@ -149,12 +149,45 @@ func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+func UserManagesDeploymentTargetInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(dt.id) > 0
+		FROM DeploymentTarget dt
+		WHERE dt.organization_id = @orgId AND dt.created_by_user_account_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `
+		DELETE FROM Organization_UserAccount
+		WHERE user_account_id = @userId AND organization_id = @orgId`,
+		pgx.NamedArgs{"userId": userID, "orgId": orgID})
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	return err
+}
+
 func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
 		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
 		pgx.NamedArgs{"userId": userID, "orgId": orgID, "role": role},
 	)
+	if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
+		return apierrors.ErrAlreadyExists
+	}
 	return err
 }
 

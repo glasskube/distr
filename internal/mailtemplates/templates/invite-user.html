@@ -21,7 +21,10 @@
           <a href="{{ .InviteURL | UnsafeURL }}">here</a>.
         </p>
         {{ else }}
-        <p>not supported yet</p>
+        <p>
+          Log in with your existing account at <a href="{{ .Host }}/">{{ .Host }}</a> and explore their Vendor Portal in
+          the top right corner.
+        </p>
         {{ end }}
 
         <p>{{template "fragments/signature.html"}}</p>

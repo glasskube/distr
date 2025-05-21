@@ -9,7 +9,6 @@ export interface CreateUserAccountRequest {
   email: string;
   name?: string;
   userRole: UserRole;
-  applicationName?: string;
 }
 
 export interface CreateUserAccountResponse {

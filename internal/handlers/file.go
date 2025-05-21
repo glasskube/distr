@@ -130,6 +130,7 @@ func fileMiddleware(h http.Handler) http.Handler {
 			}
 		} else {
 			if file.OrganizationID != *auth.CurrentOrgID() {
+				// TODO fix this check: org ID should be nullable and if not set, everybody can see the file
 				http.NotFound(w, r)
 			} else {
 				h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))
