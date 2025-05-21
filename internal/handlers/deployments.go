@@ -349,7 +349,24 @@ func validateDeploymentRequestValues(
 func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deployment := internalctx.GetDeployment(ctx)
-	if deploymentStatus, err := db.GetDeploymentStatus(ctx, deployment.ID, 100); err != nil {
+	limit, err := QueryParam(r, "limit", strconv.Atoi, Max(100))
+	if errors.Is(err, ErrParamNotDefined) {
+		limit = 25
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	before, err := QueryParam(r, "before", ParseTimeFunc(time.RFC3339Nano))
+	if err != nil && !errors.Is(err, ErrParamNotDefined) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	after, err := QueryParam(r, "after", ParseTimeFunc(time.RFC3339Nano))
+	if err != nil && !errors.Is(err, ErrParamNotDefined) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if deploymentStatus, err := db.GetDeploymentStatus(ctx, deployment.ID, limit, before, after); err != nil {
 		internalctx.GetLogger(ctx).Error("failed to get deploymentstatus", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -381,28 +398,24 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 			http.Error(w, "query parameter resource is required", http.StatusBadRequest)
 			return
 		}
-		limit := 25
-		if s := r.FormValue("limit"); s != "" {
-			if n, err := strconv.Atoi(s); err != nil {
-				http.Error(w, fmt.Sprintf("query parameter limit is invalid: %v", err), http.StatusBadRequest)
-				return
-			} else if n > 100 {
-				http.Error(w, "query parameter limit can not be greater than 100", http.StatusBadRequest)
-				return
-			} else {
-				limit = n
-			}
+		limit, err := QueryParam(r, "limit", strconv.Atoi, Max(100))
+		if errors.Is(err, ErrParamNotDefined) {
+			limit = 25
+		} else if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		var before time.Time
-		if s := r.FormValue("before"); s != "" {
-			if t, err := time.Parse(time.RFC3339Nano, s); err != nil {
-				http.Error(w, fmt.Sprintf("query parameter before is invalid: %v", err), http.StatusBadRequest)
-				return
-			} else {
-				before = t
-			}
+		before, err := QueryParam(r, "before", ParseTimeFunc(time.RFC3339Nano))
+		if err != nil && !errors.Is(err, ErrParamNotDefined) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before); err != nil {
+		after, err := QueryParam(r, "after", ParseTimeFunc(time.RFC3339Nano))
+		if err != nil && !errors.Is(err, ErrParamNotDefined) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before, after); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get log records", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

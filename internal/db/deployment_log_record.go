@@ -60,6 +60,7 @@ func GetDeploymentLogRecords(
 	resource string,
 	limit int,
 	before time.Time,
+	after time.Time,
 ) ([]types.DeploymentLogRecord, error) {
 	if before.IsZero() {
 		before = time.Now()
@@ -71,7 +72,7 @@ func GetDeploymentLogRecords(
 		FROM DeploymentLogRecord lr
 		WHERE lr.deployment_id = @deploymentId
 			AND lr.resource = @resource
-			AND lr.timestamp < @before
+			AND lr.timestamp BETWEEN @after AND @before
 		ORDER BY lr.timestamp DESC
 		LIMIT @limit`,
 		pgx.NamedArgs{
@@ -79,6 +80,7 @@ func GetDeploymentLogRecords(
 			"resource":     resource,
 			"limit":        limit,
 			"before":       before,
+			"after":        after,
 		},
 	)
 	if err != nil {

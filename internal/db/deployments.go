@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/glasskube/distr/api"
 	"github.com/google/uuid"
@@ -282,9 +283,14 @@ func GetDeploymentStatus(
 	ctx context.Context,
 	deploymentID uuid.UUID,
 	maxRows int,
+	before time.Time,
+	after time.Time,
 ) ([]types.DeploymentRevisionStatus, error) {
-	db := internalctx.GetDb(ctx)
+	if before.IsZero() {
+		before = time.Now()
+	}
 
+	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		"SELECT id from DeploymentRevision WHERE deployment_id = @deploymentId",
@@ -303,9 +309,15 @@ func GetDeploymentStatus(
 		`SELECT id, created_at, deployment_revision_id, type, message
 		FROM DeploymentRevisionStatus
 		WHERE deployment_revision_id = ANY (@deploymentRevisionIds)
+			AND created_at BETWEEN @after AND @before
 		ORDER BY created_at DESC
 		LIMIT @maxRows`,
-		pgx.NamedArgs{"deploymentRevisionIds": deploymentRevisionIDs, "maxRows": maxRows},
+		pgx.NamedArgs{
+			"deploymentRevisionIds": deploymentRevisionIDs,
+			"maxRows":               maxRows,
+			"before":                before,
+			"after":                 after,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
