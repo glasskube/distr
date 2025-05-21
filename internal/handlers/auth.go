@@ -111,7 +111,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		} else if len(orgs) < 1 {
-			// TODO flow for this case?
+			// TODO create default organization
 			return errors.New("user has no organizations")
 		}
 		org := orgs[0]
