@@ -26,6 +26,7 @@ const (
 		o.registry_domain,
 		o.email_from_address
 	`
+	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role "
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
@@ -70,7 +71,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT`+organizationOutputExpr+`, j.user_role
+		SELECT`+organizationWithUserRoleOutputExpr+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id

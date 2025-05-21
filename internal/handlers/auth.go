@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/middleware"
+	"github.com/google/uuid"
+
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 
@@ -40,6 +44,46 @@ func AuthRouter(r chi.Router) {
 		r.Post("/", authRegisterHandler)
 	})
 	r.Post("/reset", authResetPasswordHandler)
+	r.With(middleware.SentryUser, auth.Authentication.Middleware, middleware.RequireOrgAndRole).
+		Post("/switch-context", authSwitchContextHandler())
+}
+
+func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		request, err := JsonBody[api.AuthSwitchContextRequest](w, r)
+		if err != nil {
+			return
+		} else if request.OrganizationID == uuid.Nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		auth := auth.Authentication.Require(ctx)
+		if *auth.CurrentOrgID() == request.OrganizationID {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		if user, org, err := db.GetUserAccountAndOrg(
+			ctx, auth.CurrentUserID(), request.OrganizationID, nil); errors.Is(err, apierrors.ErrNotFound) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		} else if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Error("context switch failed", zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else if _, tokenString, err := authjwt.GenerateDefaultToken(user.AsUserAccount(), types.OrganizationWithUserRole{
+			Organization: *org,
+			UserRole:     user.UserRole,
+		}); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Error("failed to generate token", zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, api.AuthLoginResponse{Token: tokenString})
+		}
+	}
 }
 
 func authLoginHandler(w http.ResponseWriter, r *http.Request) {

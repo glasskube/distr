@@ -25,6 +25,11 @@ func OrganizationRouter(r chi.Router) {
 	r.Route("/branding", OrganizationBrandingRouter)
 }
 
+func OrganizationsRouter(r chi.Router) {
+	r.Use(middleware.RequireOrgAndRole)
+	r.Get("/", getOrganizations)
+}
+
 func getOrganization(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
@@ -78,5 +83,18 @@ func updateOrganization(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, organization)
+	}
+}
+
+func getOrganizations(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	auth := auth.Authentication.Require(ctx)
+
+	if orgs, err := db.GetOrganizationsForUser(ctx, auth.CurrentUserID()); err != nil {
+		internalctx.GetLogger(ctx).Error("failed to get organizations", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, orgs)
 	}
 }

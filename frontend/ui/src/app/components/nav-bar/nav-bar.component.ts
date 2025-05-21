@@ -3,7 +3,17 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faArrowLeft, faBarsStaggered, faLightbulb} from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowLeft,
+  faBarsStaggered,
+  faCheck,
+  faCheckDouble,
+  faChevronDown,
+  faChevronUp,
+  faLightbulb,
+  faShuffle,
+  faStarOfLife,
+} from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '@glasskube/distr-sdk';
 import {distinctUntilChanged, filter, firstValueFrom, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
@@ -17,6 +27,9 @@ import {UsersService} from '../../services/users.service';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {AsyncPipe} from '@angular/common';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {OrganizationService} from '../../services/organization.service';
+import {Organization, OrganizationWithUserRole} from '../../types/organization';
+import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 
 @Component({
   selector: 'app-nav-bar',
@@ -31,9 +44,13 @@ export class NavBarComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly users = inject(UsersService);
   private readonly route = inject(ActivatedRoute);
+  private readonly organizationService = inject(OrganizationService);
+  protected readonly organizations$ = this.organizationService.list();
 
   private readonly organizationBranding = inject(OrganizationBrandingService);
-  showDropdown = false;
+  userOpened = false;
+  organizationsOpened = false;
+  currentOrg = this.organizationService.get();
   email?: string;
   name?: string;
   role?: UserRole;
@@ -90,6 +107,27 @@ export class NavBarComponent implements OnInit, OnDestroy {
     }
   }
 
+  async switchContext(org: OrganizationWithUserRole) {
+    try {
+      const switched = await lastValueFrom(this.auth.switchContext(org));
+      if (switched) {
+        location.assign('/');
+      }
+    } catch (e) {
+      console.log(e);
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    } finally {
+      this.userOpened = false;
+    }
+  }
+
+  isCurrentOrg(org: OrganizationWithUserRole): boolean {
+    return org.id === this.auth.getClaims()?.org;
+  }
+
   public async logout() {
     await lastValueFrom(this.auth.logout());
     // This is necessary to flush the caching crud services
@@ -104,4 +142,9 @@ export class NavBarComponent implements OnInit, OnDestroy {
 
   protected readonly faLightbulb = faLightbulb;
   protected readonly faArrowLeft = faArrowLeft;
+  protected readonly faShuffle = faShuffle;
+  protected readonly faCheck = faCheck;
+  protected readonly faCheckDouble = faCheckDouble;
+  protected readonly faChevronDown = faChevronDown;
+  protected readonly faChevronUp = faChevronUp;
 }

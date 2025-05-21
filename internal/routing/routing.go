@@ -76,6 +76,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracer 
 			r.Route("/deployment-target-metrics", handlers.DeploymentTargetMetricsRouter)
 			r.Route("/files", handlers.FileRouter)
 			r.Route("/organization", handlers.OrganizationRouter)
+			r.Route("/organizations", handlers.OrganizationsRouter)
 			r.Route("/settings", handlers.SettingsRouter)
 			r.Route("/user-accounts", handlers.UserAccountsRouter)
 			r.Route("/tutorial-progress", handlers.TutorialsRouter)

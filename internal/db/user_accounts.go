@@ -222,7 +222,7 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountOutputExpr+`, j.user_role
+		"SELECT "+userAccountWithRoleOutputExpr+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			WHERE u.id = @id AND j.organization_id = @orgId`,
@@ -243,26 +243,31 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 	}
 }
 
-func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) (
-	*types.UserAccount,
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expectedRole *types.UserRole) (
+	*types.UserAccountWithUserRole,
 	*types.Organization,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT ("+userAccountOutputExpr+`),
+		"SELECT ("+userAccountWithRoleOutputExpr+`),
 					(`+organizationOutputExpr+`)
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
-			WHERE u.id = @id AND j.organization_id = @orgId AND j.user_role = @role`,
-		pgx.NamedArgs{"id": userID, "orgId": orgID, "role": role},
+			WHERE u.id = @id AND j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)`,
+		pgx.NamedArgs{
+			"id":        userID,
+			"orgId":     orgID,
+			"role":      expectedRole,
+			"checkRole": expectedRole != nil,
+		},
 	)
 	if err != nil {
 		return nil, nil, err
 	}
 	res, err := pgx.CollectExactlyOneRow[struct {
-		User types.UserAccount
+		User types.UserAccountWithUserRole
 		Org  types.Organization
 	}](rows, pgx.RowToStructByPos)
 	if err != nil {
