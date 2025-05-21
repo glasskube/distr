@@ -5,3 +5,4 @@ WORKDIR /
 COPY dist/distr /distr
 USER 65532:65532
 ENTRYPOINT ["/distr"]
+CMD ["serve"]

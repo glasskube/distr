@@ -45,7 +45,7 @@ var (
 	artifactTagsDefaultLimitPerOrg int
 )
 
-func init() {
+func Initialize() {
 	if currentEnv, ok := os.LookupEnv("DISTR_ENV"); ok {
 		fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
 		if err := godotenv.Load(currentEnv); err != nil {

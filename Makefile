@@ -43,7 +43,7 @@ frontend-prod: node_modules
 
 .PHONY: run
 run: frontend-dev tidy
-	DISTR_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/hub/
+	DISTR_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/hub/ serve
 
 .PHONY: run-kubernetes-agent
 run-kubernetes-agent: tidy
@@ -78,8 +78,8 @@ docker-build: docker-build-hub docker-build-docker-agent docker-build-kubernetes
 
 .PHONY: init-db
 init-db:
-	 go run ./cmd/hub/migrate/
+	DISTR_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/hub/ migrate
 
 .PHONY: purge-db
 purge-db:
-	 go run ./cmd/hub/migrate/ --down
+	DISTR_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/hub/ migrate --down
