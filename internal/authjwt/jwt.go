@@ -36,7 +36,7 @@ const (
 // which should be OK for now.
 //
 // TODO: Maybe migrate to asymmetric encryption at some point.
-var JWTAuth = sync.OnceValue[*jwtauth.JWTAuth](func() *jwtauth.JWTAuth {
+var JWTAuth = sync.OnceValue(func() *jwtauth.JWTAuth {
 	return jwtauth.New("HS256", env.JWTSecret(), nil)
 })
 
