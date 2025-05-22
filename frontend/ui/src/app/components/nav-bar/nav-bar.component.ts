@@ -25,7 +25,7 @@ import {ToastService} from '../../services/toast.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {UsersService} from '../../services/users.service';
 import {SecureImagePipe} from '../../../util/secureImage';
-import {AsyncPipe} from '@angular/common';
+import {AsyncPipe, TitleCasePipe} from '@angular/common';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
@@ -35,7 +35,15 @@ import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
   selector: 'app-nav-bar',
   standalone: true,
   templateUrl: './nav-bar.component.html',
-  imports: [ColorSchemeSwitcherComponent, OverlayModule, FaIconComponent, RouterLink, SecureImagePipe, AsyncPipe],
+  imports: [
+    ColorSchemeSwitcherComponent,
+    OverlayModule,
+    FaIconComponent,
+    RouterLink,
+    SecureImagePipe,
+    AsyncPipe,
+    TitleCasePipe,
+  ],
   animations: [dropdownAnimation],
 })
 export class NavBarComponent implements OnInit, OnDestroy {
@@ -108,6 +116,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
   }
 
   async switchContext(org: OrganizationWithUserRole) {
+    this.organizationsOpened = false;
     try {
       const switched = await lastValueFrom(this.auth.switchContext(org));
       if (switched) {
@@ -119,8 +128,6 @@ export class NavBarComponent implements OnInit, OnDestroy {
       if (msg) {
         this.toast.error(msg);
       }
-    } finally {
-      this.userOpened = false;
     }
   }
 
