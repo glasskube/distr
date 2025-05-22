@@ -22,7 +22,6 @@ import (
 	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
-	"github.com/glasskube/distr/internal/util"
 	"github.com/go-logr/zapr"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -42,6 +41,7 @@ type Registry struct {
 	execDbMigrations  bool
 	artifactsRegistry http.Handler
 	tracer            *trace.TracerProvider
+	jobsScheduler     *jobs.Scheduler
 }
 
 func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
@@ -89,23 +89,35 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		reg.dbPool = db
 	}
 
+	if scheduler, err := reg.createJobsScheduler(); err != nil {
+		return nil, err
+	} else {
+		reg.jobsScheduler = scheduler
+	}
+
 	reg.artifactsRegistry = reg.createArtifactsRegistry(ctx)
 
 	return reg, nil
 }
 
 func (r *Registry) Shutdown() error {
+	if err := r.jobsScheduler.Shutdown(); err != nil {
+		r.logger.Warn("job scheduler shutdown failed", zap.Error(err))
+	}
+
 	r.logger.Warn("shutting down database connections")
 	r.dbPool.Close()
+
 	if err := r.tracer.Shutdown(context.TODO()); err != nil {
 		r.logger.Warn("tracer shutdown failed", zap.Error(err))
 	}
+
 	// some devices like stdout and stderr can not be synced by the OS
-	if err := r.logger.Sync(); errors.Is(err, syscall.EINVAL) {
-		return nil
-	} else {
+	if err := r.logger.Sync(); !errors.Is(err, syscall.EINVAL) {
 		return fmt.Errorf("logger sync failed: %w", err)
 	}
+
+	return nil
 }
 
 type loggingQueryTracer struct {
@@ -282,27 +294,52 @@ func (r *Registry) GetArtifactsServer() server.Server {
 	}
 }
 
-func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
-	scheduler := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
+func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
+	scheduler, err := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
+	if err != nil {
+		return nil, err
+	}
+
 	if cron := env.CleanupDeploymenRevisionStatusCron(); cron != nil {
-		util.Must(scheduler.RegisterCronJob(
+		err = scheduler.RegisterCronJob(
 			*cron,
 			jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup),
-		))
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	if cron := env.CleanupDeploymenTargetStatusCron(); cron != nil {
-		util.Must(scheduler.RegisterCronJob(
+		err = scheduler.RegisterCronJob(
 			*cron,
 			jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup),
-		))
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	if cron := env.CleanupDeploymenTargetMetricsCron(); cron != nil {
-		util.Must(scheduler.RegisterCronJob(
+		err = scheduler.RegisterCronJob(
 			*cron,
 			jobs.NewJob("DeploymentTargetMetricsCleanup", cleanup.RunDeploymentTargetMetricsCleanup),
-		))
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return scheduler
+
+	scheduler.RegisterCronJob("* * * * *", jobs.NewJob("MockJob", func(ctx context.Context) error {
+		<-ctx.Done()
+		return ctx.Err()
+	}))
+
+	return scheduler, nil
+}
+
+func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
+	return r.jobsScheduler
 }
 
 func (r *Registry) GetTracer() *trace.TracerProvider {
