@@ -31,7 +31,7 @@ func (runner *runner) Run(job Job) {
 	startedAt := time.Now()
 	log.Info("job started")
 	err := job.Run(runner.jobCtx(job))
-	elapsed := time.Now().Sub(startedAt)
+	elapsed := time.Since(startedAt)
 	if err != nil {
 		log.Warn("job failed", zap.Duration("elapsed", elapsed), zap.Error(err))
 	} else {

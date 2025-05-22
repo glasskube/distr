@@ -22,6 +22,7 @@ import (
 	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-logr/zapr"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -284,10 +285,16 @@ func (r *Registry) GetArtifactsServer() server.Server {
 func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
 	scheduler := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
 	if cron := env.CleanupDeploymenRevisionStatusCron(); cron != nil {
-		scheduler.RegisterCronJob(*cron, jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup))
+		util.Must(scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup),
+		))
 	}
 	if cron := env.CleanupDeploymenTargetStatusCron(); cron != nil {
-		scheduler.RegisterCronJob(*cron, jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup))
+		util.Must(scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup),
+		))
 	}
 	return scheduler
 }
