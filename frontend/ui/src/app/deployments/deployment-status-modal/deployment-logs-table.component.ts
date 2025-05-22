@@ -24,7 +24,6 @@ class LogsTimeseriesSource implements TimeseriesSource {
   }
 
   loadAfter(after: Date): Observable<TimeseriesEntry[]> {
-    // TODO: Handle after
     return this.svc
       .get(this.deploymentId, this.resource, {limit: this.batchSize, after})
       .pipe(map((logs) => logs.map(logRecordToTimeseriesEntry)));
