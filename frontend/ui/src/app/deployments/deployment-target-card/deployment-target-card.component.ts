@@ -112,7 +112,6 @@ export class DeploymentTargetCardComponent {
   protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
   protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
   protected readonly selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
-  protected statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
 
   protected readonly metricsOpened = signal(false);
 
@@ -227,7 +226,6 @@ export class DeploymentTargetCardComponent {
   protected openStatusModal(deployment: DeploymentWithLatestRevision) {
     if (deployment?.id) {
       this.selectedDeployment.set(deployment);
-      this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
       this.showModal(this.deploymentStatusModal);
     }
   }

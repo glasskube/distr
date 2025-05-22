@@ -15,8 +15,4 @@ export class DeploymentStatusService {
     const params = timeseriesOptionsAsParams(options);
     return this.httpClient.get<DeploymentRevisionStatus[]>(`${this.baseUrl}/${deploymentId}/status`, {params});
   }
-
-  pollStatuses(deploymentId: string): Observable<DeploymentRevisionStatus[]> {
-    return timer(0, 5000).pipe(switchMap(() => this.getStatuses(deploymentId)));
-  }
 }
