@@ -2,6 +2,7 @@ package authjwt
 
 import (
 	"maps"
+	"sync"
 	"time"
 
 	"github.com/glasskube/distr/api"
@@ -35,7 +36,9 @@ const (
 // which should be OK for now.
 //
 // TODO: Maybe migrate to asymmetric encryption at some point.
-var JWTAuth = jwtauth.New("HS256", env.JWTSecret(), nil)
+var JWTAuth = sync.OnceValue[*jwtauth.JWTAuth](func() *jwtauth.JWTAuth {
+	return jwtauth.New("HS256", env.JWTSecret(), nil)
+})
 
 func GenerateDefaultToken(user types.UserAccount, org types.OrganizationWithUserRole) (jwt.Token, string, error) {
 	return generateUserToken(user, &org, defaultTokenExpiration, nil)
@@ -77,7 +80,7 @@ func generateUserToken(
 		claims[OrgIdKey] = org.ID.String()
 	}
 	maps.Copy(claims, extraClaims)
-	return JWTAuth.Encode(claims)
+	return JWTAuth().Encode(claims)
 }
 
 func GenerateAgentTokenValidFor(targetID, orgID uuid.UUID, validFor time.Duration) (jwt.Token, string, error) {
@@ -90,5 +93,5 @@ func GenerateAgentTokenValidFor(targetID, orgID uuid.UUID, validFor time.Duratio
 		jwt.AudienceKey:   audienceAgentValue,
 		OrgIdKey:          orgID.String(),
 	}
-	return JWTAuth.Encode(claims)
+	return JWTAuth().Encode(claims)
 }
