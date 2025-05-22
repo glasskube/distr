@@ -107,14 +107,22 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 
+		var org types.OrganizationWithUserRole
 		orgs, err := db.GetOrganizationsForUser(ctx, user.ID)
 		if err != nil {
 			return err
 		} else if len(orgs) < 1 {
-			// TODO create default organization
-			return errors.New("user has no organizations")
+			org.Name = user.Email
+			org.UserRole = types.UserRoleVendor
+			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
+				return err
+			} else if err := db.CreateUserAccountOrganizationAssignment(
+				ctx, user.ID, org.ID, org.UserRole); err != nil {
+				return err
+			}
+		} else {
+			org = orgs[0]
 		}
-		org := orgs[0]
 
 		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {
 			return fmt.Errorf("token creation failed: %w", err)
