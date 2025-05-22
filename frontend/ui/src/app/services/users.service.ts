@@ -12,7 +12,7 @@ export interface CreateUserAccountRequest {
 }
 
 export interface CreateUserAccountResponse {
-  id: string;
+  user: UserAccountWithRole;
   inviteUrl: string;
 }
 
@@ -52,18 +52,9 @@ export class UsersService {
   }
 
   public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
-    return this.httpClient.post<CreateUserAccountResponse>(this.baseUrl, request).pipe(
-      tap((it) =>
-        // TODO: add user details to CreateUserAccountResponse
-        this.cache.save({
-          email: request.email,
-          name: request.name,
-          userRole: request.userRole,
-          id: it.id,
-          createdAt: new Date().toISOString(),
-        })
-      )
-    );
+    return this.httpClient
+      .post<CreateUserAccountResponse>(this.baseUrl, request)
+      .pipe(tap((it) => this.cache.save(it.user)));
   }
 
   public delete(user: UserAccountWithRole): Observable<void> {

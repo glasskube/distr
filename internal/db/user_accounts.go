@@ -17,7 +17,9 @@ import (
 const (
 	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
 		"u.password_salt, u.name, u.image_id"
-	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
+	userAccountWithRoleOutputExpr = userAccountOutputExpr +
+		", j.user_role, j.created_at "
+	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
 )
 
 func CreateUserAccountWithOrganization(
@@ -198,7 +200,7 @@ func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID, role *types.Us
 	db := internalctx.GetDb(ctx)
 	checkRole := role != nil
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountWithRoleOutputExpr+`
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 		WHERE j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)
@@ -255,7 +257,7 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountWithRoleOutputExpr+`
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			WHERE u.id = @id AND j.organization_id = @orgId`,

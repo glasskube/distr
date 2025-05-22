@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -38,8 +39,10 @@ func UserAccountsRouter(r chi.Router) {
 
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 	if userAccounts, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID(), nil); err != nil {
+		log.Error("failed to get user accounts", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -149,7 +152,10 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RespondJSON(w, api.CreateUserAccountResponse{ID: userAccount.ID, InviteURL: inviteURL})
+	RespondJSON(w, api.CreateUserAccountResponse{
+		User:      userAccount.AsUserAccountWithRole(body.UserRole, time.Now()),
+		InviteURL: inviteURL,
+	})
 }
 
 func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {

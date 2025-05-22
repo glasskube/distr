@@ -132,7 +132,9 @@ export class UsersComponent implements OnDestroy {
         );
         this.inviteUrl = result.inviteUrl;
         if (!this.inviteUrl) {
-          this.toast.success('User has been added to the organization');
+          this.toast.success(
+            `${this.userRole() === 'vendor' ? 'User' : 'Customer'} has been added to the organization`
+          );
           this.closeInviteDialog();
         }
         this.refresh$.next();
