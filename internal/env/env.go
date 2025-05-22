@@ -45,6 +45,7 @@ var (
 	artifactTagsDefaultLimitPerOrg      int
 	cleanupDeploymentRevisionStatusCron *string
 	cleanupDeploymentTargetStatusCron   *string
+	cleanupDeploymentTargetMetricsCron  *string
 )
 
 func Initialize() {
@@ -116,6 +117,7 @@ func Initialize() {
 
 	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
+	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
 }
 
 func DatabaseUrl() string {
@@ -243,4 +245,8 @@ func CleanupDeploymenRevisionStatusCron() *string {
 
 func CleanupDeploymenTargetStatusCron() *string {
 	return cleanupDeploymentTargetStatusCron
+}
+
+func CleanupDeploymenTargetMetricsCron() *string {
+	return cleanupDeploymentTargetMetricsCron
 }

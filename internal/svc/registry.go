@@ -296,6 +296,12 @@ func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
 			jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup),
 		))
 	}
+	if cron := env.CleanupDeploymenTargetMetricsCron(); cron != nil {
+		util.Must(scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentTargetMetricsCleanup", cleanup.RunDeploymentTargetMetricsCleanup),
+		))
+	}
 	return scheduler
 }
 

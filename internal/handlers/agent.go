@@ -338,16 +338,6 @@ func agentPostMetricsHander(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-
-	// not in a TX because insertion should not be rolled back when the cleanup fails
-	if cnt, err := db.CleanupDeploymentTargetMetrics(ctx, &dt.DeploymentTarget); err != nil {
-		log.Error("failed to cleanup old deployment target metrics", zap.Error(err), zap.Reflect("metrics", metrics))
-	} else if cnt > 0 {
-		log.Debug("old deployment target metrics deleted",
-			zap.String("deploymentTargetId", dt.ID.String()),
-			zap.Int64("count", cnt),
-			zap.Duration("maxAge", *env.MetricsEntriesMaxAge()))
-	}
 }
 
 func queryAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
