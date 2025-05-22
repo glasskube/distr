@@ -97,12 +97,7 @@ export class TimeseriesTableComponent {
             filter((before) => before !== null),
             switchMap((before) => source.loadBefore(before))
           )
-        ).pipe(
-          tap((entries) => {
-            console.log({entries, batchSize: source.batchSize, hasMore: entries.length >= source.batchSize});
-            this.hasMore = entries.length >= source.batchSize;
-          })
-        ),
+        ).pipe(tap((entries) => (this.hasMore = entries.length >= source.batchSize))),
         interval(10_000).pipe(
           map(() => nextAfter),
           filter((after) => after !== null),
