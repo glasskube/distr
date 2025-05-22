@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentenv"
+	"github.com/glasskube/distr/internal/util"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -116,12 +117,7 @@ func RunHelmInstall(
 	} else if release, err := installAction.RunWithContext(ctx, chart, deployment.Values); err != nil {
 		return nil, fmt.Errorf("helm install failed: %w", err)
 	} else {
-		return &AgentDeployment{
-			ReleaseName:  release.Name,
-			HelmRevision: release.Version,
-			ID:           deployment.ID,
-			RevisionID:   deployment.RevisionID,
-		}, nil
+		return util.PtrTo(NewAgentDeployment(deployment, release)), nil
 	}
 }
 
@@ -149,12 +145,7 @@ func RunHelmUpgrade(
 		ctx, deployment.ReleaseName, chart, deployment.Values); err != nil {
 		return nil, fmt.Errorf("helm upgrade failed: %w", err)
 	} else {
-		return &AgentDeployment{
-			ReleaseName:  release.Name,
-			HelmRevision: release.Version,
-			ID:           deployment.ID,
-			RevisionID:   deployment.RevisionID,
-		}, nil
+		return util.PtrTo(NewAgentDeployment(deployment, release)), nil
 	}
 }
 
@@ -174,17 +165,13 @@ func RunHelmUninstall(ctx context.Context, namespace, releaseName string) error 
 	return nil
 }
 
-func GetHelmManifest(
-	ctx context.Context,
-	namespace string,
-	deployment api.AgentDeployment,
-) ([]*unstructured.Unstructured, error) {
+func GetHelmManifest(ctx context.Context, namespace, releaseName string) ([]*unstructured.Unstructured, error) {
 	cfg, err := GetHelmActionConfig(ctx, namespace, nil)
 	if err != nil {
 		return nil, err
 	}
 	getAction := action.NewGet(cfg)
-	if release, err := getAction.Run(deployment.ReleaseName); err != nil {
+	if release, err := getAction.Run(releaseName); err != nil {
 		return nil, err
 	} else {
 		// decode the release manifests which is represented as multi-document YAML

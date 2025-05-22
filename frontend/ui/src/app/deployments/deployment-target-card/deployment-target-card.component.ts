@@ -1,12 +1,10 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
+import {DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {
   Component,
   computed,
   inject,
   input,
-  InputSignal,
-  OnInit,
   resource,
   signal,
   TemplateRef,
@@ -35,7 +33,7 @@ import {
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap, takeUntil} from 'rxjs';
+import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
@@ -53,8 +51,8 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
-import {BytesPipe} from '../../../util/units';
 import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
+import {DeploymentStatusModalComponent} from '../deployment-status-modal/deployment-status-modal.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -68,12 +66,12 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
     IsStalePipe,
     DeploymentStatusDot,
     OverlayModule,
-    AsyncPipe,
     ConnectInstructionsComponent,
     ReactiveFormsModule,
     DeploymentModalComponent,
     DeploymentTargetMetricsComponent,
     NgTemplateOutlet,
+    DeploymentStatusModalComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -93,11 +91,11 @@ export class DeploymentTargetCardComponent {
   public readonly fullVersion = input(true);
   public readonly deploymentTargetMetrics = input<DeploymentTargetLatestMetrics | undefined>(undefined);
 
-  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<any>;
-  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<any>;
-  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<any>;
-  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<any>;
-  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<any>;
+  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
+  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<unknown>;
+  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<unknown>;
+  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<unknown>;
+  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<unknown>;
 
   protected readonly faShip = faShip;
   protected readonly faLink = faLink;
@@ -114,7 +112,6 @@ export class DeploymentTargetCardComponent {
   protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
   protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
   protected readonly selectedDeployment = signal<DeploymentWithLatestRevision | undefined>(undefined);
-  protected statuses: Observable<DeploymentRevisionStatus[]> = EMPTY;
 
   protected readonly metricsOpened = signal(false);
 
@@ -124,6 +121,7 @@ export class DeploymentTargetCardComponent {
 
   protected readonly isUndeploySupported = this.isAgentVersionAtLeast('1.3.0');
   protected readonly isMultiDeploymentSupported = this.isAgentVersionAtLeast('1.6.0');
+  protected readonly isLoggingSupported = this.isAgentVersionAtLeast('1.9.0');
 
   protected readonly agentUpdateAvailable = computed(() => {
     const agentVersions = this.agentVersions.value() ?? [];
@@ -209,6 +207,7 @@ export class DeploymentTargetCardComponent {
       this.editForm.controls.metricsEnabled.enable();
     }
   }
+
   protected async openInstructionsModal() {
     const dt = this.deploymentTarget();
     if (dt.currentStatus !== undefined) {
@@ -227,8 +226,21 @@ export class DeploymentTargetCardComponent {
   protected openStatusModal(deployment: DeploymentWithLatestRevision) {
     if (deployment?.id) {
       this.selectedDeployment.set(deployment);
-      this.statuses = this.deploymentStatuses.pollStatuses(deployment.id);
       this.showModal(this.deploymentStatusModal);
+    }
+  }
+
+  protected setLogsEnabled(deplyoment: DeploymentWithLatestRevision, logsEnabled: boolean) {
+    if (deplyoment.id) {
+      this.deploymentTargets.patchDeployment(deplyoment.id, {logsEnabled}).subscribe({
+        next: () => this.toast.success('Deployment has been updated.'),
+        error: (e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
     }
   }
 
