@@ -13,7 +13,9 @@ type Scheduler struct {
 }
 
 func NewScheduler(logger *zap.Logger, db queryable.Queryable) (*Scheduler, error) {
-	if scheduler, err := gocron.NewScheduler(); err != nil {
+	if scheduler, err := gocron.NewScheduler(
+		gocron.WithLogger(&gocronLoggerAdapter{logger: logger.Sugar()}),
+	); err != nil {
 		return nil, err
 	} else {
 		return &Scheduler{

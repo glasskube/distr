@@ -271,13 +271,6 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-
-		if deleted, err := db.CleanupDeploymentLogRecords(ctx, auth.CurrentDeploymentTargetID()); err != nil {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			log.Warn("log record cleanup error", zap.Error(err))
-		} else {
-			log.Info("log record cleanup finished", zap.Int64("deletedCount", deleted))
-		}
 	}
 }
 

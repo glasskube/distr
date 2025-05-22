@@ -320,7 +320,7 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 		}
 	}
 
-	if cron := env.CleanupDeploymenTargetMetricsCron(); cron != nil {
+	if cron := env.CleanupDeploymentTargetMetricsCron(); cron != nil {
 		err = scheduler.RegisterCronJob(
 			*cron,
 			jobs.NewJob("DeploymentTargetMetricsCleanup", cleanup.RunDeploymentTargetMetricsCleanup),
@@ -330,10 +330,15 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 		}
 	}
 
-	scheduler.RegisterCronJob("* * * * *", jobs.NewJob("MockJob", func(ctx context.Context) error {
-		<-ctx.Done()
-		return ctx.Err()
-	}))
+	if cron := env.CleanupDeploymentLogRecordCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentLogRecordCleanup", cleanup.RunDeploymentLogRecordCleanup),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return scheduler, nil
 }

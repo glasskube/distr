@@ -93,26 +93,24 @@ func GetDeploymentLogRecords(
 	return result, nil
 }
 
-// CleanupDeploymentLogRecords deletes logrecords for all deployments of the specified deployment target but keeps the
+// CleanupDeploymentLogRecords deletes logrecords for all deployments but keeps the
 // last [env.LogRecordEntriesMaxCount] records for each (deployment_id, resource) group.
 //
 // If [env.LogRecordEntriesMaxCount] is nil, no cleanup is performed.
-func CleanupDeploymentLogRecords(ctx context.Context, deploymentTargetID uuid.UUID) (int64, error) {
+func CleanupDeploymentLogRecords(ctx context.Context) (int64, error) {
 	limit := env.LogRecordEntriesMaxCount()
 	if limit == nil {
 		return 0, nil
 	}
+
 	db := internalctx.GetDb(ctx)
+	// TODO: Too many deleted? Set limit to 5 but it only keeps 3??
 	cmd, err := db.Exec(
 		ctx,
 		`DELETE FROM DeploymentLogRecord
-		WHERE deployment_id IN (SELECT id FROM Deployment WHERE deployment_target_id = @deploymentTargetId)
-		AND id NOT IN (
+		WHERE id NOT IN (
 			SELECT keep.id FROM (
-				SELECT DISTINCT lr.deployment_id, lr.resource
-				FROM DeploymentLogRecord lr
-				JOIN Deployment d ON d.id = lr.deployment_id
-				WHERE d.deployment_target_id = @deploymentTargetId
+				SELECT DISTINCT lr.deployment_id, lr.resource FROM DeploymentLogRecord lr
 			) rn
 			JOIN LATERAL (
 				SELECT *
@@ -122,10 +120,7 @@ func CleanupDeploymentLogRecords(ctx context.Context, deploymentTargetID uuid.UU
 				LIMIT @limit
 			) keep ON true
 		)`,
-		pgx.NamedArgs{
-			"deploymentTargetId": deploymentTargetID,
-			"limit":              limit,
-		},
+		pgx.NamedArgs{"limit": limit},
 	)
 	if err != nil {
 		return 0, fmt.Errorf("error cleaning up DeploymentLogRecords: %w", err)

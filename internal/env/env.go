@@ -46,6 +46,7 @@ var (
 	cleanupDeploymentRevisionStatusCron *string
 	cleanupDeploymentTargetStatusCron   *string
 	cleanupDeploymentTargetMetricsCron  *string
+	cleanupDeploymentLogRecordCron      *string
 )
 
 func Initialize() {
@@ -118,6 +119,7 @@ func Initialize() {
 	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
+	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
 }
 
 func DatabaseUrl() string {
@@ -247,6 +249,10 @@ func CleanupDeploymenTargetStatusCron() *string {
 	return cleanupDeploymentTargetStatusCron
 }
 
-func CleanupDeploymenTargetMetricsCron() *string {
+func CleanupDeploymentTargetMetricsCron() *string {
 	return cleanupDeploymentTargetMetricsCron
+}
+
+func CleanupDeploymentLogRecordCron() *string {
+	return cleanupDeploymentLogRecordCron
 }

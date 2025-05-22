@@ -269,6 +269,7 @@ func CleanupDeploymentRevisionStatus(ctx context.Context) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
+	// TODO: only keep latest per deployment, not deployment revision
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(
 		ctx,
