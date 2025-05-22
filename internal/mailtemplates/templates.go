@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/glasskube/distr/internal/env"
+
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/types"
 )
@@ -85,10 +87,14 @@ func VerifyEmail(userAccount types.UserAccount, org types.Organization, token st
 	}
 }
 
-func PasswordReset(userAccount types.UserAccount, org types.Organization, token string) (*template.Template, any) {
+func PasswordReset(userAccount types.UserAccount, org *types.Organization, token string) (*template.Template, any) {
+	host := env.Host()
+	if org != nil {
+		host = customdomains.AppDomainOrDefault(*org)
+	}
 	return templates.Lookup("password-reset.html"), map[string]any{
 		"UserAccount": userAccount,
-		"Host":        customdomains.AppDomainOrDefault(org),
+		"Host":        host,
 		"Token":       token,
 	}
 }

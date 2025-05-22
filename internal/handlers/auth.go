@@ -28,7 +28,6 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
@@ -218,29 +217,29 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 		}
-	} else if orgs, err := db.GetOrganizationsForUser(ctx, user.ID); err != nil || len(orgs) != 1 {
-		if len(orgs) != 1 {
-			multierr.AppendInto(&err, errors.New("user must have exacly one organization"))
-		}
-		log.Warn("could not send reset mail", zap.Error(err))
+	} else if orgs, err := db.GetOrganizationsForUser(ctx, user.ID); err != nil {
+		log.Error("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else if _, token, err := authjwt.GenerateResetToken(*user); err != nil {
-		log.Warn("could not send reset mail", zap.Error(err))
+		log.Error("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
-		org := orgs[0].Organization
+		var org *types.Organization
 		mailOpts := []mail.MailOpt{
 			mail.To(user.Email),
 			mail.Subject("Password reset"),
-			mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)),
 		}
-		if from, err := customdomains.EmailFromAddressParsedOrDefault(org); err == nil {
-			mailOpts = append(mailOpts, mail.From(*from))
-		} else {
-			log.Warn("error parsing custom from address", zap.Error(err))
+		if len(orgs) > 0 {
+			org = &orgs[0].Organization
+			if from, err := customdomains.EmailFromAddressParsedOrDefault(*org); err == nil {
+				mailOpts = append(mailOpts, mail.From(*from))
+			} else {
+				log.Warn("error parsing custom from address", zap.Error(err))
+			}
 		}
+		mailOpts = append(mailOpts, mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)))
 		if err := mailer.Send(ctx, mail.New(mailOpts...)); err != nil {
 			log.Warn("could not send reset mail", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)

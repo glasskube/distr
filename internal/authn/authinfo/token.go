@@ -20,6 +20,7 @@ func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {
 	} else if orgs, err := db.GetOrganizationsForUser(ctx, at.UserAccount.ID); err != nil {
 		return nil, err
 	} else if len(orgs) != 1 {
+		// TODO PAT migration
 		return nil, errors.New("user must have exacly one organization")
 	} else {
 		org := orgs[0]
