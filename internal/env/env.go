@@ -13,36 +13,37 @@ import (
 )
 
 var (
-	databaseUrl                    string
-	databaseMaxConns               *int
-	jwtSecret                      []byte
-	host                           string
-	registryHost                   string
-	mailerConfig                   MailerConfig
-	inviteTokenValidDuration       time.Duration
-	resetTokenValidDuration        time.Duration
-	agentTokenMaxValidDuration     time.Duration
-	agentInterval                  time.Duration
-	statusEntriesMaxAge            *time.Duration
-	metricsEntriesMaxAge           *time.Duration
-	sentryDSN                      string
-	sentryDebug                    bool
-	otelExporterSentryEnabled      bool
-	otelExporterOtlpEnabled        bool
-	enableQueryLogging             bool
-	agentDockerConfig              []byte
-	frontendSentryDSN              *string
-	frontendSentryTraceSampleRate  *float64
-	frontendPosthogToken           *string
-	frontendPosthogAPIHost         *string
-	frontendPosthogUIHost          *string
-	userEmailVerificationRequired  bool
-	serverShutdownDelayDuration    *time.Duration
-	registration                   RegistrationMode
-	registryEnabled                bool
-	registryS3Config               S3Config
-	artifactTagsDefaultLimitPerOrg int
-	cleanupStatusCron              *string
+	databaseUrl                         string
+	databaseMaxConns                    *int
+	jwtSecret                           []byte
+	host                                string
+	registryHost                        string
+	mailerConfig                        MailerConfig
+	inviteTokenValidDuration            time.Duration
+	resetTokenValidDuration             time.Duration
+	agentTokenMaxValidDuration          time.Duration
+	agentInterval                       time.Duration
+	statusEntriesMaxAge                 *time.Duration
+	metricsEntriesMaxAge                *time.Duration
+	sentryDSN                           string
+	sentryDebug                         bool
+	otelExporterSentryEnabled           bool
+	otelExporterOtlpEnabled             bool
+	enableQueryLogging                  bool
+	agentDockerConfig                   []byte
+	frontendSentryDSN                   *string
+	frontendSentryTraceSampleRate       *float64
+	frontendPosthogToken                *string
+	frontendPosthogAPIHost              *string
+	frontendPosthogUIHost               *string
+	userEmailVerificationRequired       bool
+	serverShutdownDelayDuration         *time.Duration
+	registration                        RegistrationMode
+	registryEnabled                     bool
+	registryS3Config                    S3Config
+	artifactTagsDefaultLimitPerOrg      int
+	cleanupDeploymentRevisionStatusCron *string
+	cleanupDeploymentTargetStatusCron   *string
 )
 
 func Initialize() {
@@ -111,7 +112,8 @@ func Initialize() {
 	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
 
-	cleanupStatusCron = envutil.GetEnvOrNil("CLEANUP_STATUS_CRON")
+	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
+	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
 }
 
 func DatabaseUrl() string {
@@ -229,6 +231,10 @@ func OtelExporterOtlpEnabled() bool {
 	return otelExporterOtlpEnabled
 }
 
-func CleanupStatusCron() *string {
-	return cleanupStatusCron
+func CleanupDeploymenRevisionStatusCron() *string {
+	return cleanupDeploymentRevisionStatusCron
+}
+
+func CleanupDeploymenTargetStatusCron() *string {
+	return cleanupDeploymentTargetStatusCron
 }

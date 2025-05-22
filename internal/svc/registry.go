@@ -283,8 +283,11 @@ func (r *Registry) GetArtifactsServer() server.Server {
 
 func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
 	scheduler := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
-	if cron := env.CleanupStatusCron(); cron != nil {
-		scheduler.RegisterCronJob(*cron, jobs.NewJob("StatusCleanup", cleanup.RunStatusCleanup))
+	if cron := env.CleanupDeploymenRevisionStatusCron(); cron != nil {
+		scheduler.RegisterCronJob(*cron, jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup))
+	}
+	if cron := env.CleanupDeploymenTargetStatusCron(); cron != nil {
+		scheduler.RegisterCronJob(*cron, jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup))
 	}
 	return scheduler
 }
