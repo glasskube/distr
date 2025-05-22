@@ -29,6 +29,7 @@
 - [Named](interfaces/Named.md)
 - [OrganizationBranding](interfaces/OrganizationBranding.md)
 - [PatchApplicationRequest](interfaces/PatchApplicationRequest.md)
+- [PatchDeploymentRequest](interfaces/PatchDeploymentRequest.md)
 - [TokenResponse](interfaces/TokenResponse.md)
 - [UserAccount](interfaces/UserAccount.md)
 - [UserAccountWithRole](interfaces/UserAccountWithRole.md)

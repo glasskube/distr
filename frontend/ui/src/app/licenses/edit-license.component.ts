@@ -189,7 +189,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
           const apps = await firstValueFrom(this.applicationsService.list());
           return apps.find((a) => a.id === subjectId);
         }),
-        filter((a) => !!a)
+        filter((a) => a !== undefined)
       )
       .subscribe((selectedApp) => {
         const allVersions = selectedApp.versions ?? [];

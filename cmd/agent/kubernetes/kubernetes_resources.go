@@ -11,8 +11,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func DecodeResourceYaml(data []byte) ([]*unstructured.Unstructured, error) {
@@ -30,6 +32,29 @@ func DecodeResourceYaml(data []byte) ([]*unstructured.Unstructured, error) {
 		}
 	}
 	return result, nil
+}
+
+func FromUnstructuredSlice(src []*unstructured.Unstructured) []runtime.Object {
+	result := make([]runtime.Object, len(src))
+	for i, obj := range src {
+		if converted, err := FromUnstructured(obj); err != nil {
+			logger.With(zap.Error(err)).Sugar().Warn("cannot convert unstructured with kind %v", obj.GetKind())
+			result[i] = obj
+		} else {
+			result[i] = converted
+		}
+	}
+	return result
+}
+
+func FromUnstructured(src *unstructured.Unstructured) (runtime.Object, error) {
+	if dst, err := scheme.Scheme.New(src.GroupVersionKind()); err != nil {
+		return nil, err
+	} else if err := runtime.DefaultUnstructuredConverter.FromUnstructured(src.Object, dst); err != nil {
+		return nil, err
+	} else {
+		return dst, nil
+	}
 }
 
 func ApplyResources(ctx context.Context, namespace string, objects []*unstructured.Unstructured) error {

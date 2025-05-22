@@ -23,6 +23,7 @@ type AgentDeployment struct {
 	ID           uuid.UUID                    `json:"id"`
 	RevisionID   uuid.UUID                    `json:"revisionId"`
 	RegistryAuth map[string]AgentRegistryAuth `json:"registryAuth"`
+	LogsEnabled  bool                         `json:"logsEnabled"`
 
 	// Docker specific data
 

@@ -11,10 +11,17 @@ import {
   tap,
   timer,
   merge,
+  map,
 } from 'rxjs';
 import {ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {Deployment, DeploymentRequest, DeploymentTarget, DeploymentTargetAccessResponse} from '@glasskube/distr-sdk';
+import {
+  Deployment,
+  DeploymentRequest,
+  DeploymentTarget,
+  DeploymentTargetAccessResponse,
+  PatchDeploymentRequest,
+} from '@glasskube/distr-sdk';
 
 class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   protected override identify = (dt: DeploymentTarget) => dt.id;
@@ -92,6 +99,12 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
 
   deploy(request: DeploymentRequest): Observable<void> {
     return this.httpClient.put<void>(this.deploymentsBaseUrl, request).pipe(tap(() => this.pollRefresh$.next()));
+  }
+
+  patchDeployment(id: string, request: PatchDeploymentRequest): Observable<Deployment> {
+    return this.httpClient
+      .patch<Deployment>(`${this.deploymentsBaseUrl}/${id}`, request)
+      .pipe(tap(() => this.pollRefresh$.next()));
   }
 
   undeploy(id: string): Observable<void> {
