@@ -165,13 +165,13 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
-	} else if managesDts, err := db.UserManagesDeploymentTargetInOrganization(
-		ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+	} else if ok, err := userCanBeRemovedFromOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
 		log.Error("error checking user/org removal", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	} else if managesDts {
-		http.Error(w, "Please ensure there are no deployments managed by this user and try again", http.StatusBadRequest)
+	} else if !ok {
+		http.Error(w, "Please ensure there are no deployment targets and licenses owned by this user and try again",
+			http.StatusBadRequest)
 	} else if err := db.DeleteUserAccountFromOrganization(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
 		log.Error("error removing user from organization", zap.Error(err))
 		if errors.Is(err, apierrors.ErrNotFound) {
@@ -182,6 +182,24 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func userCanBeRemovedFromOrg(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	if managesDts, err := db.UserManagesDeploymentTargetInOrganization(ctx, userID, orgID); err != nil {
+		return false, err
+	} else if managesDts {
+		return false, nil
+	} else if ownsAppLicenses, err := db.UserOwnsApplicationLicensesInOrganization(ctx, userID, orgID); err != nil {
+		return false, err
+	} else if ownsAppLicenses {
+		return false, nil
+	} else if ownsArtifactLicenses, err := db.UserOwnsArtifactLicensesInOrganization(ctx, userID, orgID); err != nil {
+		return false, err
+	} else if ownsArtifactLicenses {
+		return false, nil
+	} else {
+		return true, nil
 	}
 }
 
