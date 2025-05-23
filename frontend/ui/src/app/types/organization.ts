@@ -12,4 +12,5 @@ export interface Organization extends BaseModel, Named {
 
 export interface OrganizationWithUserRole extends Organization {
   userRole: UserRole;
+  joinedOrgAt: string;
 }

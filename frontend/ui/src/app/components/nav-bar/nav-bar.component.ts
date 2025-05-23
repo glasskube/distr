@@ -11,11 +11,23 @@ import {
   faChevronDown,
   faChevronUp,
   faLightbulb,
+  faPlus,
   faShuffle,
   faStarOfLife,
 } from '@fortawesome/free-solid-svg-icons';
 import {UserRole} from '@glasskube/distr-sdk';
-import {distinctUntilChanged, filter, firstValueFrom, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
+import {
+  combineLatestWith,
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  lastValueFrom,
+  map,
+  Observable,
+  Subject,
+  takeUntil,
+  withLatestFrom,
+} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
@@ -30,6 +42,13 @@ import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
+import {ContextService} from '../../services/context.service';
+
+type SwitchOptions = {
+  currentOrg: Organization;
+  availableOrgs: OrganizationWithUserRole[];
+  canCreateOrg: boolean;
+};
 
 @Component({
   selector: 'app-nav-bar',
@@ -47,30 +66,37 @@ import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
   animations: [dropdownAnimation],
 })
 export class NavBarComponent implements OnInit, OnDestroy {
+  private destroyed$ = new Subject<void>();
   private readonly auth = inject(AuthService);
   public readonly sidebar = inject(SidebarService);
   private readonly toast = inject(ToastService);
-  private readonly users = inject(UsersService);
   private readonly route = inject(ActivatedRoute);
+  private readonly usersService = inject(UsersService);
   private readonly organizationService = inject(OrganizationService);
-  protected readonly organizations$ = this.organizationService.list();
-
   private readonly organizationBranding = inject(OrganizationBrandingService);
+  protected readonly organization$ = this.organizationService.get();
+  protected readonly user$ = this.usersService.get();
+  protected readonly switchOptions$: Observable<SwitchOptions> = this.organizationService.getAll().pipe(
+    takeUntil(this.destroyed$),
+    combineLatestWith(this.organization$),
+    map(([orgs, currentOrg]) => {
+      return {
+        currentOrg,
+        availableOrgs: orgs.filter((o) => o.id !== currentOrg.id),
+        canCreateOrg: orgs.some((o) => o.userRole === 'vendor'),
+      };
+    })
+  );
+
   userOpened = false;
   organizationsOpened = false;
-  currentOrg = this.organizationService.get();
-  email?: string;
-  name?: string;
-  role?: UserRole;
-  imageUrl?: string;
   logoUrl = '/distr-logo.svg';
   customerSubtitle = 'Customer Portal';
 
   protected readonly faBarsStaggered = faBarsStaggered;
-  private destroyed$ = new Subject<void>();
   protected tutorial?: string;
 
-  public async ngOnInit() {
+  public ngOnInit() {
     this.route.queryParams
       .pipe(
         map((params) => params['tutorial']),
@@ -82,15 +108,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
       });
 
     try {
-      const claims = this.auth.getClaims();
-      if (claims) {
-        const {email, name, role} = claims;
-        this.email = email;
-        this.name = name;
-        this.role = role;
-        this.initBranding();
-        this.imageUrl = (await firstValueFrom(this.users.getUserByEmail(email))).imageUrl;
-      }
+      this.initBranding();
     } catch (e) {
       console.error(e);
     }
@@ -123,16 +141,11 @@ export class NavBarComponent implements OnInit, OnDestroy {
         location.assign('/');
       }
     } catch (e) {
-      console.log(e);
       const msg = getFormDisplayedError(e);
       if (msg) {
         this.toast.error(msg);
       }
     }
-  }
-
-  isCurrentOrg(org: OrganizationWithUserRole): boolean {
-    return org.id === this.auth.getClaims()?.org;
   }
 
   public async logout() {
@@ -154,4 +167,5 @@ export class NavBarComponent implements OnInit, OnDestroy {
   protected readonly faCheckDouble = faCheckDouble;
   protected readonly faChevronDown = faChevronDown;
   protected readonly faChevronUp = faChevronUp;
+  protected readonly faPlus = faPlus;
 }

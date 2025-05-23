@@ -26,7 +26,7 @@ const (
 		o.registry_domain,
 		o.email_from_address
 	`
-	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role "
+	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role, j.created_at as joined_org_at "
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {

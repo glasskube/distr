@@ -70,6 +70,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracer 
 			r.Route("/artifacts", handlers.ArtifactsRouter)
 			r.Route("/artifact-licenses", handlers.ArtifactLicensesRouter)
 			r.Route("/artifact-pulls", handlers.ArtifactPullsRouter)
+			r.Route("/context", handlers.ContextRouter)
 			r.Route("/dashboard", handlers.DashboardRouter)
 			r.Route("/deployments", handlers.DeploymentsRouter)
 			r.Route("/deployment-targets", handlers.DeploymentTargetsRouter)

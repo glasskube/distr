@@ -12,153 +12,172 @@
     </div>
   }
 
-  <div class="px-3 py-3 lg:px-5 lg:pl-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center justify-start rtl:justify-end">
-        <button
-          data-drawer-target="logo-sidebar"
-          data-drawer-toggle="logo-sidebar"
-          aria-controls="logo-sidebar"
-          type="button"
-          (click)="sidebar.toggle()"
-          class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-          <span class="sr-only">Open sidebar</span>
-          <fa-icon [icon]="faBarsStaggered" size="xl" class="h-6 w-6"></fa-icon>
-        </button>
-        <a routerLink="/" class="flex ms-2 md:me-24">
-          <img [src]="logoUrl" class="h-8 me-3" alt="" />
-          <h1 class="font-display self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">
-            @if (role === 'vendor') {
-              Distr
-            }
-            <small class="ms-2 font-semibold text-gray-500 dark:text-gray-400">
-              @if (role === 'vendor') {
-                Vendor Platform
-              } @else {
-                {{ customerSubtitle }}
+  @if (user$ | async; as user) {
+    <div class="px-3 py-3 lg:px-5 lg:pl-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center justify-start rtl:justify-end">
+          <button
+            data-drawer-target="logo-sidebar"
+            data-drawer-toggle="logo-sidebar"
+            aria-controls="logo-sidebar"
+            type="button"
+            (click)="sidebar.toggle()"
+            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+            <span class="sr-only">Open sidebar</span>
+            <fa-icon [icon]="faBarsStaggered" size="xl" class="h-6 w-6"></fa-icon>
+          </button>
+          <a routerLink="/" class="flex ms-2 md:me-24">
+            <img [src]="logoUrl" class="h-8 me-3" alt="" />
+            <h1 class="font-display self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">
+              @if (user.userRole === 'vendor') {
+                Distr
               }
-            </small>
-          </h1>
-        </a>
-      </div>
-      <div class="flex items-center">
-        <div class="flex items-center ms-3">
-          <div>
-            <app-color-scheme-switcher></app-color-scheme-switcher>
-          </div>
-          <div class="ms-2 me-4">
-            <button
-              type="button"
-              class="flex items-center text-sm"
-              aria-expanded="false"
-              cdkOverlayOrigin
-              #organizationsDropdownTrigger="cdkOverlayOrigin"
-              (click)="organizationsOpened = !organizationsOpened">
-              <span class="sr-only">Show Organizations</span>
-              @if (currentOrg | async; as org) {
-                <span class="flex flex-col text-end text-sm font-medium text-gray-900 dark:text-gray-300" role="none">
-                  {{ org.name }}
-                  <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
-                    {{ role | titlecase }}
-                  </span>
-                </span>
-                <fa-icon
-                  class="ml-2 text-gray-900 dark:text-gray-300"
-                  [icon]="organizationsOpened ? faChevronUp : faChevronDown"></fa-icon>
-              }
-            </button>
-          </div>
-          <ng-template
-            cdkConnectedOverlay
-            [cdkConnectedOverlayHasBackdrop]="true"
-            (backdropClick)="organizationsOpened = false"
-            [cdkConnectedOverlayBackdropClass]="'transparent'"
-            [cdkConnectedOverlayOrigin]="organizationsDropdownTrigger"
-            [cdkConnectedOverlayOpen]="organizationsOpened">
-            <div
-              @dropdown
-              style="transform-origin: top center"
-              class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
-              <ul class="py-1" role="none">
-                @for (org of organizations$ | async; track org.id) {
-                  @if (!isCurrentOrg(org)) {
-                    <li>
-                      <button
-                        (click)="switchContext(org)"
-                        [title]="'Switch to this organization'"
-                        class="flex items-center w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                        role="menuitem">
-                        <fa-icon class="me-4" [icon]="faShuffle"></fa-icon>
-                        <span
-                          class="flex flex-col text-start text-sm font-medium text-gray-900 dark:text-gray-300"
-                          role="none">
-                          {{ org.name }}
-                          <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
-                            {{ org.userRole | titlecase }}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  }
+              <small class="ms-2 font-semibold text-gray-500 dark:text-gray-400">
+                @if (user.userRole === 'vendor') {
+                  Vendor Platform
+                } @else {
+                  {{ customerSubtitle }}
                 }
-              </ul>
+              </small>
+            </h1>
+          </a>
+        </div>
+        <div class="flex items-center">
+          <div class="flex items-center ms-3">
+            <div>
+              <app-color-scheme-switcher></app-color-scheme-switcher>
             </div>
-          </ng-template>
-          <div class="ml-1">
-            <button
-              type="button"
-              class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-              aria-expanded="false"
-              cdkOverlayOrigin
-              #dropdownTrigger="cdkOverlayOrigin"
-              (click)="userOpened = !userOpened">
-              <span class="sr-only">Open user menu</span>
-              <img class="w-8 h-8 rounded-full" [attr.src]="imageUrl | secureImage | async" alt="user photo" />
-            </button>
-          </div>
-          <ng-template
-            cdkConnectedOverlay
-            [cdkConnectedOverlayHasBackdrop]="true"
-            (backdropClick)="userOpened = false"
-            [cdkConnectedOverlayBackdropClass]="'transparent'"
-            [cdkConnectedOverlayOrigin]="dropdownTrigger"
-            [cdkConnectedOverlayOpen]="userOpened">
-            <div
-              @dropdown
-              style="transform-origin: top center"
-              class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
-              <div class="px-4 py-3" role="none">
-                <p class="text-sm text-gray-900 dark:text-white" role="none">{{ name }}</p>
-                <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
-                  {{ email }}
-                </p>
-              </div>
-              <ul class="py-1" role="none">
-                <li>
-                  <a
-                    (click)="userOpened = false"
-                    routerLink="/settings/access-tokens"
-                    class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                    role="menuitem">
-                    Personal Access Tokens
-                  </a>
-                </li>
-              </ul>
-              <ul class="py-1" role="none">
-                <li>
+
+            @if (switchOptions$ | async; as switchOptions) {
+              @if (switchOptions.canCreateOrg || switchOptions.availableOrgs.length > 0) {
+                <div class="ms-2 me-4">
                   <button
                     type="button"
-                    (click)="logout()"
-                    class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                    role="menuitem">
-                    Sign out
+                    class="flex items-center text-sm"
+                    aria-expanded="false"
+                    cdkOverlayOrigin
+                    #organizationsDropdownTrigger="cdkOverlayOrigin"
+                    (click)="organizationsOpened = !organizationsOpened">
+                    <span class="sr-only">Show Organizations</span>
+                    <span
+                      class="flex flex-col text-end text-sm font-medium text-gray-900 dark:text-gray-300"
+                      role="none">
+                      {{ switchOptions.currentOrg.name }}
+                      <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
+                        {{ user.userRole | titlecase }}
+                      </span>
+                    </span>
+                    <fa-icon
+                      class="ml-2 text-gray-900 dark:text-gray-300"
+                      [icon]="organizationsOpened ? faChevronUp : faChevronDown"></fa-icon>
                   </button>
-                </li>
-              </ul>
+                </div>
+                <ng-template
+                  cdkConnectedOverlay
+                  [cdkConnectedOverlayHasBackdrop]="true"
+                  (backdropClick)="organizationsOpened = false"
+                  [cdkConnectedOverlayBackdropClass]="'transparent'"
+                  [cdkConnectedOverlayOrigin]="organizationsDropdownTrigger"
+                  [cdkConnectedOverlayOpen]="organizationsOpened">
+                  <div
+                    @dropdown
+                    style="transform-origin: top center"
+                    class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
+                    <ul class="py-1" role="none">
+                      @for (org of switchOptions.availableOrgs; track org.id) {
+                        <li>
+                          <button
+                            (click)="switchContext(org)"
+                            [title]="'Switch to this organization'"
+                            class="flex items-center w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                            role="menuitem">
+                            <fa-icon class="me-4" [icon]="faShuffle"></fa-icon>
+                            <span
+                              class="flex flex-col text-start text-sm font-medium text-gray-900 dark:text-gray-300"
+                              role="none">
+                              {{ org.name }}
+                              <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
+                                {{ org.userRole | titlecase }}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                    @if (switchOptions.canCreateOrg) {
+                      <ul class="py-1" role="none">
+                        <li>
+                          <button
+                            type="button"
+                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                            role="menuitem">
+                            <fa-icon [icon]="faPlus"></fa-icon>
+                            Create Organization
+                          </button>
+                        </li>
+                      </ul>
+                    }
+                  </div>
+                </ng-template>
+              }
+            }
+
+            <div class="ml-1">
+              <button
+                type="button"
+                class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                aria-expanded="false"
+                cdkOverlayOrigin
+                #dropdownTrigger="cdkOverlayOrigin"
+                (click)="userOpened = !userOpened">
+                <span class="sr-only">Open user menu</span>
+                <img class="w-8 h-8 rounded-full" [attr.src]="user.imageUrl | secureImage | async" alt="user photo" />
+              </button>
             </div>
-          </ng-template>
+            <ng-template
+              cdkConnectedOverlay
+              [cdkConnectedOverlayHasBackdrop]="true"
+              (backdropClick)="userOpened = false"
+              [cdkConnectedOverlayBackdropClass]="'transparent'"
+              [cdkConnectedOverlayOrigin]="dropdownTrigger"
+              [cdkConnectedOverlayOpen]="userOpened">
+              <div
+                @dropdown
+                style="transform-origin: top center"
+                class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
+                <div class="px-4 py-3" role="none">
+                  <p class="text-sm text-gray-900 dark:text-white" role="none">{{ user.name }}</p>
+                  <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
+                    {{ user.email }}
+                  </p>
+                </div>
+                <ul class="py-1" role="none">
+                  <li>
+                    <a
+                      (click)="userOpened = false"
+                      routerLink="/settings/access-tokens"
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                      role="menuitem">
+                      Personal Access Tokens
+                    </a>
+                  </li>
+                </ul>
+                <ul class="py-1" role="none">
+                  <li>
+                    <button
+                      type="button"
+                      (click)="logout()"
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                      role="menuitem">
+                      Sign out
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </ng-template>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  }
 </nav>
