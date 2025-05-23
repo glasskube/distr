@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -54,6 +55,7 @@ func AgentRouter(r chi.Router) {
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
 			r.Post("/metrics", agentPostMetricsHander)
+			r.Put("/logs", agentPutDeploymentLogsHandler())
 		})
 	})
 }
@@ -156,8 +158,9 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			agentDeployment := api.AgentDeployment{
-				ID:         deployment.ID,
-				RevisionID: deployment.DeploymentRevisionID,
+				ID:          deployment.ID,
+				RevisionID:  deployment.DeploymentRevisionID,
+				LogsEnabled: deployment.LogsEnabled,
 			}
 
 			if deployment.ApplicationLicenseID != nil {
@@ -241,6 +244,48 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
 			zap.Int64("count", cnt),
 			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
+	}
+}
+
+func agentPutDeploymentLogsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.AgentAuthentication.Require(ctx)
+		records, err := JsonBody[[]api.DeploymentLogRecord](w, r)
+		if err != nil {
+			return
+		}
+		deployments, err := db.GetDeploymentsForDeploymentTarget(ctx, auth.CurrentDeploymentTargetID())
+		if err != nil {
+			log.Error("error getting deployments", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		errIdx := slices.IndexFunc(records, func(r api.DeploymentLogRecord) bool {
+			return !slices.ContainsFunc(deployments, func(d types.DeploymentWithLatestRevision) bool {
+				return d.ID == r.DeploymentID
+			})
+		})
+		if errIdx >= 0 {
+			// TODO: also check DeplyomentRevisionID
+			http.Error(w, fmt.Sprintf("invalid deploymentId at index %v", errIdx), http.StatusBadRequest)
+			return
+		}
+		if err := db.SaveDeploymentLogRecords(ctx, records); err != nil {
+			log.Error("error saving log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		if deleted, err := db.CleanupDeploymentLogRecords(ctx, auth.CurrentDeploymentTargetID()); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Warn("log record cleanup error", zap.Error(err))
+		} else {
+			log.Info("log record cleanup finished", zap.Int64("deletedCount", deleted))
+		}
 	}
 }
 

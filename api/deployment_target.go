@@ -34,3 +34,7 @@ func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error)
 	}
 	return
 }
+
+type PatchDeploymentRequest struct {
+	LogsEnabled *bool `json:"logsEnabled,omitempty"`
+}

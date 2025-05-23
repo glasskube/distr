@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/glasskube/distr/api"
 	"github.com/google/uuid"
@@ -20,7 +21,8 @@ import (
 
 const (
 	deploymentOutputExpr = `
-		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id, d.docker_type
+		d.id, d.created_at, d.deployment_target_id, d.release_name, d.application_license_id, d.docker_type,
+		d.logs_enabled
 	`
 )
 
@@ -152,6 +154,33 @@ func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error
 	}
 }
 
+func UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`UPDATE Deployment AS d
+		SET logs_enabled = @logsEnabled
+		WHERE id = @id
+		RETURNING`+deploymentOutputExpr,
+		pgx.NamedArgs{
+			"id":          deployment.ID,
+			"logsEnabled": deployment.LogsEnabled,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Deployment]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return fmt.Errorf("could not update Deployment: %w", err)
+	} else {
+		*deployment = result
+		return nil
+	}
+}
+
 func DeleteDeploymentWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	res, err := db.Exec(ctx, "DELETE FROM Deployment WHERE id = @id", pgx.NamedArgs{"id": id})
@@ -254,9 +283,14 @@ func GetDeploymentStatus(
 	ctx context.Context,
 	deploymentID uuid.UUID,
 	maxRows int,
+	before time.Time,
+	after time.Time,
 ) ([]types.DeploymentRevisionStatus, error) {
-	db := internalctx.GetDb(ctx)
+	if before.IsZero() {
+		before = time.Now()
+	}
 
+	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
 		"SELECT id from DeploymentRevision WHERE deployment_id = @deploymentId",
@@ -275,9 +309,15 @@ func GetDeploymentStatus(
 		`SELECT id, created_at, deployment_revision_id, type, message
 		FROM DeploymentRevisionStatus
 		WHERE deployment_revision_id = ANY (@deploymentRevisionIds)
+			AND created_at BETWEEN @after AND @before
 		ORDER BY created_at DESC
 		LIMIT @maxRows`,
-		pgx.NamedArgs{"deploymentRevisionIds": deploymentRevisionIDs, "maxRows": maxRows},
+		pgx.NamedArgs{
+			"deploymentRevisionIds": deploymentRevisionIDs,
+			"maxRows":               maxRows,
+			"before":                before,
+			"after":                 after,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
