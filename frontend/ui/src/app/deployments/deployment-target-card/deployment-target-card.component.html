@@ -54,6 +54,9 @@
 
     @if (fullVersion()) {
       <div class="space-y-4 sm:flex sm:space-x-2 sm:space-y-0 items-center self-start">
+        @let status = deploymentTarget().currentStatus;
+        @let deployEnabled = isMultiDeploymentSupported() || deploymentTarget().deployments.length === 0;
+
         @if (deploymentTarget().metricsEnabled) {
           @if (deploymentTargetMetrics(); as metrics) {
             <button
@@ -82,23 +85,19 @@
             </ng-template>
           }
         }
-        @let status = deploymentTarget().currentStatus;
-        @if (status && !(status | isStale)) {
-          @let deployEnabled = isMultiDeploymentSupported() || deploymentTarget().deployments.length === 0;
-          <button
-            type="button"
-            (click)="showDeploymentModal()"
-            class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
-            [disabled]="!deployEnabled"
-            [title]="
-              deployEnabled
-                ? undefined
-                : 'Multiple deployments require agent version 1.6 or newer. Please consider updating.'
-            ">
-            <fa-icon [icon]="faPlus" class="h-5 w-5 mr-0.5 -ml-1 text-gray-500 dark:text-gray-400"></fa-icon>
-            Deployment
-          </button>
-        }
+        <button
+          type="button"
+          (click)="showDeploymentModal()"
+          class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed"
+          [disabled]="!deployEnabled"
+          [title]="
+            deployEnabled
+              ? undefined
+              : 'Multiple deployments require agent version 1.6 or newer. Please consider updating.'
+          ">
+          <fa-icon [icon]="faPlus" class="h-5 w-5 mr-0.5 -ml-1 text-gray-500 dark:text-gray-400"></fa-icon>
+          Deployment
+        </button>
         @if (!status) {
           <button
             type="button"
@@ -272,7 +271,6 @@
               @if (fullVersion()) {
                 <td
                   class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center justify-end space-x-2">
-                  @let targetStatus = deploymentTarget().currentStatus;
                   @if (deployment.latestStatus) {
                     <button
                       type="button"
@@ -285,17 +283,13 @@
                       Inspect
                     </button>
                   }
-                  @if (targetStatus && !(targetStatus | isStale)) {
-                    <button
-                      type="button"
-                      (click)="showDeploymentModal(deployment)"
-                      class="px-2 py-1 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                      <fa-icon
-                        [icon]="faRotate"
-                        class="h-5 w-5 mr-1 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
-                      Update
-                    </button>
-                  }
+                  <button
+                    type="button"
+                    (click)="showDeploymentModal(deployment)"
+                    class="px-2 py-1 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <fa-icon [icon]="faRotate" class="h-5 w-5 mr-1 -ml-0.5 text-gray-500 dark:text-gray-400"></fa-icon>
+                    Update
+                  </button>
                   <button
                     type="button"
                     aria-label="More actions"
