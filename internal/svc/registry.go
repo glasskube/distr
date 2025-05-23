@@ -113,7 +113,7 @@ func (r *Registry) Shutdown() error {
 	}
 
 	// some devices like stdout and stderr can not be synced by the OS
-	if err := r.logger.Sync(); !errors.Is(err, syscall.EINVAL) {
+	if err := r.logger.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
 		return fmt.Errorf("logger sync failed: %w", err)
 	}
 
