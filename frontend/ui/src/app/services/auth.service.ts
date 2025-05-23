@@ -4,7 +4,7 @@ import {jwtDecode} from 'jwt-decode';
 import {catchError, map, Observable, of, tap, throwError} from 'rxjs';
 import dayjs from 'dayjs';
 import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
-import {OrganizationWithUserRole} from '../types/organization';
+import {Organization, OrganizationWithUserRole} from '../types/organization';
 
 const tokenStorageKey = 'cloud_token';
 const actionTokenStorageKey = 'distr_action_token';
@@ -110,7 +110,7 @@ export class AuthService {
     return {token: null, claims: undefined};
   }
 
-  public switchContext(org: OrganizationWithUserRole): Observable<boolean> {
+  public switchContext(org: Organization): Observable<boolean> {
     return this.httpClient
       .post<TokenResponse | undefined>(`${authBaseUrl}/switch-context`, {organizationId: org.id})
       .pipe(

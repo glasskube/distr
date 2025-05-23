@@ -133,7 +133,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
     }
   }
 
-  async switchContext(org: OrganizationWithUserRole) {
+  async switchContext(org: Organization) {
     this.organizationsOpened = false;
     try {
       const switched = await lastValueFrom(this.auth.switchContext(org));
@@ -148,7 +148,25 @@ export class NavBarComponent implements OnInit, OnDestroy {
     }
   }
 
-  public async logout() {
+  async createOrg() {
+    // TODO modal etc
+    try {
+      const created = await lastValueFrom(
+        this.organizationService.create({
+          name: 'my org lol',
+          features: [],
+        })
+      );
+      await this.switchContext(created);
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    }
+  }
+
+  async logout() {
     await lastValueFrom(this.auth.logout());
     // This is necessary to flush the caching crud services
     // TODO: implement flushing of services directly and switch to router.navigate(...)

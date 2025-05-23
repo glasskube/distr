@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
@@ -21,7 +23,11 @@ import (
 func OrganizationRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganization)
-	r.With(requireUserRoleVendor).Put("/", updateOrganization)
+	r.Group(func(r chi.Router) {
+		r.Use(requireUserRoleVendor)
+		r.Put("/", updateOrganization)
+		r.Post("/", createOrganization)
+	})
 	r.Route("/branding", OrganizationBrandingRouter)
 }
 
@@ -83,6 +89,42 @@ func updateOrganization(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, organization)
+	}
+}
+
+func createOrganization(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	auth := auth.Authentication.Require(ctx)
+	log := internalctx.GetLogger(ctx)
+
+	organization, err := JsonBody[types.Organization](w, r)
+	if err != nil {
+		return
+	} else if organization.Name == "" {
+		http.Error(w, "name is required", http.StatusBadRequest)
+		return
+	}
+
+	// TODO lots of validation etc
+
+	if err := db.RunTx(ctx, func(ctx context.Context) error {
+		if err := db.CreateOrganization(ctx, &organization); err != nil {
+			return err
+		}
+		if err := db.CreateUserAccountOrganizationAssignment(
+			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleVendor); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		log.Error("could not create organization/assignment", zap.Error(err))
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	} else {
+		RespondJSON(w, types.OrganizationWithUserRole{
+			Organization: organization,
+			UserRole:     types.UserRoleVendor,
+			JoinedOrgAt:  time.Now(), // maybe TODO
+		})
 	}
 }
 
