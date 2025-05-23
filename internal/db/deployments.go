@@ -263,16 +263,37 @@ func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 	return err
 }
 
-func CleanupDeploymentRevisionStatus(ctx context.Context, revisionID uuid.UUID) (int64, error) {
+// CleanupDeploymentRevisionStatus deletes all DeploymentRevisionStatus entries older than [env.StatusEntriesMaxAge()],
+// always keeping the latest entry across all DeploymentRevisions of every Deployment
+func CleanupDeploymentRevisionStatus(ctx context.Context) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
+
 	db := internalctx.GetDb(ctx)
-	if cmd, err := db.Exec(ctx, `
-		DELETE FROM DeploymentRevisionStatus
-		       WHERE deployment_revision_id = @deploymentRevisionId AND
-		             current_timestamp - created_at > @statusEntriesMaxAge`,
-		pgx.NamedArgs{"deploymentRevisionId": revisionID, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
+	if cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM DeploymentRevisionStatus drs
+		USING (
+			SELECT
+				dr1.id AS deployment_revision_id,
+				max(dr2.max_created_at) AS max_created_at
+			FROM DeploymentRevision dr1
+			JOIN (
+				SELECT dr.id, dr.deployment_id, (
+					SELECT max(drs.created_at)
+					FROM DeploymentRevisionStatus drs
+					WHERE drs.deployment_revision_id = dr.id
+				) AS max_created_at
+				FROM DeploymentRevision dr
+			) dr2 ON dr1.deployment_id = dr2.deployment_id
+			GROUP BY dr1.id
+		) max_created_at
+		WHERE drs.deployment_revision_id = max_created_at.deployment_revision_id
+			AND drs.created_at < max_created_at.max_created_at
+			AND current_timestamp - drs.created_at > @statusEntriesMaxAge`,
+		pgx.NamedArgs{"statusEntriesMaxAge": env.StatusEntriesMaxAge()},
+	); err != nil {
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
