@@ -104,7 +104,6 @@ func CleanupDeploymentLogRecords(ctx context.Context) (int64, error) {
 	}
 
 	db := internalctx.GetDb(ctx)
-	// TODO: Too many deleted? Set limit to 5 but it only keeps 3??
 	cmd, err := db.Exec(
 		ctx,
 		`DELETE FROM DeploymentLogRecord
