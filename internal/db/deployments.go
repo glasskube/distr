@@ -264,22 +264,30 @@ func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 }
 
 // CleanupDeploymentRevisionStatus deletes all DeploymentRevisionStatus entries older than [env.StatusEntriesMaxAge()],
-// always keeping the latest entry for every DeploymentRevision
+// always keeping the latest entry across all DeploymentRevisions of every Deployment
 func CleanupDeploymentRevisionStatus(ctx context.Context) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
-	// TODO: only keep latest per deployment, not deployment revision
+
 	db := internalctx.GetDb(ctx)
 	if cmd, err := db.Exec(
 		ctx,
 		`DELETE FROM DeploymentRevisionStatus drs
 		USING (
 			SELECT
-				dr.id AS deployment_revision_id,
-				(SELECT max(created_at) FROM DeploymentRevisionStatus WHERE deployment_revision_id = dr.id)
-					AS max_created_at
-			FROM DeploymentRevision dr
+				dr1.id AS deployment_revision_id,
+				max(dr2.max_created_at) AS max_created_at
+			FROM DeploymentRevision dr1
+			JOIN (
+				SELECT dr.id, dr.deployment_id, (
+					SELECT max(drs.created_at)
+					FROM DeploymentRevisionStatus drs
+					WHERE drs.deployment_revision_id = dr.id
+				) AS max_created_at
+				FROM DeploymentRevision dr
+			) dr2 ON dr1.deployment_id = dr2.deployment_id
+			GROUP BY dr1.id
 		) max_created_at
 		WHERE drs.deployment_revision_id = max_created_at.deployment_revision_id
 			AND drs.created_at < max_created_at.max_created_at
