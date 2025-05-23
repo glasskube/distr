@@ -8,6 +8,7 @@ import {DeploymentTargetsService} from '../../services/deployment-targets.servic
 import {DeploymentTargetCardComponent} from '../../deployments/deployment-target-card/deployment-target-card.component';
 import {DeploymentTargetsMetricsService} from '../../services/deployment-target-metrics.service';
 import {DeploymentTargetViewData} from '../../deployments/deployment-targets.component';
+import {ToastService} from '../../services/toast.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,6 +19,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
   private readonly dashboardService = inject(DashboardService);
   protected readonly artifactsByCustomer$ = this.dashboardService.getArtifactsByCustomer().pipe(shareReplay(1));
   private readonly deploymentTargetsService = inject(DeploymentTargetsService);
@@ -58,6 +60,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           })
         )
         .subscribe();
+    } else if (this.route.snapshot.queryParams?.['from'] === 'new-org') {
+      this.toast.success('New organization created successfully');
+      this.router.navigate([this.router.url]); // remove query param
     }
   }
 

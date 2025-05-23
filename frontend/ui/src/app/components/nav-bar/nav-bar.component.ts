@@ -1,6 +1,6 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -10,24 +10,14 @@ import {
   faCheckDouble,
   faChevronDown,
   faChevronUp,
+  faCircleExclamation,
+  faClipboard,
   faLightbulb,
   faPlus,
   faShuffle,
-  faStarOfLife,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {UserRole} from '@glasskube/distr-sdk';
-import {
-  combineLatestWith,
-  distinctUntilChanged,
-  filter,
-  firstValueFrom,
-  lastValueFrom,
-  map,
-  Observable,
-  Subject,
-  takeUntil,
-  withLatestFrom,
-} from 'rxjs';
+import {combineLatestWith, distinctUntilChanged, lastValueFrom, map, Observable, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
@@ -38,11 +28,12 @@ import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-schem
 import {UsersService} from '../../services/users.service';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {AsyncPipe, TitleCasePipe} from '@angular/common';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
-import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {ContextService} from '../../services/context.service';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
+import {modalFlyInOut} from '../../animations/modal';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -62,12 +53,15 @@ type SwitchOptions = {
     SecureImagePipe,
     AsyncPipe,
     TitleCasePipe,
+    AutotrimDirective,
+    ReactiveFormsModule,
   ],
-  animations: [dropdownAnimation],
+  animations: [dropdownAnimation, modalFlyInOut],
 })
 export class NavBarComponent implements OnInit, OnDestroy {
   private destroyed$ = new Subject<void>();
   private readonly auth = inject(AuthService);
+  private readonly overlay = inject(OverlayService);
   public readonly sidebar = inject(SidebarService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
@@ -95,6 +89,12 @@ export class NavBarComponent implements OnInit, OnDestroy {
 
   protected readonly faBarsStaggered = faBarsStaggered;
   protected tutorial?: string;
+
+  @ViewChild('createOrgModal') private createOrgModal!: TemplateRef<unknown>;
+  private modalRef?: DialogRef;
+  protected readonly createOrgForm = new FormGroup({
+    name: new FormControl<string>('', Validators.required),
+  });
 
   public ngOnInit() {
     this.route.queryParams
@@ -133,12 +133,12 @@ export class NavBarComponent implements OnInit, OnDestroy {
     }
   }
 
-  async switchContext(org: OrganizationWithUserRole) {
+  async switchContext(org: Organization, targetPath = '/') {
     this.organizationsOpened = false;
     try {
       const switched = await lastValueFrom(this.auth.switchContext(org));
       if (switched) {
-        location.assign('/');
+        location.assign(targetPath);
       }
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -148,7 +148,40 @@ export class NavBarComponent implements OnInit, OnDestroy {
     }
   }
 
-  public async logout() {
+  showCreateOrgModal(): void {
+    this.closeCreateOrgModal();
+    this.modalRef = this.overlay.showModal(this.createOrgModal);
+    this.modalRef.addOnClosedHook((_) => {
+      this.organizationsOpened = false;
+    });
+  }
+
+  closeCreateOrgModal() {
+    this.modalRef?.close();
+    this.createOrgForm.reset();
+  }
+
+  async submitCreateOrgForm() {
+    this.createOrgForm.markAllAsTouched();
+    if (this.createOrgForm.valid) {
+      try {
+        const created = await lastValueFrom(
+          this.organizationService.create({
+            name: this.createOrgForm.value.name!,
+            features: [],
+          })
+        );
+        await this.switchContext(created, '/dashboard?from=new-org');
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      }
+    }
+  }
+
+  async logout() {
     await lastValueFrom(this.auth.logout());
     // This is necessary to flush the caching crud services
     // TODO: implement flushing of services directly and switch to router.navigate(...)
@@ -168,4 +201,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
   protected readonly faChevronDown = faChevronDown;
   protected readonly faChevronUp = faChevronUp;
   protected readonly faPlus = faPlus;
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faXmark = faXmark;
+  protected readonly faClipboard = faClipboard;
 }

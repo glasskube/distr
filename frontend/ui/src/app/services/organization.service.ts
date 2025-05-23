@@ -27,6 +27,10 @@ export class OrganizationService {
     return this.contextService.getAvailableOrganizations();
   }
 
+  create(organization: Organization): Observable<Organization> {
+    return this.httpClient.post<Organization>(this.baseUrl, organization);
+  }
+
   update(organization: Organization): Observable<Organization> {
     return this.httpClient.put<Organization>(this.baseUrl, organization).pipe(
       combineLatestWith(this.getAll()),
