@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/api"
-
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/jwtauth/v5"

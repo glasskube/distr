@@ -17,8 +17,10 @@ const (
 	keyLen  = 32
 )
 
-var ErrInvalidPassword = errors.New("invalid password")
-var ErrInvalidAccessKey = errors.New("invalid accessKey")
+var (
+	ErrInvalidPassword  = errors.New("invalid password")
+	ErrInvalidAccessKey = errors.New("invalid accessKey")
+)
 
 func HashPassword(userAccount *types.UserAccount) error {
 	if salt, err := generateSalt(); err != nil {

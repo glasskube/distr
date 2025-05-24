@@ -15,7 +15,7 @@ import (
 func main() {
 	ctx := context.Background()
 	registry := util.Require(svc.NewDefault(ctx))
-	defer func() { _ = registry.Shutdown() }()
+	defer func() { _ = registry.Shutdown(ctx) }()
 	ctx = internalctx.WithDb(ctx, registry.GetDbPool())
 
 	revisionID := uuid.MustParse("68297e49-b17b-4d32-8111-f8ee678f73da")

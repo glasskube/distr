@@ -17,8 +17,9 @@ type DeploymentTargetLatestMetrics struct {
 	api.AgentDeploymentTargetMetrics
 }
 
-func GetLatestDeploymentTargetMetrics(ctx context.Context, orgID, userID uuid.UUID, userRole types.UserRole) (
-	[]DeploymentTargetLatestMetrics, error) {
+func GetLatestDeploymentTargetMetrics(
+	ctx context.Context, orgID, userID uuid.UUID, userRole types.UserRole,
+) ([]DeploymentTargetLatestMetrics, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
 		`SELECT dt.id, dtm.cpu_cores_millis, dtm.cpu_usage, dtm.memory_bytes, dtm.memory_usage FROM

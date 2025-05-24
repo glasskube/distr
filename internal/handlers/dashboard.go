@@ -5,11 +5,9 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/glasskube/distr/internal/apierrors"
-
-	"github.com/glasskube/distr/api"
-
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
@@ -31,8 +29,9 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if customers, err :=
-		db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID(), util.PtrTo(types.UserRoleCustomer)); err != nil {
+	if customers, err := db.GetUserAccountsByOrgID(
+		ctx, *auth.CurrentOrgID(), util.PtrTo(types.UserRoleCustomer),
+	); err != nil {
 		log.Error("failed to get customers", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

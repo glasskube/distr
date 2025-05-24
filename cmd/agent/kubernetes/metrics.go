@@ -34,8 +34,8 @@ func doReportMetrics(ctx context.Context) {
 	} else {
 		for _, node := range nodes.Items {
 			logger.Info("node", zap.String("name", node.Name))
-			cpuCapacityM = cpuCapacityM + node.Status.Capacity.Cpu().MilliValue()
-			memoryCapacityBytes = memoryCapacityBytes + node.Status.Capacity.Memory().Value()
+			cpuCapacityM += node.Status.Capacity.Cpu().MilliValue()
+			memoryCapacityBytes += node.Status.Capacity.Memory().Value()
 
 			if nodeMetrics, err := metricsClientSet.MetricsV1beta1().NodeMetricses().
 				Get(ctx, node.Name, metav1.GetOptions{}); err != nil {
@@ -46,8 +46,8 @@ func doReportMetrics(ctx context.Context) {
 					zap.Any("node", node.Name),
 					zap.Any("cpuUsage", nodeMetrics.Usage.Cpu().MilliValue()),
 					zap.Any("memUsage", nodeMetrics.Usage.Memory().Value()))
-				cpuUsageM = cpuUsageM + nodeMetrics.Usage.Cpu().MilliValue()
-				memoryUsageBytes = memoryUsageBytes + nodeMetrics.Usage.Memory().Value()
+				cpuUsageM += nodeMetrics.Usage.Cpu().MilliValue()
+				memoryUsageBytes += nodeMetrics.Usage.Memory().Value()
 			}
 		}
 	}

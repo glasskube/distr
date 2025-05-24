@@ -7,13 +7,11 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/api"
-	"github.com/google/uuid"
-
-	"github.com/glasskube/distr/internal/env"
-
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"

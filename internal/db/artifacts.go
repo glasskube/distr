@@ -7,10 +7,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/glasskube/distr/internal/env"
-
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -56,8 +55,9 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 			"orgId": orgID,
 		}); err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
-	} else if artifacts, err :=
-		pgx.CollectRows(artifactRows, pgx.RowToStructByName[types.ArtifactWithDownloads]); err != nil {
+	} else if artifacts, err := pgx.CollectRows(
+		artifactRows, pgx.RowToStructByName[types.ArtifactWithDownloads],
+	); err != nil {
 		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
 	} else {
 		return artifacts, nil
@@ -89,8 +89,9 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 			"ownerId": ownerID,
 		}); err != nil {
 		return nil, fmt.Errorf("failed to query artifacts: %w", err)
-	} else if artifacts, err :=
-		pgx.CollectRows(artifactRows, pgx.RowToStructByName[types.ArtifactWithDownloads]); err != nil {
+	} else if artifacts, err := pgx.CollectRows(
+		artifactRows, pgx.RowToStructByName[types.ArtifactWithDownloads],
+	); err != nil {
 		return nil, fmt.Errorf("failed to collect artifacts: %w", err)
 	} else {
 		return artifacts, nil
@@ -104,7 +105,8 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 	db := internalctx.GetDb(ctx)
 	restrictDownloads := ownerID != nil
 
-	if artifactRows, err := db.Query(ctx, `
+	if artifactRows, err := db.Query(
+		ctx, `
 			SELECT `+artifactOutputWithSlugExpr+`,
 				ARRAY []::RECORD[] AS versions,`+artifactDownloadsOutExpr+`
 			FROM Artifact a
@@ -119,10 +121,12 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 			"orgId":    orgID,
 			"restrict": restrictDownloads,
 			"ownerId":  ownerID,
-		}); err != nil {
+		},
+	); err != nil {
 		return nil, fmt.Errorf("failed to query artifact by ID: %w", err)
-	} else if artifact, err :=
-		pgx.CollectExactlyOneRow(artifactRows, pgx.RowToAddrOfStructByName[types.ArtifactWithTaggedVersion]); err != nil {
+	} else if artifact, err := pgx.CollectExactlyOneRow(
+		artifactRows, pgx.RowToAddrOfStructByName[types.ArtifactWithTaggedVersion],
+	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
@@ -643,6 +647,7 @@ func EnsureArtifactTagLimitForInsert(ctx context.Context, orgID uuid.UUID) (bool
 		return result.Ok, nil
 	}
 }
+
 func GetArtifactVersionPulls(
 	ctx context.Context,
 	orgID uuid.UUID,

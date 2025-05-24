@@ -151,8 +151,7 @@ func validateDeploymentRequest(
 	org := auth.CurrentOrg()
 	var err error
 
-	if app, err =
-		db.GetApplicationForApplicationVersionID(ctx, request.ApplicationVersionID, orgId); err != nil {
+	if app, err = db.GetApplicationForApplicationVersionID(ctx, request.ApplicationVersionID, orgId); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			return badRequestError(w, "Application does not exist")
 		} else {
@@ -222,7 +221,6 @@ func validateDeploymentRequest(
 					return err
 				}
 			}
-
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
 			// license ID is required for customer but optional for vendor
 			return badRequestError(w, "applicationLicenseId is required")

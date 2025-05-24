@@ -11,12 +11,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient/useragent"
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
-
-	"github.com/glasskube/distr/api"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"

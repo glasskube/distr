@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/util"
-
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
@@ -93,17 +92,14 @@ func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Appli
 			ORDER BY a.name
 			`, pgx.NamedArgs{"orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
 		return applications, nil
 	}
 }
 
-func appendMissingVersions(application types.Application,
-	versions []types.ApplicationVersion) types.Application {
-
+func appendMissingVersions(application types.Application, versions []types.ApplicationVersion) types.Application {
 	for _, version := range versions {
 		found := false
 		for _, existingVersion := range application.Versions {
@@ -141,8 +137,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 			ORDER BY a.name
 			`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
 		return mergeApplications(applications), nil
@@ -157,8 +152,7 @@ func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Applicatio
 			WHERE a.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if application, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
@@ -178,8 +172,7 @@ func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uui
 			ORDER BY a.name
 			`, pgx.NamedArgs{"ownerID": oID, "id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
@@ -198,8 +191,7 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.U
 			WHERE v.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if application, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
