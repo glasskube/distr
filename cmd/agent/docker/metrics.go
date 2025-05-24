@@ -35,8 +35,7 @@ scrapers:
         enabled: true
 `
 
-type defaultHost struct {
-}
+type defaultHost struct{}
 
 func (nh *defaultHost) GetExtensions() map[component.ID]component.Component {
 	return nil
@@ -83,7 +82,7 @@ func startMetrics(ctx context.Context) {
 							if state, ok := dataPoint.Attributes().Get("state"); ok {
 								if state.Str() == "user" || state.Str() == "system" {
 									// TODO do other states make sense too?
-									cpuUsed = cpuUsed + dataPoint.DoubleValue()
+									cpuUsed += dataPoint.DoubleValue()
 								}
 							}
 						}
@@ -93,7 +92,7 @@ func startMetrics(ctx context.Context) {
 							if state, ok := dataPoint.Attributes().Get("state"); ok {
 								if state.Str() == "used" {
 									// TODO maybe make calculation more specific with the other possible states
-									memoryUsed = memoryUsed + dataPoint.DoubleValue()
+									memoryUsed += dataPoint.DoubleValue()
 								}
 							}
 						}
@@ -101,7 +100,6 @@ func startMetrics(ctx context.Context) {
 					case "system.memory.limit":
 						dataPoint := metric.Sum().DataPoints().At(metric.Sum().DataPoints().Len() - 1)
 						memoryTotal = dataPoint.IntValue()
-
 					}
 				}
 			}

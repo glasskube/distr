@@ -10,14 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type DeploymentType string
-type UserRole string
-type HelmChartType string
-type DeploymentStatusType string
-type DeploymentTargetScope string
-type Feature string
-type DockerType string
-type Tutorial string
+type (
+	DeploymentType        string
+	UserRole              string
+	HelmChartType         string
+	DeploymentStatusType  string
+	DeploymentTargetScope string
+	Feature               string
+	DockerType            string
+	Tutorial              string
+)
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
@@ -64,8 +66,10 @@ type Image struct {
 
 type Digest v1.Hash
 
-var _ sql.Scanner = &Digest{}
-var _ pgtype.TextValuer = &Digest{}
+var (
+	_ sql.Scanner       = &Digest{}
+	_ pgtype.TextValuer = &Digest{}
+)
 
 func (target *Digest) Scan(src any) error {
 	if srcStr, ok := src.(string); !ok {

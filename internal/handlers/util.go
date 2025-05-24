@@ -27,7 +27,9 @@ func JsonBody[T any](w http.ResponseWriter, r *http.Request) (T, error) {
 
 func RespondJSON(w http.ResponseWriter, data any) {
 	w.Header().Add("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 var requireUserRoleVendor = middleware.UserRoleMiddleware(types.UserRoleVendor)

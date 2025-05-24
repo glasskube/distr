@@ -2,8 +2,10 @@ package apierrors
 
 import "errors"
 
-var ErrNotFound = errors.New("not found")
-var ErrAlreadyExists = errors.New("already exists")
-var ErrConflict = errors.New("conflict")
-var ErrForbidden = errors.New("forbidden")
-var ErrQuotaExceeded = errors.New("quota exceeded")
+var (
+	ErrNotFound      = errors.New("not found")
+	ErrAlreadyExists = errors.New("already exists")
+	ErrConflict      = errors.New("conflict")
+	ErrForbidden     = errors.New("forbidden")
+	ErrQuotaExceeded = errors.New("quota exceeded")
+)

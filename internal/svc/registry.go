@@ -91,10 +91,10 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 	return reg, nil
 }
 
-func (r *Registry) Shutdown() error {
+func (r *Registry) Shutdown(ctx context.Context) error {
 	r.logger.Warn("shutting down database connections")
 	r.dbPool.Close()
-	if err := r.tracer.Shutdown(context.TODO()); err != nil {
+	if err := r.tracer.Shutdown(ctx); err != nil {
 		r.logger.Warn("tracer shutdown failed", zap.Error(err))
 	}
 	// some devices like stdout and stderr can not be synced by the OS
@@ -129,8 +129,10 @@ func (reg *Registry) createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		typeNames := []string{"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE", "DEPLOYMENT_STATUS_TYPE", "FEATURE",
-			"_FEATURE", "TUTORIAL"}
+		typeNames := []string{
+			"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE",
+			"DEPLOYMENT_STATUS_TYPE", "FEATURE", "_FEATURE", "TUTORIAL",
+		}
 		for _, typeName := range typeNames {
 			if pgType, err := conn.LoadType(ctx, typeName); err != nil {
 				return err
@@ -166,15 +168,14 @@ func (r *Registry) GetDbPool() *pgxpool.Pool {
 
 func createMailer(ctx context.Context) (mail.Mailer, error) {
 	config := env.GetMailerConfig()
-	authOrgOverrideFromAddress :=
-		func(ctx context.Context, mail mail.Mail) string {
-			if auth, err := auth.Authentication.Get(ctx); err == nil {
-				if org := auth.CurrentOrg(); org != nil && org.EmailFromAddress != nil {
-					return *org.EmailFromAddress
-				}
+	authOrgOverrideFromAddress := func(ctx context.Context, mail mail.Mail) string {
+		if auth, err := auth.Authentication.Get(ctx); err == nil {
+			if org := auth.CurrentOrg(); org != nil && org.EmailFromAddress != nil {
+				return *org.EmailFromAddress
 			}
-			return ""
 		}
+		return ""
+	}
 	switch config.Type {
 	case env.MailerTypeSMTP:
 		smtpConfig := smtp.Config{

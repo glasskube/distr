@@ -33,10 +33,12 @@ type blobHandler struct {
 	bucket          string
 }
 
-var _ blob.BlobHandler = &blobHandler{}
-var _ blob.BlobStatHandler = &blobHandler{}
-var _ blob.BlobPutHandler = &blobHandler{}
-var _ blob.BlobDeleteHandler = &blobHandler{}
+var (
+	_ blob.BlobHandler       = &blobHandler{}
+	_ blob.BlobStatHandler   = &blobHandler{}
+	_ blob.BlobPutHandler    = &blobHandler{}
+	_ blob.BlobDeleteHandler = &blobHandler{}
+)
 
 func NewBlobHandler(ctx context.Context) blob.BlobHandler {
 	s3Config := env.RegistryS3Config()

@@ -175,8 +175,7 @@ func GetArtifactLicenseByID(ctx context.Context, id uuid.UUID) (*types.ArtifactL
 		return nil, fmt.Errorf("could not query ArtifactLicense: %w", err)
 	}
 
-	if result, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactLicense]); err != nil {
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactLicense]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
