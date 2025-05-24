@@ -24,14 +24,12 @@ import (
 	"path"
 	"strings"
 
-	registryerror "github.com/glasskube/distr/internal/registry/error"
-
-	"github.com/google/uuid"
-
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
+	registryerror "github.com/glasskube/distr/internal/registry/error"
 	"github.com/glasskube/distr/internal/registry/verify"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -247,7 +245,6 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 
 		defer rc.Close()
 		r = rc
-
 	} else {
 		tmp, err := b.blobHandler.Get(req.Context(), repo, h, true)
 		if errors.Is(err, blob.ErrNotFound) {

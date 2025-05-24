@@ -82,8 +82,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 			} else {
 				logOptions.Since = now.Format(time.RFC3339Nano)
 			}
-			toplevelErr =
-				lw.composeService.Logs(ctx, d.ProjectName, &composeCollector{deploymentCollector}, logOptions)
+			toplevelErr = lw.composeService.Logs(ctx, d.ProjectName, &composeCollector{deploymentCollector}, logOptions)
 			if toplevelErr != nil {
 				logger.Warn("could not get compose logs", zap.Error(toplevelErr))
 			}

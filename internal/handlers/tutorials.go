@@ -6,22 +6,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/util"
-
-	"github.com/google/uuid"
-
-	"github.com/glasskube/distr/internal/resources"
-
-	"github.com/glasskube/distr/api"
-
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 

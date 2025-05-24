@@ -4,8 +4,10 @@ const (
 	snapshot = "snapshot"
 )
 
-var version = snapshot
-var commit string
+var (
+	version = snapshot
+	commit  string
+)
 
 func Version() string {
 	return version

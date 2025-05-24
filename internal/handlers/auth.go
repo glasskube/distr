@@ -7,23 +7,21 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/glasskube/distr/internal/customdomains"
-	"github.com/glasskube/distr/internal/env"
-
-	"github.com/go-chi/httprate"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mailsending"
 	"github.com/glasskube/distr/internal/mailtemplates"
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )

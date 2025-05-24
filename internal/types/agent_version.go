@@ -8,9 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	minVersionMultiDeployment = semver.MustParse("1.6.0")
-)
+var minVersionMultiDeployment = semver.MustParse("1.6.0")
 
 type AgentVersion struct {
 	ID                   uuid.UUID `db:"id" json:"id"`

@@ -1,19 +1,43 @@
 version: '2'
 run:
   allow-parallel-runners: true
+issues:
+  max-issues-per-linter: 100
+  max-same-issues: 100
 linters:
   enable:
-    - dupl
+    - asasalint
+    - asciicheck
+    - bidichk
+    - contextcheck
     - copyloopvar
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - errcheck
+    - errchkjson
+    - errname
     - ginkgolinter
+    - gocheckcompilerdirectives
     - goconst
     - gocyclo
+    - goprintffuncname
+    - govet
+    - importas
+    - ineffassign
     - lll
+    - loggercheck
+    - makezero
+    - mirror
     - misspell
     - nakedret
     - prealloc
+    - staticcheck
     - unconvert
     - unparam
+    - unused
+    - whitespace
   exclusions:
     generated: lax
     presets:
@@ -27,7 +51,9 @@ linters:
       - examples$
 formatters:
   enable:
+    - gci
     - gofmt
+    - gofumpt
     - goimports
   exclusions:
     generated: lax

@@ -5,14 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
-
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -254,8 +253,7 @@ func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.Applic
 		return nil, fmt.Errorf("could not query ApplicationLicense: %w", err)
 	}
 
-	if result, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ApplicationLicense]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}

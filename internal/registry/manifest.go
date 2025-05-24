@@ -25,17 +25,14 @@ import (
 	"strconv"
 	"strings"
 
-	registryerror "github.com/glasskube/distr/internal/registry/error"
-
-	"github.com/glasskube/distr/internal/apierrors"
-
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
-
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/registry/audit"
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
+	registryerror "github.com/glasskube/distr/internal/registry/error"
 	"github.com/glasskube/distr/internal/registry/manifest"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/types"
@@ -191,7 +188,10 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 			Tags: references,
 		}
 
-		msg, _ := json.Marshal(tagsToList)
+		msg, err := json.Marshal(tagsToList)
+		if err != nil {
+			return regErrInternal(err)
+		}
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
@@ -219,7 +219,10 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 
 		repositoriesToList := catalog{Repos: repos}
 
-		msg, _ := json.Marshal(repositoriesToList)
+		msg, err := json.Marshal(repositoriesToList)
+		if err != nil {
+			return regErrInternal(err)
+		}
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
@@ -318,7 +321,10 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 			ArtifactType: imageAsArtifact.Config.MediaType,
 		})
 	}
-	msg, _ := json.Marshal(&im)
+	msg, err := json.Marshal(&im)
+	if err != nil {
+		return regErrInternal(err)
+	}
 	resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 	resp.Header().Set("Content-Type", string(types.OCIImageIndex))
 	resp.WriteHeader(http.StatusOK)
@@ -436,7 +442,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 	// This isn't strictly required by the registry API, but some
 	// registries require this.
 	if types.MediaType(mf.ContentType).IsIndex() {
-		if err := func() *regError {
+		if err := func(ctx context.Context) *regError {
 			im, err := v1.ParseIndexManifest(bytes.NewReader(buf.Bytes()))
 			if err != nil {
 				return regErrManifestInvalid(err)
@@ -446,8 +452,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 					continue
 				}
 				if desc.MediaType.IsIndex() || desc.MediaType.IsImage() {
-					if _, err := handler.manifestHandler.Get(req.Context(), repo, desc.Digest.String()); err != nil {
-
+					if _, err := handler.manifestHandler.Get(ctx, repo, desc.Digest.String()); err != nil {
 						return &regError{
 							Status:  http.StatusNotFound,
 							Code:    "MANIFEST_UNKNOWN",
@@ -461,7 +466,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 				}
 			}
 			return nil
-		}(); err != nil {
+		}(req.Context()); err != nil {
 			return err
 		}
 	} else if types.MediaType(mf.ContentType).IsImage() {
@@ -485,7 +490,6 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		}(); err != nil {
 			return err
 		}
-
 	}
 
 	if err := checkIncompatibleManifest(buf.Bytes()); err != nil {

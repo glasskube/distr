@@ -9,10 +9,12 @@ import (
 	"github.com/glasskube/distr/internal/util"
 )
 
-//go:embed embedded
-var embeddedFs embed.FS
-var fsys = util.Require(fs.Sub(embeddedFs, "embedded"))
-var templates = map[string]*template.Template{}
+var (
+	//go:embed embedded
+	embeddedFs embed.FS
+	fsys       = util.Require(fs.Sub(embeddedFs, "embedded"))
+	templates  = map[string]*template.Template{}
+)
 
 func Get(name string) ([]byte, error) {
 	return fs.ReadFile(fsys, name)

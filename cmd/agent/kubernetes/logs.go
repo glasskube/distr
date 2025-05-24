@@ -86,8 +86,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 
 			logger.Sugar().Debugf("get logs since %v", logOptions.SinceTime)
 
-			responseMap, err :=
-				polymorphichelpers.AllPodLogsForObjectFn(k8sConfigFlags, obj, &logOptions, 10*time.Second, true)
+			responseMap, err := polymorphichelpers.AllPodLogsForObjectFn(k8sConfigFlags, obj, &logOptions, 10*time.Second, true)
 			if err != nil {
 				// not being able to get logs for all resource types is normal so we only want to call abort when an
 				// API error is encountered.

@@ -10,7 +10,6 @@ import (
 	"text/template"
 
 	"github.com/glasskube/distr/internal/buildconfig"
-
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/resources"
