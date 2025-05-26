@@ -390,11 +390,19 @@
                     </div>
 
                     <div class="w-full">
-                      <label
-                        for="base_values_input"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Base Values</label
-                      >
+                      <div class="mb-2">
+                        <label
+                          for="base_values_input"
+                          class="block text-sm font-medium text-gray-900 dark:text-white"
+                          aria-describedby="base-values-description"
+                          >Base Values</label
+                        >
+                        <div id="base-values-description" class="text-xs text-gray-400 dark:text-gray-500">
+                          Provide a values.yaml that should be shared across all deployments of this application.
+                          <br />
+                          The base values are not shown in the customer portal and can be overridden by customer values.
+                        </div>
+                      </div>
                       <app-editor
                         id="base_values_input"
                         language="yaml"
@@ -404,9 +412,21 @@
                     </div>
 
                     <div class="w-full">
-                      <label for="template_input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Template</label
-                      >
+                      <div class="mb-2">
+                        <label
+                          for="template_input"
+                          class="block text-sm font-medium text-gray-900 dark:text-white"
+                          aria-describedby="values-template-description"
+                          >Template for Customer Values</label
+                        >
+                        <div
+                          id="values-template-description"
+                          class="text-xs text-gray-400 dark:text-gray-500 xl:max-w-1/2">
+                          Shown to your customers as a hint to supply their own values.yaml.
+                          <br />
+                          These customer values can override your base values.
+                        </div>
+                      </div>
                       <app-editor
                         id="template_input"
                         class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -441,7 +461,7 @@
                       <label
                         for="compose_template_input"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Environment Template</label
+                        >Template for Environment File</label
                       >
                       <app-editor
                         id="compose_template_input"
