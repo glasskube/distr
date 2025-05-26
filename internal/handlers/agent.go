@@ -236,14 +236,6 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
 			zap.String("statusMessage", statusMessage))
-	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget); err != nil {
-		log.Error("failed to cleanup old deployment target status", zap.Error(err),
-			zap.String("deploymentTargetId", deploymentTarget.ID.String()))
-	} else if cnt > 0 {
-		log.Debug("old deployment target statuses deleted",
-			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
-			zap.Int64("count", cnt),
-			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
 	}
 }
 
@@ -278,13 +270,6 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
-		}
-
-		if deleted, err := db.CleanupDeploymentLogRecords(ctx, auth.CurrentDeploymentTargetID()); err != nil {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			log.Warn("log record cleanup error", zap.Error(err))
-		} else {
-			log.Info("log record cleanup finished", zap.Int64("deletedCount", deleted))
 		}
 	}
 }
@@ -322,16 +307,6 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-
-	// not in a TX because insertion should not be rolled back when the cleanup fails
-	if cnt, err := db.CleanupDeploymentRevisionStatus(ctx, status.RevisionID); err != nil {
-		log.Error("failed to cleanup old deployment revision status", zap.Error(err), zap.Reflect("status", status))
-	} else if cnt > 0 {
-		log.Debug("old deployment revision statuses deleted",
-			zap.String("deploymentRevisionId", status.RevisionID.String()),
-			zap.Int64("count", cnt),
-			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
-	}
 }
 
 func agentPostMetricsHander(w http.ResponseWriter, r *http.Request) {
@@ -355,16 +330,6 @@ func agentPostMetricsHander(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-	}
-
-	// not in a TX because insertion should not be rolled back when the cleanup fails
-	if cnt, err := db.CleanupDeploymentTargetMetrics(ctx, &dt.DeploymentTarget); err != nil {
-		log.Error("failed to cleanup old deployment target metrics", zap.Error(err), zap.Reflect("metrics", metrics))
-	} else if cnt > 0 {
-		log.Debug("old deployment target metrics deleted",
-			zap.String("deploymentTargetId", dt.ID.String()),
-			zap.Int64("count", cnt),
-			zap.Duration("maxAge", *env.MetricsEntriesMaxAge()))
 	}
 }
 
