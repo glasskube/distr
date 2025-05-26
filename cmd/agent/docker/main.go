@@ -32,7 +32,7 @@ func init() {
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 
-	logger.Info("kubernetes agent is starting",
+	logger.Info("docker agent is starting",
 		zap.String("version", buildconfig.Version()),
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
