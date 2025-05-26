@@ -127,9 +127,10 @@ func getAccessTokensHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		auth := auth.Authentication.Require(ctx)
-		tokens, err := db.GetAccessTokensByUserAccountID(ctx, auth.CurrentUserID())
+		tokens, err := db.GetAccessTokens(ctx, auth.CurrentUserID(), *auth.CurrentOrgID())
 		if err != nil {
 			log.Warn("error getting tokens", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			RespondJSON(w, mapping.List(tokens, mapping.AccessTokenToDTO))
@@ -150,18 +151,21 @@ func createAccessTokenHandler() http.HandlerFunc {
 		key, err := authkey.NewKey()
 		if err != nil {
 			log.Warn("error creating token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		token := types.AccessToken{
-			ExpiresAt:     request.ExpiresAt,
-			Label:         request.Label,
-			UserAccountID: auth.CurrentUserID(),
-			Key:           key,
+			ExpiresAt:      request.ExpiresAt,
+			Label:          request.Label,
+			UserAccountID:  auth.CurrentUserID(),
+			Key:            key,
+			OrganizationID: *auth.CurrentOrgID(),
 		}
 		if err := db.CreateAccessToken(ctx, &token); err != nil {
 			log.Warn("error creating token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			RespondJSON(w, mapping.AccessTokenToDTO(token).WithKey(token.Key))
@@ -181,6 +185,7 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 		auth := auth.Authentication.Require(ctx)
 		if err := db.DeleteAccessToken(ctx, tokenID, auth.CurrentUserID()); err != nil {
 			log.Warn("error deleting token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusNoContent)
