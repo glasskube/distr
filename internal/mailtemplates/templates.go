@@ -7,9 +7,8 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/glasskube/distr/internal/env"
-
 	"github.com/glasskube/distr/internal/customdomains"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 )
 
