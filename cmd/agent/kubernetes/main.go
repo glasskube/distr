@@ -17,6 +17,7 @@ import (
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/agentenv"
+	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
@@ -55,6 +56,12 @@ func init() {
 
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	logger.Info("kubernetes agent is starting",
+		zap.String("version", buildconfig.Version()),
+		zap.String("commit", buildconfig.Commit()),
+		zap.Bool("release", buildconfig.IsRelease()))
+
 	go func() {
 		logger.Info("start config watch")
 		if err := watchConfigDirs(agentConfigDirs); err != nil {
@@ -159,24 +166,7 @@ func main() {
 				}
 			}
 
-			progressCtx, progressCancel := context.WithCancel(ctx)
-			go func(ctx context.Context) {
-				tick := time.Tick(agentenv.Interval)
-				for {
-					select {
-					case <-ctx.Done():
-						logger.Info("stop sending progress updates")
-						return
-					case <-tick:
-						logger.Info("sending progress update")
-						pushProgressingStatus(ctx, deployment)
-					}
-				}
-			}(progressCtx)
-
 			runInstallOrUpgrade(ctx, res.Namespace, deployment, currentDeployment)
-
-			progressCancel()
 		}
 	}
 
@@ -228,6 +218,8 @@ func runInstallOrUpgrade(
 	deployment api.AgentDeployment,
 	currentDeployment *AgentDeployment,
 ) {
+	progress := Progress(deployment)
+
 	if _, err := agentauth.EnsureAuth(ctx, agentClient.RawToken(), deployment); err != nil {
 		logger.Error("failed to ensure docker auth", zap.Error(err))
 		pushErrorStatus(ctx, deployment, fmt.Errorf("failed to ensure docker auth: %w", err))
@@ -237,23 +229,33 @@ func runInstallOrUpgrade(
 	}
 
 	if currentDeployment == nil {
-		if installedDeployment, err := RunHelmInstall(ctx, namespace, deployment); err != nil {
-			logger.Error("helm install failed", zap.Error(err))
-			pushErrorStatus(ctx, deployment, fmt.Errorf("helm install failed: %w", err))
-		} else if err := SaveDeployment(ctx, namespace, *installedDeployment); err != nil {
-			logger.Error("could not save latest deployment", zap.Error(err))
-			pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
+		err := progress.Run(ctx, func() error {
+			if installedDeployment, err := RunHelmInstall(ctx, namespace, deployment); err != nil {
+				return fmt.Errorf("helm install failed: %w", err)
+			} else if err = SaveDeployment(ctx, namespace, *installedDeployment); err != nil {
+				return fmt.Errorf("could not save latest deployment: %w", err)
+			}
+			return nil
+		})
+		if err != nil {
+			logger.Error("install error", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("install error: %w", err))
 		} else {
 			logger.Info("helm install succeeded")
 			pushStatus(ctx, deployment, "helm install succeeded")
 		}
 	} else if currentDeployment.RevisionID != deployment.RevisionID {
-		if updatedDeployment, err := RunHelmUpgrade(ctx, namespace, deployment); err != nil {
-			logger.Error("helm upgrade failed", zap.Error(err))
-			pushErrorStatus(ctx, deployment, fmt.Errorf("helm upgrade failed: %w", err))
-		} else if err := SaveDeployment(ctx, namespace, *updatedDeployment); err != nil {
-			logger.Error("could not save latest deployment", zap.Error(err))
-			pushErrorStatus(ctx, deployment, fmt.Errorf("could not save latest deployment: %w", err))
+		err := progress.Run(ctx, func() error {
+			if updatedDeployment, err := RunHelmUpgrade(ctx, namespace, deployment); err != nil {
+				return fmt.Errorf("helm upgrade failed: %w", err)
+			} else if err := SaveDeployment(ctx, namespace, *updatedDeployment); err != nil {
+				return fmt.Errorf("could not save latest deployment: %w", err)
+			}
+			return nil
+		})
+		if err != nil {
+			logger.Error("upgrade error", zap.Error(err))
+			pushErrorStatus(ctx, deployment, fmt.Errorf("upgrade error: %w", err))
 		} else {
 			logger.Info("helm upgrade succeeded")
 			pushStatus(ctx, deployment, "helm upgrade succeeded")
@@ -287,6 +289,35 @@ func runInstallOrUpgrade(
 			}
 		}
 	}
+}
+
+type progressStatusRunner struct {
+	deployment api.AgentDeployment
+}
+
+func Progress(deployment api.AgentDeployment) *progressStatusRunner {
+	return &progressStatusRunner{deployment: deployment}
+}
+
+func (psr *progressStatusRunner) Run(ctx context.Context, f func() error) error {
+	progressCtx, progressCancel := context.WithCancel(ctx)
+	defer progressCancel()
+
+	go func(ctx context.Context) {
+		tick := time.Tick(agentenv.Interval)
+		for {
+			select {
+			case <-ctx.Done():
+				logger.Debug("stop sending progress updates")
+				return
+			case <-tick:
+				logger.Info("sending progress update")
+				pushProgressingStatus(ctx, psr.deployment)
+			}
+		}
+	}(progressCtx)
+
+	return f()
 }
 
 func pushStatus(ctx context.Context, deployment api.AgentDeployment, status string) {

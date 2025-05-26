@@ -13,36 +13,40 @@ import (
 )
 
 var (
-	databaseUrl                    string
-	databaseMaxConns               *int
-	jwtSecret                      []byte
-	host                           string
-	registryHost                   string
-	mailerConfig                   MailerConfig
-	inviteTokenValidDuration       time.Duration
-	resetTokenValidDuration        time.Duration
-	agentTokenMaxValidDuration     time.Duration
-	agentInterval                  time.Duration
-	statusEntriesMaxAge            *time.Duration
-	metricsEntriesMaxAge           *time.Duration
-	logRecordEntriesMaxCount       *int
-	sentryDSN                      string
-	sentryDebug                    bool
-	otelExporterSentryEnabled      bool
-	otelExporterOtlpEnabled        bool
-	enableQueryLogging             bool
-	agentDockerConfig              []byte
-	frontendSentryDSN              *string
-	frontendSentryTraceSampleRate  *float64
-	frontendPosthogToken           *string
-	frontendPosthogAPIHost         *string
-	frontendPosthogUIHost          *string
-	userEmailVerificationRequired  bool
-	serverShutdownDelayDuration    *time.Duration
-	registration                   RegistrationMode
-	registryEnabled                bool
-	registryS3Config               S3Config
-	artifactTagsDefaultLimitPerOrg int
+	databaseUrl                         string
+	databaseMaxConns                    *int
+	jwtSecret                           []byte
+	host                                string
+	registryHost                        string
+	mailerConfig                        MailerConfig
+	inviteTokenValidDuration            time.Duration
+	resetTokenValidDuration             time.Duration
+	agentTokenMaxValidDuration          time.Duration
+	agentInterval                       time.Duration
+	statusEntriesMaxAge                 *time.Duration
+	metricsEntriesMaxAge                *time.Duration
+	logRecordEntriesMaxCount            *int
+	sentryDSN                           string
+	sentryDebug                         bool
+	otelExporterSentryEnabled           bool
+	otelExporterOtlpEnabled             bool
+	enableQueryLogging                  bool
+	agentDockerConfig                   []byte
+	frontendSentryDSN                   *string
+	frontendSentryTraceSampleRate       *float64
+	frontendPosthogToken                *string
+	frontendPosthogAPIHost              *string
+	frontendPosthogUIHost               *string
+	userEmailVerificationRequired       bool
+	serverShutdownDelayDuration         *time.Duration
+	registration                        RegistrationMode
+	registryEnabled                     bool
+	registryS3Config                    S3Config
+	artifactTagsDefaultLimitPerOrg      int
+	cleanupDeploymentRevisionStatusCron *string
+	cleanupDeploymentTargetStatusCron   *string
+	cleanupDeploymentTargetMetricsCron  *string
+	cleanupDeploymentLogRecordCron      *string
 )
 
 func Initialize() {
@@ -117,6 +121,11 @@ func Initialize() {
 	frontendPosthogToken = envutil.GetEnvOrNil("FRONTEND_POSTHOG_TOKEN")
 	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
+
+	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
+	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
+	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
+	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
 }
 
 func DatabaseUrl() string {
@@ -237,4 +246,20 @@ func OtelExporterSentryEnabled() bool {
 
 func OtelExporterOtlpEnabled() bool {
 	return otelExporterOtlpEnabled
+}
+
+func CleanupDeploymenRevisionStatusCron() *string {
+	return cleanupDeploymentRevisionStatusCron
+}
+
+func CleanupDeploymenTargetStatusCron() *string {
+	return cleanupDeploymentTargetStatusCron
+}
+
+func CleanupDeploymentTargetMetricsCron() *string {
+	return cleanupDeploymentTargetMetricsCron
+}
+
+func CleanupDeploymentLogRecordCron() *string {
+	return cleanupDeploymentLogRecordCron
 }

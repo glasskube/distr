@@ -11,6 +11,7 @@ import (
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/agentenv"
+	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/multierr"
@@ -30,6 +31,11 @@ func init() {
 
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	logger.Info("docker agent is starting",
+		zap.String("version", buildconfig.Version()),
+		zap.String("commit", buildconfig.Commit()),
+		zap.Bool("release", buildconfig.IsRelease()))
 
 	go util.Require(NewLogsWatcher()).Watch(ctx, 30*time.Second)
 
@@ -125,7 +131,7 @@ loop:
 							for {
 								select {
 								case <-ctx.Done():
-									logger.Info("stop sending progress updates")
+									logger.Debug("stop sending progress updates")
 									return
 								case <-tick:
 									logger.Info("sending progress update")

@@ -71,6 +71,7 @@ func runServe(ctx context.Context, opts ServeOptions) {
 
 	go func() { util.Must(server.Start(":8080")) }()
 	go func() { util.Must(artifactsServer.Start(":8585")) }()
+	registry.GetJobsScheduler().Start()
 	server.WaitForShutdown()
 	artifactsServer.WaitForShutdown()
 }
