@@ -7,16 +7,15 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/glasskube/distr/internal/types"
-	"github.com/google/uuid"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 

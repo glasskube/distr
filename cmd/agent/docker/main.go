@@ -11,6 +11,7 @@ import (
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
 	"github.com/glasskube/distr/internal/agentenv"
+	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"go.uber.org/multierr"
@@ -30,6 +31,11 @@ func init() {
 
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	logger.Info("docker agent is starting",
+		zap.String("version", buildconfig.Version()),
+		zap.String("commit", buildconfig.Commit()),
+		zap.Bool("release", buildconfig.IsRelease()))
 
 	go util.Require(NewLogsWatcher()).Watch(ctx, 30*time.Second)
 
@@ -53,8 +59,7 @@ loop:
 						logger.Error("self update failed", zap.Error(err))
 						// TODO: Support status without revision ID?
 						if len(resource.Deployments) > 0 {
-							if err :=
-								client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
+							if err := client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
 								logger.Error("failed to send status", zap.Error(err))
 							}
 						}
@@ -126,7 +131,7 @@ loop:
 							for {
 								select {
 								case <-ctx.Done():
-									logger.Info("stop sending progress updates")
+									logger.Debug("stop sending progress updates")
 									return
 								case <-tick:
 									logger.Info("sending progress update")
@@ -151,8 +156,7 @@ loop:
 					}
 				}
 
-				if statusErr :=
-					client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
+				if statusErr := client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
 					logger.Error("failed to send status", zap.Error(statusErr))
 				}
 			}

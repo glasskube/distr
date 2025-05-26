@@ -109,7 +109,7 @@ func GetDeploymentTarget(
 		" WHERE dt.id = @id AND j.organization_id = dt.organization_id "
 	if orgID != nil {
 		args = pgx.NamedArgs{"id": id, "orgId": *orgID, "checkOrg": true}
-		query = query + " AND dt.organization_id = @orgId"
+		query += " AND dt.organization_id = @orgId"
 	} else {
 		args = pgx.NamedArgs{"id": id, "checkOrg": false}
 	}
@@ -235,8 +235,9 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
-	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(
+		rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy],
+	); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
@@ -264,8 +265,9 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgID})
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
-	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(
+		rows, pgx.RowToStructByNameLax[types.DeploymentTarget],
+	); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
@@ -315,16 +317,26 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 	}
 }
 
-func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget) (int64, error) {
+func CleanupDeploymentTargetStatus(ctx context.Context) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
 	db := internalctx.GetDb(ctx)
-	if cmd, err := db.Exec(ctx, `
-		DELETE FROM DeploymentTargetStatus
-		       WHERE deployment_target_id = @deploymentTargetId AND
-		             current_timestamp - created_at > @statusEntriesMaxAge`,
-		pgx.NamedArgs{"deploymentTargetId": dt.ID, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
+	if cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM DeploymentTargetStatus dts
+		USING (
+			SELECT
+				dt.id AS deployment_target_id,
+				(SELECT max(created_at) FROM DeploymentTargetStatus WHERE deployment_target_id = dt.id)
+					AS max_created_at
+			FROM DeploymentTarget dt
+		) max_created_at
+		WHERE dts.deployment_target_id = max_created_at.deployment_target_id
+			AND dts.created_at < max_created_at.max_created_at
+			AND current_timestamp - dts.created_at > @statusEntriesMaxAge`,
+		pgx.NamedArgs{"statusEntriesMaxAge": env.StatusEntriesMaxAge()},
+	); err != nil {
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil

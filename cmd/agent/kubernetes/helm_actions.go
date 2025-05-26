@@ -38,11 +38,11 @@ func GetHelmActionConfig(
 		clientOpts = append(clientOpts, registry.ClientOptPlainHTTP())
 	}
 	if deployment != nil {
-		if authorizer, err :=
-			agentauth.EnsureAuth(ctx, agentClient.RawToken(), *deployment); err != nil {
+		if authorizer, err := agentauth.EnsureAuth(ctx, agentClient.RawToken(), *deployment); err != nil {
 			return nil, err
-		} else if rc, err :=
-			registry.NewClient(append(clientOpts, registry.ClientOptAuthorizer(authorizer))...); err != nil {
+		} else if rc, err := registry.NewClient(
+			append(clientOpts, registry.ClientOptAuthorizer(*authorizer))...,
+		); err != nil {
 			return nil, err
 		} else {
 			cfg.RegistryClient = rc

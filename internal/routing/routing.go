@@ -4,9 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/httprate"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/frontend"
 	"github.com/glasskube/distr/internal/handlers"
@@ -14,7 +11,9 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )

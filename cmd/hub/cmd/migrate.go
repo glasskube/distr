@@ -39,7 +39,7 @@ func init() {
 
 func runMigrate(ctx context.Context, opts MigrateOptions) {
 	registry := util.Require(svc.NewDefault(ctx))
-	defer func() { util.Must(registry.Shutdown()) }()
+	defer func() { util.Must(registry.Shutdown(ctx)) }()
 	if opts.To > 0 {
 		registry.GetLogger().Sugar().Infof("run migrations to schema version %v", opts.To)
 		util.Must(migrations.Migrate(registry.GetLogger(), opts.To))

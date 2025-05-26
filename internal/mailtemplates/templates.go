@@ -13,16 +13,18 @@ import (
 	"github.com/glasskube/distr/internal/types"
 )
 
-//go:embed templates/*
-var embeddedFS embed.FS
+var (
+	//go:embed templates/*
+	embeddedFS embed.FS
 
-var templates *template.Template
-var funcMap = template.FuncMap{
-	"QueryEscape":    url.QueryEscape,
-	"UnsafeHTMLAttr": func(value string) template.HTMLAttr { return template.HTMLAttr(value) },
-	"UnsafeHTML":     func(value string) template.HTML { return template.HTML(value) },
-	"UnsafeURL":      func(value string) template.URL { return template.URL(value) },
-}
+	templates *template.Template
+	funcMap   = template.FuncMap{
+		"QueryEscape":    url.QueryEscape,
+		"UnsafeHTMLAttr": func(value string) template.HTMLAttr { return template.HTMLAttr(value) },
+		"UnsafeHTML":     func(value string) template.HTML { return template.HTML(value) },
+		"UnsafeURL":      func(value string) template.URL { return template.URL(value) },
+	}
+)
 
 func init() {
 	if fsys, err := fs.Sub(embeddedFS, "templates"); err != nil {
@@ -33,7 +35,7 @@ func init() {
 }
 
 func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
-	var t = template.New("").Funcs(funcMap)
+	t := template.New("").Funcs(funcMap)
 	for _, p := range patterns {
 		if files, err := fs.Glob(fsys, p); err != nil {
 			return nil, err

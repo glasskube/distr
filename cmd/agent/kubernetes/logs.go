@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"maps"
 	"time"
 
 	"github.com/glasskube/distr/internal/agentlogs"
@@ -12,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/polymorphichelpers"
 )
 
@@ -73,9 +75,12 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		now := metav1.Now()
 		var toplevelErr error
 
-	resourcesLoop:
+		responseMap := map[corev1.ObjectReference]rest.ResponseWrapper{}
 		for _, obj := range resources {
-			logger := logger.With(zap.String("resource", obj.GetObjectKind().GroupVersionKind().Kind))
+			logger := logger.With(zap.String("resourceKind", obj.GetObjectKind().GroupVersionKind().Kind))
+			if metaObj, ok := obj.(metav1.Object); ok {
+				logger = logger.With(zap.String("resourceName", metaObj.GetName()))
+			}
 
 			logOptions := corev1.PodLogOptions{Timestamps: true}
 			if since, ok := lw.last[d.ID]; ok {
@@ -86,8 +91,9 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 
 			logger.Sugar().Debugf("get logs since %v", logOptions.SinceTime)
 
-			responseMap, err :=
-				polymorphichelpers.AllPodLogsForObjectFn(k8sConfigFlags, obj, &logOptions, 10*time.Second, true)
+			resourceResponseMap, err := polymorphichelpers.AllPodLogsForObjectFn(
+				k8sConfigFlags, obj, &logOptions, 10*time.Second, true,
+			)
 			if err != nil {
 				// not being able to get logs for all resource types is normal so we only want to call abort when an
 				// API error is encountered.
@@ -98,30 +104,32 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 				} else {
 					logger.Debug("could not get logs", zap.Error(err))
 				}
+			} else {
+				maps.Copy(responseMap, resourceResponseMap)
 			}
+		}
 
-			for ref, resp := range responseMap {
-				err := func() error {
-					rc, err := resp.Stream(ctx)
-					if err != nil {
-						logger.Warn("could not get logs for pod", zap.Error(err))
-						return err
-					}
-					defer rc.Close()
-					sc := bufio.NewScanner(rc)
-					for sc.Scan() {
-						deploymentCollector.AppendMessage(ref.Name, "Log", sc.Text())
-					}
-					if err := sc.Err(); err != nil {
-						logger.Warn("error streaming logs", zap.Error(err))
-						return err
-					}
-					return nil
-				}()
+		for ref, resp := range responseMap {
+			err := func() error {
+				rc, err := resp.Stream(ctx)
 				if err != nil {
-					toplevelErr = err
-					break resourcesLoop
+					logger.Warn("could not get logs for pod", zap.Error(err))
+					return err
 				}
+				defer rc.Close()
+				sc := bufio.NewScanner(rc)
+				for sc.Scan() {
+					deploymentCollector.AppendMessage(ref.Name, "Log", sc.Text())
+				}
+				if err := sc.Err(); err != nil {
+					logger.Warn("error streaming logs", zap.Error(err))
+					return err
+				}
+				return nil
+			}()
+			if err != nil {
+				toplevelErr = err
+				break
 			}
 		}
 

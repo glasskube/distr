@@ -17,8 +17,9 @@ type DeploymentTargetLatestMetrics struct {
 	api.AgentDeploymentTargetMetrics
 }
 
-func GetLatestDeploymentTargetMetrics(ctx context.Context, orgID, userID uuid.UUID, userRole types.UserRole) (
-	[]DeploymentTargetLatestMetrics, error) {
+func GetLatestDeploymentTargetMetrics(
+	ctx context.Context, orgID, userID uuid.UUID, userRole types.UserRole,
+) ([]DeploymentTargetLatestMetrics, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
 		`SELECT dt.id, dtm.cpu_cores_millis, dtm.cpu_usage, dtm.memory_bytes, dtm.memory_usage FROM
@@ -83,16 +84,26 @@ func CreateDeploymentTargetMetrics(
 	}
 }
 
-func CleanupDeploymentTargetMetrics(ctx context.Context, dt *types.DeploymentTarget) (int64, error) {
+func CleanupDeploymentTargetMetrics(ctx context.Context) (int64, error) {
 	if env.MetricsEntriesMaxAge() == nil {
 		return 0, nil
 	}
 	db := internalctx.GetDb(ctx)
-	if cmd, err := db.Exec(ctx, `
-		DELETE FROM DeploymentTargetMetrics
-		       WHERE deployment_target_id = @deploymentTargetId AND
-		             current_timestamp - created_at > @metricsEntriesMaxAge`,
-		pgx.NamedArgs{"deploymentTargetId": dt.ID, "metricsEntriesMaxAge": env.MetricsEntriesMaxAge()}); err != nil {
+	if cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM DeploymentTargetMetrics dtm
+		USING (
+			SELECT
+				dt.id AS deployment_target_id,
+				(SELECT max(created_at) FROM DeploymentTargetMetrics WHERE deployment_target_id = dt.id)
+					AS max_created_at
+			FROM DeploymentTarget dt
+		) max_created_at
+		WHERE dtm.deployment_target_id = max_created_at.deployment_target_id
+			AND dtm.created_at < max_created_at.max_created_at
+			AND current_timestamp - dtm.created_at > @metricsEntriesMaxAge`,
+		pgx.NamedArgs{"metricsEntriesMaxAge": env.MetricsEntriesMaxAge()},
+	); err != nil {
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil

@@ -33,8 +33,9 @@ func getOrganizationBranding(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
 
-	if organizationBranding, err :=
-		db.GetOrganizationBranding(r.Context(), *auth.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
+	if organizationBranding, err := db.GetOrganizationBranding(
+		r.Context(), *auth.CurrentOrgID(),
+	); errors.Is(err, apierrors.ErrNotFound) {
 		http.NotFound(w, r)
 	} else if err != nil {
 		internalctx.GetLogger(r.Context()).Error("failed to get organizationBranding", zap.Error(err))

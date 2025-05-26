@@ -11,7 +11,9 @@ import (
 	sentryotel "github.com/getsentry/sentry-go/otel"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/buildconfig"
+	"github.com/glasskube/distr/internal/cleanup"
 	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/jobs"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mail/noop"
 	"github.com/glasskube/distr/internal/mail/ses"
@@ -39,6 +41,7 @@ type Registry struct {
 	execDbMigrations  bool
 	artifactsRegistry http.Handler
 	tracer            *trace.TracerProvider
+	jobsScheduler     *jobs.Scheduler
 }
 
 func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
@@ -57,7 +60,7 @@ func NewDefault(ctx context.Context) (*Registry, error) {
 func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 	reg.logger = createLogger()
 
-	reg.logger.Info("initializing server",
+	reg.logger.Info("initializing service registry",
 		zap.String("version", buildconfig.Version()),
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
@@ -86,23 +89,35 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		reg.dbPool = db
 	}
 
+	if scheduler, err := reg.createJobsScheduler(); err != nil {
+		return nil, err
+	} else {
+		reg.jobsScheduler = scheduler
+	}
+
 	reg.artifactsRegistry = reg.createArtifactsRegistry(ctx)
 
 	return reg, nil
 }
 
-func (r *Registry) Shutdown() error {
+func (r *Registry) Shutdown(ctx context.Context) error {
+	if err := r.jobsScheduler.Shutdown(); err != nil {
+		r.logger.Warn("job scheduler shutdown failed", zap.Error(err))
+	}
+
 	r.logger.Warn("shutting down database connections")
 	r.dbPool.Close()
-	if err := r.tracer.Shutdown(context.TODO()); err != nil {
+
+	if err := r.tracer.Shutdown(ctx); err != nil {
 		r.logger.Warn("tracer shutdown failed", zap.Error(err))
 	}
+
 	// some devices like stdout and stderr can not be synced by the OS
-	if err := r.logger.Sync(); errors.Is(err, syscall.EINVAL) {
-		return nil
-	} else {
+	if err := r.logger.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
 		return fmt.Errorf("logger sync failed: %w", err)
 	}
+
+	return nil
 }
 
 type loggingQueryTracer struct {
@@ -129,8 +144,10 @@ func (reg *Registry) createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		typeNames := []string{"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE", "DEPLOYMENT_STATUS_TYPE", "FEATURE",
-			"_FEATURE", "TUTORIAL"}
+		typeNames := []string{
+			"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE",
+			"DEPLOYMENT_STATUS_TYPE", "FEATURE", "_FEATURE", "TUTORIAL",
+		}
 		for _, typeName := range typeNames {
 			if pgType, err := conn.LoadType(ctx, typeName); err != nil {
 				return err
@@ -166,15 +183,14 @@ func (r *Registry) GetDbPool() *pgxpool.Pool {
 
 func createMailer(ctx context.Context) (mail.Mailer, error) {
 	config := env.GetMailerConfig()
-	authOrgOverrideFromAddress :=
-		func(ctx context.Context, mail mail.Mail) string {
-			if auth, err := auth.Authentication.Get(ctx); err == nil {
-				if org := auth.CurrentOrg(); org != nil && org.EmailFromAddress != nil {
-					return *org.EmailFromAddress
-				}
+	authOrgOverrideFromAddress := func(ctx context.Context, mail mail.Mail) string {
+		if auth, err := auth.Authentication.Get(ctx); err == nil {
+			if org := auth.CurrentOrg(); org != nil && org.EmailFromAddress != nil {
+				return *org.EmailFromAddress
 			}
-			return ""
 		}
+		return ""
+	}
 	switch config.Type {
 	case env.MailerTypeSMTP:
 		smtpConfig := smtp.Config{
@@ -277,6 +293,59 @@ func (r *Registry) GetArtifactsServer() server.Server {
 	} else {
 		return server.NewNoop()
 	}
+}
+
+func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
+	scheduler, err := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
+	if err != nil {
+		return nil, err
+	}
+
+	if cron := env.CleanupDeploymenRevisionStatusCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if cron := env.CleanupDeploymenTargetStatusCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if cron := env.CleanupDeploymentTargetMetricsCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentTargetMetricsCleanup", cleanup.RunDeploymentTargetMetricsCleanup),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if cron := env.CleanupDeploymentLogRecordCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("DeploymentLogRecordCleanup", cleanup.RunDeploymentLogRecordCleanup),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return scheduler, nil
+}
+
+func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
+	return r.jobsScheduler
 }
 
 func (r *Registry) GetTracer() *trace.TracerProvider {

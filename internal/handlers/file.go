@@ -8,9 +8,8 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/glasskube/distr/api"
-
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"

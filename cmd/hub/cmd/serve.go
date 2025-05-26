@@ -54,7 +54,7 @@ func runServe(ctx context.Context, opts ServeOptions) {
 	}()
 
 	registry := util.Require(svc.New(ctx, svc.ExecDbMigration(opts.Migrate)))
-	defer func() { util.Must(registry.Shutdown()) }()
+	defer func() { util.Must(registry.Shutdown(ctx)) }()
 
 	util.Must(db.CreateAgentVersion(internalctx.WithDb(ctx, registry.GetDbPool())))
 
@@ -71,6 +71,7 @@ func runServe(ctx context.Context, opts ServeOptions) {
 
 	go func() { util.Must(server.Start(":8080")) }()
 	go func() { util.Must(artifactsServer.Start(":8585")) }()
+	registry.GetJobsScheduler().Start()
 	server.WaitForShutdown()
 	artifactsServer.WaitForShutdown()
 }
