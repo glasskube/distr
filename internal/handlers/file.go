@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 
 	"github.com/glasskube/distr/api"
 
@@ -124,17 +125,22 @@ func fileMiddleware(h http.Handler) http.Handler {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else {
-				log.Warn("error getting file", zap.Error(err))
+				log.Error("error getting file", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
+		} else if orgs, err := db.GetOrganizationsForUser(ctx, auth.CurrentUserID()); err != nil {
+			// TODO not sure yet if its the right way to check this, or if we should make org id "nullable"
+			// (client would have to say at upload if its "public" or org scoped) and it would need a migration
+			log.Error("error getting orgs", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else if !slices.ContainsFunc(orgs, func(role types.OrganizationWithUserRole) bool {
+			return role.ID == file.OrganizationID
+		}) {
+			http.NotFound(w, r)
 		} else {
-			if file.OrganizationID != *auth.CurrentOrgID() {
-				// TODO fix this check: org ID should be nullable and if not set, everybody can see the file
-				http.NotFound(w, r)
-			} else {
-				h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))
-			}
+			h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))
 		}
 	})
 }
