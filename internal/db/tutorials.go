@@ -17,7 +17,7 @@ import (
 
 const tutorialProgressOutExpr = " uat.tutorial, uat.created_at, uat.events, uat.completed_at "
 
-func GetTutorialProgresses(ctx context.Context, userID uuid.UUID) (
+func GetTutorialProgresses(ctx context.Context, userID, orgID uuid.UUID) (
 	[]types.TutorialProgress,
 	error,
 ) {
@@ -25,8 +25,9 @@ func GetTutorialProgresses(ctx context.Context, userID uuid.UUID) (
 	rows, err := db.Query(ctx, `
 		SELECT `+tutorialProgressOutExpr+`
 		FROM UserAccount_TutorialProgress uat
-		WHERE uat.useraccount_id = @userId`, pgx.NamedArgs{
+		WHERE uat.useraccount_id = @userId AND uat.organization_id = @orgId`, pgx.NamedArgs{
 		"userId": userID,
+		"orgId":  orgID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query tutorial progresses: %w", err)
@@ -38,7 +39,7 @@ func GetTutorialProgresses(ctx context.Context, userID uuid.UUID) (
 	}
 }
 
-func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.Tutorial) (
+func GetTutorialProgress(ctx context.Context, userID, orgID uuid.UUID, tutorial types.Tutorial) (
 	*types.TutorialProgress,
 	error,
 ) {
@@ -46,9 +47,12 @@ func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.T
 	rows, err := db.Query(ctx, `
 		SELECT `+tutorialProgressOutExpr+`
 		FROM UserAccount_TutorialProgress uat
-		WHERE uat.useraccount_id = @userId AND uat.tutorial = @tutorial`, pgx.NamedArgs{
+		WHERE uat.useraccount_id = @userId
+			AND uat.tutorial = @tutorial
+			AND uat.organization_id = @orgId`, pgx.NamedArgs{
 		"userId":   userID,
 		"tutorial": tutorial,
+		"orgId":    orgID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query tutorial progress: %w", err)
@@ -65,20 +69,21 @@ func GetTutorialProgress(ctx context.Context, userID uuid.UUID, tutorial types.T
 
 func SaveTutorialProgress(
 	ctx context.Context,
-	userID uuid.UUID,
+	userID, orgID uuid.UUID,
 	tutorial types.Tutorial,
 	progress *api.TutorialProgressRequest,
 ) (any, error) {
 	db := internalctx.GetDb(ctx)
 	progress.CreatedAt = time.Now()
 	rows, err := db.Query(ctx, `
-		INSERT INTO UserAccount_TutorialProgress as uat (useraccount_id, tutorial, events, completed_at)
+		INSERT INTO UserAccount_TutorialProgress as uat (useraccount_id, tutorial, events, completed_at, organization_id)
 		VALUES (
 			@userId,
 			@tutorial,
-			jsonb_build_array(@event::jsonb), CASE WHEN @markCompleted THEN current_timestamp ELSE NULL END
+			jsonb_build_array(@event::jsonb), CASE WHEN @markCompleted THEN current_timestamp ELSE NULL END,
+		    @orgId
 		)
-		ON CONFLICT (useraccount_id, tutorial) DO UPDATE
+		ON CONFLICT (useraccount_id, tutorial, organization_id) DO UPDATE
 			SET events = uat.events::jsonb || @event::jsonb,
 			    completed_at = CASE WHEN @markCompleted THEN current_timestamp ELSE uat.completed_at END
 		RETURNING `+tutorialProgressOutExpr,
@@ -87,6 +92,7 @@ func SaveTutorialProgress(
 			"tutorial":      tutorial,
 			"event":         progress.TutorialProgressEvent,
 			"markCompleted": progress.MarkCompleted,
+			"orgId":         orgID,
 		},
 	)
 	if err != nil {
