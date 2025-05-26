@@ -59,8 +59,7 @@ loop:
 						logger.Error("self update failed", zap.Error(err))
 						// TODO: Support status without revision ID?
 						if len(resource.Deployments) > 0 {
-							if err :=
-								client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
+							if err := client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
 								logger.Error("failed to send status", zap.Error(err))
 							}
 						}
@@ -157,8 +156,7 @@ loop:
 					}
 				}
 
-				if statusErr :=
-					client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
+				if statusErr := client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
 					logger.Error("failed to send status", zap.Error(statusErr))
 				}
 			}

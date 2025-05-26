@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient/useragent"
@@ -32,6 +30,7 @@ import (
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 func AgentRouter(r chi.Router) {
@@ -121,7 +120,10 @@ func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error("failed to create agent token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token})
+			if err := json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token}); err != nil {
+				log.Error("failed to write response", zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 	}
 }
@@ -139,7 +141,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		statusMessage = fmt.Sprintf("%v: %v", msg, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		var agentResource = api.AgentResource{
+		agentResource := api.AgentResource{
 			Version:        deploymentTarget.AgentVersion,
 			MetricsEnabled: deploymentTarget.MetricsEnabled,
 		}
@@ -386,8 +388,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		orgId := auth.CurrentOrgID()
 		targetId := auth.CurrentDeploymentTargetID()
 
-		if deploymentTarget, err :=
-			db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
+		if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
@@ -430,15 +431,17 @@ func getVerifiedDeploymentTarget(
 	}
 }
 
-var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
-var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+var (
+	agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+	agentLoginPerTargetIdRateLimiter   = httprate.NewRateLimiter(5, time.Minute)
 
-var rateLimitPerAgent = httprate.Limit(
-	// For a 5 second interval, per minute, the agent makes 12 resource calls and 12 status calls for each deployment.
-	// Adding 25% margin and assuming that people have at most 10 deployments on a single agent we arrive at
-	// (12+10*12)*1.25 = 11*12*1.25 = 11*15
-	// also adding 2 for the metric reports
-	(11*15)+2,
-	1*time.Minute,
-	httprate.WithKeyFuncs(middleware.RateLimitCurrentDeploymentTargetIdKeyFunc),
+	rateLimitPerAgent = httprate.Limit(
+		// For a 5 second interval, per minute, the agent makes 12 resource calls and 12 status calls for each deployment.
+		// Adding 25% margin and assuming that people have at most 10 deployments on a single agent we arrive at
+		// (12+10*12)*1.25 = 11*12*1.25 = 11*15
+		// also adding 2 for the metric reports
+		(11*15)+2,
+		1*time.Minute,
+		httprate.WithKeyFuncs(middleware.RateLimitCurrentDeploymentTargetIdKeyFunc),
+	)
 )

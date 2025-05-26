@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/glasskube/distr/internal/auth"
@@ -17,6 +15,7 @@ import (
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"go.uber.org/zap"

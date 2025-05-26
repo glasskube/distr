@@ -354,15 +354,18 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var getApplicationVersionComposeFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
-	return av.ComposeFileData
-})
-var getApplicationVersionValuesFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
-	return av.ValuesFileData
-})
-var getApplicationVersionTemplateFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
-	return av.TemplateFileData
-})
+var (
+	getApplicationVersionComposeFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+		return av.ComposeFileData
+	})
+
+	getApplicationVersionValuesFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+		return av.ValuesFileData
+	})
+	getApplicationVersionTemplateFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+		return av.TemplateFileData
+	})
+)
 
 func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion) []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

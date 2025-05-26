@@ -52,7 +52,7 @@ func init() {
 
 func runCleanup(ctx context.Context, opts CleanupOptions) {
 	registry := util.Require(svc.NewDefault(ctx))
-	defer func() { util.Must(registry.Shutdown()) }()
+	defer func() { util.Must(registry.Shutdown(ctx)) }()
 	log := registry.GetLogger()
 
 	var cleanupFunc func(context.Context) error

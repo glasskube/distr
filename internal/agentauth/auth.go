@@ -18,8 +18,10 @@ import (
 	"oras.land/oras-go/v2/registry/remote/retry"
 )
 
-var previousAuth = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
-var credentialStores = map[uuid.UUID]credentials.Store{}
+var (
+	previousAuth     = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
+	credentialStores = map[uuid.UUID]credentials.Store{}
+)
 
 func init() {
 	_ = containerdlog.SetLevel("warn")

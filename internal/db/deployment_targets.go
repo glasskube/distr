@@ -108,7 +108,7 @@ func GetDeploymentTarget(
 	query := "SELECT" + deploymentTargetWithStatusOutputExpr + "FROM" + deploymentTargetFromExpr + "WHERE dt.id = @id"
 	if orgID != nil {
 		args = pgx.NamedArgs{"id": id, "orgId": *orgID}
-		query = query + " AND dt.organization_id = @orgId"
+		query += " AND dt.organization_id = @orgId"
 	} else {
 		args = pgx.NamedArgs{"id": id}
 	}
@@ -231,8 +231,9 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
-	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(
+		rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy],
+	); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
@@ -260,8 +261,9 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgID})
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
-	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(
+		rows, pgx.RowToStructByNameLax[types.DeploymentTarget],
+	); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated

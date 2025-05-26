@@ -5,11 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/glasskube/distr/internal/util"
-
-	"github.com/go-chi/httprate"
-	"github.com/google/uuid"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
@@ -22,7 +17,10 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 

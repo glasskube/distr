@@ -28,7 +28,6 @@ import (
 	applyconfigurationscorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
@@ -169,7 +168,6 @@ func main() {
 
 			runInstallOrUpgrade(ctx, res.Namespace, deployment, currentDeployment)
 		}
-
 	}
 
 	logger.Info("shutting down")
