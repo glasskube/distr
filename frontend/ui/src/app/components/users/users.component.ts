@@ -167,7 +167,7 @@ export class UsersComponent implements OnDestroy {
           const msg = getFormDisplayedError(e);
           if (msg) {
             this.toast.error(msg);
-          } // ??
+          }
           return NEVER;
         }),
         tap(() => this.refresh$.next())
