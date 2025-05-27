@@ -38,7 +38,7 @@ import {modalFlyInOut} from '../../animations/modal';
 type SwitchOptions = {
   currentOrg: Organization;
   availableOrgs: OrganizationWithUserRole[];
-  canCreateOrg: boolean;
+  isVendorSomewhere: boolean;
 };
 
 @Component({
@@ -77,7 +77,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
       return {
         currentOrg,
         availableOrgs: orgs.filter((o) => o.id !== currentOrg.id),
-        canCreateOrg: orgs.some((o) => o.userRole === 'vendor'),
+        isVendorSomewhere: orgs.some((o) => o.userRole === 'vendor'),
       };
     })
   );

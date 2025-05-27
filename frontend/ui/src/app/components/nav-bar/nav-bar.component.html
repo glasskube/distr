@@ -49,7 +49,7 @@
             </div>
 
             @if (switchOptions$ | async; as switchOptions) {
-              @if (switchOptions.canCreateOrg || switchOptions.availableOrgs.length > 0) {
+              @if (switchOptions.isVendorSomewhere || switchOptions.availableOrgs.length > 0) {
                 <div class="ms-2 me-4">
                   <button
                     type="button"
@@ -63,9 +63,11 @@
                       class="flex flex-col text-end text-sm font-medium text-gray-900 dark:text-gray-300"
                       role="none">
                       {{ switchOptions.currentOrg.name }}
-                      <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
-                        {{ user.userRole | titlecase }}
-                      </span>
+                      @if (switchOptions.isVendorSomewhere) {
+                        <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
+                          {{ user.userRole | titlecase }}
+                        </span>
+                      }
                     </span>
                     <fa-icon
                       class="ml-2 text-gray-900 dark:text-gray-300"
@@ -96,15 +98,17 @@
                               class="flex flex-col text-start text-sm font-medium text-gray-900 dark:text-gray-300"
                               role="none">
                               {{ org.name }}
-                              <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
-                                {{ org.userRole | titlecase }}
-                              </span>
+                              @if (switchOptions.isVendorSomewhere) {
+                                <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
+                                  {{ org.userRole | titlecase }}
+                                </span>
+                              }
                             </span>
                           </button>
                         </li>
                       }
                     </ul>
-                    @if (switchOptions.canCreateOrg) {
+                    @if (switchOptions.isVendorSomewhere) {
                       <ul class="py-1" role="none">
                         <li>
                           <button
