@@ -59,7 +59,7 @@ export class OverlayService {
   }
 
   public uploadImage(context: ImageUploadContext) {
-    return this.showModal<string>(ImageUploadDialogComponent, {data: {}}).result();
+    return this.showModal<string>(ImageUploadDialogComponent, {data: context}).result();
   }
 
   /**

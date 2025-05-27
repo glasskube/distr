@@ -150,7 +150,7 @@ export class UsersComponent implements OnDestroy {
   }
 
   public async uploadImage(data: UserAccountWithRole) {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl, scope: 'platform'}));
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }

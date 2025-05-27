@@ -19,6 +19,7 @@ type (
 	Feature               string
 	DockerType            string
 	Tutorial              string
+	FileScope             string
 )
 
 const (
@@ -46,6 +47,9 @@ const (
 	TutorialBranding Tutorial = "branding"
 	TutorialAgents   Tutorial = "agents"
 	TutorialRegistry Tutorial = "registry"
+
+	FileScopePlatform     FileScope = "platform"
+	FileScopeOrganization FileScope = "organization"
 )
 
 type Base struct {

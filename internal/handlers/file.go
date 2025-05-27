@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"slices"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -76,12 +75,19 @@ func createFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	if file, err := getFileFromRequest(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err := db.CreateFile(ctx, *auth.CurrentOrgID(), file); err != nil {
-		log.Warn("error uploading file", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, file.ID)
+		var orgID *uuid.UUID
+		scope := r.FormValue("scope")
+		if types.FileScope(scope) != types.FileScopePlatform {
+			orgID = auth.CurrentOrgID()
+		}
+		if err := db.CreateFile(ctx, orgID, file); err != nil {
+			log.Warn("error uploading file", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, file.ID)
+		}
 	}
 }
 
@@ -128,18 +134,12 @@ func fileMiddleware(h http.Handler) http.Handler {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
-		} else if orgs, err := db.GetOrganizationsForUser(ctx, auth.CurrentUserID()); err != nil {
-			// TODO not sure yet if its the right way to check this, or if we should make org id "nullable"
-			// (client would have to say at upload if its "public" or org scoped) and it would need a migration
-			log.Error("error getting orgs", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		} else if !slices.ContainsFunc(orgs, func(role types.OrganizationWithUserRole) bool {
-			return role.ID == file.OrganizationID
-		}) {
-			http.NotFound(w, r)
 		} else {
-			h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))
+			if file.OrganizationID != nil && *file.OrganizationID != *auth.CurrentOrgID() {
+				http.NotFound(w, r)
+			} else {
+				h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))
+			}
 		}
 	})
 }
