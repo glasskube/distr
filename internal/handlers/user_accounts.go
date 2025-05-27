@@ -165,23 +165,32 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
-	} else if ok, err := userCanBeRemovedFromOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
-		log.Error("error checking user/org removal", zap.Error(err))
+	} else if err := db.RunTx(ctx, func(ctx context.Context) error {
+		if ok, err := userCanBeRemovedFromOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			return err
+		} else if !ok {
+			http.Error(w, "Please ensure there are no deployment targets and licenses owned by this user and try again",
+				http.StatusBadRequest)
+			return nil
+		} else if err := db.DeleteUserAccountFromOrganization(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				return nil
+			} else {
+				return err
+			}
+		} else if err := db.DeleteAccessTokensOfUserInOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			return err
+		} else if err := db.DeleteTutorialProgressesOfUserInOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			return err
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+			return nil
+		}
+	}); err != nil {
+		log.Error("error removing user from org", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	} else if !ok {
-		http.Error(w, "Please ensure there are no deployment targets and licenses owned by this user and try again",
-			http.StatusBadRequest)
-	} else if err := db.DeleteUserAccountFromOrganization(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
-		log.Error("error removing user from organization", zap.Error(err))
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
-		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else {
-		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

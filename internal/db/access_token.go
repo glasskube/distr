@@ -117,3 +117,15 @@ func GetAccessTokenByKeyUpdatingLastUsed(
 		return &result, nil
 	}
 }
+
+func DeleteAccessTokensOfUserInOrg(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	if _, err := db.Exec(
+		ctx,
+		"DELETE FROM AccessToken WHERE user_account_id = @userId AND organization_id = @orgId",
+		pgx.NamedArgs{"userId": userID, "orgId": orgID},
+	); err != nil {
+		return fmt.Errorf("could not delete tokens: %w", err)
+	}
+	return nil
+}

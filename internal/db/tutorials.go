@@ -102,3 +102,15 @@ func SaveTutorialProgress(
 		return res, err
 	}
 }
+
+func DeleteTutorialProgressesOfUserInOrg(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	if _, err := db.Exec(
+		ctx,
+		"DELETE FROM UserAccount_TutorialProgress WHERE useraccount_id = @userId AND organization_id = @orgId",
+		pgx.NamedArgs{"userId": userID, "orgId": orgID},
+	); err != nil {
+		return fmt.Errorf("could not delete tutorial progresses: %w", err)
+	}
+	return nil
+}
