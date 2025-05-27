@@ -50,6 +50,19 @@
       "schedule": [
         "* 6-9 * * 1"
       ]
+    },
+    {
+      "extends": [
+        "monorepo:opentelemetry-go",
+        "monorepo:opentelemetry-go-contrib"
+      ],
+      "groupName": "opentelemetry-go monorepo",
+      "matchUpdateTypes": [
+        "digest",
+        "patch",
+        "minor",
+        "major"
+      ]
     }
   ]
 }
