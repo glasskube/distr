@@ -132,7 +132,9 @@ export class DeploymentTargetCardComponent {
   });
 
   protected readonly agentUpdatePending = computed(
-    () => this.deploymentTarget().agentVersion?.id !== this.deploymentTarget().reportedAgentVersionId
+    () =>
+      this.deploymentTarget().currentStatus !== undefined &&
+      this.deploymentTarget().agentVersion?.id !== this.deploymentTarget().reportedAgentVersionId
   );
 
   protected readonly editForm = new FormGroup({
