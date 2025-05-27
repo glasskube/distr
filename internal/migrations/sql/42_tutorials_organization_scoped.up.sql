@@ -1,7 +1,7 @@
 -- this migration assumes that every user is part of exactly one organization
 -- if there is a user without an organization, this will fail. a manual fix would be to delete the corresponding UserAccount_TutorialProgress
 
-ALTER TABLE UserAccount_TutorialProgress ADD COLUMN organization_id UUID;
+ALTER TABLE UserAccount_TutorialProgress ADD COLUMN organization_id UUID REFERENCES Organization(id) ON DELETE CASCADE;
 
 ALTER TABLE UserAccount_TutorialProgress DROP CONSTRAINT useraccount_tutorialprogress_pkey;
 
