@@ -90,7 +90,7 @@ jobs:
         run: dist/distr serve
         env:
           DATABASE_URL: postgres://local:local@localhost:5432/distr
-          JWT_SECRET: some-jwt-secret
+          JWT_SECRET: H4V7z6mEpe8/k5H/KyogT/iATJhNpEIUMd5cHF6mqF8=
           DISTR_HOST: http://localhost:8080
 
       - name: Login to GitHub Container Registry (tag only)
