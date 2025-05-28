@@ -118,3 +118,27 @@ Return the PostgreSQL Secret Name
     {{- printf "%s-%s" (include "distr.fullname" .) "externaldb" -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "distr.hubEnv" -}}
+{{- if .Values.postgresql.enabled }}
+- name: DATABASE_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "distr.databaseSecretName" . }}
+      key: password
+{{- end}}
+- name: DATABASE_URL
+  {{- if .Values.postgresql.enabled }}
+  value: {{ include "distr.databaseUri" . }}
+  {{- else if .Values.externalDatabase.uri }}
+  value: {{ .Values.externalDatabase.uri }}
+  {{- else }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "distr.databaseSecretName" . }}
+      key: {{ .Values.externalDatabase.existingSecretUriKey }}
+  {{- end }}
+{{ with .Values.hub.env }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
