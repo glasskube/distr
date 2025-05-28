@@ -20,8 +20,8 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
-          POSTGRES_USER: local
-          POSTGRES_PASSWORD: local
+          POSTGRES_USER: test-user
+          POSTGRES_PASSWORD: test-password
           POSTGRES_DB: distr
         # Set health checks to wait until postgres has started
         options: >-
@@ -88,21 +88,16 @@ jobs:
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
 
-      - name: Test migrations
+      - name: Start Hub
         shell: bash
         run: dist/distr serve &
           sleep 10 &&
-          curl http://localhost:8080/internal/environment &&
-          pkill -SIGTERM distr
+          curl http://localhost:8080/internal/environment -f &&
+          psql postgresql://test-user:test-password@localhost:5432/distr -c "select version, dirty from schema_migrations" --csv -t &&
+          pkill -SIGTERM distr &&
+          dist/distr migrate --down
         env:
-          DATABASE_URL: postgres://local:local@localhost:5432/distr
-          JWT_SECRET: H4V7z6mEpe8/k5H/KyogT/iATJhNpEIUMd5cHF6mqF8=
-          DISTR_HOST: http://localhost:8080
-
-      - name: Down migrations
-        run: dist/distr migrate --down
-        env:
-          DATABASE_URL: postgres://local:local@localhost:5432/distr
+          DATABASE_URL: postgres://test-user:test-password@localhost:5432/distr
           JWT_SECRET: H4V7z6mEpe8/k5H/KyogT/iATJhNpEIUMd5cHF6mqF8=
           DISTR_HOST: http://localhost:8080
 
