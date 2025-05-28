@@ -11,6 +11,23 @@ on:
   pull_request:
 
 jobs:
+  # Service containers to run with `container-job`
+  services:
+    # Label used to access the service container
+    postgres:
+      # Docker Hub image
+      image: postgres
+      # Provide the password for postgres
+      env:
+        POSTGRES_PASSWORD: postgres
+      # Set health checks to wait until postgres has started
+      options: >-
+        --health-cmd pg_isready
+        --health-interval 10s
+        --health-timeout 5s
+        --health-retries 5
+    runs-on: ubuntu-latest
+
   build:
     name: Build
     timeout-minutes: 10
@@ -68,6 +85,9 @@ jobs:
           LDFLAGS: >-
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+
+      - name: Test migrations
+        run: dist/distr serve
 
       - name: Login to GitHub Container Registry (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
