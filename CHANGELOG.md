@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.11.0](https://github.com/glasskube/distr/compare/1.10.0...1.11.0) (2025-05-28)
+
+
+### Features
+
+* users can be part of multiple organizations ([#959](https://github.com/glasskube/distr/issues/959)) ([afea5fe](https://github.com/glasskube/distr/commit/afea5fef4eee1c574d2401fd235801e75843bdb7))
+
+
+### Bug Fixes
+
+* **deps:** update dependency posthog-js to v1.248.0 ([#972](https://github.com/glasskube/distr/issues/972)) ([5bec987](https://github.com/glasskube/distr/commit/5bec9876eb91238236654607ef01e276960d095c))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.127.0 ([#963](https://github.com/glasskube/distr/issues/963)) ([58c1de8](https://github.com/glasskube/distr/commit/58c1de87dae7000ba01c9e5bd82eabe6b13b6c53))
+
+
+### Other
+
+* **deps:** update dependency @sentry/cli to v2.46.0 ([#971](https://github.com/glasskube/distr/issues/971)) ([3ac6cf1](https://github.com/glasskube/distr/commit/3ac6cf19a53df45c02763e5ef04a54e7ee97c269))
+* **deps:** update dependency typedoc to v0.28.5 ([#960](https://github.com/glasskube/distr/issues/960)) ([a03473f](https://github.com/glasskube/distr/commit/a03473f1bb94a4901958a51089178b1ada2fec66))
+* **deps:** update docker/build-push-action action to v6.18.0 ([#970](https://github.com/glasskube/distr/issues/970)) ([6aece3c](https://github.com/glasskube/distr/commit/6aece3c1098f0ab51eef75f62cfe1ad14cd4ac3d))
+* **ui:** agent update pending indicator for connected agents only ([#968](https://github.com/glasskube/distr/issues/968)) ([490288e](https://github.com/glasskube/distr/commit/490288e13d148f8623b7a13fab22e088afc22432))
+* **ui:** clarify base/template value labels and add descriptions ([#958](https://github.com/glasskube/distr/issues/958)) ([ac90bd2](https://github.com/glasskube/distr/commit/ac90bd26e6e4be8f3079765a00eff0eecee3e338))
+* **ui:** show "+ Deployment" and "Update" buttons unconditionally ([#949](https://github.com/glasskube/distr/issues/949)) ([e5fdd05](https://github.com/glasskube/distr/commit/e5fdd05afeca3b8fcfec60869dff01f30655a809))
+
 ## [1.10.0](https://github.com/glasskube/distr/compare/1.9.1...1.10.0) (2025-05-26)
 
 
