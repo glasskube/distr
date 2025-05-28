@@ -1,1 +1,1 @@
-DROP TABLE no_idea;
+DROP TABLE lol;
