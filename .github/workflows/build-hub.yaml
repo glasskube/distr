@@ -93,7 +93,7 @@ jobs:
         run: dist/distr serve &
           sleep 10 &&
           curl $DISTR_HOST/internal/environment -f &&
-          psql $DATABASE_URL -c "select version, dirty from schema_migrations" --csv -t &&
+          psql $DATABASE_URL -c "select version > 0, dirty from schema_migrations" --csv -t &&
           pkill -SIGTERM distr &&
           dist/distr migrate --down
         env:
