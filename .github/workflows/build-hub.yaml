@@ -93,9 +93,10 @@ jobs:
         run: dist/distr serve &
           sleep 10 &&
           curl $DISTR_HOST/internal/environment -f &&
-          psql $DATABASE_URL -c "select version > 0, dirty from schema_migrations" --csv -t &&
+          psql $DATABASE_URL -c "select version > 0, dirty from schema_migrations" --csv -t | grep "t,f" &&
           pkill -SIGTERM distr &&
           dist/distr migrate --down
+          psql $DATABASE_URL -c "select version, dirty from schema_migrations" --csv -t | grep "0,f"
         env:
           DATABASE_URL: postgres://test-user:test-password@localhost:5432/distr
           JWT_SECRET: H4V7z6mEpe8/k5H/KyogT/iATJhNpEIUMd5cHF6mqF8=
