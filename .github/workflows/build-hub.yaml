@@ -12,6 +12,20 @@ on:
 
 jobs:
   build:
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: test-user
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_DB: distr
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     name: Build
     timeout-minutes: 10
     runs-on: ubuntu-latest
@@ -68,6 +82,19 @@ jobs:
           LDFLAGS: >-
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+
+      - name: Start Hub and verify migrations
+        shell: bash
+        run: dist/distr serve &
+          sleep 5 &&
+          curl $DISTR_HOST/internal/environment -f &&
+          psql $DATABASE_URL -c "select version > 0, dirty from schema_migrations" --csv -t | grep "t,f" &&
+          pkill -SIGTERM distr &&
+          dist/distr migrate --down
+        env:
+          DATABASE_URL: postgres://test-user:test-password@localhost:5432/distr
+          JWT_SECRET: H4V7z6mEpe8/k5H/KyogT/iATJhNpEIUMd5cHF6mqF8=
+          DISTR_HOST: http://localhost:8080
 
       - name: Login to GitHub Container Registry (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
