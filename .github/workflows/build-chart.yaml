@@ -3,16 +3,16 @@ name: Build helm chart
 on:
   push:
     branches:
-      - "main"
+      - 'main'
     paths:
       - deploy/charts/**
     tags:
-      - "*"
+      - '*'
   pull_request:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Publish the helm chart to ghcr.io"
+        description: 'Publish the helm chart to ghcr.io'
         type: boolean
         default: false
 
