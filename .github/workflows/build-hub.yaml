@@ -90,6 +90,8 @@ jobs:
         run: dist/distr serve
         env:
           DATABASE_URL: postgres://local:local@localhost:5432/distr
+          JWT_SECRET: some-jwt-secret
+          DISTR_HOST: http://localhost:8080
 
       - name: Login to GitHub Container Registry (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
