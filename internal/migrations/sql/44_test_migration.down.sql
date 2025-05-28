@@ -1,3 +1,1 @@
-CREATE TABLE lol (
-  id UUID
-);
+DROP TABLE no_idea;
