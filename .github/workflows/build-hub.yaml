@@ -12,18 +12,13 @@ on:
 
 jobs:
   build:
-    # Service containers to run with `container-job`
     services:
-      # Label used to access the service container
       postgres:
-        # Docker Hub image
         image: postgres
-        # Provide the password for postgres
         env:
           POSTGRES_USER: test-user
           POSTGRES_PASSWORD: test-password
           POSTGRES_DB: distr
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
