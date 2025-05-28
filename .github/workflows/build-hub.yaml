@@ -89,7 +89,11 @@ jobs:
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
 
       - name: Test migrations
-        run: dist/distr serve & sleep 10 & curl http://localhost:8080/internal/environment
+        shell: bash
+        run: dist/distr serve &
+          sleep 10
+          curl http://localhost:8080/internal/environment
+          pkill -SIGTERM distr
         env:
           DATABASE_URL: postgres://local:local@localhost:5432/distr
           JWT_SECRET: H4V7z6mEpe8/k5H/KyogT/iATJhNpEIUMd5cHF6mqF8=
