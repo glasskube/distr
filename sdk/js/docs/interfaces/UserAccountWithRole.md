@@ -52,6 +52,12 @@
 
 ---
 
+### joinedOrgAt
+
+> **joinedOrgAt**: `string`
+
+---
+
 ### name?
 
 > `optional` **name**: `string`

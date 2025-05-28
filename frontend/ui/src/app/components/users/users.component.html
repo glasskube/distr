@@ -49,7 +49,7 @@
               <th scope="col" class="p-4"></th>
               <th scope="col" class="p-4">Name</th>
               <th scope="col" class="p-4">E-Mail</th>
-              <th scope="col" class="p-4">Creation Date</th>
+              <th scope="col" class="p-4">Join Date</th>
               <th scope="col" class="p-4"></th>
             </tr>
           </thead>
@@ -84,7 +84,7 @@
                   {{ user.email }}
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  {{ user.createdAt | date: 'short' }}
+                  {{ user.joinedOrgAt | date: 'short' }}
                 </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">

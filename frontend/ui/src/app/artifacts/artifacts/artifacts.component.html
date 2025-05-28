@@ -46,13 +46,18 @@
               </code>
             </div>
           } @else {
-            Your Distr Hub does not have the registry enabled. You can enable it by setting the corresponding
-            environment variables of the Distr Hub.
-            <!-- TODO link to docs -->
+            Your Distr Hub does not have the registry enabled.
+            <ng-container *appRequiredRole="'vendor'"
+              >You can enable it by setting the corresponding environment variables of the Distr Hub.
+              <!-- TODO link to docs -->
+            </ng-container>
           }
         } @else {
-          It seems your organization does not have a slug set yet. To use the registry, please set a slug in
-          <a class="text-gray-600 dark:text-gray-400 underline" routerLink="/settings">Settings</a>.
+          It seems your organization does not have a slug set yet.
+          <ng-container *appRequiredRole="'vendor'"
+            >To use the registry, please set a slug in
+            <a class="text-gray-600 dark:text-gray-400 underline" routerLink="/settings">Settings</a>.
+          </ng-container>
         }
       </div>
     </div>

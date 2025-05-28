@@ -9,9 +9,10 @@ import {AsyncPipe} from '@angular/common';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {getFormDisplayedError} from '../../../util/errors';
 import {ToastService} from '../../services/toast.service';
-import {FilesService} from '../../services/files.service';
+import {FileScope, FilesService} from '../../services/files.service';
 
 export interface ImageUploadContext {
+  scope?: FileScope;
   imageUrl?: string;
 }
 
@@ -76,7 +77,7 @@ export class ImageUploadDialogComponent implements OnInit, OnDestroy {
       formData.set('file', this.form.value.image as File);
 
       try {
-        let uploadResult = this.files.uploadFile(formData);
+        let uploadResult = this.files.uploadFile(formData, this.data.scope);
         await this.dialogRef.close(await lastValueFrom(uploadResult));
         this.toast.success('Image saved successfully');
       } catch (e) {

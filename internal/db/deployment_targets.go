@@ -77,7 +77,7 @@ func GetDeploymentTargets(
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
 		"SELECT"+deploymentTargetWithStatusOutputExpr+"FROM"+deploymentTargetFromExpr+
-			"WHERE dt.organization_id = @orgId "+
+			"WHERE dt.organization_id = @orgId AND j.organization_id = dt.organization_id "+
 			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor') "+
 			"ORDER BY u.name, u.email, dt.name",
 		pgx.NamedArgs{"orgId": orgID, "userId": userID, "userRole": userRole},
@@ -105,12 +105,13 @@ func GetDeploymentTarget(
 ) (*types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
-	query := "SELECT" + deploymentTargetWithStatusOutputExpr + "FROM" + deploymentTargetFromExpr + "WHERE dt.id = @id"
+	query := "SELECT" + deploymentTargetWithStatusOutputExpr + "FROM" + deploymentTargetFromExpr +
+		" WHERE dt.id = @id AND j.organization_id = dt.organization_id "
 	if orgID != nil {
-		args = pgx.NamedArgs{"id": id, "orgId": *orgID}
+		args = pgx.NamedArgs{"id": id, "orgId": *orgID, "checkOrg": true}
 		query += " AND dt.organization_id = @orgId"
 	} else {
-		args = pgx.NamedArgs{"id": id}
+		args = pgx.NamedArgs{"id": id, "checkOrg": false}
 	}
 	rows, err := db.Query(ctx, query, args)
 	if err != nil {
@@ -133,7 +134,8 @@ func GetDeploymentTargetForDeploymentID(
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		fmt.Sprintf("SELECT %v FROM %v JOIN Deployment d ON dt.id = d.deployment_target_id WHERE d.id = @id",
+		fmt.Sprintf("SELECT %v FROM %v JOIN Deployment d ON dt.id = d.deployment_target_id WHERE d.id = @id "+
+			"AND j.organization_id = dt.organization_id",
 			deploymentTargetWithStatusOutputExpr, deploymentTargetFromExpr),
 		pgx.NamedArgs{"id": id},
 	)
@@ -185,7 +187,8 @@ func CreateDeploymentTarget(
 			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @lat, @lon, @agentVersionId, @metricsEnabled)
 			RETURNING *
 		)
-		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
+		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+
+			" WHERE j.organization_id = dt.organization_id",
 		args,
 	)
 	if err != nil {
@@ -227,7 +230,8 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 				metrics_enabled = @metricsEnabled `+agentUpdateStr+`
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
-		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
+		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr+
+			" WHERE j.organization_id = dt.organization_id",
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
@@ -285,7 +289,8 @@ func UpdateDeploymentTargetReportedAgentVersionID(
 			WHERE id = @id
 			RETURNING *
 		)
-		SELECT`+deploymentTargetWithStatusOutputExpr+`FROM updated dt`+deploymentTargetJoinExpr,
+		SELECT`+deploymentTargetWithStatusOutputExpr+`FROM updated dt`+deploymentTargetJoinExpr+
+			" WHERE j.organization_id = dt.organization_id",
 		pgx.NamedArgs{"id": dt.ID, "agentVersionId": agentVersionID},
 	)
 	if err != nil {

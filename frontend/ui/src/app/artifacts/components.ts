@@ -4,7 +4,7 @@ import {faDownload, faEllipsis} from '@fortawesome/free-solid-svg-icons';
 import {HasDownloads} from '../services/artifacts.service';
 import {UsersService} from '../services/users.service';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {catchError, NEVER, switchMap, zip} from 'rxjs';
+import {catchError, EMPTY, filter, map, NEVER, of, switchMap, tap, zip} from 'rxjs';
 import {AsyncPipe} from '@angular/common';
 import {SecureImagePipe} from '../../util/secureImage';
 
@@ -28,13 +28,14 @@ export class ArtifactsDownloadCountComponent {
   selector: 'app-artifacts-downloaded-by',
   template: `
     <div class="flex -space-x-3 hover:-space-x-1 rtl:space-x-reverse">
-      @for (user of downloadedBy$ | async; track user.id) {
+      @let shownUsers = downloadedBy$ | async;
+      @for (user of shownUsers; track user.id) {
         <img
           class="size-8 border-2 border-white rounded-full dark:border-gray-800 transition-all duration-100 ease-in-out"
           [attr.src]="user.imageUrl | secureImage | async"
           [title]="user.name ?? user.email" />
       }
-      @if ((source().downloadedByCount ?? 0) - (source().downloadedByUsers ?? []).length; as count) {
+      @if ((source().downloadedByCount ?? 0) - (shownUsers?.length ?? 0); as count) {
         @if (count > 0) {
           <div
             class="flex items-center justify-center size-8 text-xs font-medium text-white bg-gray-500 dark:bg-gray-700 border-2 border-white rounded-full dark:border-gray-800">
@@ -52,9 +53,9 @@ export class ArtifactsDownloadedByComponent {
   public readonly downloadedBy$ = toObservable(this.source).pipe(
     switchMap((dl) => {
       const userObservables = (dl.downloadedByUsers ?? []).map((id) =>
-        this.usersService.getUser(id).pipe(catchError(() => NEVER))
+        this.usersService.getUser(id).pipe(catchError((e) => of(undefined)))
       );
-      return zip(...userObservables);
+      return zip(...userObservables).pipe(map((it) => it.filter((u) => u !== undefined)));
     })
   );
 }

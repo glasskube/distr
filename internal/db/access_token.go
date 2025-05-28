@@ -15,11 +15,10 @@ import (
 
 const (
 	accessTokenOutputExpr = `
-	tok.id, tok.created_at, tok.expires_at, tok.last_used_at, tok.label, tok.key, tok.user_account_id
+	tok.id, tok.created_at, tok.expires_at, tok.last_used_at, tok.label, tok.key, tok.user_account_id, tok.organization_id
 `
 	accessTokenWithUserAccountOutputExpr = accessTokenOutputExpr + `,
-	CASE WHEN u.id IS NOT NULL THEN (` + userAccountOutputExpr + `) END
-		AS user_account
+	(` + userAccountOutputExpr + `) AS user_account, oua.user_role
 `
 )
 
@@ -28,8 +27,8 @@ func CreateAccessToken(ctx context.Context, token *types.AccessToken) error {
 	rows, err := db.Query(
 		ctx,
 		fmt.Sprintf(
-			`INSERT INTO AccessToken AS tok (label, expires_at, key, user_account_id)
-			VALUES (@label, @expiresAt, @key, @userAccountId)
+			`INSERT INTO AccessToken AS tok (label, expires_at, key, user_account_id, organization_id)
+			VALUES (@label, @expiresAt, @key, @userAccountId, @orgId)
 			RETURNING %v`,
 			accessTokenOutputExpr),
 		pgx.NamedArgs{
@@ -37,6 +36,7 @@ func CreateAccessToken(ctx context.Context, token *types.AccessToken) error {
 			"expiresAt":     token.ExpiresAt,
 			"key":           token.Key[:],
 			"userAccountId": token.UserAccountID,
+			"orgId":         token.OrganizationID,
 		},
 	)
 	if err != nil {
@@ -62,12 +62,15 @@ func DeleteAccessToken(ctx context.Context, id, userID uuid.UUID) error {
 	return nil
 }
 
-func GetAccessTokensByUserAccountID(ctx context.Context, id uuid.UUID) ([]types.AccessToken, error) {
+func GetAccessTokens(ctx context.Context, userID, orgID uuid.UUID) ([]types.AccessToken, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		fmt.Sprintf(`SELECT %v FROM AccessToken tok WHERE tok.user_account_id = @id`, accessTokenOutputExpr),
-		pgx.NamedArgs{"id": id},
+		fmt.Sprintf(`
+			SELECT %v
+			FROM AccessToken tok
+			WHERE tok.user_account_id = @userId AND tok.organization_id = @orgId`, accessTokenOutputExpr),
+		pgx.NamedArgs{"userId": userID, "orgId": orgID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error querying access tokens: %w", err)
@@ -94,7 +97,9 @@ func GetAccessTokenByKeyUpdatingLastUsed(
 				RETURNING *
 			)
 			SELECT %v FROM updated tok
-			LEFT JOIN UserAccount u ON tok.user_account_id = u.id
+			INNER JOIN UserAccount u ON tok.user_account_id = u.id
+			INNER JOIN Organization_UserAccount oua
+				ON oua.user_account_id = tok.user_account_id AND oua.organization_id = tok.organization_id
 			`,
 			accessTokenWithUserAccountOutputExpr,
 		),
@@ -111,4 +116,16 @@ func GetAccessTokenByKeyUpdatingLastUsed(
 	} else {
 		return &result, nil
 	}
+}
+
+func DeleteAccessTokensOfUserInOrg(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	if _, err := db.Exec(
+		ctx,
+		"DELETE FROM AccessToken WHERE user_account_id = @userId AND organization_id = @orgId",
+		pgx.NamedArgs{"userId": userID, "orgId": orgID},
+	); err != nil {
+		return fmt.Errorf("could not delete tokens: %w", err)
+	}
+	return nil
 }

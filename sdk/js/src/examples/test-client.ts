@@ -52,12 +52,16 @@ try {
   const newDockerDeploymentTarget = await client.createDeploymentTarget({
     name: 'A Docker Deployment Target',
     type: 'docker',
+    deployments: [],
+    metricsEnabled: false,
   });
   log(newDockerDeploymentTarget, 'create docker deployment target');
 
   const newKubernetesDeploymentTarget = await client.createDeploymentTarget({
     name: 'A Kubernetes Deployment Target ',
     type: 'kubernetes',
+    deployments: [],
+    metricsEnabled: false,
     namespace: 'glasskube',
     scope: 'namespace',
   });

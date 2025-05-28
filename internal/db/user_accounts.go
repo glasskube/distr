@@ -17,7 +17,9 @@ import (
 const (
 	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
 		"u.password_salt, u.name, u.image_id"
-	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
+	userAccountWithRoleOutputExpr = userAccountOutputExpr +
+		", j.user_role, j.created_at "
+	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
 )
 
 func CreateUserAccountWithOrganization(
@@ -149,12 +151,81 @@ func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+func UserManagesDeploymentTargetInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(dt.id) > 0
+		FROM DeploymentTarget dt
+		WHERE dt.organization_id = @orgId AND dt.created_by_user_account_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func UserOwnsApplicationLicensesInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(al.id) > 0
+		FROM ApplicationLicense al
+		WHERE al.organization_id = @orgId AND al.owner_useraccount_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func UserOwnsArtifactLicensesInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(al.id) > 0
+		FROM ArtifactLicense al
+		WHERE al.organization_id = @orgId AND al.owner_useraccount_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `
+		DELETE FROM Organization_UserAccount
+		WHERE user_account_id = @userId AND organization_id = @orgId`,
+		pgx.NamedArgs{"userId": userID, "orgId": orgID})
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	return err
+}
+
 func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
 		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
 		pgx.NamedArgs{"userId": userID, "orgId": orgID, "role": role},
 	)
+	if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
+		return apierrors.ErrAlreadyExists
+	}
 	return err
 }
 
@@ -165,7 +236,7 @@ func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID, role *types.Us
 	db := internalctx.GetDb(ctx)
 	checkRole := role != nil
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountWithRoleOutputExpr+`
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 		WHERE j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)
@@ -222,7 +293,7 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountOutputExpr+`, j.user_role
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			WHERE u.id = @id AND j.organization_id = @orgId`,
@@ -243,26 +314,31 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 	}
 }
 
-func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) (
-	*types.UserAccount,
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expectedRole *types.UserRole) (
+	*types.UserAccountWithUserRole,
 	*types.Organization,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT ("+userAccountOutputExpr+`),
+		"SELECT ("+userAccountWithRoleOutputExpr+`),
 					(`+organizationOutputExpr+`)
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
-			WHERE u.id = @id AND j.organization_id = @orgId AND j.user_role = @role`,
-		pgx.NamedArgs{"id": userID, "orgId": orgID, "role": role},
+			WHERE u.id = @id AND j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)`,
+		pgx.NamedArgs{
+			"id":        userID,
+			"orgId":     orgID,
+			"role":      expectedRole,
+			"checkRole": expectedRole != nil,
+		},
 	)
 	if err != nil {
 		return nil, nil, err
 	}
 	res, err := pgx.CollectExactlyOneRow[struct {
-		User types.UserAccount
+		User types.UserAccountWithUserRole
 		Org  types.Organization
 	}](rows, pgx.RowToStructByPos)
 	if err != nil {

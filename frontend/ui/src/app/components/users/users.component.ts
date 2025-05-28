@@ -131,6 +131,12 @@ export class UsersComponent implements OnDestroy {
           })
         );
         this.inviteUrl = result.inviteUrl;
+        if (!this.inviteUrl) {
+          this.toast.success(
+            `${this.userRole() === 'vendor' ? 'User' : 'Customer'} has been added to the organization`
+          );
+          this.closeInviteDialog();
+        }
         this.refresh$.next();
       } catch (e) {
         const msg = getFormDisplayedError(e);
@@ -144,7 +150,7 @@ export class UsersComponent implements OnDestroy {
   }
 
   public async uploadImage(data: UserAccountWithRole) {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl, scope: 'platform'}));
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }
@@ -153,16 +159,14 @@ export class UsersComponent implements OnDestroy {
 
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
-      .confirm(`Really delete ${user.name ?? user.email}?`)
+      .confirm(`This will remove ${user.name ?? user.email} from your organization. Are you sure?`)
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.users.delete(user)),
         catchError((e) => {
-          if (e instanceof HttpErrorResponse && e.status === 400) {
-            this.toast.error(
-              `User ${user.name ?? user.email} cannot be deleted.
-              Please ensure there are no deployments managed by this user and try again.`
-            );
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
           }
           return NEVER;
         }),

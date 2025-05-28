@@ -1,12 +1,14 @@
-import {HttpClient, HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {jwtDecode} from 'jwt-decode';
 import {catchError, map, Observable, of, tap, throwError} from 'rxjs';
 import dayjs from 'dayjs';
 import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
+import {Organization, OrganizationWithUserRole} from '../types/organization';
 
 const tokenStorageKey = 'cloud_token';
 const actionTokenStorageKey = 'distr_action_token';
+const authBaseUrl = '/api/v1/auth';
 
 export interface JWTClaims {
   sub: string;
@@ -24,7 +26,6 @@ export interface JWTClaims {
 @Injectable({providedIn: 'root'})
 export class AuthService {
   private readonly httpClient = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/auth';
 
   private get token(): string | null {
     return localStorage.getItem(tokenStorageKey);
@@ -55,7 +56,7 @@ export class AuthService {
   }
 
   public login(email: string, password: string): Observable<void> {
-    return this.httpClient.post<TokenResponse>(`${this.baseUrl}/login`, {email, password}).pipe(
+    return this.httpClient.post<TokenResponse>(`${authBaseUrl}/login`, {email, password}).pipe(
       tap((r) => {
         this.token = r.token;
         this.actionToken = null;
@@ -65,11 +66,11 @@ export class AuthService {
   }
 
   public resetPassword(email: string): Observable<void> {
-    return this.httpClient.post<void>(`${this.baseUrl}/reset`, {email});
+    return this.httpClient.post<void>(`${authBaseUrl}/reset`, {email});
   }
 
   public registrationEnabled(): Observable<boolean> {
-    return this.httpClient.get(`${this.baseUrl}/register`).pipe(
+    return this.httpClient.get(`${authBaseUrl}/register`).pipe(
       map(() => true),
       catchError(() => of(false))
     );
@@ -80,7 +81,7 @@ export class AuthService {
     if (name) {
       body = {...body, name};
     }
-    return this.httpClient.post<void>(`${this.baseUrl}/register`, body);
+    return this.httpClient.post<void>(`${authBaseUrl}/register`, body);
   }
 
   public getClaims(): JWTClaims | undefined {
@@ -109,6 +110,21 @@ export class AuthService {
     return {token: null, claims: undefined};
   }
 
+  public switchContext(org: Organization): Observable<boolean> {
+    return this.httpClient
+      .post<TokenResponse | undefined>(`${authBaseUrl}/switch-context`, {organizationId: org.id})
+      .pipe(
+        map((r) => {
+          if (r) {
+            this.token = r.token;
+            this.actionToken = null;
+            return true;
+          }
+          return false;
+        })
+      );
+  }
+
   public logout(): Observable<void> {
     this.token = null;
     this.actionToken = null;
@@ -118,7 +134,7 @@ export class AuthService {
 
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  if (!req.url.startsWith('/api/v1/auth/')) {
+  if (authenticatedRoute(req)) {
     const {token, claims} = auth.getTokenAndClaims();
     try {
       if (claims && dayjs.unix(parseInt(claims.exp)).isAfter(dayjs())) {
@@ -144,6 +160,10 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 };
+
+function authenticatedRoute(req: HttpRequest<unknown>): boolean {
+  return !req.url.startsWith(authBaseUrl) || req.url === `${authBaseUrl}/switch-context`;
+}
 
 function removeJwtQueryParamAndRefresh(email?: string) {
   const url = new URL(location.href);

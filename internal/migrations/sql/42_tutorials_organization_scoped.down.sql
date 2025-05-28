@@ -1,0 +1,4 @@
+ALTER TABLE UserAccount_TutorialProgress DROP CONSTRAINT useraccount_tutorialprogress_pkey;
+DROP INDEX IF EXISTS useraccount_tutorialprogress_pkey;
+ALTER TABLE UserAccount_TutorialProgress DROP COLUMN organization_id;
+ALTER TABLE UserAccount_TutorialProgress ADD CONSTRAINT useraccount_tutorialprogress_pkey PRIMARY KEY (useraccount_id, tutorial);

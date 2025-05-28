@@ -75,12 +75,19 @@ func createFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	if file, err := getFileFromRequest(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if err := db.CreateFile(ctx, *auth.CurrentOrgID(), file); err != nil {
-		log.Warn("error uploading file", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, file.ID)
+		var orgID *uuid.UUID
+		scope := r.FormValue("scope")
+		if types.FileScope(scope) != types.FileScopePlatform {
+			orgID = auth.CurrentOrgID()
+		}
+		if err := db.CreateFile(ctx, orgID, file); err != nil {
+			log.Warn("error uploading file", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, file.ID)
+		}
 	}
 }
 
@@ -123,12 +130,12 @@ func fileMiddleware(h http.Handler) http.Handler {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else {
-				log.Warn("error getting file", zap.Error(err))
+				log.Error("error getting file", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		} else {
-			if file.OrganizationID != *auth.CurrentOrgID() {
+			if file.OrganizationID != nil && *file.OrganizationID != *auth.CurrentOrgID() {
 				http.NotFound(w, r)
 			} else {
 				h.ServeHTTP(w, r.WithContext(internalctx.WithFile(ctx, file)))

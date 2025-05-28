@@ -34,7 +34,7 @@ func getTutorialProgresses(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if progresses, err := db.GetTutorialProgresses(ctx, auth.CurrentUserID()); err != nil {
+	if progresses, err := db.GetTutorialProgresses(ctx, auth.CurrentUserID(), *auth.CurrentOrgID()); err != nil {
 		log.Warn("could not get tutorial progresses", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -48,7 +48,7 @@ func getTutorialProgress(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 	tutorial := r.PathValue("tutorial")
-	if progress, err := db.GetTutorialProgress(ctx, auth.CurrentUserID(),
+	if progress, err := db.GetTutorialProgress(ctx, auth.CurrentUserID(), *auth.CurrentOrgID(),
 		types.Tutorial(tutorial)); errors.Is(err, apierrors.ErrNotFound) {
 		http.NotFound(w, r)
 	} else if err != nil {
@@ -86,7 +86,7 @@ func saveTutorialProgress(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if res, err := db.SaveTutorialProgress(ctx, auth.CurrentUserID(), tutorial, &req); err != nil {
+		if res, err := db.SaveTutorialProgress(ctx, auth.CurrentUserID(), *auth.CurrentOrgID(), tutorial, &req); err != nil {
 			log.Warn("could not save tutorial progress", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -154,8 +154,9 @@ func createHelloDistrDeploymentTarget(ctx context.Context) (*types.DeploymentTar
 	auth := auth.Authentication.Require(ctx)
 	dt := types.DeploymentTargetWithCreatedBy{
 		DeploymentTarget: types.DeploymentTarget{
-			Name: "hello-distr-tutorial",
-			Type: types.DeploymentTypeDocker,
+			Name:           "hello-distr-tutorial",
+			Type:           types.DeploymentTypeDocker,
+			MetricsEnabled: true,
 		},
 	}
 	if agentVersion, err := db.GetCurrentAgentVersion(ctx); err != nil {

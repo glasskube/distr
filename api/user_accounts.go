@@ -3,19 +3,19 @@ package api
 import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/validation"
-	"github.com/google/uuid"
 )
 
 type CreateUserAccountRequest struct {
-	Email           string         `json:"email"`
-	Name            string         `json:"name"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	// Deprecated: This property will be removed in v2.
 	ApplicationName string         `json:"applicationName"`
 	UserRole        types.UserRole `json:"userRole"`
 }
 
 type CreateUserAccountResponse struct {
-	ID        uuid.UUID `json:"id"`
-	InviteURL string    `json:"inviteUrl"`
+	User      types.UserAccountWithUserRole `json:"user"`
+	InviteURL string                        `json:"inviteUrl"`
 }
 
 type UserAccountResponse struct {

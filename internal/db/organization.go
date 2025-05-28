@@ -25,13 +25,14 @@ const (
 		o.registry_domain,
 		o.email_from_address
 	`
+	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role, j.created_at as joined_org_at "
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization AS o (name) VALUES (@name) RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"name": org.Name},
+		"INSERT INTO Organization AS o (name, slug) VALUES (@name, @slug) RETURNING "+organizationOutputExpr,
+		pgx.NamedArgs{"name": org.Name, "slug": org.Slug},
 	)
 	if err != nil {
 		return fmt.Errorf("could not create orgnization: %w", err)
@@ -69,11 +70,12 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT`+organizationOutputExpr+`, j.user_role
+		SELECT`+organizationWithUserRoleOutputExpr+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
 			WHERE u.id = @id
+			ORDER BY o.created_at
 	`, pgx.NamedArgs{"id": userID})
 	if err != nil {
 		return nil, err

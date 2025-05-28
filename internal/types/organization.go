@@ -27,7 +27,8 @@ func (org *Organization) HasFeature(feature Feature) bool {
 
 type OrganizationWithUserRole struct {
 	Organization
-	UserRole UserRole `db:"user_role"`
+	UserRole    UserRole  `db:"user_role" json:"userRole"`
+	JoinedOrgAt time.Time `db:"joined_org_at" json:"joinedOrgAt"`
 }
 
 type OrganizationWithBranding struct {

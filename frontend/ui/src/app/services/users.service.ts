@@ -1,19 +1,20 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {map, Observable, of, switchMap, tap} from 'rxjs';
+import {map, merge, Observable, of, shareReplay, Subject, switchMap, tap} from 'rxjs';
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {ReactiveList} from './cache';
 import {AuthService} from './auth.service';
+import {ContextService} from './context.service';
+import {Organization} from '../types/organization';
 
 export interface CreateUserAccountRequest {
   email: string;
   name?: string;
   userRole: UserRole;
-  applicationName?: string;
 }
 
 export interface CreateUserAccountResponse {
-  id: string;
+  user: UserAccountWithRole;
   inviteUrl: string;
 }
 
@@ -26,25 +27,17 @@ class UserAccountsReactiveList extends ReactiveList<UserAccountWithRole> {
 export class UsersService {
   private readonly baseUrl = '/api/v1/user-accounts';
   private readonly httpClient = inject(HttpClient);
+  private readonly contextService = inject(ContextService);
   private readonly cache = new UserAccountsReactiveList(this.httpClient.get<UserAccountWithRole[]>(this.baseUrl));
-  private readonly auth = inject(AuthService);
+
+  private readonly selfUpdate = new Subject<UserAccountWithRole>();
+  private readonly self$ = merge(this.selfUpdate.asObservable(), this.contextService.getUser()).pipe(shareReplay(1));
+
+  public get(): Observable<UserAccountWithRole> {
+    return this.self$;
+  }
 
   public getUsers(): Observable<UserAccountWithRole[]> {
-    if (this.auth.hasRole('customer')) {
-      const claims = this.auth.getClaims();
-      if (claims) {
-        return of([
-          {
-            id: claims.sub,
-            email: claims.email,
-            name: claims.name,
-            userRole: 'customer',
-            imageUrl: claims.image_url,
-          },
-        ]);
-      }
-      return of([]);
-    }
     return this.cache.get();
   }
 
@@ -53,18 +46,9 @@ export class UsersService {
   }
 
   public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
-    return this.httpClient.post<CreateUserAccountResponse>(this.baseUrl, request).pipe(
-      tap((it) =>
-        // TODO: add user details to CreateUserAccountResponse
-        this.cache.save({
-          email: request.email,
-          name: request.name,
-          userRole: request.userRole,
-          id: it.id,
-          createdAt: new Date().toISOString(),
-        })
-      )
-    );
+    return this.httpClient
+      .post<CreateUserAccountResponse>(this.baseUrl, request)
+      .pipe(tap((it) => this.cache.save(it.user)));
   }
 
   public delete(user: UserAccountWithRole): Observable<void> {
@@ -72,26 +56,17 @@ export class UsersService {
   }
 
   public patchImage(userId: string, imageId: string) {
-    return this.httpClient
-      .patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId})
-      .pipe(tap((it) => this.cache.save(it)));
+    return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId}).pipe(
+      tap((it) => {
+        this.cache.save(it);
+        this.selfUpdate.next(it);
+      })
+    );
   }
 
   public getUser(id: string): Observable<UserAccountWithRole> {
     return this.getUsers().pipe(
       map((users) => users.find((u) => u.id === id)),
-      map((u) => {
-        if (!u) {
-          throw 'user not found';
-        }
-        return u;
-      })
-    );
-  }
-
-  public getUserByEmail(email: string): Observable<UserAccountWithRole> {
-    return this.getUsers().pipe(
-      map((users) => users.find((u) => u.email === email)),
       map((u) => {
         if (!u) {
           throw 'user not found';

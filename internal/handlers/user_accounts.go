@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -38,8 +39,10 @@ func UserAccountsRouter(r chi.Router) {
 
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
 	if userAccounts, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID(), nil); err != nil {
+		log.Error("failed to get user accounts", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -72,23 +75,33 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		Name:  body.Name,
 	}
 	var inviteURL string
+	userHasExisted := false
 
 	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
+			err = fmt.Errorf("failed to get org with branding: %w", err)
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return err
 		} else {
 			organization = *result
 		}
 
-		if err := db.CreateUserAccount(ctx, &userAccount); errors.Is(err, apierrors.ErrAlreadyExists) {
-			// TODO: In the future this should not be an error, but we don't support multi-org users yet, so for now it is
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return err
+		if existingUA, err := db.GetUserAccountByEmail(ctx, body.Email); errors.Is(err, apierrors.ErrNotFound) {
+			if err := db.CreateUserAccount(ctx, &userAccount); err != nil {
+				err = fmt.Errorf("failed to create user account: %w", err)
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			}
 		} else if err != nil {
+			err = fmt.Errorf("failed to get existing user account: %w", err)
 			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return err
+		} else {
+			userHasExisted = true
+			userAccount = *existingUA
 		}
 
 		if err := db.CreateUserAccountOrganizationAssignment(
@@ -96,35 +109,41 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			userAccount.ID,
 			organization.ID,
 			body.UserRole,
-		); err != nil {
+		); errors.Is(err, apierrors.ErrAlreadyExists) {
+			http.Error(w, "user is already part of this organization", http.StatusBadRequest)
+			return err
+		} else if err != nil {
+			err = fmt.Errorf("failed to create user org assignment: %w", err)
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
 
-		// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-		if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return err
-		} else {
-			inviteURL = fmt.Sprintf(
-				"%v/join?jwt=%v",
-				customdomains.AppDomainOrDefault(organization.Organization),
-				url.QueryEscape(token),
-			)
-			if err := mailsending.SendUserInviteMail(
-				ctx,
-				userAccount,
-				organization,
-				body.UserRole,
-				body.ApplicationName,
-				inviteURL,
-			); err != nil {
+		if !userHasExisted {
+			// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
+			if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
+			} else {
+				inviteURL = fmt.Sprintf(
+					"%v/join?jwt=%v",
+					customdomains.AppDomainOrDefault(organization.Organization),
+					url.QueryEscape(token),
+				)
 			}
+		}
+
+		if err := mailsending.SendUserInviteMail(
+			ctx,
+			userAccount,
+			organization,
+			body.UserRole,
+			inviteURL,
+		); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
 		}
 
 		return nil
@@ -133,7 +152,10 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RespondJSON(w, api.CreateUserAccountResponse{ID: userAccount.ID, InviteURL: inviteURL})
+	RespondJSON(w, api.CreateUserAccountResponse{
+		User:      userAccount.AsUserAccountWithRole(body.UserRole, time.Now()),
+		InviteURL: inviteURL,
+	})
 }
 
 func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,18 +165,50 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
-	} else if err := db.DeleteUserAccountWithID(ctx, userAccount.ID); err != nil {
-		log.Warn("error deleting user", zap.Error(err))
-		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
-		} else if errors.Is(err, apierrors.ErrConflict) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+	} else if err := db.RunTx(ctx, func(ctx context.Context) error {
+		if ok, err := userCanBeRemovedFromOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			return err
+		} else if !ok {
+			http.Error(w, "Please ensure there are no deployment targets and licenses owned by this user and try again",
+				http.StatusBadRequest)
+			return nil
+		} else if err := db.DeleteUserAccountFromOrganization(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				return nil
+			} else {
+				return err
+			}
+		} else if err := db.DeleteAccessTokensOfUserInOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			return err
+		} else if err := db.DeleteTutorialProgressesOfUserInOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+			return err
 		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusNoContent)
+			return nil
 		}
+	}); err != nil {
+		log.Error("error removing user from org", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+}
+
+func userCanBeRemovedFromOrg(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	if managesDts, err := db.UserManagesDeploymentTargetInOrganization(ctx, userID, orgID); err != nil {
+		return false, err
+	} else if managesDts {
+		return false, nil
+	} else if ownsAppLicenses, err := db.UserOwnsApplicationLicensesInOrganization(ctx, userID, orgID); err != nil {
+		return false, err
+	} else if ownsAppLicenses {
+		return false, nil
+	} else if ownsArtifactLicenses, err := db.UserOwnsArtifactLicensesInOrganization(ctx, userID, orgID); err != nil {
+		return false, err
+	} else if ownsArtifactLicenses {
+		return false, nil
 	} else {
-		w.WriteHeader(http.StatusNoContent)
+		return true, nil
 	}
 }
 
