@@ -92,8 +92,8 @@ jobs:
         shell: bash
         run: dist/distr serve &
           sleep 10 &&
-          curl http://localhost:8080/internal/environment -f &&
-          psql postgresql://test-user:test-password@localhost:5432/distr -c "select version, dirty from schema_migrations" --csv -t &&
+          curl $DISTR_HOST/internal/environment -f &&
+          psql $DATABASE_URL -c "select version, dirty from schema_migrations" --csv -t &&
           pkill -SIGTERM distr &&
           dist/distr migrate --down
         env:
