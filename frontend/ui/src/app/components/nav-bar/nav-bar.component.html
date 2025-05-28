@@ -85,29 +85,41 @@
                     @dropdown
                     style="transform-origin: top center"
                     class="my-2 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
-                    <ul class="py-1" role="none">
-                      @for (org of switchOptions.availableOrgs; track org.id) {
+                    @if (switchOptions.availableOrgs.length > 0) {
+                      <ul class="py-1" role="none">
+                        @for (org of switchOptions.availableOrgs; track org.id) {
+                          <li>
+                            <button
+                              (click)="switchContext(org)"
+                              [title]="'Switch to this organization'"
+                              class="flex items-center w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                              role="menuitem">
+                              <fa-icon class="me-4" [icon]="faShuffle"></fa-icon>
+                              <span
+                                class="flex flex-col text-start text-sm font-medium text-gray-900 dark:text-gray-300"
+                                role="none">
+                                {{ org.name }}
+                                @if (switchOptions.isVendorSomewhere) {
+                                  <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
+                                    {{ org.userRole | titlecase }}
+                                  </span>
+                                }
+                              </span>
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <ul class="py-1" role="none">
                         <li>
-                          <button
-                            (click)="switchContext(org)"
-                            [title]="'Switch to this organization'"
-                            class="flex items-center w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                          <div
+                            class="flex items-center text-start px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
                             role="menuitem">
-                            <fa-icon class="me-4" [icon]="faShuffle"></fa-icon>
-                            <span
-                              class="flex flex-col text-start text-sm font-medium text-gray-900 dark:text-gray-300"
-                              role="none">
-                              {{ org.name }}
-                              @if (switchOptions.isVendorSomewhere) {
-                                <span class="text-xs font-light text-gray-500 dark:text-gray-400" role="none">
-                                  {{ org.userRole | titlecase }}
-                                </span>
-                              }
-                            </span>
-                          </button>
+                            You are not part of any other organization.
+                          </div>
                         </li>
-                      }
-                    </ul>
+                      </ul>
+                    }
                     @if (switchOptions.isVendorSomewhere) {
                       <ul class="py-1" role="none">
                         <li>
