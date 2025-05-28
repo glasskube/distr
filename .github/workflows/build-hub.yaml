@@ -91,8 +91,8 @@ jobs:
       - name: Test migrations
         shell: bash
         run: dist/distr serve &
-          sleep 10
-          curl http://localhost:8080/internal/environment
+          sleep 10 &&
+          curl http://localhost:8080/internal/environment &&
           pkill -SIGTERM distr
         env:
           DATABASE_URL: postgres://local:local@localhost:5432/distr
