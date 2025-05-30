@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.11.1](https://github.com/glasskube/distr/compare/1.11.0...1.11.1) (2025-05-30)
+
+
+### Other
+
+* **deploy:** add cleanup jobs config in deploy/docker and helm chart ([#974](https://github.com/glasskube/distr/issues/974)) ([f6ed64d](https://github.com/glasskube/distr/commit/f6ed64d021344a5a5adb8cbb5e6e5dfae6d8186e))
+* **deps:** update dependency postcss to v8.5.4 ([#976](https://github.com/glasskube/distr/issues/976)) ([bb8deb2](https://github.com/glasskube/distr/commit/bb8deb21fa15d1000650f98b6a8f95d7d9fc5bc2))
+* **deps:** update tailwindcss monorepo to v4.1.8 ([#977](https://github.com/glasskube/distr/issues/977)) ([0c7a593](https://github.com/glasskube/distr/commit/0c7a593604f56740a6a0b42a91a3631ec40439a4))
+
 ## [1.11.0](https://github.com/glasskube/distr/compare/1.10.0...1.11.0) (2025-05-28)
 
 
