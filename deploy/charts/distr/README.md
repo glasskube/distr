@@ -12,7 +12,7 @@
 
 </div>
 
-![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.4.0](https://img.shields.io/badge/AppVersion-1.4.0-informational?style=flat-square)
+![Version: 1.11.0](https://img.shields.io/badge/Version-1.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.11.0](https://img.shields.io/badge/AppVersion-1.11.0-informational?style=flat-square)
 
 The easiest way to distribute enterprise software
 
@@ -31,7 +31,7 @@ To install Distr in Kubernetes, simply run:
 
 ```shell
 helm upgrade --install --wait --namespace distr --create-namespace \
-  distr oci://ghcr.io/glasskube/charts/distr --version 1.0.0 \
+  distr oci://ghcr.io/glasskube/charts/distr --version 1.11.0 \
   --set postgresql.enabled=true --set minio.enabled=true
 ```
 
@@ -53,6 +53,22 @@ helm upgrade --install --wait --namespace distr --create-namespace \
 | autoscaling.maxReplicas                    | int    | `10`                                             |             |
 | autoscaling.minReplicas                    | int    | `2`                                              |             |
 | autoscaling.targetCPUUtilizationPercentage | int    | `100`                                            |             |
+| cronJobs[0].args[0]                        | string | `"cleanup"`                                      |             |
+| cronJobs[0].args[1]                        | string | `"DeploymentLogRecord"`                          |             |
+| cronJobs[0].labels."distr.sh/job"          | string | `"deployment-log-record-cleanup"`                |             |
+| cronJobs[0].name                           | string | `"deployment-log-record-cleanup"`                |             |
+| cronJobs[1].args[0]                        | string | `"cleanup"`                                      |             |
+| cronJobs[1].args[1]                        | string | `"DeploymentRevisionStatus"`                     |             |
+| cronJobs[1].labels."distr.sh/job"          | string | `"deployment-revision-status-cleanup"`           |             |
+| cronJobs[1].name                           | string | `"deployment-revision-status-cleanup"`           |             |
+| cronJobs[2].args[0]                        | string | `"cleanup"`                                      |             |
+| cronJobs[2].args[1]                        | string | `"DeploymentTargetMetrics"`                      |             |
+| cronJobs[2].labels."distr.sh/job"          | string | `"deployment-target-metrics-cleanup"`            |             |
+| cronJobs[2].name                           | string | `"deployment-target-metrics-cleanup"`            |             |
+| cronJobs[3].args[0]                        | string | `"cleanup"`                                      |             |
+| cronJobs[3].args[1]                        | string | `"DeploymentTargetStatus"`                       |             |
+| cronJobs[3].labels."distr.sh/job"          | string | `"deployment-target-status-cleanup"`             |             |
+| cronJobs[3].name                           | string | `"deployment-target-status-cleanup"`             |             |
 | externalDatabase.existingSecret            | string | `""`                                             |             |
 | externalDatabase.existingSecretUriKey      | string | `"uri"`                                          |             |
 | externalDatabase.uri                       | string | `""`                                             |             |
@@ -70,6 +86,12 @@ helm upgrade --install --wait --namespace distr --create-namespace \
 | hub.env[13].value                          | string | `"smtp.example.local"`                           |             |
 | hub.env[14].name                           | string | `"MAILER_SMTP_PORT"`                             |             |
 | hub.env[14].value                          | string | `"25"`                                           |             |
+| hub.env[15].name                           | string | `"USER_EMAIL_VERIFICATION_REQUIRED"`             |             |
+| hub.env[15].value                          | string | `"false"`                                        |             |
+| hub.env[16].name                           | string | `"METRICS_ENTRIES_MAX_AGE"`                      |             |
+| hub.env[16].value                          | string | `"1h"`                                           |             |
+| hub.env[17].name                           | string | `"LOG_RECORD_ENTRIES_MAX_COUNT"`                 |             |
+| hub.env[17].value                          | string | `"500"`                                          |             |
 | hub.env[1].name                            | string | `"REGISTRY_ENABLED"`                             |             |
 | hub.env[1].value                           | string | `"true"`                                         |             |
 | hub.env[2].name                            | string | `"REGISTRY_HOST"`                                |             |
@@ -149,3 +171,7 @@ helm upgrade --install --wait --namespace distr --create-namespace \
 | Name      | Email | Url                            |
 | --------- | ----- | ------------------------------ |
 | Glasskube |       | <https://github.com/glasskube> |
+
+---
+
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
