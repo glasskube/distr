@@ -25,7 +25,6 @@
 - [DeploymentTargetAccessResponse](interfaces/DeploymentTargetAccessResponse.md)
 - [DeploymentTargetStatus](interfaces/DeploymentTargetStatus.md)
 - [DeploymentWithLatestRevision](interfaces/DeploymentWithLatestRevision.md)
-- [Geolocation](interfaces/Geolocation.md)
 - [Named](interfaces/Named.md)
 - [OrganizationBranding](interfaces/OrganizationBranding.md)
 - [PatchApplicationRequest](interfaces/PatchApplicationRequest.md)
