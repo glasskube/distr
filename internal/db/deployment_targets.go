@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -28,9 +27,6 @@ const (
 		dt.created_by_user_account_id,
 		dt.agent_version_id,
 		dt.reported_agent_version_id,
-		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
-		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
-			AS geolocation,
 		dt.metrics_enabled
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
@@ -175,16 +171,12 @@ func CreateDeploymentTarget(
 		"agentVersionId": dt.AgentVersionID,
 		"metricsEnabled": dt.MetricsEnabled,
 	}
-	if dt.Geolocation != nil {
-		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
-	}
 	rows, err := db.Query(
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
-			(name, type, organization_id, created_by_user_account_id, namespace, scope, geolocation_lat,
-				geolocation_lon, agent_version_id, metrics_enabled)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @lat, @lon, @agentVersionId, @metricsEnabled)
+			(name, type, organization_id, created_by_user_account_id, namespace, scope, agent_version_id, metrics_enabled)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @agentVersionId, @metricsEnabled)
 			RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+
@@ -210,24 +202,16 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		"id":             dt.ID,
 		"name":           dt.Name,
 		"orgId":          orgID,
-		"lat":            nil,
-		"lon":            nil,
 		"metricsEnabled": dt.MetricsEnabled,
 	}
 	if dt.AgentVersionID != nil {
 		args["agentVersionId"] = dt.AgentVersionID
 		agentUpdateStr = ", agent_version_id = @agentVersionId "
 	}
-	if dt.Geolocation != nil {
-		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
-	}
 	rows, err := db.Query(ctx,
 		`WITH updated AS (
 			UPDATE DeploymentTarget AS dt SET
-				name = @name,
-				geolocation_lat = @lat,
-				geolocation_lon = @lon,
-				metrics_enabled = @metricsEnabled `+agentUpdateStr+`
+				name = @name, metrics_enabled = @metricsEnabled `+agentUpdateStr+`
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
 		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr+

@@ -57,11 +57,6 @@ type Base struct {
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 }
 
-type Geolocation struct {
-	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
-}
-
 type Image struct {
 	Image            []byte  `db:"image" json:"image"`
 	ImageFileName    *string `db:"image_file_name" json:"imageFileName"`

@@ -141,10 +141,6 @@ export class DeploymentTargetCardComponent {
     id: new FormControl<string | undefined>(undefined),
     name: new FormControl('', Validators.required),
     type: new FormControl<DeploymentType | undefined>({value: undefined, disabled: true}, Validators.required),
-    geolocation: new FormGroup({
-      lat: new FormControl<number | undefined>(undefined),
-      lon: new FormControl<number | undefined>(undefined),
-    }),
     namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
     scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
     metricsEnabled: new FormControl<boolean>(true),
@@ -173,13 +169,6 @@ export class DeploymentTargetCardComponent {
         metricsEnabled: val.metricsEnabled ?? false,
       };
 
-      if (typeof val.geolocation?.lat === 'number' && typeof val.geolocation.lon === 'number') {
-        dt.geolocation = {
-          lat: val.geolocation.lat,
-          lon: val.geolocation.lon,
-        };
-      }
-
       try {
         this.loadDeploymentTarget(
           await lastValueFrom(val.id ? this.deploymentTargets.update(dt) : this.deploymentTargets.create(dt))
@@ -199,8 +188,6 @@ export class DeploymentTargetCardComponent {
 
   private loadDeploymentTarget(dt: DeploymentTarget) {
     this.editForm.patchValue({
-      // to reset the geolocation inputs in case dt has no geolocation
-      geolocation: {lat: undefined, lon: undefined},
       ...dt,
     });
     if (dt.scope === 'namespace') {
