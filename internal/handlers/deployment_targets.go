@@ -220,7 +220,8 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 		orgId := auth.CurrentOrgID()
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
-		} else if *auth.CurrentUserRole() == types.UserRoleCustomer && deploymentTarget.CreatedByUserAccountID != auth.CurrentUserID() {
+		} else if *auth.CurrentUserRole() == types.UserRoleCustomer &&
+			deploymentTarget.CreatedByUserAccountID != auth.CurrentUserID() {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get DeploymentTarget", zap.Error(err))
