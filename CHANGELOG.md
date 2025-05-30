@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.11.2](https://github.com/glasskube/distr/compare/1.11.1...1.11.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.14 ([#980](https://github.com/glasskube/distr/issues/980)) ([c52e75f](https://github.com/glasskube/distr/commit/c52e75f512b0d9a74605966861dd0f1b957f8666))
+* **deps:** update dependency @angular/cdk to v19.2.18 ([#981](https://github.com/glasskube/distr/issues/981)) ([825117a](https://github.com/glasskube/distr/commit/825117ac88e3e44cbd11e8e5da1383823618c487))
+* **deps:** update module helm.sh/helm/v3 to v3.18.1 ([#984](https://github.com/glasskube/distr/issues/984)) ([1aed99a](https://github.com/glasskube/distr/commit/1aed99a0facdbd691f154148b52b21da01489ab0))
+
+
+### Other
+
+* **backend:** improve deployment target endpoint visibility constraint ([#982](https://github.com/glasskube/distr/issues/982)) ([753386f](https://github.com/glasskube/distr/commit/753386f7737dc39f53f7ca309eed271327dfe618))
+* **deps:** update angular-cli monorepo to v19.2.14 ([#986](https://github.com/glasskube/distr/issues/986)) ([522058a](https://github.com/glasskube/distr/commit/522058afd4a9d417a5d013ab9fa0a5eb0c1e7a3e))
+* remove deployment target geolocation ([#979](https://github.com/glasskube/distr/issues/979)) ([45062ec](https://github.com/glasskube/distr/commit/45062ecb19a24ff3ba6eb03b4d8b9db3e4107d66))
+
 ## [1.11.1](https://github.com/glasskube/distr/compare/1.11.0...1.11.1) (2025-05-30)
 
 
