@@ -56,12 +56,6 @@ This property will be removed in v2. Please consider using `deployments` instead
 
 ---
 
-### geolocation?
-
-> `optional` **geolocation**: [`Geolocation`](Geolocation.md)
-
----
-
 ### id?
 
 > `optional` **id**: `string`
