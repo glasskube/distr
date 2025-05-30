@@ -166,8 +166,6 @@ func CreateDeploymentTarget(
 		"userId":         dt.CreatedBy.ID,
 		"namespace":      dt.Namespace,
 		"scope":          dt.Scope,
-		"lat":            nil,
-		"lon":            nil,
 		"agentVersionId": dt.AgentVersionID,
 		"metricsEnabled": dt.MetricsEnabled,
 	}
