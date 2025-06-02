@@ -1,5 +1,5 @@
 [tools]
-node = "22"
+node = "24"
 go = "1.24.3"
 golangci-lint = "2.1.6"
 helm-docs = "1.14.2"
