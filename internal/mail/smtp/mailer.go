@@ -33,6 +33,7 @@ func New(config Config) (*smtpMailer, error) {
 			gomail.WithSMTPAuth(gomail.SMTPAuthLogin),
 			gomail.WithUsername(config.Username),
 			gomail.WithPassword(config.Password),
+			gomail.WithoutNoop(),
 		)
 	}
 	client, err := gomail.NewClient(config.Host, options...)
