@@ -123,6 +123,8 @@ jobs:
             type=ref,event=branch
             type=sha,event=branch
             type=semver,pattern={{version}}
+          flavor: |
+            latest=false
           labels: |
             org.opencontainers.image.description=Distr Hub
             org.opencontainers.image.vendor=Glasskube
