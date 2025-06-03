@@ -194,7 +194,7 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 		if err != nil {
 			return regErrInternal(err)
 		}
-		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
+		resp.Header().Set("Content-Length", strconv.Itoa(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
 			return regErrInternal(err)
@@ -225,7 +225,7 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 		if err != nil {
 			return regErrInternal(err)
 		}
-		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
+		resp.Header().Set("Content-Length", strconv.Itoa(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
 			return regErrInternal(err)
@@ -288,24 +288,27 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 			return regErrInternal(err)
 		}
 
-		b, err := m.blobHandler.Get(req.Context(), repo, manifest.Blob.Digest, false)
-		if err != nil {
-			return &regError{
-				Status:  http.StatusNotFound,
-				Code:    "BAD_REQUEST",
-				Message: err.Error(),
-			}
-		}
-		defer b.Close()
-		var buf bytes.Buffer
-		if _, err := io.Copy(&buf, b); err != nil {
-			return regErrInternal(err)
-		}
-
 		var refPointer struct {
 			Subject *imgspecv1.Descriptor `json:"subject"`
 		}
-		_ = json.Unmarshal(buf.Bytes(), &refPointer)
+
+		// TODO: remove in v2
+		if len(manifest.Data) == 0 {
+			b, err := m.blobHandler.Get(req.Context(), repo, manifest.Digest, false)
+			if err != nil {
+				return &regError{
+					Status:  http.StatusNotFound,
+					Code:    "BAD_REQUEST",
+					Message: err.Error(),
+				}
+			}
+			defer b.Close()
+			if manifest.Data, err = io.ReadAll(b); err != nil {
+				return regErrInternal(err)
+			}
+		}
+
+		_ = json.Unmarshal(manifest.Data, &refPointer)
 		if refPointer.Subject == nil {
 			continue
 		}
@@ -319,10 +322,10 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 				MediaType string `json:"mediaType"`
 			} `json:"config"`
 		}
-		_ = json.Unmarshal(buf.Bytes(), &imageAsArtifact)
+		_ = json.Unmarshal(manifest.Data, &imageAsArtifact)
 		im.Manifests = append(im.Manifests, imgspecv1.Descriptor{
 			MediaType:    manifest.ContentType,
-			Size:         int64(buf.Len()),
+			Size:         int64(len(manifest.Data)),
 			Digest:       reference,
 			ArtifactType: imageAsArtifact.Config.MediaType,
 		})
@@ -331,7 +334,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	if err != nil {
 		return regErrInternal(err)
 	}
-	resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
+	resp.Header().Set("Content-Length", strconv.Itoa(len(msg)))
 	resp.Header().Set("Content-Type", string(imgspecv1.MediaTypeImageIndex))
 	resp.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
@@ -351,33 +354,35 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 		return regErrInternal(err)
 	}
 
-	b, err := handler.blobHandler.Get(ctx, repo, m.Blob.Digest, true)
-	if err != nil {
-		var rerr blob.RedirectError
-		if errors.As(err, &rerr) {
-			if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
-				log := internalctx.GetLogger(ctx)
-				log.Warn("failed to audit-log pull", zap.Error(err))
-				sentry.GetHubFromContext(ctx)
+	// TODO: remove in v2
+	if len(m.Data) == 0 {
+		b, err := handler.blobHandler.Get(ctx, repo, m.Digest, true)
+		if err != nil {
+			var rerr blob.RedirectError
+			if errors.As(err, &rerr) {
+				if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+					log := internalctx.GetLogger(ctx)
+					log.Warn("failed to audit-log pull", zap.Error(err))
+					sentry.GetHubFromContext(ctx)
+				}
+				http.Redirect(resp, req, rerr.Location, rerr.Code)
+				return nil
 			}
-			http.Redirect(resp, req, rerr.Location, rerr.Code)
-			return nil
+			// TODO: More nuanced
+			return regErrManifestUnknown
 		}
-		// TODO: More nuanced
-		return regErrManifestUnknown
-	}
-	defer b.Close()
+		defer b.Close()
 
-	buf := bytes.Buffer{}
-	if _, err = io.Copy(&buf, b); err != nil {
-		return regErrInternal(err)
+		if m.Data, err = io.ReadAll(b); err != nil {
+			return regErrInternal(err)
+		}
 	}
 
-	resp.Header().Set("Docker-Content-Digest", m.Blob.Digest.String())
+	resp.Header().Set("Docker-Content-Digest", m.Digest.String())
 	resp.Header().Set("Content-Type", m.ContentType)
-	resp.Header().Set("Content-Length", fmt.Sprint(buf.Len()))
+	resp.Header().Set("Content-Length", strconv.Itoa(len(m.Data)))
 	resp.WriteHeader(http.StatusOK)
-	if _, err := io.Copy(resp, &buf); err != nil {
+	if _, err := resp.Write(m.Data); err != nil {
 		return regErrInternal(err)
 	}
 	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
@@ -399,26 +404,15 @@ func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request
 		return regErrInternal(err)
 	}
 
-	bsh, ok := handler.blobHandler.(blob.BlobStatHandler)
-	if !ok {
-		return regErrInternal(errors.New("cannot stat blob"))
-	}
-
-	l, err := bsh.Stat(ctx, repo, m.Blob.Digest)
-	if err != nil {
-		// TODO: More nuanced
-		return regErrManifestUnknown
-	}
-
 	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
 		log := internalctx.GetLogger(ctx)
 		log.Warn("failed to audit-log pull", zap.Error(err))
 		sentry.GetHubFromContext(ctx)
 	}
 
-	resp.Header().Set("Docker-Content-Digest", m.Blob.Digest.String())
+	resp.Header().Set("Docker-Content-Digest", m.Digest.String())
 	resp.Header().Set("Content-Type", m.ContentType)
-	resp.Header().Set("Content-Length", fmt.Sprint(l))
+	resp.Header().Set("Content-Length", strconv.FormatInt(m.Size, 10))
 	resp.WriteHeader(http.StatusOK)
 	return nil
 }
@@ -431,12 +425,15 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 
 	mf := imanifest.Manifest{
 		ContentType: req.Header.Get("Content-Type"),
-		Blob: imanifest.Blob{
-			Size: int64(buf.Len()),
+		BlobWithData: imanifest.BlobWithData{
+			Data: buf.Bytes(),
+			Blob: imanifest.Blob{
+				Digest: digest.FromBytes(buf.Bytes()),
+				Size:   int64(buf.Len()),
+			},
 		},
 	}
 
-	mf.Blob.Digest = digest.SHA256.FromBytes(buf.Bytes())
 	var blobs []imanifest.Blob
 	if manifest.MIMETypeIsMultiImage(mf.ContentType) {
 		im, err := manifest.ListFromBlob(buf.Bytes(), mf.ContentType)
@@ -466,19 +463,11 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		return err
 	}
 
-	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
-		return regErrInternal(errors.New("blob handler is not a BlobPutHandler"))
-	} else {
-		if err := bph.Put(req.Context(), repo, mf.Blob.Digest, mf.ContentType, buf); err != nil {
-			return regErrInternal(err)
-		}
-	}
-
 	// Allow future references by target (tag) and immutable digest.
 	// See https://docs.docker.com/engine/reference/commandline/pull/#pull-an-image-by-digest-immutable-identifier.
 	err := db.RunTx(req.Context(), func(ctx context.Context) error {
 		return multierr.Combine(
-			handler.manifestHandler.Put(ctx, repo, mf.Blob.Digest.String(), mf, blobs),
+			handler.manifestHandler.Put(ctx, repo, mf.Digest.String(), mf, blobs),
 			handler.manifestHandler.Put(ctx, repo, target, mf, blobs),
 		)
 	})
@@ -488,8 +477,8 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		return regErrInternal(err)
 	}
 
-	resp.Header().Set("Docker-Content-Digest", mf.Blob.Digest.String())
-	resp.Header().Set("OCI-Subject", mf.Blob.Digest.String())
+	resp.Header().Set("Docker-Content-Digest", mf.Digest.String())
+	resp.Header().Set("OCI-Subject", mf.Digest.String())
 	resp.Header().Set("Location", req.URL.JoinPath(mf.Blob.Digest.String()).Path)
 	resp.WriteHeader(http.StatusCreated)
 	return nil

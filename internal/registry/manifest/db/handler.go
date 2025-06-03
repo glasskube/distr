@@ -38,9 +38,11 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 		return nil, err
 	} else {
 		return &manifest.Manifest{
-			Blob: manifest.Blob{
-				Digest: digest.Digest(av.ManifestBlobDigest),
-				Size:   av.ManifestBlobSize,
+			BlobWithData: manifest.BlobWithData{
+				Blob: manifest.Blob{
+					Digest: digest.Digest(av.ManifestBlobDigest),
+					Size:   av.ManifestBlobSize,
+				},
 			},
 			ContentType: av.ManifestContentType,
 		}, nil
@@ -153,9 +155,10 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.Blob.Digest),
-			ManifestBlobSize:       manifest.Blob.Size,
+			ManifestBlobDigest:     types.Digest(manifest.Digest),
+			ManifestBlobSize:       manifest.Size,
 			ManifestContentType:    manifest.ContentType,
+			ManifestData:           manifest.Data,
 			ArtifactID:             artifact.ID,
 		}
 

@@ -30,6 +30,7 @@ const (
 		v.manifest_blob_digest,
 		v.manifest_blob_size,
 		v.manifest_content_type,
+		v.manifest_data,
 		v.artifact_id
 	`
 	artifactDownloadsOutExpr = `
@@ -180,6 +181,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				av.id,
 				av.created_at,
 				av.manifest_blob_digest,
+				av.manifest_data,
 				coalesce((
 					SELECT array_agg(row (avt.id, avt.name, (
 						SELECT ROW(
@@ -494,9 +496,11 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 			manifest_blob_digest,
 			manifest_blob_size,
 			manifest_content_type,
+			manifest_data,
 			artifact_id
         ) VALUES (
-        	@name, @createdById, @manifestBlobDigest, @manifestBlobSize, @manifestContentType, @artifactId
+        	@name, @createdById, @manifestBlobDigest, @manifestBlobSize, @manifestContentType, @manifestData,
+			@artifactId
         ) RETURNING *`,
 		pgx.NamedArgs{
 			"name":                av.Name,
@@ -504,6 +508,7 @@ func CreateArtifactVersion(ctx context.Context, av *types.ArtifactVersion) error
 			"manifestBlobDigest":  av.ManifestBlobDigest,
 			"manifestBlobSize":    av.ManifestBlobSize,
 			"manifestContentType": av.ManifestContentType,
+			"manifestData":        av.ManifestData,
 			"artifactId":          av.ArtifactID,
 		},
 	)
