@@ -6,6 +6,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type ManifestType string
+
+const (
+	ManifestTypeGeneric        ManifestType = "generic"
+	ManifestTypeContainerImage ManifestType = "container-image"
+	ManifestTypeHelmChart      ManifestType = "helm-chart"
+)
+
 type Artifact struct {
 	ID             uuid.UUID  `db:"id" json:"id"`
 	CreatedAt      time.Time  `db:"created_at" json:"createdAt"`
@@ -28,16 +36,19 @@ type ArtifactVersionTag struct {
 }
 
 type TaggedArtifactVersion struct {
-	ID           uuid.UUID            `db:"id" json:"id"`
-	CreatedAt    time.Time            `db:"created_at" json:"createdAt"`
-	Digest       string               `db:"manifest_blob_digest" json:"digest"`
-	ManifestData []byte               `db:"manifest_data" json:"-"`
-	Tags         []ArtifactVersionTag `db:"tags" json:"tags"`
-	Size         int64                `db:"size" json:"size"`
+	ID                  uuid.UUID            `db:"id" json:"id"`
+	CreatedAt           time.Time            `db:"created_at" json:"createdAt"`
+	Digest              string               `db:"manifest_blob_digest" json:"digest"`
+	ManifestContentType string               `db:"manifest_content_type" json:"manifestContentType"`
+	ManifestData        []byte               `db:"manifest_data" json:"-"`
+	Tags                []ArtifactVersionTag `db:"tags" json:"tags"`
+	Size                int64                `db:"size" json:"size"`
 
 	DownloadsTotal    int         `db:"downloads_total" json:"downloadsTotal"`
 	DownloadedByCount int         `db:"downloaded_by_count" json:"downloadedByCount"`
 	DownloadedByUsers []uuid.UUID `db:"downloaded_by_users" json:"downloadedByUsers,omitempty"`
+
+	InferredType ManifestType `db:"-" json:"inferredType"`
 }
 
 type ArtifactWithDownloads struct {

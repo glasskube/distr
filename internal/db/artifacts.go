@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
+	"strings"
 	"time"
 
+	"github.com/containers/image/v5/manifest"
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/env"
@@ -181,6 +184,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				av.id,
 				av.created_at,
 				av.manifest_blob_digest,
+				av.manifest_content_type,
 				av.manifest_data,
 				coalesce((
 					SELECT array_agg(row (avt.id, avt.name, (
@@ -273,6 +277,25 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 	} else if versions, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.TaggedArtifactVersion]); err != nil {
 		return nil, err
 	} else {
+		for i, version := range versions {
+			version.InferredType = types.ManifestTypeGeneric
+			if strings.HasPrefix(version.ManifestContentType, "application/vnd.docker") {
+				version.InferredType = types.ManifestTypeContainerImage
+			} else if !manifest.MIMETypeIsMultiImage(version.ManifestContentType) && len(version.ManifestData) > 0 {
+				parsedManifest, err := manifest.FromBlob(version.ManifestData, version.ManifestContentType)
+				if err != nil {
+					return nil, err
+				}
+
+				if strings.HasPrefix(parsedManifest.ConfigInfo().MediaType, "application/vnd.cncf.helm") ||
+					slices.ContainsFunc(parsedManifest.LayerInfos(), func(layer manifest.LayerInfo) bool {
+						return strings.HasPrefix(layer.MediaType, "application/vnd.cncf.helm")
+					}) {
+					version.InferredType = types.ManifestTypeHelmChart
+				}
+			}
+			versions[i] = version
+		}
 		return versions, nil
 	}
 }
