@@ -2,7 +2,7 @@ name: distr-dev
 
 services:
   postgres:
-    image: 'postgres:17.4-alpine3.20'
+    image: 'postgres:17.5-alpine3.20'
     environment:
       POSTGRES_USER: local
       POSTGRES_PASSWORD: local
@@ -12,7 +12,7 @@ services:
     ports:
       - '5432:5432'
   mailpit:
-    image: 'axllent/mailpit:v1.23.2'
+    image: 'axllent/mailpit:v1.25.1'
     ports:
       - '1025:1025'
       - '8025:8025'

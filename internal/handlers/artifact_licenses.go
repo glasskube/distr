@@ -18,12 +18,11 @@ import (
 )
 
 func ArtifactLicensesRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole, requireUserRoleVendor,
-		middleware.RegistryFeatureFlagEnabledMiddleware)
+	r.Use(middleware.RequireOrgAndRole, requireUserRoleVendor, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getArtifactLicenses)
 	r.Post("/", createArtifactLicense)
 	r.Route("/{artifactLicenseId}", func(r chi.Router) {
-		r.With(artifactLicenseMiddleware, requireUserRoleVendor).Group(func(r chi.Router) {
+		r.With(artifactLicenseMiddleware).Group(func(r chi.Router) {
 			r.Put("/", updateArtifactLicense)
 			r.Delete("/", deleteArtifactLicense)
 		})

@@ -9,7 +9,6 @@ type DeploymentTarget struct {
 	Base
 	Name                   string                  `db:"name" json:"name"`
 	Type                   DeploymentType          `db:"type" json:"type"`
-	Geolocation            *Geolocation            `db:"geolocation" json:"geolocation,omitempty"`
 	AccessKeySalt          *[]byte                 `db:"access_key_salt" json:"-"`
 	AccessKeyHash          *[]byte                 `db:"access_key_hash" json:"-"`
 	CurrentStatus          *DeploymentTargetStatus `db:"current_status" json:"currentStatus,omitempty"`
@@ -19,6 +18,7 @@ type DeploymentTarget struct {
 	CreatedByUserAccountID uuid.UUID               `db:"created_by_user_account_id" json:"-"`
 	AgentVersionID         *uuid.UUID              `db:"agent_version_id" json:"-"`
 	ReportedAgentVersionID *uuid.UUID              `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"`
+	MetricsEnabled         bool                    `db:"metrics_enabled" json:"metricsEnabled"`
 }
 
 func (dt *DeploymentTarget) Validate() error {
@@ -39,7 +39,9 @@ func (dt *DeploymentTarget) Validate() error {
 
 type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
-	CreatedBy    *UserAccountWithUserRole      `db:"created_by" json:"createdBy"`
-	Deployment   *DeploymentWithLatestRevision `db:"-" json:"deployment,omitempty"`
-	AgentVersion AgentVersion                  `db:"agent_version" json:"agentVersion"`
+	CreatedBy *UserAccountWithUserRole `db:"created_by" json:"createdBy"`
+	// Deprecated: This property will be removed in v2. Please consider using Deployments instead.
+	Deployment   *DeploymentWithLatestRevision  `db:"-" json:"deployment,omitempty"`
+	Deployments  []DeploymentWithLatestRevision `db:"-" json:"deployments"`
+	AgentVersion AgentVersion                   `db:"agent_version" json:"agentVersion"`
 }

@@ -3,7 +3,8 @@ import {BaseModel} from './base';
 export interface Deployment extends BaseModel {
   deploymentTargetId: string;
   releaseName?: string;
-  note?: string;
+  dockerType?: DockerType;
+  logsEnabled: boolean;
 }
 
 export interface DeploymentRequest {
@@ -12,8 +13,13 @@ export interface DeploymentRequest {
   deploymentId?: string;
   applicationLicenseId?: string;
   releaseName?: string;
+  dockerType?: DockerType;
   valuesYaml?: string;
   envFileData?: string;
+}
+
+export interface PatchDeploymentRequest {
+  logsEnabled?: boolean;
 }
 
 export interface DeploymentWithLatestRevision extends Deployment {
@@ -25,6 +31,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   valuesYaml?: string;
   envFileData?: string;
   deploymentRevisionId?: string;
+  deploymentRevisionCreatedAt?: string;
   latestStatus?: DeploymentRevisionStatus;
 }
 
@@ -37,6 +44,8 @@ export type DeploymentType = 'docker' | 'kubernetes';
 
 export type HelmChartType = 'repository' | 'oci';
 
-export type DeploymentStatusType = 'ok' | 'error';
+export type DockerType = 'compose' | 'swarm';
+
+export type DeploymentStatusType = 'ok' | 'progressing' | 'error';
 
 export type DeploymentTargetScope = 'cluster' | 'namespace';

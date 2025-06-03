@@ -33,6 +33,21 @@ export class ForgotComponent implements OnInit, OnDestroy {
       .subscribe((email) => {
         this.formGroup.patchValue({email});
       });
+    this.route.queryParams
+      .pipe(
+        map((params) => params['reason']),
+        filter((reason) => reason),
+        distinctUntilChanged(),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((reason) => {
+        if (reason === 'invite-expired') {
+          this.errorMessage =
+            'Your invite link has expired. To finalize your account setup, ' + 'please request a password reset here. ';
+        } else if (reason === 'reset-expired') {
+          this.errorMessage = 'Your password reset link has expired. Please request a new link here.';
+        }
+      });
   }
 
   public ngOnDestroy(): void {

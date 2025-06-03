@@ -1,0 +1,2 @@
+ALTER TABLE UserAccount
+  ADD COLUMN last_logged_in_at TIMESTAMP DEFAULT NULL;

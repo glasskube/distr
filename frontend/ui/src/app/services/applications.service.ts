@@ -1,9 +1,10 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {catchError, Observable, of, tap, throwError} from 'rxjs';
+import {catchError, Observable, of, startWith, Subject, switchMap, tap, throwError} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion, DeploymentTarget, PatchApplicationRequest} from '@glasskube/distr-sdk';
+import {ArtifactWithTags} from './artifacts.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,13 +12,24 @@ import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
 export class ApplicationsService implements CrudService<Application> {
   private readonly applicationsUrl = '/api/v1/applications';
   private readonly cache: ReactiveList<Application>;
+  private readonly refresh$ = new Subject<void>();
 
   constructor(private readonly httpClient: HttpClient) {
     this.cache = new DefaultReactiveList(this.httpClient.get<Application[]>(this.applicationsUrl));
+    this.refresh$
+      .pipe(
+        switchMap(() => this.httpClient.get<Application[]>(this.applicationsUrl)),
+        tap((apps) => this.cache.reset(apps))
+      )
+      .subscribe();
   }
 
   list(): Observable<Application[]> {
     return this.cache.get();
+  }
+
+  refresh() {
+    this.refresh$.next();
   }
 
   create(application: Application): Observable<Application> {
@@ -27,6 +39,12 @@ export class ApplicationsService implements CrudService<Application> {
   update(application: Application): Observable<Application> {
     return this.httpClient
       .put<Application>(`${this.applicationsUrl}/${application.id}`, application)
+      .pipe(tap((it) => this.cache.save(it)));
+  }
+
+  patch(applicationId: string, patch: PatchApplicationRequest): Observable<Application> {
+    return this.httpClient
+      .patch<Application>(`${this.applicationsUrl}/${applicationId}`, patch)
       .pipe(tap((it) => this.cache.save(it)));
   }
 
@@ -73,6 +91,7 @@ export class ApplicationsService implements CrudService<Application> {
     if (template) {
       formData.append('templatefile', new Blob([template], {type: 'application/yaml'}));
     }
+
     return this.doCreateVersion(application, applicationVersion, formData);
   }
 
@@ -125,5 +144,11 @@ export class ApplicationsService implements CrudService<Application> {
           this.cache.save(app);
         })
       );
+  }
+
+  public patchImage(artifactsId: string, imageId: string) {
+    return this.httpClient
+      .patch<Application>(`${this.applicationsUrl}/${artifactsId}/image`, {imageId})
+      .pipe(tap((it) => this.cache.save(it)));
   }
 }

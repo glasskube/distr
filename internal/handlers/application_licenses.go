@@ -20,7 +20,7 @@ import (
 )
 
 func ApplicationLicensesRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
 	r.With(requireUserRoleVendor).Post("/", createApplicationLicense)
 	r.Route("/{applicationLicenseId}", func(r chi.Router) {
@@ -200,8 +200,9 @@ func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 			RespondJSON(w, licenses)
 		}
 	} else {
-		if licenses, err :=
-			db.GetApplicationLicensesWithOwnerID(ctx, auth.CurrentUserID(), *auth.CurrentOrgID(), applicationId); err != nil {
+		if licenses, err := db.GetApplicationLicensesWithOwnerID(
+			ctx, auth.CurrentUserID(), *auth.CurrentOrgID(), applicationId,
+		); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -242,7 +243,7 @@ func applicationLicenseMiddleware(next http.Handler) http.Handler {
 		} else if license, err := db.GetApplicationLicenseByID(ctx, licenseId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get license", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get license", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else if !canSeeLicense(auth, license) {

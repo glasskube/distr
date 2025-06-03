@@ -33,6 +33,7 @@ import (
 	"github.com/glasskube/distr/internal/registry/audit"
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
+	registryerror "github.com/glasskube/distr/internal/registry/error"
 	imanifest "github.com/glasskube/distr/internal/registry/manifest"
 	"github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/opencontainers/go-digest"
@@ -110,6 +111,8 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -118,6 +121,8 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -126,6 +131,8 @@ func (handler *manifests) handle(resp http.ResponseWriter, req *http.Request) *r
 		if err := handler.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -152,6 +159,8 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 		if err := m.authz.Authorize(req.Context(), repo, authz.ActionRead); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -182,7 +191,10 @@ func (m *manifests) handleTags(resp http.ResponseWriter, req *http.Request) *reg
 			Tags: references,
 		}
 
-		msg, _ := json.Marshal(tagsToList)
+		msg, err := json.Marshal(tagsToList)
+		if err != nil {
+			return regErrInternal(err)
+		}
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
@@ -210,7 +222,10 @@ func (m *manifests) handleCatalog(resp http.ResponseWriter, req *http.Request) *
 
 		repositoriesToList := catalog{Repos: repos}
 
-		msg, _ := json.Marshal(repositoriesToList)
+		msg, err := json.Marshal(repositoriesToList)
+		if err != nil {
+			return regErrInternal(err)
+		}
 		resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 		resp.WriteHeader(http.StatusOK)
 		if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
@@ -237,6 +252,8 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 	if err := m.authz.AuthorizeReference(req.Context(), repo, target, authz.ActionRead); err != nil {
 		if errors.Is(err, authz.ErrAccessDenied) {
 			return regErrDenied
+		} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+			return regErrNameInvalid
 		}
 		return regErrInternal(err)
 	}
@@ -311,7 +328,10 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 			ArtifactType: imageAsArtifact.Config.MediaType,
 		})
 	}
-	msg, _ := json.Marshal(&im)
+	msg, err := json.Marshal(&im)
+	if err != nil {
+		return regErrInternal(err)
+	}
 	resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
 	resp.Header().Set("Content-Type", string(types.OCIImageIndex))
 	resp.WriteHeader(http.StatusOK)
@@ -391,6 +411,12 @@ func (handler *manifests) handleHead(resp http.ResponseWriter, req *http.Request
 		return regErrManifestUnknown
 	}
 
+	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+		log := internalctx.GetLogger(ctx)
+		log.Warn("failed to audit-log pull", zap.Error(err))
+		sentry.GetHubFromContext(ctx)
+	}
+
 	resp.Header().Set("Docker-Content-Digest", m.Blob.Digest.String())
 	resp.Header().Set("Content-Type", m.ContentType)
 	resp.Header().Set("Content-Length", fmt.Sprint(l))
@@ -437,6 +463,10 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		}
 	}
 
+	if err := checkIncompatibleManifest(buf.Bytes()); err != nil {
+		return err
+	}
+
 	if bph, ok := handler.blobHandler.(blob.BlobPutHandler); !ok {
 		return regErrInternal(errors.New("blob handler is not a BlobPutHandler"))
 	} else {
@@ -478,3 +508,15 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 // 	resp.WriteHeader(http.StatusAccepted)
 // 	return nil
 // }
+
+func checkIncompatibleManifest(data []byte) *regError {
+	var mf struct {
+		Blobs []any `json:"blobs"`
+	}
+	if err := json.Unmarshal(data, &mf); err != nil {
+		return regErrManifestInvalid(err)
+	} else if len(mf.Blobs) > 0 {
+		return regErrManifestInvalid(errors.New("non-compliant manifest with blobs entry detected"))
+	}
+	return nil
+}

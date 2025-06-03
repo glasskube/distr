@@ -4,8 +4,9 @@ import {faDownload, faEllipsis} from '@fortawesome/free-solid-svg-icons';
 import {HasDownloads} from '../services/artifacts.service';
 import {UsersService} from '../services/users.service';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {catchError, NEVER, switchMap, zip} from 'rxjs';
+import {catchError, EMPTY, filter, map, NEVER, of, switchMap, tap, zip} from 'rxjs';
 import {AsyncPipe} from '@angular/common';
+import {SecureImagePipe} from '../../util/secureImage';
 
 @Component({
   selector: 'app-artifacts-download-count',
@@ -27,13 +28,14 @@ export class ArtifactsDownloadCountComponent {
   selector: 'app-artifacts-downloaded-by',
   template: `
     <div class="flex -space-x-3 hover:-space-x-1 rtl:space-x-reverse">
-      @for (user of downloadedBy$ | async; track user.id) {
+      @let shownUsers = downloadedBy$ | async;
+      @for (user of shownUsers; track user.id) {
         <img
           class="size-8 border-2 border-white rounded-full dark:border-gray-800 transition-all duration-100 ease-in-out"
-          [src]="user.gravatar"
+          [attr.src]="user.imageUrl | secureImage | async"
           [title]="user.name ?? user.email" />
       }
-      @if ((source().downloadedByCount ?? 0) - (source().downloadedByUsers ?? []).length; as count) {
+      @if ((source().downloadedByCount ?? 0) - (shownUsers?.length ?? 0); as count) {
         @if (count > 0) {
           <div
             class="flex items-center justify-center size-8 text-xs font-medium text-white bg-gray-500 dark:bg-gray-700 border-2 border-white rounded-full dark:border-gray-800">
@@ -43,17 +45,17 @@ export class ArtifactsDownloadCountComponent {
       }
     </div>
   `,
-  imports: [AsyncPipe],
+  imports: [AsyncPipe, SecureImagePipe],
 })
 export class ArtifactsDownloadedByComponent {
   public readonly source = input.required<HasDownloads>();
   private readonly usersService = inject(UsersService);
   public readonly downloadedBy$ = toObservable(this.source).pipe(
     switchMap((dl) => {
-      const gravatarObservables = (dl.downloadedByUsers ?? []).map((id) =>
-        this.usersService.getUserWithGravatarUrl(id).pipe(catchError(() => NEVER))
+      const userObservables = (dl.downloadedByUsers ?? []).map((id) =>
+        this.usersService.getUser(id).pipe(catchError((e) => of(undefined)))
       );
-      return zip(...gravatarObservables);
+      return zip(...userObservables).pipe(map((it) => it.filter((u) => u !== undefined)));
     })
   );
 }
@@ -65,7 +67,7 @@ export class ArtifactsDownloadedByComponent {
     @if (expandable()) {
       <button
         type="button"
-        class="inline-flex items-center justify-center h-3.5 ms-1 px-1 rounded-sm bg-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
+        class="inline-flex items-center justify-center h-3.5 ms-1 px-1 rounded-xs bg-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
         (click)="showFull.set(!showFull())">
         <fa-icon [icon]="faEllipsis"></fa-icon>
       </button>

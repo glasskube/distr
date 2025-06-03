@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/util"
-
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
@@ -17,7 +16,7 @@ import (
 )
 
 const (
-	applicationOutputExpr             = `a.id, a.created_at, a.organization_id, a.name, a.type`
+	applicationOutputExpr             = `a.id, a.created_at, a.organization_id, a.name, a.type, a.image_id`
 	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.application_id,
@@ -93,17 +92,14 @@ func GetApplicationsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Appli
 			ORDER BY a.name
 			`, pgx.NamedArgs{"orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
 		return applications, nil
 	}
 }
 
-func appendMissingVersions(application types.Application,
-	versions []types.ApplicationVersion) types.Application {
-
+func appendMissingVersions(application types.Application, versions []types.ApplicationVersion) types.Application {
 	for _, version := range versions {
 		found := false
 		for _, existingVersion := range application.Versions {
@@ -141,8 +137,7 @@ func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]typ
 			ORDER BY a.name
 			`, pgx.NamedArgs{"id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
 	} else {
 		return mergeApplications(applications), nil
@@ -157,8 +152,7 @@ func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Applicatio
 			WHERE a.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if application, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
@@ -178,8 +172,7 @@ func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uui
 			ORDER BY a.name
 			`, pgx.NamedArgs{"ownerID": oID, "id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
-	} else if applications, err :=
-		pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
@@ -198,8 +191,7 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.U
 			WHERE v.id = @id AND a.organization_id = @orgId
 		`, pgx.NamedArgs{"id": id, "orgId": orgID}); err != nil {
 		return nil, fmt.Errorf("failed to query application: %w", err)
-	} else if application, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
+	} else if application, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		}
@@ -211,6 +203,7 @@ func GetApplicationForApplicationVersionID(ctx context.Context, id, orgID uuid.U
 
 func CreateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
+
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
 		"applicationId": applicationVersion.ApplicationID,
@@ -255,9 +248,10 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 func UpdateApplicationVersion(ctx context.Context, applicationVersion *types.ApplicationVersion) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt WHERE id = @id
+		`UPDATE ApplicationVersion AS av SET name = @name, archived_at = @archivedAt
+		WHERE id = @id
 		RETURNING av.id, av.created_at, av.archived_at, av.name, av.chart_type, av.chart_name, av.chart_url, av.chart_version,
-				av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+			av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
 		pgx.NamedArgs{
 			"id":         applicationVersion.ID,
 			"name":       applicationVersion.Name,
@@ -300,4 +294,16 @@ func GetApplicationVersion(ctx context.Context, applicationVersionID uuid.UUID) 
 	} else {
 		return &data, nil
 	}
+}
+
+func UpdateApplicationImage(ctx context.Context, application *types.Application, imageID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(ctx,
+		`UPDATE Application SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": application.ID},
+	)
+	if err := row.Scan(&application.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to application: %w", err)
+	}
+	return nil
 }

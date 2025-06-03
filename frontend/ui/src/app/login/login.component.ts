@@ -54,6 +54,20 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.toast.success('Account activated successfully. You can now log in!');
         }
       });
+    this.route.queryParams
+      .pipe(
+        map((params) => params['reason']),
+        filter((reason) => reason),
+        distinctUntilChanged(),
+        takeUntil(this.destroyed$)
+      )
+      .subscribe((reason) => {
+        if (reason === 'password-reset') {
+          this.toast.success('Your password has been updated, you can now log in.');
+        } else if (reason === 'session-expired') {
+          this.toast.success('You have been logged out because your session has expired.');
+        }
+      });
   }
 
   public ngOnDestroy(): void {
@@ -72,7 +86,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         if (this.auth.hasRole('customer')) {
           await this.router.navigate(['/home']);
         } else {
-          await this.router.navigate(['/dashboard']);
+          await this.router.navigate(['/dashboard'], {queryParams: {from: 'login'}});
         }
       } catch (e) {
         this.errorMessage = getFormDisplayedError(e);

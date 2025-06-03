@@ -32,6 +32,12 @@
 
 ---
 
+### imageUrl?
+
+> `optional` **imageUrl**: `string`
+
+---
+
 ### name?
 
 > `optional` **name**: `string`

@@ -7,37 +7,49 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/glasskube/distr/internal/envparse"
+	"github.com/glasskube/distr/internal/envutil"
 	"github.com/joho/godotenv"
 )
 
 var (
-	databaseUrl                    string
-	jwtSecret                      []byte
-	host                           string
-	registryHost                   string
-	mailerConfig                   MailerConfig
-	inviteTokenValidDuration       time.Duration
-	resetTokenValidDuration        time.Duration
-	agentTokenMaxValidDuration     time.Duration
-	agentInterval                  time.Duration
-	statusEntriesMaxAge            *time.Duration
-	sentryDSN                      string
-	sentryDebug                    bool
-	enableQueryLogging             bool
-	agentDockerConfig              []byte
-	frontendSentryDSN              *string
-	frontendPosthogToken           *string
-	frontendPosthogAPIHost         *string
-	frontendPosthogUIHost          *string
-	userEmailVerificationRequired  bool
-	serverShutdownDelayDuration    *time.Duration
-	registration                   RegistrationMode
-	registryEnabled                bool
-	registryS3Config               S3Config
-	artifactTagsDefaultLimitPerOrg int
+	databaseUrl                         string
+	databaseMaxConns                    *int
+	jwtSecret                           []byte
+	host                                string
+	registryHost                        string
+	mailerConfig                        MailerConfig
+	inviteTokenValidDuration            time.Duration
+	resetTokenValidDuration             time.Duration
+	agentTokenMaxValidDuration          time.Duration
+	agentInterval                       time.Duration
+	statusEntriesMaxAge                 *time.Duration
+	metricsEntriesMaxAge                *time.Duration
+	logRecordEntriesMaxCount            *int
+	sentryDSN                           string
+	sentryDebug                         bool
+	otelExporterSentryEnabled           bool
+	otelExporterOtlpEnabled             bool
+	enableQueryLogging                  bool
+	agentDockerConfig                   []byte
+	frontendSentryDSN                   *string
+	frontendSentryTraceSampleRate       *float64
+	frontendPosthogToken                *string
+	frontendPosthogAPIHost              *string
+	frontendPosthogUIHost               *string
+	userEmailVerificationRequired       bool
+	serverShutdownDelayDuration         *time.Duration
+	registration                        RegistrationMode
+	registryEnabled                     bool
+	registryS3Config                    S3Config
+	artifactTagsDefaultLimitPerOrg      int
+	cleanupDeploymentRevisionStatusCron *string
+	cleanupDeploymentTargetStatusCron   *string
+	cleanupDeploymentTargetMetricsCron  *string
+	cleanupDeploymentLogRecordCron      *string
 )
 
-func init() {
+func Initialize() {
 	if currentEnv, ok := os.LookupEnv("DISTR_ENV"); ok {
 		fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
 		if err := godotenv.Load(currentEnv); err != nil {
@@ -45,60 +57,87 @@ func init() {
 		}
 	}
 
-	databaseUrl = requireEnv("DATABASE_URL")
-	jwtSecret = requireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
-	host = requireEnv("DISTR_HOST")
-	agentInterval = getEnvParsedOrDefault("AGENT_INTERVAL", getPositiveDuration, 5*time.Second)
-	statusEntriesMaxAge = getEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", getPositiveDuration)
-	enableQueryLogging = getEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
-	userEmailVerificationRequired =
-		getEnvParsedOrDefault("USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true)
-	serverShutdownDelayDuration = getEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", getPositiveDuration)
-	registration = getEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
-	inviteTokenValidDuration =
-		getEnvParsedOrDefault("INVITE_TOKEN_VALID_DURATION", getPositiveDuration, 24*time.Hour)
-	resetTokenValidDuration =
-		getEnvParsedOrDefault("RESET_TOKEN_VALID_DURATION", getPositiveDuration, 1*time.Hour)
-	agentTokenMaxValidDuration =
-		getEnvParsedOrDefault("AGENT_TOKEN_MAX_VALID_DURATION", getPositiveDuration, 24*time.Hour)
+	databaseUrl = envutil.RequireEnv("DATABASE_URL")
+	databaseMaxConns = envutil.GetEnvParsedOrNil("DATABASE_MAX_CONNS", strconv.Atoi)
+	jwtSecret = envutil.RequireEnvParsed("JWT_SECRET", base64.StdEncoding.DecodeString)
+	host = envutil.RequireEnv("DISTR_HOST")
+	agentInterval = envutil.GetEnvParsedOrDefault("AGENT_INTERVAL", envparse.PositiveDuration, 5*time.Second)
+	statusEntriesMaxAge = envutil.GetEnvParsedOrNil("STATUS_ENTRIES_MAX_AGE", envparse.PositiveDuration)
+	metricsEntriesMaxAge = envutil.GetEnvParsedOrNil("METRICS_ENTRIES_MAX_AGE", envparse.PositiveDuration)
+	logRecordEntriesMaxCount = envutil.GetEnvParsedOrNil("LOG_RECORD_ENTRIES_MAX_COUNT", envparse.NonNegativeNumber)
+	enableQueryLogging = envutil.GetEnvParsedOrDefault("ENABLE_QUERY_LOGGING", strconv.ParseBool, false)
+	userEmailVerificationRequired = envutil.GetEnvParsedOrDefault(
+		"USER_EMAIL_VERIFICATION_REQUIRED", strconv.ParseBool, true,
+	)
+	serverShutdownDelayDuration = envutil.GetEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", envparse.PositiveDuration)
+	registration = envutil.GetEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
+	inviteTokenValidDuration = envutil.GetEnvParsedOrDefault(
+		"INVITE_TOKEN_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour,
+	)
+	resetTokenValidDuration = envutil.GetEnvParsedOrDefault(
+		"RESET_TOKEN_VALID_DURATION", envparse.PositiveDuration, 1*time.Hour,
+	)
+	agentTokenMaxValidDuration = envutil.GetEnvParsedOrDefault(
+		"AGENT_TOKEN_MAX_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour,
+	)
 
-	mailerConfig.Type = getEnvParsedOrDefault("MAILER_TYPE", parseMailerType, MailerTypeUnspecified)
+	mailerConfig.Type = envutil.GetEnvParsedOrDefault("MAILER_TYPE", parseMailerType, MailerTypeUnspecified)
 	if mailerConfig.Type != MailerTypeUnspecified {
-		mailerConfig.FromAddress = requireEnvParsed("MAILER_FROM_ADDRESS", parseMailAddress)
+		mailerConfig.FromAddress = envutil.RequireEnvParsed("MAILER_FROM_ADDRESS", envparse.MailAddress)
 	}
 	if mailerConfig.Type == MailerTypeSMTP {
 		mailerConfig.SmtpConfig = &MailerSMTPConfig{
-			Host:     getEnv("MAILER_SMTP_HOST"),
-			Port:     requireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
-			Username: getEnv("MAILER_SMTP_USERNAME"),
-			Password: getEnv("MAILER_SMTP_PASSWORD"),
+			Host:     envutil.GetEnv("MAILER_SMTP_HOST"),
+			Port:     envutil.RequireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
+			Username: envutil.GetEnv("MAILER_SMTP_USERNAME"),
+			Password: envutil.GetEnv("MAILER_SMTP_PASSWORD"),
 		}
 	}
 
-	registryEnabled = getEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
+	registryEnabled = envutil.GetEnvParsedOrDefault("REGISTRY_ENABLED", strconv.ParseBool, false)
 	if registryEnabled {
-		registryHost = getEnvOrDefault("REGISTRY_HOST", host, getEnvOpts{deprecatedAlias: "DISTR_ARTIFACTS_HOST"})
-		registryS3Config.Bucket = requireEnv("REGISTRY_S3_BUCKET")
-		registryS3Config.Region = requireEnv("REGISTRY_S3_REGION")
-		registryS3Config.Endpoint = getEnvOrNil("REGISTRY_S3_ENDPOINT")
-		registryS3Config.AccessKeyID = getEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
-		registryS3Config.SecretAccessKey = getEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
-		registryS3Config.UsePathStyle = getEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
-		registryS3Config.AllowRedirect = getEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
+		registryHost = envutil.GetEnvOrDefault(
+			"REGISTRY_HOST", host, envutil.GetEnvOpts{DeprecatedAlias: "DISTR_ARTIFACTS_HOST"},
+		)
+		registryS3Config.Bucket = envutil.RequireEnv("REGISTRY_S3_BUCKET")
+		registryS3Config.Region = envutil.RequireEnv("REGISTRY_S3_REGION")
+		registryS3Config.Endpoint = envutil.GetEnvOrNil("REGISTRY_S3_ENDPOINT")
+		registryS3Config.AccessKeyID = envutil.GetEnvOrNil("REGISTRY_S3_ACCESS_KEY_ID")
+		registryS3Config.SecretAccessKey = envutil.GetEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
+		registryS3Config.UsePathStyle = envutil.GetEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
+		registryS3Config.AllowRedirect = envutil.GetEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
 	}
-	artifactTagsDefaultLimitPerOrg = getEnvParsedOrDefault("ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", getNonNegativeNumber, 0)
+	artifactTagsDefaultLimitPerOrg = envutil.GetEnvParsedOrDefault(
+		"ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", envparse.NonNegativeNumber, 0,
+	)
 
-	sentryDSN = getEnv("SENTRY_DSN")
-	sentryDebug = getEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
-	agentDockerConfig = getEnvParsedOrDefault("AGENT_DOCKER_CONFIG", asByteSlice, nil)
-	frontendSentryDSN = getEnvOrNil("FRONTEND_SENTRY_DSN")
-	frontendPosthogToken = getEnvOrNil("FRONTEND_POSTHOG_TOKEN")
-	frontendPosthogAPIHost = getEnvOrNil("FRONTEND_POSTHOG_API_HOST")
-	frontendPosthogUIHost = getEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
+	sentryDSN = envutil.GetEnv("SENTRY_DSN")
+	sentryDebug = envutil.GetEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
+	otelExporterSentryEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_SENTRY_ENABLED", strconv.ParseBool, false)
+	otelExporterOtlpEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_OTLP_ENABLED", strconv.ParseBool, false)
+	agentDockerConfig = envutil.GetEnvParsedOrDefault("AGENT_DOCKER_CONFIG", envparse.ByteSlice, nil)
+	frontendSentryDSN = envutil.GetEnvOrNil("FRONTEND_SENTRY_DSN")
+	frontendSentryTraceSampleRate = envutil.GetEnvParsedOrNil("FRONTEND_SENTRY_TRACE_SAMPLE_RATE", envparse.Float)
+	frontendPosthogToken = envutil.GetEnvOrNil("FRONTEND_POSTHOG_TOKEN")
+	frontendPosthogAPIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_API_HOST")
+	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
+
+	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
+	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
+	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
+	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
 }
 
 func DatabaseUrl() string {
 	return databaseUrl
+}
+
+// DatabaseMaxConns allows to override the MaxConns parameter of the pgx pool config.
+//
+// Note that it should also be possible to set this value via the connection string
+// (like this: postgresql://...?pool_max_conns=10), but it doesn't work for some reason.
+func DatabaseMaxConns() *int {
+	return databaseMaxConns
 }
 
 func JWTSecret() []byte {
@@ -145,12 +184,24 @@ func StatusEntriesMaxAge() *time.Duration {
 	return statusEntriesMaxAge
 }
 
+func MetricsEntriesMaxAge() *time.Duration {
+	return metricsEntriesMaxAge
+}
+
+func LogRecordEntriesMaxCount() *int {
+	return logRecordEntriesMaxCount
+}
+
 func AgentDockerConfig() []byte {
 	return agentDockerConfig
 }
 
 func FrontendSentryDSN() *string {
 	return frontendSentryDSN
+}
+
+func FrontendSentryTraceSampleRate() *float64 {
+	return frontendSentryTraceSampleRate
 }
 
 func FrontendPosthogToken() *string {
@@ -160,6 +211,7 @@ func FrontendPosthogToken() *string {
 func FrontendPosthogAPIHost() *string {
 	return frontendPosthogAPIHost
 }
+
 func FrontendPosthogUIHost() *string {
 	return frontendPosthogUIHost
 }
@@ -186,4 +238,28 @@ func RegistryS3Config() S3Config {
 
 func ArtifactTagsDefaultLimitPerOrg() int {
 	return artifactTagsDefaultLimitPerOrg
+}
+
+func OtelExporterSentryEnabled() bool {
+	return otelExporterSentryEnabled
+}
+
+func OtelExporterOtlpEnabled() bool {
+	return otelExporterOtlpEnabled
+}
+
+func CleanupDeploymenRevisionStatusCron() *string {
+	return cleanupDeploymentRevisionStatusCron
+}
+
+func CleanupDeploymenTargetStatusCron() *string {
+	return cleanupDeploymentTargetStatusCron
+}
+
+func CleanupDeploymentTargetMetricsCron() *string {
+	return cleanupDeploymentTargetMetricsCron
+}
+
+func CleanupDeploymentLogRecordCron() *string {
+	return cleanupDeploymentLogRecordCron
 }

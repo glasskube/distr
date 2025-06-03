@@ -52,6 +52,12 @@
 
 ---
 
+### deploymentRevisionCreatedAt?
+
+> `optional` **deploymentRevisionCreatedAt**: `string`
+
+---
+
 ### deploymentRevisionId?
 
 > `optional` **deploymentRevisionId**: `string`
@@ -65,6 +71,16 @@
 #### Inherited from
 
 [`Deployment`](Deployment.md).[`deploymentTargetId`](Deployment.md#deploymenttargetid)
+
+---
+
+### dockerType?
+
+> `optional` **dockerType**: [`DockerType`](../type-aliases/DockerType.md)
+
+#### Inherited from
+
+[`Deployment`](Deployment.md).[`dockerType`](Deployment.md#dockertype)
 
 ---
 
@@ -90,13 +106,13 @@
 
 ---
 
-### note?
+### logsEnabled
 
-> `optional` **note**: `string`
+> **logsEnabled**: `boolean`
 
 #### Inherited from
 
-[`Deployment`](Deployment.md).[`note`](Deployment.md#note)
+[`Deployment`](Deployment.md).[`logsEnabled`](Deployment.md#logsenabled)
 
 ---
 

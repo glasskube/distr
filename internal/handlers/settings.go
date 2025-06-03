@@ -5,9 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/httprate"
-	"github.com/google/uuid"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
@@ -20,7 +17,10 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -31,6 +31,7 @@ func SettingsRouter(r chi.Router) {
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
 	})
 	r.Route("/tokens", func(r chi.Router) {
+		r.Use(middleware.RequireOrgAndRole)
 		r.Get("/", getAccessTokensHandler())
 		r.Post("/", createAccessTokenHandler())
 		r.Route("/{id}", func(r chi.Router) {
@@ -53,12 +54,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := db.GetUserAccountByID(ctx, auth.CurrentUserID())
-	if err != nil {
-		log.Error("failed to get current user", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	user := auth.CurrentUser()
 
 	if body.Name != "" {
 		user.Name = body.Name
@@ -70,6 +66,11 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error("failed to hash password", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	}
+
+	if user.EmailVerifiedAt == nil && auth.CurrentUserEmailVerified() {
+		// because reset tokens can also verify the users email address
+		user.EmailVerifiedAt = util.PtrTo(time.Now())
 	}
 
 	if err := db.UpdateUserAccount(ctx, user); errors.Is(err, apierrors.ErrNotFound) {
@@ -86,12 +87,10 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 func userSettingsVerifyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if userAccount.EmailVerifiedAt != nil {
+	userAccount := auth.CurrentUser()
+	if userAccount.EmailVerifiedAt != nil {
 		w.WriteHeader(http.StatusNoContent)
-	} else if err := mailsending.SendUserVerificationMail(ctx, *userAccount); err != nil {
+	} else if err := mailsending.SendUserVerificationMail(ctx, *userAccount, *auth.CurrentOrg()); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 	} else {
@@ -103,9 +102,8 @@ func userSettingsVerifyConfirmHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if userAccount, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if !auth.CurrentUserEmailVerified() {
+	userAccount := auth.CurrentUser()
+	if !auth.CurrentUserEmailVerified() {
 		http.Error(w, "token does not have verified claim", http.StatusForbidden)
 	} else if userAccount.EmailVerifiedAt != nil {
 		w.WriteHeader(http.StatusNoContent)
@@ -127,9 +125,10 @@ func getAccessTokensHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		auth := auth.Authentication.Require(ctx)
-		tokens, err := db.GetAccessTokensByUserAccountID(ctx, auth.CurrentUserID())
+		tokens, err := db.GetAccessTokens(ctx, auth.CurrentUserID(), *auth.CurrentOrgID())
 		if err != nil {
 			log.Warn("error getting tokens", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			RespondJSON(w, mapping.List(tokens, mapping.AccessTokenToDTO))
@@ -150,18 +149,21 @@ func createAccessTokenHandler() http.HandlerFunc {
 		key, err := authkey.NewKey()
 		if err != nil {
 			log.Warn("error creating token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		token := types.AccessToken{
-			ExpiresAt:     request.ExpiresAt,
-			Label:         request.Label,
-			UserAccountID: auth.CurrentUserID(),
-			Key:           key,
+			ExpiresAt:      request.ExpiresAt,
+			Label:          request.Label,
+			UserAccountID:  auth.CurrentUserID(),
+			Key:            key,
+			OrganizationID: *auth.CurrentOrgID(),
 		}
 		if err := db.CreateAccessToken(ctx, &token); err != nil {
 			log.Warn("error creating token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			RespondJSON(w, mapping.AccessTokenToDTO(token).WithKey(token.Key))
@@ -181,6 +183,7 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 		auth := auth.Authentication.Require(ctx)
 		if err := db.DeleteAccessToken(ctx, tokenID, auth.CurrentUserID()); err != nil {
 			log.Warn("error deleting token", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusNoContent)

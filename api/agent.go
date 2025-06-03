@@ -6,7 +6,12 @@ import (
 )
 
 type AgentResource struct {
-	Version types.AgentVersion `json:"version"`
+	Version        types.AgentVersion `json:"version"`
+	Namespace      string             `json:"namespace,omitempty"`
+	MetricsEnabled bool               `json:"metricsEnabled"`
+	// Deprecated: This property will be removed in v2. Please consider using Deployments instead.
+	Deployment  *AgentDeployment  `json:"deployment,omitempty"`
+	Deployments []AgentDeployment `json:"deployments,omitempty"`
 }
 
 type AgentRegistryAuth struct {
@@ -18,27 +23,16 @@ type AgentDeployment struct {
 	ID           uuid.UUID                    `json:"id"`
 	RevisionID   uuid.UUID                    `json:"revisionId"`
 	RegistryAuth map[string]AgentRegistryAuth `json:"registryAuth"`
-}
+	LogsEnabled  bool                         `json:"logsEnabled"`
 
-type DockerAgentResource struct {
-	AgentResource
-	Deployment *DockerAgentDeployment `json:"deployment"`
-}
+	// Docker specific data
 
-type DockerAgentDeployment struct {
-	AgentDeployment
-	ComposeFile []byte `json:"composeFile"`
-	EnvFile     []byte `json:"envFile"`
-}
+	ComposeFile []byte            `json:"composeFile"`
+	EnvFile     []byte            `json:"envFile"`
+	DockerType  *types.DockerType `json:"dockerType"`
 
-type KubernetesAgentResource struct {
-	AgentResource
-	Namespace  string                     `json:"namespace"`
-	Deployment *KubernetesAgentDeployment `json:"deployment"`
-}
+	// Kubernetes specific data
 
-type KubernetesAgentDeployment struct {
-	AgentDeployment
 	ReleaseName  string         `json:"releaseName"`
 	ChartUrl     string         `json:"chartUrl"`
 	ChartName    string         `json:"chartName"`
@@ -50,4 +44,11 @@ type AgentDeploymentStatus struct {
 	RevisionID uuid.UUID                  `json:"revisionId"`
 	Type       types.DeploymentStatusType `json:"type"`
 	Message    string                     `json:"message"`
+}
+
+type AgentDeploymentTargetMetrics struct {
+	CPUCoresMillis int64   `json:"cpuCoresMillis" db:"cpu_cores_millis"`
+	CPUUsage       float64 `json:"cpuUsage" db:"cpu_usage"`
+	MemoryBytes    int64   `json:"memoryBytes" db:"memory_bytes"`
+	MemoryUsage    float64 `json:"memoryUsage" db:"memory_usage"`
 }

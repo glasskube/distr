@@ -6,15 +6,27 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 )
 
 type AgentDeployment struct {
-	ID          uuid.UUID `json:"id"`
-	RevisionID  uuid.UUID `json:"revisionId"`
-	ProjectName string    `json:"projectName"`
+	ID          uuid.UUID        `json:"id"`
+	RevisionID  uuid.UUID        `json:"revisionId"`
+	ProjectName string           `json:"projectName"`
+	DockerType  types.DockerType `json:"docker_type,omitempty"`
+	LogsEnabled bool             `json:"logsEnabled"`
+}
+
+func (d AgentDeployment) GetDeploymentID() uuid.UUID {
+	return d.ID
+}
+
+func (d AgentDeployment) GetDeploymentRevisionID() uuid.UUID {
+	return d.RevisionID
 }
 
 func (d *AgentDeployment) FileName() string {
@@ -25,11 +37,17 @@ func agentDeploymentDir() string {
 	return path.Join(ScratchDir(), "deployments")
 }
 
-func NewAgentDeployment(deployment api.DockerAgentDeployment) (*AgentDeployment, error) {
+func NewAgentDeployment(deployment api.AgentDeployment) (*AgentDeployment, error) {
 	if name, err := getProjectName(deployment.ComposeFile); err != nil {
 		return nil, err
 	} else {
-		return &AgentDeployment{ID: deployment.ID, RevisionID: deployment.RevisionID, ProjectName: name}, nil
+		return &AgentDeployment{
+			ID:          deployment.ID,
+			RevisionID:  deployment.RevisionID,
+			ProjectName: name,
+			DockerType:  *deployment.DockerType,
+			LogsEnabled: deployment.LogsEnabled,
+		}, nil
 	}
 }
 
@@ -43,7 +61,12 @@ func getProjectName(data []byte) (string, error) {
 	}
 }
 
-func GetExistingDeployments() ([]AgentDeployment, error) {
+var agentDeploymentMutex = sync.RWMutex{}
+
+func GetExistingDeployments() (map[uuid.UUID]AgentDeployment, error) {
+	agentDeploymentMutex.RLock()
+	defer agentDeploymentMutex.RUnlock()
+
 	if entries, err := os.ReadDir(agentDeploymentDir()); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, nil
@@ -62,13 +85,13 @@ func GetExistingDeployments() ([]AgentDeployment, error) {
 				return &d, nil
 			}
 		}
-		result := make([]AgentDeployment, 0, len(entries))
+		result := make(map[uuid.UUID]AgentDeployment, len(entries))
 		for _, entry := range entries {
 			if !entry.IsDir() {
 				if d, err := fn(entry.Name()); err != nil {
 					return nil, err
 				} else {
-					result = append(result, *d)
+					result[d.ID] = *d
 				}
 			}
 		}
@@ -77,6 +100,9 @@ func GetExistingDeployments() ([]AgentDeployment, error) {
 }
 
 func SaveDeployment(deployment AgentDeployment) error {
+	agentDeploymentMutex.Lock()
+	defer agentDeploymentMutex.Unlock()
+
 	if err := os.MkdirAll(path.Dir(deployment.FileName()), 0o700); err != nil {
 		return err
 	}

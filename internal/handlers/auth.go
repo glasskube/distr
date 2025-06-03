@@ -2,27 +2,29 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
-
-	"github.com/glasskube/distr/internal/env"
-
-	"github.com/go-chi/httprate"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mailsending"
 	"github.com/glasskube/distr/internal/mailtemplates"
+	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -38,38 +40,99 @@ func AuthRouter(r chi.Router) {
 		r.Post("/", authRegisterHandler)
 	})
 	r.Post("/reset", authResetPasswordHandler)
+	r.With(middleware.SentryUser, auth.Authentication.Middleware, middleware.RequireOrgAndRole).
+		Post("/switch-context", authSwitchContextHandler())
+}
+
+func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		request, err := JsonBody[api.AuthSwitchContextRequest](w, r)
+		if err != nil {
+			return
+		} else if request.OrganizationID == uuid.Nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		auth := auth.Authentication.Require(ctx)
+		if *auth.CurrentOrgID() == request.OrganizationID {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		if user, org, err := db.GetUserAccountAndOrg(
+			ctx, auth.CurrentUserID(), request.OrganizationID, nil); errors.Is(err, apierrors.ErrNotFound) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		} else if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Error("context switch failed", zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else if _, tokenString, err := authjwt.GenerateDefaultToken(user.AsUserAccount(), types.OrganizationWithUserRole{
+			Organization: *org,
+			UserRole:     user.UserRole,
+		}); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Error("failed to generate token", zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, api.AuthLoginResponse{Token: tokenString})
+		}
+	}
 }
 
 func authLoginHandler(w http.ResponseWriter, r *http.Request) {
-	log := internalctx.GetLogger(r.Context())
-	if request, err := JsonBody[api.AuthLoginRequest](w, r); err != nil {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	request, err := JsonBody[api.AuthLoginRequest](w, r)
+	if err != nil {
 		return
-	} else if user, err := db.GetUserAccountByEmail(r.Context(), request.Email); errors.Is(err, apierrors.ErrNotFound) {
-		http.Error(w, "invalid username or password", http.StatusBadRequest)
-	} else if err != nil {
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Warn("user login failed", zap.Error(err))
-	} else if err = security.VerifyPassword(*user, request.Password); err != nil {
-		http.Error(w, "invalid username or password", http.StatusBadRequest)
-	} else if orgs, err := db.GetOrganizationsForUser(r.Context(), user.ID); err != nil {
-		sentry.GetHubFromContext(r.Context()).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Warn("user login failed", zap.Error(err))
-	} else {
-		if len(orgs) < 1 {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Error("user has no organizations")
-		} else if len(orgs) > 1 {
-			log.Sugar().Warnf("user has %v organizations (currently only one is supported)", len(orgs))
+	}
+	err = db.RunTx(ctx, func(ctx context.Context) error {
+		user, err := db.GetUserAccountByEmail(ctx, request.Email)
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.Error(w, "invalid username or password", http.StatusBadRequest)
+			return nil
+		} else if err != nil {
+			return err
 		}
-		org := orgs[0]
-		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, *org); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Warn("token creation failed", zap.Error(err))
+		log = log.With(zap.Any("userId", user.ID))
+		if err = security.VerifyPassword(*user, request.Password); err != nil {
+			http.Error(w, "invalid username or password", http.StatusBadRequest)
+			return nil
+		}
+
+		var org types.OrganizationWithUserRole
+		orgs, err := db.GetOrganizationsForUser(ctx, user.ID)
+		if err != nil {
+			return err
+		} else if len(orgs) < 1 {
+			org.Name = user.Email
+			org.UserRole = types.UserRoleVendor
+			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
+				return err
+			} else if err := db.CreateUserAccountOrganizationAssignment(
+				ctx, user.ID, org.ID, org.UserRole); err != nil {
+				return err
+			}
 		} else {
-			_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: tokenString})
+			org = orgs[0]
 		}
+
+		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {
+			return fmt.Errorf("token creation failed: %w", err)
+		} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
+			return err
+		} else {
+			RespondJSON(w, api.AuthLoginResponse{Token: tokenString})
+			return nil
+		}
+	})
+	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		log.Warn("user login failed", zap.Error(err))
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
 
@@ -102,13 +165,14 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Email:    request.Email,
 			Password: request.Password,
 		}
+		var org *types.Organization
 
 		if err := db.RunTx(ctx, func(ctx context.Context) error {
 			if err := security.HashPassword(&userAccount); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return err
-			} else if _, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
+			} else if org, err = db.CreateUserAccountWithOrganization(ctx, &userAccount); err != nil {
 				if errors.Is(err, apierrors.ErrAlreadyExists) {
 					w.WriteHeader(http.StatusBadRequest)
 				} else {
@@ -123,7 +187,7 @@ func authRegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := mailsending.SendUserVerificationMail(ctx, userAccount); err != nil {
+		if err := mailsending.SendUserVerificationMail(ctx, userAccount, *org); err != nil {
 			log.Warn("could not send verification mail", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 		}
@@ -150,19 +214,35 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 		}
-	} else if _, token, err := authjwt.GenerateResetToken(*user); err != nil {
-		log.Warn("could not send reset mail", zap.Error(err))
+	} else if orgs, err := db.GetOrganizationsForUser(ctx, user.ID); err != nil {
+		log.Error("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
-	} else if err := mailer.Send(ctx, mail.New(
-		mail.To(user.Email),
-		mail.Subject("Password reset"),
-		mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, token)),
-	)); err != nil {
-		log.Warn("could not send reset mail", zap.Error(err))
+	} else if _, token, err := authjwt.GenerateResetToken(*user); err != nil {
+		log.Error("could not send reset mail", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
-		w.WriteHeader(http.StatusNoContent)
+		var org *types.Organization
+		mailOpts := []mail.MailOpt{
+			mail.To(user.Email),
+			mail.Subject("Password reset"),
+		}
+		if len(orgs) > 0 {
+			org = &orgs[0].Organization
+			if from, err := customdomains.EmailFromAddressParsedOrDefault(*org); err == nil {
+				mailOpts = append(mailOpts, mail.From(*from))
+			} else {
+				log.Warn("error parsing custom from address", zap.Error(err))
+			}
+		}
+		mailOpts = append(mailOpts, mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)))
+		if err := mailer.Send(ctx, mail.New(mailOpts...)); err != nil {
+			log.Warn("could not send reset mail", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }

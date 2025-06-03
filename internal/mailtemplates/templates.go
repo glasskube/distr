@@ -7,21 +7,23 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/glasskube/distr/internal/types"
-
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/types"
 )
 
-//go:embed templates/*
-var embeddedFS embed.FS
+var (
+	//go:embed templates/*
+	embeddedFS embed.FS
 
-var templates *template.Template
-var funcMap = template.FuncMap{
-	"QueryEscape":    url.QueryEscape,
-	"UnsafeHTMLAttr": func(value string) template.HTMLAttr { return template.HTMLAttr(value) },
-	"UnsafeHTML":     func(value string) template.HTML { return template.HTML(value) },
-	"UnsafeURL":      func(value string) template.URL { return template.URL(value) },
-}
+	templates *template.Template
+	funcMap   = template.FuncMap{
+		"QueryEscape":    url.QueryEscape,
+		"UnsafeHTMLAttr": func(value string) template.HTMLAttr { return template.HTMLAttr(value) },
+		"UnsafeHTML":     func(value string) template.HTML { return template.HTML(value) },
+		"UnsafeURL":      func(value string) template.URL { return template.URL(value) },
+	}
+)
 
 func init() {
 	if fsys, err := fs.Sub(embeddedFS, "templates"); err != nil {
@@ -32,7 +34,7 @@ func init() {
 }
 
 func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
-	var t = template.New("").Funcs(funcMap)
+	t := template.New("").Funcs(funcMap)
 	for _, p := range patterns {
 		if files, err := fs.Glob(fsys, p); err != nil {
 			return nil, err
@@ -50,13 +52,6 @@ func parse(fsys fs.FS, patterns ...string) (*template.Template, error) {
 	return t, nil
 }
 
-func Welcome() (*template.Template, any) {
-	return templates.Lookup("welcome.html"),
-		map[string]any{
-			"Host": env.Host(),
-		}
-}
-
 func InviteUser(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
@@ -66,7 +61,7 @@ func InviteUser(
 		map[string]any{
 			"UserAccount":  userAccount,
 			"Organization": organization,
-			"Host":         env.Host(),
+			"Host":         customdomains.AppDomainOrDefault(organization.Organization),
 			"InviteURL":    inviteURL,
 		}
 }
@@ -75,30 +70,32 @@ func InviteCustomer(
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
 	inviteURL string,
-	applicationName string,
 ) (*template.Template, any) {
 	return templates.Lookup("invite-customer.html"),
 		map[string]any{
-			"UserAccount":     userAccount,
-			"Organization":    organization,
-			"ApplicationName": applicationName,
-			"Host":            env.Host(),
-			"InviteURL":       inviteURL,
+			"UserAccount":  userAccount,
+			"Organization": organization,
+			"Host":         customdomains.AppDomainOrDefault(organization.Organization),
+			"InviteURL":    inviteURL,
 		}
 }
 
-func VerifyEmail(userAccount types.UserAccount, token string) (*template.Template, any) {
+func VerifyEmail(userAccount types.UserAccount, org types.Organization, token string) (*template.Template, any) {
 	return templates.Lookup("verify-email-registration.html"), map[string]any{
 		"UserAccount": userAccount,
-		"Host":        env.Host(),
+		"Host":        customdomains.AppDomainOrDefault(org),
 		"Token":       token,
 	}
 }
 
-func PasswordReset(userAccount types.UserAccount, token string) (*template.Template, any) {
+func PasswordReset(userAccount types.UserAccount, org *types.Organization, token string) (*template.Template, any) {
+	host := env.Host()
+	if org != nil {
+		host = customdomains.AppDomainOrDefault(*org)
+	}
 	return templates.Lookup("password-reset.html"), map[string]any{
 		"UserAccount": userAccount,
-		"Host":        env.Host(),
+		"Host":        host,
 		"Token":       token,
 	}
 }

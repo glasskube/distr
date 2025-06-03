@@ -40,15 +40,19 @@
 
 ---
 
-### deployment?
+### ~~deployment?~~
 
 > `optional` **deployment**: [`DeploymentWithLatestRevision`](DeploymentWithLatestRevision.md)
 
+#### Deprecated
+
+This property will be removed in v2. Please consider using `deployments` instead.
+
 ---
 
-### geolocation?
+### deployments
 
-> `optional` **geolocation**: [`Geolocation`](Geolocation.md)
+> **deployments**: [`DeploymentWithLatestRevision`](DeploymentWithLatestRevision.md)[]
 
 ---
 
@@ -59,6 +63,12 @@
 #### Inherited from
 
 [`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
+
+---
+
+### metricsEnabled
+
+> **metricsEnabled**: `boolean`
 
 ---
 

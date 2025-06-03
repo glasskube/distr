@@ -10,7 +10,7 @@ The low-level Distr API client. Each method represents on API endpoint.
 
 ## Constructors
 
-### new Client()
+### Constructor
 
 > **new Client**(`config`): `Client`
 
@@ -60,7 +60,7 @@ The low-level Distr API client. Each method represents on API endpoint.
 
 ### createApplicationVersion()
 
-> **createApplicationVersion**(`applicationId`, `version`, `files`?): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
+> **createApplicationVersion**(`applicationId`, `version`, `files?`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
 #### Parameters
 

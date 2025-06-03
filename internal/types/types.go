@@ -11,12 +11,17 @@ import (
 	"github.com/opencontainers/go-digest"
 )
 
-type DeploymentType string
-type UserRole string
-type HelmChartType string
-type DeploymentStatusType string
-type DeploymentTargetScope string
-type Feature string
+type (
+	DeploymentType        string
+	UserRole              string
+	HelmChartType         string
+	DeploymentStatusType  string
+	DeploymentTargetScope string
+	Feature               string
+	DockerType            string
+	Tutorial              string
+	FileScope             string
+)
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
@@ -28,14 +33,24 @@ const (
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
 
-	DeploymentStatusTypeOK    DeploymentStatusType = "ok"
-	DeploymentStatusTypeError DeploymentStatusType = "error"
+	DockerTypeCompose DockerType = "compose"
+	DockerTypeSwarm   DockerType = "swarm"
+
+	DeploymentStatusTypeOK          DeploymentStatusType = "ok"
+	DeploymentStatusTypeProgressing DeploymentStatusType = "progressing"
+	DeploymentStatusTypeError       DeploymentStatusType = "error"
 
 	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
 
 	FeatureLicensing Feature = "licensing"
-	FeatureRegistry  Feature = "registry"
+
+	TutorialBranding Tutorial = "branding"
+	TutorialAgents   Tutorial = "agents"
+	TutorialRegistry Tutorial = "registry"
+
+	FileScopePlatform     FileScope = "platform"
+	FileScopeOrganization FileScope = "organization"
 )
 
 type Base struct {
@@ -43,15 +58,18 @@ type Base struct {
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 }
 
-type Geolocation struct {
-	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
+type Image struct {
+	Image            []byte  `db:"image" json:"image"`
+	ImageFileName    *string `db:"image_file_name" json:"imageFileName"`
+	ImageContentType *string `db:"image_content_type" json:"imageContentType"`
 }
 
 type Digest digest.Digest
 
-var _ sql.Scanner = util.PtrTo(Digest(""))
-var _ pgtype.TextValuer = util.PtrTo(Digest(""))
+var (
+	_ sql.Scanner       = util.PtrTo(Digest(""))
+	_ pgtype.TextValuer = util.PtrTo(Digest(""))
+)
 
 func (target *Digest) Scan(src any) error {
 	if srcStr, ok := src.(string); !ok {
@@ -67,4 +85,8 @@ func (target *Digest) Scan(src any) error {
 // TextValue implements pgtype.TextValuer.
 func (src Digest) TextValue() (pgtype.Text, error) {
 	return pgtype.Text{String: string(src), Valid: true}, nil
+}
+
+func (h Digest) MarshalJSON() ([]byte, error) {
+	return v1.Hash(h).MarshalJSON()
 }

@@ -8,10 +8,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -31,6 +30,7 @@ import (
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 func AgentRouter(r chi.Router) {
@@ -44,9 +44,8 @@ func AgentRouter(r chi.Router) {
 		r.Post("/login", agentLoginHandler)
 
 		r.With(
-			auth.Authentication.Middleware,
-			middleware.RequireOrgID,
-			middleware.SentryUser,
+			auth.AgentAuthentication.Middleware,
+			middleware.AgentSentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
 		).Group(func(r chi.Router) {
@@ -54,6 +53,8 @@ func AgentRouter(r chi.Router) {
 			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)
 			r.Post("/status", angentPostStatusHandler)
+			r.Post("/metrics", agentPostMetricsHander)
+			r.Put("/logs", agentPutDeploymentLogsHandler())
 		})
 	})
 }
@@ -76,8 +77,16 @@ func connectHandler() http.HandlerFunc {
 			return
 		}
 
+		org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID)
+		if err != nil {
+			log.Error("could not get organization for deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		secret := r.URL.Query().Get("targetSecret")
-		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, &secret); err != nil {
+		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, *org, &secret); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -111,7 +120,10 @@ func agentLoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error("failed to create agent token", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			_ = json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token})
+			if err := json.NewEncoder(w).Encode(api.AuthLoginResponse{Token: token}); err != nil {
+				log.Error("failed to write response", zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 	}
 }
@@ -121,103 +133,104 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID.String()))
 
-	var statusMessage string
-	var appVersion *types.ApplicationVersion
-	deployment, err := db.GetLatestDeploymentForDeploymentTarget(ctx, deploymentTarget.ID)
-	if errors.Is(err, apierrors.ErrNotFound) {
-		log.Info("latest deployment not found", zap.Error(err))
-		statusMessage = "EMPTY"
-	} else if err != nil {
+	statusMessage := "OK"
+	deployments, err := db.GetDeploymentsForDeploymentTarget(ctx, deploymentTarget.ID)
+	if err != nil {
 		msg := "failed to get latest Deployment from DB"
 		log.Error(msg, zap.Error(err))
 		statusMessage = fmt.Sprintf("%v: %v", msg, err)
-		w.WriteHeader(http.StatusInternalServerError)
-	} else if av, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionID); err != nil {
-		msg := "failed to get ApplicationVersion from DB"
-		log.Error(msg, zap.Error(err))
-		statusMessage = fmt.Sprintf("%v: %v", msg, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		statusMessage = "OK"
-		appVersion = av
-	}
+		agentResource := api.AgentResource{
+			Version:        deploymentTarget.AgentVersion,
+			MetricsEnabled: deploymentTarget.MetricsEnabled,
+		}
+		if deploymentTarget.Namespace != nil {
+			agentResource.Namespace = *deploymentTarget.Namespace
+		}
 
-	var baseResource = api.AgentResource{Version: deploymentTarget.AgentVersion}
-	var baseDeployment api.AgentDeployment
-
-	if deployment != nil {
-		baseDeployment.ID = deployment.ID
-		baseDeployment.RevisionID = deployment.DeploymentRevisionID
-
-		if deployment.ApplicationLicenseID != nil {
-			if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
-				msg := "failed to get ApplicationLicense from DB"
+		for _, deployment := range deployments {
+			appVersion, err := db.GetApplicationVersion(ctx, deployment.ApplicationVersionID)
+			if err != nil {
+				msg := "failed to get ApplicationVersion from DB"
 				log.Error(msg, zap.Error(err))
 				statusMessage = fmt.Sprintf("%v: %v", msg, err)
-				w.WriteHeader(http.StatusInternalServerError)
-			} else if license.RegistryURL != nil {
-				baseDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
-					*license.RegistryURL: {
-						Username: *license.RegistryUsername,
-						Password: *license.RegistryPassword,
-					},
-				}
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				break
 			}
-		}
-	}
 
-	// TODO: Consider consolidating all types into the same response format
-	if deploymentTarget.Type == types.DeploymentTypeDocker {
-		response := api.DockerAgentResource{AgentResource: baseResource}
-		if deployment != nil && appVersion != nil {
-			if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
-				log.Warn("parse error", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else if patchedComposeFile, err := patchProjectName(composeYaml, deployment.ID); err != nil {
-				log.Warn("failed to patch project name", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else {
-				response.Deployment = &api.DockerAgentDeployment{
-					AgentDeployment: baseDeployment,
-					ComposeFile:     patchedComposeFile,
-					EnvFile:         deployment.EnvFileData,
+			agentDeployment := api.AgentDeployment{
+				ID:          deployment.ID,
+				RevisionID:  deployment.DeploymentRevisionID,
+				LogsEnabled: deployment.LogsEnabled,
+			}
+
+			if deployment.ApplicationLicenseID != nil {
+				if license, err := db.GetApplicationLicenseByID(ctx, *deployment.ApplicationLicenseID); err != nil {
+					msg := "failed to get ApplicationLicense from DB"
+					log.Error(msg, zap.Error(err))
+					statusMessage = fmt.Sprintf("%v: %v", msg, err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					break
+				} else if license.RegistryURL != nil {
+					agentDeployment.RegistryAuth = map[string]api.AgentRegistryAuth{
+						*license.RegistryURL: {
+							Username: *license.RegistryUsername,
+							Password: *license.RegistryPassword,
+						},
+					}
 				}
 			}
-		} else {
-			log.Debug("compose file is empty")
-		}
-		RespondJSON(w, response)
-	} else {
-		response := api.KubernetesAgentResource{AgentResource: baseResource, Namespace: *deploymentTarget.Namespace}
-		if deployment != nil && appVersion != nil {
-			response.Deployment = &api.KubernetesAgentDeployment{
-				AgentDeployment: baseDeployment,
-				ReleaseName:     *deployment.ReleaseName,
-				ChartUrl:        *appVersion.ChartUrl,
-				ChartVersion:    *appVersion.ChartVersion,
-			}
-			if versionValues, err := appVersion.ParsedValuesFile(); err != nil {
-				log.Warn("parse error", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
-				log.Warn("parse error", zap.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else if merged, err := util.MergeAllRecursive(versionValues, deploymentValues); err != nil {
-				log.Warn("merge error", zap.Error(err))
-				http.Error(w, fmt.Sprintf("error merging values files: %v", err), http.StatusInternalServerError)
-				return
+
+			if deploymentTarget.Type == types.DeploymentTypeDocker {
+				if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
+					log.Warn("parse error", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else if patchedComposeFile, err := patchProjectName(composeYaml, deployment.ID); err != nil {
+					log.Warn("failed to patch project name", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else {
+					agentDeployment.ComposeFile = patchedComposeFile
+					agentDeployment.EnvFile = deployment.EnvFileData
+					agentDeployment.DockerType = util.PtrCopy(deployment.DockerType)
+				}
 			} else {
-				response.Deployment.Values = merged
+				agentDeployment.ReleaseName = *deployment.ReleaseName
+				agentDeployment.ChartUrl = *appVersion.ChartUrl
+				agentDeployment.ChartVersion = *appVersion.ChartVersion
+				if versionValues, err := appVersion.ParsedValuesFile(); err != nil {
+					log.Warn("parse error", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
+					log.Warn("parse error", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else if merged, err := util.MergeAllRecursive(versionValues, deploymentValues); err != nil {
+					log.Warn("merge error", zap.Error(err))
+					http.Error(w, fmt.Sprintf("error merging values files: %v", err), http.StatusInternalServerError)
+					return
+				} else {
+					agentDeployment.Values = merged
+				}
+				if *appVersion.ChartType == types.HelmChartTypeRepository {
+					agentDeployment.ChartName = *appVersion.ChartName
+				}
 			}
-			if *appVersion.ChartType == types.HelmChartTypeRepository {
-				response.Deployment.ChartName = *appVersion.ChartName
+			agentResource.Deployments = append(agentResource.Deployments, agentDeployment)
+
+			// Set the Deployment property to the first (i.e. oldest) deployment for backwards compatibility
+			//nolint:staticcheck
+			if agentResource.Deployment == nil {
+				agentResource.Deployment = &agentDeployment
 			}
 		}
-		RespondJSON(w, response)
+
+		if statusMessage == "OK" {
+			RespondJSON(w, agentResource)
+		}
 	}
 
 	// not in a TX because insertion should not be rolled back when the cleanup fails
@@ -225,14 +238,41 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error("failed to create deployment target status – skipping cleanup of old statuses", zap.Error(err),
 			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
 			zap.String("statusMessage", statusMessage))
-	} else if cnt, err := db.CleanupDeploymentTargetStatus(ctx, &deploymentTarget.DeploymentTarget); err != nil {
-		log.Error("failed to cleanup old deployment target status", zap.Error(err),
-			zap.String("deploymentTargetId", deploymentTarget.ID.String()))
-	} else if cnt > 0 {
-		log.Debug("old deployment target statuses deleted",
-			zap.String("deploymentTargetId", deploymentTarget.ID.String()),
-			zap.Int64("count", cnt),
-			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
+	}
+}
+
+func agentPutDeploymentLogsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.AgentAuthentication.Require(ctx)
+		records, err := JsonBody[[]api.DeploymentLogRecord](w, r)
+		if err != nil {
+			return
+		}
+		deployments, err := db.GetDeploymentsForDeploymentTarget(ctx, auth.CurrentDeploymentTargetID())
+		if err != nil {
+			log.Error("error getting deployments", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		errIdx := slices.IndexFunc(records, func(r api.DeploymentLogRecord) bool {
+			return !slices.ContainsFunc(deployments, func(d types.DeploymentWithLatestRevision) bool {
+				return d.ID == r.DeploymentID
+			})
+		})
+		if errIdx >= 0 {
+			// TODO: also check DeplyomentRevisionID
+			http.Error(w, fmt.Sprintf("invalid deploymentId at index %v", errIdx), http.StatusBadRequest)
+			return
+		}
+		if err := db.SaveDeploymentLogRecords(ctx, records); err != nil {
+			log.Error("error saving log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -269,15 +309,29 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
+}
 
-	// not in a TX because insertion should not be rolled back when the cleanup fails
-	if cnt, err := db.CleanupDeploymentRevisionStatus(ctx, status.RevisionID); err != nil {
-		log.Error("failed to cleanup old deployment revision status", zap.Error(err), zap.Reflect("status", status))
-	} else if cnt > 0 {
-		log.Debug("old deployment revision statuses deleted",
-			zap.String("deploymentRevisionId", status.RevisionID.String()),
-			zap.Int64("count", cnt),
-			zap.Duration("maxAge", *env.StatusEntriesMaxAge()))
+func agentPostMetricsHander(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+
+	dt := internalctx.GetDeploymentTarget(ctx)
+
+	metrics, err := JsonBody[api.AgentDeploymentTargetMetrics](w, r)
+	if err != nil {
+		return
+	}
+	if err := db.CreateDeploymentTargetMetrics(ctx, &dt.DeploymentTarget, &metrics); err != nil {
+		if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		} else {
+			log.Error("failed to create deployment target metrics – skipping cleanup of old metrics", zap.Error(err),
+				zap.Reflect("metrics", metrics))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -309,8 +363,11 @@ func agentManifestHandler() http.HandlerFunc {
 		ctx := r.Context()
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 		log := internalctx.GetLogger(ctx).With(zap.String("deploymentTargetId", deploymentTarget.ID.String()))
-
-		if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, nil); err != nil {
+		if org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID); err != nil {
+			log.Error("could not get org for deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else if manifest, err := agentmanifest.Get(ctx, *deploymentTarget, *org, nil); err != nil {
 			log.Error("could not get agent manifest", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -327,12 +384,11 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		auth := auth.Authentication.Require(ctx)
+		auth := auth.AgentAuthentication.Require(ctx)
 		orgId := auth.CurrentOrgID()
-		targetId := auth.CurrentUserID()
+		targetId := auth.CurrentDeploymentTargetID()
 
-		if deploymentTarget, err :=
-			db.GetDeploymentTarget(ctx, targetId, orgId); errors.Is(err, apierrors.ErrNotFound) {
+		if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
@@ -375,11 +431,17 @@ func getVerifiedDeploymentTarget(
 	}
 }
 
-var agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
-var agentLoginPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+var (
+	agentConnectPerTargetIdRateLimiter = httprate.NewRateLimiter(5, time.Minute)
+	agentLoginPerTargetIdRateLimiter   = httprate.NewRateLimiter(5, time.Minute)
 
-var rateLimitPerAgent = httprate.Limit(
-	2*15, // as long as we have 5 sec interval: 12 resources, 12 status requests
-	1*time.Minute,
-	httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc),
+	rateLimitPerAgent = httprate.Limit(
+		// For a 5 second interval, per minute, the agent makes 12 resource calls and 12 status calls for each deployment.
+		// Adding 25% margin and assuming that people have at most 10 deployments on a single agent we arrive at
+		// (12+10*12)*1.25 = 11*12*1.25 = 11*15
+		// also adding 2 for the metric reports
+		(11*15)+2,
+		1*time.Minute,
+		httprate.WithKeyFuncs(middleware.RateLimitCurrentDeploymentTargetIdKeyFunc),
+	)
 )

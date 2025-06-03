@@ -73,7 +73,7 @@
           <div
             @dropdown
             style="transform-origin: top center"
-            class="w-full text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+            class="w-full text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600">
             <ul
               class="w-full text-sm font-medium text-gray-900 bg-white border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
               <li class="w-full border-gray-200 dark:border-gray-600">
@@ -82,7 +82,7 @@
                     id="all-versions-checkbox"
                     formControlName="includeAllItems"
                     type="checkbox"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-xs focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                   <label
                     for="all-versions-checkbox"
                     class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
@@ -90,8 +90,8 @@
                   >
                 </div>
               </li>
-              <ng-container formArrayName="subjectItems">
-                @for (versionCtrl of subjectItemsArray.controls; track i; let i = $index) {
+              <ng-container formArrayName="activeVersions">
+                @for (versionCtrl of activeVersionsArray.controls; track i; let i = $index) {
                   @let item = selectedApplication()?.versions?.[i];
                   @let itemLabel = selectedApplication()?.versions?.[i]?.name;
                   <li class="w-full border-t border-gray-200 dark:border-gray-600">
@@ -101,12 +101,48 @@
                         type="checkbox"
                         [formControlName]="i"
                         [value]="item"
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-xs focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                       <label
                         for="version-checkbox-{{ i }}"
                         class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                         {{ itemLabel }}
                       </label>
+                    </div>
+                  </li>
+                }
+              </ng-container>
+
+              <ng-container formArrayName="archivedVersions">
+                @if (includedArchivedVersions().length > 0) {
+                  <li class="w-full border-t border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center ps-3 py-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                      <details class="open:border-gray-200 dark:open:border-gray-700 rounded-lg text-sm font-medium">
+                        <summary class="select-none">
+                          Including {{ includedArchivedVersions().length }} Archived Versions
+                        </summary>
+                        <ul
+                          class="w-full mt-1 text-sm font-medium text-gray-900 bg-white border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                          @for (versionCtrl of archivedVersionsArray.controls; track i; let i = $index) {
+                            @let item = selectedApplication()?.versions?.[i];
+                            @let itemLabel = selectedApplication()?.versions?.[i]?.name;
+                            <li class="w-full border-gray-200 dark:border-gray-600">
+                              <div class="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  id="archived-checkbox-{{ i }}"
+                                  [formControlName]="i"
+                                  [value]="item"
+                                  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-xs focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                                <label
+                                  for="archived-checkbox-{{ i }}"
+                                  class="w-full py-1 ms-2 font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                  >{{ itemLabel }}</label
+                                >
+                              </div>
+                            </li>
+                          }
+                        </ul>
+                      </details>
                     </div>
                   </li>
                 }
@@ -136,8 +172,16 @@
   <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
 
   <h5 class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-    Docker Registry
+    External Registry Configuration (Optional)
   </h5>
+
+  <div
+    class="flex items-center p-4 mb-4 text-sm text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-800"
+    role="alert">
+    <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
+    The Distr agent is able to pull licensed artifacts from the Distr registry without any additional configuration. If
+    you are using artifacts from external authenticated registries, you can configure the credentials here.
+  </div>
 
   <div class="w-full">
     <label for="registryUrl" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Registry URL</label>
@@ -156,41 +200,43 @@
     }
   </div>
 
-  <div class="w-full">
-    <label for="registryUsername" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-      >Registry Username</label
-    >
-    <input
-      [formControl]="editForm.controls.registry.controls.username"
-      autotrim
-      type="text"
-      id="registryUsername"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-    @if (
-      editForm.controls.registry.invalid &&
-      editForm.controls.registry.controls.username.touched &&
-      !editForm.controls.registry.controls.username.value
-    ) {
-      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-    }
-  </div>
+  <div class="grid grid-cols-2 md:grid-cols-2 space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
+    <div class="w-full">
+      <label for="registryUsername" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >Registry Username</label
+      >
+      <input
+        [formControl]="editForm.controls.registry.controls.username"
+        autotrim
+        type="text"
+        id="registryUsername"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      @if (
+        editForm.controls.registry.invalid &&
+        editForm.controls.registry.controls.username.touched &&
+        !editForm.controls.registry.controls.username.value
+      ) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+      }
+    </div>
 
-  <div class="w-full">
-    <label for="registryPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-      >Registry Password</label
-    >
-    <input
-      [formControl]="editForm.controls.registry.controls.password"
-      autotrim
-      type="text"
-      id="registryPassword"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
-    @if (
-      editForm.controls.registry.invalid &&
-      editForm.controls.registry.controls.password.touched &&
-      !editForm.controls.registry.controls.password.value
-    ) {
-      <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-    }
+    <div class="w-full">
+      <label for="registryPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >Registry Password</label
+      >
+      <input
+        [formControl]="editForm.controls.registry.controls.password"
+        autotrim
+        type="text"
+        id="registryPassword"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+      @if (
+        editForm.controls.registry.invalid &&
+        editForm.controls.registry.controls.password.touched &&
+        !editForm.controls.registry.controls.password.value
+      ) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+      }
+    </div>
   </div>
 </form>

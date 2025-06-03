@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -21,12 +23,15 @@ import (
 )
 
 func DeploymentsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Put("/", putDeployment)
 	r.Route("/{deploymentId}", func(r chi.Router) {
 		r.Use(deploymentMiddleware)
+		r.Patch("/", patchDeploymentHandler())
 		r.Delete("/", deleteDeploymentHandler())
 		r.Get("/status", getDeploymentStatus)
+		r.Get("/logs", getDeploymentLogsHandler())
+		r.Get("/logs/resources", getDeploymentLogsResourcesHandler())
 	})
 }
 
@@ -64,6 +69,36 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	})
+}
+
+func patchDeploymentHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		deployment := internalctx.GetDeployment(ctx)
+		req, err := JsonBody[api.PatchDeploymentRequest](w, r)
+		if err != nil {
+			return
+		}
+
+		needsUpdate := false
+
+		if req.LogsEnabled != nil && *req.LogsEnabled != deployment.LogsEnabled {
+			deployment.LogsEnabled = *req.LogsEnabled
+			needsUpdate = true
+		}
+
+		if needsUpdate {
+			if err := db.UpdateDeployment(ctx, deployment); err != nil {
+				log.Warn("deployment update failed", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		RespondJSON(w, deployment)
+	}
 }
 
 func deleteDeploymentHandler() http.HandlerFunc {
@@ -113,16 +148,10 @@ func validateDeploymentRequest(
 	var version *types.ApplicationVersion
 	var target *types.DeploymentTargetWithCreatedBy
 
-	org, err := db.GetOrganizationByID(ctx, orgId)
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return err
-	}
+	org := auth.CurrentOrg()
+	var err error
 
-	if app, err =
-		db.GetApplicationForApplicationVersionID(ctx, request.ApplicationVersionID, orgId); err != nil {
+	if app, err = db.GetApplicationForApplicationVersionID(ctx, request.ApplicationVersionID, orgId); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
 			return badRequestError(w, "Application does not exist")
 		} else {
@@ -152,17 +181,30 @@ func validateDeploymentRequest(
 		}
 	}
 
-	if target.Deployment != nil {
-		if request.ApplicationLicenseID == nil {
-			if target.Deployment.ApplicationLicenseID != nil {
-				request.ApplicationLicenseID = target.Deployment.ApplicationLicenseID
+	var existingDeployment *types.DeploymentWithLatestRevision
+	if request.DeploymentID != nil {
+		for _, d := range target.Deployments {
+			if d.ID == *request.DeploymentID {
+				existingDeployment = &d
+				break
 			}
-		} else if target.Deployment.ApplicationLicenseID == nil {
+		}
+		if existingDeployment == nil {
+			return badRequestError(w, "DeploymentTarget doesn't have Deployment with the specified ID")
+		}
+	}
+
+	if existingDeployment != nil {
+		if request.ApplicationLicenseID == nil {
+			if existingDeployment.ApplicationLicenseID != nil {
+				request.ApplicationLicenseID = existingDeployment.ApplicationLicenseID
+			}
+		} else if existingDeployment.ApplicationLicenseID == nil {
 			return badRequestError(w, "can not update license")
-		} else if *request.ApplicationLicenseID != *target.Deployment.ApplicationLicenseID {
+		} else if *request.ApplicationLicenseID != *existingDeployment.ApplicationLicenseID {
 			return badRequestError(w, "can not update license")
 		}
-		if target.Deployment.ApplicationID != app.ID {
+		if existingDeployment.ApplicationID != app.ID {
 			return badRequestError(w, "can not change application of existing deployment")
 		}
 	}
@@ -179,7 +221,6 @@ func validateDeploymentRequest(
 					return err
 				}
 			}
-
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
 			// license ID is required for customer but optional for vendor
 			return badRequestError(w, "applicationLicenseId is required")
@@ -188,7 +229,7 @@ func validateDeploymentRequest(
 		return badRequestError(w, "unexpected applicationLicenseId")
 	}
 
-	if err = validateDeploymentRequestLicense(ctx, w, request, license, app, target); err != nil {
+	if err = validateDeploymentRequestLicense(ctx, w, request, license, app, target, existingDeployment); err != nil {
 		return err
 	} else if err = validateDeploymentRequestDeploymentType(w, target, app); err != nil {
 		return err
@@ -221,6 +262,7 @@ func validateDeploymentRequestLicense(
 	license *types.ApplicationLicense,
 	app *types.Application,
 	target *types.DeploymentTargetWithCreatedBy,
+	deployment *types.DeploymentWithLatestRevision,
 ) error {
 	if license != nil {
 		auth := auth.Authentication.Require(ctx)
@@ -243,7 +285,7 @@ func validateDeploymentRequestLicense(
 		if app.ID != license.ApplicationID {
 			return invalidLicenseError(w)
 		}
-		if target.Deployment != nil && target.Deployment.ApplicationID != license.ApplicationID {
+		if deployment != nil && deployment.ApplicationID != license.ApplicationID {
 			return badRequestError(w, "license and deployment have applicationId mismatch")
 		}
 	}
@@ -271,17 +313,18 @@ func validateDeploymentRequestDeploymentTarget(
 
 	if *auth.CurrentUserRole() == types.UserRoleCustomer &&
 		target.CreatedByUserAccountID != auth.CurrentUserID() {
-		http.Error(w, "DeploymentTarget not found", http.StatusBadRequest)
+		err := errors.New("DeploymentTarget not found")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return err
 	}
-	if request.DeploymentID == nil {
-		if target.Deployment != nil {
-			return badRequestError(w, "only one deployment per target is supported right now")
+
+	if request.DeploymentID == nil && len(target.Deployments) > 0 {
+		if err := target.AgentVersion.CheckMultiDeploymentSupported(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return err
 		}
-	} else if target.Deployment == nil {
-		return badRequestError(w, "given deployment is not a deployment of the given target")
-	} else if target.Deployment.ID != *request.DeploymentID {
-		return badRequestError(w, "given deployment does not match deployment of the given target")
 	}
+
 	return nil
 }
 
@@ -304,28 +347,108 @@ func validateDeploymentRequestValues(
 func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deployment := internalctx.GetDeployment(ctx)
-	if deploymentStatus, err := db.GetDeploymentStatus(ctx, deployment.ID, 100); err != nil {
+	limit, err := QueryParam(r, "limit", strconv.Atoi, Max(100))
+	if errors.Is(err, ErrParamNotDefined) {
+		limit = 25
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	before, err := QueryParam(r, "before", ParseTimeFunc(time.RFC3339Nano))
+	if err != nil && !errors.Is(err, ErrParamNotDefined) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	after, err := QueryParam(r, "after", ParseTimeFunc(time.RFC3339Nano))
+	if err != nil && !errors.Is(err, ErrParamNotDefined) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if deploymentStatus, err := db.GetDeploymentStatus(ctx, deployment.ID, limit, before, after); err != nil {
 		internalctx.GetLogger(ctx).Error("failed to get deploymentstatus", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
 		RespondJSON(w, deploymentStatus)
+	}
+}
+
+func getDeploymentLogsResourcesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		deployment := internalctx.GetDeployment(ctx)
+		if resources, err := db.GetDeploymentLogRecordResources(ctx, deployment.ID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else {
+			RespondJSON(w, resources)
+		}
+	}
+}
+
+func getDeploymentLogsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		deployment := internalctx.GetDeployment(ctx)
+		resource := r.FormValue("resource")
+		if resource == "" {
+			http.Error(w, "query parameter resource is required", http.StatusBadRequest)
+			return
+		}
+		limit, err := QueryParam(r, "limit", strconv.Atoi, Max(100))
+		if errors.Is(err, ErrParamNotDefined) {
+			limit = 25
+		} else if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		before, err := QueryParam(r, "before", ParseTimeFunc(time.RFC3339Nano))
+		if err != nil && !errors.Is(err, ErrParamNotDefined) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		after, err := QueryParam(r, "after", ParseTimeFunc(time.RFC3339Nano))
+		if err != nil && !errors.Is(err, ErrParamNotDefined) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before, after); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else {
+			response := make([]api.DeploymentLogRecord, len(records))
+			for i, record := range records {
+				response[i] = api.DeploymentLogRecord{
+					DeploymentID:         record.DeploymentID,
+					DeploymentRevisionID: record.DeploymentRevisionID,
+					Resource:             record.Resource,
+					Timestamp:            record.Timestamp,
+					Severity:             record.Severity,
+					Body:                 record.Body,
+				}
+			}
+			RespondJSON(w, response)
+		}
 	}
 }
 
 func deploymentMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		auth := auth.Authentication.Require(ctx)
 		deploymentId, err := uuid.Parse(r.PathValue("deploymentId"))
 		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
-		deployment, err := db.GetDeployment(ctx, deploymentId)
-		if errors.Is(err, apierrors.ErrNotFound) {
+
+		if deployment, err := db.GetDeployment(ctx, deploymentId, auth.CurrentUserID(), *auth.CurrentOrgID(),
+			*auth.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get deployment", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get deployment", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {

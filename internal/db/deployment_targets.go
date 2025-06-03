@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -28,9 +27,7 @@ const (
 		dt.created_by_user_account_id,
 		dt.agent_version_id,
 		dt.reported_agent_version_id,
-		CASE WHEN dt.geolocation_lat IS NOT NULL AND dt.geolocation_lon IS NOT NULL
-		  	THEN (dt.geolocation_lat, dt.geolocation_lon) END
-			AS geolocation
+		dt.metrics_enabled
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
 		", (" + userAccountWithRoleOutputExpr + ") as created_by"
@@ -76,7 +73,7 @@ func GetDeploymentTargets(
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx,
 		"SELECT"+deploymentTargetWithStatusOutputExpr+"FROM"+deploymentTargetFromExpr+
-			"WHERE dt.organization_id = @orgId "+
+			"WHERE dt.organization_id = @orgId AND j.organization_id = dt.organization_id "+
 			"AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor') "+
 			"ORDER BY u.name, u.email, dt.name",
 		pgx.NamedArgs{"orgId": orgID, "userId": userID, "userRole": userRole},
@@ -89,7 +86,7 @@ func GetDeploymentTargets(
 		return nil, fmt.Errorf("failed to get DeploymentTargets: %w", err)
 	} else {
 		for i := range result {
-			if err := addDeploymentToTarget(ctx, &result[i]); err != nil {
+			if err := addDeploymentsToTarget(ctx, &result[i]); err != nil {
 				return nil, err
 			}
 		}
@@ -104,12 +101,13 @@ func GetDeploymentTarget(
 ) (*types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
 	var args pgx.NamedArgs
-	query := "SELECT" + deploymentTargetWithStatusOutputExpr + "FROM" + deploymentTargetFromExpr + "WHERE dt.id = @id"
+	query := "SELECT" + deploymentTargetWithStatusOutputExpr + "FROM" + deploymentTargetFromExpr +
+		" WHERE dt.id = @id AND j.organization_id = dt.organization_id "
 	if orgID != nil {
-		args = pgx.NamedArgs{"id": id, "orgId": *orgID}
-		query = query + " AND dt.organization_id = @orgId"
+		args = pgx.NamedArgs{"id": id, "orgId": *orgID, "checkOrg": true}
+		query += " AND dt.organization_id = @orgId"
 	} else {
-		args = pgx.NamedArgs{"id": id}
+		args = pgx.NamedArgs{"id": id, "checkOrg": false}
 	}
 	rows, err := db.Query(ctx, query, args)
 	if err != nil {
@@ -121,7 +119,7 @@ func GetDeploymentTarget(
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
-		return &result, addDeploymentToTarget(ctx, &result)
+		return &result, addDeploymentsToTarget(ctx, &result)
 	}
 }
 
@@ -132,7 +130,8 @@ func GetDeploymentTargetForDeploymentID(
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		fmt.Sprintf("SELECT %v FROM %v JOIN Deployment d ON dt.id = d.deployment_target_id WHERE d.id = @id",
+		fmt.Sprintf("SELECT %v FROM %v JOIN Deployment d ON dt.id = d.deployment_target_id WHERE d.id = @id "+
+			"AND j.organization_id = dt.organization_id",
 			deploymentTargetWithStatusOutputExpr, deploymentTargetFromExpr),
 		pgx.NamedArgs{"id": id},
 	)
@@ -145,7 +144,7 @@ func GetDeploymentTargetForDeploymentID(
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get DeploymentTarget: %w", err)
 	} else {
-		return &result, addDeploymentToTarget(ctx, &result)
+		return &result, addDeploymentsToTarget(ctx, &result)
 	}
 }
 
@@ -167,23 +166,19 @@ func CreateDeploymentTarget(
 		"userId":         dt.CreatedBy.ID,
 		"namespace":      dt.Namespace,
 		"scope":          dt.Scope,
-		"lat":            nil,
-		"lon":            nil,
 		"agentVersionId": dt.AgentVersionID,
-	}
-	if dt.Geolocation != nil {
-		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
+		"metricsEnabled": dt.MetricsEnabled,
 	}
 	rows, err := db.Query(
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
-			(name, type, organization_id, created_by_user_account_id, namespace, scope, geolocation_lat,
-				geolocation_lon, agent_version_id)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @lat, @lon, @agentVersionId)
+			(name, type, organization_id, created_by_user_account_id, namespace, scope, agent_version_id, metrics_enabled)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @agentVersionId, @metricsEnabled)
 			RETURNING *
 		)
-		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr,
+		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+
+			" WHERE j.organization_id = dt.organization_id",
 		args,
 	)
 	if err != nil {
@@ -194,7 +189,7 @@ func CreateDeploymentTarget(
 		return fmt.Errorf("could not save DeploymentTarget: %w", err)
 	} else {
 		*dt = result
-		return addDeploymentToTarget(ctx, dt)
+		return addDeploymentsToTarget(ctx, dt)
 	}
 }
 
@@ -202,37 +197,33 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 	agentUpdateStr := ""
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
-		"id":    dt.ID,
-		"name":  dt.Name,
-		"orgId": orgID,
-		"lat":   nil,
-		"lon":   nil,
+		"id":             dt.ID,
+		"name":           dt.Name,
+		"orgId":          orgID,
+		"metricsEnabled": dt.MetricsEnabled,
 	}
 	if dt.AgentVersionID != nil {
 		args["agentVersionId"] = dt.AgentVersionID
 		agentUpdateStr = ", agent_version_id = @agentVersionId "
 	}
-	if dt.Geolocation != nil {
-		maps.Copy(args, pgx.NamedArgs{"lat": dt.Geolocation.Lat, "lon": dt.Geolocation.Lon})
-	}
 	rows, err := db.Query(ctx,
 		`WITH updated AS (
 			UPDATE DeploymentTarget AS dt SET
-				name = @name,
-				geolocation_lat = @lat,
-				geolocation_lon = @lon `+agentUpdateStr+`
+				name = @name, metrics_enabled = @metricsEnabled `+agentUpdateStr+`
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
-		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr,
+		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr+
+			" WHERE j.organization_id = dt.organization_id",
 		args)
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
-	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(
+		rows, pgx.RowToStructByNameLax[types.DeploymentTargetWithCreatedBy],
+	); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
-		return addDeploymentToTarget(ctx, dt)
+		return addDeploymentsToTarget(ctx, dt)
 	}
 }
 
@@ -256,8 +247,9 @@ func UpdateDeploymentTargetAccess(ctx context.Context, dt *types.DeploymentTarge
 		pgx.NamedArgs{"accessKeySalt": dt.AccessKeySalt, "accessKeyHash": dt.AccessKeyHash, "id": dt.ID, "orgId": orgID})
 	if err != nil {
 		return fmt.Errorf("could not update DeploymentTarget: %w", err)
-	} else if updated, err :=
-		pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.DeploymentTarget]); err != nil {
+	} else if updated, err := pgx.CollectExactlyOneRow(
+		rows, pgx.RowToStructByNameLax[types.DeploymentTarget],
+	); err != nil {
 		return fmt.Errorf("could not get updated DeploymentTarget: %w", err)
 	} else {
 		*dt = updated
@@ -279,7 +271,8 @@ func UpdateDeploymentTargetReportedAgentVersionID(
 			WHERE id = @id
 			RETURNING *
 		)
-		SELECT`+deploymentTargetWithStatusOutputExpr+`FROM updated dt`+deploymentTargetJoinExpr,
+		SELECT`+deploymentTargetWithStatusOutputExpr+`FROM updated dt`+deploymentTargetJoinExpr+
+			" WHERE j.organization_id = dt.organization_id",
 		pgx.NamedArgs{"id": dt.ID, "agentVersionId": agentVersionID},
 	)
 	if err != nil {
@@ -302,33 +295,47 @@ func CreateDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarge
 		return err
 	} else {
 		rows.Close()
-		return nil
+		return rows.Err()
 	}
 }
 
-func CleanupDeploymentTargetStatus(ctx context.Context, dt *types.DeploymentTarget) (int64, error) {
+func CleanupDeploymentTargetStatus(ctx context.Context) (int64, error) {
 	if env.StatusEntriesMaxAge() == nil {
 		return 0, nil
 	}
 	db := internalctx.GetDb(ctx)
-	if cmd, err := db.Exec(ctx, `
-		DELETE FROM DeploymentTargetStatus
-		       WHERE deployment_target_id = @deploymentTargetId AND
-		             current_timestamp - created_at > @statusEntriesMaxAge`,
-		pgx.NamedArgs{"deploymentTargetId": dt.ID, "statusEntriesMaxAge": env.StatusEntriesMaxAge()}); err != nil {
+	if cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM DeploymentTargetStatus dts
+		USING (
+			SELECT
+				dt.id AS deployment_target_id,
+				(SELECT max(created_at) FROM DeploymentTargetStatus WHERE deployment_target_id = dt.id)
+					AS max_created_at
+			FROM DeploymentTarget dt
+		) max_created_at
+		WHERE dts.deployment_target_id = max_created_at.deployment_target_id
+			AND dts.created_at < max_created_at.max_created_at
+			AND current_timestamp - dts.created_at > @statusEntriesMaxAge`,
+		pgx.NamedArgs{"statusEntriesMaxAge": env.StatusEntriesMaxAge()},
+	); err != nil {
 		return 0, err
 	} else {
 		return cmd.RowsAffected(), nil
 	}
 }
 
-func addDeploymentToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
-	if latest, err := GetLatestDeploymentForDeploymentTarget(ctx, dt.ID); errors.Is(err, apierrors.ErrNotFound) {
+func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithCreatedBy) error {
+	if d, err := GetDeploymentsForDeploymentTarget(ctx, dt.ID); errors.Is(err, apierrors.ErrNotFound) {
 		return nil
 	} else if err != nil {
 		return err
 	} else {
-		dt.Deployment = latest
+		dt.Deployments = d
+		// Set the Deployment property to the first (i.e. oldest) deployment for backwards compatibility
+		if len(d) > 0 {
+			dt.Deployment = &d[0] //nolint:staticcheck
+		}
 		return nil
 	}
 }

@@ -83,6 +83,10 @@ hub:
     #   value: enabled
     - name: USER_EMAIL_VERIFICATION_REQUIRED
       value: 'false'
+    - name: METRICS_ENTRIES_MAX_AGE
+      value: '1h'
+    - name: LOG_RECORD_ENTRIES_MAX_COUNT
+      value: '500'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -188,6 +192,24 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+cronJobs:
+  - name: deployment-log-record-cleanup
+    labels:
+      distr.sh/job: deployment-log-record-cleanup
+    args: [cleanup, DeploymentLogRecord]
+  - name: deployment-revision-status-cleanup
+    labels:
+      distr.sh/job: deployment-revision-status-cleanup
+    args: [cleanup, DeploymentRevisionStatus]
+  - name: deployment-target-metrics-cleanup
+    labels:
+      distr.sh/job: deployment-target-metrics-cleanup
+    args: [cleanup, DeploymentTargetMetrics]
+  - name: deployment-target-status-cleanup
+    labels:
+      distr.sh/job: deployment-target-status-cleanup
+    args: [cleanup, DeploymentTargetStatus]
 
 postgresql:
   enabled: false

@@ -16,45 +16,45 @@ type Mail struct {
 	TextBodyFunc func() (string, error)
 }
 
-type mailOpt func(mail *Mail)
+type MailOpt func(mail *Mail)
 
-func To(to ...string) mailOpt {
+func To(to ...string) MailOpt {
 	return func(mail *Mail) {
 		mail.To = append(mail.To, to...)
 	}
 }
 
-func From(from mail.Address) mailOpt {
+func From(from mail.Address) MailOpt {
 	return func(mail *Mail) {
 		mail.From = &from
 	}
 }
 
-func Bcc(to ...string) mailOpt {
+func Bcc(to ...string) MailOpt {
 	return func(mail *Mail) {
 		mail.Bcc = append(mail.Bcc, to...)
 	}
 }
 
-func ReplyTo(to string) mailOpt {
+func ReplyTo(to string) MailOpt {
 	return func(mail *Mail) {
 		mail.ReplyTo = to
 	}
 }
 
-func Subject(subject string) mailOpt {
+func Subject(subject string) MailOpt {
 	return func(mail *Mail) {
 		mail.Subject = subject
 	}
 }
 
-func HtmlBody(body string) mailOpt {
+func HtmlBody(body string) MailOpt {
 	return func(mail *Mail) {
 		mail.HtmlBodyFunc = func() (string, error) { return body, nil }
 	}
 }
 
-func HtmlBodyTemplate(tmpl *template.Template, data any) mailOpt {
+func HtmlBodyTemplate(tmpl *template.Template, data any) MailOpt {
 	return func(mail *Mail) {
 		mail.HtmlBodyFunc = func() (string, error) {
 			var b bytes.Buffer
@@ -64,13 +64,13 @@ func HtmlBodyTemplate(tmpl *template.Template, data any) mailOpt {
 	}
 }
 
-func TextBody(body string) mailOpt {
+func TextBody(body string) MailOpt {
 	return func(mail *Mail) {
 		mail.TextBodyFunc = func() (string, error) { return body, nil }
 	}
 }
 
-type mailOpts []mailOpt
+type mailOpts []MailOpt
 
 func (opts mailOpts) Apply(mail *Mail) {
 	for _, fn := range opts {
@@ -83,6 +83,6 @@ func (opts mailOpts) Create() (mail Mail) {
 	return
 }
 
-func New(opts ...mailOpt) Mail {
+func New(opts ...MailOpt) Mail {
 	return mailOpts(opts).Create()
 }

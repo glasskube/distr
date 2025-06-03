@@ -42,6 +42,22 @@
 
 ---
 
+### imageUrl?
+
+> `optional` **imageUrl**: `string`
+
+#### Inherited from
+
+[`UserAccount`](UserAccount.md).[`imageUrl`](UserAccount.md#imageurl)
+
+---
+
+### joinedOrgAt
+
+> **joinedOrgAt**: `string`
+
+---
+
 ### name?
 
 > `optional` **name**: `string`

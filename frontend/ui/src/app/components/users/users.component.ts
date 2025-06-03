@@ -5,11 +5,13 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
+  faBox,
   faCircleExclamation,
   faClipboard,
   faMagnifyingGlass,
   faPlus,
   faTrash,
+  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -26,7 +28,7 @@ import {
   takeUntil,
   tap,
 } from 'rxjs';
-import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
+import {getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
@@ -35,9 +37,10 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
-import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
+import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {SecureImagePipe} from '../../../util/secureImage';
 
 @Component({
   selector: 'app-users',
@@ -49,6 +52,7 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
     RequireRoleDirective,
     AutotrimDirective,
     UuidComponent,
+    SecureImagePipe,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
@@ -127,6 +131,12 @@ export class UsersComponent implements OnDestroy {
           })
         );
         this.inviteUrl = result.inviteUrl;
+        if (!this.inviteUrl) {
+          this.toast.success(
+            `${this.userRole() === 'vendor' ? 'User' : 'Customer'} has been added to the organization`
+          );
+          this.closeInviteDialog();
+        }
         this.refresh$.next();
       } catch (e) {
         const msg = getFormDisplayedError(e);
@@ -139,18 +149,24 @@ export class UsersComponent implements OnDestroy {
     }
   }
 
+  public async uploadImage(data: UserAccountWithRole) {
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl, scope: 'platform'}));
+    if (!fileId || data.imageUrl?.includes(fileId)) {
+      return;
+    }
+    await firstValueFrom(this.users.patchImage(data.id!, fileId));
+  }
+
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
-      .confirm(`Really delete ${user.name ?? user.email}?`)
+      .confirm(`This will remove ${user.name ?? user.email} from your organization. Are you sure?`)
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.users.delete(user)),
         catchError((e) => {
-          if (e instanceof HttpErrorResponse && e.status === 400) {
-            this.toast.error(
-              `User ${user.name ?? user.email} cannot be deleted.
-              Please ensure there are no deployments managed by this user and try again.`
-            );
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
           }
           return NEVER;
         }),
@@ -173,4 +189,6 @@ export class UsersComponent implements OnDestroy {
   }
 
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faUserCircle = faUserCircle;
+  protected readonly faBox = faBox;
 }

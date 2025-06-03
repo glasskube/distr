@@ -2,7 +2,7 @@ import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faFile, faLightbulb, faWarning} from '@fortawesome/free-solid-svg-icons';
+import {faBox, faDownload, faFile} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
 import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
@@ -11,11 +11,19 @@ import {RelativeDatePipe} from '../../../util/dates';
 import {BytesPipe} from '../../../util/units';
 import {ClipComponent} from '../../components/clip.component';
 import {UuidComponent} from '../../components/uuid';
-import {ArtifactsService, ArtifactWithTags, TaggedArtifactVersion} from '../../services/artifacts.service';
+import {
+  ArtifactsService,
+  ArtifactWithTags,
+  HasDownloads,
+  TaggedArtifactVersion,
+} from '../../services/artifacts.service';
 import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
+import {SecureImagePipe} from '../../../util/secureImage';
+import {OverlayService} from '../../services/overlay.service';
+import {RequireRoleDirective} from '../../directives/required-role.directive';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -30,6 +38,8 @@ import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, Artifac
     ArtifactsVulnerabilityReportComponent,
     ClipComponent,
     BytesPipe,
+    SecureImagePipe,
+    RequireRoleDirective,
   ],
   templateUrl: './artifact-versions.component.html',
 })
@@ -38,15 +48,28 @@ export class ArtifactVersionsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly organization = inject(OrganizationService);
   private readonly auth = inject(AuthService);
+  private readonly overlay = inject(OverlayService);
 
   protected readonly faBox = faBox;
   protected readonly faDownload = faDownload;
-  protected readonly faLightbulb = faLightbulb;
+  protected readonly faFile = faFile;
 
   protected readonly artifact$ = this.route.params.pipe(
     map((params) => params['id']?.trim()),
     distinctUntilChanged(),
-    switchMap((id: string) => this.artifacts.getByIdAndCache(id))
+    switchMap((id: string) => this.artifacts.getByIdAndCache(id)),
+    map((artifact) => {
+      if (artifact) {
+        return {
+          ...artifact,
+          versions: (artifact.versions ?? []).map((v) => ({
+            ...v,
+            ...this.calcVersionDownloads(v),
+          })),
+        };
+      }
+      return undefined;
+    })
   );
 
   protected readonly updateTag$: Observable<TaggedArtifactVersion | null> = this.artifact$.pipe(
@@ -105,10 +128,13 @@ export class ArtifactVersionsComponent {
 
   getOciUrl(
     artifact: ArtifactWithTags,
-    tag: TaggedArtifactVersion | undefined = artifact.versions.find((it) => it.tags.some((l) => l.name === 'latest'))
+    tag: TaggedArtifactVersion | undefined = (artifact.versions ?? []).find((it) =>
+      it.tags.some((l) => l.name === 'latest')
+    )
   ) {
-    const orgName = this.org.value()?.slug;
-    let url = `oci://${this.remoteEnv.value()?.registryHost}/${orgName ?? 'ORG_SLUG'}/${artifact.name}`;
+    const org = this.org.value();
+    const env = this.remoteEnv.value();
+    let url = `oci://${org?.registryDomain ?? env?.registryHost ?? 'REGISTRY_DOMAIN'}/${org?.slug ?? 'ORG_SLUG'}/${artifact.name}`;
     if (tag) {
       return `${url}:${tag.tags[0].name}`;
     } else {
@@ -116,6 +142,27 @@ export class ArtifactVersionsComponent {
     }
   }
 
-  protected readonly faWarning = faWarning;
-  protected readonly faFile = faFile;
+  protected calcVersionDownloads(version: TaggedArtifactVersion): HasDownloads {
+    let downloadsTotal = version.downloadsTotal ?? 0;
+    let downloadedBySet: {[id: string]: boolean} = {};
+    (version.downloadedByUsers ?? []).forEach((id: string) => (downloadedBySet[id] = true));
+    for (let tag of version.tags) {
+      (tag.downloads.downloadedByUsers ?? []).forEach((id: string) => (downloadedBySet[id] = true));
+      downloadsTotal = downloadsTotal + (tag.downloads.downloadsTotal ?? 0);
+    }
+    const downloadedByUsers = Object.keys(downloadedBySet);
+    return {
+      downloadsTotal,
+      downloadedByUsers,
+      downloadedByCount: downloadedByUsers.length,
+    };
+  }
+
+  public async uploadImage(data: ArtifactWithTags) {
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    if (!fileId || data.imageUrl?.includes(fileId)) {
+      return;
+    }
+    await firstValueFrom(this.artifacts.patchImage(data.id!, fileId));
+  }
 }

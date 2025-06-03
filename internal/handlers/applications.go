@@ -9,28 +9,33 @@ import (
 	"strings"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
 func ApplicationsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getApplications)
 	r.With(requireUserRoleVendor).Post("/", createApplication)
-	r.With(requireUserRoleVendor).Post("/sample", createSampleApplication)
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.With(applicationMiddleware).Group(func(r chi.Router) {
 			r.Get("/", getApplication)
-			r.With(requireUserRoleVendor).Delete("/", deleteApplication)
-			r.With(requireUserRoleVendor).Put("/", updateApplication)
+			r.With(requireUserRoleVendor).Group(func(r chi.Router) {
+				r.Delete("/", deleteApplication)
+				r.Put("/", updateApplication)
+				r.Patch("/", patchApplicationHandler())
+				r.Patch("/image", patchImageApplication)
+			})
 		})
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
@@ -96,16 +101,84 @@ func updateApplication(w http.ResponseWriter, r *http.Request) {
 	if err := db.UpdateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
 		log.Warn("could not update application", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// TODO ?
 	// there surely is some way to have the update command returning the versions too, but I don't think it's worth
 	// the work right now
 	application.Versions = existing.Versions
-	if err := json.NewEncoder(w).Encode(application); err != nil {
+	if err := json.NewEncoder(w).Encode(api.AsApplication(application)); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
+	}
+}
+
+func patchApplicationHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.Authentication.Require(ctx)
+		existing := internalctx.GetApplication(ctx)
+		patch, err := JsonBody[api.PatchApplicationRequest](w, r)
+		if err != nil {
+			return
+		}
+
+		if err := db.RunTx(ctx, func(ctx context.Context) error {
+			appliationNeedsUpdate := false
+			if patch.Name != nil && patch.Name != &existing.Name {
+				existing.Name = *patch.Name
+				appliationNeedsUpdate = true
+			}
+
+			if appliationNeedsUpdate {
+				if err := db.UpdateApplication(ctx, existing, *auth.CurrentOrgID()); err != nil {
+					log.Warn("could not update application", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return err
+				}
+			}
+
+			for _, vp := range patch.Versions {
+				var ev *types.ApplicationVersion
+				for i, v := range existing.Versions {
+					if v.ID == vp.ID {
+						ev = &existing.Versions[i]
+						break
+					}
+				}
+				if ev == nil {
+					http.Error(w, fmt.Sprintf("no ApplicationVersion found with ID %v", vp.ID), http.StatusBadRequest)
+					return errors.New("bad request")
+				}
+
+				versionNeedsUpdate := false
+				if !util.PtrEq(ev.ArchivedAt, vp.ArchivedAt) {
+					ev.ArchivedAt = vp.ArchivedAt
+					versionNeedsUpdate = true
+				}
+
+				if versionNeedsUpdate {
+					if err := db.UpdateApplicationVersion(ctx, ev); err != nil {
+						log.Warn("could not update application version", zap.Error(err))
+						sentry.GetHubFromContext(ctx).CaptureException(err)
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return err
+					}
+				}
+			}
+			return nil
+		}); err != nil {
+			if errors.Is(err, pgx.ErrTxCommitRollback) {
+				log.Warn("could not commit db transaction", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		RespondJSON(w, existing)
 	}
 }
 
@@ -114,14 +187,8 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	log := internalctx.GetLogger(ctx)
 
-	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	org := auth.CurrentOrg()
+	var err error
 	var applications []types.Application
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
 		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, auth.CurrentUserID())
@@ -134,7 +201,7 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, applications)
+		RespondJSON(w, api.MapApplicationsToResponse(applications))
 	}
 }
 
@@ -143,16 +210,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	log := internalctx.GetLogger(ctx)
 
-	org, err := db.GetOrganizationByID(ctx, *auth.CurrentOrgID())
-	if err != nil {
-		log.Error("failed to get org", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	org := auth.CurrentOrg()
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-
 		if applicationID, err := uuid.Parse(r.PathValue("applicationId")); err != nil {
 			http.NotFound(w, r)
 			return
@@ -165,14 +224,12 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			} else {
-				RespondJSON(w, application)
+				RespondJSON(w, api.AsApplication(*application))
 			}
 		}
-
 	} else {
-		RespondJSON(w, internalctx.GetApplication(r.Context()))
+		RespondJSON(w, api.AsApplication(*internalctx.GetApplication(ctx)))
 	}
-
 }
 
 func getApplicationVersion(w http.ResponseWriter, r *http.Request) {
@@ -297,15 +354,18 @@ func updateApplicationVersion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var getApplicationVersionComposeFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
-	return av.ComposeFileData
-})
-var getApplicationVersionValuesFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
-	return av.ValuesFileData
-})
-var getApplicationVersionTemplateFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
-	return av.TemplateFileData
-})
+var (
+	getApplicationVersionComposeFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+		return av.ComposeFileData
+	})
+
+	getApplicationVersionValuesFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+		return av.ValuesFileData
+	})
+	getApplicationVersionTemplateFile = getApplicationVersionFileHandler(func(av types.ApplicationVersion) []byte {
+		return av.TemplateFileData
+	})
+)
 
 func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion) []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -333,56 +393,6 @@ func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion
 	}
 }
 
-func createSampleApplication(w http.ResponseWriter, r *http.Request) {
-	// TODO only serve request if user does not have a sample application yet
-	ctx := r.Context()
-	log := internalctx.GetLogger(ctx)
-	auth := auth.Authentication.Require(ctx)
-
-	application := types.Application{
-		Name: "Shiori",
-		Type: types.DeploymentTypeDocker,
-	}
-
-	var composeFileData []byte
-	var templateFileData []byte
-	if composeFile, err := resources.Get("apps/shiori/docker-compose.yaml"); err != nil {
-		log.Warn("failed to read shiori compose file", zap.Error(err))
-	} else {
-		composeFileData = composeFile
-	}
-	if templateFile, err := resources.Get("apps/shiori/template.env"); err != nil {
-		log.Warn("failed to read shiori template file", zap.Error(err))
-	} else {
-		templateFileData = templateFile
-	}
-
-	version := types.ApplicationVersion{
-		Name:             "v1.7.4",
-		ComposeFileData:  composeFileData,
-		TemplateFileData: templateFileData,
-	}
-
-	if err := db.RunTx(ctx, func(ctx context.Context) error {
-		if err := db.CreateApplication(ctx, &application, *auth.CurrentOrgID()); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return err
-		}
-		version.ApplicationID = application.ID
-		if err := db.CreateApplicationVersion(ctx, &version); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return err
-		}
-		return nil
-	}); err != nil {
-		log.Warn("could not create sample application", zap.Error(err))
-		return
-	}
-
-	application.Versions = append(application.Versions, version)
-	RespondJSON(w, application)
-}
-
 func deleteApplication(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
@@ -401,6 +411,15 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+var patchImageApplication = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
+	application := internalctx.GetApplication(ctx)
+	if err := db.UpdateApplicationImage(ctx, application, body.ImageID); err != nil {
+		return nil, err
+	} else {
+		return api.AsApplication(*application), nil
+	}
+})
 
 func applicationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

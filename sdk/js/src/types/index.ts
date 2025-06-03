@@ -4,7 +4,5 @@ export * from './application';
 export * from './base';
 export * from './deployment';
 export * from './deployment-target';
-export * from './geolocation';
 export * from './organization-branding';
-export * from './uptime';
 export * from './user-account';

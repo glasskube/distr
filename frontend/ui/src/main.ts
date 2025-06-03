@@ -23,7 +23,8 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
       enabled: environment.production,
       release: buildConfig.version ?? buildConfig.commit,
       dsn: remoteEnvironment.sentryDsn,
-      integrations: [],
+      integrations: [Sentry.browserTracingIntegration()],
+      tracesSampleRate: remoteEnvironment.sentryTraceSampleRate ?? 1,
     });
   }
 
@@ -32,6 +33,12 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
       api_host: remoteEnvironment.posthogApiHost,
       ui_host: remoteEnvironment.posthogUiHost,
       person_profiles: 'identified_only',
+      session_recording: {
+        maskAllInputs: false,
+        maskInputOptions: {
+          password: true,
+        },
+      },
       // pageview event capturing is done for Angular router events.
       // Here we prevent the window "load" event from triggering a duplicate pageview event.
       capture_pageview: false,

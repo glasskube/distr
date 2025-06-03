@@ -1,0 +1,29 @@
+name: distr
+services:
+  agent:
+    network_mode: host
+    restart: unless-stopped
+    image: 'ghcr.io/glasskube/distr/docker-agent:{{ .agentVersion }}'
+    environment:
+      DISTR_TARGET_ID: '{{ .targetId }}'
+      DISTR_TARGET_SECRET: '{{ .targetSecret }}'
+      DISTR_LOGIN_ENDPOINT: '{{ .loginEndpoint }}'
+      DISTR_MANIFEST_ENDPOINT: '{{ .manifestEndpoint }}'
+      DISTR_RESOURCE_ENDPOINT: '{{ .resourcesEndpoint }}'
+      DISTR_STATUS_ENDPOINT: '{{ .statusEndpoint }}'
+      DISTR_METRICS_ENDPOINT: '{{ .metricsEndpoint }}'
+      DISTR_LOGS_ENDPOINT: '{{ .logsEndpoint }}'
+      DISTR_INTERVAL: '{{ .agentInterval }}'
+      DISTR_AGENT_VERSION_ID: '{{ .agentVersionId }}'
+      DISTR_AGENT_SCRATCH_DIR: /scratch
+      {{- if .registryEnabled }}
+      DISTR_REGISTRY_HOST: '{{ .registryHost }}'
+      DISTR_REGISTRY_PLAIN_HTTP: '{{ .registryPlainHttp }}'
+      {{- end }}
+      HOST_DOCKER_CONFIG_DIR: ${HOST_DOCKER_CONFIG_DIR-${HOME}/.docker}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - scratch:/scratch
+      - ${HOST_DOCKER_CONFIG_DIR-${HOME}/.docker}:/root/.docker:ro
+volumes:
+  scratch:

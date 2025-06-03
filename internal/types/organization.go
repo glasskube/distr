@@ -11,10 +11,14 @@ import (
 )
 
 type Organization struct {
-	Base
-	Name     string    `db:"name" json:"name"`
-	Slug     *string   `db:"slug" json:"slug"`
-	Features []Feature `db:"features" json:"features"`
+	ID               uuid.UUID `db:"id" json:"id"`
+	CreatedAt        time.Time `db:"created_at" json:"createdAt"`
+	Name             string    `db:"name" json:"name"`
+	Slug             *string   `db:"slug" json:"slug"`
+	Features         []Feature `db:"features" json:"features"`
+	AppDomain        *string   `db:"app_domain" json:"appDomain"`
+	RegistryDomain   *string   `db:"registry_domain" json:"registryDomain"`
+	EmailFromAddress *string   `db:"email_from_address" json:"emailFromAddress"`
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {
@@ -23,7 +27,8 @@ func (org *Organization) HasFeature(feature Feature) bool {
 
 type OrganizationWithUserRole struct {
 	Organization
-	UserRole UserRole `db:"user_role"`
+	UserRole    UserRole  `db:"user_role" json:"userRole"`
+	JoinedOrgAt time.Time `db:"joined_org_at" json:"joinedOrgAt"`
 }
 
 type OrganizationWithBranding struct {

@@ -32,6 +32,12 @@
 
 ---
 
+### dockerType?
+
+> `optional` **dockerType**: [`DockerType`](../type-aliases/DockerType.md)
+
+---
+
 ### id?
 
 > `optional` **id**: `string`
@@ -42,9 +48,9 @@
 
 ---
 
-### note?
+### logsEnabled
 
-> `optional` **note**: `string`
+> **logsEnabled**: `boolean`
 
 ---
 

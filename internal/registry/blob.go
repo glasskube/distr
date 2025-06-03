@@ -24,12 +24,13 @@ import (
 	"path"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/opencontainers/go-digest"
 
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
+	registryerror "github.com/glasskube/distr/internal/registry/error"
 	"github.com/glasskube/distr/internal/registry/verify"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -89,6 +90,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -98,6 +101,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionRead); err != nil {
 				if errors.Is(err, authz.ErrAccessDenied) {
 					return regErrDenied
+				} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+					return regErrNameInvalid
 				}
 				return regErrInternal(err)
 			}
@@ -109,6 +114,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -117,6 +124,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -127,6 +136,8 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
 				return regErrDenied
+			} else if errors.Is(err, registryerror.ErrInvalidArtifactName) {
+				return regErrNameInvalid
 			}
 			return regErrInternal(err)
 		}
@@ -235,7 +246,6 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 
 		defer rc.Close()
 		r = rc
-
 	} else {
 		tmp, err := b.blobHandler.Get(req.Context(), repo, h, true)
 		if errors.Is(err, blob.ErrNotFound) {

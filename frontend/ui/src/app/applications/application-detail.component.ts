@@ -1,9 +1,25 @@
 import {OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {
+  faArchive,
+  faBox,
+  faBoxesStacked,
+  faCheck,
+  faChevronDown,
+  faEdit,
+  faMagnifyingGlass,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
+import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
 import {
   catchError,
+  combineLatest,
+  combineLatestAll,
   combineLatestWith,
   distinctUntilChanged,
   EMPTY,
@@ -15,32 +31,21 @@ import {
   startWith,
   Subject,
   switchMap,
+  take,
   takeUntil,
   tap,
 } from 'rxjs';
-import {ApplicationsService} from '../services/applications.service';
-import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {
-  faArchive,
-  faBoxesStacked,
-  faCheck,
-  faChevronDown,
-  faEdit,
-  faMagnifyingGlass,
-  faTrash,
-  faXmark,
-} from '@fortawesome/free-solid-svg-icons';
+import {isArchived} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
+import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
+import {SecureImagePipe} from '../../util/secureImage';
+import {dropdownAnimation} from '../animations/dropdown';
+import {EditorComponent} from '../components/editor.component';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
-import {EditorComponent} from '../components/editor.component';
-import {getFormDisplayedError} from '../../util/errors';
-import {ToastService} from '../services/toast.service';
-import {disableControlsWithoutEvent, enableControlsWithoutEvent} from '../../util/forms';
-import {dropdownAnimation} from '../animations/dropdown';
+import {ApplicationsService} from '../services/applications.service';
 import {OverlayService} from '../services/overlay.service';
-import {isArchived} from '../../util/dates';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-application-detail',
@@ -55,6 +60,7 @@ import {isArchived} from '../../util/dates';
     AutotrimDirective,
     DatePipe,
     EditorComponent,
+    SecureImagePipe,
   ],
   templateUrl: './application-detail.component.html',
   animations: [dropdownAnimation],
@@ -97,6 +103,8 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     })
   );
 
+  protected selectedVersionIds = signal(new Set<string>());
+
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
     kubernetes: new FormGroup({
@@ -111,7 +119,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl(''),
     }),
     docker: new FormGroup({
-      compose: new FormControl('', Validators.required),
+      compose: new FormControl(''),
       template: new FormControl(''),
     }),
   });
@@ -129,14 +137,19 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
   protected readonly faArchive = faArchive;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faBox = faBox;
   protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
+  readonly isVersionFormExpanded = signal(false);
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
 
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
+
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
+
     this.newVersionForm.controls.kubernetes.controls.chartType.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((type) => {
@@ -199,11 +212,9 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       if (application.type === 'docker') {
         res = this.applicationService.createApplicationVersionForDocker(
           application,
-          {
-            name: this.newVersionForm.controls.versionName.value!,
-          },
+          {name: this.newVersionForm.controls.versionName.value!},
           this.newVersionForm.controls.docker.controls.compose.value!,
-          this.newVersionForm.controls.docker.controls.template.value!
+          this.newVersionForm.controls.docker.controls.template.value
         );
       } else {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;
@@ -239,6 +250,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   async fillVersionFormWith(application: Application, version: ApplicationVersion) {
+    this.isVersionFormExpanded.set(true);
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
@@ -298,7 +310,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  async archiveVersion(application: Application, version: ApplicationVersion) {
+  archiveVersion(application: Application, version: ApplicationVersion) {
     this.overlay
       .confirm(`Really archive ${version.name}? Existing deployments will continue to work.`)
       .pipe(
@@ -318,6 +330,33 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe();
+  }
+
+  async bulkArchiveVersions(app: Application) {
+    this.overlay
+      .confirm(`Really archive ${this.selectedVersionIds().size} versions? Existing deployments will continue to work.`)
+      .pipe(
+        filter((it) => it === true),
+        switchMap(() =>
+          this.applicationService.patch(app.id!, {
+            versions: app?.versions
+              ?.filter((version) => this.isVersionSelected(version))
+              .map((version) => ({id: version.id!, archivedAt: new Date().toISOString()})),
+          })
+        )
+      )
+      .subscribe({
+        next: () => {
+          this.toast.success(`${this.selectedVersionIds().size} archived`);
+          this.selectedVersionIds.set(new Set());
+        },
+        error: (e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
   }
 
   async unArchiveVersion(application: Application, version: ApplicationVersion) {
@@ -346,5 +385,49 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  public async uploadImage(data: Application) {
+    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    if (!fileId || data.imageUrl?.includes(fileId)) {
+      return;
+    }
+    await firstValueFrom(this.applicationService.patchImage(data.id!, fileId));
+  }
+
+  protected toggleVersionSelected(version: ApplicationVersion): void {
+    const id = version.id;
+    if (id === undefined) {
+      return;
+    }
+
+    this.selectedVersionIds.update((ids) => {
+      if (this.isVersionSelected(version)) {
+        ids.delete(id);
+        return ids;
+      } else {
+        return ids.add(id);
+      }
+    });
+  }
+
+  protected isVersionSelected(version: ApplicationVersion): boolean {
+    return version.id !== undefined && this.selectedVersionIds().has(version.id);
+  }
+
+  protected toggleAllVersionsSelected(versions: ApplicationVersion[]) {
+    versions = versions.filter((version) => !isArchived(version));
+    if (this.isAllVersionsSelected(versions)) {
+      this.selectedVersionIds.set(new Set());
+    } else {
+      this.selectedVersionIds.set(new Set(versions.map((v) => v.id).filter((id) => id !== undefined)));
+    }
+  }
+
+  protected isAllVersionsSelected(versions: ApplicationVersion[]): boolean {
+    versions = versions.filter((version) => !isArchived(version));
+    return (
+      this.selectedVersionIds().size > 0 &&
+      versions.length === this.selectedVersionIds().size &&
+      versions.every((version) => this.isVersionSelected(version))
+    );
+  }
 }

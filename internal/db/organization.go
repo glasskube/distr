@@ -5,28 +5,37 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
-
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
-	organizationOutputExpr = ` o.id, o.created_at, o.name, o.slug, o.features `
+	organizationOutputExpr = `
+		o.id,
+		o.created_at,
+		o.name,
+		o.slug,
+		o.features,
+		o.app_domain,
+		o.registry_domain,
+		o.email_from_address
+	`
+	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role, j.created_at as joined_org_at "
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization AS o (name) VALUES (@name) RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"name": org.Name},
+		"INSERT INTO Organization AS o (name, slug) VALUES (@name, @slug) RETURNING "+organizationOutputExpr,
+		pgx.NamedArgs{"name": org.Name, "slug": org.Slug},
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create orgnization: %w", err)
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.Organization])
 	if err != nil {
@@ -58,19 +67,20 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
-func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]*types.OrganizationWithUserRole, error) {
+func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.OrganizationWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
-		SELECT`+organizationOutputExpr+`, j.user_role
+		SELECT`+organizationWithUserRoleOutputExpr+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
 			WHERE u.id = @id
+			ORDER BY o.created_at
 	`, pgx.NamedArgs{"id": userID})
 	if err != nil {
 		return nil, err
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[types.OrganizationWithUserRole])
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.OrganizationWithUserRole])
 	if err != nil {
 		return nil, err
 	} else {

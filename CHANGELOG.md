@@ -1,5 +1,421 @@
 # Changelog
 
+## [1.11.1](https://github.com/glasskube/distr/compare/1.11.0...1.11.1) (2025-05-30)
+
+
+### Other
+
+* **deploy:** add cleanup jobs config in deploy/docker and helm chart ([#974](https://github.com/glasskube/distr/issues/974)) ([f6ed64d](https://github.com/glasskube/distr/commit/f6ed64d021344a5a5adb8cbb5e6e5dfae6d8186e))
+* **deps:** update dependency postcss to v8.5.4 ([#976](https://github.com/glasskube/distr/issues/976)) ([bb8deb2](https://github.com/glasskube/distr/commit/bb8deb21fa15d1000650f98b6a8f95d7d9fc5bc2))
+* **deps:** update tailwindcss monorepo to v4.1.8 ([#977](https://github.com/glasskube/distr/issues/977)) ([0c7a593](https://github.com/glasskube/distr/commit/0c7a593604f56740a6a0b42a91a3631ec40439a4))
+
+## [1.11.0](https://github.com/glasskube/distr/compare/1.10.0...1.11.0) (2025-05-28)
+
+
+### Features
+
+* users can be part of multiple organizations ([#959](https://github.com/glasskube/distr/issues/959)) ([afea5fe](https://github.com/glasskube/distr/commit/afea5fef4eee1c574d2401fd235801e75843bdb7))
+
+
+### Bug Fixes
+
+* **deps:** update dependency posthog-js to v1.248.0 ([#972](https://github.com/glasskube/distr/issues/972)) ([5bec987](https://github.com/glasskube/distr/commit/5bec9876eb91238236654607ef01e276960d095c))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.127.0 ([#963](https://github.com/glasskube/distr/issues/963)) ([58c1de8](https://github.com/glasskube/distr/commit/58c1de87dae7000ba01c9e5bd82eabe6b13b6c53))
+
+
+### Other
+
+* **deps:** update dependency @sentry/cli to v2.46.0 ([#971](https://github.com/glasskube/distr/issues/971)) ([3ac6cf1](https://github.com/glasskube/distr/commit/3ac6cf19a53df45c02763e5ef04a54e7ee97c269))
+* **deps:** update dependency typedoc to v0.28.5 ([#960](https://github.com/glasskube/distr/issues/960)) ([a03473f](https://github.com/glasskube/distr/commit/a03473f1bb94a4901958a51089178b1ada2fec66))
+* **deps:** update docker/build-push-action action to v6.18.0 ([#970](https://github.com/glasskube/distr/issues/970)) ([6aece3c](https://github.com/glasskube/distr/commit/6aece3c1098f0ab51eef75f62cfe1ad14cd4ac3d))
+* **ui:** agent update pending indicator for connected agents only ([#968](https://github.com/glasskube/distr/issues/968)) ([490288e](https://github.com/glasskube/distr/commit/490288e13d148f8623b7a13fab22e088afc22432))
+* **ui:** clarify base/template value labels and add descriptions ([#958](https://github.com/glasskube/distr/issues/958)) ([ac90bd2](https://github.com/glasskube/distr/commit/ac90bd26e6e4be8f3079765a00eff0eecee3e338))
+* **ui:** show "+ Deployment" and "Update" buttons unconditionally ([#949](https://github.com/glasskube/distr/issues/949)) ([e5fdd05](https://github.com/glasskube/distr/commit/e5fdd05afeca3b8fcfec60869dff01f30655a809))
+
+## [1.10.0](https://github.com/glasskube/distr/compare/1.9.1...1.10.0) (2025-05-26)
+
+
+### Features
+
+* add job scheduling ([#935](https://github.com/glasskube/distr/issues/935)) ([f6ae73b](https://github.com/glasskube/distr/commit/f6ae73b1e5d7701cb4d82c0d59515be644cbe024))
+* add support for container logs ([#881](https://github.com/glasskube/distr/issues/881)) ([a5a184c](https://github.com/glasskube/distr/commit/a5a184c062c966597fbec394aac2d8cba9e5e5ac))
+* **ui:** add bulk actions for application versions ([#924](https://github.com/glasskube/distr/issues/924)) ([075ba08](https://github.com/glasskube/distr/commit/075ba0861c66f72d733839227268d848bf0949ea))
+
+
+### Bug Fixes
+
+* **agent:** fix kubernetes agent sending progressing updates during status check ([#948](https://github.com/glasskube/distr/issues/948)) ([8e153e2](https://github.com/glasskube/distr/commit/8e153e2c694d00d127839d818fb4d21e3f43c8ca))
+* **backend:** lazily initialize jwt auth ([#941](https://github.com/glasskube/distr/issues/941)) ([923b3cf](https://github.com/glasskube/distr/commit/923b3cfe5b2d411eeddfba09198fe5c66ff3e3ae))
+* **deps:** update angular monorepo to v19.2.12 ([#936](https://github.com/glasskube/distr/issues/936)) ([f49e406](https://github.com/glasskube/distr/commit/f49e406d1bfe21ea86ddfee09d917af44fbff1d0))
+* **deps:** update angular monorepo to v19.2.13 ([#951](https://github.com/glasskube/distr/issues/951)) ([cdc34a7](https://github.com/glasskube/distr/commit/cdc34a7b4728a3e7b16bcb0f245f599d2721eb17))
+* **deps:** update dependency @angular/cdk to v19.2.17 ([#937](https://github.com/glasskube/distr/issues/937)) ([a3e3510](https://github.com/glasskube/distr/commit/a3e3510b47cd86eda74a1bf5abaa49900b5e3778))
+* **deps:** update dependency @sentry/angular to v9.22.0 ([#956](https://github.com/glasskube/distr/issues/956)) ([a75458d](https://github.com/glasskube/distr/commit/a75458d581995929775e9645c98ff3163d4ca851))
+* **deps:** update dependency posthog-js to v1.246.0 ([#957](https://github.com/glasskube/distr/issues/957)) ([45cf0af](https://github.com/glasskube/distr/commit/45cf0af65a2138ac9031d32d0089d38a1c6540fa))
+* **deps:** update dependency zone.js to v0.15.1 ([#946](https://github.com/glasskube/distr/issues/946)) ([48508c3](https://github.com/glasskube/distr/commit/48508c314b9558330d46190729de97f1f6523a45))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.79.4 ([#944](https://github.com/glasskube/distr/issues/944)) ([49f3fbe](https://github.com/glasskube/distr/commit/49f3fbea856c8d36e33505c1265296ef66c99295))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.4 ([#950](https://github.com/glasskube/distr/issues/950)) ([d7901e8](https://github.com/glasskube/distr/commit/d7901e8e94b4bafa05fb934e6fbde84fb746056c))
+* **deps:** update module github.com/docker/compose/v2 to v2.36.1 ([#940](https://github.com/glasskube/distr/issues/940)) ([b13a977](https://github.com/glasskube/distr/commit/b13a9770f52f8a183998eee842d9695dfab9e730))
+* **deps:** update module github.com/docker/compose/v2 to v2.36.2 ([#952](https://github.com/glasskube/distr/issues/952)) ([617e530](https://github.com/glasskube/distr/commit/617e53028659e32dd07a02ff3eaa03b8e6dedbb2))
+* **deps:** update module github.com/google/go-containerregistry to v0.20.4 ([#932](https://github.com/glasskube/distr/issues/932)) ([df3a83b](https://github.com/glasskube/distr/commit/df3a83b7f78fe65f1f5da5e8aa3a290341341043))
+* **deps:** update module github.com/google/go-containerregistry to v0.20.5 ([#945](https://github.com/glasskube/distr/issues/945)) ([b566b60](https://github.com/glasskube/distr/commit/b566b606be4954132bad4db6be5cae8ed7907fda))
+* **deps:** update module helm.sh/helm/v3 to v3.18.0, oras-go to v2 ([#926](https://github.com/glasskube/distr/issues/926)) ([824c996](https://github.com/glasskube/distr/commit/824c996e8e3e24800f3a2b9662622edd1476598b))
+* **deps:** update module k8s.io/kubectl to v0.33.1 ([#939](https://github.com/glasskube/distr/issues/939)) ([ae2023c](https://github.com/glasskube/distr/commit/ae2023cc58b7e2942557a632857e84ba3b34c3ba))
+* **deps:** update opentelemetry-go monorepo to v1.36.0 ([#933](https://github.com/glasskube/distr/issues/933)) ([1ad2e70](https://github.com/glasskube/distr/commit/1ad2e70bdbe79c1be703983b6f474478b91d13c9))
+
+
+### Other
+
+* **backend:** turn the hub into a cobra app ([#931](https://github.com/glasskube/distr/issues/931)) ([cfe3f6f](https://github.com/glasskube/distr/commit/cfe3f6f56251884306397dcc0e4894303d9c5ef7))
+* **deps:** bump github.com/containerd/containerd/v2 from 2.0.4 to 2.0.5 in the go_modules group across 1 directory ([#938](https://github.com/glasskube/distr/issues/938)) ([aa23d49](https://github.com/glasskube/distr/commit/aa23d4961298ded91d62c30d8b58940d1e262df2))
+* **deps:** update angular-cli monorepo to v19.2.13 ([#934](https://github.com/glasskube/distr/issues/934)) ([84b978c](https://github.com/glasskube/distr/commit/84b978c8ccbfcdc8c4566f48fa9c3ccab2998719))
+* **deps:** update axllent/mailpit docker tag to v1.25.1 ([#955](https://github.com/glasskube/distr/issues/955)) ([dad03e2](https://github.com/glasskube/distr/commit/dad03e2e34302ab4b48797aa087da84d1cbd4d24))
+* **ui:** add robots.txt file to only index the login page ([#947](https://github.com/glasskube/distr/issues/947)) ([2de09e9](https://github.com/glasskube/distr/commit/2de09e9e8900bd8cb80fa3c2728919eba3a6c7fb))
+
+## [1.9.1](https://github.com/glasskube/distr/compare/1.9.0...1.9.1) (2025-05-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @sentry/angular to v9.19.0 ([#922](https://github.com/glasskube/distr/issues/922)) ([86d253a](https://github.com/glasskube/distr/commit/86d253a07801954a07d71790a8cf7e016be37ce9))
+* **deps:** update dependency posthog-js to v1.242.3 ([#923](https://github.com/glasskube/distr/issues/923)) ([7c9db6f](https://github.com/glasskube/distr/commit/7c9db6f0432683f2907bf507020d50c525734482))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.3 ([#925](https://github.com/glasskube/distr/issues/925)) ([0e7695b](https://github.com/glasskube/distr/commit/0e7695b61dd2544813466cf611620568b0855a05))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.5 ([#918](https://github.com/glasskube/distr/issues/918)) ([6ebe47a](https://github.com/glasskube/distr/commit/6ebe47a5edeacb673a5b8f08b5a992dcc3ddce38))
+* **ui:** deployments page handles archived version scenarios better ([#927](https://github.com/glasskube/distr/issues/927)) ([c966b22](https://github.com/glasskube/distr/commit/c966b22c756b0acb2ebf36228d104e7d7213f936))
+
+
+### Other
+
+* **backend:** use registry plain http for development ([#928](https://github.com/glasskube/distr/issues/928)) ([5eb1129](https://github.com/glasskube/distr/commit/5eb112961ba218b8f3c47de7234f25189b811ebf))
+* **deps:** update axllent/mailpit docker tag to v1.25.0 ([#919](https://github.com/glasskube/distr/issues/919)) ([09748bc](https://github.com/glasskube/distr/commit/09748bcf322a2a261e317709b0b1693555bc964b))
+* **deps:** update gcr.io/distroless/static-debian12:nonroot docker digest to 188ddfb ([#921](https://github.com/glasskube/distr/issues/921)) ([78421a8](https://github.com/glasskube/distr/commit/78421a801ca13591481eaabf4dbb67507c300d43))
+* **ui:** hint that metrics reporting needs cluster scope ([#915](https://github.com/glasskube/distr/issues/915)) ([99efdae](https://github.com/glasskube/distr/commit/99efdae91c73abe148707e0f14569496bfd25f5d))
+
+## [1.9.0](https://github.com/glasskube/distr/compare/1.8.1...1.9.0) (2025-05-16)
+
+
+### Features
+
+* add host system metrics collection for deployment targets ([#899](https://github.com/glasskube/distr/issues/899)) ([1d03c3a](https://github.com/glasskube/distr/commit/1d03c3ab25c4b62de126909127bb5442025c8c3d))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.11 ([#909](https://github.com/glasskube/distr/issues/909)) ([b587766](https://github.com/glasskube/distr/commit/b5877663ed0ef6c2cac4596ea3551e1900357c8b))
+* **deps:** update dependency @angular/cdk to v19.2.16 ([#903](https://github.com/glasskube/distr/issues/903)) ([7243289](https://github.com/glasskube/distr/commit/7243289293bc85f5e9cb1b4cca3686bbf59242fb))
+* **deps:** update dependency @codemirror/view to v6.36.8 ([#895](https://github.com/glasskube/distr/issues/895)) ([88b2a84](https://github.com/glasskube/distr/commit/88b2a84feed918f0166c46f0af28a7323ef9c233))
+* **deps:** update dependency semver to v7.7.2 ([#897](https://github.com/glasskube/distr/issues/897)) ([68814a5](https://github.com/glasskube/distr/commit/68814a5e03b8b1a5a4c794d8d2890d3d9a697e7a))
+* **deps:** update kubernetes packages to v0.33.1 ([#912](https://github.com/glasskube/distr/issues/912)) ([e241943](https://github.com/glasskube/distr/commit/e2419434154b2f7d023ff9c8516cec75cc36d24a))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.3 ([#898](https://github.com/glasskube/distr/issues/898)) ([4f47e0d](https://github.com/glasskube/distr/commit/4f47e0d1ecaf520a9d90c726e5d0753f324e0fd0))
+* **deps:** update module github.com/getsentry/sentry-go to v0.33.0 ([#910](https://github.com/glasskube/distr/issues/910)) ([f389821](https://github.com/glasskube/distr/commit/f38982160165990460c4fc066c043e80da45d3eb))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.33.0 ([#911](https://github.com/glasskube/distr/issues/911)) ([4ef490b](https://github.com/glasskube/distr/commit/4ef490bfad5278a41fa19e953cad102dc7bc7740))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.126.0 ([#904](https://github.com/glasskube/distr/issues/904)) ([55288c4](https://github.com/glasskube/distr/commit/55288c4050f03fd69d24a01db20375a7e2535552))
+* **deps:** update module k8s.io/metrics to v0.33.0 ([#906](https://github.com/glasskube/distr/issues/906)) ([ef8b17d](https://github.com/glasskube/distr/commit/ef8b17d97004952c5b2b2283445168677f195ecd))
+* set tutorial deployment docker type ([#916](https://github.com/glasskube/distr/issues/916)) ([46aeebe](https://github.com/glasskube/distr/commit/46aeebea79a1320416222ddf4faed9ab2ef3be7c))
+* **ui:** break long texts to avoid layout disruption ([#914](https://github.com/glasskube/distr/issues/914)) ([5fd2d08](https://github.com/glasskube/distr/commit/5fd2d081c72fc6c8cef5dfd9e6a43d4d8688ac8b))
+* **ui:** optimize deployments view for smaller devices ([#901](https://github.com/glasskube/distr/issues/901)) ([47794b1](https://github.com/glasskube/distr/commit/47794b1af5c90eabf91a5d83d084cd4dbbf0b9ef))
+
+
+### Other
+
+* **agent:** rename cluster role binding ([#913](https://github.com/glasskube/distr/issues/913)) ([39ecbdf](https://github.com/glasskube/distr/commit/39ecbdf7938152a5c70921ea61395b6dc4e6abf0))
+* **deps:** update angular-cli monorepo to v19.2.12 ([#902](https://github.com/glasskube/distr/issues/902)) ([27ef621](https://github.com/glasskube/distr/commit/27ef62128a03826dd225bff65d2e56f62461ef94))
+* **deps:** update docker/build-push-action action to v6.17.0 ([#908](https://github.com/glasskube/distr/issues/908)) ([804be8b](https://github.com/glasskube/distr/commit/804be8bc9eba096aefa685852ae851d57a117d14))
+* **deps:** update tailwindcss monorepo to v4.1.7 ([#907](https://github.com/glasskube/distr/issues/907)) ([8c0580d](https://github.com/glasskube/distr/commit/8c0580df60d90afd88405199c41baaeae39e36d6))
+* **deps:** update webpack due to vuln ([#900](https://github.com/glasskube/distr/issues/900)) ([21ae03d](https://github.com/glasskube/distr/commit/21ae03de80bfe60d081d5dc0ec850834f043be13))
+
+## [1.8.1](https://github.com/glasskube/distr/compare/1.8.0...1.8.1) (2025-05-12)
+
+
+### Bug Fixes
+
+* **agent:** prevent implicit import of `env` package ([#893](https://github.com/glasskube/distr/issues/893)) ([6eb1be6](https://github.com/glasskube/distr/commit/6eb1be67c7f7ff932f31d1b3ebeaece77be9e515))
+
+## [1.8.0](https://github.com/glasskube/distr/compare/1.7.1...1.8.0) (2025-05-12)
+
+
+### Features
+
+* add support for custom domains and email from address ([#882](https://github.com/glasskube/distr/issues/882)) ([b7974e6](https://github.com/glasskube/distr/commit/b7974e6e84796727aac3bc4673b4fb18d1f3e25a))
+* docker swarm support ([#645](https://github.com/glasskube/distr/issues/645)) ([d842dda](https://github.com/glasskube/distr/commit/d842dda44fd6b575d2586a5689ad2d2a83371d4e))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.10 ([#884](https://github.com/glasskube/distr/issues/884)) ([841865b](https://github.com/glasskube/distr/commit/841865bdf49ca935116d722d4580f62a10c35a74))
+* **deps:** update dependency @angular/cdk to v19.2.15 ([#883](https://github.com/glasskube/distr/issues/883)) ([5fec38a](https://github.com/glasskube/distr/commit/5fec38a4e75abcfe3aaa3a376606a77b0020638b))
+* **deps:** update dependency @sentry/angular to v9.17.0 ([#890](https://github.com/glasskube/distr/issues/890)) ([081c384](https://github.com/glasskube/distr/commit/081c3848fa1974351ab2ae1759bab7b2633050b0))
+* **deps:** update dependency posthog-js to v1.240.6 ([#891](https://github.com/glasskube/distr/issues/891)) ([1062edc](https://github.com/glasskube/distr/commit/1062edc9f58588f6c634043cab259310465d6e03))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.2 ([#880](https://github.com/glasskube/distr/issues/880)) ([9eb2e41](https://github.com/glasskube/distr/commit/9eb2e41f5b36325febbbcaccbdc5004d6897b640))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.2 ([#888](https://github.com/glasskube/distr/issues/888)) ([24f119a](https://github.com/glasskube/distr/commit/24f119a25862c2ca389da85ff30b3afe0d5f6e63))
+
+
+### Other
+
+* **deps:** update actions/setup-go action to v5.5.0 ([#885](https://github.com/glasskube/distr/issues/885)) ([33f72d9](https://github.com/glasskube/distr/commit/33f72d96b4f31a97b17ad5e0ed419f59c9f30187))
+* **deps:** update angular-cli monorepo to v19.2.11 ([#879](https://github.com/glasskube/distr/issues/879)) ([fe470f7](https://github.com/glasskube/distr/commit/fe470f76340fc6b2db764115158f59b693f76cf2))
+* **deps:** update dependency @sentry/cli to v2.45.0 ([#889](https://github.com/glasskube/distr/issues/889)) ([b7c9bd8](https://github.com/glasskube/distr/commit/b7c9bd8dd4707895150d938e028c2d978bb896dd))
+* **deps:** update postgres docker tag to v17.5 ([#886](https://github.com/glasskube/distr/issues/886)) ([c327a19](https://github.com/glasskube/distr/commit/c327a199e95c6c7fe83f7906d040d5166ed180c8))
+* **deps:** update tailwindcss monorepo to v4.1.6 ([#887](https://github.com/glasskube/distr/issues/887)) ([630a659](https://github.com/glasskube/distr/commit/630a6591d1e438404252ccf612514888ab7f3e1b))
+* redirect new users to tutorials ([#892](https://github.com/glasskube/distr/issues/892)) ([e69f3f9](https://github.com/glasskube/distr/commit/e69f3f91acd77e21d5365b0da935efd6173cf2d2))
+* **ui:** make tutorial backlink more prominent ([#873](https://github.com/glasskube/distr/issues/873)) ([dfa3453](https://github.com/glasskube/distr/commit/dfa3453ce1a11cfcaba48f9a8f7ff9718b0cf0d9))
+
+## [1.7.1](https://github.com/glasskube/distr/compare/1.7.0...1.7.1) (2025-05-07)
+
+
+### Bug Fixes
+
+* **agent:** kubernetes agent GetLatestHelmRelease supports more than 10 revisions ([#876](https://github.com/glasskube/distr/issues/876)) ([7558784](https://github.com/glasskube/distr/commit/75587844f59c770e45238e7292b29c1bd22da876))
+* **deps:** update angular monorepo to v19.2.9 ([#846](https://github.com/glasskube/distr/issues/846)) ([2528080](https://github.com/glasskube/distr/commit/252808084f29df27e8efce0dbbc86376bcae661a))
+* **deps:** update dependency @angular/cdk to v19.2.14 ([#848](https://github.com/glasskube/distr/issues/848)) ([245ddbb](https://github.com/glasskube/distr/commit/245ddbb22dee168f5e5d0d4472136737db8dc3be))
+* **deps:** update dependency @codemirror/view to v6.36.7 ([#851](https://github.com/glasskube/distr/issues/851)) ([73c396a](https://github.com/glasskube/distr/commit/73c396a15c0f0599427736af6a41bb2e2ff33c9a))
+* **deps:** update dependency @fontsource/poppins to v5.2.6 ([#860](https://github.com/glasskube/distr/issues/860)) ([c16818d](https://github.com/glasskube/distr/commit/c16818d64e6b36942e1ff4a10f700f5ced71f82d))
+* **deps:** update dependency @sentry/angular to v9.15.0 ([#863](https://github.com/glasskube/distr/issues/863)) ([0b6b206](https://github.com/glasskube/distr/commit/0b6b206f137f103a346e32d9802d88fc727ee6f6))
+* **deps:** update dependency posthog-js to v1.239.1 ([#864](https://github.com/glasskube/distr/issues/864)) ([78ced57](https://github.com/glasskube/distr/commit/78ced579fb319725aecd9e9919e8ffba3f60a919))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.1 ([#853](https://github.com/glasskube/distr/issues/853)) ([2ae5ac6](https://github.com/glasskube/distr/commit/2ae5ac6a91cf05ca44b4d9df79f25db2734cc217))
+* **deps:** update module golang.org/x/crypto to v0.38.0 ([#871](https://github.com/glasskube/distr/issues/871)) ([728f7f1](https://github.com/glasskube/distr/commit/728f7f1272d6f71a1b3c0e3f958d0d77682956a8))
+* recreate tutorial resources if deleted ([#869](https://github.com/glasskube/distr/issues/869)) ([25047a1](https://github.com/glasskube/distr/commit/25047a123700eba88003b2c384981d6f04253b25))
+* show customer image in navbar ([#866](https://github.com/glasskube/distr/issues/866)) ([258e807](https://github.com/glasskube/distr/commit/258e8070cdfc815c70ef767bcff4e08222b8f86a))
+* **ui:** add missing icon when licensing disabled ([#858](https://github.com/glasskube/distr/issues/858)) ([72bbf0f](https://github.com/glasskube/distr/commit/72bbf0f9daafa3e937b2d45042047b09c90e9550))
+* **ui:** improve markdown rendering on customer "home" page ([#867](https://github.com/glasskube/distr/issues/867)) ([cb23725](https://github.com/glasskube/distr/commit/cb2372570d92ab069bce35f8ef81056a5ab27b5a))
+* **ui:** show hint for mac users ([#861](https://github.com/glasskube/distr/issues/861)) ([e696033](https://github.com/glasskube/distr/commit/e696033fe1f3f709f007592a810c149297757287))
+
+
+### Other
+
+* **backend:** add `DATABASE_MAX_CONNS` override parameter ([#868](https://github.com/glasskube/distr/issues/868)) ([4e8fb82](https://github.com/glasskube/distr/commit/4e8fb82546b8e304986434fb2b24c63840781428))
+* **deps:** update angular-cli monorepo to v19.2.10 ([#849](https://github.com/glasskube/distr/issues/849)) ([70b0bc8](https://github.com/glasskube/distr/commit/70b0bc83ced6be374e51a3e82863dc90393ddd57))
+* **deps:** update axllent/mailpit docker tag to v1.24.2 ([#852](https://github.com/glasskube/distr/issues/852)) ([c675495](https://github.com/glasskube/distr/commit/c675495939c16b2a71daf763d4e7015b2c9b51f9))
+* **deps:** update dependency @sentry/cli to v2.44.0 ([#859](https://github.com/glasskube/distr/issues/859)) ([8c25ab4](https://github.com/glasskube/distr/commit/8c25ab41db1f5bf03f38c79aca66bcf0263e0fce))
+* **deps:** update dependency @types/jasmine to v5.1.8 ([#870](https://github.com/glasskube/distr/issues/870)) ([a644901](https://github.com/glasskube/distr/commit/a644901641ed17589ab7540c1c1fa54bc15b9a5c))
+* **deps:** update dependency go to v1.24.3 ([#877](https://github.com/glasskube/distr/issues/877)) ([21f90d1](https://github.com/glasskube/distr/commit/21f90d14e1807c3850fd406927672c776e787c4e))
+* **deps:** update dependency golangci-lint to v2.1.6 ([#855](https://github.com/glasskube/distr/issues/855)) ([94abaf2](https://github.com/glasskube/distr/commit/94abaf233bd764faf98e023cf50f15d0465d5040))
+* **deps:** update dependency jasmine-core to v5.7.1 ([#850](https://github.com/glasskube/distr/issues/850)) ([971b79a](https://github.com/glasskube/distr/commit/971b79a2c4371f3f0a3e79d002d53a7b82abb8a1))
+* **deps:** update dependency typedoc to v0.28.4 ([#854](https://github.com/glasskube/distr/issues/854)) ([9bab574](https://github.com/glasskube/distr/commit/9bab574105e8197c2190ca816acf614e44501bfb))
+* **deps:** update golangci/golangci-lint-action action to v7.0.1 ([#856](https://github.com/glasskube/distr/issues/856)) ([351a857](https://github.com/glasskube/distr/commit/351a857be7dc69375e29e18b194793c0c8881213))
+* **deps:** update golangci/golangci-lint-action action to v8 ([#857](https://github.com/glasskube/distr/issues/857)) ([1c5d369](https://github.com/glasskube/distr/commit/1c5d369b5329ab2e6e6174b2b4fe33d1d7b40e18))
+* **deps:** update tailwindcss monorepo to v4.1.5 ([#845](https://github.com/glasskube/distr/issues/845)) ([fb960ae](https://github.com/glasskube/distr/commit/fb960ae940015d2c623d210a5742d7827e01b51a))
+* **ui:** hide application version form by default ([#875](https://github.com/glasskube/distr/issues/875)) ([6eec16b](https://github.com/glasskube/distr/commit/6eec16b1b04b2b163454ed94017b980de9075779))
+* **ui:** hide artifact download information in customer portal ([#862](https://github.com/glasskube/distr/issues/862)) ([2aef7d4](https://github.com/glasskube/distr/commit/2aef7d45e30ce3b604170770df16df67352c9772))
+* **ui:** increase font sizes in tutorials ([#874](https://github.com/glasskube/distr/issues/874)) ([c6fad6a](https://github.com/glasskube/distr/commit/c6fad6ab2a07bc15d5c08881e61c7c68d702e36c))
+* **ui:** use explicit monospace font stack ([#865](https://github.com/glasskube/distr/issues/865)) ([2097d31](https://github.com/glasskube/distr/commit/2097d318bbc710bb5becd66fd402bf1d5fd23acc))
+
+## [1.7.0](https://github.com/glasskube/distr/compare/1.6.1...1.7.0) (2025-04-30)
+
+
+### Features
+
+* add tutorials, adapt feature flag semantics and sidebar ([#814](https://github.com/glasskube/distr/issues/814)) ([f86f513](https://github.com/glasskube/distr/commit/f86f513bfdc29d1834f777a28b33334d261c1b6f))
+
+
+### Bug Fixes
+
+* **backend:** return image ID in GetArtifactByName ([#843](https://github.com/glasskube/distr/issues/843)) ([445e562](https://github.com/glasskube/distr/commit/445e5620d1569b73e4d0ad209eff3983c7b4c8f4))
+
+
+### Other
+
+* increase request limit ([#844](https://github.com/glasskube/distr/issues/844)) ([03ef0e9](https://github.com/glasskube/distr/commit/03ef0e999ed27fb1e02abe5976b85db4f0920853))
+* new design for vendor dashboard ([#840](https://github.com/glasskube/distr/issues/840)) ([a04615d](https://github.com/glasskube/distr/commit/a04615d80a276898ef57a03e388917e33fbc0dd4))
+* **ui:** make agent status indicator bigger ([#839](https://github.com/glasskube/distr/issues/839)) ([54ae61f](https://github.com/glasskube/distr/commit/54ae61f4635df34c89ee9a0941b842f8172ccdfd))
+* **ui:** update helm release name validation ([#842](https://github.com/glasskube/distr/issues/842)) ([39d0619](https://github.com/glasskube/distr/commit/39d061920082d86df7b15fe9b8b9391985b55f2d))
+
+## [1.6.1](https://github.com/glasskube/distr/compare/1.6.0...1.6.1) (2025-04-29)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.79.3 ([#832](https://github.com/glasskube/distr/issues/832)) ([415c2f9](https://github.com/glasskube/distr/commit/415c2f980c1f1c6a13e8b957ac9384e637fd0037))
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.6 ([#835](https://github.com/glasskube/distr/issues/835)) ([5863f7f](https://github.com/glasskube/distr/commit/5863f7f897d5bb168a112ebda383605c014d43f2))
+* **ui:** make deployment modal scrollable ([#837](https://github.com/glasskube/distr/issues/837)) ([9fe543d](https://github.com/glasskube/distr/commit/9fe543d65313afa23a58df6583689a37c085dc59))
+
+
+### Other
+
+* **ui:** improve deploy button wording on deployment page ([#836](https://github.com/glasskube/distr/issues/836)) ([1b525d9](https://github.com/glasskube/distr/commit/1b525d9fdc091cd05951145f08361f97999dc87d))
+* **ui:** improve external registry wording ([#838](https://github.com/glasskube/distr/issues/838)) ([630afe2](https://github.com/glasskube/distr/commit/630afe22d4d32b272c4d42dcd3bd05556977ff50))
+
+## [1.6.0](https://github.com/glasskube/distr/compare/1.5.2...1.6.0) (2025-04-28)
+
+
+### Features
+
+* add images for users, artifacts and applications ([#764](https://github.com/glasskube/distr/issues/764)) ([a414a44](https://github.com/glasskube/distr/commit/a414a4480ea204f1f90ab3191f210cf7d180ef8b))
+* add support for multiple deployments per deployment target ([#809](https://github.com/glasskube/distr/issues/809)) ([4c58021](https://github.com/glasskube/distr/commit/4c580218bbfd24bce5c8fdbb654996a40bac4e20))
+
+
+### Bug Fixes
+
+* **agent:** ensure token after 401 response ([#807](https://github.com/glasskube/distr/issues/807)) ([592b7a8](https://github.com/glasskube/distr/commit/592b7a8818d92997ace5bd611f71fc9a10fcf4f8))
+* **backend:** correct artifact version download numbers ([#817](https://github.com/glasskube/distr/issues/817)) ([7695c91](https://github.com/glasskube/distr/commit/7695c918e4dc4beb5356d317e5ed583212a328f6))
+* **deps:** update angular monorepo to v19.2.8 ([#818](https://github.com/glasskube/distr/issues/818)) ([a2f3588](https://github.com/glasskube/distr/commit/a2f3588907fd3432e915c199a2d3846772829b8f))
+* **deps:** update dependency @angular/cdk to v19.2.11 ([#819](https://github.com/glasskube/distr/issues/819)) ([6241f1f](https://github.com/glasskube/distr/commit/6241f1f86fa33adb0a31ae4dc017b1bfc4e89377))
+* **deps:** update dependency @codemirror/view to v6.36.6 ([#821](https://github.com/glasskube/distr/issues/821)) ([33d3407](https://github.com/glasskube/distr/commit/33d3407d074bc66f0520f6137833907dbacb3d4d))
+* **deps:** update dependency @sentry/angular to v9.13.0 ([#804](https://github.com/glasskube/distr/issues/804)) ([61a6c20](https://github.com/glasskube/distr/commit/61a6c20d216d13acdac67c6322145b2f70fdd07d))
+* **deps:** update dependency @sentry/angular to v9.14.0 ([#830](https://github.com/glasskube/distr/issues/830)) ([da75b30](https://github.com/glasskube/distr/commit/da75b308f9654b621d34f49a792d936024d2a4f6))
+* **deps:** update dependency apexcharts to v4.6.0 ([#806](https://github.com/glasskube/distr/issues/806)) ([40a4d4e](https://github.com/glasskube/distr/commit/40a4d4e7c28aa37241f636c0a3fffa04e83b3896))
+* **deps:** update dependency apexcharts to v4.7.0 ([#823](https://github.com/glasskube/distr/issues/823)) ([089841e](https://github.com/glasskube/distr/commit/089841e0e6672e6ed71de25cd02a019c69622539))
+* **deps:** update dependency flowbite to v3.1.2 ([#808](https://github.com/glasskube/distr/issues/808)) ([f4ade80](https://github.com/glasskube/distr/commit/f4ade80a5874c397771264a6d47d792004c8a8a9))
+* **deps:** update dependency posthog-js to v1.236.4 ([#805](https://github.com/glasskube/distr/issues/805)) ([857a48e](https://github.com/glasskube/distr/commit/857a48e26249fec801865b1fd76781802f0a6599))
+* **deps:** update dependency posthog-js to v1.236.7 ([#829](https://github.com/glasskube/distr/issues/829)) ([895b5ab](https://github.com/glasskube/distr/commit/895b5abfd170eb5bd1259ca43655be8ee68d0b03))
+* **deps:** update kubernetes packages to v0.33.0 ([#820](https://github.com/glasskube/distr/issues/820)) ([639dcea](https://github.com/glasskube/distr/commit/639dceafd111c9dfde44aa35ce9d9e01bb628bf8))
+* **deps:** update module github.com/docker/cli to v28.1.0+incompatible ([#797](https://github.com/glasskube/distr/issues/797)) ([5f1c4bf](https://github.com/glasskube/distr/commit/5f1c4bf9773554d8f2825f43c5ba73c43e7b28f2))
+* **deps:** update module github.com/docker/cli to v28.1.1+incompatible ([#802](https://github.com/glasskube/distr/issues/802)) ([f175122](https://github.com/glasskube/distr/commit/f175122d52c955e20b056b8daf1cf83b0da06a81))
+* **deps:** update module github.com/golang-migrate/migrate/v4 to v4.18.3 ([#822](https://github.com/glasskube/distr/issues/822)) ([baae889](https://github.com/glasskube/distr/commit/baae8892063b3cf8ff24711e1db04cd259ba06bf))
+* **deps:** update module github.com/masterminds/semver/v3 to v3.3.1 ([#831](https://github.com/glasskube/distr/issues/831)) ([ae11c3a](https://github.com/glasskube/distr/commit/ae11c3a1263ee11ba945a948f47435ec311b5e8a))
+* **deps:** update module k8s.io/cli-runtime to v0.32.4 ([#816](https://github.com/glasskube/distr/issues/816)) ([474d6b2](https://github.com/glasskube/distr/commit/474d6b2f66b1163903e81e90fedac6ea98c6e90a))
+* **deps:** update module k8s.io/client-go to v0.32.4 ([#813](https://github.com/glasskube/distr/issues/813)) ([1f07da9](https://github.com/glasskube/distr/commit/1f07da9a0f3dc1ee7d868ee268e3ba019de4b172))
+
+
+### Other
+
+* add OpenTelemetry tracing ([#801](https://github.com/glasskube/distr/issues/801)) ([67ce94b](https://github.com/glasskube/distr/commit/67ce94bda6c674a5edc16250953dfe1c94c09b2e))
+* **deps:** update angular-cli monorepo to v19.2.9 ([#811](https://github.com/glasskube/distr/issues/811)) ([f7c0757](https://github.com/glasskube/distr/commit/f7c0757b26c591527e9ee83ef701a233bb8bc554))
+* **deps:** update dependency golangci-lint to v2.1.5 ([#825](https://github.com/glasskube/distr/issues/825)) ([1ff2176](https://github.com/glasskube/distr/commit/1ff2176a975be459053aa83afa941ae8a665d720))
+* **deps:** update dependency jasmine-core to ~5.7.0 ([#828](https://github.com/glasskube/distr/issues/828)) ([730529e](https://github.com/glasskube/distr/commit/730529ee42aab882a2491ed75aa213f77adbc45e))
+* **deps:** update dependency typedoc to v0.28.3 ([#803](https://github.com/glasskube/distr/issues/803)) ([9ae5f9a](https://github.com/glasskube/distr/commit/9ae5f9a143fd551dac7bddea9a3bd1755ea2fd1f))
+* **deps:** update dependency typedoc-plugin-markdown to v4.6.3 ([#815](https://github.com/glasskube/distr/issues/815)) ([8d6ceee](https://github.com/glasskube/distr/commit/8d6ceee815c3cf6ce6473c0c2b8b1f780defab4e))
+* **deps:** update docker/build-push-action action to v6.16.0 ([#824](https://github.com/glasskube/distr/issues/824)) ([1374af9](https://github.com/glasskube/distr/commit/1374af9531f24baaccd831dc3d5c36b02d59d203))
+* **deps:** upgrade tailwindcss to v4 and flowbite to v3 ([#799](https://github.com/glasskube/distr/issues/799)) ([4306903](https://github.com/glasskube/distr/commit/4306903a0e29babd90c9037682f0cb4ff2e54fb6))
+* **registry:** do not accept non-compliant OCI manifest ([#827](https://github.com/glasskube/distr/issues/827)) ([72ea6da](https://github.com/glasskube/distr/commit/72ea6da763ca7955db82a1837dd55aa06ee1c14c))
+* **ui:** fix button cursor after tailwind upgrade ([#812](https://github.com/glasskube/distr/issues/812)) ([5231b24](https://github.com/glasskube/distr/commit/5231b246d48cf7f16bafb584eab52f6ff9e808a4))
+* **ui:** fix spacing issues after tailwind upgrade ([#826](https://github.com/glasskube/distr/issues/826)) ([c00f20a](https://github.com/glasskube/distr/commit/c00f20a6140cfd9727743b27c32ced5bcd97908b))
+
+## [1.5.2](https://github.com/glasskube/distr/compare/1.5.1...1.5.2) (2025-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v19.2.7 ([#794](https://github.com/glasskube/distr/issues/794)) ([dbffea2](https://github.com/glasskube/distr/commit/dbffea2a693d28f104ecbbb7d107e14e97d03932))
+* **deps:** update dependency @angular/cdk to v19.2.10 ([#791](https://github.com/glasskube/distr/issues/791)) ([4ccf8be](https://github.com/glasskube/distr/commit/4ccf8be6cff8c52b4b785158a94347ea8180fafe))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v19.2.8 ([#790](https://github.com/glasskube/distr/issues/790)) ([c243855](https://github.com/glasskube/distr/commit/c243855a4589c1d9fc9c3c6203b0dccb77003e01))
+* enable Distr registry for new organizations ([#796](https://github.com/glasskube/distr/issues/796)) ([29a27a3](https://github.com/glasskube/distr/commit/29a27a34ce0d223fa2d4585afb770e692840e231))
+* **ui:** disable archived versions in license edit form ([#782](https://github.com/glasskube/distr/issues/782)) ([4622fc9](https://github.com/glasskube/distr/commit/4622fc904a4e80e6e1f46f784c0d43089138a0d9))
+
+## [1.5.1](https://github.com/glasskube/distr/compare/1.5.0...1.5.1) (2025-04-16)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.5 ([#789](https://github.com/glasskube/distr/issues/789)) ([2033559](https://github.com/glasskube/distr/commit/203355914f1ba09f3266d13becc1fac28343f4dd))
+
+
+### Other
+
+* **agent:** kubernetes agent client config reload ([#775](https://github.com/glasskube/distr/issues/775)) ([00b59b6](https://github.com/glasskube/distr/commit/00b59b66d6bff01542eaee93d5dfedad7b11e4c7))
+* **deps:** update dependency golangci-lint to v2.1.2 ([#787](https://github.com/glasskube/distr/issues/787)) ([215227a](https://github.com/glasskube/distr/commit/215227a9dba3ab42f5c0b033fec9e34ff72de868))
+* **ui:** don't display push instructions for non vendors ([#788](https://github.com/glasskube/distr/issues/788)) ([2aa786b](https://github.com/glasskube/distr/commit/2aa786bd954184a9ec25ca007e755325ea310bf7))
+
+
+### Docs
+
+* add Discord support link ([#785](https://github.com/glasskube/distr/issues/785)) ([13c8729](https://github.com/glasskube/distr/commit/13c87298fc621d73a4468de5b95c38ccaa7e30c0))
+* update readme ([#777](https://github.com/glasskube/distr/issues/777)) ([a00c8e2](https://github.com/glasskube/distr/commit/a00c8e273bcbd2c809acd6c2316c9f2455fb5cb0))
+
+## [1.5.0](https://github.com/glasskube/distr/compare/1.4.7...1.5.0) (2025-04-14)
+
+
+### Features
+
+* agent registry auth ([#747](https://github.com/glasskube/distr/issues/747)) ([e55005a](https://github.com/glasskube/distr/commit/e55005af477c4e0f95802fb6eaf2f88678b7b170))
+
+
+### Bug Fixes
+
+* **agent:** kubernetes agent sends wrong status type for "progressing" ([ff0a337](https://github.com/glasskube/distr/commit/ff0a337db48aa073948f214cd36526aa592ef5de))
+* **deps:** update angular monorepo to v19.2.6 ([#767](https://github.com/glasskube/distr/issues/767)) ([295bce3](https://github.com/glasskube/distr/commit/295bce3913898374cbd0429edf1e2287f29d4e28))
+* **deps:** update aws-sdk-go-v2 monorepo ([#776](https://github.com/glasskube/distr/issues/776)) ([9377f94](https://github.com/glasskube/distr/commit/9377f94fb8e86ce0a838d61988f5b0eb59214d67))
+* **deps:** update dependency @angular/cdk to v19.2.9 ([#770](https://github.com/glasskube/distr/issues/770)) ([51e3d82](https://github.com/glasskube/distr/commit/51e3d82f91def38f6676b6499ee332cfc66822bb))
+* **deps:** update dependency @sentry/angular to v9.12.0 ([#781](https://github.com/glasskube/distr/issues/781)) ([8adc88a](https://github.com/glasskube/distr/commit/8adc88abea66ceeb81149bb6923f7ded4861abae))
+* **deps:** update dependency posthog-js to v1.235.6 ([#783](https://github.com/glasskube/distr/issues/783)) ([a78c127](https://github.com/glasskube/distr/commit/a78c127cf804774afbdece6a08b3a40db4e07160))
+* **deps:** update module github.com/getsentry/sentry-go to v0.32.0 ([#773](https://github.com/glasskube/distr/issues/773)) ([01c5b58](https://github.com/glasskube/distr/commit/01c5b585bc3ab832a58196008be3807dd5dcf723))
+* **deps:** update module helm.sh/helm/v3 to v3.17.3 ([#772](https://github.com/glasskube/distr/issues/772)) ([6f611a3](https://github.com/glasskube/distr/commit/6f611a37aa085ae0a866ce03863b00e12db21655))
+
+
+### Other
+
+* **deps:** update actions/setup-node action to v4.4.0 ([#780](https://github.com/glasskube/distr/issues/780)) ([8dc422c](https://github.com/glasskube/distr/commit/8dc422c1d12c59e6dcff974d60e795ee2fc0261a))
+* **deps:** update angular-cli monorepo to v19.2.7 ([#769](https://github.com/glasskube/distr/issues/769)) ([ba499e2](https://github.com/glasskube/distr/commit/ba499e21af6c9075c03a5688839903214ec06eae))
+* **deps:** update axllent/mailpit docker tag to v1.24.1 ([#778](https://github.com/glasskube/distr/issues/778)) ([12cb796](https://github.com/glasskube/distr/commit/12cb7964ff274db09836cae4c1b14725284cc618))
+* **deps:** update dependency golangci-lint to v2.1.1 ([#779](https://github.com/glasskube/distr/issues/779)) ([6e26b4b](https://github.com/glasskube/distr/commit/6e26b4b2b1ca9f10614f81cf14d63ac5ed3ded25))
+* **deps:** update dependency typedoc-plugin-markdown to v4.6.2 ([#766](https://github.com/glasskube/distr/issues/766)) ([f675c1b](https://github.com/glasskube/distr/commit/f675c1b92ec85d246de5e44235ddf0880dbc1397))
+* **registry:** propagate invalid name errors and return 400 ([#765](https://github.com/glasskube/distr/issues/765)) ([110ff0d](https://github.com/glasskube/distr/commit/110ff0d929ac38ccc13ee53e4743cdd149bb7455))
+* **ui:** change stale message for empty deployment targets ([#771](https://github.com/glasskube/distr/issues/771)) ([f324d0b](https://github.com/glasskube/distr/commit/f324d0b2ca86f31d69e07c8b46e9e782c4c46167))
+* **ui:** reconnect in dropdown, hide status if target empty ([#768](https://github.com/glasskube/distr/issues/768)) ([7f9e6ac](https://github.com/glasskube/distr/commit/7f9e6ac993691cb18efc873a364dbf1247e135a6))
+
+
+### Docs
+
+* add registry to README.md ([#761](https://github.com/glasskube/distr/issues/761)) ([7d1a657](https://github.com/glasskube/distr/commit/7d1a65795c061f0301b1097c1782eadaa9c55ed9))
+
+## [1.4.7](https://github.com/glasskube/distr/compare/1.4.6...1.4.7) (2025-04-08)
+
+
+### Bug Fixes
+
+* **ui:** deployed version text overflow ([#759](https://github.com/glasskube/distr/issues/759)) ([ee45edf](https://github.com/glasskube/distr/commit/ee45edf597dfa6748471d589277e64f4b0492664))
+
+
+### Other
+
+* **ui:** add Helm release name validation ([#757](https://github.com/glasskube/distr/issues/757)) ([a8adff4](https://github.com/glasskube/distr/commit/a8adff40dd68654b7ec661d5fb77b3d7fe9ae1ad))
+* **ui:** increase stale timeout to 60 secs ([#758](https://github.com/glasskube/distr/issues/758)) ([117e288](https://github.com/glasskube/distr/commit/117e28829e376499b8f56cff0e33b6cde6f54f73))
+
+## [1.4.6](https://github.com/glasskube/distr/compare/1.4.5...1.4.6) (2025-04-08)
+
+
+### Other
+
+* **ui:** add loading spinner on deployment status modal ([#754](https://github.com/glasskube/distr/issues/754)) ([7fad29c](https://github.com/glasskube/distr/commit/7fad29c3709db5044fe4fa79d7a7ae3f97edda1d))
+
+
+### Performance
+
+* **backend:** optimize DB query to get DeploymentRevisionStatus ([#753](https://github.com/glasskube/distr/issues/753)) ([46be9e9](https://github.com/glasskube/distr/commit/46be9e98a3141b3f8b82eaf9cd51882e18b41b40))
+
+## [1.4.5](https://github.com/glasskube/distr/compare/1.4.4...1.4.5) (2025-04-07)
+
+
+### Bug Fixes
+
+* **backend:** correct artifact version downloads for customer ([#742](https://github.com/glasskube/distr/issues/742)) ([ecfb521](https://github.com/glasskube/distr/commit/ecfb521b7acafb733c1edc0fcc36e2b04da426a6))
+* **backend:** correctly handle artifact size when there are no parts ([#719](https://github.com/glasskube/distr/issues/719)) ([22c0133](https://github.com/glasskube/distr/commit/22c0133bfcba1cc9d3686902c7bc2215a8f0cba0))
+* **backend:** update organization without slug leads to panic ([#727](https://github.com/glasskube/distr/issues/727)) ([c926fed](https://github.com/glasskube/distr/commit/c926fed5acba08f43e80070e1519b6b611c129e9))
+* **deps:** update angular monorepo to v19.2.5 ([#739](https://github.com/glasskube/distr/issues/739)) ([8c52183](https://github.com/glasskube/distr/commit/8c52183ae8d5bc97a67c480b15c525172c1201af))
+* **deps:** update aws-sdk-go-v2 monorepo ([#744](https://github.com/glasskube/distr/issues/744)) ([c392d30](https://github.com/glasskube/distr/commit/c392d3070b5130a95b1fe90f0fc83569321ff5df))
+* **deps:** update dependency @angular/cdk to v19.2.8 ([#740](https://github.com/glasskube/distr/issues/740)) ([511a602](https://github.com/glasskube/distr/commit/511a6021384c3cf38fde80c0db4dfea665ff44ef))
+* **deps:** update dependency @codemirror/commands to v6.8.1 ([#725](https://github.com/glasskube/distr/issues/725)) ([b3e5e12](https://github.com/glasskube/distr/commit/b3e5e129438f68319ad3a53da81b661a66cf8498))
+* **deps:** update dependency @codemirror/view to v6.36.5 ([#721](https://github.com/glasskube/distr/issues/721)) ([78e3bec](https://github.com/glasskube/distr/commit/78e3bec5c95f96fc04a56b0d7efc1bcd2007f33e))
+* **deps:** update dependency @sentry/angular to v9.10.1 ([#729](https://github.com/glasskube/distr/issues/729)) ([70b9d26](https://github.com/glasskube/distr/commit/70b9d2610c177d202ec3503cb2d84d88beeefd01))
+* **deps:** update dependency @sentry/angular to v9.11.0 ([#752](https://github.com/glasskube/distr/issues/752)) ([d0f3f9c](https://github.com/glasskube/distr/commit/d0f3f9ca6cd862173e3a469e62fb25119bfa4a68))
+* **deps:** update dependency globe.gl to v2.41.4 ([#745](https://github.com/glasskube/distr/issues/745)) ([709dedd](https://github.com/glasskube/distr/commit/709deddf02869e4677647ff4fffedb1cce1a8aab))
+* **deps:** update dependency posthog-js to v1.234.6 ([#730](https://github.com/glasskube/distr/issues/730)) ([783d57f](https://github.com/glasskube/distr/commit/783d57f35501f2ad76e268fa6e22b20269080fbc))
+* **deps:** update dependency posthog-js to v1.234.9 ([#751](https://github.com/glasskube/distr/issues/751)) ([1909b0f](https://github.com/glasskube/distr/commit/1909b0fc7902568d79eafa72a73258ebaec774d9))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.79.0 ([#731](https://github.com/glasskube/distr/issues/731)) ([30273a0](https://github.com/glasskube/distr/commit/30273a08a416ceb0c4123f313e158a60ad432444))
+* **deps:** update module github.com/go-chi/httprate to v0.15.0 ([#724](https://github.com/glasskube/distr/issues/724)) ([91eb949](https://github.com/glasskube/distr/commit/91eb9490bd0d65ebde35355c99935c45ad6f2179))
+* **deps:** update module github.com/onsi/gomega to v1.37.0 ([#738](https://github.com/glasskube/distr/issues/738)) ([23b64d8](https://github.com/glasskube/distr/commit/23b64d8cbbb2221ba4666228bc08a898adbcff8e))
+* **deps:** update module golang.org/x/crypto to v0.37.0 ([#749](https://github.com/glasskube/distr/issues/749)) ([9c7d9c6](https://github.com/glasskube/distr/commit/9c7d9c6f2f8b52d19da9808922eb555a5df7a24b))
+* **ui:** avoid invite link redirect loop and guide user ([#736](https://github.com/glasskube/distr/issues/736)) ([e1ee6bf](https://github.com/glasskube/distr/commit/e1ee6bf2328e13c31d6fec93075bfb008c5efa82))
+
+
+### Other
+
+* add artifact download history page ([#743](https://github.com/glasskube/distr/issues/743)) ([959cb10](https://github.com/glasskube/distr/commit/959cb1097bec2c8d880e6c36d67324336582cebd))
+* add deployment revision status "progressing" ([#746](https://github.com/glasskube/distr/issues/746)) ([5e1ede9](https://github.com/glasskube/distr/commit/5e1ede9d36f16440039064f5515339508c60cb77))
+* **backend:** enhanced token verification and improved visibility constraints ([#733](https://github.com/glasskube/distr/issues/733)) ([fd0ebb3](https://github.com/glasskube/distr/commit/fd0ebb31b37ca5124d05cd01e57efd730e0209b9))
+* **backend:** save UserAccount last_logged_in_at on successful login ([#741](https://github.com/glasskube/distr/issues/741)) ([1216584](https://github.com/glasskube/distr/commit/12165840d216207de4da7ede088fccbb6f9f812e))
+* **deps:** update angular-cli monorepo to v19.2.6 ([#737](https://github.com/glasskube/distr/issues/737)) ([6645a75](https://github.com/glasskube/distr/commit/6645a7529fa76240b60bfdbcc249ddf30857127d))
+* **deps:** update axllent/mailpit docker tag to v1.24.0 ([#723](https://github.com/glasskube/distr/issues/723)) ([ed4b8dd](https://github.com/glasskube/distr/commit/ed4b8dd1d4c69673dc1d5c64a2b7429ecbc8de2b))
+* **deps:** update dependency @sentry/cli to v2.43.0 ([#726](https://github.com/glasskube/distr/issues/726)) ([7480365](https://github.com/glasskube/distr/commit/7480365ddb6983500008302fb590e688d96c543e))
+* **deps:** update dependency go to v1.24.2 ([#734](https://github.com/glasskube/distr/issues/734)) ([b86922e](https://github.com/glasskube/distr/commit/b86922ef8691a29403206751875f8afded2d8959))
+* **deps:** update dependency typedoc to v0.28.2 ([#750](https://github.com/glasskube/distr/issues/750)) ([53a3f25](https://github.com/glasskube/distr/commit/53a3f25e18ff5cbb326b2b9239e41d13562bfa37))
+* **deps:** update dependency typedoc-plugin-markdown to v4.6.1 ([#735](https://github.com/glasskube/distr/issues/735)) ([a94eb65](https://github.com/glasskube/distr/commit/a94eb658a6104b0326f83d7fd7c9fc2da723ae6f))
+* **deps:** update dependency typescript to v5.8.3 ([#748](https://github.com/glasskube/distr/issues/748)) ([f602fd1](https://github.com/glasskube/distr/commit/f602fd1106faabc094d7175ac8ef634b73ec41fd))
+* **deps:** update gcr.io/distroless/static-debian12:nonroot docker digest to c0f429e ([#720](https://github.com/glasskube/distr/issues/720)) ([f0a3baa](https://github.com/glasskube/distr/commit/f0a3baab964a4873f32ce33a73843ffccfdf14e7))
+
 ## [1.4.4](https://github.com/glasskube/distr/compare/1.4.3...1.4.4) (2025-03-28)
 
 

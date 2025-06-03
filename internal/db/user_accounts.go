@@ -16,8 +16,10 @@ import (
 
 const (
 	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
-		"u.password_salt, u.name"
-	userAccountWithRoleOutputExpr = userAccountOutputExpr + ", j.user_role"
+		"u.password_salt, u.name, u.image_id"
+	userAccountWithRoleOutputExpr = userAccountOutputExpr +
+		", j.user_role, j.created_at "
+	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
 )
 
 func CreateUserAccountWithOrganization(
@@ -77,15 +79,17 @@ func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 		SET email = @email,
 			name = @name,
 			password_hash = @password_hash,
-			password_salt = @password_salt
+			password_salt = @password_salt,
+			email_verified_at = @email_verified_at
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"id":            userAccount.ID,
-			"email":         userAccount.Email,
-			"password_hash": userAccount.PasswordHash,
-			"password_salt": userAccount.PasswordSalt,
-			"name":          userAccount.Name,
+			"id":                userAccount.ID,
+			"email":             userAccount.Email,
+			"password_hash":     userAccount.PasswordHash,
+			"password_salt":     userAccount.PasswordSalt,
+			"name":              userAccount.Name,
+			"email_verified_at": userAccount.EmailVerifiedAt,
 		},
 	)
 	if err != nil {
@@ -147,24 +151,97 @@ func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+func UserManagesDeploymentTargetInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(dt.id) > 0
+		FROM DeploymentTarget dt
+		WHERE dt.organization_id = @orgId AND dt.created_by_user_account_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func UserOwnsApplicationLicensesInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(al.id) > 0
+		FROM ApplicationLicense al
+		WHERE al.organization_id = @orgId AND al.owner_useraccount_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func UserOwnsArtifactLicensesInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(al.id) > 0
+		FROM ArtifactLicense al
+		WHERE al.organization_id = @orgId AND al.owner_useraccount_id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `
+		DELETE FROM Organization_UserAccount
+		WHERE user_account_id = @userId AND organization_id = @orgId`,
+		pgx.NamedArgs{"userId": userID, "orgId": orgID})
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	return err
+}
+
 func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
 		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
 		pgx.NamedArgs{"userId": userID, "orgId": orgID, "role": role},
 	)
+	if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
+		return apierrors.ErrAlreadyExists
+	}
 	return err
 }
 
-func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.UserAccountWithUserRole, error) {
+func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID, role *types.UserRole) (
+	[]types.UserAccountWithUserRole,
+	error,
+) {
 	db := internalctx.GetDb(ctx)
+	checkRole := role != nil
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountWithRoleOutputExpr+`
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
-		WHERE j.organization_id = @orgId
-		ORDER BY u.name`,
-		pgx.NamedArgs{"orgId": orgID},
+		WHERE j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)
+		ORDER BY u.name, u.email`,
+		pgx.NamedArgs{"orgId": orgID, "checkRole": checkRole, "role": role},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
@@ -216,7 +293,7 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+userAccountOutputExpr+`, j.user_role
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			WHERE u.id = @id AND j.organization_id = @orgId`,
@@ -235,4 +312,104 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 	} else {
 		return &userAccount, nil
 	}
+}
+
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expectedRole *types.UserRole) (
+	*types.UserAccountWithUserRole,
+	*types.Organization,
+	error,
+) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT ("+userAccountWithRoleOutputExpr+`),
+					(`+organizationOutputExpr+`)
+			FROM UserAccount u
+			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
+			INNER JOIN Organization o ON o.id = j.organization_id
+			WHERE u.id = @id AND j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)`,
+		pgx.NamedArgs{
+			"id":        userID,
+			"orgId":     orgID,
+			"role":      expectedRole,
+			"checkRole": expectedRole != nil,
+		},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := pgx.CollectExactlyOneRow[struct {
+		User types.UserAccountWithUserRole
+		Org  types.Organization
+	}](rows, pgx.RowToStructByPos)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, apierrors.ErrNotFound
+		} else {
+			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+		}
+	} else {
+		return &res.User, &res.Org, nil
+	}
+}
+
+func GetUserAccountAndOrgForDeploymentTarget(
+	ctx context.Context,
+	id uuid.UUID,
+) (*types.UserAccountWithUserRole, *types.Organization, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT ("+userAccountWithRoleOutputExpr+`),
+					(`+organizationOutputExpr+`)
+			FROM DeploymentTarget dt
+			JOIN Organization o ON o.id = dt.organization_id
+			JOIN UserAccount u ON u.id = dt.created_by_user_account_id
+			JOIN Organization_UserAccount j ON u.id = j.user_account_id
+				AND o.id = j.organization_id
+			WHERE dt.id = @id`,
+		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := pgx.CollectExactlyOneRow[struct {
+		User types.UserAccountWithUserRole
+		Org  types.Organization
+	}](rows, pgx.RowToStructByPos)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, apierrors.ErrNotFound
+		} else {
+			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+		}
+	} else {
+		return &res.User, &res.Org, nil
+	}
+}
+
+func UpdateUserAccountLastLoggedIn(ctx context.Context, userID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`UPDATE UserAccount SET last_logged_in_at = now() WHERE id = @id`,
+		pgx.NamedArgs{"id": userID},
+	)
+	if err == nil && cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+	if err != nil {
+		err = fmt.Errorf("could not update last_logged_in_at on UserAccount: %w", err)
+	}
+	return err
+}
+
+func UpdateUserAccountImage(ctx context.Context, userAccount *types.UserAccountWithUserRole, imageID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	row := db.QueryRow(ctx,
+		`UPDATE UserAccount SET image_id = @imageId WHERE id = @id RETURNING image_id`,
+		pgx.NamedArgs{"imageId": imageID, "id": userAccount.ID},
+	)
+	if err := row.Scan(&userAccount.ImageID); err != nil {
+		return fmt.Errorf("could not save image id to user account: %w", err)
+	}
+	return nil
 }

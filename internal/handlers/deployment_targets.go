@@ -13,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
@@ -24,7 +25,7 @@ import (
 )
 
 func DeploymentTargetsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgID, middleware.RequireUserRole)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getDeploymentTargets)
 	r.Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
@@ -56,10 +57,7 @@ func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 
 func getDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	dt := internalctx.GetDeploymentTarget(r.Context())
-	err := json.NewEncoder(w).Encode(dt)
-	if err != nil {
-		internalctx.GetLogger(r.Context()).Error("failed to encode to json", zap.Error(err))
-	}
+	RespondJSON(w, dt)
 }
 
 func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +182,7 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, targetSecret); err != nil {
+	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, *auth.CurrentOrg(), targetSecret); err != nil {
 		log.Error("could not create connecturl", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -197,8 +195,8 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func buildConnectUrl(targetID uuid.UUID, targetSecret string) (string, error) {
-	if u, err := url.Parse(env.Host()); err != nil {
+func buildConnectUrl(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
+	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
 		return "", err
 	} else {
 		query := url.Values{}
@@ -222,8 +220,11 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 		orgId := auth.CurrentOrgID()
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
+		} else if *auth.CurrentUserRole() == types.UserRoleCustomer &&
+			deploymentTarget.CreatedByUserAccountID != auth.CurrentUserID() {
+			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
-			internalctx.GetLogger(r.Context()).Error("failed to get DeploymentTarget", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to get DeploymentTarget", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {

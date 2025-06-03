@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/glasskube/distr/internal/validation"
+	"github.com/google/uuid"
 )
 
 type AuthLoginRequest struct {
@@ -37,4 +38,8 @@ func (r *AuthResetPasswordRequest) Validate() error {
 		return validation.NewValidationFailedError("email is empty")
 	}
 	return nil
+}
+
+type AuthSwitchContextRequest struct {
+	OrganizationID uuid.UUID `json:"organizationId"`
 }

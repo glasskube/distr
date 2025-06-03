@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 	"strings"
+
+	registryerror "github.com/glasskube/distr/internal/registry/error"
 )
 
 type Name struct {
@@ -13,7 +15,7 @@ type Name struct {
 
 func Parse(input string) (*Name, error) {
 	if parts := strings.SplitN(input, "/", 2); len(parts) != 2 {
-		return nil, fmt.Errorf("is not a valid artifact name: %v", input)
+		return nil, fmt.Errorf("%w: %v", registryerror.ErrInvalidArtifactName, input)
 	} else {
 		return &Name{parts[0], parts[1]}, nil
 	}

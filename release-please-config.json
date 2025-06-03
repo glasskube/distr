@@ -19,8 +19,28 @@
         },
         {
           "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages[''].version"
+        },
+        {
+          "type": "json",
           "path": "sdk/js/package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "sdk/js/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "sdk/js/package-lock.json",
+          "jsonpath": "$.packages[''].version"
         },
         {
           "type": "yaml",

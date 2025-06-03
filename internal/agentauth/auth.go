@@ -7,47 +7,76 @@ import (
 	"os"
 	"path"
 
+	containerdlog "github.com/containerd/log"
 	dockerconfig "github.com/docker/cli/cli/config"
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/google/uuid"
-	"oras.land/oras-go/pkg/auth"
-	dockerauth "oras.land/oras-go/pkg/auth/docker"
+	"oras.land/oras-go/v2/registry/remote"
+	"oras.land/oras-go/v2/registry/remote/auth"
+	"oras.land/oras-go/v2/registry/remote/credentials"
+	"oras.land/oras-go/v2/registry/remote/retry"
 )
 
-var previousAuth = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
-var authClients = map[uuid.UUID]auth.Client{}
+var (
+	previousAuth     = map[uuid.UUID]map[string]api.AgentRegistryAuth{}
+	credentialStores = map[uuid.UUID]credentials.Store{}
+)
 
-func EnsureAuth(ctx context.Context, deployment api.AgentDeployment) (auth.Client, error) {
+func init() {
+	_ = containerdlog.SetLevel("warn")
+}
+
+func EnsureAuth(
+	ctx context.Context,
+	jwt string,
+	deployment api.AgentDeployment,
+) (*auth.Client, error) {
 	if err := os.MkdirAll(DockerConfigDir(deployment), 0o700); err != nil {
 		return nil, fmt.Errorf("could not create docker config dir for deployment: %w", err)
 	}
 
-	var client auth.Client
-	if c, exists := authClients[deployment.ID]; exists {
-		client = c
+	var store credentials.Store
+	if s, exists := credentialStores[deployment.ID]; exists {
+		store = s
 	} else {
-		if c, err := dockerauth.NewClientWithDockerFallback(DockerConfigPath(deployment)); err != nil {
-			return nil, fmt.Errorf("could not create auth client: %w", err)
+		opts := credentials.StoreOptions{
+			AllowPlaintextPut:        true,
+			DetectDefaultNativeStore: true,
+		}
+		if s, err := credentials.NewStore(DockerConfigPath(deployment), opts); err != nil {
+			return nil, fmt.Errorf("could not create credentials store: %w", err)
 		} else {
-			authClients[deployment.ID] = c
-			client = c
+			store = s
+			credentialStores[deployment.ID] = store
+		}
+	}
+
+	if reg, err := remote.NewRegistry(agentenv.DistrRegistryHost); err != nil {
+		return nil, err
+	} else {
+		reg.PlainHTTP = agentenv.DistrRegistryPlainHTTP
+		if err := credentials.Login(ctx, store, reg, auth.Credential{Username: "-", Password: jwt}); err != nil {
+			return nil, fmt.Errorf("docker login failed for %v: %w", agentenv.DistrRegistryHost, err)
 		}
 	}
 
 	if !maps.Equal(previousAuth[deployment.ID], deployment.RegistryAuth) {
 		for url, registry := range deployment.RegistryAuth {
-			if err := client.LoginWithOpts(
-				auth.WithLoginContext(ctx),
-				auth.WithLoginHostname(url),
-				auth.WithLoginUsername(registry.Username),
-				auth.WithLoginSecret(registry.Password),
-			); err != nil {
-				return nil, fmt.Errorf("docker login failed for %v: %w", url, err)
+			if reg, err := remote.NewRegistry(url); err != nil {
+				return nil, err
+			} else {
+				if err := credentials.Login(ctx, store, reg, auth.Credential{
+					Username: registry.Username,
+					Password: registry.Password,
+				}); err != nil {
+					return nil, fmt.Errorf("docker login failed for %v: %w", url, err)
+				}
 			}
 		}
 		for url := range previousAuth[deployment.ID] {
 			if _, exists := deployment.RegistryAuth[url]; !exists {
-				if err := client.Logout(ctx, url); err != nil {
+				if err := credentials.Logout(ctx, store, url); err != nil {
 					return nil, fmt.Errorf("docker logout failed for %v: %w", url, err)
 				}
 			}
@@ -55,7 +84,11 @@ func EnsureAuth(ctx context.Context, deployment api.AgentDeployment) (auth.Clien
 		previousAuth[deployment.ID] = deployment.RegistryAuth
 	}
 
-	return client, nil
+	return &auth.Client{
+		Client:     retry.DefaultClient,
+		Cache:      auth.DefaultCache,
+		Credential: credentials.Credential(store),
+	}, nil
 }
 
 func DeploymentTempDir(deployment api.AgentDeployment) string {
@@ -68,12 +101,4 @@ func DockerConfigDir(deployment api.AgentDeployment) string {
 
 func DockerConfigPath(deployment api.AgentDeployment) string {
 	return path.Join(DockerConfigDir(deployment), dockerconfig.ConfigFileName)
-}
-
-func DockerConfigEnv(deployment api.AgentDeployment) []string {
-	if len(deployment.RegistryAuth) > 0 {
-		return []string{dockerconfig.EnvOverrideConfigDir + "=" + DockerConfigDir(deployment)}
-	} else {
-		return nil
-	}
 }

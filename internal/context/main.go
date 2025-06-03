@@ -16,11 +16,14 @@ const (
 	ctxKeyMailer
 	ctxKeyOrgId
 	ctxKeyApplication
+	ctxKeyArtifact
 	ctxKeyDeployment
 	ctxKeyDeploymentTarget
+	ctxKeyFile
 	ctxKeyUserAccount
 	ctxKeyApplicationLicense
 	ctxKeyArtifactLicense
+	ctxKeyIPAddress
 )
 
 func GetDb(ctx context.Context) queryable.Queryable {

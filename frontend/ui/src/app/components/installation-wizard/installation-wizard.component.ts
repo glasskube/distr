@@ -15,7 +15,11 @@ import {
 import {combineLatest, firstValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {modalFlyInOut} from '../../animations/modal';
-import {DeploymentFormComponent, DeploymentFormValue} from '../../deployment-form/deployment-form.component';
+import {
+  mapToDeploymentRequest,
+  DeploymentFormComponent,
+  DeploymentFormValue,
+} from '../../deployment-form/deployment-form.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {ApplicationsService} from '../../services/applications.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
@@ -23,6 +27,7 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
 import {ToastService} from '../../services/toast.service';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
+import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
 
 @Component({
   selector: 'app-installation-wizard',
@@ -54,13 +59,23 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
   readonly deploymentTargetForm = new FormGroup({
     type: new FormControl<DeploymentType>('docker', Validators.required),
     name: new FormControl('', Validators.required),
-    namespace: new FormControl({value: '', disabled: true}, {nonNullable: true, validators: [Validators.required]}),
+    namespace: new FormControl(
+      {value: '', disabled: true},
+      {
+        nonNullable: true,
+        validators: [
+          Validators.required,
+          Validators.maxLength(KUBERNETES_RESOURCE_MAX_LENGTH),
+          Validators.pattern(KUBERNETES_RESOURCE_NAME_REGEX),
+        ],
+      }
+    ),
     clusterScope: new FormControl(
-      {value: false, disabled: true},
+      {value: true, disabled: true},
       {nonNullable: true, validators: [Validators.required]}
     ),
     scope: new FormControl<DeploymentTargetScope>(
-      {value: 'namespace', disabled: true},
+      {value: 'cluster', disabled: true},
       {nonNullable: true, validators: [Validators.required]}
     ),
   });
@@ -136,6 +151,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
           type: this.deploymentTargetForm.value.type!,
           namespace: this.deploymentTargetForm.value.namespace,
           scope: this.deploymentTargetForm.value.scope,
+          deployments: [],
+          metricsEnabled: this.deploymentTargetForm.value.scope !== 'namespace',
         })
       );
       this.selectedDeploymentTarget.set(created as DeploymentTarget);
@@ -161,18 +178,8 @@ export class InstallationWizardComponent implements OnInit, OnDestroy {
 
     try {
       this.loading = true;
-      const deployment = this.deployForm.value!;
-      if (deployment.valuesYaml) {
-        deployment.valuesYaml = btoa(deployment.valuesYaml);
-      } else {
-        deployment.valuesYaml = undefined;
-      }
-      if (deployment.envFileData) {
-        deployment.envFileData = btoa(deployment.envFileData);
-      } else {
-        deployment.envFileData = undefined;
-      }
-      await firstValueFrom(this.deploymentTargets.deploy(deployment as DeploymentRequest));
+      const deployment = mapToDeploymentRequest(this.deployForm.value!);
+      await firstValueFrom(this.deploymentTargets.deploy(deployment));
       this.toast.success('Deployment saved successfully');
       this.close();
     } catch (e) {

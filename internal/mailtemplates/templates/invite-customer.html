@@ -10,14 +10,12 @@
       <main>
         <p>Hi,</p>
 
-        <p>
-          {{.Organization.Name}} invited you to install {{ if not .ApplicationName }} and manage applications via Distr.
-          {{ else }} {{.ApplicationName}}. {{ end }}
-        </p>
+        <p>{{.Organization.Name}} invited you to install and manage applications via Distr.</p>
 
         <p>
-          To finish your setup and get further instructions please click
-          <a href="{{ .InviteURL | UnsafeURL }}">here</a>.
+          {{ if .InviteURL }} To finish your setup and get further instructions please click
+          <a href="{{ .InviteURL | UnsafeURL }}">here</a>. {{ else }} Log in with your existing account at
+          <a href="{{ .Host }}/">{{ .Host }}</a> and explore their Customer Portal in the top right corner. {{ end }}
         </p>
 
         <p>{{template "fragments/signature.html"}}</p>
