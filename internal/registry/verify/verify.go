@@ -17,15 +17,10 @@
 package verify
 
 import (
-	"bytes"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"hash"
 	"io"
 
 	"github.com/glasskube/distr/internal/registry/and"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/opencontainers/go-digest"
 )
 
@@ -34,14 +29,14 @@ const SizeUnknown = -1
 
 type verifyReader struct {
 	inner             io.Reader
-	hasher            hash.Hash
+	digester          digest.Digester
 	expected          digest.Digest
 	gotSize, wantSize int64
 }
 
 // Error provides information about the failed hash verification.
 type Error struct {
-	got     string
+	got     digest.Digest
 	want    digest.Digest
 	gotSize int64
 }
@@ -59,10 +54,10 @@ func (vc *verifyReader) Read(b []byte) (int, error) {
 		if vc.wantSize != SizeUnknown && vc.gotSize != vc.wantSize {
 			return n, fmt.Errorf("error verifying size; got %d, want %d", vc.gotSize, vc.wantSize)
 		}
-		got := hex.EncodeToString(vc.hasher.Sum(nil))
-		if want := vc.expected.Hex(); got != want {
+
+		if got := vc.digester.Digest(); vc.expected != got {
 			return n, Error{
-				got:     vc.expected.Algorithm().String() + ":" + got,
+				got:     got,
 				want:    vc.expected,
 				gotSize: vc.gotSize,
 			}
@@ -81,40 +76,18 @@ func (vc *verifyReader) Read(b []byte) (int, error) {
 // A size of SizeUnknown (-1) indicates disables size verification when the size
 // is unknown ahead of time.
 func ReadCloser(r io.ReadCloser, size int64, h digest.Digest) (io.ReadCloser, error) {
-	hasher := h.Algorithm().Hash()
-	r2 := io.TeeReader(r, hasher) // pass all writes to the hasher.
+	digester := h.Algorithm().Digester()
+	r2 := io.TeeReader(r, digester.Hash()) // pass all writes to the hasher.
 	if size != SizeUnknown {
 		r2 = io.LimitReader(r2, size) // if we know the size, limit to that size.
 	}
 	return &and.ReadCloser{
 		Reader: &verifyReader{
 			inner:    r2,
-			hasher:   hasher,
+			digester: digester,
 			expected: h,
 			wantSize: size,
 		},
 		CloseFunc: r.Close,
 	}, nil
-}
-
-// Descriptor verifies that the embedded Data field matches the Size and Digest
-// fields of the given v1.Descriptor, returning an error if the Data field is
-// missing or if it contains incorrect data.
-func Descriptor(d v1.Descriptor) error {
-	if d.Data == nil {
-		return errors.New("error verifying descriptor; Data == nil")
-	}
-
-	h, sz, err := v1.SHA256(bytes.NewReader(d.Data))
-	if err != nil {
-		return err
-	}
-	if h != d.Digest {
-		return fmt.Errorf("error verifying Digest; got %q, want %q", h, d.Digest)
-	}
-	if sz != d.Size {
-		return fmt.Errorf("error verifying Size; got %d, want %d", sz, d.Size)
-	}
-
-	return nil
 }

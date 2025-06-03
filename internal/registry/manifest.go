@@ -35,7 +35,6 @@ import (
 	"github.com/glasskube/distr/internal/registry/blob"
 	registryerror "github.com/glasskube/distr/internal/registry/error"
 	imanifest "github.com/glasskube/distr/internal/registry/manifest"
-	"github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -333,7 +332,7 @@ func (m *manifests) handleReferrers(resp http.ResponseWriter, req *http.Request)
 		return regErrInternal(err)
 	}
 	resp.Header().Set("Content-Length", fmt.Sprint(len(msg)))
-	resp.Header().Set("Content-Type", string(types.OCIImageIndex))
+	resp.Header().Set("Content-Type", string(imgspecv1.MediaTypeImageIndex))
 	resp.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(resp, bytes.NewReader(msg)); err != nil {
 		return regErrInternal(err)
@@ -437,7 +436,7 @@ func (handler *manifests) handlePut(resp http.ResponseWriter, req *http.Request,
 		},
 	}
 
-	mf.Blob.Digest = digest.NewDigestFromBytes(digest.SHA256, buf.Bytes())
+	mf.Blob.Digest = digest.SHA256.FromBytes(buf.Bytes())
 	var blobs []imanifest.Blob
 	if manifest.MIMETypeIsMultiImage(mf.ContentType) {
 		im, err := manifest.ListFromBlob(buf.Bytes(), mf.ContentType)

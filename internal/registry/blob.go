@@ -24,13 +24,12 @@ import (
 	"path"
 	"strings"
 
-	"github.com/opencontainers/go-digest"
-
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	registryerror "github.com/glasskube/distr/internal/registry/error"
 	"github.com/glasskube/distr/internal/registry/verify"
 	"github.com/google/uuid"
+	"github.com/opencontainers/go-digest"
 	"go.uber.org/zap"
 )
 

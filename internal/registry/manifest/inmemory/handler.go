@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"github.com/glasskube/distr/internal/registry/manifest"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/opencontainers/go-digest"
 )
 
@@ -58,7 +57,7 @@ func (h *handler) ListTags(ctx context.Context, name string, n int, last string)
 	}
 	var references []string
 	for reference := range referencesMap {
-		if _, err := v1.NewHash(reference); err == nil {
+		if _, err := digest.Parse(reference); err == nil {
 			continue
 		} else {
 			references = append(references, reference)

@@ -110,7 +110,13 @@ func (handler *blobHandler) Stat(ctx context.Context, repo string, h digest.Dige
 }
 
 // Put implements blob.BlobPutHandler.
-func (handler *blobHandler) Put(ctx context.Context, repo string, h digest.Digest, contentType string, r io.Reader) error {
+func (handler *blobHandler) Put(
+	ctx context.Context,
+	repo string,
+	h digest.Digest,
+	contentType string,
+	r io.Reader,
+) error {
 	key := h.String()
 	if rc, ok := r.(io.Closer); ok {
 		defer rc.Close()

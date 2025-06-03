@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -88,5 +89,5 @@ func (src Digest) TextValue() (pgtype.Text, error) {
 }
 
 func (h Digest) MarshalJSON() ([]byte, error) {
-	return v1.Hash(h).MarshalJSON()
+	return json.Marshal(string(h))
 }
