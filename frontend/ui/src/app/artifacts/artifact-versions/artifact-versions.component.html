@@ -37,16 +37,19 @@
                 [source]="artifact"></app-artifacts-download-count>
             </div>
 
-            <div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Pull with OCI URL</div>
-              <div class="font-mono mt-1">
-                {{ getOciUrl(artifact) }}
-                <app-clip [clip]="getOciUrl(artifact)"></app-clip>
+            @if (getArtifactUsage(artifact); as usage) {
+              <div class="text-sm">
+                <div class="text-gray-500 dark:text-gray-400">Use this artifact with:</div>
+                <div class="font-mono mt-1">
+                  {{ usage }}
+                  <app-clip [clip]="usage"></app-clip>
+                </div>
               </div>
-            </div>
+            }
 
+            <!--
             @if (updateTag$ | async; as updateTag) {
-              <!--<div
+              <div
                 class="flex text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
                 role="alert">
                 <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
@@ -61,8 +64,9 @@
                 <div>
                   <span class="font-medium">Some customers are affected by a critical vulnerability.</span>
                 </div>
-              </div>-->
+              </div>
             }
+            -->
           </div>
         </div>
       </div>
@@ -111,8 +115,8 @@
                         [date]="version.lastScannedAt">
                       </app-artifacts-vulnerability-report>
                     }
-                    <div class="flex row gap-4">
-                      @if (version.sbom) {
+                    @if (version.sbom) {
+                      <div class="flex row gap-4">
                         <div>
                           <button
                             type="button"
@@ -129,8 +133,8 @@
                             Download SBOM
                           </button>
                         </div>
-                      }
-                    </div>
+                      </div>
+                    }
                   </div>
                 }
               </li>
