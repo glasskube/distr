@@ -16,6 +16,7 @@ export interface DeploymentRequest {
   dockerType?: DockerType;
   valuesYaml?: string;
   envFileData?: string;
+  logsEnabled?: boolean;
 }
 
 export interface PatchDeploymentRequest {
