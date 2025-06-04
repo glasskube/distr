@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.11.2](https://github.com/glasskube/distr/compare/1.11.1...1.11.2) (2025-06-04)
+
+
+### Bug Fixes
+
+* **backend:** disable smtp noop check ([#1001](https://github.com/glasskube/distr/issues/1001)) ([48056b6](https://github.com/glasskube/distr/commit/48056b60f6fd996014850cebeb1ffd14dc97cab8))
+* **backend:** send 400 response code for deployment release name conflict ([#1005](https://github.com/glasskube/distr/issues/1005)) ([8e512e9](https://github.com/glasskube/distr/commit/8e512e954770b1cae74f091d6ff9941ceee70ebb))
+* **deps:** update angular monorepo to v19.2.14 ([#980](https://github.com/glasskube/distr/issues/980)) ([c52e75f](https://github.com/glasskube/distr/commit/c52e75f512b0d9a74605966861dd0f1b957f8666))
+* **deps:** update dependency @angular/cdk to v19.2.18 ([#981](https://github.com/glasskube/distr/issues/981)) ([825117a](https://github.com/glasskube/distr/commit/825117ac88e3e44cbd11e8e5da1383823618c487))
+* **deps:** update dependency @codemirror/language to v6.11.1 ([#1002](https://github.com/glasskube/distr/issues/1002)) ([43adea5](https://github.com/glasskube/distr/commit/43adea5e2ce458db8cf95e9b388e544b743baa34))
+* **deps:** update dependency @codemirror/view to v6.37.1 ([#985](https://github.com/glasskube/distr/issues/985)) ([a613245](https://github.com/glasskube/distr/commit/a6132450d2b365e328dfe6fd57cb56f2c68f148b))
+* **deps:** update dependency @fortawesome/angular-fontawesome to v2.0.1 ([#1003](https://github.com/glasskube/distr/issues/1003)) ([8f4aec4](https://github.com/glasskube/distr/commit/8f4aec4de3076d6194cc68a73123847cee2c07c7))
+* **deps:** update dependency @sentry/angular to v9.24.0 ([#996](https://github.com/glasskube/distr/issues/996)) ([7ad5383](https://github.com/glasskube/distr/commit/7ad5383e75e074513848f8830211277fad22391f))
+* **deps:** update dependency posthog-js to v1.249.0 ([#997](https://github.com/glasskube/distr/issues/997)) ([4c81796](https://github.com/glasskube/distr/commit/4c81796d0c40d4cf4cb06282cf0ddaec11ab6f5b))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.80.0 ([#987](https://github.com/glasskube/distr/issues/987)) ([1bb2266](https://github.com/glasskube/distr/commit/1bb226648518555ea9a9954946d97d632c08d1f8))
+* **deps:** update module github.com/docker/cli to v28.2.2+incompatible ([#988](https://github.com/glasskube/distr/issues/988)) ([cc07ac1](https://github.com/glasskube/distr/commit/cc07ac1956b8d84077ff1a74b4172b368b02a39f))
+* **deps:** update module helm.sh/helm/v3 to v3.18.1 ([#984](https://github.com/glasskube/distr/issues/984)) ([1aed99a](https://github.com/glasskube/distr/commit/1aed99a0facdbd691f154148b52b21da01489ab0))
+* **deps:** update module helm.sh/helm/v3 to v3.18.2 ([#999](https://github.com/glasskube/distr/issues/999)) ([9874194](https://github.com/glasskube/distr/commit/9874194b1f8a51a656210567a3ad5ef56879c931))
+
+
+### Other
+
+* **backend:** improve deployment target endpoint visibility constraint ([#982](https://github.com/glasskube/distr/issues/982)) ([753386f](https://github.com/glasskube/distr/commit/753386f7737dc39f53f7ca309eed271327dfe618))
+* **deps:** update angular-cli monorepo to v19.2.14 ([#986](https://github.com/glasskube/distr/issues/986)) ([522058a](https://github.com/glasskube/distr/commit/522058afd4a9d417a5d013ab9fa0a5eb0c1e7a3e))
+* **deps:** update dependency typedoc-plugin-markdown to v4.6.4 ([#994](https://github.com/glasskube/distr/issues/994)) ([10557a7](https://github.com/glasskube/distr/commit/10557a72e6c498c50f01a492df33bb7b202b4b38))
+* **deps:** upgrade Angular to v20 ([#998](https://github.com/glasskube/distr/issues/998)) ([8108fca](https://github.com/glasskube/distr/commit/8108fca162c5db35c139199cccd5dfd2f376a24a))
+* remove deployment target geolocation ([#979](https://github.com/glasskube/distr/issues/979)) ([45062ec](https://github.com/glasskube/distr/commit/45062ecb19a24ff3ba6eb03b4d8b9db3e4107d66))
+* **ui:** show an example OCI URL in application version form ([#1004](https://github.com/glasskube/distr/issues/1004)) ([4906c60](https://github.com/glasskube/distr/commit/4906c607c31eb55892e5cf2211cee1b4608088b9))
+
+
+### Performance
+
+* **backend:** optimize GetVersionsForArtifact database query ([#1009](https://github.com/glasskube/distr/issues/1009)) ([1f5e5ea](https://github.com/glasskube/distr/commit/1f5e5eaa8646101fec2de75fe3bcbf9cb28270f8))
+
 ## [1.11.1](https://github.com/glasskube/distr/compare/1.11.0...1.11.1) (2025-05-30)
 
 
