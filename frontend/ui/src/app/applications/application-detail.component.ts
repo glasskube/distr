@@ -107,17 +107,28 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
-    kubernetes: new FormGroup({
-      chartType: new FormControl<HelmChartType>('repository', {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
-      chartName: new FormControl('', Validators.required),
-      chartUrl: new FormControl('', Validators.required),
-      chartVersion: new FormControl('', Validators.required),
-      baseValues: new FormControl(''),
-      template: new FormControl(''),
-    }),
+    kubernetes: new FormGroup(
+      {
+        chartType: new FormControl<HelmChartType>('repository', {
+          nonNullable: true,
+          validators: Validators.required,
+        }),
+        chartName: new FormControl('', Validators.required),
+        chartUrl: new FormControl('', Validators.required),
+        chartVersion: new FormControl('', Validators.required),
+        baseValues: new FormControl(''),
+        template: new FormControl(''),
+      },
+      (v) => {
+        if (v.value.chartType === 'oci' && v.value.chartUrl && !/^oci:\/\/.+/.test(v.value.chartUrl)) {
+          return {chartUrlOci: true};
+        }
+        if (v.value.chartType === 'repository' && v.value.chartUrl && !/^https:\/\/.+/.test(v.value.chartUrl)) {
+          return {chartUrlHttps: true};
+        }
+        return null;
+      }
+    ),
     docker: new FormGroup({
       compose: new FormControl(''),
       template: new FormControl(''),
