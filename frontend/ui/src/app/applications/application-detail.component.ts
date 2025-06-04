@@ -120,8 +120,11 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         template: new FormControl(''),
       },
       (v) => {
-        if (v.value.chartType === 'oci' && v.value.chartUrl && !v.value.chartUrl.startsWith('oci://')) {
+        if (v.value.chartType === 'oci' && v.value.chartUrl && !/^oci:\/\/.+/.test(v.value.chartUrl)) {
           return {chartUrlOci: true};
+        }
+        if (v.value.chartType === 'repository' && v.value.chartUrl && !/^https:\/\/.+/.test(v.value.chartUrl)) {
+          return {chartUrlHttps: true};
         }
         return null;
       }
