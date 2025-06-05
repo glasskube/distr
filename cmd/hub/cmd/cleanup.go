@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/cleanup"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/svc"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -73,8 +76,16 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 	ctx = internalctx.WithDb(ctx, registry.GetDbPool())
 	ctx = internalctx.WithLogger(ctx, log)
 
+	ctx, span := registry.GetAlwaysTracer().
+		Tracer("github.com/glasskube/distr/cmd/hub/cmd", trace.WithInstrumentationVersion(buildconfig.Version())).
+		Start(ctx, fmt.Sprintf("cleanup_%v", opts.Type), trace.WithSpanKind(trace.SpanKindInternal))
+	defer span.End()
+
 	if err := cleanupFunc(ctx); err != nil {
 		log.Error("cleanup failed", zap.Error(err))
+		span.SetStatus(codes.Error, "cleanupFunc error")
+		span.RecordError(err)
 		os.Exit(1)
 	}
+	span.SetStatus(codes.Ok, "cleanupFunc finished")
 }

@@ -41,6 +41,7 @@ type Registry struct {
 	execDbMigrations  bool
 	artifactsRegistry http.Handler
 	tracer            *trace.TracerProvider
+	alwaysTracer      *trace.TracerProvider
 	jobsScheduler     *jobs.Scheduler
 }
 
@@ -65,10 +66,11 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
 
-	if tracer, err := reg.createTracer(ctx); err != nil {
+	if tracer, alwaysTracer, err := reg.createTracer(ctx); err != nil {
 		return nil, err
 	} else {
 		reg.tracer = tracer
+		reg.alwaysTracer = alwaysTracer
 	}
 
 	if mailer, err := createMailer(ctx); err != nil {
@@ -245,13 +247,13 @@ func createLogger() *zap.Logger {
 	}
 }
 
-func (reg *Registry) createTracer(ctx context.Context) (*trace.TracerProvider, error) {
+func (reg *Registry) createTracer(ctx context.Context) (*trace.TracerProvider, *trace.TracerProvider, error) {
 	otel.SetLogger(zapr.NewLogger(reg.logger))
 
 	var tpopts []trace.TracerProviderOption
 	if env.OtelExporterOtlpEnabled() {
 		if exp, err := otlptracegrpc.New(ctx); err != nil {
-			return nil, err
+			return nil, nil, err
 		} else {
 			tpopts = append(tpopts, trace.WithSpanProcessor(trace.NewBatchSpanProcessor(exp)))
 		}
@@ -260,7 +262,9 @@ func (reg *Registry) createTracer(ctx context.Context) (*trace.TracerProvider, e
 		tpopts = append(tpopts, trace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()))
 	}
 	tp := trace.NewTracerProvider(tpopts...)
+	atp := trace.NewTracerProvider(append(tpopts, trace.WithSampler(trace.AlwaysSample()))...)
 	otel.SetTracerProvider(tp)
+	atp.Tracer("Foo")
 
 	tmps := []propagation.TextMapPropagator{propagation.TraceContext{}, propagation.Baggage{}}
 	if env.OtelExporterSentryEnabled() {
@@ -268,7 +272,7 @@ func (reg *Registry) createTracer(ctx context.Context) (*trace.TracerProvider, e
 	}
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(tmps...))
 
-	return tp, nil
+	return tp, atp, nil
 }
 
 func (r *Registry) GetLogger() *zap.Logger {
@@ -296,7 +300,7 @@ func (r *Registry) GetArtifactsServer() server.Server {
 }
 
 func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
-	scheduler, err := jobs.NewScheduler(r.GetLogger(), r.GetDbPool())
+	scheduler, err := jobs.NewScheduler(r.GetLogger(), r.GetDbPool(), r.GetAlwaysTracer())
 	if err != nil {
 		return nil, err
 	}
@@ -350,4 +354,8 @@ func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
 
 func (r *Registry) GetTracer() *trace.TracerProvider {
 	return r.tracer
+}
+
+func (r *Registry) GetAlwaysTracer() *trace.TracerProvider {
+	return r.alwaysTracer
 }
