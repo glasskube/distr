@@ -205,18 +205,19 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				av.manifest_blob_size + coalesce(sum(avp.artifact_blob_size), 0) AS size,
 				`+artifactDownloadsOutExpr+`
 			FROM ArtifactVersion av
-			LEFT JOIN (
+			LEFT JOIN LATERAL (
 				WITH RECURSIVE aggregate AS (
 					SELECT avp.artifact_version_id as base_av_id,
 						   avp.artifact_version_id as related_av_id,
 						   avp.artifact_blob_digest,
 						   avp.artifact_blob_size
 					FROM ArtifactVersionPart avp
+						WHERE avp.artifact_version_id = av.id
 					UNION ALL
-					SELECT aggregate.base_av_id, av.id, avp.artifact_blob_digest, avp.artifact_blob_size
+					SELECT aggregate.base_av_id, av1.id, avp.artifact_blob_digest, avp.artifact_blob_size
 					FROM aggregate
-					JOIN ArtifactVersion av ON av.manifest_blob_digest = aggregate.artifact_blob_digest
-					JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
+					JOIN ArtifactVersion av1 ON av1.manifest_blob_digest = aggregate.artifact_blob_digest
+					JOIN ArtifactVersionPart avp ON av1.id = avp.artifact_version_id
 				)
 				SELECT DISTINCT * FROM aggregate
 			) avp ON av.id = avp.base_av_id

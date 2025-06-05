@@ -50,7 +50,10 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if deploymentRequest.DeploymentID == nil {
-			if err = db.CreateDeployment(ctx, &deploymentRequest); err != nil {
+			if err = db.CreateDeployment(ctx, &deploymentRequest); errors.Is(err, apierrors.ErrConflict) {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return err
+			} else if err != nil {
 				log.Warn("could not create deployment", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -145,6 +145,10 @@ func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error
 	}
 	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Deployment])
 	if err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
+			return fmt.Errorf("%w: release name must be unique per deployment target", apierrors.ErrConflict)
+		}
 		return fmt.Errorf("could not save Deployment: %w", err)
 	} else {
 		request.DeploymentID = &result.ID
