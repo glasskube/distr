@@ -130,14 +130,15 @@ func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO Deployment AS d
-			(deployment_target_id, release_name, application_license_id, docker_type)
-			VALUES (@deploymentTargetId, @releaseName, @applicationLicenseId, @dockerType)
+			(deployment_target_id, release_name, application_license_id, docker_type, logs_enabled)
+			VALUES (@deploymentTargetId, @releaseName, @applicationLicenseId, @dockerType, @logsEnabled)
 			RETURNING`+deploymentOutputExpr,
 		pgx.NamedArgs{
 			"deploymentTargetId":   request.DeploymentTargetID,
 			"releaseName":          request.ReleaseName,
 			"applicationLicenseId": request.ApplicationLicenseID,
 			"dockerType":           request.DockerType,
+			"logsEnabled":          request.LogsEnabled,
 		},
 	)
 	if err != nil {

@@ -45,6 +45,7 @@ export type DeploymentFormValue = Partial<{
   releaseName: string;
   envFileData: string;
   swarmMode: boolean;
+  logsEnabled: boolean;
 }>;
 
 export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRequest {
@@ -57,6 +58,7 @@ export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRe
     valuesYaml: value.valuesYaml ? btoa(value.valuesYaml) : undefined,
     dockerType: value.swarmMode ? 'swarm' : 'compose',
     envFileData: value.envFileData ? btoa(value.envFileData) : undefined,
+    logsEnabled: value.logsEnabled ?? false,
   };
 }
 
@@ -96,6 +98,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
     swarmMode: this.fb.nonNullable.control<boolean>(false),
+    logsEnabled: this.fb.nonNullable.control<boolean>(false),
   });
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
