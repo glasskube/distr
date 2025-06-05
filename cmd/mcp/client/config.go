@@ -1,44 +1,80 @@
 package client
 
 import (
-	"context"
-	"encoding/json"
-	"io"
+	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/glasskube/distr/internal/authkey"
+	"github.com/glasskube/distr/internal/util"
+	"go.uber.org/zap"
 )
 
+var defaultBaseUrl = util.Require(url.Parse("https://app.distr.sh/"))
+
+type ConfigOption func(*Config)
+
+func WithToken(token authkey.Key) ConfigOption {
+	return func(c *Config) {
+		c.token = token
+	}
+}
+
+func WithBaseURL(url *url.URL) ConfigOption {
+	return func(c *Config) {
+		c.baseURL = url
+	}
+}
+
+func WithLogger(log *zap.Logger) ConfigOption {
+	return func(c *Config) {
+		c.log = log.With(zap.String("component", "distr-client"))
+	}
+}
+
+func NewConfig(opts ...ConfigOption) *Config {
+	config := Config{
+		baseURL:    defaultBaseUrl,
+		httpClient: &http.Client{},
+		log:        zap.L(),
+	}
+	for _, opt := range opts {
+		opt(&config)
+	}
+	config.httpClient.Transport = config.roundTripper()
+	return &config
+}
+
 type Config struct {
-	BaseUrl    *url.URL
-	Token      string
-	HttpClient *http.Client
+	log        *zap.Logger
+	baseURL    *url.URL
+	token      authkey.Key
+	httpClient *http.Client
 }
 
-func (c *Config) NewAuthenticatedRequest(
-	ctx context.Context,
-	method string,
-	path string,
-	body io.Reader,
-) (*http.Request, error) {
-	url := c.BaseUrl.JoinPath(path).String()
-	if request, err := http.NewRequestWithContext(ctx, method, url, body); err != nil {
-		return nil, err
-	} else {
-		request.Header.Add("AccessToken", c.Token)
-		return request, nil
-	}
+func (c *Config) String() string {
+	return fmt.Sprintf("client.Config{baseURL: %v, token: %v}", c.baseURL, c.token.Serialize())
 }
 
-func Do[T any](c *Config, req *http.Request) (T, error) {
-	var result T
-	resp, err := c.HttpClient.Do(req)
-	if err != nil {
-		return result, err
+func (c *Config) apiUrl(elem ...string) string {
+	return c.baseURL.JoinPath(elem...).String()
+}
+
+func (c *Config) roundTripper() http.RoundTripper {
+	rt := tokenRoundTripper{c, c.httpClient.Transport}
+	if rt.delegate == nil {
+		rt.delegate = http.DefaultTransport
 	}
-	defer resp.Body.Close()
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return result, err
-	}
-	return result, nil
+	return &rt
+}
+
+type tokenRoundTripper struct {
+	*Config
+	delegate http.RoundTripper
+}
+
+// RoundTrip implements http.RoundTripper.
+func (t *tokenRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Authorization", "AccessToken "+t.token.Serialize())
+	return t.delegate.RoundTrip(req)
 }

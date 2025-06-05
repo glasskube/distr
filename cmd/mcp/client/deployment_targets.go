@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
@@ -18,22 +16,13 @@ type DeploymentTargetsClient struct {
 }
 
 func (c *DeploymentTargetsClient) List(ctx context.Context) ([]types.DeploymentTargetWithCreatedBy, error) {
-	if req, err := c.config.NewAuthenticatedRequest(ctx, http.MethodGet, "api/v1/deployment-targets", nil); err != nil {
-		return nil, err
-	} else {
-		return Do[[]types.DeploymentTargetWithCreatedBy](c.config, req)
-	}
+	return JsonResponse[[]types.DeploymentTargetWithCreatedBy](
+		c.config.httpClient.Get(c.config.apiUrl("api", "v1", "deployment-targets")),
+	)
 }
 
 func (c *DeploymentTargetsClient) Get(ctx context.Context, id uuid.UUID) (*types.DeploymentTargetWithCreatedBy, error) {
-	if req, err := c.config.NewAuthenticatedRequest(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("api/v1/deployment-targets/%v", id),
-		nil,
-	); err != nil {
-		return nil, err
-	} else {
-		return Do[*types.DeploymentTargetWithCreatedBy](c.config, req)
-	}
+	return JsonResponse[*types.DeploymentTargetWithCreatedBy](
+		c.config.httpClient.Get(c.config.apiUrl("api", "v1", "deployment-targets", id.String())),
+	)
 }

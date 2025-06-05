@@ -13,8 +13,9 @@ func NewManager(client *client.Client) *Manager {
 	return &Manager{client: client}
 }
 
-func (m *Manager) AddToServer(mcpServer *server.MCPServer) {
+func (m *Manager) AddToolsToServer(mcpServer *server.MCPServer) {
 	mcpServer.AddTools(
 		m.NewListDeploymentTargetsTool(),
+		m.NewGetDeploymentTargetsTool(),
 	)
 }

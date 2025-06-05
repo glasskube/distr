@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"errors"
-	"net/http"
 	"net/url"
 
 	"github.com/glasskube/distr/cmd/mcp/client"
 	"github.com/glasskube/distr/cmd/mcp/tools"
+	"github.com/glasskube/distr/internal/authkey"
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/envutil"
 	"github.com/glasskube/distr/internal/util"
@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	defaultBaseUrl = util.Require(url.Parse("https://app.distr.sh/"))
-	log            = util.Require(zap.NewDevelopment())
+	log *zap.Logger
 )
 
 var rootCmd = &cobra.Command{
@@ -27,7 +26,15 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	if buildconfig.IsRelease() {
+		log = util.Require(zap.NewProduction())
+	} else {
+		log = util.Require(zap.NewDevelopment())
+	}
+
 	rootCmd.AddCommand(serveCmd)
+
+	serveCmd.Flags().BoolVar(&serveOpts.sse, "sse", false, "start server with SSE (otherwise STDIO is used)")
 }
 
 func main() {
@@ -42,11 +49,17 @@ var serveCmd = &cobra.Command{
 	Run: serveCmdRun,
 }
 
+var serveOpts = struct {
+	sse bool
+}{}
+
 func serveCmdRun(cmd *cobra.Command, args []string) {
 	clientConfig, err := clientConfigFromEnv()
 	if err != nil {
 		log.Fatal("client config is invalid", zap.Error(err))
 	}
+
+	log.Sugar().Debugf("got client config: %v", clientConfig)
 
 	mcpServer := server.NewMCPServer(
 		"distr-mcp",
@@ -59,28 +72,38 @@ func serveCmdRun(cmd *cobra.Command, args []string) {
 	client := client.NewClient(clientConfig)
 	mgr := tools.NewManager(client)
 
-	mgr.AddToServer(mcpServer)
+	mgr.AddToolsToServer(mcpServer)
 
-	if err := server.ServeStdio(mcpServer); err != nil && !errors.Is(err, context.Canceled) {
-		log.Fatal("serve failed", zap.Error(err))
+	if serveOpts.sse {
+		log.Info("starting to serve in SSE mode")
+		if err := server.NewSSEServer(mcpServer).Start(":3001"); err != nil {
+			log.Fatal("serve failed", zap.Error(err))
+		}
+	} else {
+		log.Info("starting to serve in STDIO mode")
+		if err := server.ServeStdio(mcpServer); err != nil && !errors.Is(err, context.Canceled) {
+			log.Fatal("serve failed", zap.Error(err))
+		}
 	}
 	log.Info("distr-mcp shutting down")
 }
 
 func clientConfigFromEnv() (*client.Config, error) {
-	if token, err := envutil.RequireEnvErr("DISTR_TOKEN"); err != nil {
-		return nil, err
-	} else if url, err := envutil.GetEnvParsedOrDefaultErr(
-		"DISTR_HOST",
-		url.Parse,
-		defaultBaseUrl,
-	); err != nil {
+	opts := []client.ConfigOption{
+		client.WithLogger(log),
+	}
+
+	if token, err := envutil.RequireEnvParsedErr("DISTR_TOKEN", authkey.Parse); err != nil {
 		return nil, err
 	} else {
-		return &client.Config{
-			Token:      token,
-			BaseUrl:    url,
-			HttpClient: http.DefaultClient,
-		}, nil
+		opts = append(opts, client.WithToken(token))
 	}
+
+	if url, err := envutil.GetEnvParsedOrNilErr("DISTR_HOST", url.Parse); err != nil {
+		return nil, err
+	} else if url != nil {
+		opts = append(opts, client.WithBaseURL(*url))
+	}
+
+	return client.NewConfig(opts...), nil
 }
