@@ -17,5 +17,6 @@ func (m *Manager) AddToolsToServer(mcpServer *server.MCPServer) {
 	mcpServer.AddTools(
 		m.NewListDeploymentTargetsTool(),
 		m.NewGetDeploymentTargetsTool(),
+		m.NewCreateDeploymentTargetTool(),
 	)
 }
