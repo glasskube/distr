@@ -16,5 +16,6 @@ type ArtifactVersion struct {
 	ManifestBlobDigest     Digest     `db:"manifest_blob_digest" json:"manifestBlobDigest"`
 	ManifestBlobSize       int64      `db:"manifest_blob_size" json:"-"`
 	ManifestContentType    string     `db:"manifest_content_type" json:"manifestContentType"`
+	ManifestData           []byte     `db:"manifest_data" json:"-"`
 	ArtifactID             uuid.UUID  `db:"artifact_id" json:"artifactId"`
 }

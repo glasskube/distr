@@ -2,12 +2,14 @@ package types
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"time"
 
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/opencontainers/go-digest"
 )
 
 type (
@@ -63,17 +65,17 @@ type Image struct {
 	ImageContentType *string `db:"image_content_type" json:"imageContentType"`
 }
 
-type Digest v1.Hash
+type Digest digest.Digest
 
 var (
-	_ sql.Scanner       = &Digest{}
-	_ pgtype.TextValuer = &Digest{}
+	_ sql.Scanner       = util.PtrTo(Digest(""))
+	_ pgtype.TextValuer = util.PtrTo(Digest(""))
 )
 
 func (target *Digest) Scan(src any) error {
 	if srcStr, ok := src.(string); !ok {
 		return errors.New("src must be a string")
-	} else if h, err := v1.NewHash(srcStr); err != nil {
+	} else if h, err := digest.Parse(srcStr); err != nil {
 		return err
 	} else {
 		*target = Digest(h)
@@ -83,9 +85,9 @@ func (target *Digest) Scan(src any) error {
 
 // TextValue implements pgtype.TextValuer.
 func (src Digest) TextValue() (pgtype.Text, error) {
-	return pgtype.Text{String: v1.Hash(src).String(), Valid: true}, nil
+	return pgtype.Text{String: string(src), Valid: true}, nil
 }
 
 func (h Digest) MarshalJSON() ([]byte, error) {
-	return v1.Hash(h).MarshalJSON()
+	return json.Marshal(string(h))
 }

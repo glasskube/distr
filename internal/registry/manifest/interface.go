@@ -3,7 +3,7 @@ package manifest
 import (
 	"context"
 
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/opencontainers/go-digest"
 )
 
 type ManifestHandler interface {
@@ -18,7 +18,7 @@ type ManifestHandler interface {
 	//
 	// last: Result set will include values lexically after last.
 	ListTags(ctx context.Context, name string, n int, last string) ([]string, error)
-	ListDigests(ctx context.Context, name string) ([]v1.Hash, error)
+	ListDigests(ctx context.Context, name string) ([]digest.Digest, error)
 	Get(ctx context.Context, name string, reference string) (*Manifest, error)
 	Put(ctx context.Context, name string, reference string, manifest Manifest, blobs []Blob) error
 	Delete(ctx context.Context, name string, reference string) error

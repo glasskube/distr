@@ -8,7 +8,7 @@ import (
 
 	"github.com/glasskube/distr/internal/registry/and"
 	"github.com/glasskube/distr/internal/registry/blob"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/opencontainers/go-digest"
 )
 
 type blobHandler struct {
@@ -18,7 +18,7 @@ type blobHandler struct {
 
 func NewBlobHandler() blob.BlobHandler { return &blobHandler{m: map[string][]byte{}} }
 
-func (m *blobHandler) Stat(_ context.Context, _ string, h v1.Hash) (int64, error) {
+func (m *blobHandler) Stat(_ context.Context, _ string, h digest.Digest) (int64, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -29,7 +29,7 @@ func (m *blobHandler) Stat(_ context.Context, _ string, h v1.Hash) (int64, error
 	return int64(len(b)), nil
 }
 
-func (m *blobHandler) Get(_ context.Context, _ string, h v1.Hash, _ bool) (io.ReadCloser, error) {
+func (m *blobHandler) Get(_ context.Context, _ string, h digest.Digest, _ bool) (io.ReadCloser, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -40,7 +40,7 @@ func (m *blobHandler) Get(_ context.Context, _ string, h v1.Hash, _ bool) (io.Re
 	return &and.BytesCloser{Reader: bytes.NewReader(b)}, nil
 }
 
-func (m *blobHandler) Put(_ context.Context, _ string, h v1.Hash, _ string, r io.Reader) error {
+func (m *blobHandler) Put(_ context.Context, _ string, h digest.Digest, _ string, r io.Reader) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -55,7 +55,7 @@ func (m *blobHandler) Put(_ context.Context, _ string, h v1.Hash, _ string, r io
 	return nil
 }
 
-func (m *blobHandler) Delete(_ context.Context, _ string, h v1.Hash) error {
+func (m *blobHandler) Delete(_ context.Context, _ string, h digest.Digest) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 

@@ -17,8 +17,8 @@ import (
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/registry/blob"
 	"github.com/glasskube/distr/internal/util"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
+	"github.com/opencontainers/go-digest"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
 )
 
@@ -75,7 +75,7 @@ func clientOpts(s3Config env.S3Config) func(o *s3.Options) {
 func (handler *blobHandler) Get(
 	ctx context.Context,
 	repo string,
-	h v1.Hash,
+	h digest.Digest,
 	allowRedirect bool,
 ) (io.ReadCloser, error) {
 	key := h.String()
@@ -100,7 +100,7 @@ func (handler *blobHandler) Get(
 }
 
 // Stat implements blob.BlobStatHandler.
-func (handler *blobHandler) Stat(ctx context.Context, repo string, h v1.Hash) (int64, error) {
+func (handler *blobHandler) Stat(ctx context.Context, repo string, h digest.Digest) (int64, error) {
 	key := h.String()
 	obj, err := handler.s3Client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: &handler.bucket, Key: &key})
 	if err != nil {
@@ -110,7 +110,13 @@ func (handler *blobHandler) Stat(ctx context.Context, repo string, h v1.Hash) (i
 }
 
 // Put implements blob.BlobPutHandler.
-func (handler *blobHandler) Put(ctx context.Context, repo string, h v1.Hash, contentType string, r io.Reader) error {
+func (handler *blobHandler) Put(
+	ctx context.Context,
+	repo string,
+	h digest.Digest,
+	contentType string,
+	r io.Reader,
+) error {
 	key := h.String()
 	if rc, ok := r.(io.Closer); ok {
 		defer rc.Close()
@@ -233,7 +239,7 @@ func (handler *blobHandler) GetUploadedPartsSize(ctx context.Context, id string)
 	}
 }
 
-func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string, digest v1.Hash) error {
+func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string, digest digest.Digest) error {
 	uploadKey := path.Join(chunksPrefix, id)
 	if uploadID, err := handler.getUploadID(ctx, uploadKey); err != nil {
 		return err
@@ -275,7 +281,7 @@ func (handler *blobHandler) CompleteSession(ctx context.Context, repo, id string
 }
 
 // Delete implements blob.BlobDeleteHandler.
-func (handler *blobHandler) Delete(ctx context.Context, repo string, h v1.Hash) error {
+func (handler *blobHandler) Delete(ctx context.Context, repo string, h digest.Digest) error {
 	key := h.String()
 	_, err := handler.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{Bucket: &handler.bucket, Key: &key})
 	if err != nil {

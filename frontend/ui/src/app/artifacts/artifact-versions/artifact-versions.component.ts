@@ -126,19 +126,22 @@ export class ArtifactVersionsComponent {
     loader: () => getRemoteEnvironment(),
   });
 
-  getOciUrl(
-    artifact: ArtifactWithTags,
-    tag: TaggedArtifactVersion | undefined = (artifact.versions ?? []).find((it) =>
-      it.tags.some((l) => l.name === 'latest')
-    )
-  ) {
+  public getArtifactUsage(artifact: ArtifactWithTags): string | undefined {
+    if (!artifact.versions?.length) {
+      // this should not actually happen
+      return undefined;
+    }
     const org = this.org.value();
     const env = this.remoteEnv.value();
-    let url = `oci://${org?.registryDomain ?? env?.registryHost ?? 'REGISTRY_DOMAIN'}/${org?.slug ?? 'ORG_SLUG'}/${artifact.name}`;
-    if (tag) {
-      return `${url}:${tag.tags[0].name}`;
-    } else {
-      return url;
+    let url = `${org?.registryDomain ?? env?.registryHost ?? 'REGISTRY_DOMAIN'}/${org?.slug ?? 'ORG_SLUG'}/${artifact.name}`;
+    const version = artifact.versions[0];
+    switch (version.inferredType) {
+      case 'helm-chart':
+        return `helm install <release-name> oci://${url} --version ${version.tags[0].name}`;
+      case 'container-image':
+        return `docker pull ${url}:${version.tags[0].name}`;
+      default:
+        return `oras pull ${url}:${version.tags[0].name}`;
     }
   }
 
