@@ -136,7 +136,7 @@ make build
 make build-docker
 ```
 
-### Local development
+### Local development & Contributing
 
 Check out our [contributing guidelines](./CONTRIBUTING.md).
 
