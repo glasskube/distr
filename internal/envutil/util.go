@@ -3,6 +3,8 @@ package envutil
 import (
 	"fmt"
 	"os"
+
+	"github.com/glasskube/distr/internal/util"
 )
 
 type GetEnvOpts struct {
@@ -33,39 +35,58 @@ func GetEnvOrDefault(key, defaultValue string, opts GetEnvOpts) string {
 	return defaultValue
 }
 
-func GetEnvParsedOrNil[T any](key string, parseFunc func(string) (T, error)) *T {
+func GetEnvParsedOrNilErr[T any](key string, parseFunc func(string) (T, error)) (*T, error) {
 	if value, ok := os.LookupEnv(key); ok {
 		if parsed, err := parseFunc(value); err != nil {
-			panic(fmt.Sprintf("malformed environment variable %v: %v", key, err))
+			return nil, fmt.Errorf("malformed environment variable %v: %v", key, err)
 		} else {
-			return &parsed
+			return &parsed, nil
 		}
 	}
-	return nil
+	return nil, nil
+}
+
+func GetEnvParsedOrNil[T any](key string, parseFunc func(string) (T, error)) *T {
+	return util.Require(GetEnvParsedOrNilErr(key, parseFunc))
+}
+
+func GetEnvParsedOrDefaultErr[T any](key string, parseFunc func(string) (T, error), defaultValue T) (T, error) {
+	if value, ok := os.LookupEnv(key); ok {
+		if parsed, err := parseFunc(value); err != nil {
+			return parsed, fmt.Errorf("malformed environment variable %v: %v", key, err)
+		} else {
+			return parsed, nil
+		}
+	}
+	return defaultValue, nil
 }
 
 func GetEnvParsedOrDefault[T any](key string, parseFunc func(string) (T, error), defaultValue T) T {
-	if value, ok := os.LookupEnv(key); ok {
-		if parsed, err := parseFunc(value); err != nil {
-			panic(fmt.Sprintf("malformed environment variable %v: %v", key, err))
-		} else {
-			return parsed
-		}
+	return util.Require(GetEnvParsedOrDefaultErr(key, parseFunc, defaultValue))
+}
+
+func RequireEnvErr(key string) (string, error) {
+	if value := GetEnv(key); value != "" {
+		return value, nil
 	}
-	return defaultValue
+	return "", fmt.Errorf("missing required environment variable: %v", key)
 }
 
 func RequireEnv(key string) string {
-	if value := GetEnv(key); value != "" {
-		return value
+	return util.Require(RequireEnvErr(key))
+}
+
+func RequireEnvParsedErr[T any](key string, parseFunc func(string) (T, error)) (T, error) {
+	if value, err := RequireEnvErr(key); err != nil {
+		var empty T
+		return empty, err
+	} else if parsed, err := parseFunc(value); err != nil {
+		return parsed, fmt.Errorf("malformed environment variable %v: %v", key, err)
+	} else {
+		return parsed, nil
 	}
-	panic(fmt.Sprintf("missing required environment variable: %v", key))
 }
 
 func RequireEnvParsed[T any](key string, parseFunc func(string) (T, error)) T {
-	if parsed, err := parseFunc(RequireEnv(key)); err != nil {
-		panic(fmt.Sprintf("malformed environment variable %v: %v", key, err))
-	} else {
-		return parsed
-	}
+	return util.Require(RequireEnvParsedErr(key, parseFunc))
 }

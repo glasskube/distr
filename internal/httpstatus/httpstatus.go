@@ -1,4 +1,4 @@
-package agentclient
+package httpstatus
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 
 var ErrHttpStatus = errors.New("non-ok http status")
 
-func checkStatus(r *http.Response, err error) (*http.Response, error) {
-	if err != nil || statusOK(r) {
+func CheckStatus(r *http.Response, err error) (*http.Response, error) {
+	if err != nil || StatusOK(r) {
 		return r, err
 	} else {
 		if errorBody, err := io.ReadAll(r.Body); err == nil {
@@ -21,6 +21,6 @@ func checkStatus(r *http.Response, err error) (*http.Response, error) {
 	}
 }
 
-func statusOK(r *http.Response) bool {
+func StatusOK(r *http.Response) bool {
 	return 200 <= r.StatusCode && r.StatusCode < 300
 }

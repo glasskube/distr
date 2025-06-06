@@ -14,6 +14,7 @@ import (
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient/useragent"
 	"github.com/glasskube/distr/internal/buildconfig"
+	"github.com/glasskube/distr/internal/httpstatus"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -217,7 +218,7 @@ func (c *Client) doAuthenticatedNoRetry(ctx context.Context, r *http.Request) (*
 
 func (c *Client) do(r *http.Request) (*http.Response, error) {
 	r.Header.Set("User-Agent", fmt.Sprintf("%v/%v", useragent.DistrAgentUserAgent, buildconfig.Version()))
-	return checkStatus(c.httpClient.Do(r))
+	return httpstatus.CheckStatus(c.httpClient.Do(r))
 }
 
 func (c *Client) ReloadFromEnv() (changed bool, err error) {
