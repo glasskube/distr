@@ -21,7 +21,7 @@ type DeploymentTargets struct {
 }
 
 func (c *DeploymentTargets) url(elem ...string) string {
-	return c.config.apiUrl(append([]string{"api", "v1", "deployment-targets"}, elem...)...)
+	return c.config.apiUrl(append([]string{"api", "v1", "deployment-targets"}, elem...)...).String()
 }
 
 func (c *DeploymentTargets) List(ctx context.Context) ([]types.DeploymentTargetWithCreatedBy, error) {

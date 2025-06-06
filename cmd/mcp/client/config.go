@@ -56,8 +56,8 @@ func (c *Config) String() string {
 	return fmt.Sprintf("client.Config{baseURL: %v, token: %v}", c.baseURL, c.token.Serialize())
 }
 
-func (c *Config) apiUrl(elem ...string) string {
-	return c.baseURL.JoinPath(elem...).String()
+func (c *Config) apiUrl(elem ...string) *url.URL {
+	return c.baseURL.JoinPath(elem...)
 }
 
 func (c *Config) roundTripper() http.RoundTripper {
@@ -75,6 +75,9 @@ type tokenRoundTripper struct {
 
 // RoundTrip implements http.RoundTripper.
 func (t *tokenRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Add("Authorization", "AccessToken "+t.token.Serialize())
+	req.Header.Set("Authorization", "AccessToken "+t.token.Serialize())
+	if req.Body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	return t.delegate.RoundTrip(req)
 }
