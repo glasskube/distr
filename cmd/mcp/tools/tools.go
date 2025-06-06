@@ -15,8 +15,52 @@ func NewManager(client *client.Client) *Manager {
 
 func (m *Manager) AddToolsToServer(mcpServer *server.MCPServer) {
 	mcpServer.AddTools(
+		// Deployment Target tools
 		m.NewListDeploymentTargetsTool(),
 		m.NewGetDeploymentTargetsTool(),
 		m.NewCreateDeploymentTargetTool(),
+
+		// Application tools
+		m.NewListApplicationsTool(),
+		m.NewGetApplicationTool(),
+		m.NewCreateApplicationTool(),
+		m.NewUpdateApplicationTool(),
+
+		// Application Version tools
+		m.NewGetApplicationVersionTool(),
+		m.NewCreateApplicationVersionTool(),
+		m.NewUpdateApplicationVersionTool(),
+
+		// Application License tools
+		m.NewListApplicationLicensesTool(),
+		m.NewGetApplicationLicenseTool(),
+		m.NewCreateApplicationLicenseTool(),
+		m.NewUpdateApplicationLicenseTool(),
+		m.NewDeleteApplicationLicenseTool(),
+
+		// User tools
+		m.NewListUsersTool(),
+		m.NewCreateUserTool(),
+		m.NewDeleteUserTool(),
+		m.NewUpdateUserImageTool(),
+
+		// File tools
+		m.NewGetFileTool(),
+		m.NewDeleteFileTool(),
+
+		// Artifact tools
+		m.NewListArtifactsTool(),
+		m.NewGetArtifactTool(),
+		m.NewUpdateArtifactImageTool(),
+
+		// Organization tools
+		m.NewGetCurrentOrganizationTool(),
+		m.NewCreateOrganizationTool(),
+		m.NewUpdateOrganizationTool(),
+
+		// Deployment tools
+		m.NewCreateOrUpdateDeploymentTool(),
+		m.NewPatchDeploymentTool(),
+		m.NewDeleteDeploymentTool(),
 	)
 }
