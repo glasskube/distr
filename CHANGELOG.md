@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.11.3](https://github.com/glasskube/distr/compare/1.11.2...1.11.3) (2025-06-07)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v20.0.1 ([#1012](https://github.com/glasskube/distr/issues/1012)) ([5f11add](https://github.com/glasskube/distr/commit/5f11addc6ca8deafcce96d80018d418a1d658e16))
+* **deps:** update angular monorepo to v20.0.2 ([#1018](https://github.com/glasskube/distr/issues/1018)) ([c466b35](https://github.com/glasskube/distr/commit/c466b35d34d38af741b3448a54610e5958a2bb20))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1019](https://github.com/glasskube/distr/issues/1019)) ([cdb8d14](https://github.com/glasskube/distr/commit/cdb8d14886699050f2cbc88cfe79d8719b2aca27))
+* **deps:** update dependency @angular/cdk to v20.0.2 ([#1013](https://github.com/glasskube/distr/issues/1013)) ([add1c9f](https://github.com/glasskube/distr/commit/add1c9fa36187b8c9d46d3db69b545bb88cf2172))
+
+
+### Other
+
+* add enabling logs on deployment creation ([#1008](https://github.com/glasskube/distr/issues/1008)) ([b3d16cc](https://github.com/glasskube/distr/commit/b3d16cc67eaaba58be7d470e3ffb3f611c1fad39))
+* **deps:** update angular-cli monorepo to v20.0.1 ([#1015](https://github.com/glasskube/distr/issues/1015)) ([a96235a](https://github.com/glasskube/distr/commit/a96235a861ac83c4282053e2c1c7f14db9b20d1d))
+* **deps:** update dependency jasmine-core to ~5.8.0 ([#1021](https://github.com/glasskube/distr/issues/1021)) ([ee3e12c](https://github.com/glasskube/distr/commit/ee3e12cd13549b6a1d3444143612d16746334e8c))
+
 ## [1.11.2](https://github.com/glasskube/distr/compare/1.11.1...1.11.2) (2025-06-04)
 
 
