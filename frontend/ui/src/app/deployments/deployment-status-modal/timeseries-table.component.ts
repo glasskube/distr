@@ -41,7 +41,9 @@ export interface TimeseriesSource {
                 <td class="uppercase">
                   {{ entry.status }}
                 </td>
-                <td class="px-4 md:px-5 whitespace-pre-line font-mono text-gray-900 dark:text-white">
+                <td
+                  class="px-4 md:px-5 whitespace-pre-line font-mono text-gray-900 dark:text-white"
+                  data-ph-mask-text="true">
                   {{ entry.detail }}
                 </td>
               </tr>
