@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 	"net/http"
 	"time"
 
@@ -26,15 +28,46 @@ import (
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+
+	"github.com/coreos/go-oidc"
 )
 
+var oauth2Config *oauth2.Config
+var oidcConfig *oidc.Config
+var idTokenVerifier *oidc.IDTokenVerifier
+
 func AuthRouter(r chi.Router) {
+	oauth2Config = &oauth2.Config{ // TODO proper initialization
+		ClientID:     *env.OIDCGithubClientID(),
+		ClientSecret: *env.OIDCGithubClientSecret(),
+		RedirectURL:  "http://localhost:4200/api/v1/auth/login/github/callback",
+		Endpoint:     github.Endpoint,
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+	// ctx := context.Background()
+
+	/*provider, err := oidc.NewProvider(ctx, "https://github.com/login/oauth")
+	if err != nil {
+		panic(err)
+	}
+	oidcConfig = &oidc.Config{
+		ClientID: *env.OIDCGithubClientID(),
+	}
+	idTokenVerifier = provider.Verifier(oidcConfig)*/
+
+	idTokenVerifier = oidc.NewVerifier("https://github.com", oidc.NewRemoteKeySet(context.Background(),
+		"https://github.com/login/oauth/.well-known/jwks.json"), &oidc.Config{
+		ClientID: *env.OIDCGithubClientID(),
+	})
+
 	r.Use(httprate.Limit(
 		10,
 		1*time.Minute,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 	r.Post("/login", authLoginHandler)
+	r.Get("/login/{oidcProvider}", authLoginOidcHandler())
+	r.Get("/login/{oidcProvider}/callback", authLoginOidcCallbackHandler)
 	r.Route("/register", func(r chi.Router) {
 		r.Get("/", authRegisterGetHandler())
 		r.Post("/", authRegisterHandler)
@@ -134,6 +167,52 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Warn("user login failed", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
+}
+
+func authLoginOidcHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//ctx := r.Context()
+		//log := internalctx.GetLogger(ctx)
+		if provider := r.PathValue("oidcProvider"); provider == "" {
+			http.Error(w, "missing provider", http.StatusBadRequest)
+		} else if provider != "github" {
+			http.Error(w, "unknown provider", http.StatusBadRequest)
+		} else if !env.OIDCGithubEnabled() {
+			http.Error(w, "github login not enabled", http.StatusBadRequest)
+		} else {
+			http.Redirect(w, r, oauth2Config.AuthCodeURL("STATE-TODO-LOL"), http.StatusFound) // TODO state
+		}
+	}
+}
+
+func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	code := r.URL.Query().Get("code")
+	token, err := oauth2Config.Exchange(ctx, code)
+	if err != nil {
+		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "%v\n", token)
+	idToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		http.Error(w, "No id_token found", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "%v\n", idToken)
+	tkn, err := idTokenVerifier.Verify(ctx, idToken)
+	if err != nil {
+		http.Error(w, "Failed to verify ID token: "+err.Error(), http.StatusInternalServerError)
+		return
+	} else {
+		var x map[string]any
+		tkn.Claims(&x)
+		fmt.Fprintf(w, "%v", x)
+	}
+
+	fmt.Fprintf(w, "Login successful!")
 }
 
 func authRegisterGetHandler() http.HandlerFunc {

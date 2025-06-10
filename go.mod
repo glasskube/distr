@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.2
 	github.com/compose-spec/compose-go/v2 v2.6.4
 	github.com/containerd/log v0.1.0
+	github.com/coreos/go-oidc v2.3.0+incompatible
 	github.com/docker/cli v28.2.2+incompatible
 	github.com/docker/compose/v2 v2.37.0
 	github.com/docker/docker v28.2.2+incompatible
@@ -33,6 +34,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.128.0
 	github.com/spf13/cobra v1.9.1
 	github.com/wneessen/go-mail v0.6.2
+	github.com/zitadel/oidc/v2 v2.12.2
 	go.opentelemetry.io/collector/component v1.34.0
 	go.opentelemetry.io/collector/confmap v1.34.0
 	go.opentelemetry.io/collector/consumer v1.34.0
@@ -56,6 +58,15 @@ require (
 	k8s.io/kubectl v0.33.1
 	k8s.io/metrics v0.33.1
 	oras.land/oras-go/v2 v2.6.0
+)
+
+require (
+	github.com/gorilla/schema v1.3.0 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/muhlemmer/gu v0.3.1 // indirect
+	github.com/pquerna/cachecontrol v0.1.0 // indirect
+	github.com/zitadel/oidc/v3 v3.39.0 // indirect
+	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 )
 
 require (
@@ -299,7 +310,7 @@ require (
 	go.uber.org/mock v0.5.2 // indirect
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
 	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
+	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect

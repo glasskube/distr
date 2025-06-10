@@ -3,6 +3,7 @@ package env
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/glasskube/distr/internal/util"
 	"os"
 	"strconv"
 	"time"
@@ -47,6 +48,9 @@ var (
 	cleanupDeploymentTargetStatusCron   *string
 	cleanupDeploymentTargetMetricsCron  *string
 	cleanupDeploymentLogRecordCron      *string
+	oidcGithubEnabled                   bool
+	oidcGithubClientID                  *string
+	oidcGithubClientSecret              *string
 )
 
 func Initialize() {
@@ -126,6 +130,12 @@ func Initialize() {
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
 	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
+
+	oidcGithubEnabled = envutil.GetEnvParsedOrDefault("OIDC_GITHUB_ENABLED", strconv.ParseBool, false)
+	if oidcGithubEnabled {
+		oidcGithubClientID = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_ID"))
+		oidcGithubClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_SECRET"))
+	}
 }
 
 func DatabaseUrl() string {
@@ -262,4 +272,16 @@ func CleanupDeploymentTargetMetricsCron() *string {
 
 func CleanupDeploymentLogRecordCron() *string {
 	return cleanupDeploymentLogRecordCron
+}
+
+func OIDCGithubEnabled() bool {
+	return oidcGithubEnabled
+}
+
+func OIDCGithubClientID() *string {
+	return oidcGithubClientID
+}
+
+func OIDCGithubClientSecret() *string {
+	return oidcGithubClientSecret
 }

@@ -65,6 +65,10 @@ export class AuthService {
     );
   }
 
+  public loginWithGithub(): Observable<void> {
+    return this.httpClient.post<void>(`${authBaseUrl}/login/github`, {});
+  }
+
   public resetPassword(email: string): Observable<void> {
     return this.httpClient.post<void>(`${authBaseUrl}/reset`, {email});
   }
