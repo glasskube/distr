@@ -33,14 +33,12 @@ func (m *Manager) NewGetArtifactTool() server.ServerTool {
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the artifact to retrieve")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("ID is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse artifact ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("ID is required"), nil
 			}
 
 			if artifact, err := m.client.Artifacts().Get(ctx, id); err != nil {

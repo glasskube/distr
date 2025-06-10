@@ -51,14 +51,12 @@ func (m *Manager) NewPatchDeploymentTool() server.ServerTool {
 			mcp.WithObject("patch", mcp.Required(), mcp.Description("Patch request object")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("id is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse deployment ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("id is required"), nil
 			}
 
 			patchData := mcp.ParseStringMap(request, "patch", nil)

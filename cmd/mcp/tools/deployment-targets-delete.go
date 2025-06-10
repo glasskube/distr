@@ -8,12 +8,12 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func (m *Manager) NewGetDeploymentTargetsTool() server.ServerTool {
+func (m *Manager) NewDeleteDeploymentTargetTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool(
-			"get_deployment_target",
-			mcp.WithDescription("This tools retrieves a particular deployment target with the specified ID"),
-			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the deployment target")),
+			"delete_deployment_target",
+			mcp.WithDescription("This tool deletes a deployment target"),
+			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the deployment target to delete")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			id, err := ParseUUID(request, "id")
@@ -23,10 +23,10 @@ func (m *Manager) NewGetDeploymentTargetsTool() server.ServerTool {
 			if id == uuid.Nil {
 				return mcp.NewToolResultError("id is required"), nil
 			}
-			if deploymentTargets, err := m.client.DeploymentTargets().Get(ctx, id); err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to get DeploymentTarget", err), nil
+			if err := m.client.DeploymentTargets().Delete(ctx, id); err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to delete DeploymentTarget", err), nil
 			} else {
-				return JsonToolResult(deploymentTargets)
+				return JsonToolResult(map[string]string{"status": "success"})
 			}
 		},
 	}

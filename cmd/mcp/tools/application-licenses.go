@@ -33,14 +33,12 @@ func (m *Manager) NewGetApplicationLicenseTool() server.ServerTool {
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the license to retrieve")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("ID is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse license ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("ID is required"), nil
 			}
 
 			if license, err := m.client.ApplicationLicenses().Get(ctx, id); err != nil {
@@ -104,14 +102,12 @@ func (m *Manager) NewDeleteApplicationLicenseTool() server.ServerTool {
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the license to delete")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("ID is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse license ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("ID is required"), nil
 			}
 
 			if err := m.client.ApplicationLicenses().Delete(ctx, id); err != nil {

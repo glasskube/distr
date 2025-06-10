@@ -16,14 +16,12 @@ func (m *Manager) NewGetFileTool() server.ServerTool {
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the file to retrieve")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("ID is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse file ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("ID is required"), nil
 			}
 
 			if file, err := m.client.Files().Get(ctx, id); err != nil {
@@ -43,14 +41,12 @@ func (m *Manager) NewDeleteFileTool() server.ServerTool {
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the file to delete")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("ID is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse file ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("ID is required"), nil
 			}
 
 			if err := m.client.Files().Delete(ctx, id); err != nil {

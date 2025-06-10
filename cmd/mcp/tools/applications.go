@@ -34,14 +34,12 @@ func (m *Manager) NewGetApplicationTool() server.ServerTool {
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the application to retrieve")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			idStr := mcp.ParseString(request, "id", "")
-			if idStr == "" {
-				return mcp.NewToolResultError("Application ID is required"), nil
-			}
-
-			id, err := uuid.Parse(idStr)
+			id, err := ParseUUID(request, "id")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse application ID", err), nil
+			}
+			if id == uuid.Nil {
+				return mcp.NewToolResultError("Application ID is required"), nil
 			}
 
 			if application, err := m.client.Applications().Get(ctx, id); err != nil {

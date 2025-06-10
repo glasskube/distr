@@ -19,24 +19,20 @@ func (m *Manager) NewGetApplicationVersionTool() server.ServerTool {
 			mcp.WithString("versionId", mcp.Required(), mcp.Description("ID of the version to retrieve")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			appIDStr := mcp.ParseString(request, "applicationId", "")
-			if appIDStr == "" {
-				return mcp.NewToolResultError("Application ID is required"), nil
-			}
-
-			versionIDStr := mcp.ParseString(request, "versionId", "")
-			if versionIDStr == "" {
-				return mcp.NewToolResultError("Version ID is required"), nil
-			}
-
-			appID, err := uuid.Parse(appIDStr)
+			appID, err := ParseUUID(request, "applicationId")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse application ID", err), nil
 			}
+			if appID == uuid.Nil {
+				return mcp.NewToolResultError("Application ID is required"), nil
+			}
 
-			versionID, err := uuid.Parse(versionIDStr)
+			versionID, err := ParseUUID(request, "versionId")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse version ID", err), nil
+			}
+			if versionID == uuid.Nil {
+				return mcp.NewToolResultError("Version ID is required"), nil
 			}
 
 			if version, err := m.client.ApplicationVersions(appID).Get(ctx, versionID); err != nil {

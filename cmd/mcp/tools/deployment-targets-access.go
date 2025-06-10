@@ -8,11 +8,11 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func (m *Manager) NewGetDeploymentTargetsTool() server.ServerTool {
+func (m *Manager) NewCreateAccessForDeploymentTargetTool() server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool(
-			"get_deployment_target",
-			mcp.WithDescription("This tools retrieves a particular deployment target with the specified ID"),
+			"create_access_for_deployment_target",
+			mcp.WithDescription("This tool creates access credentials for a deployment target"),
 			mcp.WithString("id", mcp.Required(), mcp.Description("ID of the deployment target")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -23,10 +23,10 @@ func (m *Manager) NewGetDeploymentTargetsTool() server.ServerTool {
 			if id == uuid.Nil {
 				return mcp.NewToolResultError("id is required"), nil
 			}
-			if deploymentTargets, err := m.client.DeploymentTargets().Get(ctx, id); err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to get DeploymentTarget", err), nil
+			if accessResponse, err := m.client.DeploymentTargets().Connect(ctx, id); err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to create access for DeploymentTarget", err), nil
 			} else {
-				return JsonToolResult(deploymentTargets)
+				return JsonToolResult(accessResponse)
 			}
 		},
 	}
