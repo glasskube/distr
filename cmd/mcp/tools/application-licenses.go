@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
@@ -61,23 +60,12 @@ func (m *Manager) NewCreateApplicationLicenseTool() server.ServerTool {
 			mcp.WithObject("license", mcp.Required(), mcp.Description("License object to create")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			var defaultLicenseData map[string]any
-			licenseData := mcp.ParseStringMap(request, "license", defaultLicenseData)
-			if licenseData == nil {
-				return mcp.NewToolResultError("License data is required"), nil
-			}
-
-			licenseJSON, err := json.Marshal(licenseData)
+			license, err := ParseT[*types.ApplicationLicenseWithVersions](request, "license", nil)
 			if err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to process license data", err), nil
-			}
-
-			var license types.ApplicationLicenseWithVersions
-			if err := json.Unmarshal(licenseJSON, &license); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse license data", err), nil
 			}
 
-			if result, err := m.client.ApplicationLicenses().Create(ctx, &license); err != nil {
+			if result, err := m.client.ApplicationLicenses().Create(ctx, license); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to create Application License", err), nil
 			} else {
 				return JsonToolResult(result)
@@ -94,23 +82,12 @@ func (m *Manager) NewUpdateApplicationLicenseTool() server.ServerTool {
 			mcp.WithObject("license", mcp.Required(), mcp.Description("License object to update")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			var defaultLicenseData map[string]any
-			licenseData := mcp.ParseStringMap(request, "license", defaultLicenseData)
-			if licenseData == nil {
-				return mcp.NewToolResultError("License data is required"), nil
-			}
-
-			licenseJSON, err := json.Marshal(licenseData)
+			license, err := ParseT[*types.ApplicationLicenseWithVersions](request, "license", nil)
 			if err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to process license data", err), nil
-			}
-
-			var license types.ApplicationLicenseWithVersions
-			if err := json.Unmarshal(licenseJSON, &license); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse license data", err), nil
 			}
 
-			if result, err := m.client.ApplicationLicenses().Update(ctx, &license); err != nil {
+			if result, err := m.client.ApplicationLicenses().Update(ctx, license); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to update Application License", err), nil
 			} else {
 				return JsonToolResult(result)

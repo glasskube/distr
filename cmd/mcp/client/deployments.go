@@ -39,7 +39,11 @@ func (c *Deployments) Put(ctx context.Context, req api.DeploymentRequest) error 
 	}
 }
 
-func (c *Deployments) Patch(ctx context.Context, id uuid.UUID, req api.PatchDeploymentRequest) (*types.Deployment, error) {
+func (c *Deployments) Patch(
+	ctx context.Context,
+	id uuid.UUID,
+	req api.PatchDeploymentRequest,
+) (*types.Deployment, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(req); err != nil {
 		return nil, err
@@ -82,7 +86,11 @@ func (o *TimeseriesResourceOptions) AsURLValues() url.Values {
 	return v
 }
 
-func (c *Deployments) Status(ctx context.Context, id uuid.UUID, options *TimeseriesResourceOptions) ([]types.DeploymentRevisionStatus, error) {
+func (c *Deployments) Status(
+	ctx context.Context,
+	id uuid.UUID,
+	options *TimeseriesResourceOptions,
+) ([]types.DeploymentRevisionStatus, error) {
 	url := c.url("status")
 	url.RawQuery = options.AsURLValues().Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
@@ -92,7 +100,12 @@ func (c *Deployments) Status(ctx context.Context, id uuid.UUID, options *Timeser
 	return JsonResponse[[]types.DeploymentRevisionStatus](c.config.httpClient.Do(req))
 }
 
-func (c *Deployments) Logs(ctx context.Context, id uuid.UUID, resource string, options *TimeseriesResourceOptions) ([]api.DeploymentLogRecord, error) {
+func (c *Deployments) Logs(
+	ctx context.Context,
+	id uuid.UUID,
+	resource string,
+	options *TimeseriesResourceOptions,
+) ([]api.DeploymentLogRecord, error) {
 	url := c.url("logs")
 	url.RawQuery = options.AsURLValues().Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)

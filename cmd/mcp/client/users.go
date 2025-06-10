@@ -59,7 +59,11 @@ func (c *Users) Delete(ctx context.Context, userID uuid.UUID) error {
 }
 
 // UpdateImage updates the image for a user
-func (c *Users) UpdateImage(ctx context.Context, userID uuid.UUID, imageID uuid.UUID) (*api.UserAccountResponse, error) {
+func (c *Users) UpdateImage(
+	ctx context.Context,
+	userID uuid.UUID,
+	imageID uuid.UUID,
+) (*api.UserAccountResponse, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(api.PatchImageRequest{ImageID: imageID}); err != nil {
 		return nil, err

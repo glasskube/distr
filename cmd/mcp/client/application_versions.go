@@ -34,7 +34,10 @@ func (c *ApplicationVersions) Get(ctx context.Context, id uuid.UUID) (*types.App
 	return JsonResponse[*types.ApplicationVersion](c.config.httpClient.Do(req))
 }
 
-func (c *ApplicationVersions) Create(ctx context.Context, body types.ApplicationVersion) (*types.ApplicationVersion, error) {
+func (c *ApplicationVersions) Create(
+	ctx context.Context,
+	body types.ApplicationVersion,
+) (*types.ApplicationVersion, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
 		return nil, err
@@ -46,7 +49,10 @@ func (c *ApplicationVersions) Create(ctx context.Context, body types.Application
 	return JsonResponse[*types.ApplicationVersion](c.config.httpClient.Do(req))
 }
 
-func (c *ApplicationVersions) Update(ctx context.Context, body types.ApplicationVersion) (*types.ApplicationVersion, error) {
+func (c *ApplicationVersions) Update(
+	ctx context.Context,
+	body types.ApplicationVersion,
+) (*types.ApplicationVersion, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
 		return nil, err

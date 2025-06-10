@@ -16,9 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	log *zap.Logger
-)
+var log *zap.Logger
 
 var rootCmd = &cobra.Command{
 	Use:     "distr-mcp",

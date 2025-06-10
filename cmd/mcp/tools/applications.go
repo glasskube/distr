@@ -61,23 +61,14 @@ func (m *Manager) NewCreateApplicationTool() server.ServerTool {
 			mcp.WithObject("application", mcp.Required(), mcp.Description("Application object to create")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			var defaultAppData map[string]any
-			appData := mcp.ParseStringMap(request, "application", defaultAppData)
-			if appData == nil {
-				return mcp.NewToolResultError("Application data is required"), nil
-			}
-
-			appJSON, err := json.Marshal(appData)
+			app, err := ParseT[*types.Application](request, "application", nil)
 			if err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to process application data", err), nil
-			}
-
-			var app types.Application
-			if err := json.Unmarshal(appJSON, &app); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse application data", err), nil
+			} else if app == nil {
+				return mcp.NewToolResultErrorFromErr("application is required", err), nil
 			}
 
-			if result, err := m.client.Applications().Create(ctx, app); err != nil {
+			if result, err := m.client.Applications().Create(ctx, *app); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to create Application", err), nil
 			} else {
 				return JsonToolResult(result)

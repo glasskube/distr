@@ -65,7 +65,11 @@ func (c *Applications) Update(ctx context.Context, body types.Application) (*typ
 	return JsonResponse[*types.Application](c.config.httpClient.Do(req))
 }
 
-func (c *Applications) Patch(ctx context.Context, id uuid.UUID, body api.PatchApplicationRequest) (*types.Application, error) {
+func (c *Applications) Patch(
+	ctx context.Context,
+	id uuid.UUID,
+	body api.PatchApplicationRequest,
+) (*types.Application, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
 		return nil, err

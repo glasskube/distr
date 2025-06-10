@@ -36,7 +36,10 @@ func (c *DeploymentTargets) Get(ctx context.Context, id uuid.UUID) (*types.Deplo
 	)
 }
 
-func (c *DeploymentTargets) Create(ctx context.Context, req types.DeploymentTargetWithCreatedBy) (*types.DeploymentTargetWithCreatedBy, error) {
+func (c *DeploymentTargets) Create(
+	ctx context.Context,
+	req types.DeploymentTargetWithCreatedBy,
+) (*types.DeploymentTargetWithCreatedBy, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(req); err != nil {
 		return nil, err
@@ -47,7 +50,10 @@ func (c *DeploymentTargets) Create(ctx context.Context, req types.DeploymentTarg
 	}
 }
 
-func (c *DeploymentTargets) Update(ctx context.Context, req types.DeploymentTargetWithCreatedBy) (*types.DeploymentTargetWithCreatedBy, error) {
+func (c *DeploymentTargets) Update(
+	ctx context.Context,
+	req types.DeploymentTargetWithCreatedBy,
+) (*types.DeploymentTargetWithCreatedBy, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(req); err != nil {
 		return nil, err
@@ -71,7 +77,10 @@ func (c *DeploymentTargets) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (c *DeploymentTargets) Connect(ctx context.Context, id uuid.UUID) (*api.DeploymentTargetAccessTokenResponse, error) {
+func (c *DeploymentTargets) Connect(
+	ctx context.Context,
+	id uuid.UUID,
+) (*api.DeploymentTargetAccessTokenResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url(id.String()), nil)
 	if err != nil {
 		return nil, err

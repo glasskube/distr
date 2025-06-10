@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/glasskube/distr/api"
 	"github.com/google/uuid"
@@ -34,23 +33,14 @@ func (m *Manager) NewCreateUserTool() server.ServerTool {
 			mcp.WithObject("user", mcp.Required(), mcp.Description("User account to create")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			var defaultUserData map[string]any
-			userData := mcp.ParseStringMap(request, "user", defaultUserData)
-			if userData == nil {
+			user, err := ParseT[*api.CreateUserAccountRequest](request, "user", nil)
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to parse user data", err), nil
+			} else if user == nil {
 				return mcp.NewToolResultError("User data is required"), nil
 			}
 
-			userJSON, err := json.Marshal(userData)
-			if err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to process user data", err), nil
-			}
-
-			var user api.CreateUserAccountRequest
-			if err := json.Unmarshal(userJSON, &user); err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to parse user data", err), nil
-			}
-
-			if result, err := m.client.Users().Create(ctx, user); err != nil {
+			if result, err := m.client.Users().Create(ctx, *user); err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to create User", err), nil
 			} else {
 				return JsonToolResult(result)
@@ -95,22 +85,12 @@ func (m *Manager) NewUpdateUserImageTool() server.ServerTool {
 			mcp.WithString("imageId", mcp.Required(), mcp.Description("ID of the image")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			userIDStr := mcp.ParseString(request, "userId", "")
-			if userIDStr == "" {
-				return mcp.NewToolResultError("User ID is required"), nil
-			}
-
-			imageIDStr := mcp.ParseString(request, "imageId", "")
-			if imageIDStr == "" {
-				return mcp.NewToolResultError("Image ID is required"), nil
-			}
-
-			userID, err := uuid.Parse(userIDStr)
+			userID, err := ParseUUID(request, "userId")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse user ID", err), nil
 			}
 
-			imageID, err := uuid.Parse(imageIDStr)
+			imageID, err := ParseUUID(request, "imageId")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse image ID", err), nil
 			}

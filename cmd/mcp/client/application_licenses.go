@@ -42,7 +42,10 @@ func (c *ApplicationLicenses) Get(ctx context.Context, id uuid.UUID) (*types.App
 }
 
 // Create creates a new application license
-func (c *ApplicationLicenses) Create(ctx context.Context, license *types.ApplicationLicenseWithVersions) (*types.ApplicationLicense, error) {
+func (c *ApplicationLicenses) Create(
+	ctx context.Context,
+	license *types.ApplicationLicenseWithVersions,
+) (*types.ApplicationLicense, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(license); err != nil {
 		return nil, err
@@ -55,7 +58,10 @@ func (c *ApplicationLicenses) Create(ctx context.Context, license *types.Applica
 }
 
 // Update updates an existing application license
-func (c *ApplicationLicenses) Update(ctx context.Context, license *types.ApplicationLicenseWithVersions) (*types.ApplicationLicense, error) {
+func (c *ApplicationLicenses) Update(
+	ctx context.Context,
+	license *types.ApplicationLicenseWithVersions,
+) (*types.ApplicationLicense, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(license); err != nil {
 		return nil, err

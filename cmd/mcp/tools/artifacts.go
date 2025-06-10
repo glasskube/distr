@@ -60,22 +60,12 @@ func (m *Manager) NewUpdateArtifactImageTool() server.ServerTool {
 			mcp.WithString("imageId", mcp.Required(), mcp.Description("ID of the image")),
 		),
 		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			artifactIDStr := mcp.ParseString(request, "artifactId", "")
-			if artifactIDStr == "" {
-				return mcp.NewToolResultError("Artifact ID is required"), nil
-			}
-
-			imageIDStr := mcp.ParseString(request, "imageId", "")
-			if imageIDStr == "" {
-				return mcp.NewToolResultError("Image ID is required"), nil
-			}
-
-			artifactID, err := uuid.Parse(artifactIDStr)
+			artifactID, err := ParseUUID(request, "artifactId")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse artifact ID", err), nil
 			}
 
-			imageID, err := uuid.Parse(imageIDStr)
+			imageID, err := ParseUUID(request, "imageId")
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to parse image ID", err), nil
 			}

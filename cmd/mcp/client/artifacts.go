@@ -41,7 +41,11 @@ func (c *Artifacts) Get(ctx context.Context, id uuid.UUID) (*api.ArtifactRespons
 }
 
 // UpdateImage updates the image for an artifact
-func (c *Artifacts) UpdateImage(ctx context.Context, artifactID uuid.UUID, imageID uuid.UUID) (*api.ArtifactResponse, error) {
+func (c *Artifacts) UpdateImage(
+	ctx context.Context,
+	artifactID uuid.UUID,
+	imageID uuid.UUID,
+) (*api.ArtifactResponse, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(api.PatchImageRequest{ImageID: imageID}); err != nil {
 		return nil, err
