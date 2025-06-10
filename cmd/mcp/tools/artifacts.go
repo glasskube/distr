@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 
+	"github.com/glasskube/distr/cmd/mcp/client"
 	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -59,22 +60,19 @@ func (m *Manager) NewUpdateArtifactImageTool() server.ServerTool {
 			mcp.WithString("artifactId", mcp.Required(), mcp.Description("ID of the artifact")),
 			mcp.WithString("imageId", mcp.Required(), mcp.Description("ID of the image")),
 		),
-		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			artifactID, err := ParseUUID(request, "artifactId")
-			if err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to parse artifact ID", err), nil
-			}
-
-			imageID, err := ParseUUID(request, "imageId")
-			if err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to parse image ID", err), nil
-			}
-
-			if result, err := m.client.Artifacts().UpdateImage(ctx, artifactID, imageID); err != nil {
-				return mcp.NewToolResultErrorFromErr("Failed to update Artifact image", err), nil
-			} else {
-				return JsonToolResult(result)
-			}
-		},
+		Handler: m.patchImageHandlerFunc(
+			"artifactId",
+			"imageId",
+			func(c *client.Client) func(context.Context, uuid.UUID, uuid.UUID) (any, error) {
+				return func(ctx context.Context, u1, u2 uuid.UUID) (any, error) {
+					if result, err := c.Artifacts().UpdateImage(ctx, u1, u2); err != nil {
+						return nil, err
+					} else {
+						return result, nil
+					}
+				}
+			},
+			"Failed to update Artifact image",
+		),
 	}
 }
