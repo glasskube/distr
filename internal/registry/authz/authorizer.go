@@ -9,7 +9,7 @@ import (
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/registry/name"
 	"github.com/glasskube/distr/internal/types"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/opencontainers/go-digest"
 )
 
 type Action string
@@ -23,7 +23,7 @@ const (
 type Authorizer interface {
 	Authorize(ctx context.Context, name string, action Action) error
 	AuthorizeReference(ctx context.Context, name string, reference string, action Action) error
-	AuthorizeBlob(ctx context.Context, digest v1.Hash, action Action) error
+	AuthorizeBlob(ctx context.Context, digest digest.Digest, action Action) error
 }
 
 type authorizer struct{}
@@ -74,7 +74,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 }
 
 // AuthorizeBlob implements ArtifactsAuthorizer.
-func (a *authorizer) AuthorizeBlob(ctx context.Context, digest v1.Hash, action Action) error {
+func (a *authorizer) AuthorizeBlob(ctx context.Context, digest digest.Digest, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
 	if *auth.CurrentUserRole() != types.UserRoleVendor {

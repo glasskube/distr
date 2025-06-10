@@ -7,7 +7,7 @@ import (
 	"sort"
 
 	"github.com/glasskube/distr/internal/registry/manifest"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/opencontainers/go-digest"
 )
 
 type handler struct {
@@ -57,7 +57,7 @@ func (h *handler) ListTags(ctx context.Context, name string, n int, last string)
 	}
 	var references []string
 	for reference := range referencesMap {
-		if _, err := v1.NewHash(reference); err == nil {
+		if _, err := digest.Parse(reference); err == nil {
 			continue
 		} else {
 			references = append(references, reference)
@@ -83,14 +83,14 @@ func (h *handler) ListTags(ctx context.Context, name string, n int, last string)
 }
 
 // ListDigests implements manifest.ManifestHandler.
-func (h *handler) ListDigests(ctx context.Context, name string) ([]v1.Hash, error) {
+func (h *handler) ListDigests(ctx context.Context, name string) ([]digest.Digest, error) {
 	references, ok := h.manifests[name]
 	if !ok {
 		return nil, manifest.ErrNameUnknown
 	}
-	var digests []v1.Hash
+	var digests []digest.Digest
 	for reference := range references {
-		if h, err := v1.NewHash(reference); err != nil {
+		if h, err := digest.Parse(reference); err != nil {
 			continue
 		} else {
 			digests = append(digests, h)
