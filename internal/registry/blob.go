@@ -28,8 +28,8 @@ import (
 	"github.com/glasskube/distr/internal/registry/blob"
 	registryerror "github.com/glasskube/distr/internal/registry/error"
 	"github.com/glasskube/distr/internal/registry/verify"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
+	"github.com/opencontainers/go-digest"
 	"go.uber.org/zap"
 )
 
@@ -77,14 +77,14 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 	}
 	target := elem[len(elem)-1]
 	service := elem[len(elem)-2]
-	digest := req.URL.Query().Get("digest")
+	digestFromQuery := req.URL.Query().Get("digest")
 	contentRange := req.Header.Get("Content-Range")
 	rangeHeader := req.Header.Get("Range")
 	repo := req.URL.Host + path.Join(elem[1:len(elem)-2]...)
 
 	switch req.Method {
 	case http.MethodHead:
-		if h, err := v1.NewHash(target); err != nil {
+		if h, err := digest.Parse(target); err != nil {
 			return regErrDigestInvalid
 		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionStat); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
@@ -96,7 +96,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handleHead(resp, req, repo, target)
 	case http.MethodGet:
-		if h, err := v1.NewHash(target); err == nil {
+		if h, err := digest.Parse(target); err == nil {
 			if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionRead); err != nil {
 				if errors.Is(err, authz.ErrAccessDenied) {
 					return regErrDenied
@@ -118,7 +118,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			}
 			return regErrInternal(err)
 		}
-		return b.handlePost(resp, req, repo, target, digest)
+		return b.handlePost(resp, req, repo, target, digestFromQuery)
 	case http.MethodPatch:
 		if err := b.authz.Authorize(req.Context(), repo, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
@@ -130,7 +130,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 		}
 		return b.handlePatch(resp, req, target, service, contentRange)
 	case http.MethodPut:
-		if h, err := v1.NewHash(digest); err != nil {
+		if h, err := digest.Parse(digestFromQuery); err != nil {
 			return regErrDigestInvalid
 		} else if err := b.authz.AuthorizeBlob(req.Context(), h, authz.ActionWrite); err != nil {
 			if errors.Is(err, authz.ErrAccessDenied) {
@@ -140,7 +140,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 			}
 			return regErrInternal(err)
 		}
-		return b.handlePut(resp, req, service, repo, target, digest, contentRange)
+		return b.handlePut(resp, req, service, repo, target, digestFromQuery, contentRange)
 	// case http.MethodDelete:
 	// 	if err := b.authz.AuthorizeBlob(req.Context(), targetHash, authz.ActionWrite); err != nil {
 	// 		if errors.Is(err, authz.ErrAccessDenied) {
@@ -155,7 +155,7 @@ func (b *blobs) handle(resp http.ResponseWriter, req *http.Request) *regError {
 }
 
 func (b *blobs) handleHead(resp http.ResponseWriter, req *http.Request, repo, target string) *regError {
-	h, err := v1.NewHash(target)
+	h, err := digest.Parse(target)
 	if err != nil {
 		return regErrDigestInvalid
 	}
@@ -199,7 +199,7 @@ func (b *blobs) handleHead(resp http.ResponseWriter, req *http.Request, repo, ta
 }
 
 func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, target, rangeHeader string) *regError {
-	h, err := v1.NewHash(target)
+	h, err := digest.Parse(target)
 	if err != nil {
 		if id, err := uuid.Parse(target); err != nil {
 			return regErrDigestInvalid
@@ -315,7 +315,7 @@ func (b *blobs) handleGet(resp http.ResponseWriter, req *http.Request, repo, tar
 	return nil
 }
 
-func (b *blobs) handlePost(resp http.ResponseWriter, req *http.Request, repo, target, digest string) *regError {
+func (b *blobs) handlePost(resp http.ResponseWriter, req *http.Request, repo, target, digestArg string) *regError {
 	bph, ok := b.blobHandler.(blob.BlobPutHandler)
 	if !ok {
 		return regErrUnsupported
@@ -331,8 +331,8 @@ func (b *blobs) handlePost(resp http.ResponseWriter, req *http.Request, repo, ta
 		}
 	}
 
-	if digest != "" {
-		h, err := v1.NewHash(digest)
+	if digestArg != "" {
+		h, err := digest.Parse(digestArg)
 		if err != nil {
 			return regErrDigestInvalid
 		}
@@ -415,7 +415,7 @@ func (b *blobs) handlePatch(
 func (b *blobs) handlePut(
 	resp http.ResponseWriter,
 	req *http.Request,
-	service, repo, target, digest, contentRange string,
+	service, repo, target, digestArg, contentRange string,
 ) *regError {
 	bph, ok := b.blobHandler.(blob.BlobPutHandler)
 	if !ok {
@@ -430,7 +430,7 @@ func (b *blobs) handlePut(
 		}
 	}
 
-	if digest == "" {
+	if digestArg == "" {
 		return &regError{
 			Status:  http.StatusBadRequest,
 			Code:    "DIGEST_INVALID",
@@ -438,7 +438,7 @@ func (b *blobs) handlePut(
 		}
 	}
 
-	h, err := v1.NewHash(digest)
+	h, err := digest.Parse(digestArg)
 	if err != nil {
 		return regErrDigestInvalid
 	}

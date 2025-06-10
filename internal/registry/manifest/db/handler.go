@@ -12,8 +12,8 @@ import (
 	"github.com/glasskube/distr/internal/registry/name"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/uuid"
+	"github.com/opencontainers/go-digest"
 )
 
 type handler struct{}
@@ -38,9 +38,11 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 		return nil, err
 	} else {
 		return &manifest.Manifest{
-			Blob: manifest.Blob{
-				Digest: v1.Hash(av.ManifestBlobDigest),
-				Size:   av.ManifestBlobSize,
+			BlobWithData: manifest.BlobWithData{
+				Blob: manifest.Blob{
+					Digest: digest.Digest(av.ManifestBlobDigest),
+					Size:   av.ManifestBlobSize,
+				},
 			},
 			ContentType: av.ManifestContentType,
 		}, nil
@@ -73,7 +75,7 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 }
 
 // ListDigests implements manifest.ManifestHandler.
-func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]v1.Hash, error) {
+func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Digest, error) {
 	if name, err := name.Parse(nameStr); err != nil {
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
@@ -90,9 +92,9 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]v1.Hash, e
 		} else if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID); err != nil {
 			return nil, err
 		} else {
-			var result []v1.Hash
+			var result []digest.Digest
 			for _, version := range versions {
-				if h, err := v1.NewHash(version.Digest); err != nil {
+				if h, err := digest.Parse(version.Digest); err != nil {
 					continue
 				} else {
 					result = append(result, h)
@@ -153,9 +155,10 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.Blob.Digest),
-			ManifestBlobSize:       manifest.Blob.Size,
+			ManifestBlobDigest:     types.Digest(manifest.Digest),
+			ManifestBlobSize:       manifest.Size,
 			ManifestContentType:    manifest.ContentType,
+			ManifestData:           manifest.Data,
 			ArtifactID:             artifact.ID,
 		}
 
