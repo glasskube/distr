@@ -11,6 +11,8 @@ on:
 jobs:
   build-mcp:
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: write
     strategy:
       matrix:
         goos: ["windows", "linux", "darwin"]
