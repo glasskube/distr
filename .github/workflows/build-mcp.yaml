@@ -1,3 +1,5 @@
+name: Build MCP
+
 on:
   push:
     branches:
