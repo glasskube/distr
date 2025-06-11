@@ -34,7 +34,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.128.0
 	github.com/spf13/cobra v1.9.1
 	github.com/wneessen/go-mail v0.6.2
-	github.com/zitadel/oidc/v2 v2.12.2
 	go.opentelemetry.io/collector/component v1.34.0
 	go.opentelemetry.io/collector/confmap v1.34.0
 	go.opentelemetry.io/collector/consumer v1.34.0
@@ -62,11 +61,7 @@ require (
 
 require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
-	github.com/gorilla/schema v1.3.0 // indirect
-	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/muhlemmer/gu v0.3.1 // indirect
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
-	github.com/zitadel/oidc/v3 v3.39.0 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 )
 
