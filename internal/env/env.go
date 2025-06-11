@@ -51,6 +51,9 @@ var (
 	oidcGithubEnabled                   bool
 	oidcGithubClientID                  *string
 	oidcGithubClientSecret              *string
+	oidcGoogleEnabled                   bool
+	oidcGoogleClientID                  *string
+	oidcGoogleClientSecret              *string
 )
 
 func Initialize() {
@@ -135,6 +138,11 @@ func Initialize() {
 	if oidcGithubEnabled {
 		oidcGithubClientID = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_ID"))
 		oidcGithubClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_SECRET"))
+	}
+	oidcGoogleEnabled = envutil.GetEnvParsedOrDefault("OIDC_GOOGLE_ENABLED", strconv.ParseBool, false)
+	if oidcGoogleEnabled {
+		oidcGoogleClientID = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_ID"))
+		oidcGoogleClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_SECRET"))
 	}
 }
 
@@ -284,4 +292,16 @@ func OIDCGithubClientID() *string {
 
 func OIDCGithubClientSecret() *string {
 	return oidcGithubClientSecret
+}
+
+func OIDCGoogleEnabled() bool {
+	return oidcGoogleEnabled
+}
+
+func OIDCGoogleClientID() *string {
+	return oidcGoogleClientID
+}
+
+func OIDCGoogleClientSecret() *string {
+	return oidcGoogleClientSecret
 }

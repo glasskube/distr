@@ -97,6 +97,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   protected async loginWithGithub() {
-    window.location.href = '/api/v1/auth/login/github'; // Perform a full-page redirect
+    window.location.href = '/api/v1/auth/login/github';
+  }
+
+  protected async loginWithGoogle() {
+    window.location.href = '/api/v1/auth/login/google';
   }
 }
