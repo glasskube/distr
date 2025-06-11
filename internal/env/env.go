@@ -54,6 +54,10 @@ var (
 	oidcGoogleEnabled                   bool
 	oidcGoogleClientID                  *string
 	oidcGoogleClientSecret              *string
+	oidcMicrosoftEnabled                bool
+	oidcMicrosoftClientID               *string
+	oidcMicrosoftClientSecret           *string
+	oidcMicrosoftTenantID               *string
 )
 
 func Initialize() {
@@ -143,6 +147,12 @@ func Initialize() {
 	if oidcGoogleEnabled {
 		oidcGoogleClientID = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_ID"))
 		oidcGoogleClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_SECRET"))
+	}
+	oidcMicrosoftEnabled = envutil.GetEnvParsedOrDefault("OIDC_MICROSOFT_ENABLED", strconv.ParseBool, false)
+	if oidcMicrosoftEnabled {
+		oidcMicrosoftClientID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_ID"))
+		oidcMicrosoftClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_SECRET"))
+		oidcMicrosoftTenantID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_TENANT_ID"))
 	}
 }
 
@@ -304,4 +314,20 @@ func OIDCGoogleClientID() *string {
 
 func OIDCGoogleClientSecret() *string {
 	return oidcGoogleClientSecret
+}
+
+func OIDCMicrosoftEnabled() bool {
+	return oidcMicrosoftEnabled
+}
+
+func OIDCMicrosoftClientID() *string {
+	return oidcMicrosoftClientID
+}
+
+func OIDCMicrosoftClientSecret() *string {
+	return oidcMicrosoftClientSecret
+}
+
+func OIDCMicrosoftTenantID() *string {
+	return oidcMicrosoftTenantID
 }

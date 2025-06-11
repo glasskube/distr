@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
-	"golang.org/x/oauth2/google"
 	"net/http"
 	"time"
 
@@ -29,54 +26,16 @@ import (
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-
-	"github.com/coreos/go-oidc"
 )
 
-var githubOauth2Config *oauth2.Config
-var googleOauth2Config *oauth2.Config
-var oidcConfig *oidc.Config
-var idTokenVerifier *oidc.IDTokenVerifier
-
 func AuthRouter(r chi.Router) {
-	githubOauth2Config = &oauth2.Config{ // TODO proper initialization
-		ClientID:     *env.OIDCGithubClientID(),
-		ClientSecret: *env.OIDCGithubClientSecret(),
-		RedirectURL:  "http://localhost:4200/api/v1/auth/login/github/callback",
-		Endpoint:     github.Endpoint,
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
-	}
-	ctx := context.Background()
-
-	/*idTokenVerifier = oidc.NewVerifier("https://github.com", oidc.NewRemoteKeySet(context.Background(),
-		"https://github.com/login/oauth/.well-known/jwks.json"), &oidc.Config{
-		ClientID: *env.OIDCGithubClientID(),
-	})*/
-
-	googleOauth2Config = &oauth2.Config{ // TODO proper initialization
-		ClientID:     *env.OIDCGoogleClientID(),
-		ClientSecret: *env.OIDCGoogleClientSecret(),
-		RedirectURL:  "http://localhost:4200/api/v1/auth/login/google/callback",
-		Endpoint:     google.Endpoint,
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
-	}
-	provider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
-	if err != nil {
-		panic(err)
-	}
-	oidcConfig = &oidc.Config{
-		ClientID: *env.OIDCGoogleClientID(),
-	}
-	idTokenVerifier = provider.Verifier(oidcConfig)
-
 	r.Use(httprate.Limit(
 		10,
 		1*time.Minute,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
 	r.Post("/login", authLoginHandler)
-	r.Get("/login/{oidcProvider}", authLoginOidcHandler())
-	r.Get("/login/{oidcProvider}/callback", authLoginOidcCallbackHandler)
+	r.Route("/oidc", AuthOIDCRouter)
 	r.Route("/register", func(r chi.Router) {
 		r.Get("/", authRegisterGetHandler())
 		r.Post("/", authRegisterHandler)
@@ -176,120 +135,6 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Warn("user login failed", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
-}
-
-func authLoginOidcHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if provider := r.PathValue("oidcProvider"); provider == "" {
-			http.Error(w, "missing provider", http.StatusBadRequest)
-		} else {
-			switch provider {
-			case "github":
-				if !env.OIDCGithubEnabled() {
-					http.Error(w, "github login not enabled", http.StatusBadRequest)
-					// TODO back to login with this error message
-				} else {
-					http.Redirect(w, r, githubOauth2Config.AuthCodeURL("STATE-TODO-LOL"), http.StatusFound) // TODO state
-				}
-			case "google":
-				if !env.OIDCGoogleEnabled() {
-					http.Error(w, "google login not enabled", http.StatusBadRequest)
-					// TODO back to login with this error message
-				} else {
-					http.Redirect(w, r, googleOauth2Config.AuthCodeURL("STATE-TODO-LOL"), http.StatusFound) // TODO state
-				}
-			default:
-				http.Error(w, "unknown provider", http.StatusBadRequest) // TODO back to login with this error message
-			}
-		}
-	}
-}
-
-func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	code := r.URL.Query().Get("code")
-	token, err := googleOauth2Config.Exchange(ctx, code)
-	if err != nil {
-		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
-		// TODO back to login with this error message
-		return
-	}
-
-	// fmt.Fprintf(w, "%v\n", token)
-	idToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		http.Error(w, "No id_token found", http.StatusInternalServerError)
-		// TODO back to login with this error message
-		return
-	}
-
-	// fmt.Fprintf(w, "%v\n", idToken)
-	tkn, err := idTokenVerifier.Verify(ctx, idToken)
-	if err != nil {
-		http.Error(w, "Failed to verify ID token: "+err.Error(), http.StatusInternalServerError)
-		// TODO back to login with this error message
-		return
-	} else {
-		var claims struct {
-			Email string `json:"email"`
-		}
-		if err := tkn.Claims(&claims); err != nil {
-			http.Error(w, "Failed to get token claims: "+err.Error(), http.StatusInternalServerError)
-			// TODO back to login with this error message
-			return
-		}
-
-		log := internalctx.GetLogger(ctx)
-		// login logic
-		// TODO should we set the user to email_verified if logged in via social provider?
-		err = db.RunTx(ctx, func(ctx context.Context) error {
-			user, err := db.GetUserAccountByEmail(ctx, claims.Email)
-			if errors.Is(err, apierrors.ErrNotFound) {
-				http.Error(w, "invalid username or password", http.StatusBadRequest)
-				// TODO back to login with this error message (or send to signup form with this email adress?)
-				return nil
-			} else if err != nil {
-				return err
-			}
-			log = log.With(zap.Any("userId", user.ID))
-
-			var org types.OrganizationWithUserRole
-			orgs, err := db.GetOrganizationsForUser(ctx, user.ID)
-			if err != nil {
-				return err
-			} else if len(orgs) < 1 {
-				org.Name = user.Email
-				org.UserRole = types.UserRoleVendor
-				if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
-					return err
-				} else if err := db.CreateUserAccountOrganizationAssignment(
-					ctx, user.ID, org.ID, org.UserRole); err != nil {
-					return err
-				}
-			} else {
-				org = orgs[0]
-			}
-
-			if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {
-				return fmt.Errorf("token creation failed: %w", err)
-			} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
-				return err
-			} else {
-				http.Redirect(w, r, fmt.Sprintf("http://localhost:4200/?jwt=%v", tokenString), http.StatusFound)
-				// TODO cookie instead? otherwise needs support to login properly (not only session storage)
-				// RespondJSON(w, api.AuthLoginResponse{Token: tokenString})
-				return nil
-			}
-		})
-		if err != nil {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			log.Warn("user login failed", zap.Error(err))
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-
-	}
-
-	// fmt.Fprintf(w, "Login successful!")
 }
 
 func authRegisterGetHandler() http.HandlerFunc {

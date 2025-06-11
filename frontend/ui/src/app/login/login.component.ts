@@ -1,6 +1,6 @@
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {ActivatedRoute, ActivatedRouteSnapshot, Router, RouterLink} from '@angular/router';
 import {catchError, distinctUntilChanged, filter, lastValueFrom, map, Observable, of, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
@@ -54,20 +54,23 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.toast.success('Account activated successfully. You can now log in!');
         }
       });
-    this.route.queryParams
-      .pipe(
-        map((params) => params['reason']),
-        filter((reason) => reason),
-        distinctUntilChanged(),
-        takeUntil(this.destroyed$)
-      )
-      .subscribe((reason) => {
-        if (reason === 'password-reset') {
-          this.toast.success('Your password has been updated, you can now log in.');
-        } else if (reason === 'session-expired') {
-          this.toast.success('You have been logged out because your session has expired.');
-        }
-      });
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    switch(reason) {
+      case 'password-reset':
+        this.toast.success('Your password has been updated, you can now log in.');
+        break;
+      case 'session-expired':
+        this.toast.success('You have been logged out because your session has expired.');
+        break;
+      case 'oidc-failed':
+        this.toast.error('Login with this provider failed unexpectedly.');
+        break;
+    }
+    const jwt = this.route.snapshot.queryParamMap.get('jwt');
+    if(jwt) {
+      this.auth.loginWithToken(jwt);
+      window.location.href = '/';
+    }
   }
 
   public ngOnDestroy(): void {
@@ -97,10 +100,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   protected async loginWithGithub() {
-    window.location.href = '/api/v1/auth/login/github';
+    window.location.href = '/api/v1/auth/oidc/github';
   }
 
   protected async loginWithGoogle() {
-    window.location.href = '/api/v1/auth/login/google';
+    window.location.href = '/api/v1/auth/oidc/google';
+  }
+
+  protected async loginWithMicrosoft() {
+    window.location.href = '/api/v1/auth/oidc/microsoft';
   }
 }
