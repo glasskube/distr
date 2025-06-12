@@ -52,13 +52,17 @@ func AuthOIDCRouter(r chi.Router) {
 var googleIDTokenVerifier *oidc.IDTokenVerifier
 var microsoftIDTokenVerifier *oidc.IDTokenVerifier
 
-func getRedirectURL(r *http.Request, provider string) string {
+func getRequestSchemeAndHost(r *http.Request) string {
 	host := r.Host
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	return fmt.Sprintf("%v://%v/api/v1/auth/oidc/%v/callback", scheme, host, provider)
+	return fmt.Sprintf("%v://%v", scheme, host)
+}
+
+func getRedirectURL(r *http.Request, provider string) string {
+	return fmt.Sprintf("%v/api/v1/auth/oidc/%v/callback", getRequestSchemeAndHost(r), provider)
 }
 
 func getGithubOauth2Config(r *http.Request) *oauth2.Config {
@@ -240,8 +244,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
 			return err
 		} else {
-			// TODO redirect to correct host
-			http.Redirect(w, r, fmt.Sprintf("http://localhost:4200/login?jwt=%v", tokenString), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("%v/login?jwt=%v", getRequestSchemeAndHost(r), tokenString), http.StatusFound)
 			return nil
 		}
 	})
