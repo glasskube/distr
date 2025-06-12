@@ -48,6 +48,7 @@ var (
 	cleanupDeploymentTargetStatusCron   *string
 	cleanupDeploymentTargetMetricsCron  *string
 	cleanupDeploymentLogRecordCron      *string
+	cleanupOIDCStateCron                *string
 	oidcGithubEnabled                   bool
 	oidcGithubClientID                  *string
 	oidcGithubClientSecret              *string
@@ -137,6 +138,7 @@ func Initialize() {
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
 	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
+	cleanupOIDCStateCron = envutil.GetEnvOrNil("CLEANUP_OIDC_STATE_CRON")
 
 	oidcGithubEnabled = envutil.GetEnvParsedOrDefault("OIDC_GITHUB_ENABLED", strconv.ParseBool, false)
 	if oidcGithubEnabled {
@@ -290,6 +292,10 @@ func CleanupDeploymentTargetMetricsCron() *string {
 
 func CleanupDeploymentLogRecordCron() *string {
 	return cleanupDeploymentLogRecordCron
+}
+
+func CleanupOIDCStateCron() *string {
+	return cleanupOIDCStateCron
 }
 
 func OIDCGithubEnabled() bool {

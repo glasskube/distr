@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -26,4 +27,18 @@ func DeleteOIDCState(ctx context.Context, id uuid.UUID) (time.Time, error) {
 		return none, err
 	}
 	return pgx.CollectExactlyOneRow(rows, pgx.RowTo[time.Time])
+}
+
+func CleanupOIDCStates(ctx context.Context) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM OIDCState WHERE current_timestamp - created_at > @maxAge`,
+		pgx.NamedArgs{"maxAge": 1 * time.Minute},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("error cleaning up OIDCState: %w", err)
+	} else {
+		return cmd.RowsAffected(), nil
+	}
 }
