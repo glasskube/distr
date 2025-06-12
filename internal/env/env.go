@@ -3,13 +3,13 @@ package env
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/glasskube/distr/internal/util"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )
 

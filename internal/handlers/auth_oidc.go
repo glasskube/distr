@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/coreos/go-oidc"
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
@@ -19,7 +21,6 @@ import (
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/microsoft"
-	"net/http"
 )
 
 const redirectToLoginOIDCFailed = "/login?reason=oidc-failed"
@@ -27,7 +28,8 @@ const redirectToLoginOIDCFailed = "/login?reason=oidc-failed"
 func AuthOIDCRouter(r chi.Router) {
 	ctx := context.Background()
 	if env.OIDCGoogleEnabled() {
-		// TODO proper (lazy?) initialization (every server instance makes the requests) – maybe refactor to "selfmade" verifier creation like in microsoft case
+		// TODO proper (lazy?) initialization (every server instance makes the requests) –
+		// maybe refactor to "selfmade" verifier creation like in microsoft case
 		googleProvider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
 		if err != nil {
 			panic(err)
@@ -40,7 +42,8 @@ func AuthOIDCRouter(r chi.Router) {
 	if env.OIDCMicrosoftEnabled() {
 		microsoftIDTokenVerifier = oidc.NewVerifier(
 			fmt.Sprintf("https://login.microsoftonline.com/%v/v2.0", *env.OIDCMicrosoftTenantID()),
-			oidc.NewRemoteKeySet(context.Background(), "https://login.microsoftonline.com/organizations/discovery/v2.0/keys"), &oidc.Config{
+			oidc.NewRemoteKeySet(context.Background(), "https://login.microsoftonline.com/organizations/discovery/v2.0/keys"),
+			&oidc.Config{
 				ClientID: *env.OIDCMicrosoftClientID(),
 			})
 	}
@@ -49,8 +52,10 @@ func AuthOIDCRouter(r chi.Router) {
 	r.Get("/{oidcProvider}/callback", authLoginOidcCallbackHandler)
 }
 
-var googleIDTokenVerifier *oidc.IDTokenVerifier
-var microsoftIDTokenVerifier *oidc.IDTokenVerifier
+var (
+	googleIDTokenVerifier    *oidc.IDTokenVerifier
+	microsoftIDTokenVerifier *oidc.IDTokenVerifier
+)
 
 func getRequestSchemeAndHost(r *http.Request) string {
 	host := r.Host
@@ -101,12 +106,12 @@ func getMicrosoftOauth2Config(r *http.Request) *oauth2.Config {
 func authLoginOidcHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var config *oauth2.Config
-		provider := r.PathValue("oidcProvider")
-		if provider == "github" && env.OIDCGithubEnabled() {
+		provider := types.OIDCProvider(r.PathValue("oidcProvider"))
+		if provider == types.OIDCProviderGithub && env.OIDCGithubEnabled() {
 			config = getGithubOauth2Config(r)
-		} else if provider == "google" && env.OIDCGoogleEnabled() {
+		} else if provider == types.OIDCProviderGoogle && env.OIDCGoogleEnabled() {
 			config = getGoogleOauth2Config(r)
-		} else if provider == "microsoft" && env.OIDCMicrosoftEnabled() {
+		} else if provider == types.OIDCProviderMicrosoft && env.OIDCMicrosoftEnabled() {
 			config = getMicrosoftOauth2Config(r)
 		}
 		if config != nil {
@@ -125,18 +130,18 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	// TODO get state too and check it against something
 
-	provider := r.PathValue("oidcProvider")
+	provider := types.OIDCProvider(r.PathValue("oidcProvider"))
 	var config *oauth2.Config
 	var idTokenVerifier *oidc.IDTokenVerifier
 	var email string
 	var emailVerified bool
 
-	if provider == "github" && env.OIDCGithubEnabled() {
+	if provider == types.OIDCProviderGithub && env.OIDCGithubEnabled() {
 		config = getGithubOauth2Config(r)
-	} else if provider == "google" && env.OIDCGoogleEnabled() {
+	} else if provider == types.OIDCProviderGoogle && env.OIDCGoogleEnabled() {
 		config = getGoogleOauth2Config(r)
 		idTokenVerifier = googleIDTokenVerifier
-	} else if provider == "microsoft" && env.OIDCMicrosoftEnabled() {
+	} else if provider == types.OIDCProviderMicrosoft && env.OIDCMicrosoftEnabled() {
 		config = getMicrosoftOauth2Config(r)
 		idTokenVerifier = microsoftIDTokenVerifier
 	}
@@ -146,7 +151,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log = log.With(zap.String("provider", provider))
+	log = log.With(zap.String("provider", string(provider)))
 	tokenForCode, err := config.Exchange(ctx, code)
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -185,7 +190,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 				emailVerified = claims.EmailVerified
 			}
 		}
-	} else if provider == "github" {
+	} else if provider == types.OIDCProviderGithub {
 		// github doesn't provide the id_token, we need to get the users email addresses via the API
 		accessTokenStr, ok := tokenForCode.Extra("access_token").(string)
 		if !ok {
