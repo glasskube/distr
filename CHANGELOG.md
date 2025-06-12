@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.4](https://github.com/glasskube/distr/compare/1.11.3...1.11.4) (2025-06-12)
+
+
+### Performance
+
+* **backend:** add index on `DeploymentLogRecord(resource)` ([#1046](https://github.com/glasskube/distr/issues/1046); cherry-picked) ([e36f596](https://github.com/glasskube/distr/commit/e36f596423f54abe5f087ef871fd62c0097100db))
+
 ## [1.11.3](https://github.com/glasskube/distr/compare/1.11.2...1.11.3) (2025-06-12)
 
 
