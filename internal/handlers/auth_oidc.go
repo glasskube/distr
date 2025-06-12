@@ -28,8 +28,7 @@ const redirectToLoginOIDCFailed = "/login?reason=oidc-failed"
 func AuthOIDCRouter(r chi.Router) {
 	ctx := context.Background()
 	if env.OIDCGoogleEnabled() {
-		// TODO proper (lazy?) initialization (every server instance makes the requests) –
-		// maybe refactor to "selfmade" verifier creation like in microsoft case
+		// TODO proper (lazy?) initialization (every server instance makes the requests)
 		googleProvider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
 		if err != nil {
 			panic(err)
@@ -40,12 +39,15 @@ func AuthOIDCRouter(r chi.Router) {
 		googleIDTokenVerifier = googleProvider.Verifier(googleOidcConfig)
 	}
 	if env.OIDCMicrosoftEnabled() {
-		microsoftIDTokenVerifier = oidc.NewVerifier(
-			fmt.Sprintf("https://login.microsoftonline.com/%v/v2.0", *env.OIDCMicrosoftTenantID()),
-			oidc.NewRemoteKeySet(context.Background(), "https://login.microsoftonline.com/organizations/discovery/v2.0/keys"),
-			&oidc.Config{
-				ClientID: *env.OIDCMicrosoftClientID(),
-			})
+		microsoftProvider, err := oidc.NewProvider(ctx, fmt.Sprintf("https://login.microsoftonline.com/%v/v2.0",
+			*env.OIDCMicrosoftTenantID()))
+		if err != nil {
+			panic(err)
+		}
+		config := &oidc.Config{
+			ClientID: *env.OIDCMicrosoftClientID(),
+		}
+		microsoftIDTokenVerifier = microsoftProvider.Verifier(config)
 	}
 
 	r.Get("/{oidcProvider}", authLoginOidcHandler())
@@ -66,7 +68,7 @@ func getRequestSchemeAndHost(r *http.Request) string {
 	return fmt.Sprintf("%v://%v", scheme, host)
 }
 
-func getRedirectURL(r *http.Request, provider string) string {
+func getRedirectURL(r *http.Request, provider types.OIDCProvider) string {
 	return fmt.Sprintf("%v/api/v1/auth/oidc/%v/callback", getRequestSchemeAndHost(r), provider)
 }
 
@@ -74,7 +76,7 @@ func getGithubOauth2Config(r *http.Request) *oauth2.Config {
 	config := &oauth2.Config{
 		ClientID:     *env.OIDCGithubClientID(),
 		ClientSecret: *env.OIDCGithubClientSecret(),
-		RedirectURL:  getRedirectURL(r, "github"),
+		RedirectURL:  getRedirectURL(r, types.OIDCProviderGithub),
 		Endpoint:     github.Endpoint,
 		Scopes:       []string{oidc.ScopeOpenID, "email", "user:email"},
 	}
@@ -85,7 +87,7 @@ func getGoogleOauth2Config(r *http.Request) *oauth2.Config {
 	config := &oauth2.Config{
 		ClientID:     *env.OIDCGoogleClientID(),
 		ClientSecret: *env.OIDCGoogleClientSecret(),
-		RedirectURL:  getRedirectURL(r, "google"),
+		RedirectURL:  getRedirectURL(r, types.OIDCProviderGoogle),
 		Endpoint:     google.Endpoint,
 		Scopes:       []string{oidc.ScopeOpenID, "email"},
 	}
@@ -96,7 +98,7 @@ func getMicrosoftOauth2Config(r *http.Request) *oauth2.Config {
 	config := &oauth2.Config{
 		ClientID:     *env.OIDCMicrosoftClientID(),
 		ClientSecret: *env.OIDCMicrosoftClientSecret(),
-		RedirectURL:  getRedirectURL(r, "microsoft"),
+		RedirectURL:  getRedirectURL(r, types.OIDCProviderMicrosoft),
 		Endpoint:     microsoft.AzureADEndpoint(*env.OIDCMicrosoftTenantID()),
 		Scopes:       []string{oidc.ScopeOpenID, "email"},
 	}
