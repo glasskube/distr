@@ -97,7 +97,9 @@
                       }
 
                       @if (connectCommand) {
-                        <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
+                        <code
+                          class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line"
+                          data-ph-mask-text="true">
                           {{ connectCommand }}
                         </code>
                         <app-clip class="mx-2" [clip]="connectCommand"></app-clip>
