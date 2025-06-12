@@ -77,6 +77,9 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 
 		responseMap := map[corev1.ObjectReference]rest.ResponseWrapper{}
 		for _, obj := range resources {
+			if co, ok := obj.(metav1.Object); ok {
+				co.SetNamespace(lw.namespace)
+			}
 			logger := logger.With(zap.String("resourceKind", obj.GetObjectKind().GroupVersionKind().Kind))
 			if metaObj, ok := obj.(metav1.Object); ok {
 				logger = logger.With(zap.String("resourceName", metaObj.GetName()))
