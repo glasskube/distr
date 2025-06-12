@@ -227,7 +227,6 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
 			return
 		}
-		// TODO also test with organization account?
 		if ghEmail, err := getEmailFromGithubAccessToken(accessTokenStr); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to get github emails", zap.Error(err))
