@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.3](https://github.com/glasskube/distr/compare/1.11.2...1.11.3) (2025-06-12)
+
+
+### Bug Fixes
+
+* **agent:** get logs with namespace to allow logs collection with namespace-scoped agent ([#1044](https://github.com/glasskube/distr/issues/1044); cherry-picked) ([08b5561](https://github.com/glasskube/distr/commit/08b55615fa8541fa7516007c0996a1c5ba6bb0d4))
+
 ## [1.11.2](https://github.com/glasskube/distr/compare/1.11.1...1.11.2) (2025-06-04)
 
 
