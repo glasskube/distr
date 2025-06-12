@@ -1,15 +1,12 @@
-import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {ActivatedRoute, ActivatedRouteSnapshot, Router, RouterLink} from '@angular/router';
-import {catchError, distinctUntilChanged, filter, lastValueFrom, map, Observable, of, Subject, takeUntil} from 'rxjs';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {ToastService} from '../services/toast.service';
-import {getRemoteEnvironment} from '../../env/remote';
-import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {AsyncPipe} from '@angular/common';
-import {HttpClient} from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -28,8 +25,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyed$ = new Subject<void>();
   private readonly toast = inject(ToastService);
-  private readonly http = inject(HttpClient);
-  readonly showRegistrationLink$ = this.auth.registrationEnabled();
+  readonly loginConfig$ = this.auth.loginConfig();
+  readonly isJWTLogin = signal(false);
 
   public ngOnInit(): void {
     this.route.queryParams
@@ -55,7 +52,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       });
     const reason = this.route.snapshot.queryParamMap.get('reason');
-    switch(reason) {
+    switch (reason) {
       case 'password-reset':
         this.toast.success('Your password has been updated, you can now log in.');
         break;
@@ -67,7 +64,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         break;
     }
     const jwt = this.route.snapshot.queryParamMap.get('jwt');
-    if(jwt) {
+    if (jwt) {
+      this.isJWTLogin.set(true);
       this.auth.loginWithToken(jwt);
       window.location.href = '/';
     }
@@ -99,15 +97,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected async loginWithGithub() {
-    window.location.href = '/api/v1/auth/oidc/github';
-  }
-
-  protected async loginWithGoogle() {
-    window.location.href = '/api/v1/auth/oidc/google';
-  }
-
-  protected async loginWithMicrosoft() {
-    window.location.href = '/api/v1/auth/oidc/microsoft';
+  protected getLoginURL(provider: string): string {
+    return `/api/v1/auth/oidc/${provider}`;
   }
 }

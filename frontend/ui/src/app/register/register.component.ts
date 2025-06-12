@@ -32,13 +32,13 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit() {
     const reason = this.route.snapshot.queryParamMap.get('reason');
-    switch(reason) {
+    switch (reason) {
       case 'oidc-user-not-found':
         this.toast.error('This email address is not associated with a Distr account yet. Please create it here first.');
         break;
     }
     const email = this.route.snapshot.queryParamMap.get('email');
-    if(email) {
+    if (email) {
       this.form.patchValue({email});
     }
   }

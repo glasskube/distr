@@ -23,6 +23,13 @@ export interface JWTClaims {
   [claim: string]: unknown;
 }
 
+export interface LoginConfig {
+  registrationEnabled?: boolean;
+  oidcGithubEnabled?: boolean;
+  oidcGoogleEnabled?: boolean;
+  oidcMicrosoftEnabled?: boolean;
+}
+
 @Injectable({providedIn: 'root'})
 export class AuthService {
   private readonly httpClient = inject(HttpClient);
@@ -74,11 +81,8 @@ export class AuthService {
     return this.httpClient.post<void>(`${authBaseUrl}/reset`, {email});
   }
 
-  public registrationEnabled(): Observable<boolean> {
-    return this.httpClient.get(`${authBaseUrl}/register`).pipe(
-      map(() => true),
-      catchError(() => of(false))
-    );
+  public loginConfig(): Observable<LoginConfig> {
+    return this.httpClient.get<LoginConfig>(`${authBaseUrl}/login/config`).pipe(catchError(() => of({})));
   }
 
   public register(email: string, name: string | null | undefined, password: string): Observable<void> {
