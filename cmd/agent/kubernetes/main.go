@@ -245,11 +245,18 @@ func runInstallOrUpgrade(
 			pushStatus(ctx, deployment, "helm install succeeded")
 		}
 	} else if currentDeployment.RevisionID != deployment.RevisionID {
+		successMessage := "helm upgrade succeeded"
 		err := progress.Run(ctx, func() error {
 			if updatedDeployment, err := RunHelmUpgrade(ctx, namespace, deployment); err != nil {
 				return fmt.Errorf("helm upgrade failed: %w", err)
 			} else if err := SaveDeployment(ctx, namespace, *updatedDeployment); err != nil {
 				return fmt.Errorf("could not save latest deployment: %w", err)
+			} else if deployment.ForceRestart {
+				if err := ForceRestart(ctx, namespace, *updatedDeployment); err != nil {
+					pushErrorStatus(ctx, deployment, fmt.Errorf("%v; force restart error: %w", successMessage, err))
+				} else {
+					successMessage += "; force restart succeeded"
+				}
 			}
 			return nil
 		})
@@ -257,8 +264,8 @@ func runInstallOrUpgrade(
 			logger.Error("upgrade error", zap.Error(err))
 			pushErrorStatus(ctx, deployment, fmt.Errorf("upgrade error: %w", err))
 		} else {
-			logger.Info("helm upgrade succeeded")
-			pushStatus(ctx, deployment, "helm upgrade succeeded")
+			logger.Info(successMessage)
+			pushStatus(ctx, deployment, successMessage)
 		}
 	} else {
 		logger.Info("no action required. running status check")
