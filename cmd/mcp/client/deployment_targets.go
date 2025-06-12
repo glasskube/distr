@@ -81,7 +81,7 @@ func (c *DeploymentTargets) Connect(
 	ctx context.Context,
 	id uuid.UUID,
 ) (*api.DeploymentTargetAccessTokenResponse, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url(id.String()), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url(id.String(), "access-request"), nil)
 	if err != nil {
 		return nil, err
 	}
