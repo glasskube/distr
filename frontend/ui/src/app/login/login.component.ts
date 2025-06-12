@@ -7,10 +7,12 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {ToastService} from '../services/toast.service';
 import {AsyncPipe} from '@angular/common';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faGithub, faGoogle, faMicrosoft} from '@fortawesome/free-brands-svg-icons';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, AutotrimDirective, AsyncPipe],
+  imports: [ReactiveFormsModule, RouterLink, AutotrimDirective, AsyncPipe, FaIconComponent],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit, OnDestroy {
@@ -100,4 +102,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected getLoginURL(provider: string): string {
     return `/api/v1/auth/oidc/${provider}`;
   }
+
+  protected readonly faGoogle = faGoogle;
+  protected readonly faGithub = faGithub;
+  protected readonly faMicrosoft = faMicrosoft;
 }
