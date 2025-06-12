@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/authjwt"
