@@ -66,11 +66,12 @@ func GetDeploymentsForDeploymentTarget(
 	rows, err := db.Query(
 		ctx,
 		`SELECT`+deploymentOutputExpr+`,
-				dr.application_version_id as application_version_id,
-				dr.values_yaml as values_yaml,
-				dr.env_file_data as env_file_data,
-				dr.id as deployment_revision_id,
+				dr.application_version_id AS application_version_id,
+				dr.values_yaml AS values_yaml,
+				dr.env_file_data AS env_file_data,
+				dr.id AS deployment_revision_id,
 				dr.created_at AS deployment_revision_created_at,
+				dr.force_restart AS force_restart,
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,
@@ -201,14 +202,15 @@ func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentReques
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO DeploymentRevision AS d
-			(deployment_id, application_version_id, values_yaml, env_file_data)
-			VALUES (@deploymentId, @applicationVersionId, @valuesYaml, @envFileData)
-			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id`,
+			(deployment_id, application_version_id, values_yaml, env_file_data, force_restart)
+			VALUES (@deploymentId, @applicationVersionId, @valuesYaml, @envFileData, @forceRestart)
+			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id, d.force_restart`,
 		pgx.NamedArgs{
 			"deploymentId":         request.DeploymentID,
 			"applicationVersionId": request.ApplicationVersionID,
 			"valuesYaml":           request.ValuesYaml,
 			"envFileData":          request.EnvFileData,
+			"forceRestart":         request.ForceRestart,
 		},
 	)
 	if err != nil {

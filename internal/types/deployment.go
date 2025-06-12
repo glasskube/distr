@@ -28,6 +28,7 @@ type DeploymentWithLatestRevision struct {
 	ValuesYaml                  []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
 	EnvFileData                 []byte                    `db:"env_file_data" json:"envFileData,omitempty"`
 	LatestStatus                *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
+	ForceRestart                bool                      `db:"force_restart" json:"forceRestart"`
 }
 
 func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {

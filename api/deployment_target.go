@@ -24,6 +24,7 @@ type DeploymentRequest struct {
 	DockerType           *types.DockerType `json:"dockerType"`
 	EnvFileData          []byte            `json:"envFileData"`
 	LogsEnabled          bool              `json:"logsEnabled"`
+	ForceRestart         bool              `json:"forceRestart"`
 }
 
 func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {
