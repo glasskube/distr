@@ -6,16 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/authjwt"
-	context2 "github.com/glasskube/distr/internal/context"
+	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -117,20 +119,43 @@ func authLoginOidcHandler() http.HandlerFunc {
 			config = getMicrosoftOauth2Config(r)
 		}
 		if config != nil {
-			// TODO send some state and in the callback make sure it matches
-			http.Redirect(w, r, config.AuthCodeURL(""), http.StatusFound)
+			ctx := r.Context()
+			log := internalctx.GetLogger(ctx)
+			if state, err := db.CreateOIDCState(ctx); err != nil {
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				log.Error("OIDC state creation failed", zap.Error(err))
+				http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
+			} else {
+				http.Redirect(w, r, config.AuthCodeURL(state.String()), http.StatusFound)
+			}
 		} else {
 			http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
 		}
 	}
 }
 
+func verifyOIDCState(r *http.Request) error {
+	if state, err := uuid.Parse(r.URL.Query().Get("state")); err != nil {
+		return err
+	} else if createdAt, err := db.DeleteOIDCState(r.Context(), state); err != nil {
+		return err
+	} else if createdAt.Before(time.Now().UTC().Add(-1 * time.Minute)) {
+		return fmt.Errorf("got an OIDC state that is too old: %v, created_at: %v, now: %v",
+			state, createdAt, time.Now().UTC())
+	}
+	return nil
+}
+
 func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	log := context2.GetLogger(ctx)
+	log := internalctx.GetLogger(ctx)
 
-	code := r.URL.Query().Get("code")
-	// TODO get state too and check it against something
+	if err := verifyOIDCState(r); err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		log.Warn("could not verify OIDC state", zap.Error(err))
+		http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
+		return
+	}
 
 	provider := types.OIDCProvider(r.PathValue("oidcProvider"))
 	var config *oauth2.Config
@@ -154,6 +179,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log = log.With(zap.String("provider", string(provider)))
+	code := r.URL.Query().Get("code")
 	tokenForCode, err := config.Exchange(ctx, code)
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
