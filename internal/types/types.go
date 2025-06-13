@@ -22,6 +22,7 @@ type (
 	DockerType            string
 	Tutorial              string
 	FileScope             string
+	OIDCProvider          string
 )
 
 const (
@@ -52,6 +53,10 @@ const (
 
 	FileScopePlatform     FileScope = "platform"
 	FileScopeOrganization FileScope = "organization"
+
+	OIDCProviderGithub    OIDCProvider = "github"
+	OIDCProviderGoogle    OIDCProvider = "google"
+	OIDCProviderMicrosoft OIDCProvider = "microsoft"
 )
 
 type Base struct {

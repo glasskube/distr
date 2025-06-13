@@ -34,11 +34,12 @@ func AuthRouter(r chi.Router) {
 		1*time.Minute,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
-	r.Post("/login", authLoginHandler)
-	r.Route("/register", func(r chi.Router) {
-		r.Get("/", authRegisterGetHandler())
-		r.Post("/", authRegisterHandler)
+	r.Route("/login", func(r chi.Router) {
+		r.Post("/", authLoginHandler)
+		r.Get("/config", authLoginConfigHandler())
 	})
+	r.Route("/oidc", AuthOIDCRouter)
+	r.Post("/register", authRegisterHandler)
 	r.Post("/reset", authResetPasswordHandler)
 	r.With(middleware.SentryUser, auth.Authentication.Middleware, middleware.RequireOrgAndRole).
 		Post("/switch-context", authSwitchContextHandler())
@@ -136,12 +137,20 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func authRegisterGetHandler() http.HandlerFunc {
-	ok := env.Registration() == env.RegistrationEnabled
+func authLoginConfigHandler() http.HandlerFunc {
+	resp := struct {
+		RegistrationEnabled  bool `json:"registrationEnabled"`
+		OIDCGithubEnabled    bool `json:"oidcGithubEnabled"`
+		OIDCGoogleEnabled    bool `json:"oidcGoogleEnabled"`
+		OIDCMicrosoftEnabled bool `json:"oidcMicrosoftEnabled"`
+	}{
+		RegistrationEnabled:  env.Registration() == env.RegistrationEnabled,
+		OIDCGithubEnabled:    env.OIDCGithubEnabled(),
+		OIDCGoogleEnabled:    env.OIDCGoogleEnabled(),
+		OIDCMicrosoftEnabled: env.OIDCMicrosoftEnabled(),
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !ok {
-			w.WriteHeader(http.StatusForbidden)
-		}
+		RespondJSON(w, resp)
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/glasskube/distr/internal/jobs"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/migrations"
+	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
@@ -28,6 +29,7 @@ type Registry struct {
 	artifactsRegistry http.Handler
 	tracers           *tracers.Tracers
 	jobsScheduler     *jobs.Scheduler
+	oidcer            *oidc.OIDCer
 }
 
 func New(ctx context.Context, options ...RegistryOption) (*Registry, error) {
@@ -83,6 +85,12 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 
 	reg.artifactsRegistry = reg.createArtifactsRegistry(ctx)
 
+	if oidcer, err := reg.createOIDCer(ctx, reg.logger); err != nil {
+		return nil, err
+	} else {
+		reg.oidcer = oidcer
+	}
+
 	return reg, nil
 }
 
@@ -122,6 +130,7 @@ func (r *Registry) GetRouter() http.Handler {
 		r.GetDbPool(),
 		r.GetMailer(),
 		r.GetTracers(),
+		r.GetOIDCer(),
 	)
 }
 

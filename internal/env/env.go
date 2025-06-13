@@ -9,6 +9,7 @@ import (
 
 	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )
 
@@ -49,6 +50,17 @@ var (
 	cleanupDeploymentTargetStatusCron   *string
 	cleanupDeploymentTargetMetricsCron  *string
 	cleanupDeploymentLogRecordCron      *string
+	cleanupOIDCStateCron                *string
+	oidcGithubEnabled                   bool
+	oidcGithubClientID                  *string
+	oidcGithubClientSecret              *string
+	oidcGoogleEnabled                   bool
+	oidcGoogleClientID                  *string
+	oidcGoogleClientSecret              *string
+	oidcMicrosoftEnabled                bool
+	oidcMicrosoftClientID               *string
+	oidcMicrosoftClientSecret           *string
+	oidcMicrosoftTenantID               *string
 )
 
 func Initialize() {
@@ -141,6 +153,24 @@ func Initialize() {
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
 	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
+	cleanupOIDCStateCron = envutil.GetEnvOrNil("CLEANUP_OIDC_STATE_CRON")
+
+	oidcGithubEnabled = envutil.GetEnvParsedOrDefault("OIDC_GITHUB_ENABLED", strconv.ParseBool, false)
+	if oidcGithubEnabled {
+		oidcGithubClientID = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_ID"))
+		oidcGithubClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_SECRET"))
+	}
+	oidcGoogleEnabled = envutil.GetEnvParsedOrDefault("OIDC_GOOGLE_ENABLED", strconv.ParseBool, false)
+	if oidcGoogleEnabled {
+		oidcGoogleClientID = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_ID"))
+		oidcGoogleClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_SECRET"))
+	}
+	oidcMicrosoftEnabled = envutil.GetEnvParsedOrDefault("OIDC_MICROSOFT_ENABLED", strconv.ParseBool, false)
+	if oidcMicrosoftEnabled {
+		oidcMicrosoftClientID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_ID"))
+		oidcMicrosoftClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_SECRET"))
+		oidcMicrosoftTenantID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_TENANT_ID"))
+	}
 }
 
 func DatabaseUrl() string {
@@ -285,4 +315,48 @@ func CleanupDeploymentTargetMetricsCron() *string {
 
 func CleanupDeploymentLogRecordCron() *string {
 	return cleanupDeploymentLogRecordCron
+}
+
+func CleanupOIDCStateCron() *string {
+	return cleanupOIDCStateCron
+}
+
+func OIDCGithubEnabled() bool {
+	return oidcGithubEnabled
+}
+
+func OIDCGithubClientID() *string {
+	return oidcGithubClientID
+}
+
+func OIDCGithubClientSecret() *string {
+	return oidcGithubClientSecret
+}
+
+func OIDCGoogleEnabled() bool {
+	return oidcGoogleEnabled
+}
+
+func OIDCGoogleClientID() *string {
+	return oidcGoogleClientID
+}
+
+func OIDCGoogleClientSecret() *string {
+	return oidcGoogleClientSecret
+}
+
+func OIDCMicrosoftEnabled() bool {
+	return oidcMicrosoftEnabled
+}
+
+func OIDCMicrosoftClientID() *string {
+	return oidcMicrosoftClientID
+}
+
+func OIDCMicrosoftClientSecret() *string {
+	return oidcMicrosoftClientSecret
+}
+
+func OIDCMicrosoftTenantID() *string {
+	return oidcMicrosoftTenantID
 }

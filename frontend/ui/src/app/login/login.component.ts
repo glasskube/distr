@@ -1,19 +1,18 @@
-import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {catchError, distinctUntilChanged, filter, lastValueFrom, map, Observable, of, Subject, takeUntil} from 'rxjs';
+import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {ToastService} from '../services/toast.service';
-import {getRemoteEnvironment} from '../../env/remote';
-import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {AsyncPipe} from '@angular/common';
-import {HttpClient} from '@angular/common/http';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faGithub, faGoogle, faMicrosoft} from '@fortawesome/free-brands-svg-icons';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, AutotrimDirective, AsyncPipe],
+  imports: [ReactiveFormsModule, RouterLink, AutotrimDirective, AsyncPipe, FaIconComponent],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit, OnDestroy {
@@ -28,8 +27,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyed$ = new Subject<void>();
   private readonly toast = inject(ToastService);
-  private readonly http = inject(HttpClient);
-  readonly showRegistrationLink$ = this.auth.registrationEnabled();
+  readonly loginConfig$ = this.auth.loginConfig();
+  readonly isJWTLogin = signal(false);
 
   public ngOnInit(): void {
     this.route.queryParams
@@ -54,20 +53,24 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.toast.success('Account activated successfully. You can now log in!');
         }
       });
-    this.route.queryParams
-      .pipe(
-        map((params) => params['reason']),
-        filter((reason) => reason),
-        distinctUntilChanged(),
-        takeUntil(this.destroyed$)
-      )
-      .subscribe((reason) => {
-        if (reason === 'password-reset') {
-          this.toast.success('Your password has been updated, you can now log in.');
-        } else if (reason === 'session-expired') {
-          this.toast.success('You have been logged out because your session has expired.');
-        }
-      });
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    switch (reason) {
+      case 'password-reset':
+        this.toast.success('Your password has been updated, you can now log in.');
+        break;
+      case 'session-expired':
+        this.toast.success('You have been logged out because your session has expired.');
+        break;
+      case 'oidc-failed':
+        this.toast.error('Login with this provider failed unexpectedly.');
+        break;
+    }
+    const jwt = this.route.snapshot.queryParamMap.get('jwt');
+    if (jwt) {
+      this.isJWTLogin.set(true);
+      this.auth.loginWithToken(jwt);
+      window.location.href = '/';
+    }
   }
 
   public ngOnDestroy(): void {
@@ -95,4 +98,12 @@ export class LoginComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  protected getLoginURL(provider: string): string {
+    return `/api/v1/auth/oidc/${provider}`;
+  }
+
+  protected readonly faGoogle = faGoogle;
+  protected readonly faGithub = faGithub;
+  protected readonly faMicrosoft = faMicrosoft;
 }
