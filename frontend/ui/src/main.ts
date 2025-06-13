@@ -38,6 +38,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
         maskInputOptions: {
           password: true,
         },
+        maskTextSelector: '[contenteditable], [data-ph-mask-text]',
       },
       // pageview event capturing is done for Angular router events.
       // Here we prevent the window "load" event from triggering a duplicate pageview event.
