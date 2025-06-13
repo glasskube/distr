@@ -194,5 +194,5 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 var requestVerificationMailRateLimitPerUser = httprate.Limit(
 	3,
 	10*time.Minute,
-	httprate.WithKeyFuncs(middleware.RateLimitCurrentUserIdKeyFunc),
+	httprate.WithKeyFuncs(middleware.RateLimitUserIDKey),
 )

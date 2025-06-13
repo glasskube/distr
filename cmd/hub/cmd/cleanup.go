@@ -81,7 +81,7 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 	ctx = internalctx.WithDb(ctx, registry.GetDbPool())
 	ctx = internalctx.WithLogger(ctx, log)
 
-	ctx, span := registry.GetAlwaysTracer().
+	ctx, span := registry.GetTracers().Always().
 		Tracer("github.com/glasskube/distr/cmd/hub/cmd", trace.WithInstrumentationVersion(buildconfig.Version())).
 		Start(ctx, fmt.Sprintf("cleanup_%v", opts.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
