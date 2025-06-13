@@ -53,7 +53,7 @@ type Config struct {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("client.Config{baseURL: %v, token: %v}", c.baseURL, c.token.Serialize())
+	return fmt.Sprintf("client.Config{baseURL: %v, token: %v}", c.baseURL, c.token)
 }
 
 func (c *Config) apiUrl(elem ...string) *url.URL {
