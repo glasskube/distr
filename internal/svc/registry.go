@@ -7,31 +7,17 @@ import (
 	"net/http"
 	"syscall"
 
-	"github.com/exaring/otelpgx"
-	sentryotel "github.com/getsentry/sentry-go/otel"
-	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/buildconfig"
-	"github.com/glasskube/distr/internal/cleanup"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/jobs"
 	"github.com/glasskube/distr/internal/mail"
-	"github.com/glasskube/distr/internal/mail/noop"
-	"github.com/glasskube/distr/internal/mail/ses"
-	"github.com/glasskube/distr/internal/mail/smtp"
 	"github.com/glasskube/distr/internal/migrations"
 	"github.com/glasskube/distr/internal/registry"
 	"github.com/glasskube/distr/internal/routing"
 	"github.com/glasskube/distr/internal/server"
-	"github.com/go-logr/zapr"
-	"github.com/jackc/pgx/v5"
+	"github.com/glasskube/distr/internal/tracers"
 	"github.com/jackc/pgx/v5/pgxpool"
-	gomail "github.com/wneessen/go-mail"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type Registry struct {
@@ -40,8 +26,7 @@ type Registry struct {
 	mailer            mail.Mailer
 	execDbMigrations  bool
 	artifactsRegistry http.Handler
-	tracer            *trace.TracerProvider
-	alwaysTracer      *trace.TracerProvider
+	tracers           *tracers.Tracers
 	jobsScheduler     *jobs.Scheduler
 }
 
@@ -66,11 +51,10 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
 
-	if tracer, alwaysTracer, err := reg.createTracer(ctx); err != nil {
+	if tracers, err := reg.createTracer(ctx); err != nil {
 		return nil, err
 	} else {
-		reg.tracer = tracer
-		reg.alwaysTracer = alwaysTracer
+		reg.tracers = tracers
 	}
 
 	if mailer, err := createMailer(ctx); err != nil {
@@ -110,7 +94,7 @@ func (r *Registry) Shutdown(ctx context.Context) error {
 	r.logger.Warn("shutting down database connections")
 	r.dbPool.Close()
 
-	if err := r.tracer.Shutdown(ctx); err != nil {
+	if err := r.tracers.Shutdown(ctx); err != nil {
 		r.logger.Warn("tracer shutdown failed", zap.Error(err))
 	}
 
@@ -122,165 +106,23 @@ func (r *Registry) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-type loggingQueryTracer struct {
-	log *zap.Logger
-}
-
-var _ pgx.QueryTracer = &loggingQueryTracer{}
-
-func (tracer *loggingQueryTracer) TraceQueryStart(
-	ctx context.Context,
-	_ *pgx.Conn,
-	data pgx.TraceQueryStartData,
-) context.Context {
-	tracer.log.Debug("executing query", zap.String("sql", data.SQL), zap.Any("args", data.Args))
-	return ctx
-}
-
-func (tracer *loggingQueryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
-}
-
-func (reg *Registry) createDBPool(ctx context.Context) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig(env.DatabaseUrl())
-	if err != nil {
-		return nil, err
-	}
-	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		typeNames := []string{
-			"DEPLOYMENT_TYPE", "USER_ROLE", "HELM_CHART_TYPE",
-			"DEPLOYMENT_STATUS_TYPE", "FEATURE", "_FEATURE", "TUTORIAL",
-		}
-		for _, typeName := range typeNames {
-			if pgType, err := conn.LoadType(ctx, typeName); err != nil {
-				return err
-			} else {
-				conn.TypeMap().RegisterType(pgType)
-			}
-		}
-		return nil
-	}
-	if maxConns := env.DatabaseMaxConns(); maxConns != nil {
-		config.MaxConns = int32(*maxConns)
-	}
-	if env.EnableQueryLogging() {
-		config.ConnConfig.Tracer = &loggingQueryTracer{reg.logger}
-	} else {
-		config.ConnConfig.Tracer = otelpgx.NewTracer(otelpgx.WithTracerProvider(reg.tracer))
-	}
-	db, err := pgxpool.NewWithConfig(ctx, config)
-	if err != nil {
-		return nil, fmt.Errorf("cannot set up db pool: %w", err)
-	} else if conn, err := db.Acquire(ctx); err != nil {
-		// this actually checks whether the DB can be connected to
-		return nil, fmt.Errorf("cannot acquire connection: %w", err)
-	} else {
-		conn.Release()
-		return db, nil
-	}
-}
-
-func (r *Registry) GetDbPool() *pgxpool.Pool {
-	return r.dbPool
-}
-
-func createMailer(ctx context.Context) (mail.Mailer, error) {
-	config := env.GetMailerConfig()
-	authOrgOverrideFromAddress := func(ctx context.Context, mail mail.Mail) string {
-		if auth, err := auth.Authentication.Get(ctx); err == nil {
-			if org := auth.CurrentOrg(); org != nil && org.EmailFromAddress != nil {
-				return *org.EmailFromAddress
-			}
-		}
-		return ""
-	}
-	switch config.Type {
-	case env.MailerTypeSMTP:
-		smtpConfig := smtp.Config{
-			MailerConfig: mail.MailerConfig{
-				FromAddressSrc: []mail.FromAddressSrcFn{
-					mail.MailOverrideFromAddress(),
-					authOrgOverrideFromAddress,
-					mail.StaticFromAddress(config.FromAddress.String()),
-				},
-			},
-			Host:      config.SmtpConfig.Host,
-			Port:      config.SmtpConfig.Port,
-			Username:  config.SmtpConfig.Username,
-			Password:  config.SmtpConfig.Password,
-			TLSPolicy: gomail.TLSOpportunistic,
-		}
-		return smtp.New(smtpConfig)
-	case env.MailerTypeSES:
-		sesConfig := ses.Config{
-			MailerConfig: mail.MailerConfig{
-				FromAddressSrc: []mail.FromAddressSrcFn{
-					mail.MailOverrideFromAddress(),
-					authOrgOverrideFromAddress,
-					mail.StaticFromAddress(config.FromAddress.String()),
-				},
-			},
-		}
-		return ses.NewFromContext(ctx, sesConfig)
-	case env.MailerTypeUnspecified:
-		return noop.New(), nil
-	default:
-		return nil, errors.New("invalid mailer type")
-	}
-}
-
 func (reg *Registry) createArtifactsRegistry(ctx context.Context) http.Handler {
-	logger := reg.logger.With(zap.String("component", "registry"))
-	return registry.NewDefault(ctx, logger, reg.dbPool, reg.mailer, reg.tracer)
-}
-
-func (r *Registry) GetMailer() mail.Mailer {
-	return r.mailer
-}
-
-func createLogger() *zap.Logger {
-	if buildconfig.IsRelease() {
-		config := zap.NewProductionConfig()
-		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-		return zap.Must(config.Build())
-	} else {
-		return zap.Must(zap.NewDevelopment())
-	}
-}
-
-func (reg *Registry) createTracer(ctx context.Context) (*trace.TracerProvider, *trace.TracerProvider, error) {
-	otel.SetLogger(zapr.NewLogger(reg.logger))
-
-	var tpopts []trace.TracerProviderOption
-	if env.OtelExporterOtlpEnabled() {
-		if exp, err := otlptracegrpc.New(ctx); err != nil {
-			return nil, nil, err
-		} else {
-			tpopts = append(tpopts, trace.WithSpanProcessor(trace.NewBatchSpanProcessor(exp)))
-		}
-	}
-	if env.OtelExporterSentryEnabled() {
-		tpopts = append(tpopts, trace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()))
-	}
-	tp := trace.NewTracerProvider(tpopts...)
-	atp := trace.NewTracerProvider(append(tpopts, trace.WithSampler(trace.AlwaysSample()))...)
-	otel.SetTracerProvider(tp)
-	atp.Tracer("Foo")
-
-	tmps := []propagation.TextMapPropagator{propagation.TraceContext{}, propagation.Baggage{}}
-	if env.OtelExporterSentryEnabled() {
-		tmps = append(tmps, sentryotel.NewSentryPropagator())
-	}
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(tmps...))
-
-	return tp, atp, nil
-}
-
-func (r *Registry) GetLogger() *zap.Logger {
-	return r.logger
+	return registry.NewDefault(
+		ctx,
+		reg.GetLogger().With(zap.String("component", "registry")),
+		reg.GetDbPool(),
+		reg.GetMailer(),
+		reg.GetTracers().Registry(),
+	)
 }
 
 func (r *Registry) GetRouter() http.Handler {
-	return routing.NewRouter(r.logger, r.dbPool, r.mailer, r.tracer)
+	return routing.NewRouter(
+		r.GetLogger(),
+		r.GetDbPool(),
+		r.GetMailer(),
+		r.GetTracers(),
+	)
 }
 
 func (r *Registry) GetArtifactsRouter() http.Handler {
@@ -297,65 +139,4 @@ func (r *Registry) GetArtifactsServer() server.Server {
 	} else {
 		return server.NewNoop()
 	}
-}
-
-func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
-	scheduler, err := jobs.NewScheduler(r.GetLogger(), r.GetDbPool(), r.GetAlwaysTracer())
-	if err != nil {
-		return nil, err
-	}
-
-	if cron := env.CleanupDeploymenRevisionStatusCron(); cron != nil {
-		err = scheduler.RegisterCronJob(
-			*cron,
-			jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if cron := env.CleanupDeploymenTargetStatusCron(); cron != nil {
-		err = scheduler.RegisterCronJob(
-			*cron,
-			jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if cron := env.CleanupDeploymentTargetMetricsCron(); cron != nil {
-		err = scheduler.RegisterCronJob(
-			*cron,
-			jobs.NewJob("DeploymentTargetMetricsCleanup", cleanup.RunDeploymentTargetMetricsCleanup),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if cron := env.CleanupDeploymentLogRecordCron(); cron != nil {
-		err = scheduler.RegisterCronJob(
-			*cron,
-			jobs.NewJob("DeploymentLogRecordCleanup", cleanup.RunDeploymentLogRecordCleanup),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return scheduler, nil
-}
-
-func (r *Registry) GetJobsScheduler() *jobs.Scheduler {
-	return r.jobsScheduler
-}
-
-func (r *Registry) GetTracer() *trace.TracerProvider {
-	return r.tracer
-}
-
-func (r *Registry) GetAlwaysTracer() *trace.TracerProvider {
-	return r.alwaysTracer
 }

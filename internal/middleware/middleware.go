@@ -106,7 +106,7 @@ func AgentSentryUser(h http.Handler) http.Handler {
 	})
 }
 
-func RateLimitCurrentUserIdKeyFunc(r *http.Request) (string, error) {
+func RateLimitUserIDKey(r *http.Request) (string, error) {
 	if auth, err := auth.Authentication.Get(r.Context()); err != nil {
 		return "", err
 	} else {
