@@ -9,6 +9,7 @@ import (
 	"github.com/glasskube/distr/internal/handlers"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/tracers"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -18,7 +19,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers) http.Handler {
+func NewRouter(
+	logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers, oidcer *oidc.OIDCer,
+) http.Handler {
 	router := chi.NewRouter()
 	router.Use(
 		// Handles panics
@@ -26,13 +29,15 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 		// Reject bodies larger than 1MiB
 		chimiddleware.RequestSize(1048576),
 	)
-	router.Mount("/api", ApiRouter(logger, db, mailer, tracers))
+	router.Mount("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
 	router.Mount("/internal", InternalRouter())
 	router.Mount("/", FrontendRouter())
 	return router
 }
 
-func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers) http.Handler {
+func ApiRouter(
+	logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers, oidcer *oidc.OIDCer,
+) http.Handler {
 	r := chi.NewRouter()
 	r.Use(
 		chimiddleware.RequestID,
@@ -40,7 +45,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 		middleware.Sentry,
 		middleware.LoggerCtxMiddleware(logger),
 		middleware.LoggingMiddleware,
-		middleware.ContextInjectorMiddleware(db, mailer),
+		middleware.ContextInjectorMiddleware(db, mailer, oidcer),
 	)
 
 	r.Route("/v1", func(r chi.Router) {

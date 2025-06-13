@@ -9,26 +9,29 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/microsoft"
 )
 
+type OIDCer struct {
+	providers map[types.OIDCProvider]*providerContext
+}
+
 type providerContext struct {
 	OAuth2Config    func(r *http.Request) *oauth2.Config
 	IDTokenVerifier *oidc.IDTokenVerifier
 }
 
-var providers map[types.OIDCProvider]*providerContext
-
-// Init must be called once at startup.
-func Init(ctx context.Context) error {
+func NewOIDCer(ctx context.Context, log *zap.Logger) (*OIDCer, error) {
 	p := make(map[types.OIDCProvider]*providerContext)
 	if env.OIDCGoogleEnabled() {
+		log.Info("initializing google OIDC")
 		googleProvider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
 		if err != nil {
-			return fmt.Errorf("failed to initialize Google OIDC provider: %w", err)
+			return nil, fmt.Errorf("failed to initialize Google OIDC provider: %w", err)
 		}
 		googleOidcConfig := &oidc.Config{ClientID: *env.OIDCGoogleClientID()}
 		p[types.OIDCProviderGoogle] = &providerContext{
@@ -37,9 +40,11 @@ func Init(ctx context.Context) error {
 		}
 	}
 	if env.OIDCMicrosoftEnabled() {
-		microsoftProvider, err := oidc.NewProvider(ctx, fmt.Sprintf("https://login.microsoftonline.com/%v/v2.0", *env.OIDCMicrosoftTenantID()))
+		log.Info("initializing microsoft OIDC")
+		microsoftProvider, err := oidc.NewProvider(ctx,
+			fmt.Sprintf("https://login.microsoftonline.com/%v/v2.0", *env.OIDCMicrosoftTenantID()))
 		if err != nil {
-			return fmt.Errorf("failed to initialize Microsoft OIDC provider: %w", err)
+			return nil, fmt.Errorf("failed to initialize Microsoft OIDC provider: %w", err)
 		}
 		config := &oidc.Config{ClientID: *env.OIDCMicrosoftClientID()}
 		p[types.OIDCProviderMicrosoft] = &providerContext{
@@ -48,13 +53,13 @@ func Init(ctx context.Context) error {
 		}
 	}
 	if env.OIDCGithubEnabled() {
+		log.Info("initializing github OIDC")
 		p[types.OIDCProviderGithub] = &providerContext{
 			OAuth2Config:    getGithubOauth2Config,
 			IDTokenVerifier: nil,
 		}
 	}
-	providers = p
-	return nil
+	return &OIDCer{providers: p}, nil
 }
 
 func getGoogleOauth2Config(r *http.Request) *oauth2.Config {
@@ -87,22 +92,11 @@ func getGithubOauth2Config(r *http.Request) *oauth2.Config {
 	}
 }
 
-func GetRequestSchemeAndHost(r *http.Request) string {
-	host := r.Host
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	return fmt.Sprintf("%v://%v", scheme, host)
-}
-
-func getRedirectURL(r *http.Request, provider types.OIDCProvider) string {
-	return fmt.Sprintf("%v/api/v1/auth/oidc/%v/callback", GetRequestSchemeAndHost(r), provider)
-}
-
 // GetEmailForCode exchanges the code for a token and extracts the user's email and verification status.
-func GetEmailForCode(ctx context.Context, provider types.OIDCProvider, code string, r *http.Request) (string, bool, error) {
-	prov := providers[provider]
+func (o *OIDCer) GetEmailForCode(
+	ctx context.Context, provider types.OIDCProvider, code string, r *http.Request,
+) (string, bool, error) {
+	prov := o.providers[provider]
 	if prov == nil || prov.OAuth2Config == nil {
 		return "", false, fmt.Errorf("OIDC provider not configured: %s", provider)
 	}
@@ -178,8 +172,8 @@ func getEmailFromGithubAccessToken(accessToken string) (string, error) {
 }
 
 // GetAuthCodeURL returns the OIDC provider's AuthCodeURL for the given state and provider.
-func GetAuthCodeURL(r *http.Request, provider types.OIDCProvider, state string) (string, error) {
-	prov := providers[provider]
+func (o *OIDCer) GetAuthCodeURL(r *http.Request, provider types.OIDCProvider, state string) (string, error) {
+	prov := o.providers[provider]
 	if prov == nil || prov.OAuth2Config == nil {
 		return "", fmt.Errorf("OIDC provider not configured: %s", provider)
 	}

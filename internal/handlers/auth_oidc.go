@@ -36,7 +36,8 @@ func authLoginOidcHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
 		return
 	} else {
-		redirectURL, err := oidc.GetAuthCodeURL(r, provider, state.String())
+		oidcer := internalctx.GetOIDCer(ctx)
+		redirectURL, err := oidcer.GetAuthCodeURL(r, provider, state.String())
 		if err != nil {
 			http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
 			return
@@ -60,7 +61,8 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	log = log.With(zap.String("provider", string(provider)))
 	code := r.URL.Query().Get("code")
 
-	email, emailVerified, err := oidc.GetEmailForCode(ctx, provider, code, r)
+	oidcer := internalctx.GetOIDCer(ctx)
+	email, emailVerified, err := oidcer.GetEmailForCode(ctx, provider, code, r)
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		log.Error("OIDC email extraction failed", zap.Error(err))
