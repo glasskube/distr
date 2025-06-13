@@ -30,6 +30,10 @@ func NewKey() (key Key, err error) {
 	return
 }
 
+func (key Key) String() string {
+	return keyPrefix + hex.EncodeToString(key[:3]) + "___REDACTED___"
+}
+
 func (key Key) Serialize() string { return keyPrefix + hex.EncodeToString(key[:]) }
 
 func (key Key) MarshalJSON() ([]byte, error) { return json.Marshal(key.Serialize()) }

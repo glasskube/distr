@@ -1,0 +1,49 @@
+name: Build MCP
+
+on:
+  push:
+    branches:
+      - 'main'
+    tags:
+      - '*'
+  pull_request:
+
+jobs:
+  build-mcp:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        goos: ['windows', 'linux', 'darwin']
+        goarch: ['amd64', 'arm64']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: 'go.mod'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+      - name: Generate commit hash
+        id: hash
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Build application
+        run: go build -ldflags="$LDFLAGS" -o dist/distr-mcp ./cmd/mcp/
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+          LDFLAGS: >-
+            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
+            -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+      - name: Create archive
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+        run: tar -caf dist/distr-mcp-${{ matrix.goos }}-${{ matrix.goarch }}.tar.bz2 -C dist distr-mcp
+      - name: Upload Archive
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+        run: gh release upload ${{ github.ref_name }} dist/distr-mcp-${{ matrix.goos }}-${{ matrix.goarch }}.tar.bz2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
