@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.5](https://github.com/glasskube/distr/compare/1.11.4...1.11.5) (2025-06-13)
+
+
+### Performance
+
+* **backend:** optimize `GetDeploymentsForDeploymentTarget` db query with lateral join ([#1051](https://github.com/glasskube/distr/issues/1051); cherry-picked) ([f4724ed](https://github.com/glasskube/distr/commit/f4724edaeccd4dda0d2c24c6639350cd0917feec))
+
 ## [1.11.4](https://github.com/glasskube/distr/compare/1.11.3...1.11.4) (2025-06-12)
 
 
