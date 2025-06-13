@@ -2,11 +2,13 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"time"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
@@ -32,6 +34,55 @@ func SaveDeploymentLogRecords(ctx context.Context, records []api.DeploymentLogRe
 		}),
 	)
 	return err
+}
+
+func ValidateDeploymentLogRecords(
+	ctx context.Context,
+	deploymentTargetID uuid.UUID,
+	records []api.DeploymentLogRecord,
+) error {
+	if len(records) == 0 {
+		return nil
+	}
+
+	db := internalctx.GetDb(ctx)
+
+	tuples := map[struct{ deploymentID, revisionID uuid.UUID }]struct{}{}
+	for _, record := range records {
+		tuples[struct{ deploymentID, revisionID uuid.UUID }{
+			deploymentID: record.DeploymentID,
+			revisionID:   record.DeploymentRevisionID,
+		}] = struct{}{}
+	}
+
+	for tuple := range tuples {
+		rows, err := db.Query(
+			ctx,
+			`SELECT 1
+			FROM Deployment d
+			JOIN DeploymentRevision dr ON d.id = dr.deployment_id
+			WHERE d.deployment_target_id = @deploymentTargetId
+				AND d.id = @deploymentId
+				AND dr.id = @deploymentRevisionId`,
+			pgx.NamedArgs{
+				"deploymentTargetId":   deploymentTargetID,
+				"deploymentId":         tuple.deploymentID,
+				"deploymentRevisionId": tuple.revisionID,
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("could not query DeploymentTarget: %w", err)
+		}
+		if _, err := pgx.CollectRows(rows, pgx.RowTo[int64]); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return fmt.Errorf("%w: deployment %s and revision %s does not exist in deployment target %s",
+					apierrors.ErrNotFound, tuple.deploymentID, tuple.revisionID, deploymentTargetID)
+			}
+			return fmt.Errorf("could not collect DeploymentTarget: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func GetDeploymentLogRecordResources(ctx context.Context,

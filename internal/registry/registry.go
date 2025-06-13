@@ -43,7 +43,7 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -129,7 +129,7 @@ func NewDefault(
 	logger *zap.Logger,
 	pool *pgxpool.Pool,
 	mailer mail.Mailer,
-	tracer *trace.TracerProvider,
+	tracer trace.TracerProvider,
 ) http.Handler {
 	return New(
 		WithLogger(logger),
