@@ -73,7 +73,7 @@ func ValidateDeploymentLogRecords(
 		if err != nil {
 			return fmt.Errorf("could not query DeploymentTarget: %w", err)
 		}
-		if _, err := pgx.CollectRows(rows, pgx.RowTo[int64]); err != nil {
+		if _, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[int64]); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return fmt.Errorf("%w: deployment %s and revision %s does not exist in deployment target %s",
 					apierrors.ErrNotFound, tuple.deploymentID, tuple.revisionID, deploymentTargetID)
