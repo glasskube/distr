@@ -14,58 +14,58 @@ import (
 )
 
 var (
-	databaseUrl                         string
-	databaseMaxConns                    *int
-	jwtSecret                           []byte
-	host                                string
-	registryHost                        string
-	mailerConfig                        MailerConfig
-	inviteTokenValidDuration            time.Duration
-	resetTokenValidDuration             time.Duration
-	agentTokenMaxValidDuration          time.Duration
-	agentInterval                       time.Duration
-	statusEntriesMaxAge                 *time.Duration
-	metricsEntriesMaxAge                *time.Duration
-	logRecordEntriesMaxCount            *int
-	sentryDSN                           string
-	sentryDebug                         bool
-	otelAgentSampler                    *SamplerConfig
-	otelRegistrySampler                 *SamplerConfig
-	otelExporterSentryEnabled           bool
-	otelExporterOtlpEnabled             bool
-	enableQueryLogging                  bool
-	agentDockerConfig                   []byte
-	frontendSentryDSN                   *string
-	frontendSentryTraceSampleRate       *float64
-	frontendPosthogToken                *string
-	frontendPosthogAPIHost              *string
-	frontendPosthogUIHost               *string
-	userEmailVerificationRequired       bool
-	serverShutdownDelayDuration         *time.Duration
-	registration                        RegistrationMode
-	registryEnabled                     bool
-	registryS3Config                    S3Config
-	artifactTagsDefaultLimitPerOrg      int
-	cleanupDeploymentRevisionStatusCron *string
+	databaseUrl                            string
+	databaseMaxConns                       *int
+	jwtSecret                              []byte
+	host                                   string
+	registryHost                           string
+	mailerConfig                           MailerConfig
+	inviteTokenValidDuration               time.Duration
+	resetTokenValidDuration                time.Duration
+	agentTokenMaxValidDuration             time.Duration
+	agentInterval                          time.Duration
+	statusEntriesMaxAge                    *time.Duration
+	metricsEntriesMaxAge                   *time.Duration
+	logRecordEntriesMaxCount               *int
+	sentryDSN                              string
+	sentryDebug                            bool
+	otelAgentSampler                       *SamplerConfig
+	otelRegistrySampler                    *SamplerConfig
+	otelExporterSentryEnabled              bool
+	otelExporterOtlpEnabled                bool
+	enableQueryLogging                     bool
+	agentDockerConfig                      []byte
+	frontendSentryDSN                      *string
+	frontendSentryTraceSampleRate          *float64
+	frontendPosthogToken                   *string
+	frontendPosthogAPIHost                 *string
+	frontendPosthogUIHost                  *string
+	userEmailVerificationRequired          bool
+	serverShutdownDelayDuration            *time.Duration
+	registration                           RegistrationMode
+	registryEnabled                        bool
+	registryS3Config                       S3Config
+	artifactTagsDefaultLimitPerOrg         int
+	cleanupDeploymentRevisionStatusCron    *string
 	cleanupDeploymentRevisionStatusTimeout time.Duration
-	cleanupDeploymentTargetStatusCron   *string
+	cleanupDeploymentTargetStatusCron      *string
 	cleanupDeploymentTargetStatusTimeout   time.Duration
-	cleanupDeploymentTargetMetricsCron  *string
+	cleanupDeploymentTargetMetricsCron     *string
 	cleanupDeploymentTargetMetricsTimeout  time.Duration
-	cleanupDeploymentLogRecordCron      *string
+	cleanupDeploymentLogRecordCron         *string
 	cleanupDeploymentLogRecordTimeout      time.Duration
-	cleanupOIDCStateCron                *string
-	cleanupOIDCStateCronTimeout      time.Duration
-	oidcGithubEnabled                   bool
-	oidcGithubClientID                  *string
-	oidcGithubClientSecret              *string
-	oidcGoogleEnabled                   bool
-	oidcGoogleClientID                  *string
-	oidcGoogleClientSecret              *string
-	oidcMicrosoftEnabled                bool
-	oidcMicrosoftClientID               *string
-	oidcMicrosoftClientSecret           *string
-	oidcMicrosoftTenantID               *string
+	cleanupOIDCStateCron                   *string
+	cleanupOIDCStateCronTimeout            time.Duration
+	oidcGithubEnabled                      bool
+	oidcGithubClientID                     *string
+	oidcGithubClientSecret                 *string
+	oidcGoogleEnabled                      bool
+	oidcGoogleClientID                     *string
+	oidcGoogleClientSecret                 *string
+	oidcMicrosoftEnabled                   bool
+	oidcMicrosoftClientID                  *string
+	oidcMicrosoftClientSecret              *string
+	oidcMicrosoftTenantID                  *string
 )
 
 func Initialize() {
