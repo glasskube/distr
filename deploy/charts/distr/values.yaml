@@ -230,6 +230,10 @@ cronJobs:
     labels:
       distr.sh/job: deployment-target-status-cleanup
     args: [cleanup, DeploymentTargetStatus, --timeout 10m]
+  - name: oidcstate-cleanup
+    labels:
+      distr.sh/job: oidcstate-cleanup
+    args: [ cleanup, OIDCState, --timeout 10m ]
 
 postgresql:
   enabled: false
