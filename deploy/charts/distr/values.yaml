@@ -233,7 +233,7 @@ cronJobs:
   - name: oidcstate-cleanup
     labels:
       distr.sh/job: oidcstate-cleanup
-    args: [ cleanup, OIDCState, --timeout 10m ]
+    args: [cleanup, OIDCState, --timeout 10m]
 
 postgresql:
   enabled: false
