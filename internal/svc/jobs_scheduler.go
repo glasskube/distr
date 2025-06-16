@@ -19,7 +19,11 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 	if cron := env.CleanupDeploymenRevisionStatusCron(); cron != nil {
 		err = scheduler.RegisterCronJob(
 			*cron,
-			jobs.NewJob("DeploymentRevisionStatusCleanup", cleanup.RunDeploymentRevisionStatusCleanup),
+			jobs.NewJob(
+				"DeploymentRevisionStatusCleanup",
+				cleanup.RunDeploymentRevisionStatusCleanup,
+				env.CleanupDeploymenRevisionStatusTimeout(),
+			),
 		)
 		if err != nil {
 			return nil, err
@@ -29,7 +33,11 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 	if cron := env.CleanupDeploymenTargetStatusCron(); cron != nil {
 		err = scheduler.RegisterCronJob(
 			*cron,
-			jobs.NewJob("DeploymentTargetStatusCleanup", cleanup.RunDeploymentTargetStatusCleanup),
+			jobs.NewJob(
+				"DeploymentTargetStatusCleanup",
+				cleanup.RunDeploymentTargetStatusCleanup,
+				env.CleanupDeploymenTargetStatusTimeout(),
+			),
 		)
 		if err != nil {
 			return nil, err
@@ -39,7 +47,11 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 	if cron := env.CleanupDeploymentTargetMetricsCron(); cron != nil {
 		err = scheduler.RegisterCronJob(
 			*cron,
-			jobs.NewJob("DeploymentTargetMetricsCleanup", cleanup.RunDeploymentTargetMetricsCleanup),
+			jobs.NewJob(
+				"DeploymentTargetMetricsCleanup",
+				cleanup.RunDeploymentTargetMetricsCleanup,
+				env.CleanupDeploymentTargetMetricsTimeout(),
+			),
 		)
 		if err != nil {
 			return nil, err
@@ -49,7 +61,11 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 	if cron := env.CleanupDeploymentLogRecordCron(); cron != nil {
 		err = scheduler.RegisterCronJob(
 			*cron,
-			jobs.NewJob("DeploymentLogRecordCleanup", cleanup.RunDeploymentLogRecordCleanup),
+			jobs.NewJob(
+				"DeploymentLogRecordCleanup",
+				cleanup.RunDeploymentLogRecordCleanup,
+				env.CleanupDeploymentLogRecordTimeout(),
+			),
 		)
 		if err != nil {
 			return nil, err
