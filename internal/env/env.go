@@ -47,10 +47,15 @@ var (
 	registryS3Config                    S3Config
 	artifactTagsDefaultLimitPerOrg      int
 	cleanupDeploymentRevisionStatusCron *string
+	cleanupDeploymentRevisionStatusTimeout time.Duration
 	cleanupDeploymentTargetStatusCron   *string
+	cleanupDeploymentTargetStatusTimeout   time.Duration
 	cleanupDeploymentTargetMetricsCron  *string
+	cleanupDeploymentTargetMetricsTimeout  time.Duration
 	cleanupDeploymentLogRecordCron      *string
+	cleanupDeploymentLogRecordTimeout      time.Duration
 	cleanupOIDCStateCron                *string
+	cleanupOIDCStateCronTimeout      time.Duration
 	oidcGithubEnabled                   bool
 	oidcGithubClientID                  *string
 	oidcGithubClientSecret              *string
@@ -154,10 +159,20 @@ func Initialize() {
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
 
 	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
+	cleanupDeploymentRevisionStatusTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_REVISION_STATUS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
+	cleanupDeploymentTargetStatusTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_TARGET_STATUS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
+	cleanupDeploymentTargetMetricsTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_TARGET_METRICS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
+	cleanupDeploymentLogRecordTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_LOG_RECORD_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupOIDCStateCron = envutil.GetEnvOrNil("CLEANUP_OIDC_STATE_CRON")
+	cleanupOIDCStateCronTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_OIDC_STATE_CRON_TIMEOUT",
+		envparse.PositiveDuration, 0)
 
 	oidcGithubEnabled = envutil.GetEnvParsedOrDefault("OIDC_GITHUB_ENABLED", strconv.ParseBool, false)
 	if oidcGithubEnabled {
@@ -309,20 +324,40 @@ func CleanupDeploymenRevisionStatusCron() *string {
 	return cleanupDeploymentRevisionStatusCron
 }
 
+func CleanupDeploymenRevisionStatusTimeout() time.Duration {
+	return cleanupDeploymentRevisionStatusTimeout
+}
+
 func CleanupDeploymenTargetStatusCron() *string {
 	return cleanupDeploymentTargetStatusCron
+}
+
+func CleanupDeploymenTargetStatusTimeout() time.Duration {
+	return cleanupDeploymentTargetStatusTimeout
 }
 
 func CleanupDeploymentTargetMetricsCron() *string {
 	return cleanupDeploymentTargetMetricsCron
 }
 
+func CleanupDeploymentTargetMetricsTimeout() time.Duration {
+	return cleanupDeploymentTargetMetricsTimeout
+}
+
 func CleanupDeploymentLogRecordCron() *string {
 	return cleanupDeploymentLogRecordCron
 }
 
+func CleanupDeploymentLogRecordTimeout() time.Duration {
+	return cleanupDeploymentLogRecordTimeout
+}
+
 func CleanupOIDCStateCron() *string {
 	return cleanupOIDCStateCron
+}
+
+func CleanupOIDCStateCronTimeout() time.Duration {
+	return cleanupOIDCStateCronTimeout
 }
 
 func OIDCGithubEnabled() bool {
