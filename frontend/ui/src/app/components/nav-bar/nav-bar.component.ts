@@ -45,7 +45,6 @@ import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
-import {UserAccount, UserAccountWithRole} from '../../../../../../sdk/js/src';
 
 type SwitchOptions = {
   currentOrg: Organization;
