@@ -67,7 +67,11 @@ func Initialize() {
 	if currentEnv, ok := os.LookupEnv("DISTR_ENV"); ok {
 		fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
 		if err := godotenv.Load(currentEnv); err != nil {
-			fmt.Fprintf(os.Stderr, "environment not loaded: %v\n", err)
+			fmt.Fprintf(os.Stderr, "environment %v not loaded: %v\n", currentEnv, err)
+		}
+		secretEnv := currentEnv + ".secret"
+		if err := godotenv.Load(secretEnv); err != nil {
+			fmt.Fprintf(os.Stderr, "environment %v not loaded: %v\n", secretEnv, err)
 		}
 	}
 
