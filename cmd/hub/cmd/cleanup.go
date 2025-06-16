@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/cleanup"
@@ -24,33 +27,44 @@ const (
 	deploymentLogRecord      = "DeploymentLogRecord"
 )
 
-type CleanupOptions struct{ Type string }
+type CleanupOptions struct {
+	Type    string
+	Timeout time.Duration
+}
 
-var CleanupCommand = &cobra.Command{
-	Use: "cleanup <type>",
-	Long: fmt.Sprintf(
-		"type must be one of: %v, %v, %v, %v",
-		deploymentTargetStatus,
-		deploymentRevisionStatus,
-		deploymentTargetMetrics,
-		deploymentLogRecord,
-	),
-	Short: "delete old data",
-	Args:  cobra.ExactArgs(1),
-	ValidArgs: []cobra.Completion{
-		deploymentTargetStatus,
-		deploymentRevisionStatus,
-		deploymentTargetMetrics,
-		deploymentLogRecord,
-	},
-	PreRun: func(cmd *cobra.Command, args []string) { env.Initialize() },
-	Run: func(cmd *cobra.Command, args []string) {
-		runCleanup(cmd.Context(), CleanupOptions{Type: args[0]})
-	},
+func NewCleanupCommand() *cobra.Command {
+	var opts CleanupOptions
+	cmd := cobra.Command{
+		Use: "cleanup <type>",
+		Long: fmt.Sprintf(
+			"type must be one of: %v, %v, %v, %v",
+			deploymentTargetStatus,
+			deploymentRevisionStatus,
+			deploymentTargetMetrics,
+			deploymentLogRecord,
+		),
+		Short: "delete old data",
+		Args:  cobra.ExactArgs(1),
+		ValidArgs: []cobra.Completion{
+			deploymentTargetStatus,
+			deploymentRevisionStatus,
+			deploymentTargetMetrics,
+			deploymentLogRecord,
+		},
+		PreRun: func(cmd *cobra.Command, args []string) { env.Initialize() },
+		Run: func(cmd *cobra.Command, args []string) {
+			opts.Type = args[0]
+			runCleanup(cmd.Context(), opts)
+		},
+	}
+
+	cmd.Flags().DurationVar(&opts.Timeout, "timeout", 0, "timeout for the cleanup operation. 0 means no timeout (default)")
+
+	return &cmd
 }
 
 func init() {
-	RootCommand.AddCommand(CleanupCommand)
+	RootCommand.AddCommand(NewCleanupCommand())
 }
 
 func runCleanup(ctx context.Context, opts CleanupOptions) {
@@ -73,6 +87,7 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 		os.Exit(1)
 	}
 
+	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	ctx = internalctx.WithDb(ctx, registry.GetDbPool())
 	ctx = internalctx.WithLogger(ctx, log)
 
@@ -80,6 +95,14 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 		Tracer("github.com/glasskube/distr/cmd/hub/cmd", trace.WithInstrumentationVersion(buildconfig.Version())).
 		Start(ctx, fmt.Sprintf("cleanup_%v", opts.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
+
+	if opts.Timeout > 0 {
+		ctx1, cancel := context.WithTimeout(ctx, opts.Timeout)
+		ctx = ctx1
+		defer cancel()
+	}
+
+	log.Info("starting cleanup", zap.String("type", opts.Type), zap.Duration("timeout", opts.Timeout))
 
 	if err := cleanupFunc(ctx); err != nil {
 		log.Error("cleanup failed", zap.Error(err))
