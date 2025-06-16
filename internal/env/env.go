@@ -13,42 +13,46 @@ import (
 )
 
 var (
-	databaseUrl                         string
-	databaseMaxConns                    *int
-	jwtSecret                           []byte
-	host                                string
-	registryHost                        string
-	mailerConfig                        MailerConfig
-	inviteTokenValidDuration            time.Duration
-	resetTokenValidDuration             time.Duration
-	agentTokenMaxValidDuration          time.Duration
-	agentInterval                       time.Duration
-	statusEntriesMaxAge                 *time.Duration
-	metricsEntriesMaxAge                *time.Duration
-	logRecordEntriesMaxCount            *int
-	sentryDSN                           string
-	sentryDebug                         bool
-	otelAgentSampler                    *SamplerConfig
-	otelRegistrySampler                 *SamplerConfig
-	otelExporterSentryEnabled           bool
-	otelExporterOtlpEnabled             bool
-	enableQueryLogging                  bool
-	agentDockerConfig                   []byte
-	frontendSentryDSN                   *string
-	frontendSentryTraceSampleRate       *float64
-	frontendPosthogToken                *string
-	frontendPosthogAPIHost              *string
-	frontendPosthogUIHost               *string
-	userEmailVerificationRequired       bool
-	serverShutdownDelayDuration         *time.Duration
-	registration                        RegistrationMode
-	registryEnabled                     bool
-	registryS3Config                    S3Config
-	artifactTagsDefaultLimitPerOrg      int
-	cleanupDeploymentRevisionStatusCron *string
-	cleanupDeploymentTargetStatusCron   *string
-	cleanupDeploymentTargetMetricsCron  *string
-	cleanupDeploymentLogRecordCron      *string
+	databaseUrl                            string
+	databaseMaxConns                       *int
+	jwtSecret                              []byte
+	host                                   string
+	registryHost                           string
+	mailerConfig                           MailerConfig
+	inviteTokenValidDuration               time.Duration
+	resetTokenValidDuration                time.Duration
+	agentTokenMaxValidDuration             time.Duration
+	agentInterval                          time.Duration
+	statusEntriesMaxAge                    *time.Duration
+	metricsEntriesMaxAge                   *time.Duration
+	logRecordEntriesMaxCount               *int
+	sentryDSN                              string
+	sentryDebug                            bool
+	otelAgentSampler                       *SamplerConfig
+	otelRegistrySampler                    *SamplerConfig
+	otelExporterSentryEnabled              bool
+	otelExporterOtlpEnabled                bool
+	enableQueryLogging                     bool
+	agentDockerConfig                      []byte
+	frontendSentryDSN                      *string
+	frontendSentryTraceSampleRate          *float64
+	frontendPosthogToken                   *string
+	frontendPosthogAPIHost                 *string
+	frontendPosthogUIHost                  *string
+	userEmailVerificationRequired          bool
+	serverShutdownDelayDuration            *time.Duration
+	registration                           RegistrationMode
+	registryEnabled                        bool
+	registryS3Config                       S3Config
+	artifactTagsDefaultLimitPerOrg         int
+	cleanupDeploymentRevisionStatusCron    *string
+	cleanupDeploymentRevisionStatusTimeout time.Duration
+	cleanupDeploymentTargetStatusCron      *string
+	cleanupDeploymentTargetStatusTimeout   time.Duration
+	cleanupDeploymentTargetMetricsCron     *string
+	cleanupDeploymentTargetMetricsTimeout  time.Duration
+	cleanupDeploymentLogRecordCron         *string
+	cleanupDeploymentLogRecordTimeout      time.Duration
 )
 
 func Initialize() {
@@ -138,9 +142,17 @@ func Initialize() {
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
 
 	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
+	cleanupDeploymentRevisionStatusTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_REVISION_STATUS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
+	cleanupDeploymentTargetStatusTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_TARGET_STATUS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
+	cleanupDeploymentTargetMetricsTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_TARGET_METRICS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
+	cleanupDeploymentLogRecordTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_LOG_RECORD_TIMEOUT",
+		envparse.PositiveDuration, 0)
 }
 
 func DatabaseUrl() string {
@@ -275,14 +287,30 @@ func CleanupDeploymenRevisionStatusCron() *string {
 	return cleanupDeploymentRevisionStatusCron
 }
 
+func CleanupDeploymenRevisionStatusTimeout() time.Duration {
+	return cleanupDeploymentRevisionStatusTimeout
+}
+
 func CleanupDeploymenTargetStatusCron() *string {
 	return cleanupDeploymentTargetStatusCron
+}
+
+func CleanupDeploymenTargetStatusTimeout() time.Duration {
+	return cleanupDeploymentTargetStatusTimeout
 }
 
 func CleanupDeploymentTargetMetricsCron() *string {
 	return cleanupDeploymentTargetMetricsCron
 }
 
+func CleanupDeploymentTargetMetricsTimeout() time.Duration {
+	return cleanupDeploymentTargetMetricsTimeout
+}
+
 func CleanupDeploymentLogRecordCron() *string {
 	return cleanupDeploymentLogRecordCron
+}
+
+func CleanupDeploymentLogRecordTimeout() time.Duration {
+	return cleanupDeploymentLogRecordTimeout
 }

@@ -97,8 +97,8 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 	defer span.End()
 
 	if opts.Timeout > 0 {
-		ctx1, cancel := context.WithTimeout(ctx, opts.Timeout)
-		ctx = ctx1
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
 		defer cancel()
 	}
 
