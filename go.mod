@@ -29,7 +29,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.1.6
-	github.com/mark3labs/mcp-go v0.31.0
+	github.com/mark3labs/mcp-go v0.32.0
 	github.com/onsi/gomega v1.37.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.128.0
 	github.com/spf13/cobra v1.9.1
