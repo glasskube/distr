@@ -3,8 +3,6 @@ package oidc
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/glasskube/distr/internal/types"
 )
 
 func GetRequestSchemeAndHost(r *http.Request) string {
@@ -16,6 +14,6 @@ func GetRequestSchemeAndHost(r *http.Request) string {
 	return fmt.Sprintf("%v://%v", scheme, host)
 }
 
-func getRedirectURL(r *http.Request, provider types.OIDCProvider) string {
+func getRedirectURL(r *http.Request, provider Provider) string {
 	return fmt.Sprintf("%v/api/v1/auth/oidc/%v/callback", GetRequestSchemeAndHost(r), provider)
 }

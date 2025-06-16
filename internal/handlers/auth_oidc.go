@@ -27,7 +27,7 @@ func AuthOIDCRouter(r chi.Router) {
 }
 
 func authLoginOidcHandler(w http.ResponseWriter, r *http.Request) {
-	provider := types.OIDCProvider(r.PathValue("oidcProvider"))
+	provider := oidc.Provider(r.PathValue("oidcProvider"))
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	if state, err := db.CreateOIDCState(ctx); err != nil {
@@ -57,7 +57,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	provider := types.OIDCProvider(r.PathValue("oidcProvider"))
+	provider := oidc.Provider(r.PathValue("oidcProvider"))
 	log = log.With(zap.String("provider", string(provider)))
 	code := r.URL.Query().Get("code")
 
