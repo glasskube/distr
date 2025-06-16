@@ -17,7 +17,18 @@ import {
   faShuffle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {combineLatestWith, distinctUntilChanged, lastValueFrom, map, Observable, Subject, takeUntil} from 'rxjs';
+import {
+  catchError,
+  combineLatestWith,
+  distinctUntilChanged,
+  EMPTY,
+  lastValueFrom,
+  map,
+  Observable,
+  of,
+  Subject,
+  takeUntil,
+} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
@@ -69,7 +80,21 @@ export class NavBarComponent implements OnInit, OnDestroy {
   private readonly organizationService = inject(OrganizationService);
   private readonly organizationBranding = inject(OrganizationBrandingService);
   protected readonly organization$ = this.organizationService.get();
-  protected readonly user$ = this.usersService.get();
+  protected readonly user$ = this.usersService.get().pipe(
+    catchError(() => {
+      const claims = this.auth.getClaims();
+      if (claims) {
+        return of({
+          id: claims.sub,
+          name: claims.name,
+          email: claims.email,
+          userRole: claims.role,
+          imageUrl: claims.image_url,
+        });
+      }
+      return EMPTY;
+    })
+  );
   protected readonly switchOptions$: Observable<SwitchOptions> = this.organizationService.getAll().pipe(
     takeUntil(this.destroyed$),
     combineLatestWith(this.organization$),
