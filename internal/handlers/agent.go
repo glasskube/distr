@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"slices"
 	"strings"
 	"time"
 
@@ -250,29 +249,26 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		deployments, err := db.GetDeploymentsForDeploymentTarget(ctx, auth.CurrentDeploymentTargetID())
-		if err != nil {
-			log.Error("error getting deployments", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		if err := db.ValidateDeploymentLogRecords(ctx, auth.CurrentDeploymentTargetID(), records); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				http.Error(w, fmt.Sprintf("bad request: %v", err), http.StatusBadRequest)
+			} else {
+				log.Error("error saving log records", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
 			return
 		}
-		errIdx := slices.IndexFunc(records, func(r api.DeploymentLogRecord) bool {
-			return !slices.ContainsFunc(deployments, func(d types.DeploymentWithLatestRevision) bool {
-				return d.ID == r.DeploymentID
-			})
-		})
-		if errIdx >= 0 {
-			// TODO: also check DeplyomentRevisionID
-			http.Error(w, fmt.Sprintf("invalid deploymentId at index %v", errIdx), http.StatusBadRequest)
-			return
-		}
+
 		if err := db.SaveDeploymentLogRecords(ctx, records); err != nil {
 			log.Error("error saving log records", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
