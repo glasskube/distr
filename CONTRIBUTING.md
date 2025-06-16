@@ -16,7 +16,7 @@ To run the Distr Hub locally, clone the repository and make sure that all necess
 We recommend that you use [mise](https://mise.jdx.dev/) to install these (run `mise install` in the current directoy) but you do don't have to.
 
 We set the environment variable `DISTR_ENV` via `mise` (apply with `mise env` in the current directoy), which points to the `.env.development.local` file containing reasonable defaults.
-However, you are also free to use any other way to provide your environment variables to the Distr Hub. 
+However, you are also free to use any other way to provide your environment variables to the Distr Hub.
 
 You can then start the necessary containers and the Distr Hub with:
 
