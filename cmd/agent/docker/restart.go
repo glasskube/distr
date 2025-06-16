@@ -2,17 +2,41 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/stack/options"
 	"github.com/docker/cli/cli/command/stack/swarm"
 	"github.com/docker/cli/opts"
+	composeapi "github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v2/pkg/compose"
 	swarmtypes "github.com/docker/docker/api/types/swarm"
+	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
 func RunDockerRestart(ctx context.Context, deployment AgentDeployment) error {
+	switch deployment.DockerType {
+	case types.DockerTypeCompose:
+		return RunDockerComposeRestart(ctx, deployment)
+	case types.DockerTypeSwarm:
+		return RunDockerSwarmRestart(ctx, deployment)
+	default:
+		return fmt.Errorf("cannot restart deployment %v with type: %v", deployment.ProjectName, deployment.DockerType)
+	}
+}
+
+func RunDockerComposeRestart(ctx context.Context, deployment AgentDeployment) error {
+	compose := compose.NewComposeService(dockerCli)
+	err := compose.Restart(ctx, deployment.ProjectName, composeapi.RestartOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to restart deployment %v: %w", deployment.ProjectName, err)
+	}
+	return nil
+}
+
+func RunDockerSwarmRestart(ctx context.Context, deployment AgentDeployment) error {
 	services, err := swarm.GetServices(
 		ctx,
 		dockerCli,

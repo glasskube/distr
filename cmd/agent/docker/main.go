@@ -157,8 +157,8 @@ loop:
 							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
 						}
 
-						if isUpgrade {
-
+						if err == nil && isUpgrade && deployment.ForceRestart {
+							multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
 						}
 
 						progressCancel()
