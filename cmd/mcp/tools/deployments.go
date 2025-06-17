@@ -3,8 +3,10 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/cmd/mcp/client"
 	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -106,6 +108,114 @@ func (m *Manager) NewDeleteDeploymentTool() server.ServerTool {
 			} else {
 				return JsonToolResult(map[string]string{"status": "success"})
 			}
+		},
+	}
+}
+
+// Status tool
+func (m *Manager) NewStatusTool() server.ServerTool {
+	return server.ServerTool{
+		Tool: mcp.NewTool(
+			"deployment_status",
+			mcp.WithString("id", mcp.Required(), mcp.Description("Deployment ID")),
+			mcp.WithString("limit", mcp.Description("Limit number of results")),
+			mcp.WithString("before", mcp.Description("Before timestamp (RFC3339Nano)")),
+			mcp.WithString("after", mcp.Description("After timestamp (RFC3339Nano)")),
+		),
+		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			id, err := ParseUUID(request, "id")
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to parse deployment ID", err), nil
+			}
+			var opts client.TimeseriesResourceOptions
+			if limit := mcp.ParseInt64(request, "limit", -1); limit != -1 {
+				opts.Limit = &limit
+			}
+			if before := mcp.ParseString(request, "before", ""); before != "" {
+				t, err := time.Parse(time.RFC3339Nano, before)
+				if err == nil {
+					opts.Before = &t
+				}
+			}
+			if after := mcp.ParseString(request, "after", ""); after != "" {
+				t, err := time.Parse(time.RFC3339Nano, after)
+				if err == nil {
+					opts.After = &t
+				}
+			}
+			statuses, err := m.client.Deployments().Status(ctx, id, &opts)
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to get deployment status", err), nil
+			}
+			return JsonToolResult(statuses)
+		},
+	}
+}
+
+// Logs tool
+func (m *Manager) NewLogsTool() server.ServerTool {
+	return server.ServerTool{
+		Tool: mcp.NewTool(
+			"deployment_logs",
+			mcp.WithDescription("Get deployment logs"),
+			mcp.WithString("id", mcp.Required(), mcp.Description("Deployment ID")),
+			mcp.WithString("resource", mcp.Description("Resource name")),
+			mcp.WithString("limit", mcp.Description("Limit number of results")),
+			mcp.WithString("before", mcp.Description("Before timestamp (RFC3339Nano)")),
+			mcp.WithString("after", mcp.Description("After timestamp (RFC3339Nano)")),
+		),
+		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			id, err := ParseUUID(request, "id")
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to parse deployment ID", err), nil
+			}
+			resource := mcp.ParseString(request, "resource", "")
+			if resource == "" {
+				return mcp.NewToolResultError("resource is required"), nil
+			}
+			var opts client.TimeseriesResourceOptions
+			if limit := mcp.ParseInt64(request, "limit", -1); limit != -1 {
+				opts.Limit = &limit
+			}
+			if before := mcp.ParseString(request, "before", ""); before != "" {
+				t, err := time.Parse(time.RFC3339Nano, before)
+				if err == nil {
+					opts.Before = &t
+				}
+			}
+			if after := mcp.ParseString(request, "after", ""); after != "" {
+				t, err := time.Parse(time.RFC3339Nano, after)
+				if err == nil {
+					opts.After = &t
+				}
+			}
+			logs, err := m.client.Deployments().Logs(ctx, id, resource, &opts)
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to get deployment logs", err), nil
+			}
+			return JsonToolResult(logs)
+		},
+	}
+}
+
+// LogResources tool
+func (m *Manager) NewLogResourcesTool() server.ServerTool {
+	return server.ServerTool{
+		Tool: mcp.NewTool(
+			"deployment_log_resources",
+			mcp.WithDescription("Get available log resources for a deployment"),
+			mcp.WithString("id", mcp.Required(), mcp.Description("Deployment ID")),
+		),
+		Handler: func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			id, err := ParseUUID(request, "id")
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to parse deployment ID", err), nil
+			}
+			resources, err := m.client.Deployments().LogResources(ctx, id)
+			if err != nil {
+				return mcp.NewToolResultErrorFromErr("Failed to get log resources", err), nil
+			}
+			return JsonToolResult(resources)
 		},
 	}
 }
