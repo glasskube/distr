@@ -44,6 +44,12 @@
 
 ---
 
+### forceRestart?
+
+> `optional` **forceRestart**: `boolean`
+
+---
+
 ### logsEnabled?
 
 > `optional` **logsEnabled**: `boolean`

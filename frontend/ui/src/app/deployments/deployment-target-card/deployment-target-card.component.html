@@ -337,6 +337,21 @@
                             }
                           </button>
                         </li>
+                        <li
+                          class="text-yellow-400 hover:bg-yellow-500 hover:text-white dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400">
+                          <button
+                            type="button"
+                            class="text-start block w-full px-4 py-2 text-sm"
+                            (click)="forceRestart(deployment); showDeploymentDropdownForId.set(undefined)"
+                            [title]="
+                              isForceRestartSupported()
+                                ? ''
+                                : 'Agent must have version 1.12.0 or greater. Please update this agent.'
+                            "
+                            [disabled]="!isForceRestartSupported()">
+                            Force restart workloads
+                          </button>
+                        </li>
                         <li>
                           <button
                             type="button"
