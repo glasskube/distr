@@ -127,10 +127,9 @@ func FrontendRouter() http.Handler {
 func WellKnownRouter() http.Handler {
 	router := chi.NewRouter()
 	if env.WellKnownMicrosoftIdentityAssociation() != nil {
-		wellKnownJsonResponse := []byte(*env.WellKnownMicrosoftIdentityAssociation())
 		router.Get("/microsoft-identity-association.json", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write(wellKnownJsonResponse)
+			_, _ = w.Write(env.WellKnownMicrosoftIdentityAssociation())
 		})
 	}
 
