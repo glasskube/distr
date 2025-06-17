@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	dockercommand "github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
@@ -19,14 +21,16 @@ import (
 )
 
 var (
-	logger = util.Require(zap.NewDevelopment())
-	client = util.Require(agentclient.NewFromEnv(logger))
+	logger    = util.Require(zap.NewDevelopment())
+	client    = util.Require(agentclient.NewFromEnv(logger))
+	dockerCli = util.Require(dockercommand.NewDockerCli())
 )
 
 func init() {
 	if agentenv.AgentVersionID == "" {
 		logger.Warn("AgentVersionID is not set. self updates will be disabled")
 	}
+	util.Must(dockerCli.Initialize(flags.NewClientOptions()))
 }
 
 func main() {
@@ -110,16 +114,17 @@ loop:
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
 				} else {
-					skipApply := false
 					if deployment.DockerType == nil {
 						logger.Error("cannot apply deployment because docker type is nil",
 							zap.Any("deploymentRevisionId", deployment.RevisionID))
 						continue
 					}
-					if *deployment.DockerType == types.DockerTypeSwarm {
-						existing, ok := deployments[deployment.ID]
-						skipApply = ok && existing.RevisionID == deployment.RevisionID
+
+					isUpgrade := false
+					if existing, ok := deployments[deployment.ID]; ok {
+						isUpgrade = existing.RevisionID == deployment.RevisionID
 					}
+					skipApply := isUpgrade && *deployment.DockerType == types.DockerTypeSwarm
 
 					if skipApply {
 						logger.Info("skip apply in swarm mode")
@@ -150,6 +155,10 @@ loop:
 
 						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
 							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+						}
+
+						if err == nil && isUpgrade && deployment.ForceRestart {
+							multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
 						}
 
 						progressCancel()

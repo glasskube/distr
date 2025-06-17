@@ -28,6 +28,8 @@ var (
 	logRecordEntriesMaxCount            *int
 	sentryDSN                           string
 	sentryDebug                         bool
+	otelAgentSampler                    *SamplerConfig
+	otelRegistrySampler                 *SamplerConfig
 	otelExporterSentryEnabled           bool
 	otelExporterOtlpEnabled             bool
 	enableQueryLogging                  bool
@@ -115,6 +117,19 @@ func Initialize() {
 	sentryDebug = envutil.GetEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
 	otelExporterSentryEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_SENTRY_ENABLED", strconv.ParseBool, false)
 	otelExporterOtlpEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_OTLP_ENABLED", strconv.ParseBool, false)
+	if s := envutil.GetEnvParsedOrNil("OTEL_AGENT_SAMPLER", parseSamplerType); s != nil {
+		otelAgentSampler = &SamplerConfig{
+			Sampler: *s,
+			Arg:     envutil.GetEnvParsedOrDefault("OTEL_AGENT_SAMPLER_ARG", envparse.Float, 1.0),
+		}
+	}
+	if s := envutil.GetEnvParsedOrNil("OTEL_REGISTRY_SAMPLER", parseSamplerType); s != nil {
+		otelRegistrySampler = &SamplerConfig{
+			Sampler: *s,
+			Arg:     envutil.GetEnvParsedOrDefault("OTEL_REGISTRY_SAMPLER_ARG", envparse.Float, 1.0),
+		}
+	}
+
 	agentDockerConfig = envutil.GetEnvParsedOrDefault("AGENT_DOCKER_CONFIG", envparse.ByteSlice, nil)
 	frontendSentryDSN = envutil.GetEnvOrNil("FRONTEND_SENTRY_DSN")
 	frontendSentryTraceSampleRate = envutil.GetEnvParsedOrNil("FRONTEND_SENTRY_TRACE_SAMPLE_RATE", envparse.Float)
@@ -238,6 +253,14 @@ func RegistryS3Config() S3Config {
 
 func ArtifactTagsDefaultLimitPerOrg() int {
 	return artifactTagsDefaultLimitPerOrg
+}
+
+func OtelAgentSampler() *SamplerConfig {
+	return otelAgentSampler
+}
+
+func OtelRegistrySampler() *SamplerConfig {
+	return otelRegistrySampler
 }
 
 func OtelExporterSentryEnabled() bool {
