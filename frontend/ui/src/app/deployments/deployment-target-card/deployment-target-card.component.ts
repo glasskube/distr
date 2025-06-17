@@ -27,13 +27,12 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
-  DeploymentRevisionStatus,
   DeploymentTarget,
   DeploymentTargetScope,
   DeploymentType,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {EMPTY, filter, firstValueFrom, lastValueFrom, Observable, switchMap} from 'rxjs';
+import {filter, firstValueFrom, lastValueFrom, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
@@ -46,13 +45,13 @@ import {UuidComponent} from '../../components/uuid';
 import {AgentVersionService} from '../../services/agent-version.service';
 import {AuthService} from '../../services/auth.service';
 import {DeploymentStatusService} from '../../services/deployment-status.service';
+import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
-import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
-import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
 import {DeploymentStatusModalComponent} from '../deployment-status-modal/deployment-status-modal.component';
+import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
 
 @Component({
   selector: 'app-deployment-target-card',
@@ -122,6 +121,7 @@ export class DeploymentTargetCardComponent {
   protected readonly isUndeploySupported = this.isAgentVersionAtLeast('1.3.0');
   protected readonly isMultiDeploymentSupported = this.isAgentVersionAtLeast('1.6.0');
   protected readonly isLoggingSupported = this.isAgentVersionAtLeast('1.9.0');
+  protected readonly isForceRestartSupported = this.isAgentVersionAtLeast('1.12.0');
 
   protected readonly agentUpdateAvailable = computed(() => {
     const agentVersions = this.agentVersions.value() ?? [];
@@ -230,6 +230,45 @@ export class DeploymentTargetCardComponent {
           }
         },
       });
+    }
+  }
+
+  protected forceRestart(deployment: DeploymentWithLatestRevision) {
+    if (deployment.id) {
+      this.overlay
+        .confirm({
+          message: {
+            message: 'Are you sure you want to force restart this deployment?',
+            warning: {
+              message: 'Depending on the deployment, this may cause downtime.',
+            },
+          },
+        })
+        .pipe(
+          filter((result) => result === true),
+          switchMap(() =>
+            this.deploymentTargets.deploy({
+              deploymentId: deployment.id,
+              deploymentTargetId: deployment.deploymentTargetId,
+              applicationVersionId: deployment.applicationVersionId,
+              applicationLicenseId: deployment.applicationLicenseId,
+              releaseName: deployment.releaseName,
+              dockerType: deployment.dockerType,
+              valuesYaml: deployment.valuesYaml,
+              envFileData: deployment.envFileData,
+              forceRestart: true,
+            })
+          )
+        )
+        .subscribe({
+          next: () => this.toast.success('Deployment has been restarted.'),
+          error: (e) => {
+            const msg = getFormDisplayedError(e);
+            if (msg) {
+              this.toast.error(msg);
+            }
+          },
+        });
     }
   }
 

@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	dockercommand "github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentauth"
 	"github.com/glasskube/distr/internal/agentclient"
@@ -14,19 +16,22 @@ import (
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
 
 var (
-	logger = util.Require(zap.NewDevelopment())
-	client = util.Require(agentclient.NewFromEnv(logger))
+	logger    = util.Require(zap.NewDevelopment())
+	client    = util.Require(agentclient.NewFromEnv(logger))
+	dockerCli = util.Require(dockercommand.NewDockerCli())
 )
 
 func init() {
 	if agentenv.AgentVersionID == "" {
 		logger.Warn("AgentVersionID is not set. self updates will be disabled")
 	}
+	util.Must(dockerCli.Initialize(flags.NewClientOptions()))
 }
 
 func main() {
@@ -37,7 +42,7 @@ func main() {
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
 
-	go util.Require(NewLogsWatcher()).Watch(ctx, 30*time.Second)
+	go NewLogsWatcher().Watch(ctx, 30*time.Second)
 
 	tick := time.Tick(agentenv.Interval)
 
@@ -110,15 +115,16 @@ loop:
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
 				} else {
-					skipApply := false
 					if deployment.DockerType == nil {
 						logger.Error("cannot apply deployment because docker type is nil",
 							zap.Any("deploymentRevisionId", deployment.RevisionID))
 						continue
 					}
-					if *deployment.DockerType == types.DockerTypeSwarm {
-						existing, ok := deployments[deployment.ID]
-						skipApply = ok && existing.RevisionID == deployment.RevisionID
+
+					var isUpgrade, skipApply bool
+					if existing, ok := deployments[deployment.ID]; ok {
+						isUpgrade = existing.RevisionID != deployment.RevisionID
+						skipApply = !isUpgrade && *deployment.DockerType == types.DockerTypeSwarm
 					}
 
 					if skipApply {
@@ -126,30 +132,14 @@ loop:
 						status = "status checks are not yet supported in swarm mode"
 					} else {
 						progressCtx, progressCancel := context.WithCancel(ctx)
-						go func(ctx context.Context) {
-							tick := time.Tick(agentenv.Interval)
-							for {
-								select {
-								case <-ctx.Done():
-									logger.Debug("stop sending progress updates")
-									return
-								case <-tick:
-									logger.Info("sending progress update")
-									err := client.Status(
-										ctx,
-										deployment.RevisionID,
-										types.DeploymentStatusTypeProgressing,
-										"applying docker compose…",
-									)
-									if err != nil {
-										logger.Warn("error updating status", zap.Error(err))
-									}
-								}
-							}
-						}(progressCtx)
+						go sendProgressInterval(progressCtx, deployment.RevisionID)
 
 						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
 							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+						}
+
+						if err == nil && isUpgrade && deployment.ForceRestart {
+							multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
 						}
 
 						progressCancel()
@@ -163,4 +153,26 @@ loop:
 		}
 	}
 	logger.Info("shutting down")
+}
+
+func sendProgressInterval(ctx context.Context, revisionID uuid.UUID) {
+	tick := time.Tick(agentenv.Interval)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("stop sending progress updates")
+			return
+		case <-tick:
+			logger.Info("sending progress update")
+			err := client.Status(
+				ctx,
+				revisionID,
+				types.DeploymentStatusTypeProgressing,
+				"applying docker compose…",
+			)
+			if err != nil {
+				logger.Warn("error updating status", zap.Error(err))
+			}
+		}
+	}
 }
