@@ -66,6 +66,7 @@ var (
 	oidcMicrosoftClientID                  *string
 	oidcMicrosoftClientSecret              *string
 	oidcMicrosoftTenantID                  *string
+	wellKnownMicrosoftIdentityAssociation  *string
 )
 
 func Initialize() {
@@ -189,6 +190,12 @@ func Initialize() {
 		oidcMicrosoftClientID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_ID"))
 		oidcMicrosoftClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_SECRET"))
 		oidcMicrosoftTenantID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_TENANT_ID"))
+	}
+	wellKnownMicrosoftIdentityAssociationEnc := envutil.GetEnvOrNil("WELLKNOWN_MICROSOFT_IDENTITY_ASSOCIATION_JSON_BASE64")
+	if wellKnownMicrosoftIdentityAssociationEnc != nil {
+		if wellKnownDecoded, err := base64.StdEncoding.DecodeString(*wellKnownMicrosoftIdentityAssociationEnc); err == nil {
+			wellKnownMicrosoftIdentityAssociation = util.PtrTo(string(wellKnownDecoded))
+		}
 	}
 }
 
@@ -398,4 +405,8 @@ func OIDCMicrosoftClientSecret() *string {
 
 func OIDCMicrosoftTenantID() *string {
 	return oidcMicrosoftTenantID
+}
+
+func WellKnownMicrosoftIdentityAssociation() *string {
+	return wellKnownMicrosoftIdentityAssociation
 }

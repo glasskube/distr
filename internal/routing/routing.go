@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/frontend"
 	"github.com/glasskube/distr/internal/handlers"
 	"github.com/glasskube/distr/internal/mail"
@@ -31,6 +32,7 @@ func NewRouter(
 	)
 	router.Mount("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
 	router.Mount("/internal", InternalRouter())
+	router.Mount("/.well-known", WellKnownRouter())
 	router.Mount("/", FrontendRouter())
 	return router
 }
@@ -118,6 +120,19 @@ func FrontendRouter() http.Handler {
 	)
 
 	router.Handle("/*", handlers.StaticFileHandler(frontend.BrowserFS()))
+
+	return router
+}
+
+func WellKnownRouter() http.Handler {
+	router := chi.NewRouter()
+	if env.WellKnownMicrosoftIdentityAssociation() != nil {
+		wellKnownJsonResponse := []byte(*env.WellKnownMicrosoftIdentityAssociation())
+		router.Get("/microsoft-identity-association.json", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(wellKnownJsonResponse)
+		})
+	}
 
 	return router
 }
