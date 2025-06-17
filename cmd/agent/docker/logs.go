@@ -10,7 +10,6 @@ import (
 	dockercommand "github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/stack/options"
 	"github.com/docker/cli/cli/command/stack/swarm"
-	"github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/opts"
 	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
@@ -29,18 +28,12 @@ type logsWatcher struct {
 	last           map[uuid.UUID]time.Time
 }
 
-func NewLogsWatcher() (*logsWatcher, error) {
-	if cli, err := dockercommand.NewDockerCli(); err != nil {
-		return nil, err
-	} else if err := cli.Initialize(flags.NewClientOptions()); err != nil {
-		return nil, err
-	} else {
-		return &logsWatcher{
-			dockerCli:      cli,
-			composeService: compose.NewComposeService(cli),
-			logsExporter:   agentlogs.ChunkExporter(client, 100),
-			last:           make(map[uuid.UUID]time.Time),
-		}, nil
+func NewLogsWatcher() *logsWatcher {
+	return &logsWatcher{
+		dockerCli:      dockerCli,
+		composeService: compose.NewComposeService(dockerCli),
+		logsExporter:   agentlogs.ChunkExporter(client, 100),
+		last:           make(map[uuid.UUID]time.Time),
 	}
 }
 

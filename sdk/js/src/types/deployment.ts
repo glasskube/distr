@@ -17,6 +17,7 @@ export interface DeploymentRequest {
   valuesYaml?: string;
   envFileData?: string;
   logsEnabled?: boolean;
+  forceRestart?: boolean;
 }
 
 export interface PatchDeploymentRequest {
