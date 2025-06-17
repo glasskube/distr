@@ -45,6 +45,12 @@ func (runner *runner) Run(ctx context.Context, job Job) {
 	startedAt := time.Now()
 	log.Info("job started")
 
+	if job.timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, job.timeout)
+		defer cancel()
+	}
+
 	err := job.Run(ctx)
 	elapsed := time.Since(startedAt)
 	if err != nil {

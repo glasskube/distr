@@ -197,19 +197,19 @@ cronJobs:
   - name: deployment-log-record-cleanup
     labels:
       distr.sh/job: deployment-log-record-cleanup
-    args: [cleanup, DeploymentLogRecord]
+    args: [cleanup, DeploymentLogRecord, --timeout 10m]
   - name: deployment-revision-status-cleanup
     labels:
       distr.sh/job: deployment-revision-status-cleanup
-    args: [cleanup, DeploymentRevisionStatus]
+    args: [cleanup, DeploymentRevisionStatus, --timeout 10m]
   - name: deployment-target-metrics-cleanup
     labels:
       distr.sh/job: deployment-target-metrics-cleanup
-    args: [cleanup, DeploymentTargetMetrics]
+    args: [cleanup, DeploymentTargetMetrics, --timeout 10m]
   - name: deployment-target-status-cleanup
     labels:
       distr.sh/job: deployment-target-status-cleanup
-    args: [cleanup, DeploymentTargetStatus]
+    args: [cleanup, DeploymentTargetStatus, --timeout 10m]
 
 postgresql:
   enabled: false
