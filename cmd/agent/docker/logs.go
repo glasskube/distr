@@ -28,13 +28,13 @@ type logsWatcher struct {
 	last           map[uuid.UUID]time.Time
 }
 
-func NewLogsWatcher() (*logsWatcher, error) {
+func NewLogsWatcher() *logsWatcher {
 	return &logsWatcher{
 		dockerCli:      dockerCli,
 		composeService: compose.NewComposeService(dockerCli),
 		logsExporter:   agentlogs.ChunkExporter(client, 100),
 		last:           make(map[uuid.UUID]time.Time),
-	}, nil
+	}
 }
 
 func (lw *logsWatcher) Watch(ctx context.Context, d time.Duration) {

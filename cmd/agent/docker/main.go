@@ -16,6 +16,7 @@ import (
 	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
+	"github.com/google/uuid"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )
@@ -41,7 +42,7 @@ func main() {
 		zap.String("commit", buildconfig.Commit()),
 		zap.Bool("release", buildconfig.IsRelease()))
 
-	go util.Require(NewLogsWatcher()).Watch(ctx, 30*time.Second)
+	go NewLogsWatcher().Watch(ctx, 30*time.Second)
 
 	tick := time.Tick(agentenv.Interval)
 
@@ -131,27 +132,7 @@ loop:
 						status = "status checks are not yet supported in swarm mode"
 					} else {
 						progressCtx, progressCancel := context.WithCancel(ctx)
-						go func(ctx context.Context) {
-							tick := time.Tick(agentenv.Interval)
-							for {
-								select {
-								case <-ctx.Done():
-									logger.Debug("stop sending progress updates")
-									return
-								case <-tick:
-									logger.Info("sending progress update")
-									err := client.Status(
-										ctx,
-										deployment.RevisionID,
-										types.DeploymentStatusTypeProgressing,
-										"applying docker compose…",
-									)
-									if err != nil {
-										logger.Warn("error updating status", zap.Error(err))
-									}
-								}
-							}
-						}(progressCtx)
+						go sendProgressInterval(progressCtx, deployment.RevisionID)
 
 						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
 							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
@@ -172,4 +153,26 @@ loop:
 		}
 	}
 	logger.Info("shutting down")
+}
+
+func sendProgressInterval(ctx context.Context, revisionID uuid.UUID) {
+	tick := time.Tick(agentenv.Interval)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Debug("stop sending progress updates")
+			return
+		case <-tick:
+			logger.Info("sending progress update")
+			err := client.Status(
+				ctx,
+				revisionID,
+				types.DeploymentStatusTypeProgressing,
+				"applying docker compose…",
+			)
+			if err != nil {
+				logger.Warn("error updating status", zap.Error(err))
+			}
+		}
+	}
 }
