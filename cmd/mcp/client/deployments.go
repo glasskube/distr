@@ -91,7 +91,7 @@ func (c *Deployments) Status(
 	id uuid.UUID,
 	options *TimeseriesResourceOptions,
 ) ([]types.DeploymentRevisionStatus, error) {
-	url := c.url("status")
+	url := c.url(id.String(), "status")
 	url.RawQuery = options.AsURLValues().Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func (c *Deployments) Logs(
 	resource string,
 	options *TimeseriesResourceOptions,
 ) ([]api.DeploymentLogRecord, error) {
-	url := c.url("logs")
+	url := c.url(id.String(), "logs")
 	url.RawQuery = options.AsURLValues().Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
@@ -116,7 +116,7 @@ func (c *Deployments) Logs(
 }
 
 func (c *Deployments) LogResources(ctx context.Context, id uuid.UUID) ([]string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url("logs", "resources").String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url(id.String(), "logs", "resources").String(), nil)
 	if err != nil {
 		return nil, err
 	}
