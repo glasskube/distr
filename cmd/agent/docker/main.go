@@ -121,11 +121,11 @@ loop:
 						continue
 					}
 
-					isUpgrade := false
+					var isUpgrade, skipApply bool
 					if existing, ok := deployments[deployment.ID]; ok {
-						isUpgrade = existing.RevisionID == deployment.RevisionID
+						isUpgrade = existing.RevisionID != deployment.RevisionID
+						skipApply = !isUpgrade && *deployment.DockerType == types.DockerTypeSwarm
 					}
-					skipApply := isUpgrade && *deployment.DockerType == types.DockerTypeSwarm
 
 					if skipApply {
 						logger.Info("skip apply in swarm mode")
