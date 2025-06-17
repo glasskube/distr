@@ -65,6 +65,10 @@ build-docker-agent: tidy
 build-kubernetes-agent: tidy
 	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/kubernetes-agent ./cmd/agent/kubernetes
 
+.PHONY: build-mcp-server
+build-mcp-server: tidy
+	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/mcp-server ./cmd/mcp
+
 .PHONY: docker-build-hub
 docker-build-hub: build
 	docker build -f Dockerfile.hub --tag ghcr.io/glasskube/distr:$(VERSION) .
