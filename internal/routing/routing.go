@@ -14,7 +14,6 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -46,7 +45,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 	r.Route("/v1", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(
-				otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracers.Default())),
+				middleware.OTEL(tracers.Default()),
 			)
 
 			// public routes go here
@@ -90,7 +89,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 		// agent connect and download routes go here (authenticated but with accessKeyId and accessKeySecret)
 		r.Group(func(r chi.Router) {
 			r.Use(
-				otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracers.Agent())),
+				middleware.OTEL(tracers.Agent()),
 			)
 
 			r.Route("/", handlers.AgentRouter)
