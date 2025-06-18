@@ -19,8 +19,6 @@ import {
 import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
 import {
   catchError,
-  combineLatest,
-  combineLatestAll,
   combineLatestWith,
   distinctUntilChanged,
   EMPTY,
@@ -32,7 +30,6 @@ import {
   startWith,
   Subject,
   switchMap,
-  take,
   takeUntil,
   tap,
 } from 'rxjs';
@@ -47,8 +44,6 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {DeploymentModalComponent} from '../deployments/deployment-modal.component';
-import {DeploymentFormComponent} from '../deployment-form/deployment-form.component';
 
 @Component({
   selector: 'app-application-detail',
@@ -145,7 +140,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   editFormLoading = signal(false);
 
   @ViewChild('versionDetailsModal') protected readonly versionDetailsModal!: TemplateRef<unknown>;
-  protected readonly selectedVersion = signal<ApplicationVersion | undefined>(undefined);
+  protected readonly selectedVersionForDetailModal = signal<ApplicationVersion | undefined>(undefined);
   versionDetailsForm = new FormGroup({
     kubernetes: new FormGroup({
       baseValues: new FormControl(''),
@@ -172,7 +167,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
-  private modal?: DialogRef;
+  private versionDetailsModalRef?: DialogRef;
 
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
@@ -413,18 +408,19 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected hideModal(): void {
+  protected hideVersionDetails(): void {
+    this.versionDetailsModalRef?.close();
     this.versionDetailsForm.reset();
-    this.modal?.close();
+    this.selectedVersionForDetailModal.set(undefined);
   }
 
   async openVersionDetails(application: Application, version: ApplicationVersion) {
-    this.hideModal();
-    this.selectedVersion.set(version);
+    this.hideVersionDetails();
+    this.selectedVersionForDetailModal.set(version);
     const val = await this.loadVersionDetails(application, version);
     if (val) {
       this.versionDetailsForm.patchValue(val);
-      this.modal = this.overlay.showModal(this.versionDetailsModal, {
+      this.versionDetailsModalRef = this.overlay.showModal(this.versionDetailsModal, {
         positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
       });
     }
