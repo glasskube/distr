@@ -551,7 +551,7 @@
           <!-- Modal body -->
           <div class="flex flex-wrap col-span-2 text-gray-500 dark:text-gray-400">
             @if(application.type === 'docker') {
-              <input type="radio" id="tab-compose" name="deployment-tabs" class="hidden peer/compose" checked />
+              <input type="radio" id="tab-compose" name="version-detail-tabs" class="hidden peer/compose" checked />
               <label
                 for="tab-compose"
                 class="tab-label peer-checked/compose:text-blue-600 dark:peer-checked/compose:text-blue-500 peer-checked/compose:border-blue-600 dark:peer-checked/compose:border-blue-500 text-sm cursor-pointer inline-flex items-center justify-center p-2 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group">
@@ -565,8 +565,22 @@
                   [formControl]="versionDetailsForm.controls.docker.controls.compose">
                 </app-editor>
               </div>
+
+              <input type="radio" id="tab-environment" name="version-detail-tabs" class="hidden peer/environment" />
+              <label
+                for="tab-environment"
+                class="tab-label peer-checked/environment:text-blue-600 dark:peer-checked/environment:text-blue-500 peer-checked/environment:border-blue-600 dark:peer-checked/environment:border-blue-500 text-sm cursor-pointer inline-flex items-center justify-center p-2 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
+                Template for Environment File
+              </label>
+              <div class="order-12 mt-4 w-full hidden peer-checked/environment:block">
+                <app-editor
+                  id="env-file"
+                  class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  [formControl]="versionDetailsForm.controls.docker.controls.template">
+                </app-editor>
+              </div>
             } @else if (application.type === 'kubernetes') {
-              <input type="radio" id="tab-basevalues" name="deployment-tabs" class="hidden peer/basevalues" checked />
+              <input type="radio" id="tab-basevalues" name="version-detail-tabs" class="hidden peer/basevalues" checked />
               <label
                 for="tab-basevalues"
                 class="tab-label peer-checked/basevalues:text-blue-600 dark:peer-checked/basevalues:text-blue-500 peer-checked/basevalues:border-blue-600 dark:peer-checked/basevalues:border-blue-500 text-sm cursor-pointer inline-flex items-center justify-center p-2 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group">
@@ -578,6 +592,20 @@
                   language="yaml"
                   class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   [formControl]="versionDetailsForm.controls.kubernetes.controls.baseValues">
+                </app-editor>
+              </div>
+
+              <input type="radio" id="tab-customervalues" name="version-detail-tabs" class="hidden peer/customervalues" />
+              <label
+                for="tab-customervalues"
+                class="tab-label peer-checked/customervalues:text-blue-600 dark:peer-checked/customervalues:text-blue-500 peer-checked/customervalues:border-blue-600 dark:peer-checked/customervalues:border-blue-500 text-sm cursor-pointer inline-flex items-center justify-center p-2 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
+                Template for Customer Values
+              </label>
+              <div class="order-12 mt-4 w-full hidden peer-checked/customervalues:block">
+                <app-editor
+                  id="customervalues-file"
+                  class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  [formControl]="versionDetailsForm.controls.kubernetes.controls.template">
                 </app-editor>
               </div>
             }
