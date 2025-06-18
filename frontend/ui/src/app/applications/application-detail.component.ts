@@ -1,7 +1,7 @@
-import {OverlayModule} from '@angular/cdk/overlay';
+import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Component, ElementRef, inject, OnDestroy, OnInit, signal, TemplateRef, ViewChild} from '@angular/core';
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -10,7 +10,7 @@ import {
   faBoxesStacked,
   faCheck,
   faChevronDown,
-  faEdit,
+  faEdit, faEye,
   faMagnifyingGlass,
   faTrash,
   faXmark,
@@ -44,8 +44,10 @@ import {EditorComponent} from '../components/editor.component';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
-import {OverlayService} from '../services/overlay.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {DeploymentModalComponent} from '../deployments/deployment-modal.component';
+import {DeploymentFormComponent} from '../deployment-form/deployment-form.component';
 
 @Component({
   selector: 'app-application-detail',
@@ -61,6 +63,7 @@ import {ToastService} from '../services/toast.service';
     DatePipe,
     EditorComponent,
     SecureImagePipe,
+    FormsModule,
   ],
   templateUrl: './application-detail.component.html',
   animations: [dropdownAnimation],
@@ -134,12 +137,26 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       template: new FormControl(''),
     }),
   });
-
   newVersionFormLoading = signal(false);
   editForm = new FormGroup({
     name: new FormControl('', Validators.required),
   });
   editFormLoading = signal(false);
+
+  @ViewChild('versionDetailsModal') protected readonly versionDetailsModal!: TemplateRef<unknown>;
+  protected readonly selectedVersion = signal<ApplicationVersion | undefined>(undefined);
+  versionDetailsForm = new FormGroup({
+    kubernetes: new FormGroup(
+      {
+        baseValues: new FormControl(''),
+        template: new FormControl(''),
+      }
+    ),
+    docker: new FormGroup({
+      compose: new FormControl(''),
+      template: new FormControl(''),
+    }),
+  })
 
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
@@ -155,8 +172,8 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   readonly isVersionFormExpanded = signal(false);
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
-
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
+  private modal?: DialogRef;
 
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
@@ -170,6 +187,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.newVersionForm.controls.kubernetes.controls.chartName.disable();
         }
       });
+    this.versionDetailsForm.disable();
   }
 
   ngOnDestroy() {
@@ -262,11 +280,18 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   async fillVersionFormWith(application: Application, version: ApplicationVersion) {
     this.isVersionFormExpanded.set(true);
+    const val = await this.loadVersionDetails(application, version);
+    if(val) {
+      this.newVersionForm.patchValue(val);
+    }
+  }
+
+  async loadVersionDetails(application: Application, version: ApplicationVersion) {
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
         const values = await firstValueFrom(this.applicationService.getValuesFile(application.id!, version.id!));
-        this.newVersionForm.patchValue({
+        return {
           kubernetes: {
             chartType: version.chartType,
             chartName: version.chartName,
@@ -275,30 +300,33 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
             baseValues: values,
             template: template,
           },
-        });
+        };
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
           this.toast.error(msg);
         }
+        return undefined;
       }
     } else if (application.type === 'docker') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
         const compose = await firstValueFrom(this.applicationService.getComposeFile(application.id!, version.id!));
-        this.newVersionForm.patchValue({
+        return {
           docker: {
             compose,
             template: template,
           },
-        });
+        };
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
           this.toast.error(msg);
         }
+        return undefined;
       }
     }
+    return undefined;
   }
 
   deleteApplication(application: Application) {
@@ -386,6 +414,23 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected hideModal(): void {
+    this.versionDetailsForm.reset();
+    this.modal?.close();
+  }
+
+  async openVersionDetails(application: Application, version: ApplicationVersion) {
+    this.hideModal();
+    this.selectedVersion.set(version);
+    const val = await this.loadVersionDetails(application, version);
+    if(val) {
+      this.versionDetailsForm.patchValue(val);
+      this.modal = this.overlay.showModal(this.versionDetailsModal, {
+        positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+      });
+    }
+  }
+
   private enableTypeSpecificGroups(app: Application) {
     if (app.type === 'kubernetes') {
       enableControlsWithoutEvent(this.newVersionForm.controls.kubernetes);
@@ -441,4 +486,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       versions.every((version) => this.isVersionSelected(version))
     );
   }
+
+  protected readonly faEye = faEye;
 }
