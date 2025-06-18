@@ -5,6 +5,7 @@ import (
 
 	"github.com/glasskube/distr/internal/db/queryable"
 	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/oidc"
 	"go.uber.org/zap"
 )
 
@@ -24,6 +25,7 @@ const (
 	ctxKeyApplicationLicense
 	ctxKeyArtifactLicense
 	ctxKeyIPAddress
+	ctxKeyOIDCer
 )
 
 func GetDb(ctx context.Context) queryable.Queryable {
@@ -67,4 +69,17 @@ func GetMailer(ctx context.Context) mail.Mailer {
 
 func WithMailer(ctx context.Context, mailer mail.Mailer) context.Context {
 	return context.WithValue(ctx, ctxKeyMailer, mailer)
+}
+
+func GetOIDCer(ctx context.Context) *oidc.OIDCer {
+	if oidcer, ok := ctx.Value(ctxKeyOIDCer).(*oidc.OIDCer); ok {
+		if oidcer != nil {
+			return oidcer
+		}
+	}
+	panic("oidcer not contained in context")
+}
+
+func WithOIDCer(ctx context.Context, oidcer *oidc.OIDCer) context.Context {
+	return context.WithValue(ctx, ctxKeyOIDCer, oidcer)
 }

@@ -87,6 +87,26 @@ hub:
       value: '1h'
     - name: LOG_RECORD_ENTRIES_MAX_COUNT
       value: '500'
+    # - name: OIDC_GITHUB_ENABLED
+    #   value: 'true'
+    # - name: OIDC_GITHUB_CLIENT_ID # required if OIDC_GITHUB_ENABLED
+    #   value:
+    # - name: OIDC_GITHUB_CLIENT_SECRET # required if OIDC_GITHUB_ENABLED
+    #   value:
+    # - name: OIDC_GOOGLE_ENABLED
+    #   value: 'true'
+    # - name: OIDC_GOOGLE_CLIENT_ID # required if OIDC_GOOGLE_ENABLED
+    #   value:
+    # - name: OIDC_GOOGLE_CLIENT_SECRET # required if OIDC_GOOGLE_ENABLED
+    #   value:
+    # - name: OIDC_MICROSOFT_ENABLED
+    #   value: 'true'
+    # - name: OIDC_MICROSOFT_CLIENT_ID # required if OIDC_MICROSOFT_ENABLED
+    #   value:
+    # - name: OIDC_MICROSOFT_CLIENT_SECRET # required if OIDC_MICROSOFT_ENABLED
+    #   value:
+    # - name: OIDC_MICROSOFT_TENANT_ID # required if OIDC_MICROSOFT_ENABLED
+    #   value:
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -210,6 +230,10 @@ cronJobs:
     labels:
       distr.sh/job: deployment-target-status-cleanup
     args: [cleanup, DeploymentTargetStatus, --timeout 10m]
+  - name: oidcstate-cleanup
+    labels:
+      distr.sh/job: oidcstate-cleanup
+    args: [cleanup, OIDCState, --timeout 10m]
 
 postgresql:
   enabled: false

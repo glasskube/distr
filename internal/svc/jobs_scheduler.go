@@ -72,5 +72,15 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 		}
 	}
 
+	if cron := env.CleanupOIDCStateCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob("OIDCStateCleanup", cleanup.RunOIDCStateCleanup, env.CleanupOIDCStateCronTimeout()),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return scheduler, nil
 }
