@@ -10,7 +10,8 @@ import {
   faBoxesStacked,
   faCheck,
   faChevronDown,
-  faEdit, faEye,
+  faEdit,
+  faEye,
   faMagnifyingGlass,
   faTrash,
   faXmark,
@@ -146,17 +147,15 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   @ViewChild('versionDetailsModal') protected readonly versionDetailsModal!: TemplateRef<unknown>;
   protected readonly selectedVersion = signal<ApplicationVersion | undefined>(undefined);
   versionDetailsForm = new FormGroup({
-    kubernetes: new FormGroup(
-      {
-        baseValues: new FormControl(''),
-        template: new FormControl(''),
-      }
-    ),
+    kubernetes: new FormGroup({
+      baseValues: new FormControl(''),
+      template: new FormControl(''),
+    }),
     docker: new FormGroup({
       compose: new FormControl(''),
       template: new FormControl(''),
     }),
-  })
+  });
 
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
@@ -281,7 +280,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   async fillVersionFormWith(application: Application, version: ApplicationVersion) {
     this.isVersionFormExpanded.set(true);
     const val = await this.loadVersionDetails(application, version);
-    if(val) {
+    if (val) {
       this.newVersionForm.patchValue(val);
     }
   }
@@ -423,7 +422,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
     this.hideModal();
     this.selectedVersion.set(version);
     const val = await this.loadVersionDetails(application, version);
-    if(val) {
+    if (val) {
       this.versionDetailsForm.patchValue(val);
       this.modal = this.overlay.showModal(this.versionDetailsModal, {
         positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
