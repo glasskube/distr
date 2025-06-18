@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.12.1](https://github.com/glasskube/distr/compare/1.12.0...1.12.1) (2025-06-18)
+
+
+### Bug Fixes
+
+* **backend:** change https detection for OIDC redirect URI ([#1072](https://github.com/glasskube/distr/issues/1072)) ([5567d32](https://github.com/glasskube/distr/commit/5567d32d6df893172d0697188118c4e3f8099e8c))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v20.0.3 ([#1071](https://github.com/glasskube/distr/issues/1071)) ([70019df](https://github.com/glasskube/distr/commit/70019dff4b0cbc2b6c87a25aeaf3ea68703049a9))
+* **deps:** update docker/setup-buildx-action action to v3.11.1 ([#1075](https://github.com/glasskube/distr/issues/1075)) ([b5b5a11](https://github.com/glasskube/distr/commit/b5b5a11442a1ad1722632cb8ae1283fa70298c2e))
+* **ui:** make application details accessible in modal ([#1073](https://github.com/glasskube/distr/issues/1073)) ([976396c](https://github.com/glasskube/distr/commit/976396c9b1648f83b71d37ddabf3a1a8dc44514d))
+
 ## [1.12.0](https://github.com/glasskube/distr/compare/1.11.2...1.12.0) (2025-06-18)
 
 
