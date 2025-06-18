@@ -3,15 +3,18 @@ package oidc
 import (
 	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/glasskube/distr/internal/env"
 )
 
 func GetRequestSchemeAndHost(r *http.Request) string {
-	host := r.Host
+	host := env.Host()
 	scheme := "http"
-	if r.TLS != nil {
+	if strings.HasPrefix(host, "https") {
 		scheme = "https"
 	}
-	return fmt.Sprintf("%v://%v", scheme, host)
+	return fmt.Sprintf("%v://%v", scheme, r.Host)
 }
 
 func getRedirectURL(r *http.Request, provider Provider) string {
