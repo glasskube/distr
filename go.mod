@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.4
 	github.com/compose-spec/compose-go/v2 v2.6.4
 	github.com/containerd/log v0.1.0
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/docker/cli v28.2.2+incompatible
 	github.com/docker/compose/v2 v2.37.1
 	github.com/docker/docker v28.2.2+incompatible
@@ -57,6 +58,11 @@ require (
 	k8s.io/kubectl v0.33.1
 	k8s.io/metrics v0.33.1
 	oras.land/oras-go/v2 v2.6.0
+)
+
+require (
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 )
 
 require (
@@ -305,7 +311,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.6.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
+	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect

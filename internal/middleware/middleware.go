@@ -14,6 +14,7 @@ import (
 	"github.com/glasskube/distr/internal/authn/authinfo"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,13 +26,16 @@ import (
 	"go.uber.org/zap"
 )
 
-func ContextInjectorMiddleware(db *pgxpool.Pool, mailer mail.Mailer) func(next http.Handler) http.Handler {
+func ContextInjectorMiddleware(
+	db *pgxpool.Pool, mailer mail.Mailer, oidcer *oidc.OIDCer,
+) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			ctx = internalctx.WithDb(ctx, db)
 			ctx = internalctx.WithMailer(ctx, mailer)
 			ctx = internalctx.WithRequestIPAddress(ctx, r.RemoteAddr)
+			ctx = internalctx.WithOIDCer(ctx, oidcer)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

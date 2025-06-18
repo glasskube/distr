@@ -49,3 +49,6 @@ Thumbs.db
 .sentryclirc
 
 *.tgz
+
+# dev variables that are sensitive
+.env.development.local.secret

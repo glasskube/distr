@@ -144,7 +144,7 @@ func NewDefault(
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,
-			middleware.ContextInjectorMiddleware(pool, mailer),
+			middleware.ContextInjectorMiddleware(pool, mailer, nil),
 			auth.ArtifactsAuthentication.Middleware,
 			middleware.RequireOrgAndRole,
 		),
