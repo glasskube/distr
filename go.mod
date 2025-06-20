@@ -19,7 +19,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.33.0
 	github.com/getsentry/sentry-go/otel v0.33.0
-	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httprate v0.15.0
 	github.com/go-chi/jwtauth/v5 v5.3.3
 	github.com/go-co-op/gocron/v2 v2.16.2
