@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.12.2](https://github.com/glasskube/distr/compare/1.12.1...1.12.2) (2025-06-21)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v20.0.4 ([#1077](https://github.com/glasskube/distr/issues/1077)) ([a5cd1df](https://github.com/glasskube/distr/commit/a5cd1dfec1c016e273597e66113947fbc329cc19))
+* **deps:** update kubernetes packages to v0.33.2 ([#1080](https://github.com/glasskube/distr/issues/1080)) ([bc799ba](https://github.com/glasskube/distr/commit/bc799baccc82e06dffcaf9c00a116db62844e832))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.81.0 ([#1078](https://github.com/glasskube/distr/issues/1078)) ([1f3cb28](https://github.com/glasskube/distr/commit/1f3cb28f0e41d405263fda7901fc9e2cc3da6902))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.5 ([#1085](https://github.com/glasskube/distr/issues/1085)) ([6e41d3a](https://github.com/glasskube/distr/commit/6e41d3aaae4cf7d0854ceedc84a8df95a14b25c0))
+* **deps:** update module github.com/docker/compose/v2 to v2.37.2 ([#1084](https://github.com/glasskube/distr/issues/1084)) ([ffe34f4](https://github.com/glasskube/distr/commit/ffe34f45ab514e782d467e1367641a57be067cf5))
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.2 [security] ([#1083](https://github.com/glasskube/distr/issues/1083)) ([90ed87d](https://github.com/glasskube/distr/commit/90ed87d7dbdc9297413a851f02e72d205d728806))
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.26.2 ([#1086](https://github.com/glasskube/distr/issues/1086)) ([9c50879](https://github.com/glasskube/distr/commit/9c508790403e7564d1f440e6d41f1bdaa37fdbe2))
+* **deps:** update dependency typedoc-plugin-markdown to v4.7.0 ([#1081](https://github.com/glasskube/distr/issues/1081)) ([fbbed23](https://github.com/glasskube/distr/commit/fbbed230dc467d8d457490dc6a960f38db1b3d9a))
+
 ## [1.12.1](https://github.com/glasskube/distr/compare/1.12.0...1.12.1) (2025-06-18)
 
 
