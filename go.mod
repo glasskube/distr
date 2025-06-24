@@ -17,8 +17,8 @@ require (
 	github.com/docker/docker v28.2.2+incompatible
 	github.com/exaring/otelpgx v0.9.3
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/getsentry/sentry-go v0.33.0
-	github.com/getsentry/sentry-go/otel v0.33.0
+	github.com/getsentry/sentry-go v0.34.0
+	github.com/getsentry/sentry-go/otel v0.34.0
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httprate v0.15.0
 	github.com/go-chi/jwtauth/v5 v5.3.3
