@@ -35,10 +35,10 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.128.0
 	github.com/spf13/cobra v1.9.1
 	github.com/wneessen/go-mail v0.6.2
-	go.opentelemetry.io/collector/component v1.34.0
+	go.opentelemetry.io/collector/component v1.35.0
 	go.opentelemetry.io/collector/confmap v1.34.0
 	go.opentelemetry.io/collector/consumer v1.34.0
-	go.opentelemetry.io/collector/pdata v1.34.0
+	go.opentelemetry.io/collector/pdata v1.35.0
 	go.opentelemetry.io/collector/receiver v1.34.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.61.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0
@@ -93,10 +93,10 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zclconf/go-cty v1.16.3 // indirect
 	go.opentelemetry.io/collector/confmap/xconfmap v0.128.0 // indirect
-	go.opentelemetry.io/collector/featuregate v1.34.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.35.0 // indirect
 	go.opentelemetry.io/collector/filter v0.128.0 // indirect
-	go.opentelemetry.io/collector/internal/telemetry v0.128.0 // indirect
-	go.opentelemetry.io/collector/pipeline v0.128.0 // indirect
+	go.opentelemetry.io/collector/internal/telemetry v0.129.0 // indirect
+	go.opentelemetry.io/collector/pipeline v0.129.0 // indirect
 	go.opentelemetry.io/collector/receiver/receiverhelper v0.128.0 // indirect
 	go.opentelemetry.io/collector/scraper v0.128.0 // indirect
 	go.opentelemetry.io/collector/scraper/scraperhelper v0.128.0 // indirect
