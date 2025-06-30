@@ -37,8 +37,8 @@ require (
 	github.com/wneessen/go-mail v0.6.2
 	go.opentelemetry.io/collector/component v1.34.0
 	go.opentelemetry.io/collector/confmap v1.34.0
-	go.opentelemetry.io/collector/consumer v1.34.0
-	go.opentelemetry.io/collector/pdata v1.34.0
+	go.opentelemetry.io/collector/consumer v1.35.0
+	go.opentelemetry.io/collector/pdata v1.35.0
 	go.opentelemetry.io/collector/receiver v1.34.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.61.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0
