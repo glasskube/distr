@@ -44,7 +44,6 @@ import {DeploymentStatusDot, StatusDotComponent} from '../../components/status-d
 import {UuidComponent} from '../../components/uuid';
 import {AgentVersionService} from '../../services/agent-version.service';
 import {AuthService} from '../../services/auth.service';
-import {DeploymentStatusService} from '../../services/deployment-status.service';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
@@ -77,7 +76,6 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
 export class DeploymentTargetCardComponent {
   private readonly agentVersionsSvc = inject(AgentVersionService);
   private readonly overlay = inject(OverlayService);
-  private readonly deploymentStatuses = inject(DeploymentStatusService);
   protected readonly auth = inject(AuthService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly toast = inject(ToastService);
@@ -95,6 +93,7 @@ export class DeploymentTargetCardComponent {
   @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<unknown>;
   @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<unknown>;
   @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<unknown>;
+  @ViewChild('deleteDeploymentProgressModal') protected readonly deleteDeploymentProgressModal!: TemplateRef<unknown>;
 
   protected readonly faShip = faShip;
   protected readonly faLink = faLink;
@@ -319,7 +318,12 @@ export class DeploymentTargetCardComponent {
             },
           })
         )
-      )
+      ) {
+        const modalRef = this.overlay.showModal(this.deleteDeploymentProgressModal, {
+          positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+          backdropStyleOnly: true,
+        });
+
         try {
           await firstValueFrom(this.deploymentTargets.undeploy(d.id));
         } catch (e) {
@@ -327,7 +331,10 @@ export class DeploymentTargetCardComponent {
           if (msg) {
             this.toast.error(msg);
           }
+        } finally {
+          modalRef?.dismiss();
         }
+      }
     }
   }
 
