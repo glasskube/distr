@@ -41,6 +41,7 @@ func runServe(ctx context.Context, opts ServeOptions) {
 	util.Must(sentry.Init(sentry.ClientOptions{
 		Dsn:              env.SentryDSN(),
 		Debug:            env.SentryDebug(),
+		Environment:      env.SentryEnvironment(),
 		EnableTracing:    env.OtelExporterSentryEnabled(),
 		TracesSampleRate: 1.0,
 		Release:          buildconfig.Version(),

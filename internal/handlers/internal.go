@@ -17,6 +17,7 @@ func getFrontendEnvironmentHandler() http.HandlerFunc {
 	// precompute the json response
 	frontendEnvJSON := util.Require(json.Marshal(struct {
 		SentryDSN             *string  `json:"sentryDsn,omitempty"`
+		SentryEnvironment     string   `json:"sentryEnvironment,omitzero"`
 		SentryTraceSampleRate *float64 `json:"sentryTraceSampleRate,omitempty"`
 		PosthogToken          *string  `json:"posthogToken,omitempty"`
 		PosthogAPIHost        *string  `json:"posthogApiHost,omitempty"`
@@ -24,6 +25,7 @@ func getFrontendEnvironmentHandler() http.HandlerFunc {
 		RegistryHost          string   `json:"registryHost"`
 	}{
 		SentryDSN:             env.FrontendSentryDSN(),
+		SentryEnvironment:     env.SentryEnvironment(),
 		SentryTraceSampleRate: env.FrontendSentryTraceSampleRate(),
 		PosthogToken:          env.FrontendPosthogToken(),
 		PosthogAPIHost:        env.FrontendPosthogAPIHost(),

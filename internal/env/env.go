@@ -29,6 +29,7 @@ var (
 	logRecordEntriesMaxCount               *int
 	sentryDSN                              string
 	sentryDebug                            bool
+	sentryEnvironment                      string
 	otelAgentSampler                       *SamplerConfig
 	otelRegistrySampler                    *SamplerConfig
 	otelExporterSentryEnabled              bool
@@ -137,6 +138,7 @@ func Initialize() {
 
 	sentryDSN = envutil.GetEnv("SENTRY_DSN")
 	sentryDebug = envutil.GetEnvParsedOrDefault("SENTRY_DEBUG", strconv.ParseBool, false)
+	sentryEnvironment = envutil.GetEnv("SENTRY_ENVIRONMENT")
 	otelExporterSentryEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_SENTRY_ENABLED", strconv.ParseBool, false)
 	otelExporterOtlpEnabled = envutil.GetEnvParsedOrDefault("OTEL_EXPORTER_OTLP_ENABLED", strconv.ParseBool, false)
 	if s := envutil.GetEnvParsedOrNil("OTEL_AGENT_SAMPLER", parseSamplerType); s != nil {
@@ -241,6 +243,10 @@ func SentryDSN() string {
 
 func SentryDebug() bool {
 	return sentryDebug
+}
+
+func SentryEnvironment() string {
+	return sentryEnvironment
 }
 
 func EnableQueryLogging() bool {
