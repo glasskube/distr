@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.12.2](https://github.com/glasskube/distr/compare/1.12.1...1.12.2) (2025-07-01)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v20.0.4 ([#1077](https://github.com/glasskube/distr/issues/1077)) ([a5cd1df](https://github.com/glasskube/distr/commit/a5cd1dfec1c016e273597e66113947fbc329cc19))
+* **deps:** update angular monorepo to v20.0.5 ([#1098](https://github.com/glasskube/distr/issues/1098)) ([4332cf4](https://github.com/glasskube/distr/commit/4332cf40dab65534d02ab9a3ff9b6300cb53e16f))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1102](https://github.com/glasskube/distr/issues/1102)) ([458114d](https://github.com/glasskube/distr/commit/458114dfa38bb170c344d7a535d4af222ec9e3fb))
+* **deps:** update codemirror ([#1099](https://github.com/glasskube/distr/issues/1099)) ([09a6322](https://github.com/glasskube/distr/commit/09a6322be634694cf67f7cabd7c3fb46575c80bf))
+* **deps:** update dependency @angular/cdk to v20.0.4 ([#1101](https://github.com/glasskube/distr/issues/1101)) ([230099d](https://github.com/glasskube/distr/commit/230099d27b445da89e48cacde248e2371320303a))
+* **deps:** update kubernetes packages to v0.33.2 ([#1080](https://github.com/glasskube/distr/issues/1080)) ([bc799ba](https://github.com/glasskube/distr/commit/bc799baccc82e06dffcaf9c00a116db62844e832))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.81.0 ([#1078](https://github.com/glasskube/distr/issues/1078)) ([1f3cb28](https://github.com/glasskube/distr/commit/1f3cb28f0e41d405263fda7901fc9e2cc3da6902))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.6.5 ([#1085](https://github.com/glasskube/distr/issues/1085)) ([6e41d3a](https://github.com/glasskube/distr/commit/6e41d3aaae4cf7d0854ceedc84a8df95a14b25c0))
+* **deps:** update module github.com/docker/cli to v28.3.0+incompatible ([#1092](https://github.com/glasskube/distr/issues/1092)) ([c055d1b](https://github.com/glasskube/distr/commit/c055d1b36a282f7ae12ac1efb7e99e8fa2ca1b84))
+* **deps:** update module github.com/docker/compose/v2 to v2.37.2 ([#1084](https://github.com/glasskube/distr/issues/1084)) ([ffe34f4](https://github.com/glasskube/distr/commit/ffe34f45ab514e782d467e1367641a57be067cf5))
+* **deps:** update module github.com/docker/compose/v2 to v2.37.3 ([#1091](https://github.com/glasskube/distr/issues/1091)) ([40b40e4](https://github.com/glasskube/distr/commit/40b40e4234db0498aa476821f4e35bcd961fd043))
+* **deps:** update module github.com/docker/compose/v2 to v2.38.1 ([#1116](https://github.com/glasskube/distr/issues/1116)) ([72c0e9c](https://github.com/glasskube/distr/commit/72c0e9c462f618e5a45631a934fc06e4ed800171))
+* **deps:** update module github.com/docker/docker to v28.3.0+incompatible ([#1093](https://github.com/glasskube/distr/issues/1093)) ([c3ddc07](https://github.com/glasskube/distr/commit/c3ddc07747e6b0e3b1dcb2ee47b7bb92c297c8f3))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.34.0 ([#1089](https://github.com/glasskube/distr/issues/1089)) ([5c1aaab](https://github.com/glasskube/distr/commit/5c1aaab5d57f44df43326bf3cd1989cd104f06ab))
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.2 [security] ([#1083](https://github.com/glasskube/distr/issues/1083)) ([90ed87d](https://github.com/glasskube/distr/commit/90ed87d7dbdc9297413a851f02e72d205d728806))
+* **deps:** update module github.com/masterminds/semver/v3 to v3.4.0 ([#1103](https://github.com/glasskube/distr/issues/1103)) ([f7b9096](https://github.com/glasskube/distr/commit/f7b9096243e42149fa4cddc4482dcfed9b8f2040))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.129.0 ([#1115](https://github.com/glasskube/distr/issues/1115)) ([077a063](https://github.com/glasskube/distr/commit/077a063b30b1ac3e6ffd7ab3922860c383958392))
+* **deps:** update opentelemetry-go monorepo to v1.37.0 ([#1094](https://github.com/glasskube/distr/issues/1094)) ([19aa86d](https://github.com/glasskube/distr/commit/19aa86d9ac480ab1c1874a10511b7a790b543425))
+* **deps:** update opentelemetry-go-contrib monorepo to v0.62.0 ([#1107](https://github.com/glasskube/distr/issues/1107)) ([915d7b1](https://github.com/glasskube/distr/commit/915d7b17109bc0bb4f0a497105533b63c4c6cf7e))
+* **registry:** prevent occasional S3 NoSuchKey error ([#1118](https://github.com/glasskube/distr/issues/1118)) ([997e5e9](https://github.com/glasskube/distr/commit/997e5e9718e925c355ccbf529dd9a18b42b27ca9))
+* **security:** add workflow read permission to validate migrations job ([#1090](https://github.com/glasskube/distr/issues/1090)) ([9c278a1](https://github.com/glasskube/distr/commit/9c278a106ac7732d744df75e28dc90c6a4b4c651))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v20.0.4 ([#1100](https://github.com/glasskube/distr/issues/1100)) ([0ef9ad1](https://github.com/glasskube/distr/commit/0ef9ad1ea8d61ec62d3d76488a060d9f190f24dd))
+* **deps:** update axllent/mailpit docker tag to v1.26.2 ([#1086](https://github.com/glasskube/distr/issues/1086)) ([9c50879](https://github.com/glasskube/distr/commit/9c508790403e7564d1f440e6d41f1bdaa37fdbe2))
+* **deps:** update axllent/mailpit docker tag to v1.27.0 ([#1105](https://github.com/glasskube/distr/issues/1105)) ([2e74ae6](https://github.com/glasskube/distr/commit/2e74ae682a7682d9296dd6ebf4f25b3eadab9cdb))
+* **deps:** update dependency golangci-lint to v2.2.1 ([#1106](https://github.com/glasskube/distr/issues/1106)) ([e017579](https://github.com/glasskube/distr/commit/e0175790a44295c0db74973af8e24eb2a2c2dc5e))
+* **deps:** update dependency prettier to v3.6.2 ([#1087](https://github.com/glasskube/distr/issues/1087)) ([95ea1e2](https://github.com/glasskube/distr/commit/95ea1e2cffab282f268dd09fda9413650dca64d9))
+* **deps:** update dependency typedoc to v0.28.7 ([#1096](https://github.com/glasskube/distr/issues/1096)) ([57d7200](https://github.com/glasskube/distr/commit/57d72008fda65cd659e2dae57cbbae20ee2a69dc))
+* **deps:** update dependency typedoc-plugin-markdown to v4.7.0 ([#1081](https://github.com/glasskube/distr/issues/1081)) ([fbbed23](https://github.com/glasskube/distr/commit/fbbed230dc467d8d457490dc6a960f38db1b3d9a))
+* **deps:** update tailwindcss monorepo to v4.1.11 ([#1097](https://github.com/glasskube/distr/issues/1097)) ([42f27a3](https://github.com/glasskube/distr/commit/42f27a3eba78b6535c5f175f9a509681130549f1))
+
 ## [1.12.1](https://github.com/glasskube/distr/compare/1.12.0...1.12.1) (2025-06-18)
 
 
