@@ -46,6 +46,7 @@ export type DeploymentFormValue = Partial<{
   envFileData: string;
   swarmMode: boolean;
   logsEnabled: boolean;
+  forceRestart: boolean;
 }>;
 
 export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRequest {
@@ -59,6 +60,7 @@ export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRe
     dockerType: value.swarmMode ? 'swarm' : 'compose',
     envFileData: value.envFileData ? btoa(value.envFileData) : undefined,
     logsEnabled: value.logsEnabled ?? false,
+    forceRestart: value.forceRestart ?? false,
   };
 }
 
@@ -99,6 +101,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     envFileData: this.fb.nonNullable.control(''),
     swarmMode: this.fb.nonNullable.control<boolean>(false),
     logsEnabled: this.fb.nonNullable.control<boolean>(false),
+    forceRestart: this.fb.nonNullable.control<boolean>(false),
   });
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
@@ -271,9 +274,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       if (id) {
         this.deployForm.controls.applicationId.disable();
         this.deployForm.controls.swarmMode.disable();
+        this.deployForm.controls.forceRestart.enable();
       } else {
         this.deployForm.controls.applicationId.enable();
         this.deployForm.controls.swarmMode.enable();
+        this.deployForm.controls.forceRestart.disable();
       }
     });
 

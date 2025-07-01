@@ -8,4 +8,5 @@ type DeploymentRevision struct {
 	ApplicationVersionID uuid.UUID `db:"application_version_id" json:"applicationVersionId"`
 	ValuesYaml           []byte    `db:"-" json:"valuesYaml,omitempty"`
 	EnvFileData          []byte    `db:"-" json:"-"`
+	ForceRestart         bool      `db:"force_restart" json:"forceRestart"`
 }

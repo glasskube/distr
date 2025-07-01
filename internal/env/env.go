@@ -9,53 +9,75 @@ import (
 
 	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )
 
 var (
-	databaseUrl                         string
-	databaseMaxConns                    *int
-	jwtSecret                           []byte
-	host                                string
-	registryHost                        string
-	mailerConfig                        MailerConfig
-	inviteTokenValidDuration            time.Duration
-	resetTokenValidDuration             time.Duration
-	agentTokenMaxValidDuration          time.Duration
-	agentInterval                       time.Duration
-	statusEntriesMaxAge                 *time.Duration
-	metricsEntriesMaxAge                *time.Duration
-	logRecordEntriesMaxCount            *int
-	sentryDSN                           string
-	sentryDebug                         bool
-	otelAgentSampler                    *SamplerConfig
-	otelRegistrySampler                 *SamplerConfig
-	otelExporterSentryEnabled           bool
-	otelExporterOtlpEnabled             bool
-	enableQueryLogging                  bool
-	agentDockerConfig                   []byte
-	frontendSentryDSN                   *string
-	frontendSentryTraceSampleRate       *float64
-	frontendPosthogToken                *string
-	frontendPosthogAPIHost              *string
-	frontendPosthogUIHost               *string
-	userEmailVerificationRequired       bool
-	serverShutdownDelayDuration         *time.Duration
-	registration                        RegistrationMode
-	registryEnabled                     bool
-	registryS3Config                    S3Config
-	artifactTagsDefaultLimitPerOrg      int
-	cleanupDeploymentRevisionStatusCron *string
-	cleanupDeploymentTargetStatusCron   *string
-	cleanupDeploymentTargetMetricsCron  *string
-	cleanupDeploymentLogRecordCron      *string
+	databaseUrl                            string
+	databaseMaxConns                       *int
+	jwtSecret                              []byte
+	host                                   string
+	registryHost                           string
+	mailerConfig                           MailerConfig
+	inviteTokenValidDuration               time.Duration
+	resetTokenValidDuration                time.Duration
+	agentTokenMaxValidDuration             time.Duration
+	agentInterval                          time.Duration
+	statusEntriesMaxAge                    *time.Duration
+	metricsEntriesMaxAge                   *time.Duration
+	logRecordEntriesMaxCount               *int
+	sentryDSN                              string
+	sentryDebug                            bool
+	otelAgentSampler                       *SamplerConfig
+	otelRegistrySampler                    *SamplerConfig
+	otelExporterSentryEnabled              bool
+	otelExporterOtlpEnabled                bool
+	enableQueryLogging                     bool
+	agentDockerConfig                      []byte
+	frontendSentryDSN                      *string
+	frontendSentryTraceSampleRate          *float64
+	frontendPosthogToken                   *string
+	frontendPosthogAPIHost                 *string
+	frontendPosthogUIHost                  *string
+	userEmailVerificationRequired          bool
+	serverShutdownDelayDuration            *time.Duration
+	registration                           RegistrationMode
+	registryEnabled                        bool
+	registryS3Config                       S3Config
+	artifactTagsDefaultLimitPerOrg         int
+	cleanupDeploymentRevisionStatusCron    *string
+	cleanupDeploymentRevisionStatusTimeout time.Duration
+	cleanupDeploymentTargetStatusCron      *string
+	cleanupDeploymentTargetStatusTimeout   time.Duration
+	cleanupDeploymentTargetMetricsCron     *string
+	cleanupDeploymentTargetMetricsTimeout  time.Duration
+	cleanupDeploymentLogRecordCron         *string
+	cleanupDeploymentLogRecordTimeout      time.Duration
+	cleanupOIDCStateCron                   *string
+	cleanupOIDCStateCronTimeout            time.Duration
+	oidcGithubEnabled                      bool
+	oidcGithubClientID                     *string
+	oidcGithubClientSecret                 *string
+	oidcGoogleEnabled                      bool
+	oidcGoogleClientID                     *string
+	oidcGoogleClientSecret                 *string
+	oidcMicrosoftEnabled                   bool
+	oidcMicrosoftClientID                  *string
+	oidcMicrosoftClientSecret              *string
+	oidcMicrosoftTenantID                  *string
+	wellKnownMicrosoftIdentityAssociation  []byte
 )
 
 func Initialize() {
 	if currentEnv, ok := os.LookupEnv("DISTR_ENV"); ok {
 		fmt.Fprintf(os.Stderr, "environment=%v\n", currentEnv)
 		if err := godotenv.Load(currentEnv); err != nil {
-			fmt.Fprintf(os.Stderr, "environment not loaded: %v\n", err)
+			fmt.Fprintf(os.Stderr, "environment %v not loaded: %v\n", currentEnv, err)
+		}
+		secretEnv := currentEnv + ".secret"
+		if err := godotenv.Load(secretEnv); err != nil {
+			fmt.Fprintf(os.Stderr, "environment %v not loaded: %v\n", secretEnv, err)
 		}
 	}
 
@@ -138,9 +160,39 @@ func Initialize() {
 	frontendPosthogUIHost = envutil.GetEnvOrNil("FRONTEND_POSTHOG_UI_HOST")
 
 	cleanupDeploymentRevisionStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_REVISION_STATUS_CRON")
+	cleanupDeploymentRevisionStatusTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_REVISION_STATUS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentTargetStatusCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_STATUS_CRON")
+	cleanupDeploymentTargetStatusTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_TARGET_STATUS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentTargetMetricsCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_TARGET_METRICS_CRON")
+	cleanupDeploymentTargetMetricsTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_TARGET_METRICS_TIMEOUT",
+		envparse.PositiveDuration, 0)
 	cleanupDeploymentLogRecordCron = envutil.GetEnvOrNil("CLEANUP_DEPLOYMENT_LOG_RECORD_CRON")
+	cleanupDeploymentLogRecordTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_DEPLOYMENT_LOG_RECORD_TIMEOUT",
+		envparse.PositiveDuration, 0)
+	cleanupOIDCStateCron = envutil.GetEnvOrNil("CLEANUP_OIDC_STATE_CRON")
+	cleanupOIDCStateCronTimeout = envutil.GetEnvParsedOrDefault("CLEANUP_OIDC_STATE_CRON_TIMEOUT",
+		envparse.PositiveDuration, 0)
+
+	oidcGithubEnabled = envutil.GetEnvParsedOrDefault("OIDC_GITHUB_ENABLED", strconv.ParseBool, false)
+	if oidcGithubEnabled {
+		oidcGithubClientID = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_ID"))
+		oidcGithubClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GITHUB_CLIENT_SECRET"))
+	}
+	oidcGoogleEnabled = envutil.GetEnvParsedOrDefault("OIDC_GOOGLE_ENABLED", strconv.ParseBool, false)
+	if oidcGoogleEnabled {
+		oidcGoogleClientID = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_ID"))
+		oidcGoogleClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GOOGLE_CLIENT_SECRET"))
+	}
+	oidcMicrosoftEnabled = envutil.GetEnvParsedOrDefault("OIDC_MICROSOFT_ENABLED", strconv.ParseBool, false)
+	if oidcMicrosoftEnabled {
+		oidcMicrosoftClientID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_ID"))
+		oidcMicrosoftClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_CLIENT_SECRET"))
+		oidcMicrosoftTenantID = util.PtrTo(envutil.RequireEnv("OIDC_MICROSOFT_TENANT_ID"))
+	}
+	wellKnownMicrosoftIdentityAssociation = envutil.GetEnvParsedOrDefault(
+		"WELLKNOWN_MICROSOFT_IDENTITY_ASSOCIATION_JSON", envparse.ByteSlice, nil)
 }
 
 func DatabaseUrl() string {
@@ -275,14 +327,82 @@ func CleanupDeploymenRevisionStatusCron() *string {
 	return cleanupDeploymentRevisionStatusCron
 }
 
+func CleanupDeploymenRevisionStatusTimeout() time.Duration {
+	return cleanupDeploymentRevisionStatusTimeout
+}
+
 func CleanupDeploymenTargetStatusCron() *string {
 	return cleanupDeploymentTargetStatusCron
+}
+
+func CleanupDeploymenTargetStatusTimeout() time.Duration {
+	return cleanupDeploymentTargetStatusTimeout
 }
 
 func CleanupDeploymentTargetMetricsCron() *string {
 	return cleanupDeploymentTargetMetricsCron
 }
 
+func CleanupDeploymentTargetMetricsTimeout() time.Duration {
+	return cleanupDeploymentTargetMetricsTimeout
+}
+
 func CleanupDeploymentLogRecordCron() *string {
 	return cleanupDeploymentLogRecordCron
+}
+
+func CleanupDeploymentLogRecordTimeout() time.Duration {
+	return cleanupDeploymentLogRecordTimeout
+}
+
+func CleanupOIDCStateCron() *string {
+	return cleanupOIDCStateCron
+}
+
+func CleanupOIDCStateCronTimeout() time.Duration {
+	return cleanupOIDCStateCronTimeout
+}
+
+func OIDCGithubEnabled() bool {
+	return oidcGithubEnabled
+}
+
+func OIDCGithubClientID() *string {
+	return oidcGithubClientID
+}
+
+func OIDCGithubClientSecret() *string {
+	return oidcGithubClientSecret
+}
+
+func OIDCGoogleEnabled() bool {
+	return oidcGoogleEnabled
+}
+
+func OIDCGoogleClientID() *string {
+	return oidcGoogleClientID
+}
+
+func OIDCGoogleClientSecret() *string {
+	return oidcGoogleClientSecret
+}
+
+func OIDCMicrosoftEnabled() bool {
+	return oidcMicrosoftEnabled
+}
+
+func OIDCMicrosoftClientID() *string {
+	return oidcMicrosoftClientID
+}
+
+func OIDCMicrosoftClientSecret() *string {
+	return oidcMicrosoftClientSecret
+}
+
+func OIDCMicrosoftTenantID() *string {
+	return oidcMicrosoftTenantID
+}
+
+func WellKnownMicrosoftIdentityAssociation() []byte {
+	return wellKnownMicrosoftIdentityAssociation
 }

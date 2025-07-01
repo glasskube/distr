@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -13,21 +14,28 @@ import (
 	"github.com/glasskube/distr/internal/authn/authinfo"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/mail"
+	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
-func ContextInjectorMiddleware(db *pgxpool.Pool, mailer mail.Mailer) func(next http.Handler) http.Handler {
+func ContextInjectorMiddleware(
+	db *pgxpool.Pool, mailer mail.Mailer, oidcer *oidc.OIDCer,
+) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			ctx = internalctx.WithDb(ctx, db)
 			ctx = internalctx.WithMailer(ctx, mailer)
 			ctx = internalctx.WithRequestIPAddress(ctx, r.RemoteAddr)
+			ctx = internalctx.WithOIDCer(ctx, oidcer)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -163,3 +171,37 @@ func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) htt
 }
 
 var LicensingFeatureFlagEnabledMiddleware = FeatureFlagMiddleware(types.FeatureLicensing)
+
+func SetRequestPattern(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+		if r.Pattern == "" {
+			r.Pattern = chi.RouteContext(r.Context()).RoutePattern()
+		}
+	})
+}
+
+func OTEL(provider trace.TracerProvider) func(next http.Handler) http.Handler {
+	mw := otelhttp.NewMiddleware(
+		"",
+		otelhttp.WithTracerProvider(provider),
+		otelhttp.WithSpanNameFormatter(
+			func(operation string, r *http.Request) string {
+				var b strings.Builder
+				if operation != "" {
+					b.WriteString(operation)
+					b.WriteString(" ")
+				}
+				b.WriteString(r.Method)
+				if r.Pattern != "" {
+					b.WriteString(" ")
+					b.WriteString(r.Pattern)
+				}
+				return b.String()
+			},
+		),
+	)
+	return func(next http.Handler) http.Handler {
+		return mw(SetRequestPattern(next))
+	}
+}

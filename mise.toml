@@ -1,5 +1,8 @@
 [tools]
 node = "24"
 go = "1.24.4"
-golangci-lint = "2.1.6"
+golangci-lint = "2.2.1"
 helm-docs = "1.14.2"
+
+[env]
+DISTR_ENV = '.env.development.local'

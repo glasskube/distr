@@ -42,7 +42,6 @@ import (
 	"github.com/glasskube/distr/internal/registry/manifest/db"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
@@ -141,11 +140,11 @@ func NewDefault(
 			chimiddleware.Recoverer,
 			chimiddleware.RequestID,
 			chimiddleware.RealIP,
-			otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracer)),
+			middleware.OTEL(tracer),
 			middleware.Sentry,
 			middleware.LoggerCtxMiddleware(logger),
 			middleware.LoggingMiddleware,
-			middleware.ContextInjectorMiddleware(pool, mailer),
+			middleware.ContextInjectorMiddleware(pool, mailer, nil),
 			auth.ArtifactsAuthentication.Middleware,
 			middleware.RequireOrgAndRole,
 		),

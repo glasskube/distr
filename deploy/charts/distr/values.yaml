@@ -87,6 +87,26 @@ hub:
       value: '1h'
     - name: LOG_RECORD_ENTRIES_MAX_COUNT
       value: '500'
+    # - name: OIDC_GITHUB_ENABLED
+    #   value: 'true'
+    # - name: OIDC_GITHUB_CLIENT_ID # required if OIDC_GITHUB_ENABLED
+    #   value:
+    # - name: OIDC_GITHUB_CLIENT_SECRET # required if OIDC_GITHUB_ENABLED
+    #   value:
+    # - name: OIDC_GOOGLE_ENABLED
+    #   value: 'true'
+    # - name: OIDC_GOOGLE_CLIENT_ID # required if OIDC_GOOGLE_ENABLED
+    #   value:
+    # - name: OIDC_GOOGLE_CLIENT_SECRET # required if OIDC_GOOGLE_ENABLED
+    #   value:
+    # - name: OIDC_MICROSOFT_ENABLED
+    #   value: 'true'
+    # - name: OIDC_MICROSOFT_CLIENT_ID # required if OIDC_MICROSOFT_ENABLED
+    #   value:
+    # - name: OIDC_MICROSOFT_CLIENT_SECRET # required if OIDC_MICROSOFT_ENABLED
+    #   value:
+    # - name: OIDC_MICROSOFT_TENANT_ID # required if OIDC_MICROSOFT_ENABLED
+    #   value:
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -96,12 +116,10 @@ podAnnotations: {}
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
-podSecurityContext:
-  {}
+podSecurityContext: {}
   # fsGroup: 2000
 
-securityContext:
-  {}
+securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -121,8 +139,7 @@ service:
 ingress:
   enabled: false
   className: ''
-  annotations:
-    {}
+  annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
@@ -143,8 +160,7 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources:
-  {}
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -197,19 +213,23 @@ cronJobs:
   - name: deployment-log-record-cleanup
     labels:
       distr.sh/job: deployment-log-record-cleanup
-    args: [cleanup, DeploymentLogRecord]
+    args: [cleanup, DeploymentLogRecord, --timeout 10m]
   - name: deployment-revision-status-cleanup
     labels:
       distr.sh/job: deployment-revision-status-cleanup
-    args: [cleanup, DeploymentRevisionStatus]
+    args: [cleanup, DeploymentRevisionStatus, --timeout 10m]
   - name: deployment-target-metrics-cleanup
     labels:
       distr.sh/job: deployment-target-metrics-cleanup
-    args: [cleanup, DeploymentTargetMetrics]
+    args: [cleanup, DeploymentTargetMetrics, --timeout 10m]
   - name: deployment-target-status-cleanup
     labels:
       distr.sh/job: deployment-target-status-cleanup
-    args: [cleanup, DeploymentTargetStatus]
+    args: [cleanup, DeploymentTargetStatus, --timeout 10m]
+  - name: oidcstate-cleanup
+    labels:
+      distr.sh/job: oidcstate-cleanup
+    args: [cleanup, OIDCState, --timeout 10m]
 
 postgresql:
   enabled: false

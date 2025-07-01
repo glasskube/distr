@@ -33,6 +33,9 @@ func (m *Manager) AddToolsToServer(mcpServer *server.MCPServer) {
 		m.NewGetApplicationVersionTool(),
 		m.NewCreateApplicationVersionTool(),
 		m.NewUpdateApplicationVersionTool(),
+		m.NewComposeFileTool(),
+		m.NewValuesFileTool(),
+		m.NewTemplateFileTool(),
 
 		// Application License tools
 		m.NewListApplicationLicensesTool(),
@@ -65,5 +68,8 @@ func (m *Manager) AddToolsToServer(mcpServer *server.MCPServer) {
 		m.NewCreateOrUpdateDeploymentTool(),
 		m.NewPatchDeploymentTool(),
 		m.NewDeleteDeploymentTool(),
+		m.NewStatusTool(),
+		m.NewLogsTool(),
+		m.NewLogResourcesTool(),
 	)
 }

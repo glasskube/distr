@@ -7,6 +7,10 @@ LDFLAGS ?= -s -w -X github.com/glasskube/distr/internal/buildconfig.version=$(VE
 tidy:
 	$(GOCMD) mod tidy
 
+.PHONY: validate-migrations
+validate-migrations:
+	hack/validate-migrations.sh
+
 .PHONY: lint-frontend
 lint-frontend:
 	npm run lint
@@ -24,10 +28,10 @@ lint-go-fix:
 	golangci-lint run --fix
 
 .PHONY: lint
-lint: lint-go lint-frontend
+lint: lint-go lint-frontend validate-migrations
 
 .PHONY: lint-fix
-lint-fix: lint-go-fix lint-frontend-fix
+lint-fix: lint-go-fix lint-frontend-fix validate-migrations
 
 node_modules: package-lock.json
 	npm install --no-save
@@ -64,6 +68,10 @@ build-docker-agent: tidy
 .PHONY: build-kubernetes-agent
 build-kubernetes-agent: tidy
 	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/kubernetes-agent ./cmd/agent/kubernetes
+
+.PHONY: build-mcp-server
+build-mcp-server: tidy
+	CGO_ENABLED=0 $(GOCMD) build -ldflags="$(LDFLAGS)" -o dist/mcp-server ./cmd/mcp
 
 .PHONY: docker-build-hub
 docker-build-hub: build

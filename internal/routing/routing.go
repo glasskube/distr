@@ -5,20 +5,23 @@ import (
 	"time"
 
 	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/frontend"
 	"github.com/glasskube/distr/internal/handlers"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/tracers"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
-func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers) http.Handler {
+func NewRouter(
+	logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers, oidcer *oidc.OIDCer,
+) http.Handler {
 	router := chi.NewRouter()
 	router.Use(
 		// Handles panics
@@ -26,13 +29,16 @@ func NewRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 		// Reject bodies larger than 1MiB
 		chimiddleware.RequestSize(1048576),
 	)
-	router.Mount("/api", ApiRouter(logger, db, mailer, tracers))
+	router.Mount("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
 	router.Mount("/internal", InternalRouter())
+	router.Mount("/.well-known", WellKnownRouter())
 	router.Mount("/", FrontendRouter())
 	return router
 }
 
-func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers) http.Handler {
+func ApiRouter(
+	logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers, oidcer *oidc.OIDCer,
+) http.Handler {
 	r := chi.NewRouter()
 	r.Use(
 		chimiddleware.RequestID,
@@ -40,13 +46,13 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 		middleware.Sentry,
 		middleware.LoggerCtxMiddleware(logger),
 		middleware.LoggingMiddleware,
-		middleware.ContextInjectorMiddleware(db, mailer),
+		middleware.ContextInjectorMiddleware(db, mailer, oidcer),
 	)
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(
-				otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracers.Default())),
+				middleware.OTEL(tracers.Default()),
 			)
 
 			// public routes go here
@@ -90,7 +96,7 @@ func ApiRouter(logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers
 		// agent connect and download routes go here (authenticated but with accessKeyId and accessKeySecret)
 		r.Group(func(r chi.Router) {
 			r.Use(
-				otelhttp.NewMiddleware("", otelhttp.WithTracerProvider(tracers.Agent())),
+				middleware.OTEL(tracers.Agent()),
 			)
 
 			r.Route("/", handlers.AgentRouter)
@@ -113,6 +119,18 @@ func FrontendRouter() http.Handler {
 	)
 
 	router.Handle("/*", handlers.StaticFileHandler(frontend.BrowserFS()))
+
+	return router
+}
+
+func WellKnownRouter() http.Handler {
+	router := chi.NewRouter()
+	if env.WellKnownMicrosoftIdentityAssociation() != nil {
+		router.Get("/microsoft-identity-association.json", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(env.WellKnownMicrosoftIdentityAssociation())
+		})
+	}
 
 	return router
 }
