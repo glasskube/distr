@@ -12,6 +12,7 @@ on:
 
 jobs:
   build-agent:
+    if: ${{ matrix.platform.enabled }}
     timeout-minutes: 30
     runs-on: ${{ matrix.platform.runner }}
     permissions:
@@ -25,8 +26,10 @@ jobs:
         platform:
           - arch: linux/amd64
             runner: ubuntu-latest
+            enabled: true
           - arch: linux/arm64
             runner: ubuntu-24.04-arm
+            enabled: ${{ startsWith(github.ref, 'refs/tags/') }}
     env:
       REGISTRY_IMAGE: ghcr.io/glasskube/distr/${{ matrix.agent }}
     steps:
