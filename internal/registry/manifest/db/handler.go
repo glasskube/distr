@@ -43,6 +43,7 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 					Digest: digest.Digest(av.ManifestBlobDigest),
 					Size:   av.ManifestBlobSize,
 				},
+				Data: av.ManifestData,
 			},
 			ContentType: av.ManifestContentType,
 		}, nil
