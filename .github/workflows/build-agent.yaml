@@ -95,6 +95,8 @@ jobs:
         agent:
           - docker-agent
           - kubernetes-agent
+    env:
+      REGISTRY_IMAGE: ghcr.io/glasskube/distr/${{ matrix.agent }}
     steps:
       - name: Download digests
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
