@@ -87,6 +87,7 @@ jobs:
       - build-agent
     permissions:
       contents: read
+      id-token: write
       packages: write
     strategy:
       matrix:
