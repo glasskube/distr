@@ -5,9 +5,9 @@ name: Build Agents
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 jobs:
@@ -63,6 +63,8 @@ jobs:
           outputs: type=image,push-by-digest=true,name-canonical=true,push=${{ startsWith(github.ref, 'refs/tags/') }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          sbom: true
+          provenance: true
       - name: Prepare for export
         run: |
           platform=${{ matrix.platform.arch }}
@@ -129,3 +131,14 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+      - name: Sign the images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
