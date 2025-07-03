@@ -139,7 +139,6 @@ jobs:
             registry.distr.sh/glasskube/distr
           tags: |
             type=ref,event=branch
-            type=sha,event=branch
             type=semver,pattern={{version}}
           flavor: |
             latest=false
