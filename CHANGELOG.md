@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.12.3](https://github.com/glasskube/distr/compare/1.12.2...1.12.3) (2025-07-03)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v20.0.6 ([#1121](https://github.com/glasskube/distr/issues/1121)) ([4f7e2d6](https://github.com/glasskube/distr/commit/4f7e2d69d5f10f2b73ad573c59564e1e984ae03b))
+* **deps:** update dependency @angular/cdk to v20.0.5 ([#1124](https://github.com/glasskube/distr/issues/1124)) ([723afee](https://github.com/glasskube/distr/commit/723afeef60847b603fccc86137d868c624508a4f))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.83.0 ([#1125](https://github.com/glasskube/distr/issues/1125)) ([237d5bf](https://github.com/glasskube/distr/commit/237d5bfbcc86ffef45c9bf7e88a49642dcaa02a0))
+* **deps:** update module github.com/docker/cli to v28.3.1+incompatible ([#1126](https://github.com/glasskube/distr/issues/1126)) ([c5744ab](https://github.com/glasskube/distr/commit/c5744ab64ba1487f1bf7099deb9d8250c6da0585))
+* **deps:** update module github.com/docker/docker to v28.3.1+incompatible ([#1127](https://github.com/glasskube/distr/issues/1127)) ([892eea8](https://github.com/glasskube/distr/commit/892eea832b14f51deca9fdd3fb72ed63ac0000d9))
+
+
+### Other
+
+* add ability to set the sentry environment ([#1104](https://github.com/glasskube/distr/issues/1104)) ([b6ae803](https://github.com/glasskube/distr/commit/b6ae80397c24a5445a1ba1c923f714a6d640a46c))
+* **deps:** update anchore/sbom-action action to v0.20.2 ([#1123](https://github.com/glasskube/distr/issues/1123)) ([e07aca6](https://github.com/glasskube/distr/commit/e07aca60956ce00e5f86f76713115d912dbf97ba))
+* **deps:** update angular-cli monorepo to v20.0.5 ([#1122](https://github.com/glasskube/distr/issues/1122)) ([a23b806](https://github.com/glasskube/distr/commit/a23b8064306bdf1850b92ad746ff5fe705f6b310))
+
 ## [1.12.2](https://github.com/glasskube/distr/compare/1.12.1...1.12.2) (2025-07-01)
 
 
