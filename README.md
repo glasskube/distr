@@ -17,7 +17,7 @@ Distr enables software and AI companies to distribute applications to self-manag
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/distr)](https://artifacthub.io/packages/helm/distr/distr)
 
-![Deployment Overview](https://github.com/glasskube/glasskube.dev/blob/main/static/img/screenshots/distr/distr-deployments-light.webp)
+![Deployment Overview](https://github.com/glasskube/glasskube.dev/blob/main/static/img/screenshots/distr/distr-dashboard-dark.webp)
 
 <hr>
 
