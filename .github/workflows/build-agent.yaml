@@ -13,7 +13,7 @@ on:
 jobs:
   build-agent:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform.runner }}
     permissions:
       contents: read
       packages: write
@@ -22,6 +22,13 @@ jobs:
         agent:
           - docker-agent
           - kubernetes-agent
+        platform:
+          - arch: linux/amd64
+            runner: ubuntu-latest
+          - arch: linux/arm64
+            runner: ubuntu-24.04-arm
+    env:
+      REGISTRY_IMAGE: ghcr.io/glasskube/distr/${{ matrix.agent }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -41,7 +48,75 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
-          images: ghcr.io/glasskube/distr/${{ matrix.agent }}
+          images: ${{ env.REGISTRY_IMAGE }}
+      - name: Docker build (push only for tag)
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          platforms: ${{ matrix.platform.arch }}
+          file: Dockerfile.${{ matrix.agent }}
+          build-args: |
+            COMMIT=${{ steps.generate.outputs.sha_short }}
+            VERSION=${{ github.ref_name }}
+          tags: ${{ env.REGISTRY_IMAGE }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=${{ startsWith(github.ref, 'refs/tags/') }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          sbom: true
+          provenance: true
+      - name: Prepare for export
+        run: |
+          platform=${{ matrix.platform.arch }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: digests-${{ matrix.agent }}-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs:
+      - build-agent
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    strategy:
+      matrix:
+        agent:
+          - docker-agent
+          - kubernetes-agent
+    env:
+      REGISTRY_IMAGE: ghcr.io/glasskube/distr/${{ matrix.agent }}
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.agent }}-*
+          merge-multiple: true
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
           tags: |
             type=ref,event=branch
             type=sha,event=branch
@@ -51,28 +126,20 @@ jobs:
           labels: |
             org.opencontainers.image.description=Distr agent software
             org.opencontainers.image.vendor=Glasskube
-      - name: Docker build (push only for tag)
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        id: build-push
-        with:
-          platforms: ${{ startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
-          file: Dockerfile.${{ matrix.agent }}
-          build-args: |
-            COMMIT=${{ steps.generate.outputs.sha_short }}
-            VERSION=${{ github.ref_name }}
-          push: ${{ startsWith(github.ref, 'refs/tags/') }}
-          sbom: true
-          provenance: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+      - name: Get digest of the created image
+        id: digest
+        run: |
+          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }} --format "{{ print .Manifest.Digest }}")
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
       - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
       - name: Sign the images with GitHub OIDC Token
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
-          DIGEST: ${{ steps.build-push.outputs.digest }}
+          DIGEST: ${{ steps.digest.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           images=""
