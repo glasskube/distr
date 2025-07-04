@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.4](https://github.com/glasskube/distr/compare/1.12.3...1.12.4) (2025-07-03)
+
+
+### Docs
+
+* update deployment screenshot in README.md ([#1061](https://github.com/glasskube/distr/issues/1061)) ([8e9fb77](https://github.com/glasskube/distr/commit/8e9fb77e4e82a91176f534e9ceb6e003db9fdf92))
+
 ## [1.12.3](https://github.com/glasskube/distr/compare/1.12.2...1.12.3) (2025-07-03)
 
 
