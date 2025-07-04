@@ -25,6 +25,9 @@ func (m *Manager) NewCreateOrUpdateDeploymentTool() server.ServerTool {
 				return mcp.NewToolResultError("deployment object is required"), nil
 			}
 
+			// the put deployment request uses "deploymentId" as the ID field
+			data["deploymentId"] = data["id"]
+
 			dataJSON, err := json.Marshal(data)
 			if err != nil {
 				return mcp.NewToolResultErrorFromErr("Failed to process deployment data", err), nil
