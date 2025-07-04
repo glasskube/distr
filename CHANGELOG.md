@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.5](https://github.com/glasskube/distr/compare/1.12.4...1.12.5) (2025-07-04)
+
+
+### Bug Fixes
+
+* **mcp:** update deployment mcp tool ([#1130](https://github.com/glasskube/distr/issues/1130)) ([bbf90fe](https://github.com/glasskube/distr/commit/bbf90fe17f9ea9ebf025395de7a9896578d406b8))
+
+
+### Other
+
+* **ui:** show a progress dialog during undeploy operations ([#1108](https://github.com/glasskube/distr/issues/1108)) ([b14bda6](https://github.com/glasskube/distr/commit/b14bda6bae84cb758d28fee74ad4aae5a37deba4))
+
 ## [1.12.4](https://github.com/glasskube/distr/compare/1.12.3...1.12.4) (2025-07-03)
 
 
