@@ -13,7 +13,7 @@ require (
 	github.com/containerd/log v0.1.0
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/docker/cli v28.3.1+incompatible
-	github.com/docker/compose/v2 v2.38.1
+	github.com/docker/compose/v2 v2.38.2
 	github.com/docker/docker v28.3.1+incompatible
 	github.com/exaring/otelpgx v0.9.3
 	github.com/fsnotify/fsnotify v1.9.0
@@ -255,7 +255,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moby/buildkit v0.23.1 // indirect
+	github.com/moby/buildkit v0.23.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.1.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
