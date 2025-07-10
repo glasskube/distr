@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.12.6](https://github.com/glasskube/distr/compare/1.12.5...1.12.6) (2025-07-10)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/docker/cli to v28.3.2+incompatible ([#1146](https://github.com/glasskube/distr/issues/1146)) ([2dc8d10](https://github.com/glasskube/distr/commit/2dc8d10547456d4efdc043b6a72eae9e6b2483e9))
+* **deps:** update module github.com/docker/compose/v2 to v2.38.2 ([#1138](https://github.com/glasskube/distr/issues/1138)) ([a6e18e9](https://github.com/glasskube/distr/commit/a6e18e96cadaca49b0d7463577df146cc610d6e5))
+* **deps:** update module github.com/docker/docker to v28.3.2+incompatible ([#1147](https://github.com/glasskube/distr/issues/1147)) ([3cf1f60](https://github.com/glasskube/distr/commit/3cf1f60abab292eb0294b4c699e6b6775d80d3af))
+* **deps:** update module helm.sh/helm/v3 to v3.18.4 [security] ([#1143](https://github.com/glasskube/distr/issues/1143)) ([039deee](https://github.com/glasskube/distr/commit/039deeeb422843fa281a663301596238e7c0e519))
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.27.1 ([#1132](https://github.com/glasskube/distr/issues/1132)) ([3fb8a29](https://github.com/glasskube/distr/commit/3fb8a2958124a396fde088608650005d60f2dfac))
+
 ## [1.12.5](https://github.com/glasskube/distr/compare/1.12.4...1.12.5) (2025-07-04)
 
 
