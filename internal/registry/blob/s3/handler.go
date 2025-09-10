@@ -43,13 +43,18 @@ var (
 func NewBlobHandler(ctx context.Context) blob.BlobHandler {
 	s3Config := env.RegistryS3Config()
 	var s3Client *s3.Client
-	if awsconfig, err := awsconfig.LoadDefaultConfig(ctx); err != nil {
+	if config, err := awsconfig.LoadDefaultConfig(ctx); err != nil {
 		s3Client = s3.New(s3.Options{}, clientOpts(s3Config))
+		if s3Config.ResignForGCP {
+			s3Client = s3.New(s3.Options{}, clientOpts(s3Config), ResignForGCP)
+		}
 	} else {
-		otelaws.AppendMiddlewares(&awsconfig.APIOptions)
-		s3Client = s3.NewFromConfig(awsconfig, clientOpts(s3Config))
+		otelaws.AppendMiddlewares(&config.APIOptions)
+		s3Client = s3.NewFromConfig(config, clientOpts(s3Config))
+		if s3Config.ResignForGCP {
+			s3Client = s3.NewFromConfig(config, clientOpts(s3Config), ResignForGCP)
+		}
 	}
-
 	return &blobHandler{
 		s3Client:        s3Client,
 		s3PresignClient: s3.NewPresignClient(s3Client),
@@ -63,6 +68,12 @@ func clientOpts(s3Config env.S3Config) func(o *s3.Options) {
 		o.Region = s3Config.Region
 		o.BaseEndpoint = s3Config.Endpoint
 		o.UsePathStyle = s3Config.UsePathStyle
+		if s3Config.RequestChecksumCalculationWhenRequired {
+			o.RequestChecksumCalculation = aws.RequestChecksumCalculationWhenRequired
+		}
+		if s3Config.ResponseChecksumValidationWhenRequired {
+			o.ResponseChecksumValidation = aws.ResponseChecksumValidationWhenRequired
+		}
 		if s3Config.AccessKeyID != nil && s3Config.SecretAccessKey != nil {
 			o.Credentials = aws.NewCredentialsCache(
 				credentials.NewStaticCredentialsProvider(*s3Config.AccessKeyID, *s3Config.SecretAccessKey, ""),
