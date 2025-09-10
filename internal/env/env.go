@@ -131,9 +131,15 @@ func Initialize() {
 		registryS3Config.SecretAccessKey = envutil.GetEnvOrNil("REGISTRY_S3_SECRET_ACCESS_KEY")
 		registryS3Config.UsePathStyle = envutil.GetEnvParsedOrDefault("REGISTRY_S3_USE_PATH_STYLE", strconv.ParseBool, false)
 		registryS3Config.AllowRedirect = envutil.GetEnvParsedOrDefault("REGISTRY_S3_ALLOW_REDIRECT", strconv.ParseBool, true)
-		registryS3Config.RequestChecksumCalculationWhenRequired = envutil.GetEnvParsedOrDefault("REGISTRY_S3_REQUEST_CHECKSUM_CALCULATION", strconv.ParseBool, false)
-		registryS3Config.ResponseChecksumValidationWhenRequired = envutil.GetEnvParsedOrDefault("REGISTRY_S3_RESPONSE_CHECKSUM_VALIDATION", strconv.ParseBool, false)
-		registryS3Config.ResignForGCP = envutil.GetEnvParsedOrDefault("REGISTRY_RESIGN_FOR_GCP", strconv.ParseBool, false)
+		registryS3Config.RequestChecksumCalculationWhenRequired = envutil.GetEnvParsedOrDefault(
+			"REGISTRY_S3_REQUEST_CHECKSUM_CALCULATION", strconv.ParseBool, false,
+		)
+		registryS3Config.ResponseChecksumValidationWhenRequired = envutil.GetEnvParsedOrDefault(
+			"REGISTRY_S3_RESPONSE_CHECKSUM_VALIDATION", strconv.ParseBool, false,
+		)
+		registryS3Config.ResignForGCP = envutil.GetEnvParsedOrDefault(
+			"REGISTRY_RESIGN_FOR_GCP", strconv.ParseBool, false,
+		)
 	}
 	artifactTagsDefaultLimitPerOrg = envutil.GetEnvParsedOrDefault(
 		"ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", envparse.NonNegativeNumber, 0,
