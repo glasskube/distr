@@ -54,7 +54,7 @@ hub:
       value: 'true'
     - name: REGISTRY_S3_ALLOW_REDIRECT
       value: 'false'
-    # Set of variables requires to use GCP as a S3 compatible backend
+    # Set of variables required to use GCP as a S3 compatible backend
     # - name: REGISTRY_S3_REQUEST_CHECKSUM_CALCULATION
     #   value: 'true'
     # - name: REGISTRY_S3_RESPONSE_CHECKSUM_VALIDATION
@@ -246,12 +246,6 @@ postgresql:
     database: distr
     existingSecret: ''
   architecture: standalone
-  primary:
-    # Enable access to the db from local network
-    pgHbaConfiguration: |-
-      local all all trust
-      host all all 10.0.0.0/8 trust
-      host all all localhost trust
   service:
     ports:
       postgresql: 5432
