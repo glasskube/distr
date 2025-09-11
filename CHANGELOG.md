@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.13.0](https://github.com/glasskube/distr/compare/1.12.5...1.13.0) (2025-09-11)
+
+
+### Features
+
+* **registry:** add GCS compatibility for registry storage ([#1158](https://github.com/glasskube/distr/issues/1158)) ([4588ef0](https://github.com/glasskube/distr/commit/4588ef01b277d52e7133e6ebbe25830e70b893df))
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v20.2.4 ([#1144](https://github.com/glasskube/distr/issues/1144)) ([e6636f6](https://github.com/glasskube/distr/commit/e6636f61aa1810e19056bb2055d680cff4ac3430))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1170](https://github.com/glasskube/distr/issues/1170)) ([d3d269e](https://github.com/glasskube/distr/commit/d3d269e9b2390a65567a4645c7a6b93e35cea09b))
+* **deps:** update codemirror ([#1169](https://github.com/glasskube/distr/issues/1169)) ([397ebac](https://github.com/glasskube/distr/commit/397ebacb7cd9aca62606d7caf9684e8fb13985b1))
+* **deps:** update dependency @angular/cdk to v20.2.2 ([#1145](https://github.com/glasskube/distr/issues/1145)) ([066dd52](https://github.com/glasskube/distr/commit/066dd52f8b6f1bd1f57f104504c171bd5051eb77))
+* **deps:** update dependency @sentry/angular to v9.46.0 ([#1134](https://github.com/glasskube/distr/issues/1134)) ([90037a2](https://github.com/glasskube/distr/commit/90037a2612bb4e49d89967cf59fd3fc9d09395ee))
+* **deps:** update dependency dayjs to v1.11.18 ([#1171](https://github.com/glasskube/distr/issues/1171)) ([4403648](https://github.com/glasskube/distr/commit/440364847a867a972e5b04408bf4df4b4ebfa09a))
+* **deps:** update dependency posthog-js to v1.262.0 ([#1135](https://github.com/glasskube/distr/issues/1135)) ([8c3bdb0](https://github.com/glasskube/distr/commit/8c3bdb0d7cea345bc9358dbd3b98f3d05a44e966))
+* **deps:** update github.com/jackc/pgerrcode digest to afb5586 ([#1160](https://github.com/glasskube/distr/issues/1160)) ([6e12edb](https://github.com/glasskube/distr/commit/6e12edbadeec23987ae90284bdf25d3fe0522ae9))
+* **deps:** update module github.com/docker/cli to v28.3.2+incompatible ([#1146](https://github.com/glasskube/distr/issues/1146)) ([2dc8d10](https://github.com/glasskube/distr/commit/2dc8d10547456d4efdc043b6a72eae9e6b2483e9))
+* **deps:** update module github.com/docker/compose/v2 to v2.38.2 ([#1138](https://github.com/glasskube/distr/issues/1138)) ([a6e18e9](https://github.com/glasskube/distr/commit/a6e18e96cadaca49b0d7463577df146cc610d6e5))
+* **deps:** update module github.com/docker/docker to v28.3.2+incompatible ([#1147](https://github.com/glasskube/distr/issues/1147)) ([3cf1f60](https://github.com/glasskube/distr/commit/3cf1f60abab292eb0294b4c699e6b6775d80d3af))
+* **deps:** update module github.com/docker/docker to v28.3.3+incompatible [security] ([#1151](https://github.com/glasskube/distr/issues/1151)) ([eb29fd7](https://github.com/glasskube/distr/commit/eb29fd758e2caee215f50f64d85a90403af3e373))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.35.2 ([#1137](https://github.com/glasskube/distr/issues/1137)) ([150e7e3](https://github.com/glasskube/distr/commit/150e7e3f0d173e68ebaba983096a071cf7a64ce6))
+* **deps:** update module github.com/mark3labs/mcp-go to v0.39.1 ([#1139](https://github.com/glasskube/distr/issues/1139)) ([13311e5](https://github.com/glasskube/distr/commit/13311e5266a233be0b099eb3385769450aca7efb))
+* **deps:** update module golang.org/x/crypto to v0.42.0 ([#1148](https://github.com/glasskube/distr/issues/1148)) ([1fa961d](https://github.com/glasskube/distr/commit/1fa961df1537357d2ca5c584caeb62fa02e1b466))
+* **deps:** update module helm.sh/helm/v3 to v3.18.4 [security] ([#1143](https://github.com/glasskube/distr/issues/1143)) ([039deee](https://github.com/glasskube/distr/commit/039deeeb422843fa281a663301596238e7c0e519))
+* **deps:** update module helm.sh/helm/v3 to v3.18.5 [security] ([#1156](https://github.com/glasskube/distr/issues/1156)) ([10e214c](https://github.com/glasskube/distr/commit/10e214cd540302bab115102ffc5575dfc07ee6dd))
+
+
+### Other
+
+* **deps:** update amannn/action-semantic-pull-request digest to e32d7e6 ([#1159](https://github.com/glasskube/distr/issues/1159)) ([5981ebf](https://github.com/glasskube/distr/commit/5981ebf64787c0273c482f5aefdd42dfa72b5b4e))
+* **deps:** update anchore/sbom-action action to v0.20.5 ([#1161](https://github.com/glasskube/distr/issues/1161)) ([4275901](https://github.com/glasskube/distr/commit/42759019051e2dc6fed643f8f7844385c6c62ddd))
+* **deps:** update axllent/mailpit docker tag to v1.27.1 ([#1132](https://github.com/glasskube/distr/issues/1132)) ([3fb8a29](https://github.com/glasskube/distr/commit/3fb8a2958124a396fde088608650005d60f2dfac))
+* **deps:** update axllent/mailpit docker tag to v1.27.7 ([#1162](https://github.com/glasskube/distr/issues/1162)) ([1a537db](https://github.com/glasskube/distr/commit/1a537dbd24cdd301e5bb61c1d77883867e775424))
+* **deps:** update azure/setup-helm action to v4.3.1 ([#1163](https://github.com/glasskube/distr/issues/1163)) ([8dde0d7](https://github.com/glasskube/distr/commit/8dde0d70228dfcae9c3e24b896353a19f0967c16))
+* **deps:** update dependency @types/jasmine to v5.1.9 ([#1164](https://github.com/glasskube/distr/issues/1164)) ([47fdfd1](https://github.com/glasskube/distr/commit/47fdfd1f2aff9118a77595e257288ac91debae81))
+* **deps:** update dependency @types/semver to v7.7.1 ([#1165](https://github.com/glasskube/distr/issues/1165)) ([f3ee925](https://github.com/glasskube/distr/commit/f3ee925c8477d4579b172d0807961f48e7abb372))
+* **deps:** update dependency go to v1.25.1 ([#1140](https://github.com/glasskube/distr/issues/1140)) ([5edd3f3](https://github.com/glasskube/distr/commit/5edd3f38df44338aa99904db07ab4d407d0d819b))
+* **deps:** update dependency golangci-lint to v2.4.0 ([#1149](https://github.com/glasskube/distr/issues/1149)) ([ac820e2](https://github.com/glasskube/distr/commit/ac820e28a17d7607a45b083653945ff930d5bc08))
+* **deps:** update dependency typedoc to v0.28.12 ([#1166](https://github.com/glasskube/distr/issues/1166)) ([56750e5](https://github.com/glasskube/distr/commit/56750e5d526ff1dd825cc1e235160c78b31cf502))
+* **deps:** update gcr.io/distroless/static-debian12:nonroot docker digest to e8a4044 ([#1152](https://github.com/glasskube/distr/issues/1152)) ([df9e1f5](https://github.com/glasskube/distr/commit/df9e1f5969e6bba94ccacf814950d3d6deeacf52))
+* **deps:** update sigstore/cosign-installer action to v3.9.2 ([#1167](https://github.com/glasskube/distr/issues/1167)) ([54e585e](https://github.com/glasskube/distr/commit/54e585ea4c057cd7176c47b66c9ec902885b710b))
+* **deps:** update tailwindcss monorepo to v4.1.13 ([#1168](https://github.com/glasskube/distr/issues/1168)) ([3fa86d8](https://github.com/glasskube/distr/commit/3fa86d822c7dd4e5eb9fb43790870d25e5c02537))
+
 ## [1.12.5](https://github.com/glasskube/distr/compare/1.12.4...1.12.5) (2025-07-04)
 
 
