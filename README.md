@@ -122,7 +122,7 @@ Using Distr agents on macOS? Follow the [guide](https://distr.sh/docs/guides/dis
 To build Distr Hub from source, first ensure that the following build dependencies are installed:
 
 - NodeJS (Version 22)
-- Go (Version 1.24)
+- Go (Version 1.25)
 - Docker (when building the Docker images)
 
 We recommend that you use [mise](https://mise.jdx.dev/) to install these tools, but you do don't have to.
