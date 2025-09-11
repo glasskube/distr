@@ -159,7 +159,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+      - uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
       - name: Sign the images with GitHub OIDC Token
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
