@@ -53,13 +53,16 @@ type MailerSMTPConfig struct {
 }
 
 type S3Config struct {
-	Bucket          string
-	Region          string
-	Endpoint        *string
-	AccessKeyID     *string
-	SecretAccessKey *string
-	UsePathStyle    bool
-	AllowRedirect   bool
+	Bucket                                 string
+	Region                                 string
+	Endpoint                               *string
+	AccessKeyID                            *string
+	SecretAccessKey                        *string
+	UsePathStyle                           bool
+	AllowRedirect                          bool
+	RequestChecksumCalculationWhenRequired bool
+	ResponseChecksumValidationWhenRequired bool
+	ResignForGCP                           bool
 }
 
 type SamplerType string

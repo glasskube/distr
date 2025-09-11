@@ -54,6 +54,13 @@ hub:
       value: 'true'
     - name: REGISTRY_S3_ALLOW_REDIRECT
       value: 'false'
+    # Set of variables required to use GCP as a S3 compatible backend
+    # - name: REGISTRY_S3_REQUEST_CHECKSUM_CALCULATION
+    #   value: 'true'
+    # - name: REGISTRY_S3_RESPONSE_CHECKSUM_VALIDATION
+    #   value: 'true'
+    # - name: REGISTRY_RESIGN_FOR_GCP
+    #   value: 'true'
     # The base64 encoded JWT secret
     # Can be generated with `openssl rand -base64 32`
     - name: JWT_SECRET
