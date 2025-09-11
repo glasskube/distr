@@ -268,10 +268,10 @@ github.com/fvbommel/sortorder v1.1.0 h1:fUmoe+HLsBTctBDoaBwpQo5N+nrCp8g/BjKb/6ZQ
 github.com/fvbommel/sortorder v1.1.0/go.mod h1:uk88iVf1ovNn1iLfgUVU2F9o5eO30ui720w+kxuqRs0=
 github.com/fxamacker/cbor/v2 v2.8.0 h1:fFtUGXUzXPHTIUdne5+zzMPTfffl3RD5qYnkY40vtxU=
 github.com/fxamacker/cbor/v2 v2.8.0/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
-github.com/getsentry/sentry-go v0.34.0 h1:1FCHBVp8TfSc8L10zqSwXUZNiOSF+10qw4czjarTiY4=
-github.com/getsentry/sentry-go v0.34.0/go.mod h1:C55omcY9ChRQIUcVcGcs+Zdy4ZpQGvNJ7JYHIoSWOtE=
-github.com/getsentry/sentry-go/otel v0.34.0 h1:8zz0z7rQI87TkfY92QlCeDxKyeNdmScPjiEgfJnHn0o=
-github.com/getsentry/sentry-go/otel v0.34.0/go.mod h1:Tt6M9onuYX+Cxxi7GZ90+BhJDAFlw2NRNQv9anTBt1M=
+github.com/getsentry/sentry-go v0.35.2 h1:jKuujpRwa8FFRYMIwwZpu83Xh0voll9bmvyc6310WBM=
+github.com/getsentry/sentry-go v0.35.2/go.mod h1:mdL49ixwT2yi57k5eh7mpnDyPybixPzlzEJFu0Z76QA=
+github.com/getsentry/sentry-go/otel v0.35.2 h1:R6vNi+GLwWtiAdSJVv671fQj5R3T2F9ks4mRWxDyOf0=
+github.com/getsentry/sentry-go/otel v0.35.2/go.mod h1:GnNdbDdGu9bxJXL5aGv0qBR4c9vPiZutXoseKFx9Yqk=
 github.com/go-chi/chi/v5 v5.2.2 h1:CMwsvRVTbXVytCk1Wd72Zy1LAsAh9GxMmSNWLHCG618=
 github.com/go-chi/chi/v5 v5.2.2/go.mod h1:L2yAIGWB3H+phAw1NxKwWM+7eUH/lU8pOMm5hHcoops=
 github.com/go-chi/httprate v0.15.0 h1:j54xcWV9KGmPf/X4H32/aTH+wBlrvxL7P+SdnRqxh5g=
