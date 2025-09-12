@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.12
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.3
-	github.com/compose-spec/compose-go/v2 v2.7.1
+	github.com/compose-spec/compose-go/v2 v2.8.2
 	github.com/containerd/log v0.1.0
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/docker/cli v28.3.2+incompatible
@@ -117,7 +117,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.37.0 // indirect
 	go.uber.org/mock v0.5.2 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
-	go.yaml.in/yaml/v3 v3.0.3 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	k8s.io/component-helpers v0.33.3 // indirect
 )
