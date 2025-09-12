@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.13.1](https://github.com/glasskube/distr/compare/1.13.0...1.13.1) (2025-09-12)
+
+
+### Bug Fixes
+
+* **deps:** update angular monorepo to v20.3.0 ([#1187](https://github.com/glasskube/distr/issues/1187)) ([4e9d528](https://github.com/glasskube/distr/commit/4e9d5284b2d90e273c6d32c6fe22dbaf350c5ebd))
+* **deps:** update dependency @angular/cdk to v20.2.3 ([#1178](https://github.com/glasskube/distr/issues/1178)) ([adc0e9e](https://github.com/glasskube/distr/commit/adc0e9e348456dcd82f91e3284f14951cda44a60))
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.3 ([#1172](https://github.com/glasskube/distr/issues/1172)) ([00e2c91](https://github.com/glasskube/distr/commit/00e2c9142faf7357176dd76af00dbd25ddcd6229))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.16.5 ([#1173](https://github.com/glasskube/distr/issues/1173)) ([5c122a7](https://github.com/glasskube/distr/commit/5c122a7fff3293b094cc3609564701d1a42f40ac))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.7.6 ([#1176](https://github.com/glasskube/distr/issues/1176)) ([7add766](https://github.com/glasskube/distr/commit/7add766d16dd391b88c8cfda293fb67a3d0d48f7))
+* **deps:** update module helm.sh/helm/v3 to v3.18.6 ([#1177](https://github.com/glasskube/distr/issues/1177)) ([2d1d2fd](https://github.com/glasskube/distr/commit/2d1d2fdf8e7f2415e8be1a151b1d0ba47679b587))
+
+
+### Other
+
+* **deps:** update actions/checkout action to v5 ([#1188](https://github.com/glasskube/distr/issues/1188)) ([a9150fa](https://github.com/glasskube/distr/commit/a9150faebf5d48955b045bc683338ca0210531ce))
+* **deps:** update actions/download-artifact action to v5 ([#1189](https://github.com/glasskube/distr/issues/1189)) ([7066589](https://github.com/glasskube/distr/commit/7066589c1323baef3231f170cc534c8bbd07dd53))
+* **deps:** update actions/setup-go action to v6 ([#1190](https://github.com/glasskube/distr/issues/1190)) ([bdcd765](https://github.com/glasskube/distr/commit/bdcd76565fe2c77f11200d1d456113a2ed07a4e6))
+* **deps:** update actions/setup-node action to v5 ([#1191](https://github.com/glasskube/distr/issues/1191)) ([1c198d6](https://github.com/glasskube/distr/commit/1c198d6bad664e5c3f642795ef031fd7c228e5ae))
+* **deps:** update amannn/action-semantic-pull-request action to v6 ([#1192](https://github.com/glasskube/distr/issues/1192)) ([6587b10](https://github.com/glasskube/distr/commit/6587b10699df0ff0129a6d03b771de197bc134b4))
+* **deps:** update angular-cli monorepo to v20.3.1 ([#1193](https://github.com/glasskube/distr/issues/1193)) ([31fc454](https://github.com/glasskube/distr/commit/31fc4540169d4c8fe4dd5979495cd55ea4ee3fb9))
+* **deps:** update dependency jasmine-core to ~5.10.0 ([#1180](https://github.com/glasskube/distr/issues/1180)) ([a788d99](https://github.com/glasskube/distr/commit/a788d99f61a6b0d70552e675afed7bdbbbd4dae3))
+* **deps:** update dependency typedoc-plugin-markdown to v4.8.1 ([#1181](https://github.com/glasskube/distr/issues/1181)) ([664a496](https://github.com/glasskube/distr/commit/664a4965eb30d6d1611ba6c754385744eda9071f))
+* **deps:** update dependency typescript to ~5.9.0 ([#1182](https://github.com/glasskube/distr/issues/1182)) ([67c1899](https://github.com/glasskube/distr/commit/67c1899f4d0df309e2e926be3724922d6192c164))
+* **deps:** update dependency typescript to v5.9.2 ([#1183](https://github.com/glasskube/distr/issues/1183)) ([139e24d](https://github.com/glasskube/distr/commit/139e24d6d395834563625037dcde4cd25351d73b))
+* **deps:** update docker/login-action action to v3.5.0 ([#1184](https://github.com/glasskube/distr/issues/1184)) ([9b51c2e](https://github.com/glasskube/distr/commit/9b51c2e20857ce7e4639f6103c29b5e93353dfcd))
+* **deps:** update docker/metadata-action action to v5.8.0 ([#1185](https://github.com/glasskube/distr/issues/1185)) ([3ba4108](https://github.com/glasskube/distr/commit/3ba4108aa2e87b6e571f2517d0d6f7796f49e2ed))
+* **deps:** update googleapis/release-please-action action to v4.3.0 ([#1186](https://github.com/glasskube/distr/issues/1186)) ([ed9c89f](https://github.com/glasskube/distr/commit/ed9c89f2f159d9bb0804e0387e55b1404eb07e79))
+
 ## [1.13.0](https://github.com/glasskube/distr/compare/1.12.5...1.13.0) (2025-09-11)
 
 
