@@ -26,7 +26,7 @@ require (
 	github.com/go-chi/jwtauth/v5 v5.3.3
 	github.com/go-co-op/gocron/v2 v2.16.5
 	github.com/go-logr/zapr v1.3.0
-	github.com/golang-migrate/migrate/v4 v4.18.3
+	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6
 	github.com/jackc/pgx/v5 v5.7.6
@@ -319,7 +319,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.37.0 // indirect
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.0 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.17.0 // indirect
