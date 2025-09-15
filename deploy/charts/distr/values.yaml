@@ -114,6 +114,16 @@ hub:
     #   value:
     # - name: OIDC_MICROSOFT_TENANT_ID # required if OIDC_MICROSOFT_ENABLED
     #   value:
+    - name: OIDC_GENERIC_ENABLED
+      value: 'true'
+    - name: OIDC_GENERIC_ISSUER
+      value: ''
+    - name: OIDC_GENERIC_CLIENT_ID
+      value: 'foo'
+    - name: OIDC_GENERIC_CLIENT_SECRET
+      value: 'bar'
+    - name: OIDC_GENERIC_SCOPES
+      value: 'foo,bar,baz'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -264,6 +274,10 @@ minio:
   buckets:
     - name: distr
       purge: false
+
+dex:
+  enabled: false
+  fullnameOverride: distr-oidc-dex
 
 externalDatabase:
   uri: ''

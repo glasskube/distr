@@ -15,6 +15,7 @@ services:
       start_interval: 1s
       interval: 5s
       retries: 6
+      start_period: 30s
   hub:
     image: ghcr.io/glasskube/distr:1.13.0 # x-release-please-version
     depends_on:
@@ -44,6 +45,15 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio:/data/
+
+  # OIDC provider mockup
+  dex:
+    image: dexidp/dex:latest
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./dex-config.yaml:/etc/dex/config.yaml
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
 
 volumes:
   postgres:
