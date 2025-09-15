@@ -6,12 +6,12 @@ web:
 staticClients:
   - id: example-app
     redirectURIs:
-      - 'http://dex:5555/callback'
+      - 'http://localhost:8080/generic/callback'
     name: 'Example App'
     secret: ZXhhbXBsZS1hcHAtc2VjcmV0
 enablePasswordDB: true
 staticPasswords:
-  - email: "admin@example.com"
-    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
-    username: "admin"
-    userID: "1234"
+  - email: 'admin@example.com'
+    hash: '$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W'
+    username: 'admin'
+    userID: '1234'

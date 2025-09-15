@@ -19,7 +19,7 @@ services:
       start_period: 30s
   hub:
     container_name: distr
-#    image: ghcr.io/glasskube/distr:1.13.0 # x-release-please-version
+    #    image: ghcr.io/glasskube/distr:1.13.0 # x-release-please-version
     image: ghcr.io/glasskube/distr:snapshot
     depends_on:
       postgres:
@@ -55,18 +55,18 @@ services:
     container_name: mailhog
     image: mailhog/mailhog:latest
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - '1025:1025'
+      - '8025:8025'
 
   # OIDC provider mockup
   dex:
     container_name: dex
     image: dexidp/dex:latest
     ports:
-      - "5556:5556"
+      - '5556:5556'
     volumes:
       - ./dex-config.yaml:/etc/dex/config.yaml
-    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    command: ['dex', 'serve', '/etc/dex/config.yaml']
 
 volumes:
   postgres:
