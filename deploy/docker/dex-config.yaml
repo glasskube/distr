@@ -1,4 +1,4 @@
-issuer: http://dex:5556/dex
+issuer: http://localhost:5556/dex
 storage:
   type: memory
 web:
@@ -6,7 +6,7 @@ web:
 staticClients:
   - id: example-app
     redirectURIs:
-      - 'http://localhost:8080/generic/callback'
+      - 'http://localhost:8080/api/v1/auth/oidc/generic/callback'
     name: 'Example App'
     secret: ZXhhbXBsZS1hcHAtc2VjcmV0
 enablePasswordDB: true

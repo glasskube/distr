@@ -27,5 +27,9 @@ dependencies:
     condition: minio.enabled
   - name: dex
     repository: https://charts.dexidp.io
-    version: 0.24.x
+    version: 0.x.x
     condition: dex.enabled
+  - name: mailhog
+    version: 5.x.x
+    repository: https://codecentric.github.io/helm-charts
+    condition: mailhog.enabled

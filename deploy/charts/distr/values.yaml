@@ -74,11 +74,11 @@ hub:
       value: My Distr <noreply@distr.local>
     - name: MAILER_TYPE
       # change to "ses" for direct usage of the AWS SDK for SES
-      value: smtp
+      value: 'smtp'
     - name: MAILER_SMTP_HOST
-      value: smtp.example.local
+      value: 'distr-mail'
     - name: MAILER_SMTP_PORT
-      value: '25'
+      value: '1025'
     # - name: MAILER_SMTP_USERNAME
     #   value: ""
     # - name: MAILER_SMTP_PASSWORD
@@ -114,16 +114,16 @@ hub:
     #   value:
     # - name: OIDC_MICROSOFT_TENANT_ID # required if OIDC_MICROSOFT_ENABLED
     #   value:
-    - name: OIDC_GENERIC_ENABLED
-      value: 'true'
-    - name: OIDC_GENERIC_ISSUER
-      value: ''
-    - name: OIDC_GENERIC_CLIENT_ID
-      value: 'foo'
-    - name: OIDC_GENERIC_CLIENT_SECRET
-      value: 'bar'
-    - name: OIDC_GENERIC_SCOPES
-      value: 'foo,bar,baz'
+  #    - name: OIDC_GENERIC_ENABLED
+  #      value: 'true'
+  #    - name: OIDC_GENERIC_ISSUER
+  #      value: 'http://distr-oidc-dex:5556/dex'
+  #    - name: OIDC_GENERIC_CLIENT_ID
+  #      value: 'example-app'
+  #    - name: OIDC_GENERIC_CLIENT_SECRET
+  #      value: 'example-app-secret'
+  #    - name: OIDC_GENERIC_SCOPES
+  #      value: 'foo,bar,baz'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -189,7 +189,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 256Mi
 
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# This is to set up the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
     path: /
@@ -275,9 +275,32 @@ minio:
     - name: distr
       purge: false
 
+mailhog:
+  enabled: false
+  fullnameOverride: distr-mail
+
 dex:
   enabled: false
   fullnameOverride: distr-oidc-dex
+  config:
+    #    issuer: http://distr-oidc-dex:5556/dex
+    issuer: 'http://localhost:5556/dex'
+    storage:
+      type: memory
+    web:
+      http: 0.0.0.0:5556
+    staticClients:
+      - id: 'example-app'
+        redirectURIs:
+          - 'http://localhost:8080/api/v1/auth/oidc/generic/callback'
+        name: 'Example App'
+        secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+    enablePasswordDB: true
+    staticPasswords:
+      - email: 'admin@example.com'
+        hash: '$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W'
+        username: 'admin'
+        userID: '1234'
 
 externalDatabase:
   uri: ''
