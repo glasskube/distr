@@ -35,7 +35,7 @@ require (
 	github.com/mark3labs/mcp-go v0.39.1
 	github.com/onsi/gomega v1.38.2
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.129.0
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/wneessen/go-mail v0.6.2
 	go.opentelemetry.io/collector/component v1.35.0
 	go.opentelemetry.io/collector/confmap v1.35.0
@@ -83,7 +83,7 @@ require (
 	github.com/serialx/hashring v0.0.0-20200727003509-22c0c7ab6b1b // indirect
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.5 // indirect
-	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilinna/clock v1.1.0 // indirect
