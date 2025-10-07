@@ -27,7 +27,7 @@ func Parse(encoded string) (Key, error) {
 
 func NewKey() (key Key, err error) {
 	_, err = rand.Read(key[:])
-	return
+	return key, err
 }
 
 func (key Key) String() string {

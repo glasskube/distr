@@ -80,7 +80,7 @@ func (opts mailOpts) Apply(mail *Mail) {
 
 func (opts mailOpts) Create() (mail Mail) {
 	opts.Apply(&mail)
-	return
+	return mail
 }
 
 func New(opts ...MailOpt) Mail {

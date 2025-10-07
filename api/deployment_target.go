@@ -34,7 +34,7 @@ func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error)
 			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
 		}
 	}
-	return
+	return result, err
 }
 
 type PatchDeploymentRequest struct {
