@@ -36,7 +36,7 @@ func (av ApplicationVersion) ParsedValuesFile() (result map[string]any, err erro
 			err = fmt.Errorf("cannot parse ApplicationVersion values file: %w", err)
 		}
 	}
-	return
+	return result, err
 }
 
 func (av ApplicationVersion) ParsedTemplateFile() (result map[string]any, err error) {
@@ -45,7 +45,7 @@ func (av ApplicationVersion) ParsedTemplateFile() (result map[string]any, err er
 			err = fmt.Errorf("cannot parse ApplicationVersion values template: %w", err)
 		}
 	}
-	return
+	return result, err
 }
 
 func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err error) {
@@ -54,7 +54,7 @@ func (av ApplicationVersion) ParsedComposeFile() (result map[string]any, err err
 			err = fmt.Errorf("cannot parse ApplicationVersion compose file: %w", err)
 		}
 	}
-	return
+	return result, err
 }
 
 func (av ApplicationVersion) Validate(deplType DeploymentType) error {

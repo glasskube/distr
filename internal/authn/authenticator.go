@@ -81,6 +81,6 @@ func Alternative[A any, B any](authenticators ...Authenticator[A, B]) Authentica
 				break
 			}
 		}
-		return
+		return result, err
 	})
 }
