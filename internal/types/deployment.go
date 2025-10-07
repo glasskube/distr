@@ -37,5 +37,5 @@ func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any,
 			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
 		}
 	}
-	return
+	return result, err
 }
