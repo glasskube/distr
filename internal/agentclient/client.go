@@ -224,28 +224,28 @@ func (c *Client) do(r *http.Request) (*http.Response, error) {
 func (c *Client) ReloadFromEnv() (changed bool, err error) {
 	var d clientData
 	if d.authTarget, err = readEnvVar("DISTR_TARGET_ID"); err != nil {
-		return
+		return changed, err
 	} else if d.authSecret, err = readEnvVar("DISTR_TARGET_SECRET"); err != nil {
-		return
+		return changed, err
 	} else if d.loginEndpoint, err = readEnvVar("DISTR_LOGIN_ENDPOINT"); err != nil {
-		return
+		return changed, err
 	} else if d.manifestEndpoint, err = readEnvVar("DISTR_MANIFEST_ENDPOINT"); err != nil {
-		return
+		return changed, err
 	} else if d.resourceEndpoint, err = readEnvVar("DISTR_RESOURCE_ENDPOINT"); err != nil {
-		return
+		return changed, err
 	} else if d.statusEndpoint, err = readEnvVar("DISTR_STATUS_ENDPOINT"); err != nil {
-		return
+		return changed, err
 	} else if d.metricsEndpoint, err = readEnvVar("DISTR_METRICS_ENDPOINT"); err != nil {
-		return
+		return changed, err
 	} else if d.logsEndpoint, err = readEnvVar("DISTR_LOGS_ENDPOINT"); err != nil {
-		return
+		return changed, err
 	} else {
 		changed = c.clientData != d
 		if changed {
 			c.clientData = d
 			c.ClearToken()
 		}
-		return
+		return changed, err
 	}
 }
 

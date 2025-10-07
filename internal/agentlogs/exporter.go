@@ -25,10 +25,10 @@ func ChunkExporter(exporter Exporter, chunkSize int) Exporter {
 
 func (be *chunkExporter) Logs(ctx context.Context, logs []api.DeploymentLogRecord) (err error) {
 	if len(logs) == 0 {
-		return
+		return err
 	}
 	for logs := range slices.Chunk(logs, be.chunkSize) {
 		multierr.AppendInto(&err, be.delegate.Logs(ctx, logs))
 	}
-	return
+	return err
 }
