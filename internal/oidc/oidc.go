@@ -21,6 +21,7 @@ const (
 	ProviderGithub    Provider = "github"
 	ProviderGoogle    Provider = "google"
 	ProviderMicrosoft Provider = "microsoft"
+	ProviderGeneric   Provider = "generic"
 )
 
 type EmailExtractorFunc func(context.Context, *oauth2.Token) (string, bool, error)
@@ -89,6 +90,27 @@ func NewOIDCer(ctx context.Context, log *zap.Logger) (*OIDCer, error) {
 		p[ProviderGithub] = &providerContext{
 			OAuth2Config:   getGithubOauth2Config,
 			EmailExtractor: getEmailFromGithubAccessToken,
+		}
+	}
+	if env.OIDCGenericEnabled() {
+		log.Info("initializing generic OIDC")
+		genericProvider, err := oidc.NewProvider(ctx, *env.OIDCGenericIssuer())
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize Generic OIDC provider: %w", err)
+		}
+		genericOidcConfig := &oidc.Config{ClientID: *env.OIDCGenericClientID()}
+		genericVerifier := genericProvider.Verifier(genericOidcConfig)
+		p[ProviderGeneric] = &providerContext{
+			OAuth2Config: func(r *http.Request) *oauth2.Config {
+				return &oauth2.Config{
+					ClientID:     *env.OIDCGenericClientID(),
+					ClientSecret: *env.OIDCGenericClientSecret(),
+					RedirectURL:  getRedirectURL(r, ProviderGeneric),
+					Endpoint:     genericProvider.Endpoint(),
+					Scopes:       env.OIDCGenericScopes(),
+				}
+			},
+			EmailExtractor: verifiedIdTokenEmailExtractor(genericVerifier),
 		}
 	}
 	return &OIDCer{providers: p}, nil
