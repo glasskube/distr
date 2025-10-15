@@ -107,7 +107,7 @@ jobs:
           DISTR_HOST: http://localhost:8080
 
       - name: Generate SBOM for frontend project
-        uses: anchore/sbom-action@f8bdd1d8ac5e901a77a92f111440fdb1b593736b # v0.20.6
+        uses: anchore/sbom-action@d8a2c0130026bf585de5c176ab8f7ce62d75bf04 # v0.20.7
         with:
           file: package-lock.json
           output-file: dist/frontend.spdx.json
