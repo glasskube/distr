@@ -31,11 +31,10 @@ func DeleteOIDCState(ctx context.Context, id uuid.UUID) (string, time.Time, erro
 	if err != nil {
 		return "", time.Time{}, err
 	}
-	type row struct {
+	r, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[struct {
 		PKCECodeVerifier string    `db:"pkce_code_verifier"`
 		CreatedAt        time.Time `db:"created_at"`
-	}
-	r, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[row])
+	}])
 	if err != nil {
 		return "", time.Time{}, err
 	}
