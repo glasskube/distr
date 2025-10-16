@@ -27,7 +27,7 @@ func CreateOIDCState(ctx context.Context) (uuid.UUID, string, error) {
 
 func DeleteOIDCState(ctx context.Context, id uuid.UUID) (string, time.Time, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, "DELETE FROM OIDCState WHERE id = @id RETURNING created_at", pgx.NamedArgs{"id": id})
+	rows, err := db.Query(ctx, "DELETE FROM OIDCState WHERE id = @id RETURNING created_at, pkce_code_verifier", pgx.NamedArgs{"id": id})
 	if err != nil {
 		return "", time.Time{}, err
 	}
