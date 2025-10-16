@@ -71,8 +71,9 @@ var (
 	oidcGenericEnabled                     bool
 	oidcGenericClientID                    *string
 	oidcGenericClientSecret                *string
-	oidcGenerictIssuer                     *string
+	oidcGenericIssuer                      *string
 	oidcGenericScopes                      *string
+	oidcGenericPKCEEnabled                 bool
 	wellKnownMicrosoftIdentityAssociation  []byte
 )
 
@@ -212,8 +213,9 @@ func Initialize() {
 	if oidcGenericEnabled {
 		oidcGenericClientID = util.PtrTo(envutil.RequireEnv("OIDC_GENERIC_CLIENT_ID"))
 		oidcGenericClientSecret = util.PtrTo(envutil.RequireEnv("OIDC_GENERIC_CLIENT_SECRET"))
-		oidcGenerictIssuer = util.PtrTo(envutil.RequireEnv("OIDC_GENERIC_ISSUER"))
+		oidcGenericIssuer = util.PtrTo(envutil.RequireEnv("OIDC_GENERIC_ISSUER"))
 		oidcGenericScopes = util.PtrTo(envutil.RequireEnv("OIDC_GENERIC_SCOPES"))
+		oidcGenericPKCEEnabled = envutil.GetEnvParsedOrDefault("OIDC_GENERIC_PKCE_ENABLED", strconv.ParseBool, false)
 	}
 	wellKnownMicrosoftIdentityAssociation = envutil.GetEnvParsedOrDefault(
 		"WELLKNOWN_MICROSOFT_IDENTITY_ASSOCIATION_JSON", envparse.ByteSlice, nil)
@@ -431,13 +433,11 @@ func OIDCMicrosoftTenantID() *string {
 	return oidcMicrosoftTenantID
 }
 
-func OIDCGenericEnabled() bool {
-	return oidcGenericEnabled
-}
-
+func OIDCGenericEnabled() bool         { return oidcGenericEnabled }
 func OIDCGenericClientID() *string     { return oidcGenericClientID }
 func OIDCGenericClientSecret() *string { return oidcGenericClientSecret }
-func OIDCGenericIssuer() *string       { return oidcGenerictIssuer }
+func OIDCGenericIssuer() *string       { return oidcGenericIssuer }
+func OIDCGenericPKCEEnabled() bool     { return oidcGenericPKCEEnabled }
 
 // OIDCGenericScopes returns scopes as a string array
 // expecting user input as "foo bar baz" or "foo,bar,baz"

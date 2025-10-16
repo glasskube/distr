@@ -8,25 +8,38 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/oauth2"
 )
 
-func CreateOIDCState(ctx context.Context) (uuid.UUID, error) {
+func CreateOIDCState(ctx context.Context) (uuid.UUID, string, error) {
+	pkceVerifier := oauth2.GenerateVerifier()
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, "INSERT INTO OIDCState DEFAULT VALUES RETURNING id")
+	rows, err := db.Query(ctx, "INSERT INTO OIDCState (pkce_code_verifier) VALUES (?) RETURNING id", pkceVerifier)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, "", err
 	}
-	return pgx.CollectExactlyOneRow(rows, pgx.RowTo[uuid.UUID])
+	id, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return uuid.Nil, "", err
+	}
+	return id, pkceVerifier, nil
 }
 
-func DeleteOIDCState(ctx context.Context, id uuid.UUID) (time.Time, error) {
+func DeleteOIDCState(ctx context.Context, id uuid.UUID) (string, time.Time, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, "DELETE FROM OIDCState WHERE id = @id RETURNING created_at", pgx.NamedArgs{"id": id})
 	if err != nil {
-		var none time.Time
-		return none, err
+		return "", time.Time{}, err
 	}
-	return pgx.CollectExactlyOneRow(rows, pgx.RowTo[time.Time])
+	type row struct {
+		PKCECodeVerifier string    `db:"pkce_code_verifier"`
+		CreatedAt        time.Time `db:"created_at"`
+	}
+	r, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[row])
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return r.PKCECodeVerifier, r.CreatedAt, nil
 }
 
 func CleanupOIDCStates(ctx context.Context) (int64, error) {
