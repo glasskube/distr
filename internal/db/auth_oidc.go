@@ -14,7 +14,7 @@ import (
 func CreateOIDCState(ctx context.Context) (uuid.UUID, string, error) {
 	pkceVerifier := oauth2.GenerateVerifier()
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, "INSERT INTO OIDCState (pkce_code_verifier) VALUES (?) RETURNING id", pkceVerifier)
+	rows, err := db.Query(ctx, "INSERT INTO OIDCState (pkce_code_verifier) VALUES (@pkce_code_verifier) RETURNING id", pgx.NamedArgs{"pkce_code_verifier": pkceVerifier})
 	if err != nil {
 		return uuid.Nil, "", err
 	}
