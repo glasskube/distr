@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
 	"github.com/glasskube/distr/internal/util"
@@ -442,12 +443,14 @@ func OIDCGenericPKCEEnabled() bool     { return oidcGenericPKCEEnabled }
 // OIDCGenericScopes returns scopes as a string array
 // expecting user input as "foo bar baz" or "foo,bar,baz"
 func OIDCGenericScopes() []string {
-	var scopes []string
+	scopes := []string{
+		oidc.ScopeOpenID,
+	}
 	if oidcGenericScopes != nil {
 		if strings.Contains(*oidcGenericScopes, ",") {
-			scopes = strings.Split(*oidcGenericScopes, ",")
+			scopes = append(scopes, strings.Split(*oidcGenericScopes, ",")...)
 		} else if strings.Contains(*oidcGenericScopes, " ") {
-			scopes = strings.Split(*oidcGenericScopes, " ")
+			scopes = append(scopes, strings.Split(*oidcGenericScopes, " ")...)
 		}
 	}
 	return scopes
