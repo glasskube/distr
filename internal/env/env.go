@@ -11,6 +11,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )
@@ -46,6 +47,7 @@ var (
 	userEmailVerificationRequired          bool
 	serverShutdownDelayDuration            *time.Duration
 	registration                           RegistrationMode
+	defaultUserRole                        types.UserRole
 	registryEnabled                        bool
 	registryS3Config                       S3Config
 	artifactTagsDefaultLimitPerOrg         int
@@ -104,6 +106,7 @@ func Initialize() {
 	)
 	serverShutdownDelayDuration = envutil.GetEnvParsedOrNil("SERVER_SHUTDOWN_DELAY_DURATION", envparse.PositiveDuration)
 	registration = envutil.GetEnvParsedOrDefault("REGISTRATION", parseRegistrationMode, RegistrationEnabled)
+	defaultUserRole = envutil.GetEnvParsedOrDefault("DEFAULT_USER_ROLE", parseDefaultUserRole, types.UserRoleVendor)
 	inviteTokenValidDuration = envutil.GetEnvParsedOrDefault(
 		"INVITE_TOKEN_VALID_DURATION", envparse.PositiveDuration, 24*time.Hour,
 	)
@@ -458,4 +461,8 @@ func OIDCGenericScopes() []string {
 
 func WellKnownMicrosoftIdentityAssociation() []byte {
 	return wellKnownMicrosoftIdentityAssociation
+}
+
+func DefaultUserRole() types.UserRole {
+	return defaultUserRole
 }
