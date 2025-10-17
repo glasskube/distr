@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"net/http"
 	"net/url"
 
 	"github.com/glasskube/distr/cmd/mcp/client"
@@ -18,6 +19,18 @@ import (
 
 var log *zap.Logger
 
+func authFromRequest(ctx context.Context, r *http.Request) context.Context {
+	authHeader := r.Header.Get("Authorization")
+	return client.WithAuthToken(ctx, authHeader)
+}
+
+func authFromEnv(ctx context.Context) context.Context {
+	if token, err := envutil.RequireEnvParsedErr("DISTR_TOKEN", authkey.Parse); err == nil {
+		return client.WithAuthToken(ctx, "AccessToken "+token.Serialize())
+	}
+	return ctx
+}
+
 var rootCmd = &cobra.Command{
 	Use:     "distr-mcp",
 	Version: buildconfig.Version(),
@@ -32,7 +45,7 @@ func init() {
 
 	rootCmd.AddCommand(serveCmd)
 
-	serveCmd.Flags().BoolVar(&serveOpts.sse, "sse", false, "start server with SSE (otherwise STDIO is used)")
+	serveCmd.Flags().StringVarP(&serveOpts.transport, "transport", "t", "http", "transport type (stdio or http)")
 }
 
 func main() {
@@ -48,42 +61,57 @@ var serveCmd = &cobra.Command{
 }
 
 var serveOpts = struct {
-	sse bool
+	transport string
 }{}
 
 func serveCmdRun(cmd *cobra.Command, args []string) {
-	clientConfig, err := clientConfigFromEnv()
-	if err != nil {
-		log.Fatal("client config is invalid", zap.Error(err))
-	}
-
-	log.Sugar().Debugf("got client config: %v", clientConfig)
-
 	mcpServer := server.NewMCPServer(
-		"distr-mcp",
+		"Distr",
 		buildconfig.Version(),
-		server.WithResourceCapabilities(true, true),
 		server.WithToolCapabilities(true),
-		server.WithPromptCapabilities(true),
 	)
 
-	client := client.NewClient(clientConfig)
-	mgr := tools.NewManager(client)
+	var clientConfig *client.Config
+	var err error
 
-	mgr.AddToolsToServer(mcpServer)
-
-	if serveOpts.sse {
-		log.Info("starting to serve in SSE mode")
-		if err := server.NewSSEServer(mcpServer).Start(":3001"); err != nil {
-			log.Fatal("serve failed", zap.Error(err))
+	switch serveOpts.transport {
+	case "stdio":
+		// For stdio mode, require DISTR_TOKEN from environment
+		clientConfig, err = clientConfigFromEnv()
+		if err != nil {
+			log.Fatal("client config is invalid", zap.Error(err))
 		}
-	} else {
+		log.Sugar().Debugf("got client config: %v", clientConfig)
+
+		c := client.NewClient(clientConfig)
+		mgr := tools.NewManager(c)
+		mgr.AddToolsToServer(mcpServer)
+
 		log.Info("starting to serve in STDIO mode")
-		if err := server.ServeStdio(mcpServer); err != nil && !errors.Is(err, context.Canceled) {
+		err := server.ServeStdio(mcpServer, server.WithStdioContextFunc(authFromEnv))
+		if err != nil && !errors.Is(err, context.Canceled) {
 			log.Fatal("serve failed", zap.Error(err))
 		}
+	case "http":
+		// For HTTP mode, use token from request Authorization header
+		clientConfig, err = clientConfigFromEnvOptional()
+		if err != nil {
+			log.Fatal("client config is invalid", zap.Error(err))
+		}
+
+		c := client.NewClient(clientConfig)
+		mgr := tools.NewManager(c)
+		mgr.AddToolsToServer(mcpServer)
+
+		log.Info("starting to serve in HTTP mode on :3001 and path /mcp")
+		httpServer := server.NewStreamableHTTPServer(mcpServer, server.WithHTTPContextFunc(authFromRequest))
+		if err := httpServer.Start(":3001"); err != nil {
+			log.Fatal("serve failed", zap.Error(err))
+		}
+	default:
+		log.Fatal("invalid transport type", zap.String("transport", serveOpts.transport))
 	}
-	log.Info("distr-mcp shutting down")
+	log.Info("Distr MCP server shutting down")
 }
 
 func clientConfigFromEnv() (*client.Config, error) {
@@ -95,6 +123,21 @@ func clientConfigFromEnv() (*client.Config, error) {
 		return nil, err
 	} else {
 		opts = append(opts, client.WithToken(token))
+	}
+
+	if url, err := envutil.GetEnvParsedOrNilErr("DISTR_HOST", url.Parse); err != nil {
+		return nil, err
+	} else if url != nil {
+		opts = append(opts, client.WithBaseURL(*url))
+	}
+
+	return client.NewConfig(opts...), nil
+}
+
+func clientConfigFromEnvOptional() (*client.Config, error) {
+	opts := []client.ConfigOption{
+		client.WithLogger(log),
+		client.WithContextAuth(true),
 	}
 
 	if url, err := envutil.GetEnvParsedOrNilErr("DISTR_HOST", url.Parse); err != nil {
