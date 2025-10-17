@@ -1,0 +1,10 @@
+postgresql:
+  enabled: true
+minio:
+  enabled: true
+dex:
+  enabled: true
+mailhog:
+  enabled: true
+#image:
+#  tag: 'snapshot'
