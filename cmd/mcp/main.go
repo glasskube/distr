@@ -94,7 +94,7 @@ func serveCmdRun(cmd *cobra.Command, args []string) {
 		}
 	case "http":
 		// For HTTP mode, use token from request Authorization header
-		clientConfig, err = clientConfigFromEnvOptional()
+		clientConfig, err = clientConfigFromEnvWithoutToken()
 		if err != nil {
 			log.Fatal("client config is invalid", zap.Error(err))
 		}
@@ -134,7 +134,7 @@ func clientConfigFromEnv() (*client.Config, error) {
 	return client.NewConfig(opts...), nil
 }
 
-func clientConfigFromEnvOptional() (*client.Config, error) {
+func clientConfigFromEnvWithoutToken() (*client.Config, error) {
 	opts := []client.ConfigOption{
 		client.WithLogger(log),
 		client.WithContextAuth(true),
