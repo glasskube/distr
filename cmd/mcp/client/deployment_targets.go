@@ -25,15 +25,19 @@ func (c *DeploymentTargets) url(elem ...string) string {
 }
 
 func (c *DeploymentTargets) List(ctx context.Context) ([]types.DeploymentTargetWithCreatedBy, error) {
-	return JsonResponse[[]types.DeploymentTargetWithCreatedBy](
-		c.config.httpClient.Get(c.url()),
-	)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return JsonResponse[[]types.DeploymentTargetWithCreatedBy](c.config.httpClient.Do(req))
 }
 
 func (c *DeploymentTargets) Get(ctx context.Context, id uuid.UUID) (*types.DeploymentTargetWithCreatedBy, error) {
-	return JsonResponse[*types.DeploymentTargetWithCreatedBy](
-		c.config.httpClient.Get(c.url(id.String())),
-	)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url(id.String()), nil)
+	if err != nil {
+		return nil, err
+	}
+	return JsonResponse[*types.DeploymentTargetWithCreatedBy](c.config.httpClient.Do(req))
 }
 
 func (c *DeploymentTargets) Create(
@@ -43,11 +47,12 @@ func (c *DeploymentTargets) Create(
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(req); err != nil {
 		return nil, err
-	} else {
-		return JsonResponse[*types.DeploymentTargetWithCreatedBy](
-			c.config.httpClient.Post(c.url(), "application/json", &buf),
-		)
 	}
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url(), &buf)
+	if err != nil {
+		return nil, err
+	}
+	return JsonResponse[*types.DeploymentTargetWithCreatedBy](c.config.httpClient.Do(httpReq))
 }
 
 func (c *DeploymentTargets) Update(
@@ -57,15 +62,12 @@ func (c *DeploymentTargets) Update(
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(req); err != nil {
 		return nil, err
-	} else {
-		return JsonResponse[*types.DeploymentTargetWithCreatedBy](
-			c.config.httpClient.Post(
-				c.url(req.ID.String()),
-				"application/json",
-				&buf,
-			),
-		)
 	}
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url(req.ID.String()), &buf)
+	if err != nil {
+		return nil, err
+	}
+	return JsonResponse[*types.DeploymentTargetWithCreatedBy](c.config.httpClient.Do(httpReq))
 }
 
 func (c *DeploymentTargets) Delete(ctx context.Context, id uuid.UUID) error {
