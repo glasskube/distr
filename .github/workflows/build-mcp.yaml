@@ -12,11 +12,9 @@ jobs:
   build-mcp:
     runs-on: 'ubuntu-latest'
     permissions:
-      contents: write
-    strategy:
-      matrix:
-        goos: ['windows', 'linux', 'darwin']
-        goarch: ['amd64', 'arm64']
+      contents: read
+      id-token: write
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -33,17 +31,56 @@ jobs:
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr-mcp ./cmd/mcp/
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: '0'
           LDFLAGS: >-
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
-      - name: Create archive
-        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
-        run: tar -caf dist/distr-mcp-${{ matrix.goos }}-${{ matrix.goarch }}.tar.bz2 -C dist distr-mcp
-      - name: Upload Archive
-        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
-        run: gh release upload ${{ github.ref_name }} dist/distr-mcp-${{ matrix.goos }}-${{ matrix.goarch }}.tar.bz2
+
+      - name: Login to GitHub Container Registry (tag only)
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Generate Docker Metadata
+        id: meta
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        with:
+          images: ghcr.io/glasskube/distr-mcp
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+          labels: |
+            org.opencontainers.image.description=Distr MCP server
+            org.opencontainers.image.vendor=Glasskube
+      - name: Docker build (push on tag only)
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        id: build-push
+        with:
+          platforms: ${{ startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          context: .
+          file: Dockerfile.mcp
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          sbom: true
+          provenance: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: Sign the images with GitHub OIDC Token
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}

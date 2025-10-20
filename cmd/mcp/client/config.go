@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,6 +12,17 @@ import (
 )
 
 var defaultBaseUrl = util.Require(url.Parse("https://app.distr.sh/"))
+
+type authTokenKey struct{}
+
+func AuthTokenFromContext(ctx context.Context) (string, bool) {
+	token, ok := ctx.Value(authTokenKey{}).(string)
+	return token, ok
+}
+
+func WithAuthToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, authTokenKey{}, token)
+}
 
 type ConfigOption func(*Config)
 
@@ -32,6 +44,12 @@ func WithLogger(log *zap.Logger) ConfigOption {
 	}
 }
 
+func WithContextAuth(useContextAuth bool) ConfigOption {
+	return func(c *Config) {
+		c.useContextAuth = useContextAuth
+	}
+}
+
 func NewConfig(opts ...ConfigOption) *Config {
 	config := Config{
 		baseURL:    defaultBaseUrl,
@@ -46,10 +64,11 @@ func NewConfig(opts ...ConfigOption) *Config {
 }
 
 type Config struct {
-	log        *zap.Logger
-	baseURL    *url.URL
-	token      authkey.Key
-	httpClient *http.Client
+	log            *zap.Logger
+	baseURL        *url.URL
+	token          authkey.Key
+	httpClient     *http.Client
+	useContextAuth bool
 }
 
 func (c *Config) String() string {
@@ -75,7 +94,16 @@ type tokenRoundTripper struct {
 
 // RoundTrip implements http.RoundTripper.
 func (t *tokenRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Authorization", "AccessToken "+t.token.Serialize())
+	// Check if we should use context-based auth
+	if t.useContextAuth {
+		if token, ok := AuthTokenFromContext(req.Context()); ok && token != "" {
+			req.Header.Set("Authorization", token)
+		}
+	} else {
+		// Use token from config
+		req.Header.Set("Authorization", "AccessToken "+t.token.Serialize())
+	}
+
 	if req.Body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

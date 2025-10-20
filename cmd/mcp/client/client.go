@@ -5,5 +5,5 @@ type Client struct {
 }
 
 func NewClient(config *Config) *Client {
-	return &Client{config}
+	return &Client{config: config}
 }
