@@ -21,6 +21,7 @@ const (
 	ProviderGithub    Provider = "github"
 	ProviderGoogle    Provider = "google"
 	ProviderMicrosoft Provider = "microsoft"
+	ProviderGeneric   Provider = "generic"
 )
 
 type EmailExtractorFunc func(context.Context, *oauth2.Token) (string, bool, error)
@@ -47,12 +48,17 @@ func verifiedIdTokenEmailExtractor(verifier *oidc.IDTokenVerifier) EmailExtracto
 }
 
 type providerContext struct {
-	OAuth2Config   func(r *http.Request) *oauth2.Config
-	EmailExtractor EmailExtractorFunc
+	oauth2Config   func(r *http.Request) *config
+	emailExtractor EmailExtractorFunc
 }
 
 type OIDCer struct {
 	providers map[Provider]*providerContext
+}
+
+type config struct {
+	oauth2.Config
+	pkceEnabled bool
 }
 
 func NewOIDCer(ctx context.Context, log *zap.Logger) (*OIDCer, error) {
@@ -66,8 +72,8 @@ func NewOIDCer(ctx context.Context, log *zap.Logger) (*OIDCer, error) {
 		googleOidcConfig := &oidc.Config{ClientID: *env.OIDCGoogleClientID()}
 		googleVerifier := googleProvider.Verifier(googleOidcConfig)
 		p[ProviderGoogle] = &providerContext{
-			OAuth2Config:   getGoogleOauth2Config,
-			EmailExtractor: verifiedIdTokenEmailExtractor(googleVerifier),
+			oauth2Config:   getGoogleOauth2Config,
+			emailExtractor: verifiedIdTokenEmailExtractor(googleVerifier),
 		}
 	}
 	if env.OIDCMicrosoftEnabled() {
@@ -80,64 +86,102 @@ func NewOIDCer(ctx context.Context, log *zap.Logger) (*OIDCer, error) {
 		microsoftOidcConfig := &oidc.Config{ClientID: *env.OIDCMicrosoftClientID()}
 		microsoftVerifier := microsoftProvider.Verifier(microsoftOidcConfig)
 		p[ProviderMicrosoft] = &providerContext{
-			OAuth2Config:   getMicrosoftOauth2Config,
-			EmailExtractor: verifiedIdTokenEmailExtractor(microsoftVerifier),
+			oauth2Config:   getMicrosoftOauth2Config,
+			emailExtractor: verifiedIdTokenEmailExtractor(microsoftVerifier),
 		}
 	}
 	if env.OIDCGithubEnabled() {
 		log.Info("initializing github OIDC")
 		p[ProviderGithub] = &providerContext{
-			OAuth2Config:   getGithubOauth2Config,
-			EmailExtractor: getEmailFromGithubAccessToken,
+			oauth2Config:   getGithubOauth2Config,
+			emailExtractor: getEmailFromGithubAccessToken,
+		}
+	}
+	if env.OIDCGenericEnabled() {
+		log.Info("initializing generic OIDC")
+		genericProvider, err := oidc.NewProvider(ctx, *env.OIDCGenericIssuer())
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize Generic OIDC provider: %w", err)
+		}
+		genericOidcConfig := &oidc.Config{ClientID: *env.OIDCGenericClientID()}
+		genericVerifier := genericProvider.Verifier(genericOidcConfig)
+		p[ProviderGeneric] = &providerContext{
+			oauth2Config: func(r *http.Request) *config {
+				return &config{
+					Config: oauth2.Config{
+						ClientID:     *env.OIDCGenericClientID(),
+						ClientSecret: *env.OIDCGenericClientSecret(),
+						RedirectURL:  getRedirectURL(r, ProviderGeneric),
+						Endpoint:     genericProvider.Endpoint(),
+						Scopes:       env.OIDCGenericScopes(),
+					},
+					pkceEnabled: env.OIDCGenericPKCEEnabled(),
+				}
+			},
+			emailExtractor: verifiedIdTokenEmailExtractor(genericVerifier),
 		}
 	}
 	return &OIDCer{providers: p}, nil
 }
 
-func getGoogleOauth2Config(r *http.Request) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     *env.OIDCGoogleClientID(),
-		ClientSecret: *env.OIDCGoogleClientSecret(),
-		RedirectURL:  getRedirectURL(r, ProviderGoogle),
-		Endpoint:     google.Endpoint,
-		Scopes:       []string{oidc.ScopeOpenID, "email"},
+func getGoogleOauth2Config(r *http.Request) *config {
+	return &config{
+		Config: oauth2.Config{
+			ClientID:     *env.OIDCGoogleClientID(),
+			ClientSecret: *env.OIDCGoogleClientSecret(),
+			RedirectURL:  getRedirectURL(r, ProviderGoogle),
+			Endpoint:     google.Endpoint,
+			Scopes:       []string{oidc.ScopeOpenID, "email"},
+		},
+		pkceEnabled: true,
 	}
 }
 
-func getMicrosoftOauth2Config(r *http.Request) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     *env.OIDCMicrosoftClientID(),
-		ClientSecret: *env.OIDCMicrosoftClientSecret(),
-		RedirectURL:  getRedirectURL(r, ProviderMicrosoft),
-		Endpoint:     microsoft.AzureADEndpoint(*env.OIDCMicrosoftTenantID()),
-		Scopes:       []string{oidc.ScopeOpenID, "email"},
+func getMicrosoftOauth2Config(r *http.Request) *config {
+	return &config{
+		Config: oauth2.Config{
+			ClientID:     *env.OIDCMicrosoftClientID(),
+			ClientSecret: *env.OIDCMicrosoftClientSecret(),
+			RedirectURL:  getRedirectURL(r, ProviderMicrosoft),
+			Endpoint:     microsoft.AzureADEndpoint(*env.OIDCMicrosoftTenantID()),
+			Scopes:       []string{oidc.ScopeOpenID, "email"},
+		},
+		pkceEnabled: true,
 	}
 }
 
-func getGithubOauth2Config(r *http.Request) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     *env.OIDCGithubClientID(),
-		ClientSecret: *env.OIDCGithubClientSecret(),
-		RedirectURL:  getRedirectURL(r, ProviderGithub),
-		Endpoint:     github.Endpoint,
-		Scopes:       []string{oidc.ScopeOpenID, "email", "user:email"},
+func getGithubOauth2Config(r *http.Request) *config {
+	return &config{
+		Config: oauth2.Config{
+			ClientID:     *env.OIDCGithubClientID(),
+			ClientSecret: *env.OIDCGithubClientSecret(),
+			RedirectURL:  getRedirectURL(r, ProviderGithub),
+			Endpoint:     github.Endpoint,
+			Scopes:       []string{oidc.ScopeOpenID, "email", "user:email"},
+		},
+		pkceEnabled: true,
 	}
 }
 
 // GetEmailForCode exchanges the code for a token and extracts the user's email and verification status.
 func (o *OIDCer) GetEmailForCode(
-	ctx context.Context, provider Provider, code string, r *http.Request,
+	ctx context.Context, provider Provider, code, pkceVerifier string, r *http.Request,
 ) (string, bool, error) {
 	prov := o.providers[provider]
-	if prov == nil || prov.OAuth2Config == nil {
+	if prov == nil || prov.oauth2Config == nil {
 		return "", false, fmt.Errorf("OIDC provider not configured: %s", provider)
 	}
-	token, err := prov.OAuth2Config(r).Exchange(ctx, code)
+	c := prov.oauth2Config(r)
+	var opts []oauth2.AuthCodeOption
+	if c.pkceEnabled {
+		opts = append(opts, oauth2.VerifierOption(pkceVerifier))
+	}
+	token, err := prov.oauth2Config(r).Exchange(ctx, code, opts...)
 	if err != nil {
 		return "", false, fmt.Errorf("token exchange failed: %w", err)
 	}
 
-	if email, verified, err := prov.EmailExtractor(ctx, token); err != nil {
+	if email, verified, err := prov.emailExtractor(ctx, token); err != nil {
 		return "", false, err
 	} else {
 		return email, verified, nil
@@ -184,10 +228,14 @@ func getEmailFromGithubAccessToken(ctx context.Context, token *oauth2.Token) (st
 }
 
 // GetAuthCodeURL returns the OIDC provider's AuthCodeURL for the given state and provider.
-func (o *OIDCer) GetAuthCodeURL(r *http.Request, provider Provider, state string) (string, error) {
+func (o *OIDCer) GetAuthCodeURL(r *http.Request, provider Provider, state, pkceVerifier string) (string, error) {
 	prov := o.providers[provider]
-	if prov == nil || prov.OAuth2Config == nil {
+	if prov == nil || prov.oauth2Config == nil {
 		return "", fmt.Errorf("OIDC provider not configured: %s", provider)
 	}
-	return prov.OAuth2Config(r).AuthCodeURL(state), nil
+	c := prov.oauth2Config(r)
+	if c.pkceEnabled {
+		return c.AuthCodeURL(state, oauth2.S256ChallengeOption(pkceVerifier)), nil
+	}
+	return c.AuthCodeURL(state), nil
 }
