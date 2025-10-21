@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.6
 	github.com/compose-spec/compose-go/v2 v2.9.0
 	github.com/containerd/log v0.1.0
-	github.com/coreos/go-oidc/v3 v3.15.0
+	github.com/coreos/go-oidc/v3 v3.16.0
 	github.com/docker/cli v28.3.2+incompatible
 	github.com/docker/compose/v2 v2.38.2
 	github.com/docker/docker v28.4.0+incompatible
@@ -64,7 +64,7 @@ require (
 
 require (
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 )
 
 require (
