@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.14.1](https://github.com/glasskube/distr/compare/1.14.0...1.14.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* **agent:** disable JWT validation ([#1275](https://github.com/glasskube/distr/issues/1275)) ([dc70e6a](https://github.com/glasskube/distr/commit/dc70e6a93db91e4d645324c5a8d67e3dad10a949))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.9.0 ([#1270](https://github.com/glasskube/distr/issues/1270)) ([3621bbf](https://github.com/glasskube/distr/commit/3621bbf818bf3e672c895596d41ca290124746e1))
+* **deps:** update module github.com/coreos/go-oidc/v3 to v3.16.0 ([#1271](https://github.com/glasskube/distr/issues/1271)) ([c2098b5](https://github.com/glasskube/distr/commit/c2098b5d678fb70f589b29800a05ca50b21c0ecf))
+* **deps:** update module github.com/docker/docker to v28.5.1+incompatible ([#1272](https://github.com/glasskube/distr/issues/1272)) ([248eea8](https://github.com/glasskube/distr/commit/248eea87b4a5b1c487acb8f1526f11ae43de2ddc))
+* **deps:** update module github.com/getsentry/sentry-go to v0.36.0 ([#1273](https://github.com/glasskube/distr/issues/1273)) ([1f610f9](https://github.com/glasskube/distr/commit/1f610f94c69bff075c361f028c48af9c3da101bf))
+
+
+### Other
+
+* **deps:** update codemirror ([#1234](https://github.com/glasskube/distr/issues/1234)) ([3103eb8](https://github.com/glasskube/distr/commit/3103eb85ec38af53dcf6b4094175794b843cc269))
+* **deps:** update dependency go to v1.25.3 ([#1261](https://github.com/glasskube/distr/issues/1261)) ([15691bb](https://github.com/glasskube/distr/commit/15691bb5bf66a70d2b86fd56a484e8fb93dafcfd))
+* **deps:** update font awesome to v7.1.0 ([#1266](https://github.com/glasskube/distr/issues/1266)) ([6ce2dbc](https://github.com/glasskube/distr/commit/6ce2dbcc7d9eff3a97054e9ef04e58c87ebf533c))
+
 ## [1.14.0](https://github.com/glasskube/distr/compare/1.13.0...1.14.0) (2025-10-20)
 
 
