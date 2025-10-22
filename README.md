@@ -153,3 +153,28 @@ npm install --save @glasskube/distr-sdk
 ```
 
 The full SDK documentation is at https://distr.sh/docs/integrations/sdk/
+
+## Distr MCP server
+
+Use the Distr MCP server to connect your deployments, applications, artifacts and licenses to agentic workflows,
+or to interact with the Distr platform in LLM Clients.
+
+The Distr MCP server is hosted on HyprMCP ([hyprmcp.com](https://hyprmcp.com/) & [`hyprmcp/jetski`](http://github.com/hyprmcp/jetski/)).
+It can either be used as a Remote MCP server via the streamable HTTP protocol or used locally via stdio.
+
+> [!NOTE]  
+> The Distr MCP server requires authentication via a personal access token.
+
+Configure a [personal access token (PAT)](https://distr.sh/docs/integrations/personal-access-token/)
+in an `Authorization` header when calling the MCP server.
+
+**Header name:** `Authorization`
+**Header value:** `AccessToken distr-bc46...`
+
+Example configuration for Claude Code would look like:
+
+```shell
+claude mcp add --transport http distr https://glasskube.hyprmcp.cloud/distr/mcp --header "Authorization: AccessToken distr-bc46..."
+```
+
+The full MCP Server documentation is at https://distr.sh/docs/integrations/mcp/
