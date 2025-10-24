@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.14.2](https://github.com/glasskube/distr/compare/1.14.1...1.14.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1289](https://github.com/glasskube/distr/issues/1289)) ([af6746c](https://github.com/glasskube/distr/commit/af6746c4a038615c426ddf050f61c83a397d83e5))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1294](https://github.com/glasskube/distr/issues/1294)) ([bb592e9](https://github.com/glasskube/distr/commit/bb592e9223d556c9cfac6f196321741d0c22c43c))
+* **deps:** update module github.com/getsentry/sentry-go to v0.36.1 ([#1283](https://github.com/glasskube/distr/issues/1283)) ([33e00ed](https://github.com/glasskube/distr/commit/33e00edacf7a07f4aceab3c91e2dac0cb0d3a18e))
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.20.9 ([#1292](https://github.com/glasskube/distr/issues/1292)) ([0ca3f52](https://github.com/glasskube/distr/commit/0ca3f52774dd5f573c89f3504d66380d0838f2f9))
+* **deps:** update angular monorepo to v20.3.7 ([#1288](https://github.com/glasskube/distr/issues/1288)) ([409d810](https://github.com/glasskube/distr/commit/409d810615bdadd137779c1e762c1b152f9a3077))
+* **deps:** update angular-cli monorepo to v20.3.7 ([#1290](https://github.com/glasskube/distr/issues/1290)) ([766027b](https://github.com/glasskube/distr/commit/766027baadbdff371a9967d4a71efcd7fbad735b))
+* **deps:** update dependency @angular/cdk to v20.2.10 ([#1286](https://github.com/glasskube/distr/issues/1286)) ([edf7105](https://github.com/glasskube/distr/commit/edf7105a85c6d4fdba9e3272f9d684eef575f8d2))
+* **deps:** update dependency @types/jasmine to v5.1.12 ([#1277](https://github.com/glasskube/distr/issues/1277)) ([a1a76f5](https://github.com/glasskube/distr/commit/a1a76f5844e1bb0a5f36d6a9ae633156149169cc))
+* **deps:** update tailwindcss monorepo to v4.1.15 ([#1282](https://github.com/glasskube/distr/issues/1282)) ([ab5c458](https://github.com/glasskube/distr/commit/ab5c458e38651f64fdac4867bcd6a1b67c680f4e))
+* **deps:** update tailwindcss monorepo to v4.1.16 ([#1293](https://github.com/glasskube/distr/issues/1293)) ([d5aa69d](https://github.com/glasskube/distr/commit/d5aa69d0fdc30cc857ee3657a55c8609e88aa25e))
+
+
+### Docs
+
+* add hosted distr mcp to README.md ([#1279](https://github.com/glasskube/distr/issues/1279)) ([9c287a9](https://github.com/glasskube/distr/commit/9c287a924d60fc0e777719feff40ae4abfda5484))
+
 ## [1.14.1](https://github.com/glasskube/distr/compare/1.14.0...1.14.1) (2025-10-21)
 
 
