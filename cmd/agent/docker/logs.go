@@ -23,7 +23,7 @@ import (
 
 type logsWatcher struct {
 	dockerCli      dockercommand.Cli
-	composeService composeapi.Service
+	composeService composeapi.Compose
 	logsExporter   agentlogs.Exporter
 	last           map[uuid.UUID]time.Time
 }
