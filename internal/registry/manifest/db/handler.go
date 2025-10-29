@@ -176,7 +176,7 @@ func (h *handler) Put(
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||
 			existingVersion.ManifestContentType != version.ManifestContentType {
-			return fmt.Errorf("%w: reference %s already exists with different manifest digest", manifestpkg.ErrTagAlreadyExists, reference)
+			return fmt.Errorf("%w: tag %s already exists with different content", manifestpkg.ErrTagAlreadyExists, reference)
 		} else {
 			version = *existingVersion
 		}
