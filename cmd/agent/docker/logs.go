@@ -8,12 +8,12 @@ import (
 	"time"
 
 	dockercommand "github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/command/stack/options"
-	"github.com/docker/cli/cli/command/stack/swarm"
-	"github.com/docker/cli/opts"
+	"github.com/docker/cli/cli/compose/convert"
 	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/glasskube/distr/internal/agentlogs"
 	"github.com/glasskube/distr/internal/types"
@@ -84,16 +84,17 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 			// Getting the list of swarm services for the stack and then getting the logs for each service.
 			// Because we are interacting with the API directly, we also have to decode the raw stream into its
 			// stdout and stderr components.
-			services, err := swarm.GetServices(
+			apiClient := lw.dockerCli.Client()
+			services, err := apiClient.ServiceList(
 				ctx,
-				lw.dockerCli,
-				options.Services{Namespace: d.ProjectName, Filter: opts.NewFilterOpt()},
+				swarm.ServiceListOptions{
+					Filters: filters.NewArgs(filters.Arg("label", convert.LabelNamespace+"="+d.ProjectName)),
+				},
 			)
 			if err != nil {
 				logger.Warn("could not get services for docker stack", zap.Error(err))
 				toplevelErr = err
 			} else {
-				apiClient := lw.dockerCli.Client()
 				for _, svc := range services {
 					// fake closure to close the ReadCloser returned by ServiceLogs after each iteration
 					err := func() error {
