@@ -38,6 +38,7 @@ linters:
     - unparam
     - unused
     - whitespace
+    - gocritic
   exclusions:
     generated: lax
     presets:
@@ -49,6 +50,12 @@ linters:
       - third_party$
       - builtin$
       - examples$
+  settings:
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+        - singleCaseSwitch
+
 formatters:
   enable:
     - gci

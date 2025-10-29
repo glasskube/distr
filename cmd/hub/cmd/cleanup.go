@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -57,7 +58,9 @@ func NewCleanupCommand() *cobra.Command {
 		PreRun: func(cmd *cobra.Command, args []string) { env.Initialize() },
 		Run: func(cmd *cobra.Command, args []string) {
 			opts.Type = args[0]
-			runCleanup(cmd.Context(), opts)
+			if err := runCleanup(cmd.Context(), opts); err != nil {
+				os.Exit(1)
+			}
 		},
 	}
 
@@ -70,7 +73,7 @@ func init() {
 	RootCommand.AddCommand(NewCleanupCommand())
 }
 
-func runCleanup(ctx context.Context, opts CleanupOptions) {
+func runCleanup(ctx context.Context, opts CleanupOptions) error {
 	registry := util.Require(svc.NewDefault(ctx))
 	defer func() { util.Must(registry.Shutdown(ctx)) }()
 	log := registry.GetLogger()
@@ -89,7 +92,7 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 		cleanupFunc = cleanup.RunOIDCStateCleanup
 	default:
 		log.Sugar().Errorf("invalid cleanup type: %v", opts.Type)
-		os.Exit(1)
+		return errors.New("invalid cleanup type")
 	}
 
 	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
@@ -113,7 +116,8 @@ func runCleanup(ctx context.Context, opts CleanupOptions) {
 		log.Error("cleanup failed", zap.Error(err))
 		span.SetStatus(codes.Error, "cleanupFunc error")
 		span.RecordError(err)
-		os.Exit(1)
+		return err
 	}
 	span.SetStatus(codes.Ok, "cleanupFunc finished")
+	return nil
 }
