@@ -32,6 +32,16 @@
 
 ---
 
+### emailVerified
+
+> **emailVerified**: `boolean`
+
+#### Inherited from
+
+[`UserAccount`](UserAccount.md).[`emailVerified`](UserAccount.md#emailverified)
+
+---
+
 ### id?
 
 > `optional` **id**: `string`
