@@ -32,6 +32,8 @@ func UserAccountsRouter(r chi.Router) {
 			r.Use(userAccountMiddleware)
 			r.Delete("/", deleteUserAccountHandler)
 			r.Patch("/image", patchImageUserAccount)
+			r.With(inviteUserRateLimiter).
+				Post("/invite", resendUserInviteHandler())
 		})
 	})
 	r.Get("/status", getUserAccountStatusHandler)
@@ -119,18 +121,11 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		if !userHasExisted {
-			// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
-			if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
+		if !userHasExisted || userAccount.EmailVerifiedAt == nil {
+			if inviteURL, err = generateUserInviteUrl(userAccount, organization.Organization); err != nil {
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
-			} else {
-				inviteURL = fmt.Sprintf(
-					"%v/join?jwt=%v",
-					customdomains.AppDomainOrDefault(organization.Organization),
-					url.QueryEscape(token),
-				)
 			}
 		}
 
@@ -156,6 +151,62 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		User:      userAccount.AsUserAccountWithRole(body.UserRole, time.Now()),
 		InviteURL: inviteURL,
 	})
+}
+
+func resendUserInviteHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		auth := auth.Authentication.Require(ctx)
+		userAccountIDStr := r.PathValue("userId")
+		userAccountID, err := uuid.Parse(userAccountIDStr)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		userAccount, err := db.GetUserAccountWithRole(ctx, userAccountID, *auth.CurrentOrgID())
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		} else if err != nil {
+			err = fmt.Errorf("failed to get org with branding: %w", err)
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if userAccount.EmailVerified {
+			http.Error(w, "UserAccount is already verified", http.StatusBadRequest)
+			return
+		}
+
+		organization, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID())
+		if err != nil {
+			err = fmt.Errorf("failed to get org with branding: %w", err)
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		inviteURL, err := generateUserInviteUrl(userAccount.AsUserAccount(), organization.Organization)
+		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := mailsending.SendUserInviteMail(
+			ctx,
+			userAccount.AsUserAccount(),
+			*organization,
+			userAccount.UserRole,
+			inviteURL,
+		); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		RespondJSON(w, api.CreateUserAccountResponse{User: *userAccount, InviteURL: inviteURL})
+	}
 }
 
 func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
@@ -240,4 +291,17 @@ func userAccountMiddleware(h http.Handler) http.Handler {
 			h.ServeHTTP(w, r.WithContext(internalctx.WithUserAccount(ctx, userAccount)))
 		}
 	})
+}
+
+func generateUserInviteUrl(userAccount types.UserAccount, organization types.Organization) (string, error) {
+	// TODO: Should probably use a different mechanism for invite tokens but for now this should work OK
+	if _, token, err := authjwt.GenerateVerificationTokenValidFor(userAccount); err != nil {
+		return "", fmt.Errorf("failed to generate invite URL: %w", err)
+	} else {
+		return fmt.Sprintf(
+			"%v/join?jwt=%v",
+			customdomains.AppDomainOrDefault(organization),
+			url.QueryEscape(token),
+		), nil
+	}
 }

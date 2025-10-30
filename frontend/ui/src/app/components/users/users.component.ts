@@ -1,6 +1,6 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, computed, inject, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -10,10 +10,12 @@ import {
   faClipboard,
   faMagnifyingGlass,
   faPlus,
+  faRepeat,
   faTrash,
   faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
@@ -25,22 +27,19 @@ import {
   startWith,
   Subject,
   switchMap,
-  takeUntil,
   tap,
 } from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';
+import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
-import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
-import {HttpErrorResponse} from '@angular/common/http';
-import {FeatureFlagService} from '../../services/feature-flag.service';
-import {SecureImagePipe} from '../../../util/secureImage';
 
 @Component({
   selector: 'app-users',
@@ -65,6 +64,7 @@ export class UsersComponent implements OnDestroy {
 
   public readonly faMagnifyingGlass = faMagnifyingGlass;
   public readonly faPlus = faPlus;
+  protected readonly faRepeat = faRepeat;
   public readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
   protected readonly faClipboard = faClipboard;
@@ -72,7 +72,6 @@ export class UsersComponent implements OnDestroy {
   public readonly userRole: Signal<UserRole>;
   public readonly users$: Observable<UserAccountWithRole[]>;
   private readonly refresh$ = new Subject<void>();
-  private readonly destroyed$ = new Subject<void>();
 
   @ViewChild('inviteUserDialog') private inviteUserDialog!: TemplateRef<unknown>;
   private modalRef?: DialogRef;
@@ -104,17 +103,15 @@ export class UsersComponent implements OnDestroy {
         !search ||
         (it.name || '').toLowerCase().includes(search.toLowerCase()) ||
         (it.email || '').toLowerCase().includes(search.toLowerCase())
-    ).pipe(takeUntil(this.destroyed$));
+    ).pipe(takeUntilDestroyed());
   }
 
   ngOnDestroy() {
     this.refresh$.complete();
-    this.destroyed$.next();
-    this.destroyed$.complete();
   }
 
-  public showInviteDialog(): void {
-    this.closeInviteDialog();
+  public showInviteDialog(reset?: boolean): void {
+    this.closeInviteDialog(reset);
     this.modalRef = this.overlay.showModal(this.inviteUserDialog);
   }
 
@@ -157,6 +154,23 @@ export class UsersComponent implements OnDestroy {
     await firstValueFrom(this.users.patchImage(data.id!, fileId));
   }
 
+  protected async resendInvitation(user: UserAccountWithRole) {
+    try {
+      const result = await firstValueFrom(this.users.resendInvitation(user));
+      this.inviteUrl = result.inviteUrl;
+      if (!this.inviteUrl) {
+        this.toast.success(`Invitation has been resent to ${user.email}`);
+      } else {
+        this.showInviteDialog(false);
+      }
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    }
+  }
+
   public async deleteUser(user: UserAccountWithRole): Promise<void> {
     this.overlay
       .confirm(`This will remove ${user.name ?? user.email} from your organization. Are you sure?`)
@@ -175,10 +189,13 @@ export class UsersComponent implements OnDestroy {
       .subscribe();
   }
 
-  public closeInviteDialog(): void {
-    this.inviteUrl = null;
+  public closeInviteDialog(reset: boolean = true): void {
     this.modalRef?.close();
-    this.inviteForm.reset();
+
+    if (reset) {
+      this.inviteUrl = null;
+      this.inviteForm.reset();
+    }
   }
 
   public copyInviteUrl(): void {
