@@ -34,7 +34,9 @@ func getContextHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		RespondJSON(w, api.ContextResponse{
-			User:              api.AsUserAccount(auth.CurrentUser().AsUserAccountWithRole(*auth.CurrentUserRole(), joinDate)),
+			User: api.AsUserAccount(
+				auth.CurrentUser().AsUserAccountWithRole(*auth.CurrentUserRole(), auth.CurrentCustomerOrgID(), joinDate),
+			),
 			Organization:      *auth.CurrentOrg(),
 			AvailableContexts: orgs,
 		})

@@ -60,3 +60,11 @@ func (b *OrganizationBranding) LogoDataUrl() *string {
 		return nil
 	}
 }
+
+type CustomerOrganization struct {
+	ID             uuid.UUID  `db:"id" json:"id"`
+	CreatedAt      time.Time  `db:"created_at" json:"createdAt"`
+	OrganizationID uuid.UUID  `db:"organization_id" json:"organizationId"`
+	ImageID        *uuid.UUID `db:"image_id" json:"imageId,omitempty"`
+	Name           string     `db:"name" json:"name"`
+}

@@ -6,16 +6,20 @@ import (
 )
 
 type SimpleAuthInfo struct {
-	userID         uuid.UUID
-	userEmail      string
-	organizationID *uuid.UUID
-	emailVerified  bool
-	userRole       *types.UserRole
-	rawToken       any
+	userID                 uuid.UUID
+	userEmail              string
+	organizationID         *uuid.UUID
+	customerOrganizationID *uuid.UUID
+	emailVerified          bool
+	userRole               *types.UserRole
+	rawToken               any
 }
 
 // CurrentOrgID implements AuthInfo.
 func (i *SimpleAuthInfo) CurrentOrgID() *uuid.UUID { return i.organizationID }
+
+// CurrentCustomerOrgID implements AuthInfo.
+func (i *SimpleAuthInfo) CurrentCustomerOrgID() *uuid.UUID { return i.customerOrganizationID }
 
 // CurrentUserEmailVerified implements AuthInfo.
 func (i *SimpleAuthInfo) CurrentUserEmailVerified() bool { return i.emailVerified }

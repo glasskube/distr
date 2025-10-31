@@ -273,13 +273,14 @@ func validateDeploymentRequestLicense(
 		if license.OrganizationID != *auth.CurrentOrgID() {
 			return licenseNotFoundError(w)
 		}
-		if license.OwnerUserAccountID == nil {
+		if license.CustomerOrganizationID == nil {
 			return invalidLicenseError(w)
 		}
-		if *auth.CurrentUserRole() == types.UserRoleCustomer && *license.OwnerUserAccountID != auth.CurrentUserID() {
+		if *auth.CurrentUserRole() == types.UserRoleCustomer &&
+			*license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
 			return licenseNotFoundError(w)
 		}
-		if target.CreatedByUserAccountID != *license.OwnerUserAccountID {
+		if target.CustomerOrganizationID == nil || *target.CustomerOrganizationID != *license.CustomerOrganizationID {
 			return invalidLicenseError(w)
 		}
 		if len(license.Versions) > 0 && !license.HasVersionWithID(request.ApplicationVersionID) {

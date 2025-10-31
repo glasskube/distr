@@ -24,6 +24,7 @@ func (tok AccessToken) HasExpired() bool {
 
 type AccessTokenWithUserAccount struct {
 	AccessToken
-	UserAccount UserAccount `db:"user_account"`
-	UserRole    UserRole    `db:"user_role"`
+	UserAccount            UserAccount `db:"user_account"`
+	UserRole               UserRole    `db:"user_role"`
+	CustomerOrganizationID *uuid.UUID  `db:"customer_organization_id"`
 }

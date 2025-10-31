@@ -18,7 +18,9 @@ const (
 	tok.id, tok.created_at, tok.expires_at, tok.last_used_at, tok.label, tok.key, tok.user_account_id, tok.organization_id
 `
 	accessTokenWithUserAccountOutputExpr = accessTokenOutputExpr + `,
-	(` + userAccountOutputExpr + `) AS user_account, oua.user_role
+	(` + userAccountOutputExpr + `) AS user_account,
+	oua.user_role,
+	oua.customer_organization_id
 `
 )
 

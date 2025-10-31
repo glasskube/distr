@@ -27,8 +27,6 @@ func (a DbAuthInfo) CurrentOrg() *types.Organization {
 
 func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 	return authn.AuthenticatorFunc[AuthInfo, *DbAuthInfo](func(ctx context.Context, a AuthInfo) (*DbAuthInfo, error) {
-		var user *types.UserAccount
-		var org *types.Organization
 		if a.CurrentOrgID() != nil && a.CurrentUserRole() != nil {
 			if u, o, err := db.GetUserAccountAndOrg(
 				ctx, a.CurrentUserID(), *a.CurrentOrgID(), a.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
@@ -36,8 +34,19 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 			} else if err != nil {
 				return nil, err
 			} else {
-				user = util.PtrTo(u.AsUserAccount())
-				org = o
+				return &DbAuthInfo{
+					AuthInfo: &SimpleAuthInfo{
+						userID:                 a.CurrentUserID(),
+						userEmail:              a.CurrentUserEmail(),
+						organizationID:         a.CurrentOrgID(),
+						customerOrganizationID: u.CustomerOrganizationID,
+						emailVerified:          a.CurrentUserEmailVerified(),
+						userRole:               a.CurrentUserRole(),
+						rawToken:               a.Token(),
+					},
+					user: util.PtrTo(u.AsUserAccount()),
+					org:  o,
+				}, nil
 			}
 		} else {
 			// some special tokens like password reset don't have an organization ID
@@ -46,14 +55,9 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 			} else if err != nil {
 				return nil, err
 			} else {
-				user = u
+				return &DbAuthInfo{AuthInfo: a, user: u}, nil
 			}
 		}
-		return &DbAuthInfo{
-			AuthInfo: a,
-			user:     user,
-			org:      org,
-		}, nil
 	})
 }
 
@@ -67,12 +71,13 @@ func AgentDbAuthenticator() authn.Authenticator[AgentAuthInfo, *DbAuthInfo] {
 		}
 		return &DbAuthInfo{
 			AuthInfo: &SimpleAuthInfo{
-				organizationID: &org.ID,
-				userID:         userWithRole.ID,
-				userEmail:      userWithRole.Email,
-				emailVerified:  userWithRole.EmailVerifiedAt != nil,
-				userRole:       util.PtrTo(userWithRole.UserRole),
-				rawToken:       a.Token(),
+				organizationID:         &org.ID,
+				customerOrganizationID: userWithRole.CustomerOrganizationID,
+				userID:                 userWithRole.ID,
+				userEmail:              userWithRole.Email,
+				emailVerified:          userWithRole.EmailVerifiedAt != nil,
+				userRole:               util.PtrTo(userWithRole.UserRole),
+				rawToken:               a.Token(),
 			},
 			user: util.PtrTo(userWithRole.AsUserAccount()),
 			org:  org,

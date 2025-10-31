@@ -17,7 +17,7 @@ import (
 const (
 	applicationLicenseOutputExpr = `
 		al.id, al.created_at, al.name, al.expires_at, al.application_id, al.organization_id,
-		al.owner_useraccount_id, al.registry_url, al.registry_username, al.registry_password
+		al.customer_organization_id, al.registry_url, al.registry_username, al.registry_password
 	`
 	applicationLicenseWithVersionsOutputExpr = applicationLicenseOutputExpr + `,
 		coalesce((
@@ -34,7 +34,9 @@ const (
 	`
 	applicationLicenseCompleteOutputExpr = applicationLicenseWithVersionsOutputExpr + `,
 		(a.id, a.created_at, a.organization_id, a.name, a.type) as application,
-		CASE WHEN al.owner_useraccount_id IS NOT NULL THEN (` + userAccountOutputExpr + `) END as owner
+		CASE WHEN al.customer_organization_id IS NOT NULL
+			THEN (` + customerOrganizationOutputExpr + `)
+		END as customer_organization
 	`
 )
 
@@ -43,21 +45,21 @@ func CreateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO ApplicationLicense AS al (
-			name, expires_at, application_id, organization_id, owner_useraccount_id, registry_url, registry_username,
+			name, expires_at, application_id, organization_id, customer_organization_id, registry_url, registry_username,
 			registry_password
 		) VALUES (
-			@name, @expiresAt, @applicationId, @organizationId, @ownerUserAccountId, @registryUrl, @registryUsername,
+			@name, @expiresAt, @applicationId, @organizationId, @customerOrganizationId, @registryUrl, @registryUsername,
 			@registryPassword
 		) RETURNING`+applicationLicenseOutputExpr,
 		pgx.NamedArgs{
-			"name":               license.Name,
-			"expiresAt":          license.ExpiresAt,
-			"applicationId":      license.ApplicationID,
-			"organizationId":     license.OrganizationID,
-			"ownerUserAccountId": license.OwnerUserAccountID,
-			"registryUrl":        license.RegistryURL,
-			"registryUsername":   license.RegistryUsername,
-			"registryPassword":   license.RegistryPassword,
+			"name":                   license.Name,
+			"expiresAt":              license.ExpiresAt,
+			"applicationId":          license.ApplicationID,
+			"organizationId":         license.OrganizationID,
+			"customerOrganizationId": license.CustomerOrganizationID,
+			"registryUrl":            license.RegistryURL,
+			"registryUsername":       license.RegistryUsername,
+			"registryPassword":       license.RegistryPassword,
 		},
 	)
 	if err != nil {
@@ -82,19 +84,19 @@ func UpdateApplicationLicense(ctx context.Context, license *types.ApplicationLic
 		`UPDATE ApplicationLicense AS al SET
 			name = @name,
             expires_at = @expiresAt,
-            owner_useraccount_id = @ownerUserAccountId,
+            customer_organization_id = @customerOrganizationId,
             registry_url = @registryUrl,
             registry_username = @registryUsername,
             registry_password = @registryPassword
 		 WHERE al.id = @id RETURNING`+applicationLicenseOutputExpr,
 		pgx.NamedArgs{
-			"id":                 license.ID,
-			"name":               license.Name,
-			"expiresAt":          license.ExpiresAt,
-			"ownerUserAccountId": license.OwnerUserAccountID,
-			"registryUrl":        license.RegistryURL,
-			"registryUsername":   license.RegistryUsername,
-			"registryPassword":   license.RegistryPassword,
+			"id":                     license.ID,
+			"name":                   license.Name,
+			"expiresAt":              license.ExpiresAt,
+			"customerOrganizationId": license.CustomerOrganizationID,
+			"registryUrl":            license.RegistryURL,
+			"registryUsername":       license.RegistryUsername,
+			"registryPassword":       license.RegistryPassword,
 		},
 	)
 	if err != nil {
@@ -181,7 +183,7 @@ func GetApplicationLicensesWithOrganizationID(
 		"SELECT "+applicationLicenseCompleteOutputExpr+
 			"FROM ApplicationLicense al "+
 			"LEFT JOIN Application a ON al.application_id = a.id "+
-			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
+			"LEFT JOIN CustomerOrganization co ON al.customer_organization_id = co.id "+
 			"WHERE al.organization_id = @organizationId "+
 			andApplicationIdMatchesOrEmpty(applicationID),
 		pgx.NamedArgs{
@@ -200,9 +202,9 @@ func GetApplicationLicensesWithOrganizationID(
 	}
 }
 
-func GetApplicationLicensesWithOwnerID(
+func GetApplicationLicensesWithCustomerOrganizationID(
 	ctx context.Context,
-	ownerID, organizationID uuid.UUID,
+	customerOrganizationID, organizationID uuid.UUID,
 	applicationID *uuid.UUID,
 ) ([]types.ApplicationLicense, error) {
 	db := internalctx.GetDb(ctx)
@@ -211,13 +213,13 @@ func GetApplicationLicensesWithOwnerID(
 		"SELECT "+applicationLicenseCompleteOutputExpr+
 			"FROM ApplicationLicense al "+
 			"LEFT JOIN Application a ON al.application_id = a.id "+
-			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
-			"WHERE al.owner_useraccount_id = @ownerId AND al.organization_id = @organizationId "+
+			"LEFT JOIN CustomerOrganization co ON al.customer_organization_id = co.id "+
+			"WHERE al.customer_organization_id = @customerOrganizationId AND al.organization_id = @organizationId "+
 			andApplicationIdMatchesOrEmpty(applicationID),
 		pgx.NamedArgs{
-			"ownerId":        ownerID,
-			"organizationId": organizationID,
-			"applicationId":  applicationID,
+			"customerOrganizationId": customerOrganizationID,
+			"organizationId":         organizationID,
+			"applicationId":          applicationID,
 		},
 	)
 	if err != nil {
@@ -245,7 +247,7 @@ func GetApplicationLicenseByID(ctx context.Context, id uuid.UUID) (*types.Applic
 		"SELECT "+applicationLicenseCompleteOutputExpr+
 			"FROM ApplicationLicense al "+
 			"LEFT JOIN Application a ON al.application_id = a.id "+
-			"LEFT JOIN UserAccount u ON al.owner_useraccount_id = u.id "+
+			"LEFT JOIN CustomerOrganization co ON al.customer_organization_id = co.id "+
 			"WHERE al.id = @id ",
 		pgx.NamedArgs{"id": id},
 	)
