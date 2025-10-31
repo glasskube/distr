@@ -106,6 +106,8 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			userAccount = *existingUA
 		}
 
+		// TODO: Check access to customer organization
+
 		if err := db.CreateUserAccountOrganizationAssignment(
 			ctx,
 			userAccount.ID,
@@ -148,7 +150,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondJSON(w, api.CreateUserAccountResponse{
-		User:      userAccount.AsUserAccountWithRole(body.UserRole, time.Now()),
+		User:      userAccount.AsUserAccountWithRole(body.UserRole, body.CustomerOrganizationID, time.Now()),
 		InviteURL: inviteURL,
 	})
 }

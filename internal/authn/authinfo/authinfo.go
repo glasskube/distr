@@ -10,6 +10,7 @@ type AuthInfo interface {
 	CurrentUserEmail() string
 	CurrentUserRole() *types.UserRole
 	CurrentOrgID() *uuid.UUID
+	CurrentCustomerOrgID() *uuid.UUID
 	CurrentUserEmailVerified() bool
 	Token() any
 }

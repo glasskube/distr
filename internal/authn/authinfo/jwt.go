@@ -13,6 +13,8 @@ import (
 )
 
 func FromUserJWT(token jwt.Token) (*SimpleAuthInfo, error) {
+	// TODO: Check if this function is still needed
+	// FIXME: SimpleAuthInfo does not contain customer org ID here
 	var result SimpleAuthInfo
 	if parsedSub, err := uuid.Parse(token.Subject()); err != nil {
 		return nil, fmt.Errorf("JWT subject is invalid: %w", err)

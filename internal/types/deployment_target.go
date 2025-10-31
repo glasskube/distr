@@ -16,6 +16,7 @@ type DeploymentTarget struct {
 	Scope                  *DeploymentTargetScope  `db:"scope" json:"scope,omitempty"`
 	OrganizationID         uuid.UUID               `db:"organization_id" json:"-"`
 	CreatedByUserAccountID uuid.UUID               `db:"created_by_user_account_id" json:"-"`
+	CustomerOrganizationID *uuid.UUID              `db:"customer_organization_id" json:"customerOrganizationId,omitempty"`
 	AgentVersionID         *uuid.UUID              `db:"agent_version_id" json:"-"`
 	ReportedAgentVersionID *uuid.UUID              `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"`
 	MetricsEnabled         bool                    `db:"metrics_enabled" json:"metricsEnabled"`

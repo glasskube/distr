@@ -25,6 +25,7 @@ const (
 		dt.scope,
 		dt.organization_id,
 		dt.created_by_user_account_id,
+		dt.customer_organization_id,
 		dt.agent_version_id,
 		dt.reported_agent_version_id,
 		dt.metrics_enabled
