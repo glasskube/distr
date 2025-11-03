@@ -3,8 +3,6 @@ package env
 import (
 	"fmt"
 	"net/mail"
-
-	"github.com/glasskube/distr/internal/types"
 )
 
 type RegistrationMode string
@@ -21,15 +19,6 @@ func parseRegistrationMode(value string) (RegistrationMode, error) {
 		return RegistrationMode(value), nil
 	default:
 		return "", fmt.Errorf("invalid RegistrationMode: %v", value)
-	}
-}
-
-func parseDefaultUserRole(value string) (types.UserRole, error) {
-	switch value {
-	case string(types.UserRoleCustomer), string(types.UserRoleVendor):
-		return types.UserRole(value), nil
-	default:
-		return "", fmt.Errorf("invalid UserRule: %v", value)
 	}
 }
 

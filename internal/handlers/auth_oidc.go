@@ -89,7 +89,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		} else if len(orgs) < 1 {
 			// TODO deduplicate (regular login)
 			org.Name = user.Email
-			org.UserRole = env.DefaultUserRole()
+			org.UserRole = types.UserRoleVendor
 			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
 				return err
 			} else if err := db.CreateUserAccountOrganizationAssignment(
