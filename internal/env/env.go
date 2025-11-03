@@ -11,7 +11,6 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/glasskube/distr/internal/envparse"
 	"github.com/glasskube/distr/internal/envutil"
-	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/joho/godotenv"
 )

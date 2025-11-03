@@ -12,7 +12,6 @@ import (
 	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
