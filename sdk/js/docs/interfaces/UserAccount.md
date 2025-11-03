@@ -32,6 +32,12 @@
 
 ---
 
+### emailVerified
+
+> **emailVerified**: `boolean`
+
+---
+
 ### id?
 
 > `optional` **id**: `string`

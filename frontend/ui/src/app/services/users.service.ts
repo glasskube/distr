@@ -13,7 +13,7 @@ export interface CreateUserAccountRequest {
   userRole: UserRole;
 }
 
-export interface CreateUserAccountResponse {
+export interface UserAccountInvitationResponse {
   user: UserAccountWithRole;
   inviteUrl: string;
 }
@@ -45,9 +45,15 @@ export class UsersService {
     return this.httpClient.get<{active: boolean}>(`${this.baseUrl}/status`);
   }
 
-  public addUser(request: CreateUserAccountRequest): Observable<CreateUserAccountResponse> {
+  public addUser(request: CreateUserAccountRequest): Observable<UserAccountInvitationResponse> {
     return this.httpClient
-      .post<CreateUserAccountResponse>(this.baseUrl, request)
+      .post<UserAccountInvitationResponse>(this.baseUrl, request)
+      .pipe(tap((it) => this.cache.save(it.user)));
+  }
+
+  public resendInvitation(user: UserAccountWithRole): Observable<UserAccountInvitationResponse> {
+    return this.httpClient
+      .post<UserAccountInvitationResponse>(`${this.baseUrl}/${user.id}/invite`, undefined)
       .pipe(tap((it) => this.cache.save(it.user)));
   }
 

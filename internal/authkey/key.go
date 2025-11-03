@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -42,7 +43,7 @@ func (key *Key) Scan(src any) error {
 	switch v := src.(type) {
 	case []byte:
 		if len(v) == 16 {
-			*key = Key(v[:])
+			*key = Key(slices.Clone(v))
 			return nil
 		}
 	}

@@ -131,7 +131,7 @@ func (c *Client) Login(ctx context.Context) error {
 		if err := json.NewDecoder(resp.Body).Decode(&loginResponse); err != nil {
 			return err
 		}
-		if parsedToken, err := jwt.Parse([]byte(loginResponse.Token), jwt.WithVerify(false)); err != nil {
+		if parsedToken, err := jwt.ParseInsecure([]byte(loginResponse.Token)); err != nil {
 			return err
 		} else {
 			c.rawToken = loginResponse.Token

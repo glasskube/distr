@@ -53,7 +53,7 @@ jobs:
           cache-dependency-path: |
             go.sum
       - name: Setup node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: '24'
           cache: npm
@@ -107,7 +107,7 @@ jobs:
           DISTR_HOST: http://localhost:8080
 
       - name: Generate SBOM for frontend project
-        uses: anchore/sbom-action@aa0e114b2e19480f157109b9922bda359bd98b90 # v0.20.8
+        uses: anchore/sbom-action@8e94d75ddd33f69f691467e42275782e4bfefe84 # v0.20.9
         with:
           file: package-lock.json
           output-file: dist/frontend.spdx.json

@@ -19,7 +19,7 @@ services:
       start_period: 30s
   hub:
     container_name: distr
-    image: ghcr.io/glasskube/distr:1.14.0 # x-release-please-version
+    image: ghcr.io/glasskube/distr:1.14.2 # x-release-please-version
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,24 +48,6 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio:/data/
-
-  # Example SMTP provider
-  mailhog:
-    container_name: mailhog
-    image: mailhog/mailhog:latest
-    ports:
-      - '1025:1025'
-      - '8025:8025'
-
-  # OIDC provider mockup
-  dex:
-    container_name: dex
-    image: dexidp/dex:latest
-    ports:
-      - '5556:5556'
-    volumes:
-      - ./dex-config.yaml:/etc/dex/config.yaml
-    command: ['dex', 'serve', '/etc/dex/config.yaml']
 
 volumes:
   postgres:

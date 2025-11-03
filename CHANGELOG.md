@@ -1,5 +1,55 @@
 # Changelog
 
+## [1.14.2](https://github.com/glasskube/distr/compare/1.14.1...1.14.2) (2025-10-29)
+
+
+### Bug Fixes
+
+* **backend:** ensure db connections are cancelled on cleanup timeout ([#1306](https://github.com/glasskube/distr/issues/1306)) ([858b92f](https://github.com/glasskube/distr/commit/858b92f7c923ed81a83c215e9cf20fd1ce923ec6))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1289](https://github.com/glasskube/distr/issues/1289)) ([af6746c](https://github.com/glasskube/distr/commit/af6746c4a038615c426ddf050f61c83a397d83e5))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1294](https://github.com/glasskube/distr/issues/1294)) ([bb592e9](https://github.com/glasskube/distr/commit/bb592e9223d556c9cfac6f196321741d0c22c43c))
+* **deps:** update module github.com/getsentry/sentry-go to v0.36.1 ([#1283](https://github.com/glasskube/distr/issues/1283)) ([33e00ed](https://github.com/glasskube/distr/commit/33e00edacf7a07f4aceab3c91e2dac0cb0d3a18e))
+* **deps:** update module github.com/getsentry/sentry-go to v0.36.2 ([#1299](https://github.com/glasskube/distr/issues/1299)) ([f0d7f48](https://github.com/glasskube/distr/commit/f0d7f48800f40007de6ca955d56c0cbc8fde4054))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.36.1 ([#1285](https://github.com/glasskube/distr/issues/1285)) ([d598426](https://github.com/glasskube/distr/commit/d598426927b5e7ec8bd8e57ab0d190e971dc1cfb))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.17.0 ([#1287](https://github.com/glasskube/distr/issues/1287)) ([4c09faf](https://github.com/glasskube/distr/commit/4c09faf5f504420a9f0450abb48eb2ccde103a14))
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.20.9 ([#1292](https://github.com/glasskube/distr/issues/1292)) ([0ca3f52](https://github.com/glasskube/distr/commit/0ca3f52774dd5f573c89f3504d66380d0838f2f9))
+* **deps:** update angular monorepo to v20.3.7 ([#1288](https://github.com/glasskube/distr/issues/1288)) ([409d810](https://github.com/glasskube/distr/commit/409d810615bdadd137779c1e762c1b152f9a3077))
+* **deps:** update angular-cli monorepo to v20.3.7 ([#1290](https://github.com/glasskube/distr/issues/1290)) ([766027b](https://github.com/glasskube/distr/commit/766027baadbdff371a9967d4a71efcd7fbad735b))
+* **deps:** update dependency @angular/cdk to v20.2.10 ([#1286](https://github.com/glasskube/distr/issues/1286)) ([edf7105](https://github.com/glasskube/distr/commit/edf7105a85c6d4fdba9e3272f9d684eef575f8d2))
+* **deps:** update dependency @codemirror/commands to v6.10.0 ([#1295](https://github.com/glasskube/distr/issues/1295)) ([58d6887](https://github.com/glasskube/distr/commit/58d688721a7693c7f88fd1b58592311761bdb08f))
+* **deps:** update dependency @types/jasmine to v5.1.12 ([#1277](https://github.com/glasskube/distr/issues/1277)) ([a1a76f5](https://github.com/glasskube/distr/commit/a1a76f5844e1bb0a5f36d6a9ae633156149169cc))
+* **deps:** update docker/login-action action to v3.6.0 ([#1284](https://github.com/glasskube/distr/issues/1284)) ([8c5d285](https://github.com/glasskube/distr/commit/8c5d285243d3d0d3ce611abe9b6eb82ddf3f7472))
+* **deps:** update googleapis/release-please-action action to v4.4.0 ([#1296](https://github.com/glasskube/distr/issues/1296)) ([5a05c99](https://github.com/glasskube/distr/commit/5a05c9979f7000a5b455ef09716adabc7f7617a4))
+* **deps:** update tailwindcss monorepo to v4.1.15 ([#1282](https://github.com/glasskube/distr/issues/1282)) ([ab5c458](https://github.com/glasskube/distr/commit/ab5c458e38651f64fdac4867bcd6a1b67c680f4e))
+* **deps:** update tailwindcss monorepo to v4.1.16 ([#1293](https://github.com/glasskube/distr/issues/1293)) ([d5aa69d](https://github.com/glasskube/distr/commit/d5aa69d0fdc30cc857ee3657a55c8609e88aa25e))
+
+
+### Docs
+
+* add hosted distr mcp to README.md ([#1279](https://github.com/glasskube/distr/issues/1279)) ([9c287a9](https://github.com/glasskube/distr/commit/9c287a924d60fc0e777719feff40ae4abfda5484))
+
+## [1.14.1](https://github.com/glasskube/distr/compare/1.14.0...1.14.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* **agent:** disable JWT validation ([#1275](https://github.com/glasskube/distr/issues/1275)) ([dc70e6a](https://github.com/glasskube/distr/commit/dc70e6a93db91e4d645324c5a8d67e3dad10a949))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.9.0 ([#1270](https://github.com/glasskube/distr/issues/1270)) ([3621bbf](https://github.com/glasskube/distr/commit/3621bbf818bf3e672c895596d41ca290124746e1))
+* **deps:** update module github.com/coreos/go-oidc/v3 to v3.16.0 ([#1271](https://github.com/glasskube/distr/issues/1271)) ([c2098b5](https://github.com/glasskube/distr/commit/c2098b5d678fb70f589b29800a05ca50b21c0ecf))
+* **deps:** update module github.com/docker/docker to v28.5.1+incompatible ([#1272](https://github.com/glasskube/distr/issues/1272)) ([248eea8](https://github.com/glasskube/distr/commit/248eea87b4a5b1c487acb8f1526f11ae43de2ddc))
+* **deps:** update module github.com/getsentry/sentry-go to v0.36.0 ([#1273](https://github.com/glasskube/distr/issues/1273)) ([1f610f9](https://github.com/glasskube/distr/commit/1f610f94c69bff075c361f028c48af9c3da101bf))
+
+
+### Other
+
+* **deps:** update codemirror ([#1234](https://github.com/glasskube/distr/issues/1234)) ([3103eb8](https://github.com/glasskube/distr/commit/3103eb85ec38af53dcf6b4094175794b843cc269))
+* **deps:** update dependency go to v1.25.3 ([#1261](https://github.com/glasskube/distr/issues/1261)) ([15691bb](https://github.com/glasskube/distr/commit/15691bb5bf66a70d2b86fd56a484e8fb93dafcfd))
+* **deps:** update font awesome to v7.1.0 ([#1266](https://github.com/glasskube/distr/issues/1266)) ([6ce2dbc](https://github.com/glasskube/distr/commit/6ce2dbcc7d9eff3a97054e9ef04e58c87ebf533c))
+
 ## [1.14.0](https://github.com/glasskube/distr/compare/1.13.0...1.14.0) (2025-10-20)
 
 
