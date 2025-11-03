@@ -38,7 +38,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/wneessen/go-mail v0.7.2
 	go.opentelemetry.io/collector/component v1.44.0
-	go.opentelemetry.io/collector/confmap v1.44.0
+	go.opentelemetry.io/collector/confmap v1.45.0
 	go.opentelemetry.io/collector/consumer v1.44.0
 	go.opentelemetry.io/collector/pdata v1.44.0
 	go.opentelemetry.io/collector/receiver v1.44.0
@@ -101,7 +101,7 @@ require (
 	github.com/zclconf/go-cty v1.17.0 // indirect
 	go.opentelemetry.io/collector/confmap/xconfmap v0.138.0 // indirect
 	go.opentelemetry.io/collector/consumer/consumererror v0.138.0 // indirect
-	go.opentelemetry.io/collector/featuregate v1.44.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.45.0 // indirect
 	go.opentelemetry.io/collector/filter v0.138.0 // indirect
 	go.opentelemetry.io/collector/internal/telemetry v0.138.0 // indirect
 	go.opentelemetry.io/collector/pdata/pprofile v0.138.0 // indirect
