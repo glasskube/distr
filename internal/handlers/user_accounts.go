@@ -88,8 +88,10 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.CustomerOrganizationID != nil {
-		if co, err := db.GetCustomerOrganizationByID(ctx, *body.CustomerOrganizationID); errors.Is(err, apierrors.ErrNotFound) ||
-			(err == nil && co.OrganizationID != organization.ID) {
+		if co, err := db.GetCustomerOrganizationByID(
+			ctx,
+			*body.CustomerOrganizationID,
+		); errors.Is(err, apierrors.ErrNotFound) || (err == nil && co.OrganizationID != organization.ID) {
 			http.Error(w, "customer organization does not exist", http.StatusBadRequest)
 			return
 		} else if err != nil {
