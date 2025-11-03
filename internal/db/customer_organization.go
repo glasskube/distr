@@ -47,25 +47,6 @@ func CreateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 	}
 }
 
-func GetCustomerOrganizationByID(ctx context.Context, id uuid.UUID) (*types.CustomerOrganization, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx,
-		"SELECT "+customerOrganizationOutputExpr+" FROM CustomerOrganization co WHERE co.id = @id",
-		pgx.NamedArgs{"id": id},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("could not query CustomerOrganization: %w", err)
-	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.CustomerOrganization])
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, apierrors.ErrNotFound
-	} else if err != nil {
-		return nil, fmt.Errorf("could not get CustomerOrganization: %w", err)
-	} else {
-		return &result, nil
-	}
-}
-
 func GetCustomerOrganizationsByOrganizationID(
 	ctx context.Context,
 	orgID uuid.UUID,
@@ -90,11 +71,12 @@ func UpdateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		"UPDATE CustomerOrganization AS co SET name = @name, image_id = @imageId "+
-			"WHERE co.id = @id RETURNING "+customerOrganizationOutputExpr,
+			"WHERE co.id = @id AND co.organization_id = @organizationId RETURNING "+customerOrganizationOutputExpr,
 		pgx.NamedArgs{
-			"id":      customerOrg.ID,
-			"name":    customerOrg.Name,
-			"imageId": customerOrg.ImageID,
+			"id":             customerOrg.ID,
+			"organizationId": customerOrg.OrganizationID,
+			"name":           customerOrg.Name,
+			"imageId":        customerOrg.ImageID,
 		},
 	)
 	if err != nil {
@@ -111,9 +93,13 @@ func UpdateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 	}
 }
 
-func DeleteCustomerOrganizationWithID(ctx context.Context, id uuid.UUID) error {
+func DeleteCustomerOrganizationWithID(ctx context.Context, id uuid.UUID, organizationID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	cmd, err := db.Exec(ctx, `DELETE FROM CustomerOrganization WHERE id = @id`, pgx.NamedArgs{"id": id})
+	cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM CustomerOrganization WHERE id = @id AND organization_id = @organizationId`,
+		pgx.NamedArgs{"id": id, "organizationId": organizationID},
+	)
 	if err != nil {
 		var pgError *pgconn.PgError
 		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {

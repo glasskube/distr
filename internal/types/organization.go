@@ -27,8 +27,10 @@ func (org *Organization) HasFeature(feature Feature) bool {
 
 type OrganizationWithUserRole struct {
 	Organization
-	UserRole    UserRole  `db:"user_role" json:"userRole"`
-	JoinedOrgAt time.Time `db:"joined_org_at" json:"joinedOrgAt"`
+	UserRole                 UserRole   `db:"user_role" json:"userRole"`
+	CustomerOrganizationID   *uuid.UUID `db:"customer_organization_id" json:"customerOrganizationId,omitempty"`
+	CustomerOrganizationName *string    `db:"customer_organization_name" json:"customerOrganizationName,omitempty"`
+	JoinedOrgAt              time.Time  `db:"joined_org_at" json:"joinedOrgAt"`
 }
 
 type OrganizationWithBranding struct {
@@ -59,12 +61,4 @@ func (b *OrganizationBranding) LogoDataUrl() *string {
 	} else {
 		return nil
 	}
-}
-
-type CustomerOrganization struct {
-	ID             uuid.UUID  `db:"id" json:"id"`
-	CreatedAt      time.Time  `db:"created_at" json:"createdAt"`
-	OrganizationID uuid.UUID  `db:"organization_id" json:"organizationId"`
-	ImageID        *uuid.UUID `db:"image_id" json:"imageId,omitempty"`
-	Name           string     `db:"name" json:"name"`
 }
