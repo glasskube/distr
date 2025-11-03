@@ -46,6 +46,7 @@ func CreateUserAccountWithOrganization(
 		userAccount.ID,
 		org.ID,
 		types.UserRoleVendor,
+		nil,
 	); err != nil {
 		return nil, err
 	} else {
@@ -227,12 +228,22 @@ func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.U
 	return err
 }
 
-func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) error {
-	// TODO: CustomerOrganizationID
+func CreateUserAccountOrganizationAssignment(
+	ctx context.Context,
+	userID, orgID uuid.UUID,
+	role types.UserRole,
+	customerOrganizationID *uuid.UUID,
+) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
-		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
-		pgx.NamedArgs{"userId": userID, "orgId": orgID, "role": role},
+		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role, customer_organization_id) "+
+			"VALUES (@orgId, @userId, @role, @customerOrganizationID)",
+		pgx.NamedArgs{
+			"userId":                 userID,
+			"orgId":                  orgID,
+			"role":                   role,
+			"customerOrganizationID": customerOrganizationID,
+		},
 	)
 	if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
 		return apierrors.ErrAlreadyExists

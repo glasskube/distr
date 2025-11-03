@@ -79,6 +79,27 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	var inviteURL string
 	userHasExisted := false
 
+	if body.UserRole == types.UserRoleVendor && body.CustomerOrganizationID != nil {
+		http.Error(w, "customer organization not applicable for vendor user", http.StatusBadRequest)
+		return
+	} else if body.UserRole == types.UserRoleCustomer && body.CustomerOrganizationID == nil {
+		http.Error(w, "customer organization is required for customer user", http.StatusBadRequest)
+		return
+	}
+
+	if body.CustomerOrganizationID != nil {
+		if co, err := db.GetCustomerOrganizationByID(ctx, *body.CustomerOrganizationID); errors.Is(err, apierrors.ErrNotFound) ||
+			(err == nil && co.OrganizationID != organization.ID) {
+			http.Error(w, "customer organization does not exist", http.StatusBadRequest)
+			return
+		} else if err != nil {
+			err = fmt.Errorf("failed to get customer organization: %w", err)
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
 			err = fmt.Errorf("failed to get org with branding: %w", err)
@@ -106,13 +127,12 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			userAccount = *existingUA
 		}
 
-		// TODO: Check access to customer organization
-
 		if err := db.CreateUserAccountOrganizationAssignment(
 			ctx,
 			userAccount.ID,
 			organization.ID,
 			body.UserRole,
+			body.CustomerOrganizationID,
 		); errors.Is(err, apierrors.ErrAlreadyExists) {
 			http.Error(w, "user is already part of this organization", http.StatusBadRequest)
 			return err

@@ -47,6 +47,26 @@ func CreateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 	}
 }
 
+func GetCustomerOrganizationByID(
+	ctx context.Context,
+	id uuid.UUID,
+) (*types.CustomerOrganization, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT "+customerOrganizationOutputExpr+
+			" FROM CustomerOrganization co WHERE co.id = @id ORDER BY co.name",
+		pgx.NamedArgs{"id": id},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query CustomerOrganization: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.CustomerOrganization])
+	if err != nil {
+		return nil, fmt.Errorf("could not collect CustomerOrganization: %w", err)
+	}
+	return &result, nil
+}
+
 func GetCustomerOrganizationsByOrganizationID(
 	ctx context.Context,
 	orgID uuid.UUID,
