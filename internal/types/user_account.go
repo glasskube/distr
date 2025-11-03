@@ -13,6 +13,7 @@ type UserAccount struct {
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
 	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
+	EmailVerified   bool       `db:"email_verified" json:"emailVerified"`
 	PasswordHash    []byte     `db:"password_hash" json:"-"`
 	PasswordSalt    []byte     `db:"password_salt" json:"-"`
 	Name            string     `db:"name" json:"name,omitempty"`
@@ -43,6 +44,7 @@ type UserAccountWithUserRole struct {
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
 	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
+	EmailVerified   bool       `db:"email_verified" json:"emailVerified"`
 	PasswordHash    []byte     `db:"password_hash" json:"-"`
 	PasswordSalt    []byte     `db:"password_salt" json:"-"`
 	Name            string     `db:"name" json:"name,omitempty"`

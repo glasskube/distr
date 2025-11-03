@@ -15,8 +15,16 @@ import (
 )
 
 const (
-	userAccountOutputExpr = "u.id, u.created_at, u.email, u.email_verified_at, u.password_hash, " +
-		"u.password_salt, u.name, u.image_id"
+	userAccountOutputExpr = `
+		u.id,
+		u.created_at,
+		u.email,
+		u.email_verified_at,
+		u.email_verified_at IS NOT NULL,
+		u.password_hash,
+		u.password_salt,
+		u.name,
+		u.image_id`
 	userAccountWithRoleOutputExpr = userAccountOutputExpr +
 		", j.user_role, j.created_at "
 	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
@@ -61,7 +69,7 @@ func CreateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 	)
 	if err != nil {
 		return fmt.Errorf("could not query users: %w", err)
-	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByPos); err != nil {
 		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
 			return fmt.Errorf("user account with email %v can not be created: %w", userAccount.Email, apierrors.ErrAlreadyExists)
 		}
@@ -94,7 +102,7 @@ func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 	)
 	if err != nil {
 		return fmt.Errorf("could not query users: %w", err)
-	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByPos); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return apierrors.ErrNotFound
 		} else if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
@@ -120,7 +128,7 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 	)
 	if err != nil {
 		return fmt.Errorf("could not query users: %w", err)
-	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+	} else if created, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByPos); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return apierrors.ErrNotFound
 		} else if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
@@ -245,7 +253,7 @@ func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID, role *types.Us
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
-	} else if result, err := pgx.CollectRows[types.UserAccountWithUserRole](rows, pgx.RowToStructByName); err != nil {
+	} else if result, err := pgx.CollectRows[types.UserAccountWithUserRole](rows, pgx.RowToStructByPos); err != nil {
 		return nil, fmt.Errorf("could not map users: %w", err)
 	} else {
 		return result, nil
@@ -260,7 +268,7 @@ func GetUserAccountByID(ctx context.Context, id uuid.UUID) (*types.UserAccount, 
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
-	} else if userAccount, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+	} else if userAccount, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByPos); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		} else {
@@ -279,7 +287,7 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
-	} else if userAccount, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByName); err != nil {
+	} else if userAccount, err := pgx.CollectExactlyOneRow[types.UserAccount](rows, pgx.RowToStructByPos); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound
 		} else {
@@ -302,7 +310,7 @@ func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*type
 	if err != nil {
 		return nil, err
 	}
-	userAccount, err := pgx.CollectExactlyOneRow[types.UserAccountWithUserRole](rows, pgx.RowToStructByName)
+	userAccount, err := pgx.CollectExactlyOneRow[types.UserAccountWithUserRole](rows, pgx.RowToStructByPos)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, apierrors.ErrNotFound

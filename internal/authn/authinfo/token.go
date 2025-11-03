@@ -30,9 +30,5 @@ func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {
 }
 
 func AuthKeyAuthenticator() authn.Authenticator[authkey.Key, AuthInfo] {
-	return authn.AuthenticatorFunc[authkey.Key, AuthInfo](
-		func(ctx context.Context, key authkey.Key) (AuthInfo, error) {
-			return FromAuthKey(ctx, key)
-		},
-	)
+	return authn.AuthenticatorFunc[authkey.Key, AuthInfo](FromAuthKey)
 }

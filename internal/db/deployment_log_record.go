@@ -144,6 +144,32 @@ func GetDeploymentLogRecords(
 	return result, nil
 }
 
+func BulkCreateDeploymentLogRecordWithCreatedAt(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+	deploymentRevisionID uuid.UUID,
+	statuses []types.DeploymentLogRecord,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.CopyFrom(
+		ctx,
+		pgx.Identifier{"deploymentlogrecord"},
+		[]string{"deployment_id", "deployment_revision_id", "resource", "created_at", "timestamp", "severity", "body"},
+		pgx.CopyFromSlice(len(statuses), func(i int) ([]any, error) {
+			return []any{
+				deploymentID,
+				deploymentRevisionID,
+				statuses[i].Resource,
+				statuses[i].CreatedAt,
+				statuses[i].Timestamp,
+				statuses[i].Severity,
+				statuses[i].Body,
+			}, nil
+		}),
+	)
+	return err
+}
+
 // CleanupDeploymentLogRecords deletes logrecords for all deployments but keeps the
 // last [env.LogRecordEntriesMaxCount] records for each (deployment_id, resource) group.
 //

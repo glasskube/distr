@@ -196,3 +196,9 @@ var requestVerificationMailRateLimitPerUser = httprate.Limit(
 	10*time.Minute,
 	httprate.WithKeyFuncs(middleware.RateLimitUserIDKey),
 )
+
+var inviteUserRateLimiter = httprate.Limit(
+	3,
+	10*time.Minute,
+	httprate.WithKeyFuncs(middleware.RateLimitUserIDKey, middleware.RateLimitPathValueKey("userId")),
+)

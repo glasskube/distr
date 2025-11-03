@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/glasskube/distr/cmd/mcp/client"
 	"github.com/glasskube/distr/cmd/mcp/tools"
@@ -49,9 +50,18 @@ func init() {
 }
 
 func main() {
-	defer func() { _ = log.Sync() }()
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatal("command returned error", zap.Error(err))
+	err := func() error {
+		defer func() { _ = log.Sync() }()
+
+		err := rootCmd.Execute()
+		if err != nil {
+			log.Error("command returned error", zap.Error(err))
+		}
+
+		return err
+	}()
+	if err != nil {
+		os.Exit(1)
 	}
 }
 
