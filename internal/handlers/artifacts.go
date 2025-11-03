@@ -11,6 +11,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
@@ -47,13 +48,13 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, api.MapArtifactsToResponse(artifacts))
+		RespondJSON(w, mapping.List(artifacts, mapping.ArtifactsWithDownloadsToAPI))
 	}
 }
 
 func getArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	RespondJSON(w, api.AsArtifact(*internalctx.GetArtifact(ctx)))
+	RespondJSON(w, mapping.ArtifactToAPI(*internalctx.GetArtifact(ctx)))
 }
 
 var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
@@ -61,7 +62,7 @@ var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body
 	if err := db.UpdateArtifactImage(ctx, artifact, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsArtifact(*artifact), nil
+		return mapping.ArtifactToAPI(*artifact), nil
 	}
 })
 

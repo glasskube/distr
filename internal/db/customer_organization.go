@@ -70,17 +70,24 @@ func GetCustomerOrganizationByID(
 func GetCustomerOrganizationsByOrganizationID(
 	ctx context.Context,
 	orgID uuid.UUID,
-) ([]types.CustomerOrganization, error) {
+) ([]types.CustomerOrganizationWithUserCount, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+customerOrganizationOutputExpr+
-			" FROM CustomerOrganization co WHERE co.organization_id = @orgId ORDER BY co.name",
+		fmt.Sprintf(
+			`SELECT %v, count(oua.user_account_id) as user_count
+			FROM CustomerOrganization co
+			LEFT JOIN Organization_UserAccount oua ON co.id = oua.customer_organization_id
+			WHERE co.organization_id = @orgId
+			GROUP BY %v
+			ORDER BY co.name`,
+			customerOrganizationOutputExpr, customerOrganizationOutputExpr,
+		),
 		pgx.NamedArgs{"orgId": orgID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query CustomerOrganization: %w", err)
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.CustomerOrganization])
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.CustomerOrganizationWithUserCount])
 	if err != nil {
 		return nil, fmt.Errorf("could not collect CustomerOrganization: %w", err)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -36,7 +37,7 @@ func getCustomerOrganizationsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			RespondJSON(w, customerOrganizations)
+			RespondJSON(w, mapping.List(customerOrganizations, mapping.CustomerOrganizationWithUserCountToAPI))
 		}
 	}
 }
@@ -62,7 +63,7 @@ func createCustomerOrganizationHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			RespondJSON(w, customerOrganization)
+			RespondJSON(w, mapping.CustomerOrganizationToAPI(customerOrganization))
 		}
 	}
 }
@@ -95,7 +96,7 @@ func updateCustomerOrganizationHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			RespondJSON(w, customerOrganization)
+			RespondJSON(w, mapping.CustomerOrganizationToAPI(customerOrganization))
 		}
 	}
 }
@@ -114,6 +115,8 @@ func deleteCustomerOrganizationHandler() http.HandlerFunc {
 
 		if err := db.DeleteCustomerOrganizationWithID(ctx, id, *auth.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
 			http.NotFound(w, r)
+		} else if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, "customer organization is not empty", http.StatusConflict)
 		} else if err != nil {
 			log.Error("failed to delete customer org", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)

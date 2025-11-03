@@ -17,6 +17,7 @@ import (
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mailsending"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -48,7 +49,7 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, api.MapUserAccountsToResponse(userAccounts))
+		RespondJSON(w, mapping.List(userAccounts, mapping.UserAccountToAPI))
 	}
 }
 
@@ -91,7 +92,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		if co, err := db.GetCustomerOrganizationByID(
 			ctx,
 			*body.CustomerOrganizationID,
-		); errors.Is(err, apierrors.ErrNotFound) || (err == nil && co.OrganizationID != organization.ID) {
+		); errors.Is(err, apierrors.ErrNotFound) || (err == nil && co.OrganizationID != *auth.CurrentOrgID()) {
 			http.Error(w, "customer organization does not exist", http.StatusBadRequest)
 			return
 		} else if err != nil {
@@ -292,7 +293,7 @@ var patchImageUserAccount = patchImageHandler(func(ctx context.Context, body api
 	if err := db.UpdateUserAccountImage(ctx, user, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsUserAccount(*user), nil
+		return mapping.UserAccountToAPI(*user), nil
 	}
 })
 

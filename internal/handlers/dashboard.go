@@ -11,6 +11,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
@@ -42,7 +43,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		result := make([]api.ArtifactsByCustomer, 0)
 		for _, customer := range customers {
-			customerRes := api.ArtifactsByCustomer{Customer: api.AsUserAccount(customer)}
+			customerRes := api.ArtifactsByCustomer{Customer: mapping.UserAccountToAPI(customer)}
 			for _, artifact := range artifacts {
 				if slices.Contains(artifact.DownloadedByUsers, customer.ID) {
 					if latestPulled, err := db.GetLatestPullOfArtifactByUser(ctx, artifact.ID, customer.ID); err != nil {
@@ -65,7 +66,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 							return
 						} else {
 							customerRes.Artifacts = append(customerRes.Artifacts, api.DashboardArtifact{
-								Artifact: api.AsArtifact(types.ArtifactWithTaggedVersion{
+								Artifact: mapping.ArtifactToAPI(types.ArtifactWithTaggedVersion{
 									ArtifactWithDownloads: artifact,
 									Versions:              versions,
 								}),

@@ -13,3 +13,8 @@ type CustomerOrganization struct {
 	ImageID        *uuid.UUID `db:"image_id" json:"imageId,omitempty"`
 	Name           string     `db:"name" json:"name"`
 }
+
+type CustomerOrganizationWithUserCount struct {
+	CustomerOrganization
+	UserCount int `db:"user_count" json:"userCount"`
+}

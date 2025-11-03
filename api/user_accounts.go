@@ -25,21 +25,6 @@ type UserAccountResponse struct {
 	ImageUrl string `json:"imageUrl"`
 }
 
-func AsUserAccount(u types.UserAccountWithUserRole) UserAccountResponse {
-	return UserAccountResponse{
-		UserAccountWithUserRole: u,
-		ImageUrl:                WithImageUrl(u.ImageID),
-	}
-}
-
-func MapUserAccountsToResponse(userAccounts []types.UserAccountWithUserRole) []UserAccountResponse {
-	result := make([]UserAccountResponse, len(userAccounts))
-	for i, u := range userAccounts {
-		result[i] = AsUserAccount(u)
-	}
-	return result
-}
-
 type UpdateUserAccountRequest struct {
 	Name     string  `json:"name"`
 	Password *string `json:"password"`
