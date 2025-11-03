@@ -38,15 +38,11 @@ func CreateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 	if err != nil {
 		return fmt.Errorf("could not insert CustomerOrganization: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.CustomerOrganization])
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.CustomerOrganization])
 	if err != nil {
-		var pgError *pgconn.PgError
-		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
-			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
-		}
 		return err
 	} else {
-		*customerOrg = *result
+		*customerOrg = result
 		return nil
 	}
 }
@@ -104,17 +100,13 @@ func UpdateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 	if err != nil {
 		return fmt.Errorf("could not update CustomerOrganization: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[types.CustomerOrganization])
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.CustomerOrganization])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return apierrors.ErrNotFound
 	} else if err != nil {
-		var pgError *pgconn.PgError
-		if errors.As(err, &pgError) && pgError.Code == pgerrcode.UniqueViolation {
-			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
-		}
 		return err
 	} else {
-		*customerOrg = *result
+		*customerOrg = result
 		return nil
 	}
 }
