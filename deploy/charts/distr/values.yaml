@@ -76,9 +76,9 @@ hub:
       # change to "ses" for direct usage of the AWS SDK for SES
       value: 'smtp'
     - name: MAILER_SMTP_HOST
-      value: 'distr-mail'
+      value: 'smtp.example.local'
     - name: MAILER_SMTP_PORT
-      value: '1025'
+      value: '25'
     # - name: MAILER_SMTP_USERNAME
     #   value: ""
     # - name: MAILER_SMTP_PASSWORD
@@ -274,33 +274,6 @@ minio:
   buckets:
     - name: distr
       purge: false
-
-mailhog:
-  enabled: false
-  fullnameOverride: distr-mail
-
-dex:
-  enabled: false
-  fullnameOverride: distr-oidc-dex
-  config:
-    #    issuer: http://distr-oidc-dex:5556/dex
-    issuer: 'http://localhost:5556/dex'
-    storage:
-      type: memory
-    web:
-      http: 0.0.0.0:5556
-    staticClients:
-      - id: 'example-app'
-        redirectURIs:
-          - 'http://localhost:8080/api/v1/auth/oidc/generic/callback'
-        name: 'Example App'
-        secret: ZXhhbXBsZS1hcHAtc2VjcmV0
-    enablePasswordDB: true
-    staticPasswords:
-      - email: 'admin@example.com'
-        hash: '$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W'
-        username: 'admin'
-        userID: '1234'
 
 externalDatabase:
   uri: ''
