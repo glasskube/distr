@@ -37,7 +37,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.138.0
 	github.com/spf13/cobra v1.10.1
 	github.com/wneessen/go-mail v0.7.2
-	go.opentelemetry.io/collector/component v1.44.0
+	go.opentelemetry.io/collector/component v1.45.0
 	go.opentelemetry.io/collector/confmap v1.44.0
 	go.opentelemetry.io/collector/consumer v1.44.0
 	go.opentelemetry.io/collector/pdata v1.44.0
