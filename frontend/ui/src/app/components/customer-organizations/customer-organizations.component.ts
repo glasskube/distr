@@ -9,6 +9,7 @@ import {
   faPlus,
   faTrash,
   faUserCircle,
+  faEdit,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, filter, firstValueFrom, map, startWith, Subject, switchMap} from 'rxjs';
@@ -46,6 +47,7 @@ export class CustomerOrganizationsComponent {
   protected readonly faTrash = faTrash;
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faEdit = faEdit;
 
   private readonly customerOrganizationsService = inject(CustomerOrganizationsService);
   private readonly toast = inject(ToastService);
@@ -78,13 +80,21 @@ export class CustomerOrganizationsComponent {
 
   private readonly createCustomerDialog = viewChild.required<TemplateRef<unknown>>('createCustomerDialog');
   private modalRef?: DialogRef;
-  protected readonly createForm = new FormGroup({
-    name: new FormControl('', [Validators.required]),
+  protected readonly createForm = this.fb.group({
+    id: this.fb.control(''),
+    name: this.fb.control('', [Validators.required]),
+    imageId: this.fb.control(''),
   });
   protected createFormLoading = false;
 
   protected showCreateDialog() {
     this.closeCreateDialog();
+    this.modalRef = this.overlay.showModal(this.createCustomerDialog());
+  }
+
+  protected showUpdateDialog(value: CustomerOrganization) {
+    this.closeCreateDialog();
+    this.createForm.patchValue(value);
     this.modalRef = this.overlay.showModal(this.createCustomerDialog());
   }
 
@@ -96,7 +106,7 @@ export class CustomerOrganizationsComponent {
     }
   }
 
-  protected submitCreateForm() {
+  protected async submitCreateForm() {
     this.createForm.markAllAsTouched();
 
     if (this.createForm.invalid) {
@@ -104,29 +114,36 @@ export class CustomerOrganizationsComponent {
     }
 
     this.createFormLoading = true;
-    this.customerOrganizationsService
-      .createCustomerOrganization({
-        name: this.createForm.value.name!,
-      })
-      .subscribe({
-        next: () => {
-          this.createFormLoading = false;
-          this.closeCreateDialog();
-          this.refresh$.next();
-        },
-        error: () => {
-          this.createFormLoading = false;
-        },
-      });
+
+    const request = {
+      name: this.createForm.value.name!,
+      imageId: this.createForm.value.imageId || undefined,
+    };
+
+    try {
+      if (this.createForm.value.id) {
+        await firstValueFrom(
+          this.customerOrganizationsService.updateCustomerOrganization(this.createForm.value.id, request)
+        );
+      } else {
+        await firstValueFrom(this.customerOrganizationsService.createCustomerOrganization(request));
+      }
+
+      this.closeCreateDialog();
+      this.refresh$.next();
+    } finally {
+      this.createFormLoading = false;
+    }
   }
 
-  protected async uploadImage(target: CustomerOrganization): Promise<void> {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({scope: 'platform'}));
-    if (!fileId || fileId == target.imageId) {
+  protected async uploadImage(value: CustomerOrganization): Promise<void> {
+    const imageId = await firstValueFrom(this.overlay.uploadImage({scope: 'platform'}));
+    if (!imageId || imageId === value.imageId) {
       return;
     }
-    target.imageId = fileId;
-    await firstValueFrom(this.customerOrganizationsService.updateCustomerOrganization(target));
+    await firstValueFrom(
+      this.customerOrganizationsService.updateCustomerOrganization(value.id, {name: value.name, imageId})
+    );
     this.refresh$.next();
   }
 

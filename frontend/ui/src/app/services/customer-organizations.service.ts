@@ -29,8 +29,11 @@ export class CustomerOrganizationsService {
     return this.httpClient.post<CustomerOrganization>(baseUrl, request);
   }
 
-  public updateCustomerOrganization(request: CustomerOrganization): Observable<CustomerOrganization> {
-    return this.httpClient.put<CustomerOrganization>(`${baseUrl}/${request.id}`, request);
+  public updateCustomerOrganization(
+    id: string,
+    request: CreateUpdateCustomerOrganizationRequest
+  ): Observable<CustomerOrganization> {
+    return this.httpClient.put<CustomerOrganization>(`${baseUrl}/${id}`, request);
   }
 
   public deleteCustomerOrganization(id: string): Observable<void> {
