@@ -1,4 +1,4 @@
-import {BaseModel} from '@glasskube/distr-sdk';
+import {BaseModel} from './base';
 
 export interface CustomerOrganization extends Required<BaseModel> {
   name: string;
