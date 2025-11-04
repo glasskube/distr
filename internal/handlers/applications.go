@@ -190,7 +190,7 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var applications []types.Application
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, auth.CurrentUserID())
+		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID())
 	} else {
 		applications, err = db.GetApplicationsByOrgID(ctx, *auth.CurrentOrgID())
 	}
@@ -215,7 +215,7 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		} else {
-			application, err := db.GetApplicationWithLicenseOwnerID(ctx, auth.CurrentUserID(), applicationID)
+			application, err := db.GetApplicationWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID(), applicationID)
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else if err != nil {
