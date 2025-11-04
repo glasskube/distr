@@ -2,6 +2,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+global:
+  security:
+    allowInsecureImages: true
+
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 2
 
@@ -249,6 +253,8 @@ postgresql:
   service:
     ports:
       postgresql: 5432
+  image:
+    repository: bitnamilegacy/postgresql
 
 minio:
   enabled: false
