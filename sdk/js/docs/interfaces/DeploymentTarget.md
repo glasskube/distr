@@ -40,6 +40,12 @@
 
 ---
 
+### customerOrganization?
+
+> `optional` **customerOrganization**: `CustomerOrganization`
+
+---
+
 ### ~~deployment?~~
 
 > `optional` **deployment**: [`DeploymentWithLatestRevision`](DeploymentWithLatestRevision.md)
