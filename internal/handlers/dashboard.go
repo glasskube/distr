@@ -26,6 +26,7 @@ func DashboardRouter(r chi.Router) {
 	})
 }
 
+// TODO: This needs to be updated to use customer organizations instead of user accounts
 func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
@@ -57,7 +58,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 					} else {
 						var licenseOwnerID *uuid.UUID
 						if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-							licenseOwnerID = &customer.ID
+							licenseOwnerID = customer.CustomerOrganizationID
 						}
 						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseOwnerID); err != nil {
 							log.Error("failed to get versions for artifact", zap.Error(err))
