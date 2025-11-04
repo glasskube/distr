@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.15.0](https://github.com/glasskube/distr/compare/1.14.2...1.15.0) (2025-11-04)
+
+
+### Features
+
+* add resending invitation for non-verified users ([#1310](https://github.com/glasskube/distr/issues/1310)) ([7d56c6f](https://github.com/glasskube/distr/commit/7d56c6f60a90249954917b7ecd3f64b028c143c6))
+
+
+### Bug Fixes
+
+* **chart:** switch postgres to bitnamilegacy ([#1337](https://github.com/glasskube/distr/issues/1337)) ([09c80ad](https://github.com/glasskube/distr/commit/09c80ad2b8d3720f2184cfb5712b75ed5eafb57a))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1303](https://github.com/glasskube/distr/issues/1303)) ([d176c19](https://github.com/glasskube/distr/commit/d176c19bf86cac5fb4708995eff338b37a380204))
+* **deps:** update module github.com/aws/smithy-go to v1.23.2 ([#1331](https://github.com/glasskube/distr/issues/1331)) ([ed3e074](https://github.com/glasskube/distr/commit/ed3e074706224eed467979e9808dbad1ef5bb80d))
+* **deps:** update module github.com/compose-spec/compose-go/v2 to v2.9.1 ([#1312](https://github.com/glasskube/distr/issues/1312)) ([6eb9b8d](https://github.com/glasskube/distr/commit/6eb9b8dead214447e87501e1e30d75cd0d9cff0e))
+* **deps:** update module github.com/docker/compose/v2 to v2.40.2 [security] ([#1297](https://github.com/glasskube/distr/issues/1297)) ([400ae3a](https://github.com/glasskube/distr/commit/400ae3ac2ac5e01857478e010b74e0f6d3087faa))
+* **deps:** update module github.com/docker/compose/v2 to v2.40.3 ([#1201](https://github.com/glasskube/distr/issues/1201)) ([5f27b95](https://github.com/glasskube/distr/commit/5f27b9514d5531f6a6d5f4ff68661ddb215aa7a6))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.36.2 ([#1300](https://github.com/glasskube/distr/issues/1300)) ([8a5ac0c](https://github.com/glasskube/distr/commit/8a5ac0c8990d29a4247c0f528c6824e8d59a73ac))
+* **deps:** update module github.com/mark3labs/mcp-go to v0.42.0 ([#1291](https://github.com/glasskube/distr/issues/1291)) ([08d54fb](https://github.com/glasskube/distr/commit/08d54fb84afd49b64f3edd383f7b9067249227c4))
+* **deps:** update module github.com/mark3labs/mcp-go to v0.43.0 ([#1327](https://github.com/glasskube/distr/issues/1327)) ([753d3e3](https://github.com/glasskube/distr/commit/753d3e39f5f6009c5ec8194129aee200172a338b))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.138.0 ([#1301](https://github.com/glasskube/distr/issues/1301)) ([01e0a05](https://github.com/glasskube/distr/commit/01e0a052d46f034f39fc9af541fb9355f36475e3))
+* **deps:** update module golang.org/x/crypto to v0.43.0 ([#1314](https://github.com/glasskube/distr/issues/1314)) ([422222b](https://github.com/glasskube/distr/commit/422222bda7e5326320d62d9a298458d96f1c3a00))
+* **deps:** update module golang.org/x/oauth2 to v0.32.0 ([#1316](https://github.com/glasskube/distr/issues/1316)) ([939e7ef](https://github.com/glasskube/distr/commit/939e7efab610c6ffd2ca3f6cadbb18e09ff9eec2))
+
+
+### Other
+
+* **deps:** update actions/setup-node action to v6 ([#1319](https://github.com/glasskube/distr/issues/1319)) ([22770cd](https://github.com/glasskube/distr/commit/22770cd4e0ed93dbd942737fda33b8ba03cad883))
+* **deps:** update angular monorepo to v20.3.9 ([#1308](https://github.com/glasskube/distr/issues/1308)) ([be60758](https://github.com/glasskube/distr/commit/be60758dc1762ded7d4bd67794cb140d96f1b978))
+* **deps:** update angular-cli monorepo to v20.3.8 ([#1311](https://github.com/glasskube/distr/issues/1311)) ([8cdaaaf](https://github.com/glasskube/distr/commit/8cdaaafcf5cd3ea43618d8ddd679f9582339f5e2))
+* **deps:** update dependency @angular/cdk to v20.2.11 ([#1326](https://github.com/glasskube/distr/issues/1326)) ([cb20b26](https://github.com/glasskube/distr/commit/cb20b269c8bddfa28072593848beef16d2a9aa9a))
+* **deps:** update dependency @sentry/cli to v2.57.0 ([#1329](https://github.com/glasskube/distr/issues/1329)) ([c6c3f67](https://github.com/glasskube/distr/commit/c6c3f679c84bacbd858f1802ed5f2abe10e9d7e6))
+* **deps:** update dependency dayjs to v1.11.19 ([#1318](https://github.com/glasskube/distr/issues/1318)) ([8c63f80](https://github.com/glasskube/distr/commit/8c63f80d449c562f25ff8cdba4b7e615e83a229d))
+* **deps:** update dependency golangci-lint to v2.6.0 ([#1313](https://github.com/glasskube/distr/issues/1313)) ([8e74c62](https://github.com/glasskube/distr/commit/8e74c62b240f7e87df32e81678fb3538371294c5))
+* **deps:** update dependency jasmine-core to v5.12.1 ([#1309](https://github.com/glasskube/distr/issues/1309)) ([844525b](https://github.com/glasskube/distr/commit/844525b7879d91bb8c216478c74b4bef5e3fcaf7))
+* **deps:** update dependency node to v24 ([#1320](https://github.com/glasskube/distr/issues/1320)) ([f1fb358](https://github.com/glasskube/distr/commit/f1fb3588479fdea0ebc2320fa2b94b762ee6611c))
+* **deps:** update dependency rimraf to v6.1.0 ([#1317](https://github.com/glasskube/distr/issues/1317)) ([8621a5c](https://github.com/glasskube/distr/commit/8621a5ccfa1b2dc21d276685d642290fb609687d))
+* **deps:** update dependency typedoc to v0.28.14 ([#1263](https://github.com/glasskube/distr/issues/1263)) ([c9eb1c2](https://github.com/glasskube/distr/commit/c9eb1c21d9009acca9f33b852bc778024b98efca))
+* **deps:** update fontsource monorepo to v5.2.8 ([#1328](https://github.com/glasskube/distr/issues/1328)) ([f40e7eb](https://github.com/glasskube/distr/commit/f40e7eb897b9fa46a6fa31dcc160d1e128a6c1b7))
+* **deps:** update github artifact actions (major) ([#1321](https://github.com/glasskube/distr/issues/1321)) ([db1a355](https://github.com/glasskube/distr/commit/db1a355bf53f6ba7bba4c7a975a9509a7cedecbc))
+* **deps:** update sigstore/cosign-installer action to v3.10.1 ([#1330](https://github.com/glasskube/distr/issues/1330)) ([57939d9](https://github.com/glasskube/distr/commit/57939d917fa850fa99daea0bb0b06a22356a8c9d))
+* **deps:** update sigstore/cosign-installer action to v4 ([#1324](https://github.com/glasskube/distr/issues/1324)) ([abf6f72](https://github.com/glasskube/distr/commit/abf6f7280342efe9a443fded27b4fe8c43828e4d))
+
 ## [1.14.2](https://github.com/glasskube/distr/compare/1.14.1...1.14.2) (2025-10-29)
 
 
