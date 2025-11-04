@@ -92,7 +92,12 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
 			return nil, err
-		} else if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID, licenseCustomerOrgID); err != nil {
+		} else if versions, err := db.GetVersionsForArtifact(
+			ctx,
+			artifact.ID,
+			licenseUserID,
+			licenseCustomerOrgID,
+		); err != nil {
 			return nil, err
 		} else {
 			var result []digest.Digest
@@ -125,7 +130,12 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
 			return nil, err
-		} else if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID, licenseCustomerOrgID); err != nil {
+		} else if versions, err := db.GetVersionsForArtifact(
+			ctx,
+			artifact.ID,
+			licenseUserID,
+			licenseCustomerOrgID,
+		); err != nil {
 			return nil, err
 		} else {
 			var result []string

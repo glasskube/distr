@@ -102,7 +102,13 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 	}
 }
 
-func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID, userID *uuid.UUID, customerOrgID *uuid.UUID) (
+func GetArtifactByID(
+	ctx context.Context,
+	orgID uuid.UUID,
+	artifactID uuid.UUID,
+	userID *uuid.UUID,
+	customerOrgID *uuid.UUID,
+) (
 	*types.ArtifactWithTaggedVersion,
 	error,
 ) {
