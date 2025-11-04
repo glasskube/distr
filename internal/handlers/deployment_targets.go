@@ -74,7 +74,13 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
-		if err = db.CreateDeploymentTarget(ctx, &dt, *auth.CurrentOrgID(), auth.CurrentUserID()); err != nil {
+		if err = db.CreateDeploymentTarget(
+			ctx,
+			&dt,
+			*auth.CurrentOrgID(),
+			auth.CurrentUserID(),
+			auth.CurrentCustomerOrgID(),
+		); err != nil {
 			log.Warn("could not create DeploymentTarget", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -21,7 +21,7 @@ import {CustomerOrganizationsService} from '../../services/customer-organization
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
-import {CustomerOrganization} from '../../types/customer-organization';
+import {CustomerOrganization} from '@glasskube/distr-sdk/types/customer-organization';
 import {UuidComponent} from '../uuid';
 import {RouterLink} from '@angular/router';
 

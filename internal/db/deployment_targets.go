@@ -31,7 +31,8 @@ const (
 		dt.metrics_enabled
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
-		", (" + userAccountWithRoleOutputExpr + ") as created_by"
+		", (" + userAccountWithRoleOutputExpr + ") as created_by" +
+		", CASE WHEN co.id IS NOT NULL THEN (" + customerOrganizationOutputExpr + ") END AS customer_organization"
 	deploymentTargetWithStatusOutputExpr = deploymentTargetOutputExpr + `,
 		CASE WHEN status.id IS NOT NULL
 			THEN (status.id, status.created_at, status.message) END
@@ -60,6 +61,8 @@ const (
 			ON dt.created_by_user_account_id = u.id
 		LEFT JOIN Organization_UserAccount j
 			ON u.id = j.user_account_id
+		LEFT JOIN CustomerOrganization co
+			ON dt.customer_organization_id = co.id
 	`
 	deploymentTargetFromExpr = `
 		DeploymentTarget dt
@@ -153,6 +156,7 @@ func CreateDeploymentTarget(
 	ctx context.Context,
 	dt *types.DeploymentTargetWithCreatedBy,
 	orgID, createdByID uuid.UUID,
+	customerOrgID *uuid.UUID,
 ) error {
 	dt.OrganizationID = orgID
 	if dt.CreatedBy == nil {
@@ -169,13 +173,15 @@ func CreateDeploymentTarget(
 		"scope":          dt.Scope,
 		"agentVersionId": dt.AgentVersionID,
 		"metricsEnabled": dt.MetricsEnabled,
+		"customerOrgId":  customerOrgID,
 	}
 	rows, err := db.Query(
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
-			(name, type, organization_id, created_by_user_account_id, namespace, scope, agent_version_id, metrics_enabled)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @agentVersionId, @metricsEnabled)
+			(name, type, organization_id, created_by_user_account_id, namespace, scope, agent_version_id, metrics_enabled,
+				customer_organization_id)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @agentVersionId, @metricsEnabled, @customerOrgId)
 			RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+
