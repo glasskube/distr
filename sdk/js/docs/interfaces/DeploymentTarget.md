@@ -42,7 +42,7 @@
 
 ### customerOrganization?
 
-> `optional` **customerOrganization**: `CustomerOrganization`
+> `optional` **customerOrganization**: [`CustomerOrganization`](CustomerOrganization.md)
 
 ---
 

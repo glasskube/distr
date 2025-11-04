@@ -1,17 +1,19 @@
 import {AsyncPipe, DatePipe, DecimalPipe} from '@angular/common';
-import {Component, inject, TemplateRef, viewChild, ViewChild} from '@angular/core';
+import {Component, inject, TemplateRef, viewChild} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
+import {RouterLink} from '@angular/router';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
   faCircleExclamation,
+  faEdit,
   faMagnifyingGlass,
   faPlus,
   faTrash,
   faUserCircle,
-  faEdit,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import {CustomerOrganization} from '@glasskube/distr-sdk';
 import {combineLatest, filter, firstValueFrom, map, startWith, Subject, switchMap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
@@ -21,9 +23,7 @@ import {CustomerOrganizationsService} from '../../services/customer-organization
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
-import {CustomerOrganization} from '@glasskube/distr-sdk/types/customer-organization';
 import {UuidComponent} from '../uuid';
-import {RouterLink} from '@angular/router';
 
 @Component({
   templateUrl: './customer-organizations.component.html',
