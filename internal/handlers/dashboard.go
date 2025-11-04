@@ -14,7 +14,6 @@ import (
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -26,14 +25,11 @@ func DashboardRouter(r chi.Router) {
 	})
 }
 
-// TODO: This needs to be updated to use customer organizations instead of user accounts
 func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if customers, err := db.GetUserAccountsByOrgID(
-		ctx, *auth.CurrentOrgID(), util.PtrTo(types.UserRoleCustomer),
-	); err != nil {
+	if customers, err := db.GetCustomerOrganizationsByOrganizationID(ctx, *auth.CurrentOrgID()); err != nil {
 		log.Error("failed to get customers", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -44,7 +40,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		result := make([]api.ArtifactsByCustomer, 0)
 		for _, customer := range customers {
-			customerRes := api.ArtifactsByCustomer{Customer: mapping.UserAccountToAPI(customer)}
+			customerRes := api.ArtifactsByCustomer{Customer: mapping.CustomerOrganizationToAPI(customer.CustomerOrganization)}
 			for _, artifact := range artifacts {
 				if slices.Contains(artifact.DownloadedByUsers, customer.ID) {
 					if latestPulled, err := db.GetLatestPullOfArtifactByUser(ctx, artifact.ID, customer.ID); err != nil {
@@ -58,7 +54,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 					} else {
 						var licenseOwnerID *uuid.UUID
 						if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-							licenseOwnerID = customer.CustomerOrganizationID
+							licenseOwnerID = &customer.ID
 						}
 						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseOwnerID); err != nil {
 							log.Error("failed to get versions for artifact", zap.Error(err))

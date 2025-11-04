@@ -6,6 +6,6 @@ type DashboardArtifact struct {
 }
 
 type ArtifactsByCustomer struct {
-	Customer  UserAccountResponse `json:"customer"`
-	Artifacts []DashboardArtifact `json:"artifacts,omitempty"`
+	Customer  CustomerOrganization `json:"customer"`
+	Artifacts []DashboardArtifact  `json:"artifacts,omitempty"`
 }
