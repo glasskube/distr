@@ -1,5 +1,4 @@
-import {Application, ApplicationVersion, BaseModel, Named} from '@glasskube/distr-sdk';
-import {CustomerOrganization} from '../../../../../sdk/js/dist';
+import {Application, ApplicationVersion, BaseModel, CustomerOrganization, Named} from '@glasskube/distr-sdk';
 
 export interface ApplicationLicense extends BaseModel, Named {
   expiresAt?: Date;
