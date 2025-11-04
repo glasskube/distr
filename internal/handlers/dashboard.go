@@ -56,7 +56,8 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 						if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
 							licenseOwnerID = &customer.ID
 						}
-						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseOwnerID); err != nil {
+						// TODO: what to do here about the user ID
+						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, nil, licenseOwnerID); err != nil {
 							log.Error("failed to get versions for artifact", zap.Error(err))
 							sentry.GetHubFromContext(ctx).CaptureException(err)
 							http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

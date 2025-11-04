@@ -102,12 +102,12 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 	}
 }
 
-func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID, ownerID *uuid.UUID) (
+func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID, userID *uuid.UUID, customerOrgID *uuid.UUID) (
 	*types.ArtifactWithTaggedVersion,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
-	restrictDownloads := ownerID != nil
+	restrictDownloads := userID != nil
 
 	if artifactRows, err := db.Query(
 		ctx, `
@@ -124,7 +124,7 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 			"id":       artifactID,
 			"orgId":    orgID,
 			"restrict": restrictDownloads,
-			"ownerId":  ownerID,
+			"ownerId":  userID,
 		},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query artifact by ID: %w", err)
@@ -135,9 +135,9 @@ func GetArtifactByID(ctx context.Context, orgID uuid.UUID, artifactID uuid.UUID,
 			return nil, apierrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to collect artifact by ID: %w", err)
-	} else if versions, err := GetVersionsForArtifact(ctx, artifact.ID, ownerID); err != nil {
+	} else if versions, err := GetVersionsForArtifact(ctx, artifact.ID, userID, customerOrgID); err != nil {
 		return nil, fmt.Errorf("failed to get artifact versions: %w", err)
-	} else if ownerID != nil && len(versions) == 0 {
+	} else if customerOrgID != nil && len(versions) == 0 {
 		return nil, apierrors.ErrNotFound
 	} else {
 		artifact.Versions = versions
@@ -172,11 +172,11 @@ func GetArtifactByName(ctx context.Context, orgSlug, name string) (*types.Artifa
 	}
 }
 
-func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *uuid.UUID) (
+func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, customerOrgID *uuid.UUID) (
 	[]types.TaggedArtifactVersion,
 	error,
 ) {
-	checkLicense := ownerID != nil
+	checkLicense := customerOrgID != nil
 
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
@@ -222,7 +222,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 				SELECT DISTINCT * FROM aggregate
 			) avp ON av.id = avp.base_av_id
 			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = avp.related_av_id AND
-				(NOT @checkLicense OR avpl.useraccount_id = @ownerId)
+				(NOT @checkLicense OR avpl.useraccount_id = @userId)
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (
@@ -234,7 +234,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 					FROM ArtifactLicense_Artifact ala
 					INNER JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
 					WHERE ala.artifact_id = @artifactId AND ala.artifact_version_id IS NULL
-					AND al.customer_organization_id = @ownerId AND (al.expires_at IS NULL OR al.expires_at > now())
+					AND al.customer_organization_id = @customerOrgId AND (al.expires_at IS NULL OR al.expires_at > now())
 				)
 				OR EXISTS (
 					-- or license only for specific versions or their parent versions
@@ -254,7 +254,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 					FROM ArtifactVersionAggregate avagg
 					INNER JOIN ArtifactLicense_Artifact ala ON ala.artifact_version_id = avagg.id
 					INNER JOIN ArtifactLicense al ON ala.artifact_license_id = al.id
-					WHERE al.customer_organization_id = @ownerId AND (al.expires_at IS NULL OR al.expires_at > now())
+					WHERE al.customer_organization_id = @customerOrgId AND (al.expires_at IS NULL OR al.expires_at > now())
 					AND ala.artifact_id = @artifactId
 				)
 			)
@@ -270,9 +270,10 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, ownerID *
 			ORDER BY av.created_at DESC
 			`,
 		pgx.NamedArgs{
-			"artifactId":   artifactID,
-			"ownerId":      ownerID,
-			"checkLicense": checkLicense,
+			"artifactId":    artifactID,
+			"userId":        userID,
+			"customerOrgId": customerOrgID,
+			"checkLicense":  checkLicense,
 		}); err != nil {
 		return nil, err
 	} else if versions, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.TaggedArtifactVersion]); err != nil {

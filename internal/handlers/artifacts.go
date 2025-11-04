@@ -79,9 +79,15 @@ func artifactMiddleware(h http.Handler) http.Handler {
 			http.NotFound(w, r)
 			return
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, util.PtrTo(auth.CurrentUserID()))
+			artifact, err = db.GetArtifactByID(
+				ctx,
+				*auth.CurrentOrgID(),
+				artifactId,
+				util.PtrTo(auth.CurrentUserID()),
+				auth.CurrentCustomerOrgID(),
+			)
 		} else {
-			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)
+			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil, nil)
 		}
 
 		if err != nil {
