@@ -315,8 +315,7 @@ func validateDeploymentRequestDeploymentTarget(
 ) error {
 	auth := auth.Authentication.Require(ctx)
 
-	if *auth.CurrentUserRole() == types.UserRoleCustomer &&
-		target.CreatedByUserAccountID != auth.CurrentUserID() {
+	if !isDeploymentTargetVisible(auth, target.DeploymentTarget) {
 		err := errors.New("DeploymentTarget not found")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return err
