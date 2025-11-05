@@ -24,6 +24,9 @@ import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.
 import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
 import {DeploymentTargetsComponent} from './deployments/deployment-targets.component';
+import {CustomerOrganizationsComponent} from './components/customer-organizations/customer-organizations.component';
+import {CustomerUsersComponent} from './components/users/customers/customer-users.component';
+import {VendorUsersComponent} from './components/users/vendors/vendor-users.component';
 
 function requiredRoleGuard(userRole: UserRole): CanActivateFn {
   return () => {
@@ -95,14 +98,17 @@ export const routes: Routes = [
   },
   {
     path: 'customers',
-    component: UsersComponent,
-    data: {userRole: 'customer'},
+    component: CustomerOrganizationsComponent,
+    canActivate: [requiredRoleGuard('vendor')],
+  },
+  {
+    path: 'customers/:customerOrganizationId',
+    component: CustomerUsersComponent,
     canActivate: [requiredRoleGuard('vendor')],
   },
   {
     path: 'users',
-    component: UsersComponent,
-    data: {userRole: 'vendor'},
+    component: VendorUsersComponent,
     canActivate: [requiredRoleGuard('vendor')],
   },
   {

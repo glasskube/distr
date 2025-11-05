@@ -9,6 +9,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -34,7 +35,9 @@ func getContextHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		RespondJSON(w, api.ContextResponse{
-			User:              api.AsUserAccount(auth.CurrentUser().AsUserAccountWithRole(*auth.CurrentUserRole(), joinDate)),
+			User: mapping.UserAccountToAPI(
+				auth.CurrentUser().AsUserAccountWithRole(*auth.CurrentUserRole(), auth.CurrentCustomerOrgID(), joinDate),
+			),
 			Organization:      *auth.CurrentOrg(),
 			AvailableContexts: orgs,
 		})

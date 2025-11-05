@@ -17,6 +17,7 @@ import (
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mailsending"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -48,7 +49,7 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, api.MapUserAccountsToResponse(userAccounts))
+		RespondJSON(w, mapping.List(userAccounts, mapping.UserAccountToAPI))
 	}
 }
 
@@ -78,6 +79,29 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var inviteURL string
 	userHasExisted := false
+
+	if body.UserRole == types.UserRoleVendor && body.CustomerOrganizationID != nil {
+		http.Error(w, "customer organization not applicable for vendor user", http.StatusBadRequest)
+		return
+	} else if body.UserRole == types.UserRoleCustomer && body.CustomerOrganizationID == nil {
+		http.Error(w, "customer organization is required for customer user", http.StatusBadRequest)
+		return
+	}
+
+	if body.CustomerOrganizationID != nil {
+		if co, err := db.GetCustomerOrganizationByID(
+			ctx,
+			*body.CustomerOrganizationID,
+		); errors.Is(err, apierrors.ErrNotFound) || (err == nil && co.OrganizationID != *auth.CurrentOrgID()) {
+			http.Error(w, "customer organization does not exist", http.StatusBadRequest)
+			return
+		} else if err != nil {
+			err = fmt.Errorf("failed to get customer organization: %w", err)
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 
 	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
@@ -111,6 +135,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			userAccount.ID,
 			organization.ID,
 			body.UserRole,
+			body.CustomerOrganizationID,
 		); errors.Is(err, apierrors.ErrAlreadyExists) {
 			http.Error(w, "user is already part of this organization", http.StatusBadRequest)
 			return err
@@ -148,7 +173,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondJSON(w, api.CreateUserAccountResponse{
-		User:      userAccount.AsUserAccountWithRole(body.UserRole, time.Now()),
+		User:      userAccount.AsUserAccountWithRole(body.UserRole, body.CustomerOrganizationID, time.Now()),
 		InviteURL: inviteURL,
 	})
 }
@@ -268,7 +293,7 @@ var patchImageUserAccount = patchImageHandler(func(ctx context.Context, body api
 	if err := db.UpdateUserAccountImage(ctx, user, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsUserAccount(*user), nil
+		return mapping.UserAccountToAPI(*user), nil
 	}
 })
 

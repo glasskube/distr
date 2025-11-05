@@ -11,9 +11,9 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -29,9 +29,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if customers, err := db.GetUserAccountsByOrgID(
-		ctx, *auth.CurrentOrgID(), util.PtrTo(types.UserRoleCustomer),
-	); err != nil {
+	if customers, err := db.GetCustomerOrganizationsByOrganizationID(ctx, *auth.CurrentOrgID()); err != nil {
 		log.Error("failed to get customers", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -42,7 +40,7 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		result := make([]api.ArtifactsByCustomer, 0)
 		for _, customer := range customers {
-			customerRes := api.ArtifactsByCustomer{Customer: api.AsUserAccount(customer)}
+			customerRes := api.ArtifactsByCustomer{Customer: mapping.CustomerOrganizationToAPI(customer.CustomerOrganization)}
 			for _, artifact := range artifacts {
 				if slices.Contains(artifact.DownloadedByUsers, customer.ID) {
 					if latestPulled, err := db.GetLatestPullOfArtifactByUser(ctx, artifact.ID, customer.ID); err != nil {
@@ -58,14 +56,15 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 						if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
 							licenseOwnerID = &customer.ID
 						}
-						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseOwnerID); err != nil {
+						// TODO: what to do here about the user ID
+						if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, nil, licenseOwnerID); err != nil {
 							log.Error("failed to get versions for artifact", zap.Error(err))
 							sentry.GetHubFromContext(ctx).CaptureException(err)
 							http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 							return
 						} else {
 							customerRes.Artifacts = append(customerRes.Artifacts, api.DashboardArtifact{
-								Artifact: api.AsArtifact(types.ArtifactWithTaggedVersion{
+								Artifact: mapping.ArtifactToAPI(types.ArtifactWithTaggedVersion{
 									ArtifactWithDownloads: artifact,
 									Versions:              versions,
 								}),

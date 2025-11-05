@@ -2,6 +2,7 @@ export * from './access-token';
 export * from './agent-version';
 export * from './application';
 export * from './base';
+export * from './customer-organization';
 export * from './deployment';
 export * from './deployment-target';
 export * from './organization-branding';

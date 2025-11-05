@@ -26,7 +26,7 @@ const (
 		u.name,
 		u.image_id`
 	userAccountWithRoleOutputExpr = userAccountOutputExpr +
-		", j.user_role, j.created_at "
+		", j.user_role, j.created_at, j.customer_organization_id "
 	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
 )
 
@@ -46,6 +46,7 @@ func CreateUserAccountWithOrganization(
 		userAccount.ID,
 		org.ID,
 		types.UserRoleVendor,
+		nil,
 	); err != nil {
 		return nil, err
 	} else {
@@ -182,7 +183,8 @@ func UserOwnsApplicationLicensesInOrganization(ctx context.Context, userID, orgI
 	rows, err := db.Query(ctx, `
 		SELECT count(al.id) > 0
 		FROM ApplicationLicense al
-		WHERE al.organization_id = @orgId AND al.owner_useraccount_id = @userId`,
+		JOIN Organization_UserAccount ou ON al.customer_organization_id = ou.customer_organization_id
+		WHERE al.organization_id = @orgId AND ou.user_account_id = @userId`,
 		pgx.NamedArgs{"orgId": orgID, "userId": userID},
 	)
 	if err != nil {
@@ -200,7 +202,8 @@ func UserOwnsArtifactLicensesInOrganization(ctx context.Context, userID, orgID u
 	rows, err := db.Query(ctx, `
 		SELECT count(al.id) > 0
 		FROM ArtifactLicense al
-		WHERE al.organization_id = @orgId AND al.owner_useraccount_id = @userId`,
+		JOIN Organization_UserAccount ou ON al.customer_organization_id = ou.customer_organization_id
+		WHERE al.organization_id = @orgId AND ou.user_account_id = @userId`,
 		pgx.NamedArgs{"orgId": orgID, "userId": userID},
 	)
 	if err != nil {
@@ -225,11 +228,22 @@ func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.U
 	return err
 }
 
-func CreateUserAccountOrganizationAssignment(ctx context.Context, userID, orgID uuid.UUID, role types.UserRole) error {
+func CreateUserAccountOrganizationAssignment(
+	ctx context.Context,
+	userID, orgID uuid.UUID,
+	role types.UserRole,
+	customerOrganizationID *uuid.UUID,
+) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
-		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role) VALUES (@orgId, @userId, @role)",
-		pgx.NamedArgs{"userId": userID, "orgId": orgID, "role": role},
+		"INSERT INTO Organization_UserAccount (organization_id, user_account_id, user_role, customer_organization_id) "+
+			"VALUES (@orgId, @userId, @role, @customerOrganizationID)",
+		pgx.NamedArgs{
+			"userId":                 userID,
+			"orgId":                  orgID,
+			"role":                   role,
+			"customerOrganizationID": customerOrganizationID,
+		},
 	)
 	if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
 		return apierrors.ErrAlreadyExists

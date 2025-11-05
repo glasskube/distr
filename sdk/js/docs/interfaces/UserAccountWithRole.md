@@ -22,6 +22,12 @@
 
 ---
 
+### customerOrganizationId?
+
+> `optional` **customerOrganizationId**: `string`
+
+---
+
 ### email
 
 > **email**: `string`

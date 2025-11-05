@@ -187,11 +187,13 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     ),
     combineLatestWith(
       this.deploymentTarget$.pipe(
-        map((dt) => dt?.createdBy?.id),
+        map((dt) => dt?.customerOrganization?.id),
         distinctUntilChanged()
       )
     ),
-    map(([licenses, targetCreatedById]) => licenses.filter((l) => l.ownerUserAccountId === targetCreatedById)),
+    map(([licenses, customerOrganizationId]) =>
+      licenses.filter((l) => l.customerOrganizationId === customerOrganizationId)
+    ),
     shareReplay(1)
   );
 

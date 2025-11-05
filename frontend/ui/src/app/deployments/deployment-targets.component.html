@@ -58,17 +58,28 @@
       </div>
     </div>
 
-    <div class="grid gap-4 items-stretch 2xl:grid-cols-2">
-      @for (deploymentTarget of filteredDeploymentTargets$ | async; track deploymentTarget.id) {
-        <app-deployment-target-card
-          [deploymentTarget]="deploymentTarget"
-          [fullVersion]="true"
-          [deploymentTargetMetrics]="deploymentTarget.metrics">
-        </app-deployment-target-card>
-      } @empty {
-        <div class="text-gray-500 dark:text-gray-400">No agents found.</div>
+    @for (
+      customerDeploymentTargets of filteredDeploymentTargets$ | async;
+      track customerDeploymentTargets.customerOrganization?.id
+    ) {
+      @if (customerDeploymentTargets.customerOrganization; as customer) {
+        <h2
+          class="text-xl font-extrabold leading-none tracking-tight text-gray-900 md:text-2xl dark:text-white mb-3 mt-6">
+          {{ customer.name }}
+        </h2>
       }
-    </div>
+
+      <div class="grid gap-4 items-stretch 2xl:grid-cols-2">
+        @for (deploymentTarget of customerDeploymentTargets.deploymentTargets; track deploymentTarget.id) {
+          <app-deployment-target-card
+            [deploymentTarget]="deploymentTarget"
+            [fullVersion]="true"
+            [deploymentTargetMetrics]="deploymentTarget.metrics" />
+        }
+      </div>
+    } @empty {
+      <div class="text-gray-500 dark:text-gray-400">No agents found.</div>
+    }
 
     <ng-template #deploymentModal>
       <app-deployment-modal

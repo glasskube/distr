@@ -1,3 +1,5 @@
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {AsyncPipe} from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -10,43 +12,29 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
-import {AsyncPipe} from '@angular/common';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {
   AbstractControl,
   ControlValueAccessor,
   FormArray,
   FormBuilder,
   FormControl,
-  FormGroup,
   NG_VALUE_ACCESSOR,
   NgControl,
   ReactiveFormsModule,
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
-import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {
-  distinctUntilChanged,
-  first,
-  firstValueFrom,
-  map,
-  of,
-  Subject,
-  switchMap,
-  takeUntil,
-  withLatestFrom,
-} from 'rxjs';
-import {ApplicationLicense} from '../../types/application-license';
-import {UsersService} from '../../services/users.service';
-import dayjs from 'dayjs';
-import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {dropdownAnimation} from '../../animations/dropdown';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {ArtifactLicense, ArtifactLicenseSelection} from '../../services/artifact-licenses.service';
-import {Artifact, ArtifactsService, TaggedArtifactVersion, ArtifactWithTags} from '../../services/artifacts.service';
-import {ArtifactsHashComponent} from '../components';
+import {faChevronDown, faMagnifyingGlass, faPen, faPlus, faXmark} from '@fortawesome/free-solid-svg-icons';
+import dayjs from 'dayjs';
+import {distinctUntilChanged, first, firstValueFrom, of, Subject, switchMap, takeUntil} from 'rxjs';
 import {RelativeDatePipe} from '../../../util/dates';
+import {dropdownAnimation} from '../../animations/dropdown';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {ArtifactLicense, ArtifactLicenseSelection} from '../../services/artifact-licenses.service';
+import {ArtifactsService, ArtifactWithTags} from '../../services/artifacts.service';
+import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
+import {ArtifactsHashComponent} from '../components';
 
 @Component({
   selector: 'app-edit-artifact-license',
@@ -74,12 +62,9 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
   private injector = inject(Injector);
   private readonly destroyed$ = new Subject<void>();
   private readonly artifactsService = inject(ArtifactsService);
-  private readonly usersService = inject(UsersService);
+  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
   allArtifacts$ = this.artifactsService.list();
-  customers$ = this.usersService.getUsers().pipe(
-    map((accounts) => accounts.filter((a) => a.userRole === 'customer')),
-    first()
-  );
+  customers$ = this.customerOrganizationService.getCustomerOrganizations().pipe(first());
 
   private fb = inject(FormBuilder);
   editForm = this.fb.nonNullable.group({
@@ -92,7 +77,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
       includeAllTags: boolean;
       artifactTags: boolean[];
     }>([], Validators.required),
-    ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
+    customerOrganizationId: this.fb.nonNullable.control<string | undefined>(undefined),
   });
   editFormLoading = false;
   readonly license = signal<ArtifactLicense | undefined>(undefined);
@@ -122,7 +107,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
               versionIds: this.getSelectedVersions(artifact.includeAllTags, artifact.artifactTags, artifact.artifact!),
             };
           }),
-          ownerUserAccountId: val.ownerUserAccountId,
+          customerOrganizationId: val.customerOrganizationId,
         });
       } else {
         this.onChange(undefined);
@@ -280,7 +265,7 @@ export class EditArtifactLicenseComponent implements OnInit, OnDestroy, AfterVie
         name: license.name,
         artifacts: [],
         expiresAt: license.expiresAt ? dayjs(license.expiresAt).format('YYYY-MM-DD') : '',
-        ownerUserAccountId: license.ownerUserAccountId,
+        customerOrganizationId: license.customerOrganizationId,
       });
       for (let selection of license.artifacts || []) {
         this.addArtifactGroup(selection);

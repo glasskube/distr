@@ -127,15 +127,18 @@ func mergeApplications(applications []types.Application) []types.Application {
 	return util.GetValues(applicationMap)
 }
 
-func GetApplicationsWithLicenseOwnerID(ctx context.Context, id uuid.UUID) ([]types.Application, error) {
+func GetApplicationsWithLicenseOwnerID(
+	ctx context.Context,
+	customerOrganizationID uuid.UUID,
+) ([]types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT DISTINCT `+applicationWithLicensedVersionsOutputExpr+`
 			FROM ApplicationLicense al
 				LEFT JOIN Application a ON al.application_id = a.id
-			WHERE al.owner_useraccount_id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
+			WHERE al.customer_organization_id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
 			ORDER BY a.name
-			`, pgx.NamedArgs{"id": id}); err != nil {
+			`, pgx.NamedArgs{"id": customerOrganizationID}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		return nil, fmt.Errorf("failed to get applications: %w", err)
@@ -162,15 +165,19 @@ func GetApplication(ctx context.Context, id, orgID uuid.UUID) (*types.Applicatio
 	}
 }
 
-func GetApplicationWithLicenseOwnerID(ctx context.Context, oID uuid.UUID, id uuid.UUID) (*types.Application, error) {
+func GetApplicationWithLicenseOwnerID(
+	ctx context.Context,
+	customerOrganizationID uuid.UUID,
+	id uuid.UUID,
+) (*types.Application, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 			SELECT DISTINCT `+applicationWithLicensedVersionsOutputExpr+`
 			FROM ApplicationLicense al
 				LEFT JOIN Application a ON al.application_id = a.id
-			WHERE al.owner_useraccount_id = @ownerID AND a.id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
+			WHERE al.customer_organization_id = @ownerID AND a.id = @id AND (al.expires_at IS NULL OR al.expires_at > now())
 			ORDER BY a.name
-			`, pgx.NamedArgs{"ownerID": oID, "id": id}); err != nil {
+			`, pgx.NamedArgs{"ownerID": customerOrganizationID, "id": id}); err != nil {
 		return nil, fmt.Errorf("failed to query applications: %w", err)
 	} else if applications, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Application]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

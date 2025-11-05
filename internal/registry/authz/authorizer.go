@@ -62,7 +62,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 		return ErrAccessDenied
 	} else if action != ActionWrite && *auth.CurrentUserRole() != types.UserRoleVendor {
 		if org.HasFeature(types.FeatureLicensing) {
-			err := db.CheckLicenseForArtifact(ctx, name.OrgName, name.ArtifactName, reference, auth.CurrentUserID())
+			err := db.CheckLicenseForArtifact(ctx, name.OrgName, name.ArtifactName, reference, *auth.CurrentCustomerOrgID())
 			if errors.Is(err, apierrors.ErrForbidden) {
 				return ErrAccessDenied
 			} else if err != nil {
@@ -81,7 +81,7 @@ func (a *authorizer) AuthorizeBlob(ctx context.Context, digest digest.Digest, ac
 		if action == ActionWrite {
 			return ErrAccessDenied
 		} else if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			err := db.CheckLicenseForArtifactBlob(ctx, digest.String(), auth.CurrentUserID())
+			err := db.CheckLicenseForArtifactBlob(ctx, digest.String(), *auth.CurrentCustomerOrgID())
 			if errors.Is(err, apierrors.ErrForbidden) {
 				return ErrAccessDenied
 			} else if err != nil {

@@ -4,7 +4,12 @@ import {AfterViewInit, Component, inject, OnDestroy, signal, TemplateRef, ViewCh
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
-import {ApplicationVersion, DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
+import {
+  ApplicationVersion,
+  CustomerOrganization,
+  DeploymentTarget,
+  DeploymentWithLatestRevision,
+} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
@@ -18,7 +23,7 @@ import {
   takeUntil,
 } from 'rxjs';
 import {SemVer} from 'semver';
-import {maxBy} from '../../util/arrays';
+import {compareBy, maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
 import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
@@ -40,6 +45,11 @@ type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatest
 
 export interface DeploymentTargetViewData extends DeploymentTarget {
   metrics?: DeploymentTargetLatestMetrics;
+}
+
+export interface CustomerDeploymentTargets {
+  customerOrganization?: CustomerOrganization;
+  deploymentTargets: DeploymentTargetViewData[];
 }
 
 @Component({
@@ -90,21 +100,35 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     catchError(() => of([]))
   );
 
-  readonly filteredDeploymentTargets$: Observable<DeploymentTargetViewData[]> = filteredByFormControl(
+  protected readonly filteredDeploymentTargets$: Observable<CustomerDeploymentTargets[]> = filteredByFormControl(
     this.deploymentTargets$,
     this.filterForm.controls.search,
-    (dt, search) => !search || (dt.name || '').toLowerCase().includes(search.toLowerCase())
+    (dt, search) =>
+      !search ||
+      [dt.name, dt.customerOrganization?.name].some((it) => it?.toLowerCase()?.includes(search.toLowerCase()) ?? false)
   ).pipe(
     combineLatestWith(this.deploymentTargetMetrics$),
-    map(([deploymentTargets, deploymentTargetMetrics]) => {
-      return deploymentTargets.map((dt) => {
-        return {
-          ...dt,
-          metrics: deploymentTargetMetrics.find((x) => x.id === dt.id),
-        } as DeploymentTargetViewData;
-      });
-    })
+    map(([deploymentTargets, deploymentTargetMetrics]) =>
+      deploymentTargets.map((dt) => ({
+        ...dt,
+        metrics: deploymentTargetMetrics.find((x) => x.id === dt.id),
+      }))
+    ),
+    map((deploymentTargets) => [
+      {deploymentTargets: deploymentTargets.filter((it) => it.customerOrganization === undefined)},
+      ...Object.values(
+        deploymentTargets
+          .map((dt) => dt.customerOrganization)
+          .filter((co) => co !== undefined)
+          .sort(compareBy((co) => co.name))
+          .reduce<Record<string, CustomerOrganization>>((agg, co) => ({...agg, [co.id]: co}), {})
+      ).map<CustomerDeploymentTargets>((customerOrganization) => ({
+        customerOrganization,
+        deploymentTargets: deploymentTargets.filter((dt) => dt.customerOrganization?.id === customerOrganization.id),
+      })),
+    ])
   );
+
   private readonly applications$ = this.applications.list();
 
   protected deploymentTargetsWithUpdate$: Observable<DeploymentWithNewerVersion[]> = this.deploymentTargets$.pipe(

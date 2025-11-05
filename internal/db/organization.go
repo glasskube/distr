@@ -25,7 +25,11 @@ const (
 		o.registry_domain,
 		o.email_from_address
 	`
-	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role, j.created_at as joined_org_at "
+	organizationWithUserRoleOutputExpr = organizationOutputExpr + `,
+		j.user_role,
+		cu.id AS customer_organization_id,
+		cu.name AS customer_organization_name,
+		j.created_at as joined_org_at `
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
@@ -74,6 +78,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.Org
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
+			LEFT JOIN CustomerOrganization cu ON cu.id = j.customer_organization_id
 			WHERE u.id = @id
 			ORDER BY o.created_at
 	`, pgx.NamedArgs{"id": userID})

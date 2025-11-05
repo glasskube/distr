@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, computed, inject, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
+import {Component, computed, inject, input, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
@@ -69,7 +69,10 @@ export class UsersComponent implements OnDestroy {
   protected readonly faTrash = faTrash;
   protected readonly faClipboard = faClipboard;
 
-  public readonly userRole: Signal<UserRole>;
+  public readonly customerOrganizationId = input<string>();
+  public readonly userRole: Signal<UserRole> = computed(() =>
+    this.customerOrganizationId() === undefined ? 'vendor' : 'customer'
+  );
   public readonly users$: Observable<UserAccountWithRole[]>;
   private readonly refresh$ = new Subject<void>();
 
@@ -87,14 +90,14 @@ export class UsersComponent implements OnDestroy {
   });
 
   constructor() {
-    const data = toSignal(inject(ActivatedRoute).data);
-    this.userRole = computed(() => data()?.['userRole'] ?? null);
     const usersWithRefresh = this.refresh$.pipe(
       startWith(undefined),
       switchMap(() => this.users.getUsers())
     );
-    const shownUserAccounts = combineLatest([toObservable(this.userRole), usersWithRefresh]).pipe(
-      map(([userRole, users]) => users.filter((it) => userRole !== null && it.userRole === userRole))
+    const shownUserAccounts = combineLatest([toObservable(this.customerOrganizationId), usersWithRefresh]).pipe(
+      map(([customerOrganizationId, users]) =>
+        users.filter((it) => it.customerOrganizationId === customerOrganizationId)
+      )
     );
     this.users$ = filteredByFormControl(
       shownUserAccounts,
@@ -125,6 +128,7 @@ export class UsersComponent implements OnDestroy {
             email: this.inviteForm.value.email!,
             name: this.inviteForm.value.name || undefined,
             userRole: this.userRole(),
+            customerOrganizationId: this.customerOrganizationId(),
           })
         );
         this.inviteUrl = result.inviteUrl;

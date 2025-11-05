@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -72,7 +72,7 @@ func generateUserToken(
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
 	}
 	if user.ImageID != nil {
-		claims[UserImageURLKey] = api.WithImageUrl(user.ImageID)
+		claims[UserImageURLKey] = util.CreateImageURL(user.ImageID)
 	}
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole

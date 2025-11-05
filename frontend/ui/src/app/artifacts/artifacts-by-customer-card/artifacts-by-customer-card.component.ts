@@ -1,4 +1,5 @@
 import {OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe} from '@angular/common';
 import {Component, inject, input} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -12,17 +13,16 @@ import {
   faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import {CustomerOrganization} from '@glasskube/distr-sdk';
+import {SemVer} from 'semver';
+import {maxBy} from '../../../util/arrays';
+import {SecureImagePipe} from '../../../util/secureImage';
 import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {modalFlyInOut} from '../../animations/modal';
-import {AuthService} from '../../services/auth.service';
-import {ApplicationVersion, UserAccountWithRole} from '@glasskube/distr-sdk';
-import {DashboardArtifact} from '../../services/dashboard.service';
-import {maxBy} from '../../../util/arrays';
-import {SemVer} from 'semver';
 import {TaggedArtifactVersion} from '../../services/artifacts.service';
-import {AsyncPipe} from '@angular/common';
-import {SecureImagePipe} from '../../../util/secureImage';
+import {AuthService} from '../../services/auth.service';
+import {DashboardArtifact} from '../../services/dashboard.service';
 
 @Component({
   selector: 'app-artifacts-by-customer-card',
@@ -33,7 +33,7 @@ import {SecureImagePipe} from '../../../util/secureImage';
 export class ArtifactsByCustomerCardComponent {
   protected readonly auth = inject(AuthService);
 
-  public readonly customer = input.required<UserAccountWithRole>();
+  public readonly customer = input.required<CustomerOrganization>();
   public readonly artifacts = input.required<DashboardArtifact[]>();
 
   protected isOnLatest(artifact: DashboardArtifact): boolean {

@@ -95,7 +95,7 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		if err := db.CreateUserAccountOrganizationAssignment(
-			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleVendor); err != nil {
+			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleVendor, nil); err != nil {
 			return err
 		}
 		return nil

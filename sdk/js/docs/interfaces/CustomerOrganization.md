@@ -1,0 +1,53 @@
+[**@glasskube/distr-sdk**](../README.md)
+
+---
+
+[@glasskube/distr-sdk](../README.md) / CustomerOrganization
+
+# Interface: CustomerOrganization
+
+## Extends
+
+- `Required`\<[`BaseModel`](BaseModel.md)\>
+
+## Extended by
+
+- [`CustomerOrganizationWithUserCount`](CustomerOrganizationWithUserCount.md)
+
+## Properties
+
+### createdAt
+
+> **createdAt**: `string`
+
+#### Inherited from
+
+[`BaseModel`](BaseModel.md).[`createdAt`](BaseModel.md#createdat)
+
+---
+
+### id
+
+> **id**: `string`
+
+#### Inherited from
+
+[`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
+
+---
+
+### imageId?
+
+> `optional` **imageId**: `string`
+
+---
+
+### imageUrl?
+
+> `optional` **imageUrl**: `string`
+
+---
+
+### name
+
+> **name**: `string`
