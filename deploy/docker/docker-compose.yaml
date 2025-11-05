@@ -2,7 +2,6 @@ name: distr
 
 services:
   postgres:
-    container_name: postgres
     image: 'postgres:17-alpine'
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,7 +17,6 @@ services:
       retries: 6
       start_period: 30s
   hub:
-    container_name: distr
     image: ghcr.io/glasskube/distr:1.14.2 # x-release-please-version
     depends_on:
       postgres:
@@ -34,7 +32,6 @@ services:
   # If you don't want to use the OCI registry (REGISTRY_ENABLED=false) or want to use an external S3 provider,
   # you don't need to run the minio service.
   minio:
-    container_name: minio
     image: 'minio/minio:RELEASE.2025-02-28T09-55-16Z'
     entrypoint: sh
     command:
