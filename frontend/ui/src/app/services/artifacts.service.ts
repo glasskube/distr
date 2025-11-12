@@ -92,4 +92,21 @@ export class ArtifactsService {
       .patch<ArtifactWithTags>(`${this.artifactsUrl}/${artifactsId}/image`, {imageId})
       .pipe(tap((it) => this.cache.save(it)));
   }
+
+  public deleteArtifact(artifactId: string): Observable<void> {
+    return this.http.delete<void>(`${this.artifactsUrl}/${artifactId}`).pipe(
+      tap(() => {
+        this.cache.remove({id: artifactId} as ArtifactWithTags);
+      })
+    );
+  }
+
+  public deleteArtifactVersion(artifactId: string, versionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.artifactsUrl}/${artifactId}/versions/${versionId}`).pipe(
+      tap(() => {
+        // Invalidate cache to force refresh
+        this.cache.remove({id: artifactId} as ArtifactWithTags);
+      })
+    );
+  }
 }

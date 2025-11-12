@@ -26,6 +26,10 @@ func ArtifactsRouter(r chi.Router) {
 		r.Use(artifactMiddleware)
 		r.Get("/", getArtifact)
 		r.With(requireUserRoleVendor).Patch("/image", patchImageArtifactHandler)
+		r.With(requireUserRoleVendor).Delete("/", deleteArtifactHandler)
+		r.Route("/versions/{versionId}", func(r chi.Router) {
+			r.With(requireUserRoleVendor).Delete("/", deleteArtifactVersionHandler)
+		})
 	})
 }
 
@@ -64,6 +68,69 @@ var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body
 		return api.AsArtifact(*artifact), nil
 	}
 })
+
+func deleteArtifactHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	artifact := internalctx.GetArtifact(ctx)
+
+	if err := db.RunTx(ctx, func(ctx context.Context) error {
+		if isReferenced, err := db.ArtifactIsReferencedInLicenses(ctx, artifact.ID); err != nil {
+			return err
+		} else if isReferenced {
+			http.Error(w, "Cannot delete artifact: it is referenced in one or more licenses. Please remove the artifact from all licenses before deleting.", http.StatusBadRequest)
+			return nil
+		} else if err := db.DeleteArtifactWithID(ctx, artifact.ID); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				return nil
+			} else {
+				return err
+			}
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+			return nil
+		}
+	}); err != nil {
+		log.Error("error deleting artifact", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+}
+
+func deleteArtifactVersionHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+
+	versionId, parseErr := uuid.Parse(r.PathValue("versionId"))
+	if parseErr != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := db.RunTx(ctx, func(ctx context.Context) error {
+		if isReferenced, err := db.ArtifactVersionIsReferencedInLicenses(ctx, versionId); err != nil {
+			return err
+		} else if isReferenced {
+			http.Error(w, "Cannot delete artifact version: it is referenced in one or more licenses. Please remove the version from all licenses before deleting.", http.StatusBadRequest)
+			return nil
+		} else if err := db.DeleteArtifactVersionWithID(ctx, versionId); err != nil {
+			if errors.Is(err, apierrors.ErrNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				return nil
+			} else {
+				return err
+			}
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+			return nil
+		}
+	}); err != nil {
+		log.Error("error deleting artifact version", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+}
 
 func artifactMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

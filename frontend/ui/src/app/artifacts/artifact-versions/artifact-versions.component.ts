@@ -1,10 +1,10 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource} from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faFile} from '@fortawesome/free-solid-svg-icons';
+import {faBox, faDownload, faFile, faTrash} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap} from 'rxjs';
+import {catchError, distinctUntilChanged, filter, firstValueFrom, map, NEVER, Observable, Subject, switchMap, tap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
@@ -24,6 +24,8 @@ import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, Artifac
 import {SecureImagePipe} from '../../../util/secureImage';
 import {OverlayService} from '../../services/overlay.service';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {ToastService} from '../../services/toast.service';
+import {getFormDisplayedError} from '../../../util/errors';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -49,10 +51,15 @@ export class ArtifactVersionsComponent {
   private readonly organization = inject(OrganizationService);
   private readonly auth = inject(AuthService);
   private readonly overlay = inject(OverlayService);
+  private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
   protected readonly faBox = faBox;
   protected readonly faDownload = faDownload;
   protected readonly faFile = faFile;
+  protected readonly faTrash = faTrash;
+
+  private readonly refresh$ = new Subject<void>();
 
   protected readonly artifact$ = this.route.params.pipe(
     map((params) => params['id']?.trim()),
@@ -167,5 +174,31 @@ export class ArtifactVersionsComponent {
       return;
     }
     await firstValueFrom(this.artifacts.patchImage(data.id!, fileId));
+  }
+
+  public deleteArtifactVersion(artifact: ArtifactWithTags, version: TaggedArtifactVersion): void {
+    const tagNames = version.tags.map((t) => t.name).join(', ');
+    this.overlay
+      .confirm({
+        message: {
+          message: `This will permanently delete version ${tagNames} (${version.digest.substring(0, 12)}) from ${artifact.name}. Users will no longer be able to download this specific version. Are you sure?`,
+        },
+      })
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.artifacts.deleteArtifactVersion(artifact.id, version.id)),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return NEVER;
+        }),
+        tap(() => {
+          this.toast.success('Artifact version deleted successfully');
+          this.refresh$.next();
+        })
+      )
+      .subscribe();
   }
 }

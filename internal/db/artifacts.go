@@ -727,3 +727,75 @@ func UpdateArtifactImage(ctx context.Context, artifact *types.ArtifactWithTagged
 	}
 	return nil
 }
+
+func ArtifactIsReferencedInLicenses(ctx context.Context, artifactID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(ala.id) > 0
+		FROM ArtifactLicense_Artifact ala
+		WHERE ala.artifact_id = @artifactId`,
+		pgx.NamedArgs{"artifactId": artifactID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func ArtifactVersionIsReferencedInLicenses(ctx context.Context, versionID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(ala.id) > 0
+		FROM ArtifactLicense_Artifact ala
+		WHERE ala.artifact_version_id = @versionId`,
+		pgx.NamedArgs{"versionId": versionID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+func DeleteArtifactWithID(ctx context.Context, id uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `DELETE FROM Artifact WHERE id = @id`, pgx.NamedArgs{"id": id})
+	if err != nil {
+		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not delete Artifact: %w", err)
+	}
+
+	return nil
+}
+
+func DeleteArtifactVersionWithID(ctx context.Context, id uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `DELETE FROM ArtifactVersion WHERE id = @id`, pgx.NamedArgs{"id": id})
+	if err != nil {
+		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not delete ArtifactVersion: %w", err)
+	}
+
+	return nil
+}
