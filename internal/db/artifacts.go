@@ -818,7 +818,7 @@ func checkAllVersionsLicense(ctx context.Context, artifactID uuid.UUID) error {
 	}
 
 	if hasAllVersionsLicense {
-		return fmt.Errorf("cannot delete tag: there is an all-versions license for this artifact")
+		return apierrors.NewBadRequest("cannot delete tag: there is an all-versions license for this artifact")
 	}
 
 	return nil
