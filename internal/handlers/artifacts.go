@@ -74,29 +74,36 @@ func deleteArtifactHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	artifact := internalctx.GetArtifact(ctx)
 
-	if err := db.RunTx(ctx, func(ctx context.Context) error {
-		if isReferenced, err := db.ArtifactIsReferencedInLicenses(ctx, artifact.ID); err != nil {
+	err := db.RunTx(ctx, func(ctx context.Context) error {
+		isReferenced, err := db.ArtifactIsReferencedInLicenses(ctx, artifact.ID)
+		if err != nil {
 			return err
-		} else if isReferenced {
-			e := "Cannot delete artifact: it is referenced in one or more licenses."
-			http.Error(w, e, http.StatusBadRequest)
-			return nil
-		} else if err := db.DeleteArtifactWithID(ctx, artifact.ID); err != nil {
-			if errors.Is(err, apierrors.ErrNotFound) {
-				w.WriteHeader(http.StatusNoContent)
-				return nil
-			} else {
-				return err
-			}
-		} else {
-			w.WriteHeader(http.StatusNoContent)
-			return nil
 		}
-	}); err != nil {
+		if isReferenced {
+			return apierrors.NewBadRequest("Cannot delete artifact: it is referenced in one or more licenses.")
+		}
+
+		if err := db.DeleteArtifactWithID(ctx, artifact.ID); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		if errors.Is(err, apierrors.ErrBadRequest) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		log.Error("error deleting artifact", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func deleteArtifactTagHandler(w http.ResponseWriter, r *http.Request) {
@@ -110,14 +117,10 @@ func deleteArtifactTagHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.RunTx(ctx, func(ctx context.Context) error {
+	err := db.RunTx(ctx, func(ctx context.Context) error {
 		// Step 1: Validate version exists and fetch it
 		version, err := db.GetArtifactVersionByTag(ctx, artifact.ID, tagName)
 		if err != nil {
-			if errors.Is(err, apierrors.ErrNotFound) {
-				http.NotFound(w, r)
-				return nil
-			}
 			return err
 		}
 
@@ -129,37 +132,43 @@ func deleteArtifactTagHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Step 3: Enhanced license check
 		if err := db.CheckArtifactVersionDeletionForLicenses(ctx, artifact.ID, version, versionsWithSameDigest); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return nil
+			return err
 		}
 
 		// Step 4: Check if this is the last non-SHA tag of the artifact
-		if isLast, err := db.IsLastTagOfArtifact(ctx, artifact.ID, tagName); err != nil {
+		isLast, err := db.IsLastTagOfArtifact(ctx, artifact.ID, tagName)
+		if err != nil {
 			return err
-		} else if isLast {
-			e := "Cannot delete tag: it is the last tag of the artifact. " +
-				"At least one tag must remain for the artifact."
-			http.Error(w, e, http.StatusConflict)
-			return nil
+		}
+		if isLast {
+			return apierrors.NewConflict(
+				"Cannot delete tag: it is the last tag of the artifact. At least one tag must remain for the artifact.",
+			)
 		}
 
 		// Step 5: Delete the tag
-		if err := db.DeleteArtifactTag(ctx, artifact.ID, tagName); err != nil {
-			if errors.Is(err, apierrors.ErrNotFound) {
-				w.WriteHeader(http.StatusNoContent)
-				return nil
-			} else {
-				return err
-			}
+		return db.DeleteArtifactTag(ctx, artifact.ID, tagName)
+	})
+	if err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+			return
 		}
-
-		w.WriteHeader(http.StatusNoContent)
-		return nil
-	}); err != nil {
+		if errors.Is(err, apierrors.ErrBadRequest) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
 		log.Error("error deleting artifact tag", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func artifactMiddleware(h http.Handler) http.Handler {

@@ -3,16 +3,7 @@ import {Component, inject, resource} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {
-  catchError,
-  distinctUntilChanged,
-  filter,
-  firstValueFrom,
-  map,
-  NEVER,
-  switchMap,
-  tap,
-} from 'rxjs';
+import {catchError, distinctUntilChanged, filter, firstValueFrom, map, NEVER, switchMap, tap} from 'rxjs';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
 import {BytesPipe} from '../../../util/units';
@@ -92,7 +83,7 @@ export class ArtifactVersionsComponent {
     const org = this.org.value();
     const env = this.remoteEnv.value();
     let url = `${org?.registryDomain ?? env?.registryHost ?? 'REGISTRY_DOMAIN'}/${org?.slug ?? 'ORG_SLUG'}/${artifact.name}`;
-    const version = artifact.versions.find((it) => it.tags);
+    const version = artifact.versions.find((it) => it.tags && it.tags.length > 0);
     if (!version) return;
     switch (version.inferredType) {
       case 'helm-chart':

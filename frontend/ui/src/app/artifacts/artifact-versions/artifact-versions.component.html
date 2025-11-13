@@ -61,14 +61,14 @@
                       <div class="flex flex-row gap-1 flex-wrap">
                         @for (label of version.tags; track label.name) {
                           <span
-                            class="bg-blue-100 text-blue-800 text-xs font-medium pl-2.5 pr-1 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400 flex items-center gap-1">
+                            class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400 flex items-center gap-1">
                             {{ label.name }}
                             <button
                               *appRequiredRole="'vendor'"
                               type="button"
                               aria-label="Delete tag {{ label.name }}"
                               (click)="deleteArtifactTag(artifact, version, label.name)"
-                              class="p-0 text-red-400 hover:text-red-600 transition-colors">
+                              class="-mr-1 text-red-400 hover:text-red-600 transition-colors">
                               <fa-icon [icon]="faXmark"></fa-icon>
                             </button>
                           </span>
