@@ -2,10 +2,8 @@ import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faFile} from '@fortawesome/free-solid-svg-icons';
-import dayjs from 'dayjs';
-import {distinctUntilChanged, filter, firstValueFrom, map, Observable, switchMap} from 'rxjs';
-import {SemVer} from 'semver';
+import {faBox, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {catchError, distinctUntilChanged, filter, firstValueFrom, map, NEVER, switchMap, tap} from 'rxjs';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
 import {BytesPipe} from '../../../util/units';
@@ -17,13 +15,13 @@ import {
   HasDownloads,
   TaggedArtifactVersion,
 } from '../../services/artifacts.service';
-import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
-import {ArtifactsVulnerabilityReportComponent} from '../artifacts-vulnerability-report.component';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {OverlayService} from '../../services/overlay.service';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {ToastService} from '../../services/toast.service';
+import {getFormDisplayedError} from '../../../util/errors';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -35,7 +33,6 @@ import {RequireRoleDirective} from '../../directives/required-role.directive';
     ArtifactsDownloadCountComponent,
     ArtifactsDownloadedByComponent,
     ArtifactsHashComponent,
-    ArtifactsVulnerabilityReportComponent,
     ClipComponent,
     BytesPipe,
     SecureImagePipe,
@@ -47,17 +44,16 @@ export class ArtifactVersionsComponent {
   private readonly artifacts = inject(ArtifactsService);
   private readonly route = inject(ActivatedRoute);
   private readonly organization = inject(OrganizationService);
-  private readonly auth = inject(AuthService);
   private readonly overlay = inject(OverlayService);
+  private readonly toast = inject(ToastService);
 
   protected readonly faBox = faBox;
-  protected readonly faDownload = faDownload;
-  protected readonly faFile = faFile;
+  protected readonly faXmark = faXmark;
 
   protected readonly artifact$ = this.route.params.pipe(
     map((params) => params['id']?.trim()),
     distinctUntilChanged(),
-    switchMap((id: string) => this.artifacts.getByIdAndCache(id)),
+    switchMap((id) => this.artifacts.getByIdAndCache(id)),
     map((artifact) => {
       if (artifact) {
         return {
@@ -69,53 +65,6 @@ export class ArtifactVersionsComponent {
         };
       }
       return undefined;
-    })
-  );
-
-  protected readonly updateTag$: Observable<TaggedArtifactVersion | null> = this.artifact$.pipe(
-    filter((a) => !!a),
-    map((artifact) => {
-      const tagsSorted = [...artifact.versions]
-        .sort((a, b) => {
-          if (a.tags.some((l) => l.name === 'latest')) {
-            return 1;
-          }
-
-          if (b.tags.some((l) => l.name === 'latest')) {
-            return -1;
-          }
-
-          if (a.tags.length > 0 && b.tags.length > 0) {
-            try {
-              const aMax = a.tags
-                .map((l) => new SemVer(l.name))
-                .sort((a, b) => a.compare(b))
-                .reverse()[0];
-              const bMax = b.tags
-                .map((l) => new SemVer(l.name))
-                .sort((a, b) => a.compare(b))
-                .reverse()[0];
-              return aMax.compare(bMax);
-            } catch (e) {
-              console.warn(e);
-              return dayjs(a.createdAt).diff(b.createdAt);
-            }
-          } else {
-            return a.tags.length ? 1 : b.tags.length ? -1 : 0;
-          }
-        })
-        .reverse();
-
-      const newer = tagsSorted.slice(
-        0,
-        tagsSorted.findIndex((t) => (t.downloadedByUsers ?? []).some((u) => u === this.auth.getClaims()?.sub))
-      );
-
-      if (newer.length > 0) {
-        return newer[0];
-      }
-
-      return null;
     })
   );
 
@@ -134,7 +83,8 @@ export class ArtifactVersionsComponent {
     const org = this.org.value();
     const env = this.remoteEnv.value();
     let url = `${org?.registryDomain ?? env?.registryHost ?? 'REGISTRY_DOMAIN'}/${org?.slug ?? 'ORG_SLUG'}/${artifact.name}`;
-    const version = artifact.versions[0];
+    const version = artifact.versions.find((it) => it.tags && it.tags.length > 0);
+    if (!version) return;
     switch (version.inferredType) {
       case 'helm-chart':
         return `helm install <release-name> oci://${url} --version ${version.tags[0].name}`;
@@ -167,5 +117,27 @@ export class ArtifactVersionsComponent {
       return;
     }
     await firstValueFrom(this.artifacts.patchImage(data.id!, fileId));
+  }
+
+  public deleteArtifactTag(artifact: ArtifactWithTags, version: TaggedArtifactVersion, tagName: string): void {
+    this.overlay
+      .confirm(
+        `This will untag "${tagName}" from ${artifact.name}. The artifact version SHA (${version.digest.substring(0, 12)}) will remain in the database. Are you sure?`
+      )
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.artifacts.deleteArtifactTag(artifact, tagName)),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return NEVER;
+        }),
+        tap(() => {
+          this.toast.success(`Tag "${tagName}" removed successfully`);
+        })
+      )
+      .subscribe();
   }
 }
