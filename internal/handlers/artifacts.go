@@ -27,8 +27,8 @@ func ArtifactsRouter(r chi.Router) {
 		r.Get("/", getArtifact)
 		r.With(requireUserRoleVendor).Patch("/image", patchImageArtifactHandler)
 		r.With(requireUserRoleVendor).Delete("/", deleteArtifactHandler)
-		r.Route("/versions/{versionId}", func(r chi.Router) {
-			r.With(requireUserRoleVendor).Delete("/", deleteArtifactVersionHandler)
+		r.Route("/tags/{tagName}", func(r chi.Router) {
+			r.With(requireUserRoleVendor).Delete("/", deleteArtifactTagHandler)
 		})
 	})
 }
@@ -78,7 +78,8 @@ func deleteArtifactHandler(w http.ResponseWriter, r *http.Request) {
 		if isReferenced, err := db.ArtifactIsReferencedInLicenses(ctx, artifact.ID); err != nil {
 			return err
 		} else if isReferenced {
-			http.Error(w, "Cannot delete artifact: it is referenced in one or more licenses. Please remove the artifact from all licenses before deleting.", http.StatusBadRequest)
+			e := "Cannot delete artifact: it is referenced in one or more licenses."
+			http.Error(w, e, http.StatusBadRequest)
 			return nil
 		} else if err := db.DeleteArtifactWithID(ctx, artifact.ID); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
@@ -98,23 +99,25 @@ func deleteArtifactHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func deleteArtifactVersionHandler(w http.ResponseWriter, r *http.Request) {
+func deleteArtifactTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
+	artifact := internalctx.GetArtifact(ctx)
 
-	versionId, parseErr := uuid.Parse(r.PathValue("versionId"))
-	if parseErr != nil {
+	tagName := r.PathValue("tagName")
+	if tagName == "" {
 		http.NotFound(w, r)
 		return
 	}
 
 	if err := db.RunTx(ctx, func(ctx context.Context) error {
-		if isReferenced, err := db.ArtifactVersionIsReferencedInLicenses(ctx, versionId); err != nil {
+		if isReferenced, err := db.ArtifactTagIsReferencedInLicenses(ctx, artifact.ID, tagName); err != nil {
 			return err
 		} else if isReferenced {
-			http.Error(w, "Cannot delete artifact version: it is referenced in one or more licenses. Please remove the version from all licenses before deleting.", http.StatusBadRequest)
+			e := "Cannot delete tag: it is referenced in one or more licenses."
+			http.Error(w, e, http.StatusBadRequest)
 			return nil
-		} else if err := db.DeleteArtifactVersionWithID(ctx, versionId); err != nil {
+		} else if err := db.DeleteArtifactTag(ctx, artifact.ID, tagName); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				w.WriteHeader(http.StatusNoContent)
 				return nil
@@ -126,7 +129,7 @@ func deleteArtifactVersionHandler(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 	}); err != nil {
-		log.Error("error deleting artifact version", zap.Error(err))
+		log.Error("error deleting artifact tag", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}

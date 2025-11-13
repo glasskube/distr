@@ -46,27 +46,6 @@
                 </div>
               </div>
             }
-
-            <!--
-            @if (updateTag$ | async; as updateTag) {
-              <div
-                class="flex text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-                role="alert">
-                <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
-                <div>
-                  <span class="font-medium">Some customers are not using the latest version of this artifact.</span>
-                </div>
-              </div>
-              <div
-                class="flex text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                role="alert">
-                <fa-icon [icon]="faWarning" class="me-4"></fa-icon>
-                <div>
-                  <span class="font-medium">Some customers are affected by a critical vulnerability.</span>
-                </div>
-              </div>
-            }
-            -->
           </div>
         </div>
       </div>
@@ -75,79 +54,43 @@
         <div class="overflow-x-auto">
           <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
             @for (version of artifact.versions; track version.digest) {
-              <li class="py-3 px-6 sm:py-4">
-                <div class="flex items-center gap-2">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-row gap-1">
-                      @for (label of version.tags; track label.name) {
-                        @if (label.name === 'latest') {
+              @if (version.tags.length) {
+                <li class="py-3 px-6 sm:py-4">
+                  <div class="flex items-center gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex flex-row gap-1 flex-wrap">
+                        @for (label of version.tags; track label.name) {
                           <span
-                            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-green-400 border border-green-400">
+                            class="bg-blue-100 text-blue-800 text-xs font-medium pl-2.5 pr-1 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400 flex items-center gap-1">
                             {{ label.name }}
-                          </span>
-                        } @else {
-                          <span
-                            class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400">
-                            {{ label.name }}
+                            <button
+                              *appRequiredRole="'vendor'"
+                              type="button"
+                              aria-label="Delete tag {{ label.name }}"
+                              (click)="deleteArtifactTag(artifact, version, label.name)"
+                              class="p-0 text-red-400 hover:text-red-600 transition-colors">
+                              <fa-icon [icon]="faXmark"></fa-icon>
+                            </button>
                           </span>
                         }
-                      }
+                      </div>
+                      <ul class="flex gap-3 mt-1 text-xs font-normal text-gray-500 truncate dark:text-gray-400">
+                        <li>{{ version.createdAt | relativeDate }}</li>
+                        @if (version.size > 0) {
+                          <li>{{ version.size | bytes }}</li>
+                        }
+                        <li>
+                          <app-artifacts-hash [hash]="version.digest"></app-artifacts-hash>
+                        </li>
+                      </ul>
                     </div>
-                    <ul class="flex gap-3 mt-1 text-xs font-normal text-gray-500 truncate dark:text-gray-400">
-                      <li>{{ version.createdAt | relativeDate }}</li>
-                      @if (version.size > 0) {
-                        <li>{{ version.size | bytes }}</li>
-                      }
-                      <li><app-artifacts-hash [hash]="version.digest"></app-artifacts-hash></li>
-                    </ul>
-                  </div>
-                  <div class="flex items-center gap-2">
                     <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
                       <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
-                      <app-artifacts-downloaded-by [source]="version"> </app-artifacts-downloaded-by>
+                      <app-artifacts-downloaded-by [source]="version"></app-artifacts-downloaded-by>
                     </div>
-                    <button
-                      *appRequiredRole="'vendor'"
-                      type="button"
-                      aria-label="Delete version"
-                      (click)="deleteArtifactVersion(artifact, version)"
-                      class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                      <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
-                    </button>
                   </div>
-                </div>
-
-                @if (version.lastScannedAt || version.sbom) {
-                  <div class="flex mt-2 justify-between">
-                    @if (version.lastScannedAt) {
-                      <app-artifacts-vulnerability-report
-                        [vulns]="version.vulnerabilities"
-                        [date]="version.lastScannedAt">
-                      </app-artifacts-vulnerability-report>
-                    }
-                    @if (version.sbom) {
-                      <div class="flex row gap-4">
-                        <div>
-                          <button
-                            type="button"
-                            class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                            <fa-icon class="me-1" [icon]="faFile"></fa-icon>
-                            Release Notes
-                          </button>
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                            <fa-icon class="me-1" [icon]="faDownload"></fa-icon>
-                            Download SBOM
-                          </button>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                }
-              </li>
+                </li>
+              }
             }
           </ul>
         </div>

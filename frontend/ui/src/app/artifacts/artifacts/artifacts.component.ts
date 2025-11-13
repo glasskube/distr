@@ -50,10 +50,9 @@ export class ArtifactsComponent {
 
   private readonly refresh$ = new Subject<void>();
 
-  protected readonly artifacts$ = combineLatest([
-    this.artifacts.list(),
-    this.refresh$.pipe(startWith(undefined)),
-  ]).pipe(map(([artifacts]) => artifacts));
+  protected readonly artifacts$ = combineLatest([this.artifacts.list(), this.refresh$.pipe(startWith(undefined))]).pipe(
+    map(([artifacts]) => artifacts)
+  );
 
   protected readonly filteredArtifacts$ = combineLatest([
     this.artifacts$,

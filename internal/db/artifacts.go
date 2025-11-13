@@ -746,13 +746,19 @@ func ArtifactIsReferencedInLicenses(ctx context.Context, artifactID uuid.UUID) (
 	return result.Exists, nil
 }
 
-func ArtifactVersionIsReferencedInLicenses(ctx context.Context, versionID uuid.UUID) (bool, error) {
+func ArtifactTagIsReferencedInLicenses(ctx context.Context, artifactID uuid.UUID, tagName string) (bool, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
 		SELECT count(ala.id) > 0
 		FROM ArtifactLicense_Artifact ala
-		WHERE ala.artifact_version_id = @versionId`,
-		pgx.NamedArgs{"versionId": versionID},
+		JOIN ArtifactVersion av ON ala.artifact_version_id = av.id
+		WHERE (av.artifact_id = @artifactId
+		AND av.name = @tagName)
+		OR ala.artifact_version_id is null`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+			"tagName":    tagName,
+		},
 	)
 	if err != nil {
 		return false, err
@@ -782,9 +788,19 @@ func DeleteArtifactWithID(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func DeleteArtifactVersionWithID(ctx context.Context, id uuid.UUID) error {
+func DeleteArtifactTag(ctx context.Context, artifactID uuid.UUID, tagName string) error {
 	db := internalctx.GetDb(ctx)
-	cmd, err := db.Exec(ctx, `DELETE FROM ArtifactVersion WHERE id = @id`, pgx.NamedArgs{"id": id})
+	// Delete only the tag, not the version SHA
+	// Tags are ArtifactVersion records where name does NOT contain a colon
+	cmd, err := db.Exec(ctx, `
+		DELETE FROM ArtifactVersion
+		WHERE artifact_id = @artifactId
+		AND name = @tagName
+		AND name NOT LIKE '%:%'`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+			"tagName":    tagName,
+		})
 	if err != nil {
 		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.ForeignKeyViolation {
 			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
@@ -794,7 +810,7 @@ func DeleteArtifactVersionWithID(ctx context.Context, id uuid.UUID) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("could not delete ArtifactVersion: %w", err)
+		return fmt.Errorf("could not delete tag: %w", err)
 	}
 
 	return nil

@@ -101,11 +101,14 @@ export class ArtifactsService {
     );
   }
 
-  public deleteArtifactVersion(artifactId: string, versionId: string): Observable<void> {
-    return this.http.delete<void>(`${this.artifactsUrl}/${artifactId}/versions/${versionId}`).pipe(
+  public deleteArtifactTag(artifact: ArtifactWithTags, tagName: string) {
+    return this.http.delete<void>(`${this.artifactsUrl}/${artifact.id}/tags/${encodeURIComponent(tagName)}`).pipe(
       tap(() => {
-        // Invalidate cache to force refresh
-        this.cache.remove({id: artifactId} as ArtifactWithTags);
+        artifact.versions = (artifact.versions ?? []).map((version) => {
+          version.tags = version.tags.filter((tag) => tag.name !== tagName);
+          return version;
+        });
+        this.cache.save(artifact);
       })
     );
   }
