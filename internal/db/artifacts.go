@@ -781,7 +781,7 @@ func CheckArtifactVersionDeletionForLicenses(
 		// Count other non-SHA tags pointing to the same digest (excluding the tag being deleted)
 		otherNonSHATags := 0
 		for _, v := range versionsWithSameDigest {
-			// Skip SHA versions (name contains ":")
+			// Count non-SHA tags (names that don't contain ":")
 			if v.Name != version.Name && !isDigestName(v.Name) {
 				otherNonSHATags++
 			}
