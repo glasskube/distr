@@ -789,7 +789,7 @@ func CheckArtifactVersionDeletionForLicenses(
 
 		// If there are no other non-SHA tags, deletion should fail
 		if otherNonSHATags == 0 {
-			return fmt.Errorf(
+			return apierrors.NewBadRequest(
 				"cannot delete tag: the manifest digest is referenced in one or more licenses " +
 					"and this is the last non-SHA tag pointing to it",
 			)
