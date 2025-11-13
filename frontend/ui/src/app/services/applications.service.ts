@@ -123,12 +123,6 @@ export class ApplicationsService implements CrudService<Application> {
       );
   }
 
-  createSample(): Observable<Application> {
-    return this.httpClient
-      .post<Application>(`${this.applicationsUrl}/sample`, null)
-      .pipe(tap((it) => this.cache.save(it)));
-  }
-
   updateApplicationVersion(app: Application, version: ApplicationVersion): Observable<ApplicationVersion> {
     return this.httpClient
       .put<ApplicationVersion>(`${this.applicationsUrl}/${app.id}/versions/${version.id}`, version)

@@ -353,29 +353,6 @@ func CreateArtifact(ctx context.Context, artifact *types.Artifact) error {
 	}
 }
 
-func GetArtifactVersions(ctx context.Context, orgName, name string) ([]types.ArtifactVersion, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(
-		ctx,
-		`SELECT`+artifactVersionOutputExpr+`
-		FROM Artifact a
-		JOIN Organization o ON o.id = a.organization_id
-		LEFT JOIN ArtifactVersion v ON a.id = v.artifact_id
-		WHERE o.slug = @orgName
-			AND a.name = @name
-		ORDER BY v.name ASC`,
-		pgx.NamedArgs{"orgName": orgName, "name": name},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
-	}
-	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactVersion])
-	if err != nil {
-		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
-	}
-	return result, nil
-}
-
 func CheckLicenseForArtifact(ctx context.Context, orgName, name, reference string, userID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
@@ -597,54 +574,6 @@ func CreateArtifactPullLogEntry(ctx context.Context, versionID, userID uuid.UUID
 	return nil
 }
 
-func GetArtifactVersionPullCount(ctx context.Context, versionID uuid.UUID) (int, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(
-		ctx,
-		`SELECT count(SELECT * FROM ArtifactVersionPull WHERE artifact_version_id = @versionId)`,
-		pgx.NamedArgs{"versionId": versionID},
-	)
-	if err != nil {
-		return 0, fmt.Errorf("could not get pull count: %w", err)
-	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Count int }])
-	if err != nil {
-		return 0, fmt.Errorf("could not get pull count: %w", err)
-	}
-	return result.Count, nil
-}
-
-func GetArtifactVersionPullers(ctx context.Context, versionID uuid.UUID) ([]types.UserAccount, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(
-		ctx,
-		`
-		WITH LastPull AS (
-			SELECT av.artifact_id, max(avp.created_at) AS latest_pull FROM ArtifactVersionPull avp
-			JOIN ArtifactVersion av ON av.id = avp.artifact_version_id
-			WHERE useraccount_id = @userId
-			GROUP BY av.artifact_id
-		)
-		SELECT DISTINCT `+userAccountOutputExpr+`
-			FROM UserAccount ua
-			JOIN ArtifactVersionPull p ON ua.id = p.useraccount_id
-			JOIN ArtifactVersion av ON av.id = p.artifact_version_id
-			JOIN LastPull lp ON lp.artifact_id = av.artifact_id AND lp.latest_pull = avp.created_at
-			WHERE p.artifact_version_id = @versionId
-			ORDER BY p.created_at DESC
-		`,
-		pgx.NamedArgs{"versionId": versionID},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("could not get pullers: %w", err)
-	}
-	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.UserAccount])
-	if err != nil {
-		return nil, fmt.Errorf("could not get pullers: %w", err)
-	}
-	return result, nil
-}
-
 func EnsureArtifactTagLimitForInsert(ctx context.Context, orgID uuid.UUID) (bool, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx, `
@@ -725,5 +654,246 @@ func UpdateArtifactImage(ctx context.Context, artifact *types.ArtifactWithTagged
 	if err := row.Scan(&artifact.ImageID); err != nil {
 		return fmt.Errorf("could not save image id to artifact: %w", err)
 	}
+	return nil
+}
+
+func ArtifactIsReferencedInLicenses(ctx context.Context, artifactID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT count(ala.id) > 0
+		FROM ArtifactLicense_Artifact ala
+		WHERE ala.artifact_id = @artifactId`,
+		pgx.NamedArgs{"artifactId": artifactID},
+	)
+	if err != nil {
+		return false, err
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	if err != nil {
+		return false, err
+	}
+	return result.Exists, nil
+}
+
+// GetArtifactVersionByTag retrieves an artifact version by its tag name
+func GetArtifactVersionByTag(
+	ctx context.Context,
+	artifactID uuid.UUID,
+	tagName string,
+) (*types.ArtifactVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT `+artifactVersionOutputExpr+`
+		FROM ArtifactVersion v
+		WHERE v.artifact_id = @artifactId
+		AND v.name = @tagName`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+			"tagName":    tagName,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("could not query ArtifactVersion: %w", err)
+	}
+	return &result, nil
+}
+
+// GetArtifactVersionsByDigest retrieves all artifact versions with the same manifest_blob_digest
+func GetArtifactVersionsByDigest(
+	ctx context.Context,
+	artifactID uuid.UUID,
+	digest string,
+) ([]types.ArtifactVersion, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx, `
+		SELECT `+artifactVersionOutputExpr+`
+		FROM ArtifactVersion v
+		WHERE v.artifact_id = @artifactId
+		AND v.manifest_blob_digest = @digest
+		ORDER BY v.created_at DESC`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+			"digest":     digest,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query ArtifactVersions: %w", err)
+	}
+	results, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.ArtifactVersion])
+	if err != nil {
+		return nil, fmt.Errorf("could not collect ArtifactVersions: %w", err)
+	}
+	return results, nil
+}
+
+// CheckArtifactVersionDeletionForLicenses performs comprehensive license validation before deleting a tag
+// It checks if the deletion would break license access by verifying:
+// 1. If the SHA version is referenced in licenses
+// 2. If there are other non-SHA tags pointing to the same digest
+// 3. If there are all-versions licenses (without artifact_version_id)
+// Returns error if deletion should be prevented due to license references
+func CheckArtifactVersionDeletionForLicenses(
+	ctx context.Context,
+	artifactID uuid.UUID,
+	version *types.ArtifactVersion,
+	versionsWithSameDigest []types.ArtifactVersion,
+) error {
+	db := internalctx.GetDb(ctx)
+
+	// Find the SHA version (where name = manifest_blob_digest, i.e., starts with "sha256:")
+	var shaVersion *types.ArtifactVersion
+	for i := range versionsWithSameDigest {
+		if versionsWithSameDigest[i].Name == string(versionsWithSameDigest[i].ManifestBlobDigest) {
+			shaVersion = &versionsWithSameDigest[i]
+			break
+		}
+	}
+
+	// If there's no SHA version, we can't have license references to it
+	if shaVersion == nil {
+		// Still check for all-versions licenses
+		return checkAllVersionsLicense(ctx, artifactID)
+	}
+
+	// Check if the SHA version is referenced in any license
+	var isReferencedCount int64
+	err := db.QueryRow(ctx, `
+		SELECT count(*)
+		FROM ArtifactLicense_Artifact ala
+		WHERE ala.artifact_version_id = @shaVersionId`,
+		pgx.NamedArgs{
+			"shaVersionId": shaVersion.ID,
+		},
+	).Scan(&isReferencedCount)
+	if err != nil {
+		return fmt.Errorf("could not check license references: %w", err)
+	}
+
+	// If SHA version is referenced in licenses
+	if isReferencedCount > 0 {
+		// Count other non-SHA tags pointing to the same digest (excluding the tag being deleted)
+		otherNonSHATags := 0
+		for _, v := range versionsWithSameDigest {
+			// Count non-SHA tags (names that don't contain ":")
+			if v.Name != version.Name && !isDigestName(v.Name) {
+				otherNonSHATags++
+			}
+		}
+
+		// If there are no other non-SHA tags, deletion should fail
+		if otherNonSHATags == 0 {
+			return apierrors.NewBadRequest(
+				"cannot delete tag: the manifest digest is referenced in one or more licenses " +
+					"and this is the last non-SHA tag pointing to it",
+			)
+		}
+	}
+
+	// Check for all-versions licenses
+	return checkAllVersionsLicense(ctx, artifactID)
+}
+
+// checkAllVersionsLicense checks if there's a license referencing the artifact without any artifact_version_id
+func checkAllVersionsLicense(ctx context.Context, artifactID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	var hasAllVersionsLicense bool
+	err := db.QueryRow(ctx, `
+		SELECT count(*) > 0
+		FROM ArtifactLicense_Artifact ala
+		WHERE ala.artifact_id = @artifactId
+		AND ala.artifact_version_id IS NULL`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+		},
+	).Scan(&hasAllVersionsLicense)
+	if err != nil {
+		return fmt.Errorf("could not check all-versions license: %w", err)
+	}
+
+	if hasAllVersionsLicense {
+		return apierrors.NewBadRequest("cannot delete tag: there is an all-versions license for this artifact")
+	}
+
+	return nil
+}
+
+// isDigestName checks if a version name is a digest (contains ":")
+func isDigestName(name string) bool {
+	return len(name) > 0 && strings.Contains(name, ":")
+}
+
+func DeleteArtifactWithID(ctx context.Context, id uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `DELETE FROM Artifact WHERE id = @id`, pgx.NamedArgs{"id": id})
+	if err != nil {
+		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not delete Artifact: %w", err)
+	}
+
+	return nil
+}
+
+func IsLastTagOfArtifact(ctx context.Context, artifactID uuid.UUID, tagName string) (bool, error) {
+	db := internalctx.GetDb(ctx)
+
+	// Count all non-SHA tags for this artifact
+	// Tags are ArtifactVersion records where name does NOT contain a colon
+	var tagCount int64
+	err := db.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM ArtifactVersion
+		WHERE artifact_id = @artifactId
+		AND name NOT LIKE '%:%'`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+		}).Scan(&tagCount)
+	if err != nil {
+		return false, fmt.Errorf("could not count tags: %w", err)
+	}
+
+	// If there is only 1 tag remaining, and we're trying to delete it, prevent deletion
+	return tagCount == 1, nil
+}
+
+func DeleteArtifactTag(ctx context.Context, artifactID uuid.UUID, tagName string) error {
+	db := internalctx.GetDb(ctx)
+
+	// Delete only the tag, not the version SHA
+	// Tags are ArtifactVersion records where name does NOT contain a colon
+	cmd, err := db.Exec(ctx, `
+		DELETE FROM ArtifactVersion
+		WHERE artifact_id = @artifactId
+		AND name = @tagName
+		AND name NOT LIKE '%:%'`,
+		pgx.NamedArgs{
+			"artifactId": artifactID,
+			"tagName":    tagName,
+		})
+	if err != nil {
+		if pgerr := (*pgconn.PgError)(nil); errors.As(err, &pgerr) && pgerr.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not delete tag: %w", err)
+	}
+
 	return nil
 }
