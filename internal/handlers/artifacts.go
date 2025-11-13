@@ -90,7 +90,7 @@ func deleteArtifactHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNoContent)
+			http.NotFound(w, r)
 			return
 		}
 		if errors.Is(err, apierrors.ErrBadRequest) {
