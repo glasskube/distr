@@ -1,24 +1,18 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource} from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faFile, faXmark} from '@fortawesome/free-solid-svg-icons';
-import dayjs from 'dayjs';
+import {faBox, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
-  combineLatest,
   distinctUntilChanged,
   filter,
   firstValueFrom,
   map,
   NEVER,
-  Observable,
-  startWith,
-  Subject,
   switchMap,
   tap,
 } from 'rxjs';
-import {SemVer} from 'semver';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
 import {BytesPipe} from '../../../util/units';
@@ -30,7 +24,6 @@ import {
   HasDownloads,
   TaggedArtifactVersion,
 } from '../../services/artifacts.service';
-import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
 import {SecureImagePipe} from '../../../util/secureImage';
@@ -64,20 +57,12 @@ export class ArtifactVersionsComponent {
   private readonly toast = inject(ToastService);
 
   protected readonly faBox = faBox;
-  protected readonly faDownload = faDownload;
-  protected readonly faFile = faFile;
   protected readonly faXmark = faXmark;
 
-  private readonly refresh$ = new Subject<void>();
-
-  protected readonly artifact$ = combineLatest([
-    this.route.params.pipe(
-      map((params) => params['id']?.trim()),
-      distinctUntilChanged()
-    ),
-    this.refresh$.pipe(startWith(undefined)),
-  ]).pipe(
-    switchMap(([id]) => this.artifacts.getByIdAndCache(id)),
+  protected readonly artifact$ = this.route.params.pipe(
+    map((params) => params['id']?.trim()),
+    distinctUntilChanged(),
+    switchMap((id) => this.artifacts.getByIdAndCache(id)),
     map((artifact) => {
       if (artifact) {
         return {
@@ -160,7 +145,6 @@ export class ArtifactVersionsComponent {
         }),
         tap(() => {
           this.toast.success(`Tag "${tagName}" removed successfully`);
-          this.refresh$.next();
         })
       )
       .subscribe();

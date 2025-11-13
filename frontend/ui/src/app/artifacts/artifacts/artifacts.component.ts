@@ -1,10 +1,10 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, inject} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {Router, RouterLink} from '@angular/router';
+import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faLightbulb, faMagnifyingGlass, faTrash, faUserCircle} from '@fortawesome/free-solid-svg-icons';
-import {catchError, combineLatest, filter, map, NEVER, startWith, Subject, switchMap, tap} from 'rxjs';
+import {catchError, combineLatest, filter, map, NEVER, startWith, switchMap, tap} from 'rxjs';
 import {UuidComponent} from '../../components/uuid';
 import {ArtifactsService, ArtifactWithTags} from '../../services/artifacts.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent} from '../components';
@@ -38,7 +38,6 @@ export class ArtifactsComponent {
   private readonly artifacts = inject(ArtifactsService);
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
-  private readonly router = inject(Router);
 
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faBox = faBox;
@@ -48,11 +47,7 @@ export class ArtifactsComponent {
     search: new FormControl(''),
   });
 
-  private readonly refresh$ = new Subject<void>();
-
-  protected readonly artifacts$ = combineLatest([this.artifacts.list(), this.refresh$.pipe(startWith(undefined))]).pipe(
-    map(([artifacts]) => artifacts)
-  );
+  protected readonly artifacts$ = this.artifacts.list();
 
   protected readonly filteredArtifacts$ = combineLatest([
     this.artifacts$,
@@ -74,11 +69,9 @@ export class ArtifactsComponent {
 
   public deleteArtifact(artifact: ArtifactWithTags): void {
     this.overlay
-      .confirm({
-        message: {
-          message: `This will permanently delete ${artifact.name} and all its versions. Users will no longer be able to download this artifact. Are you sure?`,
-        },
-      })
+      .confirm(
+        `This will permanently delete ${artifact.name} and all its versions. Users will no longer be able to download this artifact. Are you sure?`
+      )
       .pipe(
         filter((result) => result === true),
         switchMap(() => this.artifacts.deleteArtifact(artifact.id)),
@@ -91,7 +84,6 @@ export class ArtifactsComponent {
         }),
         tap(() => {
           this.toast.success('Artifact deleted successfully');
-          this.refresh$.next();
         })
       )
       .subscribe();
