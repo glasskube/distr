@@ -95,3 +95,11 @@ init-db:
 .PHONY: purge-db
 purge-db:
 	DISTR_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/hub/ migrate --down
+
+.PHONY: migrate-db-to
+migrate-db-to:
+	@if [ -z "$(TO)" ]; then \
+		echo "Error: TO parameter is required. Usage: make migrate-db-to TO=<migration_number>"; \
+		exit 1; \
+	fi
+	DISTR_ENV=.env.development.local CGO_ENABLED=0 $(GOCMD) run -ldflags="$(LDFLAGS)" ./cmd/hub/ migrate --to $(TO)
