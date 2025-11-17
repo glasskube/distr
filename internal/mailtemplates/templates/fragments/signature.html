@@ -1,2 +1,2 @@
 Best regards,<br />
-the {{ if .Organization.Name }}{{ .Organization.Name }}{{ else }}Distr{{ end }} Team!
+the {{ if and .Organization .Organization.Name }}{{ .Organization.Name }}{{ else }}Distr{{ end }} Team!
