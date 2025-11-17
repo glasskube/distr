@@ -88,14 +88,19 @@ func VerifyEmail(userAccount types.UserAccount, org types.Organization, token st
 	}
 }
 
-func PasswordReset(userAccount types.UserAccount, org *types.Organization, token string) (*template.Template, any) {
+func PasswordReset(
+	userAccount types.UserAccount,
+	organization *types.OrganizationWithBranding,
+	token string,
+) (*template.Template, any) {
 	host := env.Host()
-	if org != nil {
-		host = customdomains.AppDomainOrDefault(*org)
+	if organization != nil {
+		host = customdomains.AppDomainOrDefault(organization.Organization)
 	}
 	return templates.Lookup("password-reset.html"), map[string]any{
-		"UserAccount": userAccount,
-		"Host":        host,
-		"Token":       token,
+		"UserAccount":  userAccount,
+		"Organization": organization,
+		"Host":         host,
+		"Token":        token,
 	}
 }
