@@ -10,7 +10,6 @@ import (
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/google/uuid"
 )
 
 var (
@@ -91,11 +90,11 @@ func VerifyEmail(userAccount types.UserAccount, org types.Organization, token st
 
 func PasswordReset(
 	userAccount types.UserAccount,
-	organization types.OrganizationWithBranding,
+	organization *types.OrganizationWithBranding,
 	token string,
 ) (*template.Template, any) {
 	host := env.Host()
-	if organization.ID != uuid.Nil {
+	if organization != nil {
 		host = customdomains.AppDomainOrDefault(organization.Organization)
 	}
 	return templates.Lookup("password-reset.html"), map[string]any{

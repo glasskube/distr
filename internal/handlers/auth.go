@@ -232,7 +232,7 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
-		var organization types.OrganizationWithBranding
+		var organization *types.OrganizationWithBranding
 		mailOpts := []mail.MailOpt{
 			mail.To(user.Email),
 			mail.Subject("Password reset"),
@@ -244,7 +244,7 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			} else {
-				organization = *result
+				organization = result
 			}
 
 			if from, err := customdomains.EmailFromAddressParsedOrDefault(organization.Organization); err == nil {
