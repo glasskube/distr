@@ -2,7 +2,7 @@ module github.com/glasskube/distr
 
 go 1.24.9
 
-toolchain go1.25.3
+toolchain go1.25.4
 
 require (
 	github.com/Masterminds/semver/v3 v3.4.0
