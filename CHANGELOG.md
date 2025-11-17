@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.15.2](https://github.com/glasskube/distr/compare/1.15.1...1.15.2) (2025-11-17)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1347](https://github.com/glasskube/distr/issues/1347)) ([3d0debd](https://github.com/glasskube/distr/commit/3d0debd554657ee99f62dc0609a6f30368ecb3d4))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.18.0 ([#1348](https://github.com/glasskube/distr/issues/1348)) ([a39076a](https://github.com/glasskube/distr/commit/a39076afbdda6e4230c4bb830da43af5590b4eec))
+* **deps:** update module golang.org/x/oauth2 to v0.33.0 ([#1353](https://github.com/glasskube/distr/issues/1353)) ([9ec1626](https://github.com/glasskube/distr/commit/9ec1626caa3f82c41623d4d68edd950fc125abec))
+* missing branding in email templates ([#1374](https://github.com/glasskube/distr/issues/1374)) ([097eb84](https://github.com/glasskube/distr/commit/097eb843e84ebc322ad8b92e036418174cb2de5f))
+
+
+### Other
+
+* **deps:** update angular monorepo to v20.3.12 ([#1369](https://github.com/glasskube/distr/issues/1369)) ([db84463](https://github.com/glasskube/distr/commit/db84463995b2e02612dc9ea7c049ab14ff75de5e))
+* **deps:** update dependency @angular/cdk to v20.2.13 ([#1370](https://github.com/glasskube/distr/issues/1370)) ([74e3aba](https://github.com/glasskube/distr/commit/74e3aba5c53ff283c93849d9b6242e944955cc40))
+* **deps:** update dependency @codemirror/view to v6.38.8 ([#1372](https://github.com/glasskube/distr/issues/1372)) ([75779bf](https://github.com/glasskube/distr/commit/75779bfa8878fa137369aca4565603fde3548bb2))
+* **deps:** update dependency go to v1.25.4 ([#1345](https://github.com/glasskube/distr/issues/1345)) ([d48c2b7](https://github.com/glasskube/distr/commit/d48c2b79b34b849ab592e8869024ebf84ff3d824))
+* **deps:** update dependency posthog-js to v1.293.0 ([#1356](https://github.com/glasskube/distr/issues/1356)) ([4bbbc88](https://github.com/glasskube/distr/commit/4bbbc880bcd8b74335e1107a2aa4ee43568eac4b))
+* **deps:** update golangci/golangci-lint-action action to v9 ([#1352](https://github.com/glasskube/distr/issues/1352)) ([e2054d1](https://github.com/glasskube/distr/commit/e2054d169e6caf597e8e6b2b90b2ee649bd28288))
+
 ## [1.15.1](https://github.com/glasskube/distr/compare/1.15.0...1.15.1) (2025-11-13)
 
 
