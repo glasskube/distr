@@ -76,8 +76,9 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 			SELECT `+artifactOutputWithSlugExpr+`,`+artifactDownloadsOutExpr+`
 			FROM Artifact a
 			JOIN Organization o ON o.id = a.organization_id
+			LEFT JOIN Organization_UserAccount oua ON oua.organization_id = a.organization_id AND oua.customer_organization_id = @ownerId
 			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
-			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id AND avpl.useraccount_id = @ownerId
+			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id AND avpl.useraccount_id = oua.user_account_id
 			WHERE a.organization_id = @orgId
 			AND EXISTS(
 				SELECT ala.id
@@ -182,7 +183,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, c
 	[]types.TaggedArtifactVersion,
 	error,
 ) {
-	checkLicense := customerOrgID != nil
+	isVendorUser := customerOrgID == nil
 
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
@@ -200,7 +201,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, c
 							coalesce(array_agg(DISTINCT avplx.useraccount_id)
 									 FILTER (WHERE avplx.useraccount_id IS NOT NULL), ARRAY[]::UUID[])
 						)
-						FROM ArtifactVersionPull avplx WHERE avplx.artifact_version_id = avt.id
+						FROM ArtifactVersionPull avplx WHERE @isVendorUser AND avplx.artifact_version_id = avt.id
 						)) ORDER BY avt.name
 					)
 					FROM ArtifactVersion avt
@@ -227,12 +228,11 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, c
 				)
 				SELECT DISTINCT * FROM aggregate
 			) avp ON av.id = avp.base_av_id
-			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = avp.related_av_id AND
-				(NOT @checkLicense OR avpl.useraccount_id = @userId)
+			LEFT JOIN ArtifactVersionPull avpl ON @isVendorUser AND avpl.artifact_version_id = avp.related_av_id
 			WHERE av.artifact_id = @artifactId
 			AND av.name LIKE '%:%'
 			AND (
-				NOT @checkLicense
+				@isVendorUser
 				-- license check
 				OR EXISTS (
 					-- license for all versions of the artifact
@@ -279,7 +279,7 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, c
 			"artifactId":    artifactID,
 			"userId":        userID,
 			"customerOrgId": customerOrgID,
-			"checkLicense":  checkLicense,
+			"isVendorUser":  isVendorUser,
 		}); err != nil {
 		return nil, err
 	} else if versions, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.TaggedArtifactVersion]); err != nil {
