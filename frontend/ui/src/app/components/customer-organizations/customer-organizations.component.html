@@ -53,19 +53,20 @@
                   <app-uuid [uuid]="customer.id" />
                 </td>
                 <td>
-                    <button
-                      type="button"
-                      (click)="uploadImage(customer)"
-                      aria-label="Upload customer avatar"
-                      class="size-8 rounded-full bg-gray-900 dark:bg-gray-400 text-white dark:text-gray-800">
-                        @if (customer.imageId) {
-                          <img
-                            [src]="customer.imageUrl | secureImage | async"
-                            alt="customer avatar" class="size-full rounded-full" />
-                        } @else {
-                            <fa-icon [icon]="faBuildingUser" size="lg" />
-                        }
-                    </button>
+                  <button
+                    type="button"
+                    (click)="uploadImage(customer)"
+                    aria-label="Upload customer avatar"
+                    class="size-8 rounded-full bg-gray-900 dark:bg-gray-400 text-white dark:text-gray-800">
+                    @if (customer.imageId) {
+                      <img
+                        [src]="customer.imageUrl | secureImage | async"
+                        alt="customer avatar"
+                        class="size-full rounded-full" />
+                    } @else {
+                      <fa-icon [icon]="faBuildingUser" size="lg" />
+                    }
+                  </button>
                 </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white max-w-32 lg:max-w-64 xl:max-w-128 overflow-hidden text-ellipsis">
