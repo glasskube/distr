@@ -5,6 +5,8 @@ import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
+  faBuilding,
+  faBuildingUser,
   faCircleExclamation,
   faEdit,
   faMagnifyingGlass,
@@ -43,7 +45,7 @@ import {UuidComponent} from '../uuid';
 export class CustomerOrganizationsComponent {
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faPlus = faPlus;
-  protected readonly faUserCircle = faUserCircle;
+  protected readonly faBuildingUser = faBuildingUser;
   protected readonly faTrash = faTrash;
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
