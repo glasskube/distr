@@ -53,7 +53,7 @@
     }
 
     code {
-      @apply whitespace-pre-line;
+      @apply whitespace-pre;
     }
 
     code:not(pre *) {
@@ -106,6 +106,27 @@
     ul {
       @apply text-gray-600;
       @apply dark:text-gray-300;
+    }
+
+    blockquote {
+      @apply border-l-4;
+      @apply ps-4;
+      @apply border-gray-300;
+      @apply dark:border-gray-700;
+      @apply italic;
+    }
+
+    table {
+      @apply w-full border-collapse;
+
+      tr {
+        @apply hover:bg-gray-100 dark:hover:bg-gray-700;
+      }
+
+      th,
+      td {
+        @apply border border-gray-200 dark:border-gray-600 px-1;
+      }
     }
   }
 }
