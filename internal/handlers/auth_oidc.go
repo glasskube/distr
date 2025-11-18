@@ -30,14 +30,14 @@ func authLoginOidcHandler(w http.ResponseWriter, r *http.Request) {
 	provider := oidc.Provider(r.PathValue("oidcProvider"))
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
-	if state, err := db.CreateOIDCState(ctx); err != nil {
+	if state, pkceVerifier, err := db.CreateOIDCState(ctx); err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		log.Error("OIDC state creation failed", zap.Error(err))
 		http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
 		return
 	} else {
 		oidcer := internalctx.GetOIDCer(ctx)
-		redirectURL, err := oidcer.GetAuthCodeURL(r, provider, state.String())
+		redirectURL, err := oidcer.GetAuthCodeURL(r, provider, state.String(), pkceVerifier)
 		if err != nil {
 			http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
 			return
@@ -50,7 +50,8 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 
-	if err := verifyOIDCState(r); err != nil {
+	pkceVerifier, err := verifyOIDCState(r)
+	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		log.Warn("could not verify OIDC state", zap.Error(err))
 		http.Redirect(w, r, redirectToLoginOIDCFailed, http.StatusFound)
@@ -62,7 +63,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 
 	oidcer := internalctx.GetOIDCer(ctx)
-	email, emailVerified, err := oidcer.GetEmailForCode(ctx, provider, code, r)
+	email, emailVerified, err := oidcer.GetEmailForCode(ctx, provider, code, pkceVerifier, r)
 	if err != nil {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		log.Error("OIDC email extraction failed", zap.Error(err))
@@ -119,14 +120,18 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func verifyOIDCState(r *http.Request) error {
-	if state, err := uuid.Parse(r.URL.Query().Get("state")); err != nil {
-		return err
-	} else if createdAt, err := db.DeleteOIDCState(r.Context(), state); err != nil {
-		return err
-	} else if createdAt.Before(time.Now().UTC().Add(-1 * time.Minute)) {
-		return fmt.Errorf("got an OIDC state that is too old: %v, created_at: %v, now: %v",
+func verifyOIDCState(r *http.Request) (string, error) {
+	state, err := uuid.Parse(r.URL.Query().Get("state"))
+	if err != nil {
+		return "", err
+	}
+	pkceVerifier, createdAt, err := db.DeleteOIDCState(r.Context(), state)
+	if err != nil {
+		return "", err
+	}
+	if createdAt.Before(time.Now().UTC().Add(-1 * time.Minute)) {
+		return "", fmt.Errorf("got an OIDC state that is too old: %v, created_at: %v, now: %v",
 			state, createdAt, time.Now().UTC())
 	}
-	return nil
+	return pkceVerifier, nil
 }

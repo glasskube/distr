@@ -143,11 +143,13 @@ func authLoginConfigHandler() http.HandlerFunc {
 		OIDCGithubEnabled    bool `json:"oidcGithubEnabled"`
 		OIDCGoogleEnabled    bool `json:"oidcGoogleEnabled"`
 		OIDCMicrosoftEnabled bool `json:"oidcMicrosoftEnabled"`
+		OIDCGenericEnabled   bool `json:"oidcGenericEnabled"`
 	}{
 		RegistrationEnabled:  env.Registration() == env.RegistrationEnabled,
 		OIDCGithubEnabled:    env.OIDCGithubEnabled(),
 		OIDCGoogleEnabled:    env.OIDCGoogleEnabled(),
 		OIDCMicrosoftEnabled: env.OIDCMicrosoftEnabled(),
+		OIDCGenericEnabled:   env.OIDCGenericEnabled(),
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		RespondJSON(w, resp)

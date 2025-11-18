@@ -7,8 +7,9 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {ToastService} from '../services/toast.service';
 import {AsyncPipe} from '@angular/common';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {FaIconComponent, IconDefinition} from '@fortawesome/angular-fontawesome';
 import {faGithub, faGoogle, faMicrosoft} from '@fortawesome/free-brands-svg-icons';
+import {faArrowRightToBracket} from '@fortawesome/free-solid-svg-icons/faArrowRightToBracket';
 
 @Component({
   selector: 'app-login',
@@ -106,4 +107,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected readonly faGoogle = faGoogle;
   protected readonly faGithub = faGithub;
   protected readonly faMicrosoft = faMicrosoft;
+  protected readonly faGeneric = faArrowRightToBracket;
+  protected readonly faArrowRightToBracket = faArrowRightToBracket;
 }
