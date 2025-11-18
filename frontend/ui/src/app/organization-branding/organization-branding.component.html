@@ -62,20 +62,40 @@
               <h2 class="text-xl font-bold dark:text-white mt-8">Welcome Page</h2>
 
               <div>
-                <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >Markdown Description</label
-                >
-                <div
-                  class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
-                  <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
-                    <textarea
-                      formControlName="description"
-                      id="description"
-                      rows="8"
-                      class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"
-                      placeholder="# Welcome"></textarea>
+                <div class="flex items-end pb-1">
+                  <label for="description" class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >Markdown Description</label
+                  >
+                  <div class="inline-flex rounded-base shadow-xs -space-x-px">
+                    <button
+                      type="button"
+                      class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                      (click)="markdownPreviewMode = !markdownPreviewMode">
+                      @if (markdownPreviewMode) {
+                        Write
+                      } @else {
+                        Preview
+                      }
+                    </button>
                   </div>
                 </div>
+                @if (markdownPreviewMode) {
+                  <div
+                    class="markdown bg-gray-50 dark:bg-gray-900 p-2 -mx-2 rounded-sm border border-gray-200 dark:border-gray-600"
+                    [innerHTML]="form.value.description ?? '' | markdown | async"></div>
+                } @else {
+                  <div
+                    class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
+                    <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
+                      <textarea
+                        formControlName="description"
+                        id="description"
+                        rows="8"
+                        class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"
+                        placeholder="# Welcome"></textarea>
+                    </div>
+                  </div>
+                }
               </div>
               <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
                 <button

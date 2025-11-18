@@ -7,6 +7,7 @@
     h5,
     h6 {
       @apply font-display;
+      @apply dark:text-white;
 
       &:not(h1) {
         @apply font-bold;
@@ -44,6 +45,7 @@
       @apply rounded-md;
       @apply px-4;
       @apply py-2;
+      @apply border border-gray-200 dark:border-gray-600;
     }
 
     code:not(a *),
@@ -59,12 +61,12 @@
     code:not(pre *) {
       @apply rounded-sm;
       @apply px-1;
+      @apply border border-gray-200 dark:border-gray-600;
     }
 
     pre,
     code {
-      @apply bg-gray-200;
-      @apply dark:bg-gray-800;
+      @apply bg-gray-200 dark:bg-gray-800;
     }
 
     hr {
@@ -125,7 +127,7 @@
 
       th,
       td {
-        @apply border border-gray-200 dark:border-gray-600 px-1;
+        @apply px-1 border border-gray-200 dark:border-gray-600 dark:text-white;
       }
     }
   }
