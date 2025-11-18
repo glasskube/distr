@@ -12,7 +12,7 @@
 
         <p>
           Your e-mail address has been added to the <strong>{{.Organization.Name}}</strong> organization on
-          <a href="{{.Host}}/">Distr</a>.
+          <a href="{{.Host}}/">{{.Host}}</a>.
         </p>
 
         {{ if .InviteURL }}
@@ -27,9 +27,9 @@
         </p>
         {{ end }}
 
-        <p>{{template "fragments/signature.html"}}</p>
+        <p>{{template "fragments/signature.html" . }}</p>
       </main>
-      {{template "fragments/footer.html"}}
+      {{template "fragments/footer.html" . }}
     </div>
   </body>
 </html>

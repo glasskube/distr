@@ -2,6 +2,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+global:
+  security:
+    allowInsecureImages: true
+
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 2
 
@@ -74,9 +78,9 @@ hub:
       value: My Distr <noreply@distr.local>
     - name: MAILER_TYPE
       # change to "ses" for direct usage of the AWS SDK for SES
-      value: smtp
+      value: 'smtp'
     - name: MAILER_SMTP_HOST
-      value: smtp.example.local
+      value: 'smtp.example.local'
     - name: MAILER_SMTP_PORT
       value: '25'
     # - name: MAILER_SMTP_USERNAME
@@ -114,6 +118,16 @@ hub:
     #   value:
     # - name: OIDC_MICROSOFT_TENANT_ID # required if OIDC_MICROSOFT_ENABLED
     #   value:
+  #    - name: OIDC_GENERIC_ENABLED
+  #      value: 'true'
+  #    - name: OIDC_GENERIC_ISSUER
+  #      value: 'http://distr-oidc-dex:5556/dex'
+  #    - name: OIDC_GENERIC_CLIENT_ID
+  #      value: 'example-app'
+  #    - name: OIDC_GENERIC_CLIENT_SECRET
+  #      value: 'example-app-secret'
+  #    - name: OIDC_GENERIC_SCOPES
+  #      value: 'foo,bar,baz'
   envFrom: []
 
 # This is for setting Kubernetes Annotations to a Pod.
@@ -179,7 +193,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 256Mi
 
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# This is to set up the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
     path: /
@@ -249,6 +263,8 @@ postgresql:
   service:
     ports:
       postgresql: 5432
+  image:
+    repository: bitnamilegacy/postgresql
 
 minio:
   enabled: false
