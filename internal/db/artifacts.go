@@ -75,10 +75,14 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 	if artifactRows, err := db.Query(ctx, `
 			SELECT `+artifactOutputWithSlugExpr+`,`+artifactDownloadsOutExpr+`
 			FROM Artifact a
-			JOIN Organization o ON o.id = a.organization_id
-			LEFT JOIN Organization_UserAccount oua ON oua.organization_id = a.organization_id AND oua.customer_organization_id = @ownerId
-			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
-			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id AND avpl.useraccount_id = oua.user_account_id
+			JOIN Organization o
+				ON o.id = a.organization_id
+			LEFT JOIN Organization_UserAccount oua
+				ON oua.organization_id = a.organization_id AND oua.customer_organization_id = @ownerId
+			LEFT JOIN ArtifactVersion av
+				ON a.id = av.artifact_id
+			LEFT JOIN ArtifactVersionPull avpl
+				ON avpl.artifact_version_id = av.id AND avpl.useraccount_id = oua.user_account_id
 			WHERE a.organization_id = @orgId
 			AND EXISTS(
 				SELECT ala.id

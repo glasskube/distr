@@ -41,7 +41,11 @@ func getArtifactsByCustomer(w http.ResponseWriter, r *http.Request) {
 		for _, customer := range customers {
 			customerRes := api.ArtifactsByCustomer{Customer: mapping.CustomerOrganizationToAPI(customer.CustomerOrganization)}
 			for _, artifact := range artifacts {
-				if latestPulled, err := db.GetLatestPullOfArtifactByCustomerOrganization(ctx, artifact.ID, customer.ID); err != nil {
+				if latestPulled, err := db.GetLatestPullOfArtifactByCustomerOrganization(
+					ctx,
+					artifact.ID,
+					customer.ID,
+				); err != nil {
 					if errors.Is(err, apierrors.ErrNotFound) {
 						continue
 					} else {
