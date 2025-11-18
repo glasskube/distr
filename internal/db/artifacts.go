@@ -107,14 +107,13 @@ func GetArtifactByID(
 	ctx context.Context,
 	orgID uuid.UUID,
 	artifactID uuid.UUID,
-	userID *uuid.UUID,
 	customerOrgID *uuid.UUID,
 ) (
 	*types.ArtifactWithTaggedVersion,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
-	restrictDownloads := userID != nil
+	isVendorUser := customerOrgID == nil
 
 	if artifactRows, err := db.Query(
 		ctx, `
@@ -123,15 +122,13 @@ func GetArtifactByID(
 			FROM Artifact a
 			JOIN Organization o ON o.id = a.organization_id
 			LEFT JOIN ArtifactVersion av ON a.id = av.artifact_id
-			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id
-				AND (NOT @restrict OR avpl.useraccount_id = @ownerId)
+			LEFT JOIN ArtifactVersionPull avpl ON @isVendorUser AND avpl.artifact_version_id = av.id
 			WHERE a.id = @id AND a.organization_id = @orgId
 			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug`,
 		pgx.NamedArgs{
-			"id":       artifactID,
-			"orgId":    orgID,
-			"restrict": restrictDownloads,
-			"ownerId":  userID,
+			"id":           artifactID,
+			"orgId":        orgID,
+			"isVendorUser": isVendorUser,
 		},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query artifact by ID: %w", err)
@@ -142,7 +139,7 @@ func GetArtifactByID(
 			return nil, apierrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to collect artifact by ID: %w", err)
-	} else if versions, err := GetVersionsForArtifact(ctx, artifact.ID, userID, customerOrgID); err != nil {
+	} else if versions, err := GetVersionsForArtifact(ctx, artifact.ID, customerOrgID); err != nil {
 		return nil, fmt.Errorf("failed to get artifact versions: %w", err)
 	} else if customerOrgID != nil && len(versions) == 0 {
 		return nil, apierrors.ErrNotFound
@@ -179,7 +176,7 @@ func GetArtifactByName(ctx context.Context, orgSlug, name string) (*types.Artifa
 	}
 }
 
-func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, customerOrgID *uuid.UUID) (
+func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, customerOrgID *uuid.UUID) (
 	[]types.TaggedArtifactVersion,
 	error,
 ) {
@@ -277,7 +274,6 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, userID, c
 			`,
 		pgx.NamedArgs{
 			"artifactId":    artifactID,
-			"userId":        userID,
 			"customerOrgId": customerOrgID,
 			"isVendorUser":  isVendorUser,
 		}); err != nil {

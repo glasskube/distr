@@ -14,7 +14,6 @@ import (
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -185,15 +184,9 @@ func artifactMiddleware(h http.Handler) http.Handler {
 			http.NotFound(w, r)
 			return
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			artifact, err = db.GetArtifactByID(
-				ctx,
-				*auth.CurrentOrgID(),
-				artifactId,
-				util.PtrTo(auth.CurrentUserID()),
-				auth.CurrentCustomerOrgID(),
-			)
+			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, auth.CurrentCustomerOrgID())
 		} else {
-			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil, nil)
+			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)
 		}
 
 		if err != nil {

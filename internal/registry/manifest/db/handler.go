@@ -81,10 +81,8 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
-		var licenseUserID *uuid.UUID
 		var licenseCustomerOrgID *uuid.UUID
 		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			licenseUserID = util.PtrTo(auth.CurrentUserID())
 			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
@@ -95,7 +93,6 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 		} else if versions, err := db.GetVersionsForArtifact(
 			ctx,
 			artifact.ID,
-			licenseUserID,
 			licenseCustomerOrgID,
 		); err != nil {
 			return nil, err
@@ -119,10 +116,8 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
-		var licenseUserID *uuid.UUID
 		var licenseCustomerOrgID *uuid.UUID
 		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			licenseUserID = util.PtrTo(auth.CurrentUserID())
 			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
@@ -133,7 +128,6 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 		} else if versions, err := db.GetVersionsForArtifact(
 			ctx,
 			artifact.ID,
-			licenseUserID,
 			licenseCustomerOrgID,
 		); err != nil {
 			return nil, err
