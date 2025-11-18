@@ -1,8 +1,7 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, computed, inject, input, OnDestroy, Signal, TemplateRef, ViewChild} from '@angular/core';
-import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
@@ -16,30 +15,18 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
-import {
-  catchError,
-  combineLatest,
-  filter,
-  firstValueFrom,
-  map,
-  NEVER,
-  Observable,
-  startWith,
-  Subject,
-  switchMap,
-  tap,
-} from 'rxjs';
+import {catchError, filter, firstValueFrom, NEVER, switchMap, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
-import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-users',
@@ -56,66 +43,51 @@ import {UuidComponent} from '../uuid';
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
 })
-export class UsersComponent implements OnDestroy {
-  private readonly toast = inject(ToastService);
-  private readonly users = inject(UsersService);
-  private readonly overlay = inject(OverlayService);
-  readonly featureFlags = inject(FeatureFlagService);
+export class UsersComponent {
+  public readonly users = input.required<UserAccountWithRole[]>();
+  public readonly userRole = input.required<UserRole>();
+  public readonly customerOrganizationId = input<string>();
+  public readonly refresh = output<void>();
 
-  public readonly faMagnifyingGlass = faMagnifyingGlass;
-  public readonly faPlus = faPlus;
+  private readonly toast = inject(ToastService);
+  private readonly usersService = inject(UsersService);
+  private readonly overlay = inject(OverlayService);
+  private readonly auth = inject(AuthService);
+
+  protected readonly currentUserRole = this.auth.getClaims()!.role;
+
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPlus = faPlus;
   protected readonly faRepeat = faRepeat;
-  public readonly faXmark = faXmark;
+  protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
   protected readonly faClipboard = faClipboard;
 
-  public readonly customerOrganizationId = input<string>();
-  public readonly userRole: Signal<UserRole> = computed(() =>
-    this.customerOrganizationId() === undefined ? 'vendor' : 'customer'
-  );
-  public readonly users$: Observable<UserAccountWithRole[]>;
-  private readonly refresh$ = new Subject<void>();
-
-  @ViewChild('inviteUserDialog') private inviteUserDialog!: TemplateRef<unknown>;
-  private modalRef?: DialogRef;
-  public inviteForm = new FormGroup({
-    email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
-    name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-  });
-  inviteFormLoading = false;
-  protected inviteUrl: string | null = null;
-
-  filterForm = new FormGroup({
+  protected readonly filterForm = new FormGroup({
     search: new FormControl(''),
   });
 
-  constructor() {
-    const usersWithRefresh = this.refresh$.pipe(
-      startWith(undefined),
-      switchMap(() => this.users.getUsers())
-    );
-    const shownUserAccounts = combineLatest([toObservable(this.customerOrganizationId), usersWithRefresh]).pipe(
-      map(([customerOrganizationId, users]) =>
-        users.filter((it) => it.customerOrganizationId === customerOrganizationId)
-      )
-    );
-    this.users$ = filteredByFormControl(
-      shownUserAccounts,
-      this.filterForm.controls.search,
-      (it: UserAccountWithRole, search: string) =>
-        !search ||
-        (it.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (it.email || '').toLowerCase().includes(search.toLowerCase())
-    ).pipe(takeUntilDestroyed());
-  }
+  protected readonly users$ = filteredByFormControl(
+    toObservable(this.users),
+    this.filterForm.controls.search,
+    (it: UserAccountWithRole, search: string) =>
+      !search ||
+      (it.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (it.email || '').toLowerCase().includes(search.toLowerCase())
+  );
 
-  ngOnDestroy() {
-    this.refresh$.complete();
-  }
+  private readonly inviteUserDialog = viewChild.required<TemplateRef<unknown>>('inviteUserDialog');
+  private modalRef?: DialogRef;
+  protected inviteForm = new FormGroup({
+    email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
+    name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
+  });
+  protected inviteFormLoading = false;
+  protected inviteUrl: string | null = null;
 
   public showInviteDialog(reset?: boolean): void {
     this.closeInviteDialog(reset);
-    this.modalRef = this.overlay.showModal(this.inviteUserDialog);
+    this.modalRef = this.overlay.showModal(this.inviteUserDialog());
   }
 
   public async submitInviteForm(): Promise<void> {
@@ -124,7 +96,7 @@ export class UsersComponent implements OnDestroy {
       this.inviteFormLoading = true;
       try {
         const result = await firstValueFrom(
-          this.users.addUser({
+          this.usersService.addUser({
             email: this.inviteForm.value.email!,
             name: this.inviteForm.value.name || undefined,
             userRole: this.userRole(),
@@ -138,7 +110,7 @@ export class UsersComponent implements OnDestroy {
           );
           this.closeInviteDialog();
         }
-        this.refresh$.next();
+        this.refresh.emit();
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
@@ -155,12 +127,12 @@ export class UsersComponent implements OnDestroy {
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }
-    await firstValueFrom(this.users.patchImage(data.id!, fileId));
+    await firstValueFrom(this.usersService.patchImage(data.id!, fileId));
   }
 
   protected async resendInvitation(user: UserAccountWithRole) {
     try {
-      const result = await firstValueFrom(this.users.resendInvitation(user));
+      const result = await firstValueFrom(this.usersService.resendInvitation(user));
       this.inviteUrl = result.inviteUrl;
       if (!this.inviteUrl) {
         this.toast.success(`Invitation has been resent to ${user.email}`);
@@ -180,7 +152,7 @@ export class UsersComponent implements OnDestroy {
       .confirm(`This will remove ${user.name ?? user.email} from your organization. Are you sure?`)
       .pipe(
         filter((result) => result === true),
-        switchMap(() => this.users.delete(user)),
+        switchMap(() => this.usersService.delete(user)),
         catchError((e) => {
           const msg = getFormDisplayedError(e);
           if (msg) {
@@ -188,7 +160,7 @@ export class UsersComponent implements OnDestroy {
           }
           return NEVER;
         }),
-        tap(() => this.refresh$.next())
+        tap(() => this.refresh.emit())
       )
       .subscribe();
   }

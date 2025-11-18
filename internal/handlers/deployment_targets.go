@@ -133,7 +133,10 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	if dt.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
 	} else if currentUser, err := db.GetUserAccountWithRole(
-		ctx, auth.CurrentUserID(), *auth.CurrentOrgID(),
+		ctx,
+		auth.CurrentUserID(),
+		*auth.CurrentOrgID(),
+		auth.CurrentCustomerOrgID(),
 	); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if currentUser.UserRole != types.UserRoleVendor && dt.CreatedByUserAccountID != currentUser.ID {

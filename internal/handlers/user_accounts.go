@@ -26,7 +26,7 @@ import (
 )
 
 func UserAccountsRouter(r chi.Router) {
-	r.With(requireUserRoleVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
 		r.Post("/", createUserAccountHandler)
 		r.Route("/{userId}", func(r chi.Router) {
@@ -44,7 +44,17 @@ func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	if userAccounts, err := db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID(), nil); err != nil {
+
+	var userAccounts []types.UserAccountWithUserRole
+	var err error
+
+	if customerOrgID := auth.CurrentCustomerOrgID(); customerOrgID != nil {
+		userAccounts, err = db.GetUserAccountsByCustomerOrgID(ctx, *customerOrgID)
+	} else {
+		userAccounts, err = db.GetUserAccountsByOrgID(ctx, *auth.CurrentOrgID())
+	}
+
+	if err != nil {
 		log.Error("failed to get user accounts", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -79,6 +89,14 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var inviteURL string
 	userHasExisted := false
+
+	if customerOrgID := auth.CurrentCustomerOrgID(); customerOrgID != nil {
+		if body.UserRole == types.UserRoleVendor {
+			http.Error(w, "insufficient permissions", http.StatusForbidden)
+			return
+		}
+		body.CustomerOrganizationID = customerOrgID
+	}
 
 	if body.UserRole == types.UserRoleVendor && body.CustomerOrganizationID != nil {
 		http.Error(w, "customer organization not applicable for vendor user", http.StatusBadRequest)
@@ -189,7 +207,7 @@ func resendUserInviteHandler() http.HandlerFunc {
 			return
 		}
 
-		userAccount, err := db.GetUserAccountWithRole(ctx, userAccountID, *auth.CurrentOrgID())
+		userAccount, err := db.GetUserAccountWithRole(ctx, userAccountID, *auth.CurrentOrgID(), auth.CurrentCustomerOrgID())
 		if errors.Is(err, apierrors.ErrNotFound) {
 			http.NotFound(w, r)
 			return
@@ -294,7 +312,12 @@ func userAccountMiddleware(h http.Handler) http.Handler {
 		log := internalctx.GetLogger(ctx)
 		if userId, err := uuid.Parse(r.PathValue("userId")); err != nil {
 			http.NotFound(w, r)
-		} else if userAccount, err := db.GetUserAccountWithRole(ctx, userId, *auth.CurrentOrgID()); err != nil {
+		} else if userAccount, err := db.GetUserAccountWithRole(
+			ctx,
+			userId,
+			*auth.CurrentOrgID(),
+			auth.CurrentCustomerOrgID(),
+		); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
 			} else {

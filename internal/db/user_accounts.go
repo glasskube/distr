@@ -213,19 +213,40 @@ func CreateUserAccountOrganizationAssignment(
 	return err
 }
 
-func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID, role *types.UserRole) (
+func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (
 	[]types.UserAccountWithUserRole,
 	error,
 ) {
 	db := internalctx.GetDb(ctx)
-	checkRole := role != nil
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
 		FROM UserAccount u
 		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
-		WHERE j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)
+		WHERE j.organization_id = @orgId
 		ORDER BY u.name, u.email`,
-		pgx.NamedArgs{"orgId": orgID, "checkRole": checkRole, "role": role},
+		pgx.NamedArgs{"orgId": orgID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not query users: %w", err)
+	} else if result, err := pgx.CollectRows[types.UserAccountWithUserRole](rows, pgx.RowToStructByPos); err != nil {
+		return nil, fmt.Errorf("could not map users: %w", err)
+	} else {
+		return result, nil
+	}
+}
+
+func GetUserAccountsByCustomerOrgID(ctx context.Context, customerOrganizationID uuid.UUID) (
+	[]types.UserAccountWithUserRole,
+	error,
+) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
+		FROM UserAccount u
+		INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
+		WHERE j.customer_organization_id = @customerOrgId
+		ORDER BY u.name, u.email`,
+		pgx.NamedArgs{"customerOrgId": customerOrganizationID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query users: %w", err)
@@ -274,14 +295,27 @@ func GetUserAccountByEmail(ctx context.Context, email string) (*types.UserAccoun
 	}
 }
 
-func GetUserAccountWithRole(ctx context.Context, userID, orgID uuid.UUID) (*types.UserAccountWithUserRole, error) {
+func GetUserAccountWithRole(
+	ctx context.Context,
+	userID, orgID uuid.UUID,
+	customerOrgID *uuid.UUID,
+) (*types.UserAccountWithUserRole, error) {
 	db := internalctx.GetDb(ctx)
+	checkCustomerOrgID := customerOrgID != nil
 	rows, err := db.Query(ctx,
 		"SELECT "+userAccountWithRoleOutputExprWithAlias+`
-			FROM UserAccount u
-			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
-			WHERE u.id = @id AND j.organization_id = @orgId`,
-		pgx.NamedArgs{"id": userID, "orgId": orgID},
+		FROM UserAccount u
+		INNER JOIN Organization_UserAccount j
+			ON u.id = j.user_account_id
+		WHERE u.id = @id
+			AND j.organization_id = @orgId
+			AND (NOT @checkCustomerOrgId OR j.customer_organization_id = @customerOrganizationId)`,
+		pgx.NamedArgs{
+			"id":                     userID,
+			"orgId":                  orgID,
+			"customerOrganizationId": customerOrgID,
+			"checkCustomerOrgId":     checkCustomerOrgID,
+		},
 	)
 	if err != nil {
 		return nil, err

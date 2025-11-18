@@ -109,7 +109,6 @@ export const routes: Routes = [
   {
     path: 'users',
     component: VendorUsersComponent,
-    canActivate: [requiredRoleGuard('vendor')],
   },
   {
     path: 'branding',
