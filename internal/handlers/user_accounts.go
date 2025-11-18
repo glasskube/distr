@@ -273,18 +273,8 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 func userCanBeRemovedFromOrg(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
 	if managesDts, err := db.UserManagesDeploymentTargetInOrganization(ctx, userID, orgID); err != nil {
 		return false, err
-	} else if managesDts {
-		return false, nil
-	} else if ownsAppLicenses, err := db.UserOwnsApplicationLicensesInOrganization(ctx, userID, orgID); err != nil {
-		return false, err
-	} else if ownsAppLicenses {
-		return false, nil
-	} else if ownsArtifactLicenses, err := db.UserOwnsArtifactLicensesInOrganization(ctx, userID, orgID); err != nil {
-		return false, err
-	} else if ownsArtifactLicenses {
-		return false, nil
 	} else {
-		return true, nil
+		return !managesDts, nil
 	}
 }
 

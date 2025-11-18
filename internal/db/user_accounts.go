@@ -178,44 +178,6 @@ func UserManagesDeploymentTargetInOrganization(ctx context.Context, userID, orgI
 	return result.Exists, nil
 }
 
-func UserOwnsApplicationLicensesInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, `
-		SELECT count(al.id) > 0
-		FROM ApplicationLicense al
-		JOIN Organization_UserAccount ou ON al.customer_organization_id = ou.customer_organization_id
-		WHERE al.organization_id = @orgId AND ou.user_account_id = @userId`,
-		pgx.NamedArgs{"orgId": orgID, "userId": userID},
-	)
-	if err != nil {
-		return false, err
-	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
-	if err != nil {
-		return false, err
-	}
-	return result.Exists, nil
-}
-
-func UserOwnsArtifactLicensesInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, `
-		SELECT count(al.id) > 0
-		FROM ArtifactLicense al
-		JOIN Organization_UserAccount ou ON al.customer_organization_id = ou.customer_organization_id
-		WHERE al.organization_id = @orgId AND ou.user_account_id = @userId`,
-		pgx.NamedArgs{"orgId": orgID, "userId": userID},
-	)
-	if err != nil {
-		return false, err
-	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
-	if err != nil {
-		return false, err
-	}
-	return result.Exists, nil
-}
-
 func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	cmd, err := db.Exec(ctx, `
