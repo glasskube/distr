@@ -13,11 +13,11 @@ validate-migrations:
 
 .PHONY: lint-frontend
 lint-frontend:
-	npm run lint
+	pnpm run lint
 
 .PHONY: lint-frontend-fix
 lint-frontend-fix:
-	npm run lint:fix
+	pnpm run format
 
 .PHONY: lint-go
 lint-go: tidy
@@ -33,13 +33,13 @@ lint: lint-go lint-frontend validate-migrations
 .PHONY: lint-fix
 lint-fix: lint-go-fix lint-frontend-fix validate-migrations
 
-node_modules: package-lock.json
-	npm install --no-save
+node_modules: package.json pnpm-lock.yaml
+	pnpm install
 	@touch node_modules
 
 .PHONY: frontend-dev
 frontend-dev: node_modules
-	npm run build:dev
+	pnpm run build:dev
 
 .PHONY: frontend-prod
 frontend-prod: node_modules
