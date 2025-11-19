@@ -1,8 +1,8 @@
 import {AsyncPipe} from '@angular/common';
-import {Component, inject, resource} from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
+import {Component, inject, resource, signal} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faBox, faEllipsisVertical, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {catchError, distinctUntilChanged, filter, firstValueFrom, map, NEVER, switchMap, tap} from 'rxjs';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
@@ -22,6 +22,8 @@ import {OverlayService} from '../../services/overlay.service';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {ToastService} from '../../services/toast.service';
 import {getFormDisplayedError} from '../../../util/errors';
+import {OverlayModule} from '@angular/cdk/overlay';
+import {dropdownAnimation} from '../../animations/dropdown';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -37,18 +39,25 @@ import {getFormDisplayedError} from '../../../util/errors';
     BytesPipe,
     SecureImagePipe,
     RequireRoleDirective,
+    OverlayModule,
   ],
+  animations: [dropdownAnimation],
   templateUrl: './artifact-versions.component.html',
 })
 export class ArtifactVersionsComponent {
   private readonly artifacts = inject(ArtifactsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly organization = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
 
   protected readonly faBox = faBox;
   protected readonly faXmark = faXmark;
+  protected readonly faTrash = faTrash;
+  protected readonly faEllipsisVertical = faEllipsisVertical;
+
+  protected readonly showDropdown = signal(false);
 
   protected readonly artifact$ = this.route.params.pipe(
     map((params) => params['id']?.trim()),
@@ -119,6 +128,27 @@ export class ArtifactVersionsComponent {
     await firstValueFrom(this.artifacts.patchImage(data.id!, fileId));
   }
 
+  public deleteArtifact(artifact: ArtifactWithTags): void {
+    this.overlay
+      .confirm(
+        `This will permanently delete ${artifact.name} and all its versions. Users will no longer be able to download this artifact. Are you sure?`
+      )
+      .pipe(
+        filter((result) => result === true),
+        switchMap(() => this.artifacts.deleteArtifact(artifact.id)),
+        catchError((e) => {
+          const msg = getFormDisplayedError(e);
+          if (msg) {
+            this.toast.error(msg);
+          }
+          return NEVER;
+        }),
+        tap(() => this.toast.success('Artifact deleted successfully')),
+        switchMap(() => this.router.navigate(['/artifacts']))
+      )
+      .subscribe();
+  }
+
   public deleteArtifactTag(artifact: ArtifactWithTags, version: TaggedArtifactVersion, tagName: string): void {
     this.overlay
       .confirm(
@@ -134,9 +164,7 @@ export class ArtifactVersionsComponent {
           }
           return NEVER;
         }),
-        tap(() => {
-          this.toast.success(`Tag "${tagName}" removed successfully`);
-        })
+        tap(() => this.toast.success(`Tag "${tagName}" removed successfully`))
       )
       .subscribe();
   }
