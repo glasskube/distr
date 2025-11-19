@@ -45,7 +45,7 @@
     "@fortawesome/free-solid-svg-icons": "^7.0.0",
     "@glasskube/distr-sdk": "file:./sdk/js/src",
     "@pandatix/js-cvss": "^0.4.4",
-    "@sentry/angular": "^9.0.0",
+    "@sentry/angular": "^10.0.0",
     "dayjs": "^1.11.13",
     "flowbite": "^3.0.0",
     "jwt-decode": "^4.0.0",
