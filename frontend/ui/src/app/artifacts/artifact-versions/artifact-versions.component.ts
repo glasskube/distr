@@ -1,6 +1,6 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource, signal} from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faBox, faEllipsisVertical, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {catchError, distinctUntilChanged, filter, firstValueFrom, map, NEVER, switchMap, tap} from 'rxjs';
@@ -47,6 +47,7 @@ import {dropdownAnimation} from '../../animations/dropdown';
 export class ArtifactVersionsComponent {
   private readonly artifacts = inject(ArtifactsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly organization = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
@@ -142,9 +143,8 @@ export class ArtifactVersionsComponent {
           }
           return NEVER;
         }),
-        tap(() => {
-          this.toast.success('Artifact deleted successfully');
-        })
+        tap(() => this.toast.success('Artifact deleted successfully')),
+        switchMap(() => this.router.navigate(['/artifacts']))
       )
       .subscribe();
   }
@@ -164,9 +164,7 @@ export class ArtifactVersionsComponent {
           }
           return NEVER;
         }),
-        tap(() => {
-          this.toast.success(`Tag "${tagName}" removed successfully`);
-        })
+        tap(() => this.toast.success(`Tag "${tagName}" removed successfully`))
       )
       .subscribe();
   }
