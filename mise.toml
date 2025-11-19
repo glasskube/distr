@@ -3,6 +3,23 @@ node = "24"
 go = "1.25.4"
 golangci-lint = "2.6.2"
 helm-docs = "1.14.2"
+watchexec = "2.3.2"
 
 [env]
 DISTR_ENV = '.env.development.local'
+VERSION = "snapshot"
+COMMIT = "TODO"
+
+[vars]
+ldflags = "-s -w -X github.com/glasskube/distr/internal/buildconfig.version=$VERSION -X github.com/glasskube/distr/internal/buildconfig.commit=$COMMIT"
+
+[tasks.frontend-dev]
+run = 'npm run build:dev'
+sources = ["node_modules/**/*", "frontend/ui/**/*"]
+outputs = ["internal/frontend/dist/ui/"]
+
+# mise watch serve -r
+[tasks.serve]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
+depends = ["frontend-dev"]
+sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
