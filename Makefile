@@ -17,7 +17,7 @@ lint-frontend:
 
 .PHONY: lint-frontend-fix
 lint-frontend-fix:
-	pnpm run lint:fix
+	pnpm run format
 
 .PHONY: lint-go
 lint-go: tidy

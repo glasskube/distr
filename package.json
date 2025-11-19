@@ -19,7 +19,7 @@
     "pretest": "npm run buildconfig",
     "test": "ng test",
     "lint": "prettier --check .",
-    "lint:fix": "prettier --write ."
+    "format": "prettier --write ."
   },
   "private": true,
   "dependencies": {
