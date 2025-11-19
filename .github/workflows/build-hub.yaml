@@ -52,21 +52,25 @@ jobs:
           check-latest: true
           cache-dependency-path: |
             go.sum
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: 10
       - name: Setup node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: '24'
-          cache: npm
+          cache: pnpm
           registry-url: 'https://registry.npmjs.org'
       - name: Generate commit hash
         id: hash
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Install frontend dependencies with npm
-        run: npm ci
+      - name: Install frontend dependencies with pnpm
+        run: pnpm install --frozen-lockfile
 
       - name: Lint with prettier
-        run: npm run lint
+        run: pnpm run lint
       - name: Lint with golangci-lint
         uses: golangci/golangci-lint-action@0a35821d5c230e903fcfe077583637dea1b27b47 # v9.0.0
         with:
@@ -74,12 +78,12 @@ jobs:
 
       - name: Build frontend
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: npm run build:prod
+        run: pnpm run build:prod
       - name: Build frontend and upload source maps (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
-          npm run build:prod -- --source-map=true || exit 1
-          npm run sentry-upload || exit 1
+          pnpm run build:prod -- --source-map=true || exit 1
+          pnpm run sentry-upload || exit 1
           rm internal/frontend/dist/ui/browser/*.map || exit 1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -109,7 +113,7 @@ jobs:
       - name: Generate SBOM for frontend project
         uses: anchore/sbom-action@fbfd9c6c189226748411491745178e0c2017392d # v0.20.10
         with:
-          file: package-lock.json
+          file: pnpm-lock.yaml
           output-file: dist/frontend.spdx.json
           format: spdx-json
           upload-release-assets: false
