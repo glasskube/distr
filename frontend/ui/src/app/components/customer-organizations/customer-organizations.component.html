@@ -150,15 +150,17 @@
               </div>
 
               @if (featureFlags.isLicensingEnabled$ | async) {
-                <div
-                  class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
-                  role="alert">
-                  <fa-icon [icon]="faCircleExclamation" />
-                  <span class="sr-only">Info</span>
-                  <div class="ms-3 text-sm font-medium">
-                    Please make sure to assign a license to the new customer afterwards.
+                @if (!createForm.value.id) {
+                  <div
+                    class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+                    role="alert">
+                    <fa-icon [icon]="faCircleExclamation" />
+                    <span class="sr-only">Info</span>
+                    <div class="ms-3 text-sm font-medium">
+                      Please make sure to assign a license to the new customer afterwards.
+                    </div>
                   </div>
-                </div>
+                }
               }
 
               <button
