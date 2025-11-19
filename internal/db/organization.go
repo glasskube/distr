@@ -23,7 +23,12 @@ const (
 		o.features,
 		o.app_domain,
 		o.registry_domain,
-		o.email_from_address
+		o.email_from_address,
+		o.subscription_type,
+		o.subscription_ends_at,
+		o.subscription_external_id,
+		o.subscription_customer_organization_quantity,
+		o.subscription_user_account_quantity
 	`
 	organizationWithUserRoleOutputExpr = organizationOutputExpr + ", j.user_role, j.created_at as joined_org_at "
 )
