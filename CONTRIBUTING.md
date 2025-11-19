@@ -24,7 +24,7 @@ You can then start the necessary containers and the Distr Hub with:
 # Start the database and a mock SMTP server
 docker compose up -d
 # Start Distr Hub
-make run
+mise watch serve -r
 ```
 
 Open your browser and navigate to [`http://localhost:8080/register`](http://localhost:8080/register) to register a user

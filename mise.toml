@@ -18,6 +18,7 @@ run = 'npm run build:dev'
 sources = ["node_modules/**/*", "frontend/ui/**/*"]
 outputs = ["internal/frontend/dist/ui/"]
 
+# mise watch serve -r
 [tasks.serve]
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
 depends = ["frontend-dev"]
