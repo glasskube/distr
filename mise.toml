@@ -3,7 +3,7 @@ node = "24"
 go = "1.25.4"
 golangci-lint = "2.6.2"
 helm-docs = "1.14.2"
-watchexec = "latest"
+watchexec = "2.3.2"
 
 [env]
 DISTR_ENV = '.env.development.local'
