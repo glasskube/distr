@@ -12,6 +12,7 @@ import (
 	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/handlerutil"
 	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -109,7 +110,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
 			return err
 		} else {
-			http.Redirect(w, r, fmt.Sprintf("%v/login?jwt=%v", oidc.GetRequestSchemeAndHost(r), tokenString), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("%v/login?jwt=%v", handlerutil.GetRequestSchemeAndHost(r), tokenString), http.StatusFound)
 			return nil
 		}
 	})
