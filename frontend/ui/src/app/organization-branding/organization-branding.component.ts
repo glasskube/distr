@@ -11,11 +11,12 @@ import {AsyncPipe} from '@angular/common';
 import {base64ToBlob} from '../../util/blob';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {OrganizationBranding} from '@glasskube/distr-sdk';
+import {MarkdownPipe} from 'ngx-markdown';
 
 @Component({
   selector: 'app-organization-branding',
   templateUrl: './organization-branding.component.html',
-  imports: [FaIconComponent, ReactiveFormsModule, AsyncPipe, AutotrimDirective],
+  imports: [FaIconComponent, ReactiveFormsModule, AsyncPipe, AutotrimDirective, MarkdownPipe],
 })
 export class OrganizationBrandingComponent implements OnInit {
   protected readonly faFloppyDisk = faFloppyDisk;
@@ -23,6 +24,8 @@ export class OrganizationBrandingComponent implements OnInit {
   private readonly organizationBrandingService = inject(OrganizationBrandingService);
   private organizationBranding?: OrganizationBranding;
   private toast = inject(ToastService);
+
+  protected markdownPreviewMode = false;
 
   protected readonly form = new FormGroup({
     title: new FormControl(''),
