@@ -8,6 +8,30 @@
   ],
   "packageRules": [
     {
+      "extends": [
+        "monorepo:opentelemetry-go"
+      ],
+      "groupName": "opentelemetry-go monorepo",
+      "matchUpdateTypes": [
+        "digest",
+        "patch",
+        "minor",
+        "major"
+      ]
+    },
+    {
+      "extends": [
+        "monorepo:opentelemetry-go-contrib"
+      ],
+      "groupName": "opentelemetry-go-contrib monorepo",
+      "matchUpdateTypes": [
+        "digest",
+        "patch",
+        "minor",
+        "major"
+      ]
+    },
+    {
       "matchManagers": [
         "npm",
         "github-actions",
@@ -49,30 +73,6 @@
       ],
       "schedule": [
         "* 6-9 * * 1"
-      ]
-    },
-    {
-      "extends": [
-        "monorepo:opentelemetry-go"
-      ],
-      "groupName": "opentelemetry-go monorepo",
-      "matchUpdateTypes": [
-        "digest",
-        "patch",
-        "minor",
-        "major"
-      ]
-    },
-    {
-      "extends": [
-        "monorepo:opentelemetry-go-contrib"
-      ],
-      "groupName": "opentelemetry-go-contrib monorepo",
-      "matchUpdateTypes": [
-        "digest",
-        "patch",
-        "minor",
-        "major"
       ]
     }
   ]

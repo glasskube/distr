@@ -10,7 +10,7 @@
       <main>
         <p>Hi,</p>
 
-        <p>{{.Organization.Name}} invited you to install and manage applications via Distr.</p>
+        <p>{{.Organization.Name}} invited you to install and manage applications via {{.Host}}.</p>
 
         <p>
           {{ if .InviteURL }} To finish your setup and get further instructions please click
@@ -18,9 +18,9 @@
           <a href="{{ .Host }}/">{{ .Host }}</a> and explore their Customer Portal in the top right corner. {{ end }}
         </p>
 
-        <p>{{template "fragments/signature.html"}}</p>
+        <p>{{template "fragments/signature.html" . }}</p>
       </main>
-      {{template "fragments/footer.html"}}
+      {{template "fragments/footer.html" . }}
     </div>
   </body>
 </html>
