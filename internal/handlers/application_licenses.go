@@ -201,7 +201,7 @@ func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if licenses, err := db.GetApplicationLicensesWithCustomerOrganizationID(
-			ctx, auth.CurrentUserID(), *auth.CurrentCustomerOrgID(), applicationId,
+			ctx, *auth.CurrentCustomerOrgID(), *auth.CurrentOrgID(), applicationId,
 		); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
