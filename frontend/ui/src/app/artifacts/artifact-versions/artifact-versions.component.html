@@ -28,13 +28,49 @@
                 <h2 class="text-2xl font-semibold truncate">
                   {{ artifact.name }}
                 </h2>
-                <p class="text-sm text-gray-500 truncate dark:text-gray-400 mt-1">
+                <p class="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
                   <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
                 </p>
               </div>
-              <app-artifacts-download-count
-                *appRequiredRole="'vendor'"
-                [source]="artifact"></app-artifacts-download-count>
+
+              <ng-container *appRequiredRole="'vendor'">
+                <button
+                  type="button"
+                  class="text-gray-500 dark:text-gray-400 self-start px-1"
+                  cdkOverlayOrigin
+                  #dropdownTrigger="cdkOverlayOrigin"
+                  (click)="showDropdown.set(true)">
+                  <fa-icon [icon]="faEllipsisVertical" />
+                </button>
+
+                <app-artifacts-download-count class="self-start" [source]="artifact" />
+
+                <ng-template
+                  cdkConnectedOverlay
+                  [cdkConnectedOverlayHasBackdrop]="true"
+                  (backdropClick)="showDropdown.set(false)"
+                  (detach)="showDropdown.set(false)"
+                  cdkConnectedOverlayBackdropClass="transparent"
+                  [cdkConnectedOverlayOrigin]="dropdownTrigger"
+                  [cdkConnectedOverlayPositions]="[
+                    {originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top'},
+                  ]"
+                  [cdkConnectedOverlayOpen]="showDropdown()">
+                  <div
+                    @dropdown
+                    style="transform-origin: top center"
+                    class="text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600 overflow-hidden">
+                    <button
+                      type="button"
+                      aria-label="Delete"
+                      (click)="deleteArtifact(artifact)"
+                      class="text-start block w-full px-4 py-2 text-sm text-red-700 enabled:hover:text-white enabled:hover:bg-red-800 dark:text-red-500 dark:enabled:hover:text-white dark:enabled:hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed">
+                      <fa-icon [icon]="faTrash" class="inline-block mr-2" />
+                      Delete
+                    </button>
+                  </div>
+                </ng-template>
+              </ng-container>
             </div>
 
             @if (getArtifactUsage(artifact); as usage) {
@@ -66,7 +102,7 @@
                             <button
                               *appRequiredRole="'vendor'"
                               type="button"
-                              aria-label="Delete tag {{ label.name }}"
+                              [attr.aria-label]="'Delete tag ' + label.name"
                               (click)="deleteArtifactTag(artifact, version, label.name)"
                               class="-mr-1 text-red-400 hover:text-red-600 transition-colors">
                               <fa-icon [icon]="faXmark"></fa-icon>
