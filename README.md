@@ -127,13 +127,13 @@ To build Distr Hub from source, first ensure that the following build dependenci
 
 We recommend that you use [mise](https://mise.jdx.dev/) to install these tools, but you do don't have to.
 
-All build tasks can be found in the [`Makefile`](Makefile), for example:
+All build tasks can be found in the `mise.toml` file, for example:
 
 ```shell
 # Build the control plane
-make build
+mise run build:hub
 # Build all docker images
-make build-docker
+mise run "docker-build:**"
 ```
 
 ### Local development & Contributing
