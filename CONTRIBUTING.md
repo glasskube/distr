@@ -32,8 +32,8 @@ and receive the E-Mail verification link via Mailpit on [`http://localhost:8025`
 
 ### Stripe Integration
 
-In order to use the Stripe integration during development, the `stripe` CLI tool must be installed. 
-If you use `mise` for setup, it will be installed automatically. 
+In order to use the Stripe integration during development, the `stripe` CLI tool must be installed.
+If you use `mise` for setup, it will be installed automatically.
 Use `stripe login` to authenticate with Stripe (make sure to use a sandbox account).
 
 Use `stripe listen --forward-to localhost:8080/api/v1/webhook/stripe` to forward Stripe webhook events to your local server.
