@@ -12,8 +12,8 @@ jobs:
     strategy:
       matrix:
         agent:
-          - docker-agent
-          - kubernetes-agent
+          - docker
+          - kubernetes
     permissions:
       contents: read
     steps:
@@ -27,10 +27,10 @@ jobs:
           cache-dependency-path: |
             go.sum
       - name: Build Agent
-        run: make "build-${{ matrix.agent }}"
+        run: go build -o dist/${{ matrix.agent }}-agent ./cmd/agent/${{ matrix.agent }}
       - name: Test Agent Startup
         run: |
-          echo "run ${{ matrix.agent }} with timeout $TIMEOUT"
+          echo "run ${{ matrix.agent }} agent with timeout $TIMEOUT"
           if timeout "$TIMEOUT" bash -c '
             {
               while read -r line; do
@@ -39,7 +39,7 @@ jobs:
                   exit 0
                 fi
               done
-            } < <("./dist/${{ matrix.agent }}" 2>&1)
+            } < <("./dist/${{ matrix.agent }}-agent" 2>&1)
             echo "Agent quit unexpectedly"
             exit 1
           '; then
