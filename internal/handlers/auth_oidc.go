@@ -110,7 +110,9 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		} else if err = db.UpdateUserAccountLastLoggedIn(ctx, user.ID); err != nil {
 			return err
 		} else {
-			http.Redirect(w, r, fmt.Sprintf("%v/login?jwt=%v", handlerutil.GetRequestSchemeAndHost(r), tokenString), http.StatusFound)
+			http.Redirect(w, r,
+				fmt.Sprintf("%v/login?jwt=%v", handlerutil.GetRequestSchemeAndHost(r), tokenString),
+				http.StatusFound)
 			return nil
 		}
 	})

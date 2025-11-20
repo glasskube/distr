@@ -59,7 +59,11 @@ type PriceIDs struct {
 	UserPriceID     string
 }
 
-func GetStripePrices(ctx context.Context, subscriptionType types.SubscriptionType, mode BillingMode) (*PriceIDs, error) {
+func GetStripePrices(
+	ctx context.Context,
+	subscriptionType types.SubscriptionType,
+	mode BillingMode,
+) (*PriceIDs, error) {
 	var customerPriceLookupKey string
 	var userPriceLookupKey string
 
