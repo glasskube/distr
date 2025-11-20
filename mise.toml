@@ -35,10 +35,14 @@ sources = ["node_modules/**/*", "frontend/ui/**/*"]
 outputs = ["internal/frontend/dist/ui/"]
 
 [tasks."build:hub"]
-run = 'go build -ldflags="{{vars.ldflags}}" -o dist/distr ./cmd/hub/'
+run = 'go build -ldflags="{{vars.ldflags}}" -o dist/distr ./cmd/hub'
 depends = ["go-tidy", "build:frontend-prod"]
 sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
 outputs = ["dist/distr"]
+
+[tasks."build:mcp"]
+run = 'go build -ldflags="{{vars.ldflags}}" -o dist/mcp-server ./cmd/mcp'
+depends = ["go-tidy"]
 
 [tasks."build:agent:docker"]
 run = 'go build -ldflags="{{vars.ldflags}}" -o dist/docker-agent ./cmd/agent/docker'
@@ -79,6 +83,7 @@ sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
 
 [tasks."run:hub:db-migrate"]
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ migrate'
+description = 'Migrate the database to the latest schema version. Protip: `mise run:hub:db-migrate -- --to xx` to migrate to a specific version'
 
 [tasks."run:hub:db-purge"]
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ migrate --down'
