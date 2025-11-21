@@ -11,10 +11,7 @@ import (
 	"github.com/glasskube/distr/internal/handlerutil"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
-	"github.com/stripe/stripe-go/v83"
-	"github.com/stripe/stripe-go/v83/checkout/session"
 	"go.uber.org/zap"
 )
 
@@ -35,6 +32,7 @@ func postCheckoutHandler() http.HandlerFunc {
 			BillingMode             billing.BillingMode    `json:"billingMode"`
 			CustomerOrganizationQty int64                  `json:"subscriptionCustomerOrganizationQuantity"`
 			UserAccountQty          int64                  `json:"subscriptionUserAccountQuantity"`
+			Currency                string                 `json:"currency"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -43,34 +41,33 @@ func postCheckoutHandler() http.HandlerFunc {
 			return
 		}
 
-		prices, err := billing.GetStripePrices(ctx, body.SubscriptionType, body.BillingMode)
-		if err != nil {
-			log.Warn("failed to get stripe prices", zap.Error(err))
-			http.Error(w, "failed to get stripe prices", http.StatusInternalServerError)
-			return
+		// Default to USD if no currency is provided
+		if body.Currency == "" {
+			body.Currency = "usd"
 		}
 
-		params := stripe.CheckoutSessionParams{
-			Mode:       util.PtrTo(string(stripe.CheckoutSessionModeSubscription)),
-			SuccessURL: util.PtrTo(fmt.Sprintf("%v/billing/success", handlerutil.GetRequestSchemeAndHost(r))),
-			LineItems: []*stripe.CheckoutSessionLineItemParams{
-				{Price: &prices.CustomerPriceID, Quantity: util.PtrTo(body.CustomerOrganizationQty)},
-				{Price: &prices.UserPriceID, Quantity: util.PtrTo(body.UserAccountQty)},
-			},
-			SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
-				Metadata: map[string]string{
-					"organizationId": auth.CurrentOrgID().String(),
-				},
-			},
-		}
-
-		session, err := session.New(&params)
+		session, err := billing.CreateCheckoutSession(ctx, billing.CheckoutSessionParams{
+			OrganizationID:          auth.CurrentOrgID().String(),
+			SubscriptionType:        body.SubscriptionType,
+			BillingMode:             body.BillingMode,
+			CustomerOrganizationQty: body.CustomerOrganizationQty,
+			UserAccountQty:          body.UserAccountQty,
+			Currency:                body.Currency,
+			SuccessURL:              fmt.Sprintf("%v/billing/success", handlerutil.GetRequestSchemeAndHost(r)),
+		})
 		if err != nil {
 			log.Error("failed to create checkout session", zap.Error(err))
 			http.Error(w, "failed to create checkout session", http.StatusInternalServerError)
 			return
 		}
 
-		http.Redirect(w, r, session.URL, http.StatusFound)
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(map[string]string{
+			"sessionId": session.ID,
+			"url":       session.URL,
+		}); err != nil {
+			log.Error("failed to encode response", zap.Error(err))
+			http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		}
 	}
 }

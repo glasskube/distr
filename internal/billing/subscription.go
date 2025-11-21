@@ -1,6 +1,7 @@
 package billing
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/stripe/stripe-go/v83"
+	"github.com/stripe/stripe-go/v83/checkout/session"
 )
 
 func GetSubscriptionType(subscription stripe.Subscription) (*types.SubscriptionType, error) {
@@ -71,4 +73,39 @@ func GetCustomerOrganizationQty(subscription stripe.Subscription) (int64, error)
 		}
 	}
 	return 0, fmt.Errorf("no unit price for CustomerOrganization found")
+}
+
+type CheckoutSessionParams struct {
+	OrganizationID          string
+	SubscriptionType        types.SubscriptionType
+	BillingMode             BillingMode
+	CustomerOrganizationQty int64
+	UserAccountQty          int64
+	Currency                string
+	SuccessURL              string
+}
+
+func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+	prices, err := GetStripePrices(ctx, params.SubscriptionType, params.BillingMode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stripe prices: %w", err)
+	}
+
+	sessionParams := &stripe.CheckoutSessionParams{
+		Params:     stripe.Params{Context: ctx},
+		Mode:       util.PtrTo(string(stripe.CheckoutSessionModeSubscription)),
+		Currency:   util.PtrTo(params.Currency),
+		SuccessURL: util.PtrTo(params.SuccessURL),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{Price: &prices.CustomerPriceID, Quantity: util.PtrTo(params.CustomerOrganizationQty)},
+			{Price: &prices.UserPriceID, Quantity: util.PtrTo(params.UserAccountQty)},
+		},
+		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
+			Metadata: map[string]string{
+				"organizationId": params.OrganizationID,
+			},
+		},
+	}
+
+	return session.New(sessionParams)
 }
