@@ -92,7 +92,7 @@ func authLoginOidcCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
 				return err
 			} else if err := db.CreateUserAccountOrganizationAssignment(
-				ctx, user.ID, org.ID, org.UserRole); err != nil {
+				ctx, user.ID, org.ID, org.UserRole, org.CustomerOrganizationID); err != nil {
 				return err
 			}
 		} else {

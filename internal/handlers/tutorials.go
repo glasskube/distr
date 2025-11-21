@@ -163,7 +163,13 @@ func createHelloDistrDeploymentTarget(ctx context.Context) (*types.DeploymentTar
 		return nil, err
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
-		if err := db.CreateDeploymentTarget(ctx, &dt, *auth.CurrentOrgID(), auth.CurrentUserID()); err != nil {
+		if err := db.CreateDeploymentTarget(
+			ctx,
+			&dt,
+			*auth.CurrentOrgID(),
+			auth.CurrentUserID(),
+			auth.CurrentCustomerOrgID(),
+		); err != nil {
 			return nil, err
 		} else {
 			return &dt, nil

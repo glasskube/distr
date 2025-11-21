@@ -1,3 +1,5 @@
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {AsyncPipe} from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -11,8 +13,6 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
-import {AsyncPipe} from '@angular/common';
-import {AutotrimDirective} from '../directives/autotrim.directive';
 import {
   ControlValueAccessor,
   FormArray,
@@ -23,6 +23,7 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faChevronDown,
   faExclamationTriangle,
@@ -32,27 +33,16 @@ import {
   faPlus,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  combineLatestWith,
-  filter,
-  first,
-  firstValueFrom,
-  map,
-  Subject,
-  switchMap,
-  takeUntil,
-  withLatestFrom,
-} from 'rxjs';
-import {ApplicationLicense} from '../types/application-license';
-import {ApplicationsService} from '../services/applications.service';
 import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
-import {UsersService} from '../services/users.service';
 import dayjs from 'dayjs';
-import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {dropdownAnimation} from '../animations/dropdown';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {ArtifactLicense} from '../services/artifact-licenses.service';
+import {combineLatestWith, filter, first, firstValueFrom, Subject, switchMap, takeUntil} from 'rxjs';
 import {isArchived} from '../../util/dates';
+import {dropdownAnimation} from '../animations/dropdown';
+import {AutotrimDirective} from '../directives/autotrim.directive';
+import {ApplicationsService} from '../services/applications.service';
+import {ArtifactLicense} from '../services/artifact-licenses.service';
+import {CustomerOrganizationsService} from '../services/customer-organizations.service';
+import {ApplicationLicense} from '../types/application-license';
 
 @Component({
   selector: 'app-edit-license',
@@ -71,12 +61,9 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
   private injector = inject(Injector);
   private readonly destroyed$ = new Subject<void>();
   private readonly applicationsService = inject(ApplicationsService);
-  private readonly usersService = inject(UsersService);
+  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
   applications$ = this.applicationsService.list();
-  customers$ = this.usersService.getUsers().pipe(
-    map((accounts) => accounts.filter((a) => a.userRole === 'customer')),
-    first()
-  );
+  customers$ = this.customerOrganizationService.getCustomerOrganizations().pipe(first());
 
   private fb = inject(FormBuilder);
   editForm = this.fb.nonNullable.group({
@@ -87,7 +74,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
     includeAllItems: this.fb.nonNullable.control<boolean>(true, Validators.required),
     activeVersions: this.fb.array<boolean>([]),
     archivedVersions: this.fb.array<boolean>([]),
-    ownerUserAccountId: this.fb.nonNullable.control<string | undefined>(undefined),
+    customerOrganizationId: this.fb.nonNullable.control<string | undefined>(undefined),
     registry: this.fb.nonNullable.group(
       {
         url: this.fb.nonNullable.control(''),
@@ -173,7 +160,7 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
             val.activeVersions ?? [],
             val.archivedVersions ?? []
           ),
-          ownerUserAccountId: val.ownerUserAccountId,
+          customerOrganizationId: val.customerOrganizationId,
           registryUrl: val.registry.url?.trim() || undefined,
           registryUsername: val.registry.username?.trim() || undefined,
           registryPassword: val.registry.password?.trim() || undefined,
@@ -321,16 +308,16 @@ export class EditLicenseComponent implements OnInit, OnDestroy, AfterViewInit, C
         activeVersions: [], // will be set by on-change,
         archivedVersions: [], // will be set by on-change,
         includeAllItems: (license.versions ?? []).length === 0,
-        ownerUserAccountId: license.ownerUserAccountId,
+        customerOrganizationId: license.customerOrganizationId,
         registry: {
           url: license.registryUrl || '',
           username: license.registryUsername || '',
           password: license.registryPassword || '',
         },
       });
-      if (license.ownerUserAccountId) {
+      if (license.customerOrganizationId) {
         this.editForm.controls.subjectId.disable({emitEvent: false});
-        this.editForm.controls.ownerUserAccountId.disable({emitEvent: false});
+        this.editForm.controls.customerOrganizationId.disable({emitEvent: false});
       }
     } else {
       this.editForm.reset();

@@ -15,7 +15,7 @@ export interface ArtifactLicenseSelection {
 export interface ArtifactLicense extends BaseModel, Named {
   expiresAt?: Date;
   artifacts?: ArtifactLicenseSelection[];
-  ownerUserAccountId?: string;
+  customerOrganizationId?: string;
 }
 
 @Injectable({providedIn: 'root'})
