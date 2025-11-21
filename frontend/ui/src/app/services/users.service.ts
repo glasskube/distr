@@ -11,6 +11,7 @@ export interface CreateUserAccountRequest {
   email: string;
   name?: string;
   userRole: UserRole;
+  customerOrganizationId?: string;
 }
 
 export interface UserAccountInvitationResponse {

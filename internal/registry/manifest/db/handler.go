@@ -56,7 +56,7 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	var artifacts []types.ArtifactWithDownloads
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), auth.CurrentUserID())
+		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
 	}
@@ -81,16 +81,20 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
-		var licenseUserID *uuid.UUID
+		var licenseCustomerOrgID *uuid.UUID
 		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			licenseUserID = util.PtrTo(auth.CurrentUserID())
+			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
 			return nil, err
-		} else if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID); err != nil {
+		} else if versions, err := db.GetVersionsForArtifact(
+			ctx,
+			artifact.ID,
+			licenseCustomerOrgID,
+		); err != nil {
 			return nil, err
 		} else {
 			var result []digest.Digest
@@ -112,16 +116,20 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
-		var licenseUserID *uuid.UUID
+		var licenseCustomerOrgID *uuid.UUID
 		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			licenseUserID = util.PtrTo(auth.CurrentUserID())
+			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
 			return nil, err
-		} else if versions, err := db.GetVersionsForArtifact(ctx, artifact.ID, licenseUserID); err != nil {
+		} else if versions, err := db.GetVersionsForArtifact(
+			ctx,
+			artifact.ID,
+			licenseCustomerOrgID,
+		); err != nil {
 			return nil, err
 		} else {
 			var result []string

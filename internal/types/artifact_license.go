@@ -7,12 +7,12 @@ import (
 )
 
 type ArtifactLicenseBase struct {
-	ID                 uuid.UUID  `db:"id" json:"id"`
-	CreatedAt          time.Time  `db:"created_at" json:"createdAt"`
-	Name               string     `db:"name" json:"name"`
-	ExpiresAt          *time.Time `db:"expires_at" json:"expiresAt,omitempty"`
-	OrganizationID     uuid.UUID  `db:"organization_id" json:"-"`
-	OwnerUserAccountID *uuid.UUID `db:"owner_useraccount_id" json:"ownerUserAccountId,omitempty"`
+	ID                     uuid.UUID  `db:"id" json:"id"`
+	CreatedAt              time.Time  `db:"created_at" json:"createdAt"`
+	Name                   string     `db:"name" json:"name"`
+	ExpiresAt              *time.Time `db:"expires_at" json:"expiresAt,omitempty"`
+	OrganizationID         uuid.UUID  `db:"organization_id" json:"-"`
+	CustomerOrganizationID *uuid.UUID `db:"customer_organization_id" json:"customerOrganizationId,omitempty"`
 }
 
 type ArtifactLicenseSelection struct {

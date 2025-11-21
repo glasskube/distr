@@ -18,9 +18,13 @@ type DeploymentTargetLatestMetrics struct {
 }
 
 func GetLatestDeploymentTargetMetrics(
-	ctx context.Context, orgID, userID uuid.UUID, userRole types.UserRole,
+	ctx context.Context,
+	orgID uuid.UUID,
+	customerOrganizationID *uuid.UUID,
 ) ([]DeploymentTargetLatestMetrics, error) {
 	db := internalctx.GetDb(ctx)
+	isVendorUser := customerOrganizationID == nil
+
 	if rows, err := db.Query(ctx,
 		`SELECT dt.id, dtm.cpu_cores_millis, dtm.cpu_usage, dtm.memory_bytes, dtm.memory_usage FROM
 			DeploymentTarget dt
@@ -43,10 +47,10 @@ func GetLatestDeploymentTargetMetrics(
 				ON dt.id = dtm.deployment_target_id
 					AND dtm.created_at = metrics_max.max_created_at
 			WHERE dt.organization_id = @orgId
-			AND (dt.created_by_user_account_id = @userId OR @userRole = 'vendor')
+			AND (@isVendorUser OR dt.customer_organization_id = @customerOrganizationId)
 			AND dt.metrics_enabled = true
 			ORDER BY u.name, u.email, dt.name`,
-		pgx.NamedArgs{"orgId": orgID, "userId": userID, "userRole": userRole},
+		pgx.NamedArgs{"orgId": orgID, "customerOrganizationId": customerOrganizationID, "isVendorUser": isVendorUser},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	} else if result, err := pgx.CollectRows(

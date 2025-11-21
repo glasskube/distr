@@ -240,6 +240,7 @@
           <span class="ms-3">Users</span>
         </a>
       </li>
+
       <li>
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
@@ -252,6 +253,7 @@
           <span class="ms-3">Branding</span>
         </a>
       </li>
+
       <li>
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
@@ -265,6 +267,7 @@
         </a>
       </li>
     </ul>
+
     <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'customer'">
       <li>
         <a
@@ -279,6 +282,7 @@
           <span class="ms-3">Home</span>
         </a>
       </li>
+
       <li>
         <a
           (click)="sidebar.hide()"
@@ -292,6 +296,7 @@
           <span class="ms-3">Deployments</span>
         </a>
       </li>
+
       <li>
         <a
           (click)="sidebar.hide()"
@@ -305,7 +310,23 @@
           <span class="ms-3">Artifacts</span>
         </a>
       </li>
+
+      <hr class="border-gray-200 dark:border-gray-600" />
+
+      <li>
+        <a
+          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+          routerLinkActive="bg-gray-100 dark:bg-gray-700"
+          routerLink="/users">
+          <fa-icon
+            [icon]="faUsers"
+            size="lg"
+            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+          <span class="ms-3">Users</span>
+        </a>
+      </li>
     </ul>
+
     @if (feedbackAlert) {
       <div
         id="alert-update"
@@ -348,6 +369,7 @@
         </a>
       </div>
     }
+
     <div class="text-center text-xs text-gray-300 dark:text-gray-600">
       {{ buildConfig.version }}
       (<code>{{ buildConfig.commit }}</code

@@ -10,28 +10,33 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func GetLatestPullOfArtifactByUser(ctx context.Context, artifactId uuid.UUID, userId uuid.UUID) (string, error) {
+func GetLatestPullOfArtifactByCustomerOrganization(
+	ctx context.Context,
+	artifactID uuid.UUID,
+	customerOrganizationID uuid.UUID,
+) (string, error) {
 	db := internalctx.GetDb(ctx)
 	if rows, err := db.Query(ctx, `
 		SELECT av.name
-		FROM ArtifactVersionPull avpl
+		FROM Organization_UserAccount oua
+		JOIN ArtifactVersionPull avpl ON avpl.useraccount_id = oua.user_account_id
 		JOIN ArtifactVersion av ON av.id = avpl.artifact_version_id
-		WHERE av.artifact_id = @artifactId 
-			AND avpl.useraccount_id = @userId
+		WHERE av.artifact_id = @artifactId
+			AND oua.customer_organization_id = @customerOrganizationId
 			AND av.name NOT LIKE '%:%'
 		ORDER BY avpl.created_at DESC
 		LIMIT 1;
 	`, pgx.NamedArgs{
-		"artifactId": artifactId,
-		"userId":     userId,
+		"artifactId":             artifactID,
+		"customerOrganizationId": customerOrganizationID,
 	}); err != nil {
 		return "", err
-	} else if res, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Name string }]); err != nil {
+	} else if res, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[string]); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", apierrors.ErrNotFound
 		}
 		return "", err
 	} else {
-		return res.Name, nil
+		return res, nil
 	}
 }

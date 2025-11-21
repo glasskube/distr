@@ -91,8 +91,8 @@ func updateApplicationLicense(w http.ResponseWriter, r *http.Request) {
 	} else if license.ID != existing.ID {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else if existing.OwnerUserAccountID != nil &&
-		(license.OwnerUserAccountID == nil || *existing.OwnerUserAccountID != *license.OwnerUserAccountID) {
+	} else if existing.CustomerOrganizationID != nil &&
+		(license.CustomerOrganizationID == nil || *existing.CustomerOrganizationID != *license.CustomerOrganizationID) {
 		http.Error(w, "Changing the license owner is not allowed", http.StatusBadRequest)
 		return
 	} else if existing.ApplicationID != license.ApplicationID {
@@ -200,8 +200,8 @@ func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 			RespondJSON(w, licenses)
 		}
 	} else {
-		if licenses, err := db.GetApplicationLicensesWithOwnerID(
-			ctx, auth.CurrentUserID(), *auth.CurrentOrgID(), applicationId,
+		if licenses, err := db.GetApplicationLicensesWithCustomerOrganizationID(
+			ctx, *auth.CurrentCustomerOrgID(), *auth.CurrentOrgID(), applicationId,
 		); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -260,7 +260,7 @@ func canSeeLicense(auth authinfo.AuthInfo, license *types.ApplicationLicense) bo
 		return false
 	}
 	if *auth.CurrentUserRole() == types.UserRoleCustomer {
-		if license.OwnerUserAccountID == nil || *license.OwnerUserAccountID != auth.CurrentUserID() {
+		if license.CustomerOrganizationID == nil || *license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
 			return false
 		}
 	}
