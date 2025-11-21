@@ -75,8 +75,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.14 h1:FzQE21lNtUor0
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.14/go.mod h1:s1ydyWG9pm3ZwmmYN21HKyG9WzAZhYVW85wMHs5FV6w=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.58.1 h1:qew9X9TyJrKZSrORLlzNkLiqBGMEZa6eNfr5oL8grOA=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.58.1/go.mod h1:py/7C8W37SHqyHk6tkvZKiFDvMA/WkfPv5Qd8dUXYQw=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.91.1 h1:f3CVT98cvySOZslMZHusyQHTMY8Xt+F1i0YaR6oEJ4s=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.91.1/go.mod h1:wYNqY3L02Z3IgRYxOBPH9I1zD9Cjh9hI5QOy/eOjQvw=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.92.0 h1:8FshVvnV2sr9kOSAbOnc/vwVmmAwMjOedKH6JW2ddPM=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.92.0/go.mod h1:wYNqY3L02Z3IgRYxOBPH9I1zD9Cjh9hI5QOy/eOjQvw=
 github.com/aws/aws-sdk-go-v2/service/ses v1.34.12 h1:q1UruiOpAbJuHKH/WsGuHkXKQL1TwJB0KOTYu5fs0Jk=
 github.com/aws/aws-sdk-go-v2/service/ses v1.34.12/go.mod h1:w+iUMP1i8+1u4wO6QjfdfqPFXGQV5Qy5qK+c3/rcYDg=
 github.com/aws/aws-sdk-go-v2/service/signin v1.0.1 h1:BDgIUYGEo5TkayOWv/oBLPphWwNm/A91AebUjAu5L5g=
