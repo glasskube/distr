@@ -59,7 +59,7 @@ func stripeWebhookHandler() http.HandlerFunc {
 
 			log.Info("stripe customer subscription created")
 
-			if err := handleStripeSunscription(ctx, subscription); err != nil {
+			if err := handleStripeSubscription(ctx, subscription); err != nil {
 				log.Error("Error handling stripe subscription", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -76,7 +76,7 @@ func stripeWebhookHandler() http.HandlerFunc {
 
 			log.Info("stripe customer subscription updated")
 
-			if err := handleStripeSunscription(ctx, subscription); err != nil {
+			if err := handleStripeSubscription(ctx, subscription); err != nil {
 				log.Error("Error handling stripe subscription", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -93,7 +93,7 @@ func stripeWebhookHandler() http.HandlerFunc {
 
 			log.Info("stripe customer subscription deleted", zap.Any("subscription", subscription))
 
-			if err := handleStripeSunscription(ctx, subscription); err != nil {
+			if err := handleStripeSubscription(ctx, subscription); err != nil {
 				log.Error("Error handling stripe subscription", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -107,7 +107,7 @@ func stripeWebhookHandler() http.HandlerFunc {
 	}
 }
 
-func handleStripeSunscription(ctx context.Context, subscription stripe.Subscription) error {
+func handleStripeSubscription(ctx context.Context, subscription stripe.Subscription) error {
 	log := internalctx.GetLogger(ctx)
 
 	orgId, err := uuid.Parse(subscription.Metadata["organizationId"])
