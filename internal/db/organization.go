@@ -58,8 +58,27 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"UPDATE Organization AS o SET name = @name, slug = @slug WHERE id = @id RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"id": org.ID, "name": org.Name, "slug": org.Slug},
+		`UPDATE Organization AS o
+		SET
+			name = @name,
+			slug = @slug,
+			subscription_type = @subscription_type,
+			subscription_ends_at = @subscription_ends_at,
+			subscription_external_id = @subscription_external_id,
+			subscription_customer_organization_quantity = @subscription_customer_organization_quantity,
+			subscription_user_account_quantity = @subscription_user_account_quantity
+		WHERE id = @id
+		RETURNING `+organizationOutputExpr,
+		pgx.NamedArgs{
+			"id":                       org.ID,
+			"name":                     org.Name,
+			"slug":                     org.Slug,
+			"subscription_type":        org.SubscriptionType,
+			"subscription_ends_at":     org.SubscriptionEndsAt.UTC(),
+			"subscription_external_id": org.SubscriptionExternalID,
+			"subscription_customer_organization_quantity": org.SubscriptionCustomerOrganizationQty,
+			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
+		},
 	)
 	if err != nil {
 		return err
@@ -115,6 +134,30 @@ func GetOrganizationByID(ctx context.Context, orgID uuid.UUID) (*types.Organizat
 	} else {
 		return &result, nil
 	}
+}
+
+func GetOrganizationBySubscriptionID(ctx context.Context, subscriptionID string) (*types.Organization, error) {
+	db := internalctx.GetDb(ctx)
+
+	rows, err := db.Query(
+		ctx,
+		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE subscription_external_id = @id",
+		pgx.NamedArgs{"subscriptionId": subscriptionID},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Organization: %w", err)
+	}
+
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Organization])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+
+		return nil, fmt.Errorf("failed to scan Organization: %w", err)
+	}
+
+	return &result, nil
 }
 
 func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.OrganizationWithBranding, error) {

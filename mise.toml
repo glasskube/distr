@@ -5,6 +5,7 @@ golangci-lint = "2.6.2"
 helm-docs = "1.14.2"
 watchexec = "2.3.2"
 pnpm = "10.23.0"
+stripe = "1.32.0"
 
 [env]
 DISTR_ENV = '.env.development.local'

@@ -30,6 +30,27 @@ mise watch serve -r
 Open your browser and navigate to [`http://localhost:8080/register`](http://localhost:8080/register) to register a user
 and receive the E-Mail verification link via Mailpit on [`http://localhost:8025`](http://localhost:8025).
 
+### Stripe Integration
+
+In order to use the Stripe integration during development, the `stripe` CLI tool must be installed.
+If you use `mise` for setup, it will be installed automatically.
+Use `stripe login` to authenticate with Stripe (make sure to use a sandbox account).
+
+Use `stripe listen --forward-to localhost:8080/api/v1/webhook/stripe` to forward Stripe webhook events to your local server.
+Create an API key on the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys) with write access to "Checkout Sessions" and read access to "Prices".
+Add the `STRIPE_WEBHOOK_SECRET` and `STRIPE_API_KEY` variables to your `.env.development.local.secret` file.
+
+In your sandbox account you need at least some of the price resources with the following lookup keys:
+
+- `distr_starter_customer_monthly`
+- `distr_starter_customer_yearly`
+- `distr_starter_user_monthly`
+- `distr_starter_user_yearly`
+- `distr_pro_customer_monthly`
+- `distr_pro_customer_yearly`
+- `distr_pro_user_monthly`
+- `distr_pro_user_yearly`
+
 ## Backporting bugfixes
 
 If the `main` branch already contains changes that would warrant a major or minor version bump but there is need to create a patch release only, it is possible to backport commits by pushing to the relevant `v*.*.x` branch. For example, if a commit should be added to version 1.2.3, it must be pushed to the `v1.2.x` branch.

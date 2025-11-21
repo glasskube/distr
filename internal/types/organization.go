@@ -22,8 +22,8 @@ type Organization struct {
 	SubscriptionType                    SubscriptionType `db:"subscription_type" json:"subscriptionType"`
 	SubscriptionEndsAt                  time.Time        `db:"subscription_ends_at" json:"subscriptionEndsAt"`
 	SubscriptionExternalID              *string          `db:"subscription_external_id" json:"subscriptionExternalId"`
-	SubscriptionCustomerOrganizationQty *int             `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
-	SubscriptionUserAccountQty          *int             `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
+	SubscriptionCustomerOrganizationQty *int64           `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
+	SubscriptionUserAccountQty          *int64           `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {
