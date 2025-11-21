@@ -87,8 +87,8 @@ importers:
         specifier: ^1.11.13
         version: 1.11.19
       flowbite:
-        specifier: ^3.0.0
-        version: 3.1.2(rollup@4.52.3)
+        specifier: ^4.0.0
+        version: 4.0.1(rollup@4.52.3)
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -2377,14 +2377,11 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
-  flowbite-datepicker@1.3.2:
-    resolution: {integrity: sha512-6Nfm0MCVX3mpaR7YSCjmEO2GO8CDt6CX8ZpQnGdeu03WUCWtEPQ/uy0PUiNtIJjJZWnX0Cm3H55MOhbD1g+E/g==}
+  flowbite-datepicker@2.0.0:
+    resolution: {integrity: sha512-m81hl0Bimq45MUg4maJLOnXrX+C9lZ0AkjMb9uotuVUSr729k/YiymWDfVAm63AYDH7g7y3rI3ke3XaBzWWqLw==}
 
-  flowbite@2.5.2:
-    resolution: {integrity: sha512-kwFD3n8/YW4EG8GlY3Od9IoKND97kitO+/ejISHSqpn3vw2i5K/+ZI8Jm2V+KC4fGdnfi0XZ+TzYqQb4Q1LshA==}
-
-  flowbite@3.1.2:
-    resolution: {integrity: sha512-MkwSgbbybCYgMC+go6Da5idEKUFfMqc/AmSjm/2ZbdmvoKf5frLPq/eIhXc9P+rC8t9boZtUXzHDgt5whZ6A/Q==}
+  flowbite@4.0.1:
+    resolution: {integrity: sha512-UwUjvnqrQTiFm3uMJ0WWnzKXKoDyNyfyEzoNnxmZo6KyDzCedjqZw1UW0Oqdn+E0iYVdPu0fizydJN6e4pP9Rw==}
 
   follow-redirects@1.15.11:
     resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
@@ -6281,27 +6278,20 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  flowbite-datepicker@1.3.2(rollup@4.52.3):
+  flowbite-datepicker@2.0.0(rollup@4.52.3):
     dependencies:
       '@rollup/plugin-node-resolve': 15.3.1(rollup@4.52.3)
-      flowbite: 2.5.2(rollup@4.52.3)
+      '@tailwindcss/postcss': 4.1.17
     transitivePeerDependencies:
       - rollup
 
-  flowbite@2.5.2(rollup@4.52.3):
+  flowbite@4.0.1(rollup@4.52.3):
     dependencies:
       '@popperjs/core': 2.11.8
-      flowbite-datepicker: 1.3.2(rollup@4.52.3)
-      mini-svg-data-uri: 1.4.4
-    transitivePeerDependencies:
-      - rollup
-
-  flowbite@3.1.2(rollup@4.52.3):
-    dependencies:
-      '@popperjs/core': 2.11.8
-      flowbite-datepicker: 1.3.2(rollup@4.52.3)
+      flowbite-datepicker: 2.0.0(rollup@4.52.3)
       mini-svg-data-uri: 1.4.4
       postcss: 8.5.6
+      tailwindcss: 4.1.17
     transitivePeerDependencies:
       - rollup
 
