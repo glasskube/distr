@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/glasskube/distr/compare/1.16.0...1.16.1) (2025-11-21)
+
+
+### Other
+
+* force new release (no changes) ([#1423](https://github.com/glasskube/distr/issues/1423)) ([ec9b3f8](https://github.com/glasskube/distr/commit/ec9b3f83659f2cdddb79bf8192316303fbcd8c73))
+
 ## [1.16.0](https://github.com/glasskube/distr/compare/1.15.2...1.16.0) (2025-11-21)
 
 
