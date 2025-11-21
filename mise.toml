@@ -4,12 +4,13 @@ go = "1.25.4"
 golangci-lint = "2.6.2"
 helm-docs = "1.14.2"
 watchexec = "2.3.2"
-pnpm = "10.22.0"
+pnpm = "10.23.0"
 
 [env]
 DISTR_ENV = '.env.development.local'
 VERSION = "snapshot"
 COMMIT = "TODO"
+CGO_ENABLED = "0"
 
 [vars]
 ldflags = "-s -w -X github.com/glasskube/distr/internal/buildconfig.version=$VERSION -X github.com/glasskube/distr/internal/buildconfig.commit=$COMMIT"
@@ -18,17 +19,86 @@ ldflags = "-s -w -X github.com/glasskube/distr/internal/buildconfig.version=$VER
 run = 'pnpm install'
 sources = ["package.json", "pnpm-lock.yaml"]
 
-[tasks.frontend-dev]
+[tasks.go-tidy]
+run = 'go mod tidy'
+
+[tasks."build:frontend-dev"]
 run = 'pnpm build:dev'
 depends = ["frontend-deps"]
 sources = ["node_modules/**/*", "frontend/ui/**/*"]
 outputs = ["internal/frontend/dist/ui/"]
 
-[tasks.go-tidy]
-run = 'go mod tidy'
+[tasks."build:frontend-prod"]
+run = 'pnpm build:prod'
+depends = ["frontend-deps"]
+sources = ["node_modules/**/*", "frontend/ui/**/*"]
+outputs = ["internal/frontend/dist/ui/"]
 
-# mise watch serve -r
-[tasks.serve]
-run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
-depends = ["go-tidy", "frontend-dev"]
+[tasks."build:hub"]
+run = 'go build -ldflags="{{vars.ldflags}}" -o dist/distr ./cmd/hub'
+depends = ["go-tidy", "build:frontend-prod"]
 sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
+outputs = ["dist/distr"]
+
+[tasks."build:mcp"]
+run = 'go build -ldflags="{{vars.ldflags}}" -o dist/mcp-server ./cmd/mcp'
+depends = ["go-tidy"]
+
+[tasks."build:agent:docker"]
+run = 'go build -ldflags="{{vars.ldflags}}" -o dist/docker-agent ./cmd/agent/docker'
+depends = ["go-tidy"]
+
+[tasks."build:agent:kubernetes"]
+run = 'go build -ldflags="{{vars.ldflags}}" -o dist/kubernetes-agent ./cmd/agent/kubernetes'
+depends = ["go-tidy"]
+
+[tasks."lint:go"]
+depends = ["go-tidy"]
+run = 'golangci-lint run'
+
+[tasks."lint:frontend"]
+run = 'pnpm lint'
+
+[tasks."lint:migrations"]
+run = 'hack/validate-migrations.sh'
+
+[tasks.lint]
+run = {tasks=["lint:go", "lint:frontend", "lint:migrations"]}
+
+[tasks."format:go"]
+run = 'golangci-lint run --fix'
+
+[tasks."format:frontend"]
+run = 'pnpm format'
+
+[tasks.format]
+run = {tasks=["format:go", "format:frontend"]}
+
+[tasks."run:hub:serve"]
+alias = "serve"
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
+description = 'Starts the hub server. Protip: auto-reload with "mise watch serve -r"'
+depends = ["go-tidy", "build:frontend-dev"]
+sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
+
+[tasks."run:hub:db-migrate"]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ migrate'
+description = 'Migrate the database to the latest schema version. Protip: `mise run:hub:db-migrate -- --to xx` to migrate to a specific version'
+
+[tasks."run:hub:db-purge"]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ migrate --down'
+
+[tasks."run:agent:docker"]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/agent/docker/ run'
+
+[tasks."run:agent:kubernetes"]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/agent/kubernetes/ run'
+
+[tasks."docker-build:hub"]
+run = 'docker build -f Dockerfile.hub --tag ghcr.io/glasskube/distr:$VERSION .'
+
+[tasks."docker-build:agent:docker"]
+run = 'docker build -f Dockerfile.docker-agent --tag ghcr.io/glasskube/distr/docker-agent:$VERSION --build-arg VERSION=$VERSION --build-arg COMMIT=$COMMIT --network host .'
+
+[tasks."docker-build:agent:kubernetes"]
+run = 'docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/distr/kubernetes-agent:$VERSION --build-arg VERSION=$VERSION --build-arg COMMIT=$COMMIT --network host .'

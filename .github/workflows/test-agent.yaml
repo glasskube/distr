@@ -12,25 +12,25 @@ jobs:
     strategy:
       matrix:
         agent:
-          - docker-agent
-          - kubernetes-agent
+          - docker
+          - kubernetes
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: 'go.mod'
           check-latest: true
           cache-dependency-path: |
             go.sum
       - name: Build Agent
-        run: make "build-${{ matrix.agent }}"
+        run: go build -o dist/${{ matrix.agent }}-agent ./cmd/agent/${{ matrix.agent }}
       - name: Test Agent Startup
         run: |
-          echo "run ${{ matrix.agent }} with timeout $TIMEOUT"
+          echo "run ${{ matrix.agent }} agent with timeout $TIMEOUT"
           if timeout "$TIMEOUT" bash -c '
             {
               while read -r line; do
@@ -39,7 +39,7 @@ jobs:
                   exit 0
                 fi
               done
-            } < <("./dist/${{ matrix.agent }}" 2>&1)
+            } < <("./dist/${{ matrix.agent }}-agent" 2>&1)
             echo "Agent quit unexpectedly"
             exit 1
           '; then
