@@ -19,7 +19,7 @@
     "pretest": "npm run buildconfig",
     "test": "ng test",
     "lint": "prettier --check .",
-    "lint:fix": "prettier --write ."
+    "format": "prettier --write ."
   },
   "private": true,
   "dependencies": {
@@ -44,18 +44,21 @@
     "@fortawesome/free-regular-svg-icons": "^7.0.0",
     "@fortawesome/free-solid-svg-icons": "^7.0.0",
     "@glasskube/distr-sdk": "file:./sdk/js/src",
+    "@lezer/highlight": "^1.2.3",
     "@pandatix/js-cvss": "^0.4.4",
-    "@sentry/angular": "^10.0.0",
+    "@sentry/angular": "^10.25.0",
+    "@sentry/browser": "^10.25.0",
     "dayjs": "^1.11.13",
     "flowbite": "^3.0.0",
     "jwt-decode": "^4.0.0",
+    "marked": "^17.0.0",
     "ngx-markdown": "^20.0.0",
     "ngx-toastr": "^19.0.0",
     "posthog-js": "^1.187.0",
     "rxjs": "~7.8.0",
     "semver": "^7.7.1",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.16.0"
   },
   "devDependencies": {
     "@angular/build": "^20.0.0",
