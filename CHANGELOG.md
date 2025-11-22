@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/glasskube/distr/compare/1.16.1...2.0.0) (2025-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* add customer organizations ([#1388](https://github.com/glasskube/distr/issues/1388))
+
+### Features
+
+* add customer organizations ([#1388](https://github.com/glasskube/distr/issues/1388)) ([d7084eb](https://github.com/glasskube/distr/commit/d7084ebe0b189c73becf34f3f5af9b7e91a7fa67))
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1430](https://github.com/glasskube/distr/issues/1430)) ([71c9b66](https://github.com/glasskube/distr/commit/71c9b66b9837898c3fb7b9d6a4cc4ae16df58a99))
+
 ## [1.16.1](https://github.com/glasskube/distr/compare/1.16.0...1.16.1) (2025-11-21)
 
 
