@@ -31,7 +31,7 @@ func IsCustomerUserAccountLimitReached(
 	if !org.HasActiveSubscription() {
 		return true, nil
 	} else {
-		return !GetUsersPerCustomerOrganizationLimit(org.SubscriptionType).Check(customerOrganization.UserCount), nil
+		return GetUsersPerCustomerOrganizationLimit(org.SubscriptionType).IsReached(customerOrganization.UserCount), nil
 	}
 }
 
@@ -64,6 +64,6 @@ func IsDeploymentTargetLimitReached(
 	} else if count, err := db.CountDeploymentTargets(ctx, org.ID, customerOrgID); err != nil {
 		return true, fmt.Errorf("could not query DeploymentTarget: %w", err)
 	} else {
-		return !GetDeploymentTargetsPerCustomerOrganizationLimit(org.SubscriptionType).Check(count), nil
+		return GetDeploymentTargetsPerCustomerOrganizationLimit(org.SubscriptionType).IsReached(count), nil
 	}
 }

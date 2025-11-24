@@ -6,7 +6,7 @@ import (
 	"github.com/glasskube/distr/internal/types"
 )
 
-type Limit int
+type Limit int64
 
 const (
 	Unlimited Limit = -1
@@ -24,8 +24,8 @@ const (
 	MaxDeploymentTargetsPerCustomerOrganizationUnlimited Limit = Unlimited
 )
 
-func (l Limit) Check(other int64) bool {
-	return l == Unlimited || other <= int64(l)
+func (l Limit) IsReached(other int64) bool {
+	return l == Unlimited || int64(l) <= other
 }
 
 func GetCustomersPerOrganizationLimit(st types.SubscriptionType) Limit {

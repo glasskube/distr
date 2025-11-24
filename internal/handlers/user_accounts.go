@@ -159,8 +159,9 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if limitReached {
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-			return errors.New("limit reached")
+			err = errors.New("user limit reached")
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return err
 		}
 
 		if existingUA, err := db.GetUserAccountByEmail(ctx, body.Email); errors.Is(err, apierrors.ErrNotFound) {
