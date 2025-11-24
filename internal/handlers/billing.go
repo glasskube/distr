@@ -44,7 +44,8 @@ func postCheckoutHandler() http.HandlerFunc {
 			return
 		}
 
-		if limit := subscription.GetCustomersPerOrganizationLimit(body.SubscriptionType); limit.IsReached(body.CustomerOrganizationQty) {
+		limit := subscription.GetCustomersPerOrganizationLimit(body.SubscriptionType)
+		if limit.IsReached(body.CustomerOrganizationQty) {
 			http.Error(
 				w,
 				fmt.Sprintf("subscription with typ %v can have at most %v customers", body.SubscriptionType, limit),
