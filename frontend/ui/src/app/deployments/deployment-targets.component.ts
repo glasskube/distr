@@ -1,6 +1,7 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, inject, OnDestroy, signal, TemplateRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, computed, inject, signal, TemplateRef, ViewChild} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
@@ -10,18 +11,7 @@ import {
   DeploymentTarget,
   DeploymentWithLatestRevision,
 } from '@glasskube/distr-sdk';
-import {
-  catchError,
-  combineLatest,
-  combineLatestWith,
-  first,
-  map,
-  Observable,
-  of,
-  Subject,
-  switchMap,
-  takeUntil,
-} from 'rxjs';
+import {catchError, combineLatest, combineLatestWith, first, map, Observable, of, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {compareBy, maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
@@ -31,15 +21,18 @@ import {modalFlyInOut} from '../animations/modal';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
+import {
+  DeploymentTargetLatestMetrics,
+  DeploymentTargetsMetricsService,
+} from '../services/deployment-target-metrics.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
-import {
-  DeploymentTargetLatestMetrics,
-  DeploymentTargetsMetricsService,
-} from '../services/deployment-target-metrics.service';
+import {OrganizationService} from '../services/organization.service';
+import {SubscriptionType} from '../types/organization';
+import {ContextService} from '../services/context.service';
 
 type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
 
@@ -50,6 +43,21 @@ export interface DeploymentTargetViewData extends DeploymentTarget {
 export interface CustomerDeploymentTargets {
   customerOrganization?: CustomerOrganization;
   deploymentTargets: DeploymentTargetViewData[];
+}
+
+function getDeploymentTargetPerCustomerOrganizationLimit(subscriptionType: SubscriptionType): number | undefined {
+  switch (subscriptionType) {
+    case 'trial':
+      return undefined;
+    case 'starter':
+      return 1;
+    case 'pro':
+      return 3;
+    case 'enterprise':
+      return undefined;
+    default:
+      throw new Error(`Unknown subscription type: ${subscriptionType}`);
+  }
 }
 
 @Component({
@@ -68,19 +76,20 @@ export interface CustomerDeploymentTargets {
   standalone: true,
   animations: [modalFlyInOut, drawerFlyInOut],
 })
-export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
+export class DeploymentTargetsComponent implements AfterViewInit {
   public readonly auth = inject(AuthService);
   private readonly overlay = inject(OverlayService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly deploymentTargetMetrics = inject(DeploymentTargetsMetricsService);
+  private readonly organizationService = inject(OrganizationService);
+  private readonly context = inject(ContextService);
 
-  readonly faMagnifyingGlass = faMagnifyingGlass;
-  readonly plusIcon = faPlus;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly plusIcon = faPlus;
   protected readonly faLightbulb = faLightbulb;
 
-  private destroyed$ = new Subject<void>();
   private modal?: DialogRef;
 
   @ViewChild('deploymentWizard') protected readonly deploymentWizard!: TemplateRef<unknown>;
@@ -94,11 +103,31 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
     search: new FormControl(''),
   });
 
-  readonly deploymentTargets$ = this.deploymentTargets.poll().pipe(takeUntil(this.destroyed$));
+  readonly deploymentTargets$ = this.deploymentTargets.poll().pipe(takeUntilDestroyed());
   readonly deploymentTargetMetrics$ = this.deploymentTargetMetrics.poll().pipe(
-    takeUntil(this.destroyed$),
+    takeUntilDestroyed(),
     catchError(() => of([]))
   );
+
+  private readonly organization = toSignal(this.organizationService.get());
+  protected readonly limit = computed(() => {
+    const org = this.organization();
+    return !org ? undefined : getDeploymentTargetPerCustomerOrganizationLimit(org.subscriptionType!);
+  });
+  protected readonly count = toSignal(
+    combineLatest([this.deploymentTargets$, this.context.getUser()]).pipe(
+      map(
+        ([targets, user]) => targets.filter((it) => it.customerOrganization?.id === user.customerOrganizationId).length
+      )
+    ),
+    {initialValue: 0}
+  );
+  protected readonly percentage = computed(() => {
+    const limit = this.limit();
+    const count = this.count();
+    if (!limit || !count) return 0;
+    return Math.round(Math.min(count / limit, 1) * 100);
+  });
 
   protected readonly filteredDeploymentTargets$: Observable<CustomerDeploymentTargets[]> = filteredByFormControl(
     this.deploymentTargets$,
@@ -163,11 +192,6 @@ export class DeploymentTargetsComponent implements AfterViewInit, OnDestroy {
           this.openWizard();
         }
       });
-  }
-
-  ngOnDestroy(): void {
-    this.destroyed$.next();
-    this.destroyed$.complete();
   }
 
   protected showDeploymentModal(

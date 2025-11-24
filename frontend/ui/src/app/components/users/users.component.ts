@@ -1,6 +1,6 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {Component, computed, inject, input, output, TemplateRef, viewChild} from '@angular/core';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -27,6 +27,23 @@ import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
 import {AuthService} from '../../services/auth.service';
+import {OrganizationService} from '../../services/organization.service';
+import {SubscriptionType} from '../../types/organization';
+
+function getUserAccountPerCustomerOrganizationLimit(subscriptionType: SubscriptionType): number | undefined {
+  switch (subscriptionType) {
+    case 'trial':
+      return undefined;
+    case 'starter':
+      return 1;
+    case 'pro':
+      return 10;
+    case 'enterprise':
+      return undefined;
+    default:
+      throw new Error(`Unknown subscription type: ${subscriptionType}`);
+  }
+}
 
 @Component({
   selector: 'app-users',
@@ -51,6 +68,7 @@ export class UsersComponent {
 
   private readonly toast = inject(ToastService);
   private readonly usersService = inject(UsersService);
+  private readonly organizationService = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
   private readonly auth = inject(AuthService);
 
@@ -84,6 +102,24 @@ export class UsersComponent {
   });
   protected inviteFormLoading = false;
   protected inviteUrl: string | null = null;
+
+  protected readonly organization = toSignal(this.organizationService.get());
+
+  protected readonly limit = computed(() => {
+    const org = this.organization();
+    const role = this.userRole();
+    return !org
+      ? undefined
+      : role === 'vendor'
+        ? org.subscriptionUserAccountQuantity
+        : getUserAccountPerCustomerOrganizationLimit(org.subscriptionType!);
+  });
+
+  protected readonly percentage = computed(() => {
+    const limit = this.limit();
+    const used = this.users().length;
+    return limit && Math.round(Math.min(used / limit, 1) * 100);
+  });
 
   public showInviteDialog(reset?: boolean): void {
     this.closeInviteDialog(reset);

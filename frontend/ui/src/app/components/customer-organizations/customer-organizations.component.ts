@@ -1,5 +1,5 @@
 import {AsyncPipe, DatePipe, DecimalPipe} from '@angular/common';
-import {Component, inject, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
@@ -26,6 +26,7 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UuidComponent} from '../uuid';
+import {OrganizationService} from '../../services/organization.service';
 
 @Component({
   templateUrl: './customer-organizations.component.html',
@@ -55,8 +56,19 @@ export class CustomerOrganizationsComponent {
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly organizationService = inject(OrganizationService);
   protected readonly featureFlags = inject(FeatureFlagService);
 
+  private readonly organization = toSignal(this.organizationService.get());
+  protected readonly limit = computed(() => {
+    return this.organization()?.subscriptionCustomerOrganizationQuantity;
+  });
+  protected readonly percentage = computed(() => {
+    const customerOrganizations = this.customerOrganizations();
+    const limit = this.limit();
+    if (!customerOrganizations || !limit) return undefined;
+    return Math.round(Math.min(customerOrganizations.length / limit, 1) * 100);
+  });
   protected readonly filterForm = this.fb.group({
     search: this.fb.control(''),
   });
