@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.2](https://github.com/glasskube/distr/compare/1.16.1...1.16.2) (2025-11-24)
+
+
+### Bug Fixes
+
+* **backend:** prevent error when two deployment target status with same timestamp ([#1435](https://github.com/glasskube/distr/issues/1435); cherry-picked) ([f95381c](https://github.com/glasskube/distr/commit/f95381c91b4473e0a75c8e950bfebbbcac98c336))
+
 ## [1.16.1](https://github.com/glasskube/distr/compare/1.16.0...1.16.1) (2025-11-21)
 
 
