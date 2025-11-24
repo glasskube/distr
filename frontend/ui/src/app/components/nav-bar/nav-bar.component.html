@@ -1,9 +1,21 @@
 <nav class="sticky top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-  @if (tutorial) {
+  @let organization = organization$ | async;
+  @if (organization?.subscriptionType === 'trial') {
+    <div class="w-full bg-yellow-300 dark:bg-yellow-200 p-1">
+      <div class="flex items-center justify-center">
+        <p class="text-sm">Your trial is about to expire {{ organization?.subscriptionEndsAt | relativeDate }}!</p>
+      </div>
+      <div class="flex items-center justify-center">
+        <a class="text-sm hover:underline" routerLink="/pricing">Upgrade Now</a>
+      </div>
+    </div>
+  }
+
+  @if (tutorial()) {
     <div class="relative">
       <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-8">
         <a
-          [routerLink]="['tutorials', tutorial]"
+          [routerLink]="['tutorials', tutorial()]"
           class="flex-1 sm:flex-none items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
           <fa-icon [icon]="faArrowLeft" class="me-4"></fa-icon>
           Continue Tutorial</a

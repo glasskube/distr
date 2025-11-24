@@ -45,6 +45,8 @@ import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
+import {RelativeDatePipe} from '../../../util/dates';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -64,6 +66,7 @@ type SwitchOptions = {
     SecureImagePipe,
     AsyncPipe,
     TitleCasePipe,
+    RelativeDatePipe,
     AutotrimDirective,
     ReactiveFormsModule,
   ],
@@ -113,7 +116,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
   customerSubtitle = 'Customer Portal';
 
   protected readonly faBarsStaggered = faBarsStaggered;
-  protected tutorial?: string;
+  protected readonly tutorial = toSignal(this.route.queryParams.pipe(map((params) => params['tutorial'])));
 
   @ViewChild('createOrgModal') private createOrgModal!: TemplateRef<unknown>;
   private modalRef?: DialogRef;
@@ -121,19 +124,9 @@ export class NavBarComponent implements OnInit, OnDestroy {
     name: new FormControl<string>('', Validators.required),
   });
 
-  public ngOnInit() {
-    this.route.queryParams
-      .pipe(
-        map((params) => params['tutorial']),
-        distinctUntilChanged(),
-        takeUntil(this.destroyed$)
-      )
-      .subscribe((tutorial) => {
-        this.tutorial = tutorial;
-      });
-
+  public async ngOnInit() {
     try {
-      this.initBranding();
+      await this.initBranding();
     } catch (e) {
       console.error(e);
     }
