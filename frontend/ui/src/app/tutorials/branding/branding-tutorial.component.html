@@ -152,6 +152,45 @@
                   <li class="mb-10 ms-8">
                     <span class="absolute flex items-center justify-center -start-2 mt-0.75">
                       <input
+                        id="customerOrgDone"
+                        type="checkbox"
+                        [formControl]="inviteFormGroup.controls.customerCreateDone"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
+                    </span>
+                    <label for="inviteDone" class="text-lg font-medium leading-tight"
+                      >Create a customer organization</label
+                    >
+                    <p class="mt-1 text-sm">
+                      Customer organizations are used to group customers together and manage their access to resources.
+                    </p>
+                    <div class="mt-2 flex">
+                      <input
+                        [formControl]="inviteFormGroup.controls.customerName"
+                        autotrim
+                        type="email"
+                        name="customerName"
+                        id="customerName"
+                        class="md:w-108 bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
+                      @if (inviteFormGroup.controls.customerName.dirty) {
+                        <button
+                          type="button"
+                          [disabled]="loading()"
+                          (click)="createCustomerOrganization()"
+                          class="ml-4 flex items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-5 py-2.5 text-sm font-medium text-white hover:border-primary-800 hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:border-primary-700 dark:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700 dark:focus:ring-primary-800 sm:mt-0 sm:w-auto">
+                            Create
+                        </button>
+                      }
+                    </div>
+                    @if (
+                      inviteFormGroup.controls.customerName.touched && inviteFormGroup.controls.customerName.errors
+                    ) {
+                      <div class="mt-2 text-sm text-red-500">Please enter name for your customer organization.</div>
+                    }
+                  </li>
+
+                  <li class="mb-10 ms-8">
+                    <span class="absolute flex items-center justify-center -start-2 mt-0.75">
+                      <input
                         id="inviteDone"
                         type="checkbox"
                         [formControl]="inviteFormGroup.controls.inviteDone"
