@@ -11,6 +11,7 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v83"
 	"github.com/stripe/stripe-go/v83/webhook"
@@ -146,6 +147,12 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 		return err
 	} else {
 		org.SubscriptionUserAccountQty = &qty
+	}
+
+	if org.SubscriptionType == types.SubscriptionTypeStarter {
+		org.Features = []types.Feature{}
+	} else {
+		org.Features = []types.Feature{types.FeatureLicensing}
 	}
 
 	log.Info("updated organization subscription",
