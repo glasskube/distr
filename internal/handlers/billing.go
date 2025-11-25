@@ -10,6 +10,7 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/handlerutil"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -40,6 +41,16 @@ func postCheckoutHandler() http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			log.Debug("bad json payload", zap.Error(err))
 			http.Error(w, "bad json payload", http.StatusBadRequest)
+			return
+		}
+
+		limit := subscription.GetCustomersPerOrganizationLimit(body.SubscriptionType)
+		if limit.IsReached(body.CustomerOrganizationQty) {
+			http.Error(
+				w,
+				fmt.Sprintf("subscription with typ %v can have at most %v customers", body.SubscriptionType, limit),
+				http.StatusBadRequest,
+			)
 			return
 		}
 

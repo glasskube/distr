@@ -30,6 +30,14 @@ func (org *Organization) HasFeature(feature Feature) bool {
 	return slices.Contains(org.Features, feature)
 }
 
+func (org *Organization) HasActiveSubscription() bool {
+	return org.SubscriptionEndsAt.After(time.Now())
+}
+
+func (org *Organization) HasActiveSubscriptionWithType(st SubscriptionType) bool {
+	return org.HasActiveSubscription() && org.SubscriptionType == st
+}
+
 type OrganizationWithUserRole struct {
 	Organization
 	UserRole                 UserRole   `db:"user_role" json:"userRole"`
