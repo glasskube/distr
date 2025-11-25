@@ -57,7 +57,6 @@ type SwitchOptions = {
     AsyncPipe,
     DatePipe,
     TitleCasePipe,
-    RelativeDatePipe,
     AutotrimDirective,
     ReactiveFormsModule,
   ],
