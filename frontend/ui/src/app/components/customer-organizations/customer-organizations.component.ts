@@ -5,14 +5,12 @@ import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
-  faBuilding,
   faBuildingUser,
   faCircleExclamation,
   faEdit,
   faMagnifyingGlass,
   faPlus,
   faTrash,
-  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {CustomerOrganization} from '@glasskube/distr-sdk';
@@ -23,10 +21,11 @@ import {modalFlyInOut} from '../../animations/modal';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
+import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
-import {OrganizationService} from '../../services/organization.service';
 
 @Component({
   templateUrl: './customer-organizations.component.html',
@@ -40,6 +39,7 @@ import {OrganizationService} from '../../services/organization.service';
     AsyncPipe,
     DecimalPipe,
     RouterLink,
+    QuotaLimitComponent,
   ],
   animations: [modalFlyInOut],
 })
@@ -60,15 +60,8 @@ export class CustomerOrganizationsComponent {
   protected readonly featureFlags = inject(FeatureFlagService);
 
   private readonly organization = toSignal(this.organizationService.get());
-  protected readonly limit = computed(() => {
-    return this.organization()?.subscriptionCustomerOrganizationQuantity;
-  });
-  protected readonly percentage = computed(() => {
-    const customerOrganizations = this.customerOrganizations();
-    const limit = this.limit();
-    if (!customerOrganizations || !limit) return undefined;
-    return Math.round(Math.min(customerOrganizations.length / limit, 1) * 100);
-  });
+  protected readonly limit = computed(() => this.organization()?.subscriptionCustomerOrganizationQuantity);
+
   protected readonly filterForm = this.fb.group({
     search: this.fb.control(''),
   });

@@ -19,20 +19,21 @@ import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
 import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
+import {QuotaLimitComponent} from '../components/quota-limit.component';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
+import {ContextService} from '../services/context.service';
 import {
   DeploymentTargetLatestMetrics,
   DeploymentTargetsMetricsService,
 } from '../services/deployment-target-metrics.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {LicensesService} from '../services/licenses.service';
+import {OrganizationService} from '../services/organization.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
+import {SubscriptionType} from '../types/organization';
 import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
-import {OrganizationService} from '../services/organization.service';
-import {SubscriptionType} from '../types/organization';
-import {ContextService} from '../services/context.service';
 
 type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
 
@@ -71,6 +72,7 @@ function getDeploymentTargetPerCustomerOrganizationLimit(subscriptionType: Subsc
     OverlayModule,
     DeploymentTargetCardComponent,
     DeploymentModalComponent,
+    QuotaLimitComponent,
   ],
   templateUrl: './deployment-targets.component.html',
   standalone: true,
@@ -112,7 +114,9 @@ export class DeploymentTargetsComponent implements AfterViewInit {
   private readonly organization = toSignal(this.organizationService.get());
   protected readonly limit = computed(() => {
     const org = this.organization();
-    return !org ? undefined : getDeploymentTargetPerCustomerOrganizationLimit(org.subscriptionType!);
+    return !(org && org.subscriptionType)
+      ? undefined
+      : getDeploymentTargetPerCustomerOrganizationLimit(org.subscriptionType);
   });
   protected readonly count = toSignal(
     combineLatest([this.deploymentTargets$, this.context.getUser()]).pipe(
@@ -122,12 +126,6 @@ export class DeploymentTargetsComponent implements AfterViewInit {
     ),
     {initialValue: 0}
   );
-  protected readonly percentage = computed(() => {
-    const limit = this.limit();
-    const count = this.count();
-    if (!limit || !count) return 0;
-    return Math.round(Math.min(count / limit, 1) * 100);
-  });
 
   protected readonly filteredDeploymentTargets$: Observable<CustomerDeploymentTargets[]> = filteredByFormControl(
     this.deploymentTargets$,

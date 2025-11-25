@@ -22,13 +22,14 @@ import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
+import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
-import {UuidComponent} from '../uuid';
-import {AuthService} from '../../services/auth.service';
-import {OrganizationService} from '../../services/organization.service';
 import {SubscriptionType} from '../../types/organization';
+import {QuotaLimitComponent} from '../quota-limit.component';
+import {UuidComponent} from '../uuid';
 
 function getUserAccountPerCustomerOrganizationLimit(subscriptionType: SubscriptionType): number | undefined {
   switch (subscriptionType) {
@@ -56,6 +57,7 @@ function getUserAccountPerCustomerOrganizationLimit(subscriptionType: Subscripti
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
+    QuotaLimitComponent,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
@@ -108,17 +110,11 @@ export class UsersComponent {
   protected readonly limit = computed(() => {
     const org = this.organization();
     const role = this.userRole();
-    return !org
+    return !(org && org.subscriptionType)
       ? undefined
       : role === 'vendor'
         ? org.subscriptionUserAccountQuantity
-        : getUserAccountPerCustomerOrganizationLimit(org.subscriptionType!);
-  });
-
-  protected readonly percentage = computed(() => {
-    const limit = this.limit();
-    const used = this.users().length;
-    return limit && Math.round(Math.min(used / limit, 1) * 100);
+        : getUserAccountPerCustomerOrganizationLimit(org.subscriptionType);
   });
 
   public showInviteDialog(reset?: boolean): void {
