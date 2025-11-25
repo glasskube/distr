@@ -235,6 +235,23 @@ func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (
 	}
 }
 
+func CountUserAccountsByOrgIDAndRole(ctx context.Context, orgID uuid.UUID, role types.UserRole) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT count(*) FROM Organization_UserAccount WHERE organization_id = @orgId AND user_role = @role",
+		pgx.NamedArgs{"orgId": orgID, "role": role},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get user count: %w", err)
+	}
+
+	if count, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[int64]); err != nil {
+		return 0, fmt.Errorf("failed to get user count: %w", err)
+	} else {
+		return count, nil
+	}
+}
+
 func GetUserAccountsByCustomerOrgID(ctx context.Context, customerOrganizationID uuid.UUID) (
 	[]types.UserAccountWithUserRole,
 	error,

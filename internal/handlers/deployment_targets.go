@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -75,16 +77,37 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
-		if err = db.CreateDeploymentTarget(
-			ctx,
-			&dt,
-			*auth.CurrentOrgID(),
-			auth.CurrentUserID(),
-			auth.CurrentCustomerOrgID(),
-		); err != nil {
-			log.Warn("could not create DeploymentTarget", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
+		err = db.RunTx(ctx, func(ctx context.Context) error {
+			limitReached, err := subscription.IsDeploymentTargetLimitReached(ctx, *auth.CurrentOrg(), dt.CustomerOrganizationID)
+			if err != nil {
+				log.Warn("could not check deployment target limit", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			} else if limitReached {
+				err = errors.New("deployment target limit reached")
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return err
+			}
+
+			if err = db.CreateDeploymentTarget(
+				ctx,
+				&dt,
+				*auth.CurrentOrgID(),
+				auth.CurrentUserID(),
+				auth.CurrentCustomerOrgID(),
+			); err != nil {
+				log.Warn("could not create DeploymentTarget", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			return nil
+		})
+
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		} else {
 			RespondJSON(w, dt)
 		}
