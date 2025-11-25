@@ -148,7 +148,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     combineLatestWith(this.deploymentTarget$),
     map(
       ([isLicensingEnabled, deploymentTarget]) =>
-        isLicensingEnabled && deploymentTarget?.createdBy?.userRole === 'customer'
+        isLicensingEnabled && deploymentTarget?.customerOrganization !== undefined
     ),
     distinctUntilChanged()
   );
@@ -162,7 +162,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     combineLatestWith(this.deploymentTarget$, this.deployment$),
     map(
       ([isLicensingEnabled, deploymentTarget, deployment]) =>
-        isLicensingEnabled && !deployment && deploymentTarget?.createdBy?.userRole === 'customer'
+        isLicensingEnabled && !deployment && deploymentTarget?.customerOrganization !== undefined
     ),
     distinctUntilChanged()
   );

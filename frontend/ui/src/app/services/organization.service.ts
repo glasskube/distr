@@ -38,7 +38,7 @@ export class OrganizationService {
         const foundOrg = allOrgs.find((o) => o.id === it.id);
         return {
           ...it,
-          userRole: foundOrg?.userRole ?? 'vendor',
+          userRole: foundOrg?.userRole!,
           joinedOrgAt: foundOrg?.joinedOrgAt ?? new Date().toISOString(),
         };
       }),

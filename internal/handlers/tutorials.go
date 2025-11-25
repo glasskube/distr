@@ -22,7 +22,7 @@ import (
 )
 
 func TutorialsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgAndRole, requireUserRoleVendor)
+	r.Use(middleware.RequireOrgAndRole, middleware.RequireVendor)
 	r.Get("/", getTutorialProgresses)
 	r.Route("/{tutorial}", func(r chi.Router) {
 		r.Get("/", getTutorialProgress)

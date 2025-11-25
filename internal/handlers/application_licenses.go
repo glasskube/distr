@@ -22,12 +22,12 @@ import (
 func ApplicationLicensesRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
-	r.With(requireUserRoleVendor).Post("/", createApplicationLicense)
+	r.With(middleware.RequireVendor).Post("/", createApplicationLicense)
 	r.Route("/{applicationLicenseId}", func(r chi.Router) {
 		r.With(applicationLicenseMiddleware).Group(func(r chi.Router) {
 			r.Get("/", getApplicationLicense)
-			r.With(requireUserRoleVendor).Delete("/", deleteApplicationLicense)
-			r.With(requireUserRoleVendor).Put("/", updateApplicationLicense)
+			r.With(middleware.RequireVendor).Delete("/", deleteApplicationLicense)
+			r.With(middleware.RequireVendor).Put("/", updateApplicationLicense)
 		})
 	})
 }
@@ -190,7 +190,7 @@ func getApplicationLicenses(w http.ResponseWriter, r *http.Request) {
 			applicationId = &id
 		}
 	}
-	if *auth.CurrentUserRole() == types.UserRoleVendor {
+	if auth.CurrentCustomerOrgID() == nil {
 		if licenses, err := db.GetApplicationLicensesWithOrganizationID(
 			ctx, *auth.CurrentOrgID(), applicationId); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get licenses", zap.Error(err))
@@ -259,7 +259,7 @@ func canSeeLicense(auth authinfo.AuthInfo, license *types.ApplicationLicense) bo
 	if license.OrganizationID != *auth.CurrentOrgID() {
 		return false
 	}
-	if *auth.CurrentUserRole() == types.UserRoleCustomer {
+	if auth.CurrentCustomerOrgID() != nil {
 		if license.CustomerOrganizationID == nil || *license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
 			return false
 		}

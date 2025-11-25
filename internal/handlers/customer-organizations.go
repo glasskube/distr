@@ -19,7 +19,7 @@ import (
 )
 
 func CustomerOrganizationsRouter(r chi.Router) {
-	r.With(requireUserRoleVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getCustomerOrganizationsHandler())
 		r.Post("/", createCustomerOrganizationHandler())
 		r.Put("/{id}", updateCustomerOrganizationHandler())

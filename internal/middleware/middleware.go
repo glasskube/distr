@@ -83,6 +83,20 @@ func UserRoleMiddleware(userRole types.UserRole) func(handler http.Handler) http
 	}
 }
 
+func RequireVendor(handler http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if auth, err := auth.Authentication.Get(ctx); err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else if auth.CurrentCustomerOrgID() != nil {
+			http.Error(w, "insufficient permissions", http.StatusForbidden)
+		} else {
+			handler.ServeHTTP(w, r)
+		}
+	}
+	return http.HandlerFunc(fn)
+}
+
 var Sentry = sentryhttp.New(sentryhttp.Options{Repanic: true}).Handle
 
 func SentryUser(h http.Handler) http.Handler {

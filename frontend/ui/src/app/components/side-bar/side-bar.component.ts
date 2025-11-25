@@ -19,7 +19,11 @@ import {
   faUserCheck,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {
+  RequireCustomerDirective,
+  RequireRoleDirective,
+  RequireVendorDirective,
+} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
 import {buildConfig} from '../../../buildconfig';
 import {FeatureFlagService} from '../../services/feature-flag.service';
@@ -34,12 +38,13 @@ import {TutorialsService} from '../../services/tutorials.service';
   imports: [
     RouterLink,
     FaIconComponent,
-    RequireRoleDirective,
     AsyncPipe,
     RouterLinkActive,
     CdkOverlayOrigin,
     CdkConnectedOverlay,
     NgTemplateOutlet,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
 })
 export class SideBarComponent {

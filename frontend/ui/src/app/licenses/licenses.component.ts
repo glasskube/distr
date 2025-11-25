@@ -1,24 +1,24 @@
-import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {AutotrimDirective} from '../directives/autotrim.directive';
+import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap, takeUntil} from 'rxjs';
-import {filteredByFormControl} from '../../util/filter';
-import {LicensesService} from '../services/licenses.service';
-import {ApplicationLicense} from '../types/application-license';
-import {UuidComponent} from '../components/uuid';
-import {DialogRef, OverlayService} from '../services/overlay.service';
-import {getFormDisplayedError} from '../../util/errors';
-import {ToastService} from '../services/toast.service';
-import {RequireRoleDirective} from '../directives/required-role.directive';
-import {dropdownAnimation} from '../animations/dropdown';
-import {drawerFlyInOut} from '../animations/drawer';
-import {modalFlyInOut} from '../animations/modal';
-import {ApplicationsService} from '../services/applications.service';
-import {EditLicenseComponent} from './edit-license.component';
 import {isExpired} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
+import {filteredByFormControl} from '../../util/filter';
+import {drawerFlyInOut} from '../animations/drawer';
+import {dropdownAnimation} from '../animations/dropdown';
+import {modalFlyInOut} from '../animations/modal';
+import {UuidComponent} from '../components/uuid';
+import {AutotrimDirective} from '../directives/autotrim.directive';
+import {RequireVendorDirective} from '../directives/required-role.directive';
+import {ApplicationsService} from '../services/applications.service';
+import {LicensesService} from '../services/licenses.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
+import {ToastService} from '../services/toast.service';
+import {ApplicationLicense} from '../types/application-license';
+import {EditLicenseComponent} from './edit-license.component';
 
 @Component({
   selector: 'app-licenses',
@@ -30,7 +30,7 @@ import {isExpired} from '../../util/dates';
     FaIconComponent,
     UuidComponent,
     DatePipe,
-    RequireRoleDirective,
+    RequireVendorDirective,
     EditLicenseComponent,
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],

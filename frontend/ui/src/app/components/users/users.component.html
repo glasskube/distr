@@ -12,7 +12,7 @@
           type="text"
           id="simple-search"
           [placeholder]="
-            currentUserRole === 'vendor' && userRole() === 'customer' ? 'Filter customers' : 'Filter users'
+            auth.isVendor() && customerOrganizationId() !== undefined ? 'Filter customers' : 'Filter users'
           "
           [formControl]="filterForm.controls.search"
           autotrim
@@ -28,7 +28,7 @@
       id="createApplicationButton"
       class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
       <fa-icon [icon]="faPlus" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-      @if (currentUserRole === 'vendor' && userRole() === 'customer') {
+      @if (auth.isVendor() && customerOrganizationId() !== undefined) {
         Invite Customer
       } @else {
         Add User
@@ -84,7 +84,7 @@
           <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
             @if (!user.emailVerified) {
               <button
-                *appRequiredRole="'vendor'"
+                *appRequireVendor
                 type="button"
                 (click)="resendInvitation(user)"
                 class="py-2 px-3 text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
@@ -114,7 +114,7 @@
     <!-- Modal header -->
     <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-        @if (currentUserRole === 'vendor' && userRole() === 'customer') {
+        @if (auth.isVendor() && customerOrganizationId() !== undefined) {
           Invite customer
         } @else {
           Add a user
@@ -188,7 +188,7 @@
                 role="alert">
                 <div class="flex flex-col w-full">
                   <div class="font-medium">
-                    @if (currentUserRole === 'vendor' && userRole() === 'customer') {
+                    @if (auth.isVendor() && customerOrganizationId() !== undefined) {
                       Customer has been invited to the organization
                     } @else {
                       User has been invited to the organization

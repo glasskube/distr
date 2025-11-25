@@ -4,6 +4,7 @@ import {
   inject,
   Input,
   OnChanges,
+  OnInit,
   SimpleChanges,
   TemplateRef,
   ViewContainerRef,
@@ -11,9 +12,7 @@ import {
 import {AuthService} from '../services/auth.service';
 import {UserRole} from '@glasskube/distr-sdk';
 
-@Directive({
-  selector: '[appRequiredRole]',
-})
+@Directive({selector: '[appRequiredRole]'})
 export class RequireRoleDirective implements OnChanges {
   private readonly auth = inject(AuthService);
   private readonly templateRef = inject(TemplateRef);
@@ -33,6 +32,32 @@ export class RequireRoleDirective implements OnChanges {
           this.embeddedViewRef = null;
         }
       }
+    }
+  }
+}
+
+@Directive({selector: '[appRequireVendor]'})
+export class RequireVendorDirective implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly templateRef = inject(TemplateRef);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+
+  public ngOnInit(): void {
+    if (this.auth.isVendor()) {
+      this.viewContainerRef.createEmbeddedView(this.templateRef);
+    }
+  }
+}
+
+@Directive({selector: '[appRequireCustomer]'})
+export class RequireCustomerDirective implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly templateRef = inject(TemplateRef);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+
+  public ngOnInit(): void {
+    if (this.auth.isCustomer()) {
+      this.viewContainerRef.createEmbeddedView(this.templateRef);
     }
   }
 }

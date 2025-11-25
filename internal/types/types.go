@@ -28,8 +28,9 @@ const (
 	DeploymentTypeDocker     DeploymentType = "docker"
 	DepolymentTypeKubernetes DeploymentType = "kubernetes"
 
-	UserRoleVendor   UserRole = "vendor"
-	UserRoleCustomer UserRole = "customer"
+	UserRoleReadOnly  UserRole = "read_only"
+	UserRoleReadWrite UserRole = "read_write"
+	UserRoleAdmin     UserRole = "admin"
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"

@@ -29,7 +29,7 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 	return authn.AuthenticatorFunc[AuthInfo, *DbAuthInfo](func(ctx context.Context, a AuthInfo) (*DbAuthInfo, error) {
 		if a.CurrentOrgID() != nil && a.CurrentUserRole() != nil {
 			if u, o, err := db.GetUserAccountAndOrg(
-				ctx, a.CurrentUserID(), *a.CurrentOrgID(), a.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
+				ctx, a.CurrentUserID(), *a.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
 				return nil, authn.ErrBadAuthentication
 			} else if err != nil {
 				return nil, err

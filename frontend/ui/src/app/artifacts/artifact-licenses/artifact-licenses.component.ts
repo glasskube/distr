@@ -1,46 +1,38 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, OnDestroy, OnInit, TemplateRef} from '@angular/core';
+import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
-  combineLatest,
-  debounceTime,
   EMPTY,
   filter,
-  first,
   firstValueFrom,
   map,
   Observable,
   shareReplay,
-  startWith,
   Subject,
   switchMap,
   takeUntil,
 } from 'rxjs';
+import {isExpired} from '../../../util/dates';
+import {getFormDisplayedError} from '../../../util/errors';
+import {filteredByFormControl} from '../../../util/filter';
+import {drawerFlyInOut} from '../../animations/drawer';
+import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
 import {UuidComponent} from '../../components/uuid';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {
   ArtifactLicense,
   ArtifactLicenseSelection,
   ArtifactLicensesService,
 } from '../../services/artifact-licenses.service';
-import {filteredByFormControl} from '../../../util/filter';
-import {ApplicationsService} from '../../services/applications.service';
-import {DialogRef, OverlayService} from '../../services/overlay.service';
-import {ToastService} from '../../services/toast.service';
-import {getFormDisplayedError} from '../../../util/errors';
-import {isExpired} from '../../../util/dates';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
-import {EditLicenseComponent} from '../../licenses/edit-license.component';
-import {dropdownAnimation} from '../../animations/dropdown';
-import {drawerFlyInOut} from '../../animations/drawer';
-import {modalFlyInOut} from '../../animations/modal';
-import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
-import {UsersService} from '../../services/users.service';
 import {ArtifactsService} from '../../services/artifacts.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
+import {ToastService} from '../../services/toast.service';
+import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
 
 @Component({
   selector: 'app-artifact-licenses',
@@ -50,7 +42,7 @@ import {CustomerOrganizationsService} from '../../services/customer-organization
     FaIconComponent,
     UuidComponent,
     DatePipe,
-    RequireRoleDirective,
+    RequireVendorDirective,
     EditArtifactLicenseComponent,
   ],
   templateUrl: './artifact-licenses.component.html',

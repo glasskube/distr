@@ -33,7 +33,7 @@
                 </p>
               </div>
 
-              <ng-container *appRequiredRole="'vendor'">
+              <ng-container *appRequireVendor>
                 <button
                   type="button"
                   class="text-gray-500 dark:text-gray-400 self-start px-1"
@@ -100,7 +100,7 @@
                             class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400 flex items-center gap-1">
                             {{ label.name }}
                             <button
-                              *appRequiredRole="'vendor'"
+                              *appRequireVendor
                               type="button"
                               [attr.aria-label]="'Delete tag ' + label.name"
                               (click)="deleteArtifactTag(artifact, version, label.name)"
@@ -120,7 +120,7 @@
                         </li>
                       </ul>
                     </div>
-                    <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
+                    <div class="flex flex-col items-end gap-1" *appRequireVendor>
                       <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
                       <app-artifacts-downloaded-by [source]="version"></app-artifacts-downloaded-by>
                     </div>

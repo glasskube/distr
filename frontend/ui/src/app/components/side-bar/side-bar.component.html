@@ -4,7 +4,7 @@
   aria-label="Sidebar"
   #asideElement>
   <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
-    <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'vendor'">
+    <ul class="space-y-2 font-medium flex-1" *appRequireVendor>
       <li>
         <a
           (click)="sidebar.hide()"
@@ -268,7 +268,7 @@
       </li>
     </ul>
 
-    <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'customer'">
+    <ul class="space-y-2 font-medium flex-1" *appRequireCustomer>
       <li>
         <a
           (click)="sidebar.hide()"
@@ -332,7 +332,7 @@
         id="alert-update"
         class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700"
         role="alert"
-        *appRequiredRole="'vendor'">
+        *appRequireVendor>
         <div class="flex justify-between items-center mb-3">
           <span
             class="bg-gray-100 text-gray-600 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-600 dark:text-gray-200"

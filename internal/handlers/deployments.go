@@ -119,8 +119,7 @@ func deleteDeploymentHandler() http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
 			}
-			if target.OrganizationID != orgId ||
-				(*auth.CurrentUserRole() != types.UserRoleVendor && target.CreatedByUserAccountID != auth.CurrentUserID()) {
+			if target.OrganizationID != orgId || !isDeploymentTargetVisible(auth, target.DeploymentTarget) {
 				http.NotFound(w, r)
 				return apierrors.ErrNotFound
 			}
@@ -224,7 +223,7 @@ func validateDeploymentRequest(
 					return err
 				}
 			}
-		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
+		} else if auth.CurrentCustomerOrgID() != nil {
 			// license ID is required for customer but optional for vendor
 			return badRequestError(w, "applicationLicenseId is required")
 		}
@@ -276,8 +275,7 @@ func validateDeploymentRequestLicense(
 		if license.CustomerOrganizationID == nil {
 			return invalidLicenseError(w)
 		}
-		if *auth.CurrentUserRole() == types.UserRoleCustomer &&
-			*license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
+		if auth.CurrentCustomerOrgID() != nil && *license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
 			return licenseNotFoundError(w)
 		}
 		if target.CustomerOrganizationID == nil || *target.CustomerOrganizationID != *license.CustomerOrganizationID {

@@ -13,6 +13,7 @@ const authBaseUrl = '/api/v1/auth';
 export interface JWTClaims {
   sub: string;
   org: string;
+  c_org: string;
   email: string;
   password_reset: boolean;
   email_verified: boolean;
@@ -61,6 +62,14 @@ export class AuthService {
 
   public hasRole(role: UserRole): boolean {
     return this.getClaims()?.role === role;
+  }
+
+  public isVendor(): boolean {
+    return this.getClaims()?.c_org === undefined;
+  }
+
+  public isCustomer(): boolean {
+    return this.getClaims()?.c_org !== undefined;
   }
 
   public login(email: string, password: string): Observable<void> {

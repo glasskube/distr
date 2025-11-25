@@ -45,7 +45,7 @@ func CreateUserAccountWithOrganization(
 		ctx,
 		userAccount.ID,
 		org.ID,
-		types.UserRoleVendor,
+		types.UserRoleAdmin,
 		nil,
 	); err != nil {
 		return nil, err
@@ -332,7 +332,7 @@ func GetUserAccountWithRole(
 	}
 }
 
-func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expectedRole *types.UserRole) (
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID) (
 	*types.UserAccountWithUserRole,
 	*types.Organization,
 	error,
@@ -344,12 +344,10 @@ func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expected
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
-			WHERE u.id = @id AND j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)`,
+			WHERE u.id = @id AND j.organization_id = @orgId`,
 		pgx.NamedArgs{
-			"id":        userID,
-			"orgId":     orgID,
-			"role":      expectedRole,
-			"checkRole": expectedRole != nil,
+			"id":    userID,
+			"orgId": orgID,
 		},
 	)
 	if err != nil {

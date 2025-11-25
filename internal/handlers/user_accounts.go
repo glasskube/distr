@@ -91,19 +91,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	userHasExisted := false
 
 	if customerOrgID := auth.CurrentCustomerOrgID(); customerOrgID != nil {
-		if body.UserRole == types.UserRoleVendor {
-			http.Error(w, "insufficient permissions", http.StatusForbidden)
-			return
-		}
 		body.CustomerOrganizationID = customerOrgID
-	}
-
-	if body.UserRole == types.UserRoleVendor && body.CustomerOrganizationID != nil {
-		http.Error(w, "customer organization not applicable for vendor user", http.StatusBadRequest)
-		return
-	} else if body.UserRole == types.UserRoleCustomer && body.CustomerOrganizationID == nil {
-		http.Error(w, "customer organization is required for customer user", http.StatusBadRequest)
-		return
 	}
 
 	if body.CustomerOrganizationID != nil {
@@ -176,7 +164,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			ctx,
 			userAccount,
 			organization,
-			body.UserRole,
+			body.CustomerOrganizationID,
 			inviteURL,
 		); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -240,7 +228,7 @@ func resendUserInviteHandler() http.HandlerFunc {
 			ctx,
 			userAccount.AsUserAccount(),
 			*organization,
-			userAccount.UserRole,
+			userAccount.CustomerOrganizationID,
 			inviteURL,
 		); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)

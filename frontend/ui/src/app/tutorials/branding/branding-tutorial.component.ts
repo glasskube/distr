@@ -231,10 +231,12 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
       this.loading.set(true);
       try {
         const email = this.inviteFormGroup.value.customerEmail!;
+        // TODO: Add customerOrganizationId from customer org created in previous step
+        //   (TODO: create previous step that creates customer org)
         await lastValueFrom(
           this.usersService.addUser({
             email,
-            userRole: 'customer',
+            userRole: 'admin',
           })
         );
         this.inviteFormGroup.controls.inviteDone.patchValue(true);

@@ -23,7 +23,7 @@ import (
 func OrganizationBrandingRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganizationBranding)
-	r.With(requireUserRoleVendor).Group(func(r chi.Router) {
+	r.With(middleware.RequireVendor).Group(func(r chi.Router) {
 		r.Post("/", createOrganizationBranding)
 		r.Put("/", updateOrganizationBranding)
 	})

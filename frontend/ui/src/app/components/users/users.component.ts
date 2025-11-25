@@ -21,12 +21,12 @@ import {filteredByFormControl} from '../../../util/filter';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {UuidComponent} from '../uuid';
-import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-users',
@@ -35,7 +35,7 @@ import {AuthService} from '../../services/auth.service';
     AsyncPipe,
     DatePipe,
     ReactiveFormsModule,
-    RequireRoleDirective,
+    RequireVendorDirective,
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
@@ -45,14 +45,13 @@ import {AuthService} from '../../services/auth.service';
 })
 export class UsersComponent {
   public readonly users = input.required<UserAccountWithRole[]>();
-  public readonly userRole = input.required<UserRole>();
   public readonly customerOrganizationId = input<string>();
   public readonly refresh = output<void>();
 
   private readonly toast = inject(ToastService);
   private readonly usersService = inject(UsersService);
   private readonly overlay = inject(OverlayService);
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
 
   protected readonly currentUserRole = this.auth.getClaims()!.role;
 
@@ -81,6 +80,7 @@ export class UsersComponent {
   protected inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
+    userRole: new FormControl<UserRole | undefined>('admin', {nonNullable: true, validators: [Validators.required]}),
   });
   protected inviteFormLoading = false;
   protected inviteUrl: string | null = null;
@@ -99,14 +99,14 @@ export class UsersComponent {
           this.usersService.addUser({
             email: this.inviteForm.value.email!,
             name: this.inviteForm.value.name || undefined,
-            userRole: this.userRole(),
+            userRole: this.inviteForm.value.userRole ?? 'admin',
             customerOrganizationId: this.customerOrganizationId(),
           })
         );
         this.inviteUrl = result.inviteUrl;
         if (!this.inviteUrl) {
           this.toast.success(
-            `${this.userRole() === 'vendor' ? 'User' : 'Customer'} has been added to the organization`
+            `${result.user.customerOrganizationId === undefined ? 'User' : 'Customer'} has been added to the organization`
           );
           this.closeInviteDialog();
         }

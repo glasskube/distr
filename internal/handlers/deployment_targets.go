@@ -20,6 +20,7 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -132,14 +133,7 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	if dt.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
-	} else if currentUser, err := db.GetUserAccountWithRole(
-		ctx,
-		auth.CurrentUserID(),
-		*auth.CurrentOrgID(),
-		auth.CurrentCustomerOrgID(),
-	); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if currentUser.UserRole != types.UserRoleVendor && dt.CreatedByUserAccountID != currentUser.ID {
+	} else if !isDeploymentTargetVisible(auth, dt.DeploymentTarget) {
 		http.Error(w, "must be vendor or creator", http.StatusForbidden)
 	} else if err := db.DeleteDeploymentTargetWithID(ctx, dt.ID); err != nil {
 		log.Warn("error deleting deployment target", zap.Error(err))
@@ -244,9 +238,5 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 }
 
 func isDeploymentTargetVisible(auth authinfo.AuthInfo, target types.DeploymentTarget) bool {
-	if *auth.CurrentUserRole() == types.UserRoleCustomer {
-		return target.CustomerOrganizationID != nil && *target.CustomerOrganizationID == *auth.CurrentCustomerOrgID()
-	}
-
-	return true
+	return auth.CurrentCustomerOrgID() == nil || util.PtrEq(auth.CurrentCustomerOrgID(), target.CustomerOrganizationID)
 }

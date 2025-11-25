@@ -24,7 +24,7 @@ import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {Application, DeploymentType} from '@glasskube/distr-sdk';
 import {UuidComponent} from '../components/uuid';
-import {RequireRoleDirective} from '../directives/required-role.directive';
+import {RequireRoleDirective, RequireVendorDirective} from '../directives/required-role.directive';
 import {Router, RouterLink} from '@angular/router';
 import {SecureImagePipe} from '../../util/secureImage';
 
@@ -39,7 +39,7 @@ import {SecureImagePipe} from '../../util/secureImage';
     OverlayModule,
     AutotrimDirective,
     UuidComponent,
-    RequireRoleDirective,
+    RequireVendorDirective,
     RouterLink,
     SecureImagePipe,
   ],
