@@ -44,8 +44,7 @@ func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 	deploymentTargets, err := db.GetDeploymentTargets(
 		ctx,
 		*auth.CurrentOrgID(),
-		auth.CurrentUserID(),
-		*auth.CurrentUserRole(),
+		auth.CurrentCustomerOrgID(),
 	)
 	if err != nil {
 		internalctx.GetLogger(ctx).Error("failed to get DeploymentTargets", zap.Error(err))
