@@ -91,7 +91,6 @@ func ApiRouter(
 				r.Route("/organization", handlers.OrganizationRouter)
 				r.Route("/organizations", handlers.OrganizationsRouter)
 				r.Route("/settings", handlers.SettingsRouter)
-				r.Route("/subscription", handlers.SubscriptionRouter)
 				r.Route("/tutorial-progress", handlers.TutorialsRouter)
 				r.Route("/user-accounts", handlers.UserAccountsRouter)
 			})

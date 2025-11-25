@@ -8,7 +8,7 @@ import {CheckoutRequest, SubscriptionInfo} from '../types/subscription';
 })
 export class SubscriptionService {
   private readonly httpClient = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/subscription';
+  private readonly baseUrl = '/api/v1/billing/subscription';
 
   get(): Observable<SubscriptionInfo> {
     return this.httpClient.get<SubscriptionInfo>(this.baseUrl);
@@ -22,7 +22,7 @@ export class SubscriptionService {
       this.httpClient.post<{
         sessionId: string;
         url: string;
-      }>('/api/v1/billing/checkout', request)
+      }>(this.baseUrl, request)
     );
 
     if (!response?.url) {

@@ -18,3 +18,8 @@ type CustomerOrganizationWithUserCount struct {
 	CustomerOrganization
 	UserCount int64 `db:"user_count" json:"userCount"`
 }
+
+type CustomerOrganizationWithUsage struct {
+	CustomerOrganizationWithUserCount
+	DeploymentTargetCount int64 `db:"deployment_target_count" json:"deploymentTargetCount"`
+}

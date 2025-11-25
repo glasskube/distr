@@ -126,7 +126,6 @@ export const routes: Routes = [
   {
     path: 'subscription',
     component: SubscriptionComponent,
-    data: {userRole: 'vendor'},
     canActivate: [requiredRoleGuard('vendor')],
   },
   {

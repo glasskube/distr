@@ -62,7 +62,6 @@ export class SideBarComponent {
   protected readonly faAddressBook = faAddressBook;
   protected readonly faBox = faBox;
   protected readonly faCreditCard = faCreditCard;
-  protected readonly buildConfig = buildConfig;
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
   protected readonly faChevronDown = faChevronDown;

@@ -24,7 +24,7 @@ export class SubscriptionComponent implements OnInit {
   protected loading = signal(true);
 
   protected readonly form = new FormGroup({
-    subscriptionType: new FormControl<SubscriptionType>('starter', [Validators.required]),
+    subscriptionType: new FormControl<SubscriptionType>('pro', [Validators.required]),
     billingMode: new FormControl<'monthly' | 'yearly'>('monthly', [Validators.required]),
     userAccountQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
     customerOrganizationQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
@@ -38,7 +38,7 @@ export class SubscriptionComponent implements OnInit {
 
       // Pre-fill form with current subscription values or defaults
       this.form.patchValue({
-        subscriptionType: info.subscriptionType === 'trial' ? 'starter' : info.subscriptionType,
+        subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
         userAccountQuantity: info.subscriptionUserAccountQuantity ?? info.currentUserAccountCount,
         customerOrganizationQuantity:
           info.subscriptionCustomerOrganizationQuantity ?? info.currentCustomerOrganizationCount,
@@ -59,21 +59,18 @@ export class SubscriptionComponent implements OnInit {
     const userQty = this.form.value.userAccountQuantity ?? 0;
     const customerQty = this.form.value.customerOrganizationQuantity ?? 0;
 
-    let basePrice = 0;
     let userPrice = 0;
     let customerPrice = 0;
 
     if (subscriptionType === 'starter') {
-      basePrice = billingMode === 'monthly' ? 40 : 480;
       userPrice = billingMode === 'monthly' ? 16 : 192;
       customerPrice = billingMode === 'monthly' ? 24 : 288;
     } else if (subscriptionType === 'pro') {
-      basePrice = billingMode === 'monthly' ? 80 : 960;
       userPrice = billingMode === 'monthly' ? 24 : 288;
       customerPrice = billingMode === 'monthly' ? 56 : 672;
     }
 
-    return basePrice + userPrice * userQty + customerPrice * customerQty;
+    return userPrice * userQty + customerPrice * customerQty;
   }
 
   async checkout() {
@@ -100,16 +97,56 @@ export class SubscriptionComponent implements OnInit {
   }
 
   getPlanLimits(plan: SubscriptionType): {customers: string; users: string; deployments: string} {
-    if (plan === 'starter') {
-      return {customers: 'Up to 3', users: '1 per customer', deployments: '1 per customer'};
-    } else if (plan === 'pro') {
-      return {customers: 'Up to 100', users: 'Up to 10 per customer', deployments: '3 per customer'};
+    const info = this.subscriptionInfo();
+    if (!info) {
+      return {customers: '', users: '', deployments: ''};
     }
-    return {customers: 'Unlimited', users: 'Unlimited', deployments: 'Unlimited'};
+
+    let limits;
+    switch (plan) {
+      case 'trial':
+        limits = info.trialLimits;
+        break;
+      case 'starter':
+        limits = info.starterLimits;
+        break;
+      case 'pro':
+        limits = info.proLimits;
+        break;
+      case 'enterprise':
+        limits = info.enterpriseLimits;
+        break;
+      default:
+        return {customers: '', users: '', deployments: ''};
+    }
+
+    return {
+      customers:
+        limits.maxCustomerOrganizations === -1
+          ? 'Unlimited customer organizations'
+          : `Up to ${limits.maxCustomerOrganizations} customer organization${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
+      users:
+        limits.maxUsersPerCustomerOrganization === -1
+          ? 'Unlimited users per customer organization'
+          : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer organization`,
+      deployments:
+        limits.maxDeploymentsPerCustomerOrganization === -1
+          ? 'Unlimited deployments per customer'
+          : `${limits.maxDeploymentsPerCustomerOrganization} active deployment${limits.maxDeploymentsPerCustomerOrganization > 1 ? 's' : ''} per customer`,
+    };
   }
 
-  getCurrencySymbol(): string {
-    const currency = this.form.value.currency || 'usd';
-    return currency === 'eur' ? '€' : '$';
+  canSelectStarterPlan(): boolean {
+    const info = this.subscriptionInfo();
+    if (!info) {
+      return true;
+    }
+
+    // Check if current usage exceeds starter plan limits
+    return (
+      info.currentCustomerOrganizationCount <= info.starterLimits.maxCustomerOrganizations &&
+      info.currentMaxUsersPerCustomer <= info.starterLimits.maxUsersPerCustomerOrganization &&
+      info.currentMaxDeploymentTargetsPerCustomer <= info.starterLimits.maxDeploymentsPerCustomerOrganization
+    );
   }
 }

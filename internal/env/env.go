@@ -78,7 +78,6 @@ var (
 	wellKnownMicrosoftIdentityAssociation  []byte
 	stripeWebhookSecret                    *string
 	stripeAPIKey                           *string
-	stripePublishableKey                   *string
 )
 
 func Initialize() {
@@ -226,7 +225,6 @@ func Initialize() {
 
 	stripeWebhookSecret = envutil.GetEnvOrNil("STRIPE_WEBHOOK_SECRET")
 	stripeAPIKey = envutil.GetEnvOrNil("STRIPE_API_KEY")
-	stripePublishableKey = envutil.GetEnvOrNil("STRIPE_PUBLISHABLE_KEY")
 }
 
 func DatabaseUrl() string {
@@ -473,8 +471,4 @@ func StripeWebhookSecret() *string {
 
 func StripeAPIKey() *string {
 	return stripeAPIKey
-}
-
-func StripePublishableKey() *string {
-	return stripePublishableKey
 }
