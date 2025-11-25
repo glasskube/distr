@@ -190,7 +190,17 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var applications []types.Application
 	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID())
+		// Get applications based on license owner ID only if there is at least one license in the parent organization
+		if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, *auth.CurrentOrgID(), nil); err != nil {
+			log.Error("failed to get application licenses", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if len(licenses) > 0 {
+			applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID())
+		} else {
+			applications, err = db.GetApplicationsByOrgID(ctx, *auth.CurrentOrgID())
+		}
 	} else {
 		applications, err = db.GetApplicationsByOrgID(ctx, *auth.CurrentOrgID())
 	}
@@ -214,7 +224,12 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 		if applicationID, err := uuid.Parse(r.PathValue("applicationId")); err != nil {
 			http.NotFound(w, r)
 			return
-		} else {
+		} else if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, *auth.CurrentOrgID(), nil); err != nil {
+			log.Error("failed to get application licenses", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if len(licenses) > 0 {
 			application, err := db.GetApplicationWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID(), applicationID)
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
@@ -225,6 +240,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 			} else {
 				RespondJSON(w, mapping.ApplicationToAPI(*application))
 			}
+		} else {
+			RespondJSON(w, mapping.ApplicationToAPI(*internalctx.GetApplication(ctx)))
 		}
 	} else {
 		RespondJSON(w, mapping.ApplicationToAPI(*internalctx.GetApplication(ctx)))

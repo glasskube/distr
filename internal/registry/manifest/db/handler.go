@@ -56,7 +56,13 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	var artifacts []types.ArtifactWithDownloads
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
+		if licenses, err1 := db.GetArtifactLicenses(ctx, *auth.CurrentOrgID()); err != nil {
+			err = err1
+		} else if len(licenses) > 0 {
+			artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
+		} else {
+			artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
+		}
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
 	}
