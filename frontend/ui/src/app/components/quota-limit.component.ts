@@ -10,7 +10,8 @@ import {Component, computed, input} from '@angular/core';
         <div class="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 max-w-24 flex-grow">
           <div
             class="h-2.5 rounded-full"
-            [class.bg-yellow-400]="!isLimitReached()"
+            [class.bg-blue-600]="!isLimitCritical() && !isLimitReached()"
+            [class.bg-yellow-400]="isLimitCritical() && !isLimitReached()"
             [class.bg-red-600]="isLimitReached()"
             [class.dark:bg-red-500]="isLimitReached()"
             [style]="{width: p + '%'}"></div>
@@ -33,5 +34,6 @@ export class QuotaLimitComponent {
     }
     return Math.min(100, Math.round(((u ?? 0) / l) * 100));
   });
+  public isLimitCritical = computed(() => this.percentage() >= 85);
   public isLimitReached = computed(() => this.percentage() >= 100);
 }
