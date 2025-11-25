@@ -27,6 +27,7 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
 import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {TutorialsService} from '../../services/tutorials.service';
+import {OrganizationService} from '../../services/organization.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -44,18 +45,19 @@ import {TutorialsService} from '../../services/tutorials.service';
   ],
 })
 export class SideBarComponent {
-  public readonly sidebar = inject(SidebarService);
-  public readonly featureFlags = inject(FeatureFlagService);
+  protected readonly sidebar = inject(SidebarService);
+  protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly tutorialsService = inject(TutorialsService);
-  public feedbackAlert = true;
+  private readonly organizationService = inject(OrganizationService);
+
+  protected readonly buildConfig = buildConfig;
+
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;
-  protected readonly faServer = faServer;
   protected readonly faLightbulb = faLightbulb;
   protected readonly faKey = faKey;
   protected readonly faGear = faGear;
   protected readonly faUsers = faUsers;
-  protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
   protected readonly faAddressBook = faAddressBook;
   protected readonly faBox = faBox;
@@ -65,23 +67,15 @@ export class SideBarComponent {
   protected readonly faHome = faHome;
   protected readonly faChevronDown = faChevronDown;
 
-  @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
+  protected feedbackAlert = true;
   protected readonly agentsSubMenuOpen = signal(true);
   protected readonly licenseSubMenuOpen = signal(true);
   protected readonly registrySubMenuOpen = signal(true);
   protected readonly licenseOverlayOpen = signal(false);
 
-  constructor() {
-    effect(() => {
-      const show = this.sidebar.showSidebar();
-      this.asideElement?.nativeElement.classList.toggle('translate-x-0', show);
-      this.asideElement?.nativeElement.classList.toggle('-translate-x-full', !show);
-    });
-  }
+  protected readonly organization$ = this.organizationService.get();
 
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);
   }
-
-  protected readonly faUserCheck = faUserCheck;
 }

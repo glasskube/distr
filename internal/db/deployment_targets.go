@@ -98,6 +98,26 @@ func GetDeploymentTargets(
 	}
 }
 
+func CountDeploymentTargets(ctx context.Context, orgID uuid.UUID, customerOrgID *uuid.UUID) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		`SELECT count(*)
+		FROM deployment_targets
+		WHERE organization_id = @orgId
+			AND customer_organization_id = @customerOrgId`,
+		pgx.NamedArgs{"orgId": orgID, "customerOrgId": customerOrgID},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count DeploymentTargets: %w", err)
+	}
+
+	if count, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[int64]); err != nil {
+		return 0, fmt.Errorf("failed to count DeploymentTargets: %w", err)
+	} else {
+		return count, nil
+	}
+}
+
 func GetDeploymentTarget(
 	ctx context.Context,
 	id uuid.UUID,
@@ -117,7 +137,7 @@ func GetDeploymentTarget(
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTargetWithCreatedBy])
+	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[types.DeploymentTargetWithCreatedBy])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, apierrors.ErrNotFound
 	} else if err != nil {
