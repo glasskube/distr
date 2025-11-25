@@ -117,7 +117,7 @@ func GetDeploymentTarget(
 	if err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.DeploymentTargetWithCreatedBy])
+	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[types.DeploymentTargetWithCreatedBy])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, apierrors.ErrNotFound
 	} else if err != nil {
