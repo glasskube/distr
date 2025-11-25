@@ -5,4 +5,7 @@ ALTER TABLE Organization
   ADD COLUMN subscription_ends_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() + interval '1 month'),
   ADD COLUMN subscription_external_id TEXT,
   ADD COLUMN subscription_customer_organization_quantity INTEGER,
-  ADD COLUMN subscription_user_account_quantity INTEGER;
+  ADD COLUMN subscription_user_account_quantity INTEGER,
+  ALTER COLUMN features SET DEFAULT '{licensing}';
+
+UPDATE Organization SET features = '{licensing}';
