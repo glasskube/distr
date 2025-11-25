@@ -1,12 +1,33 @@
 <nav class="sticky top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
   @let organization = organization$ | async;
   @if (organization?.subscriptionType === 'trial') {
-    <div class="w-full bg-yellow-300 dark:bg-yellow-200 p-1">
-      <div class="flex items-center justify-center">
-        <p class="text-sm">Your trial is about to expire {{ organization?.subscriptionEndsAt | relativeDate }}!</p>
+    <div
+      class="flex flex-col justify-between items-start py-3 px-4 w-full bg-gray-50 border border-b border-gray-200 md:gap-8 md:items-center md:flex-row dark:border-gray-700 lg:py-4 dark:bg-gray-900">
+      <div class="sm:flex xl:items-center">
+        <fa-icon
+          size="lg"
+          [icon]="faCircleInfo"
+          class="hidden mr-3 mt-1 w-6 h-6 lg:flex sm:mb-0 text-gray-400 shrink-0"></fa-icon>
+        <p class="mb-4 text-sm text-gray-500 dark:text-gray-300 md:mb-0">
+          You are currently on the Distr Pro trial. Your trial will expire on
+          <span class="font-bold text-gray-900 dark:text-white">{{
+            organization?.subscriptionEndsAt | date: 'MMMM d, yyyy'
+          }}</span
+          >.
+        </p>
       </div>
-      <div class="flex items-center justify-center">
-        <a class="text-sm hover:underline" routerLink="/pricing">Upgrade Now</a>
+      <div class="flex items-center space-x-4 items-center lg:pl-10 shrink-0">
+        <a
+          href="https://distr.sh/contact/"
+          target="_blank"
+          class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline"
+          >Contact Sales</a
+        >
+        <a
+          routerLink="/pricing"
+          class="py-2 px-4 text-sm font-medium text-center text-white rounded-lg bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >Upgrade Now</a
+        >
       </div>
     </div>
   }

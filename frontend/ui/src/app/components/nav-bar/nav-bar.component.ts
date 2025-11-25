@@ -11,24 +11,14 @@ import {
   faChevronDown,
   faChevronUp,
   faCircleExclamation,
+  faCircleInfo,
   faClipboard,
   faLightbulb,
   faPlus,
   faShuffle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  catchError,
-  combineLatestWith,
-  distinctUntilChanged,
-  EMPTY,
-  lastValueFrom,
-  map,
-  Observable,
-  of,
-  Subject,
-  takeUntil,
-} from 'rxjs';
+import {catchError, combineLatestWith, EMPTY, lastValueFrom, map, Observable, of, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
@@ -38,7 +28,7 @@ import {ToastService} from '../../services/toast.service';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {UsersService} from '../../services/users.service';
 import {SecureImagePipe} from '../../../util/secureImage';
-import {AsyncPipe, TitleCasePipe} from '@angular/common';
+import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
 import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
@@ -46,7 +36,7 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
 import {RelativeDatePipe} from '../../../util/dates';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {toSignal} from '@angular/core/rxjs-interop';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -65,6 +55,7 @@ type SwitchOptions = {
     RouterLink,
     SecureImagePipe,
     AsyncPipe,
+    DatePipe,
     TitleCasePipe,
     RelativeDatePipe,
     AutotrimDirective,
@@ -220,6 +211,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
   protected readonly faChevronUp = faChevronUp;
   protected readonly faPlus = faPlus;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faCircleInfo = faCircleInfo;
   protected readonly faXmark = faXmark;
   protected readonly faClipboard = faClipboard;
 }

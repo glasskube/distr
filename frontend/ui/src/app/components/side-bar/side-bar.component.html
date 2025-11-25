@@ -3,11 +3,10 @@
   id="logo-sidebar"
   class="fixed left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
   [class.top-16]="!isTrial"
-  [class.top-28]="isTrial"
+  [class.top-33]="isTrial"
   [class.translate-x-0]="sidebar.showSidebar()"
   [class.-translate-x-full]="!sidebar.showSidebar()"
-  aria-label="Sidebar"
-  #asideElement>
+  aria-label="Sidebar">
   <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
     <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'vendor'">
       <li>
