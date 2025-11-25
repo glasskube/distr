@@ -85,8 +85,9 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
 			} else if limitReached {
-				http.Error(w, "deployment target limit reached", http.StatusForbidden)
-				return errors.New("limit reached")
+				err = errors.New("deployment target limit reached")
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return err
 			}
 
 			if err = db.CreateDeploymentTarget(

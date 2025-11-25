@@ -67,8 +67,9 @@ func createCustomerOrganizationHandler() http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
 			} else if limitReached {
-				http.Error(w, "customer org limit reached", http.StatusForbidden)
-				return errors.New("limit reached")
+				err = errors.New("customer limit reached")
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return err
 			}
 
 			if err := db.CreateCustomerOrganization(ctx, &customerOrganization); err != nil {
