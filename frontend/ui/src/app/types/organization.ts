@@ -12,6 +12,8 @@ export interface Organization extends BaseModel, Named {
   emailFromAddress?: string;
   subscriptionType?: SubscriptionType;
   subscriptionEndsAt?: string;
+  subscriptionCustomerOrganizationQuantity?: number;
+  subscriptionUserAccountQuantity?: number;
 }
 
 export interface OrganizationWithUserRole extends Organization {
