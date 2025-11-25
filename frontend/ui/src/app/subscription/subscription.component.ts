@@ -63,11 +63,11 @@ export class SubscriptionComponent implements OnInit {
     let customerPrice = 0;
 
     if (subscriptionType === 'starter') {
-      userPrice = billingMode === 'monthly' ? 16 : 192;
-      customerPrice = billingMode === 'monthly' ? 24 : 288;
+      userPrice = billingMode === 'monthly' ? 19 : 192;
+      customerPrice = billingMode === 'monthly' ? 29 : 288;
     } else if (subscriptionType === 'pro') {
-      userPrice = billingMode === 'monthly' ? 24 : 288;
-      customerPrice = billingMode === 'monthly' ? 56 : 672;
+      userPrice = billingMode === 'monthly' ? 29 : 288;
+      customerPrice = billingMode === 'monthly' ? 69 : 672;
     }
 
     return userPrice * userQty + customerPrice * customerQty;
