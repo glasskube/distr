@@ -91,7 +91,7 @@ func getSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	info := api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt.Format("2006-01-02"),
-		SubscriptionExternalID:                 org.SubscriptionExternalID,
+		SubscriptionExternalID:                 org.StripeSubscriptionId,
 		SubscriptionCustomerOrganizationQty:    org.SubscriptionCustomerOrganizationQty,
 		SubscriptionUserAccountQty:             org.SubscriptionUserAccountQty,
 		CurrentUserAccountCount:                usage.userAccountCount,

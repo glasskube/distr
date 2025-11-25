@@ -75,7 +75,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			"slug":                     org.Slug,
 			"subscription_type":        org.SubscriptionType,
 			"subscription_ends_at":     org.SubscriptionEndsAt.UTC(),
-			"subscription_external_id": org.SubscriptionExternalID,
+			"subscription_external_id": org.StripeSubscriptionId,
 			"subscription_customer_organization_quantity": org.SubscriptionCustomerOrganizationQty,
 			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
 		},
