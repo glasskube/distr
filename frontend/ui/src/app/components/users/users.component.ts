@@ -17,6 +17,7 @@ import {
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {catchError, filter, firstValueFrom, NEVER, switchMap, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
+import {never} from '../../../util/exhaust';
 import {filteredByFormControl} from '../../../util/filter';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
@@ -42,7 +43,7 @@ function getUserAccountPerCustomerOrganizationLimit(subscriptionType: Subscripti
     case 'enterprise':
       return undefined;
     default:
-      throw new Error(`Unknown subscription type: ${subscriptionType}`);
+      never(subscriptionType);
   }
 }
 

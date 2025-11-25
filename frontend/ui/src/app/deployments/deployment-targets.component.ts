@@ -15,6 +15,7 @@ import {catchError, combineLatest, combineLatestWith, first, map, Observable, of
 import {SemVer} from 'semver';
 import {compareBy, maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
+import {never} from '../../util/exhaust';
 import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
@@ -57,7 +58,7 @@ function getDeploymentTargetPerCustomerOrganizationLimit(subscriptionType: Subsc
     case 'enterprise':
       return undefined;
     default:
-      throw new Error(`Unknown subscription type: ${subscriptionType}`);
+      never(subscriptionType);
   }
 }
 
