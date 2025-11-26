@@ -22,13 +22,14 @@ import (
 func ArtifactsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getArtifacts)
-	r.Route("/{artifactId}", func(r chi.Router) {
-		r.Use(artifactMiddleware)
+	r.With(artifactMiddleware).Route("/{artifactId}", func(r chi.Router) {
 		r.Get("/", getArtifact)
-		r.With(middleware.RequireVendor).Patch("/image", patchImageArtifactHandler)
-		r.With(middleware.RequireVendor).Delete("/", deleteArtifactHandler)
-		r.Route("/tags/{tagName}", func(r chi.Router) {
-			r.With(middleware.RequireVendor).Delete("/", deleteArtifactTagHandler)
+		r.With(middleware.RequireVendor).Group(func(r chi.Router) {
+			r.Patch("/image", patchImageArtifactHandler)
+			r.With(middleware.RequireReadWriteOrAdmin).Delete("/", deleteArtifactHandler)
+			r.Route("/tags/{tagName}", func(r chi.Router) {
+				r.With(middleware.RequireReadWriteOrAdmin).Delete("/", deleteArtifactTagHandler)
+			})
 		})
 	})
 }

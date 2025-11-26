@@ -1,9 +1,10 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
+import {Component, inject, TemplateRef} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap, takeUntil} from 'rxjs';
+import {catchError, EMPTY, filter, firstValueFrom, Observable, switchMap} from 'rxjs';
 import {isExpired} from '../../util/dates';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
@@ -12,15 +13,13 @@ import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
-import {RequireVendorDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
+import {AuthService} from '../services/auth.service';
 import {LicensesService} from '../services/licenses.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {ApplicationLicense} from '../types/application-license';
 import {EditLicenseComponent} from './edit-license.component';
-import {AuthService} from '../services/auth.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-licenses',
@@ -32,7 +31,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     FaIconComponent,
     UuidComponent,
     DatePipe,
-    RequireVendorDirective,
     EditLicenseComponent,
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],

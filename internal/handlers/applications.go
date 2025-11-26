@@ -26,25 +26,33 @@ import (
 
 func ApplicationsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
+
 	r.Get("/", getApplications)
-	r.With(middleware.RequireVendor).Post("/", createApplication)
+
+	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).
+		Post("/", createApplication)
+
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.With(applicationMiddleware).Group(func(r chi.Router) {
 			r.Get("/", getApplication)
-			r.With(middleware.RequireVendor).Group(func(r chi.Router) {
+			r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
 				r.Delete("/", deleteApplication)
 				r.Put("/", updateApplication)
 				r.Patch("/", patchApplicationHandler())
 				r.Patch("/image", patchImageApplication)
 			})
 		})
+
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
-			r.With(applicationMiddleware).Group(func(r chi.Router) {
-				r.With(middleware.RequireVendor).Post("/", createApplicationVersion)
-			})
+			r.With(applicationMiddleware).
+				Group(func(r chi.Router) {
+					r.With(middleware.RequireVendor).
+						With(middleware.RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)).
+						Post("/", createApplicationVersion)
+				})
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
 				r.With(middleware.RequireVendor, applicationMiddleware).Put("/", updateApplicationVersion)

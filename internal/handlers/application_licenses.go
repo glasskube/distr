@@ -22,12 +22,12 @@ import (
 func ApplicationLicensesRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
-	r.With(middleware.RequireVendor).Post("/", createApplicationLicense)
-	r.Route("/{applicationLicenseId}", func(r chi.Router) {
-		r.With(applicationLicenseMiddleware).Group(func(r chi.Router) {
-			r.Get("/", getApplicationLicense)
-			r.With(middleware.RequireVendor).Delete("/", deleteApplicationLicense)
-			r.With(middleware.RequireVendor).Put("/", updateApplicationLicense)
+	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Post("/", createApplicationLicense)
+	r.With(applicationLicenseMiddleware).Route("/{applicationLicenseId}", func(r chi.Router) {
+		r.Get("/", getApplicationLicense)
+		r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+			r.Delete("/", deleteApplicationLicense)
+			r.Put("/", updateApplicationLicense)
 		})
 	})
 }

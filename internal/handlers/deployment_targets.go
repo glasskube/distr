@@ -29,13 +29,15 @@ import (
 func DeploymentTargetsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getDeploymentTargets)
-	r.Post("/", createDeploymentTarget)
+	r.With(middleware.RequireReadWriteOrAdmin).Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
 		r.Use(deploymentTargetMiddleware)
 		r.Get("/", getDeploymentTarget)
-		r.Put("/", updateDeploymentTarget)
-		r.Delete("/", deleteDeploymentTarget)
-		r.Post("/access-request", createAccessForDeploymentTarget)
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+			r.Put("/", updateDeploymentTarget)
+			r.Delete("/", deleteDeploymentTarget)
+			r.Post("/access-request", createAccessForDeploymentTarget)
+		})
 	})
 }
 

@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -67,13 +68,13 @@ func LoggingMiddleware(handler http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func UserRoleMiddleware(userRole types.UserRole) func(handler http.Handler) http.Handler {
+func RequireAnyUserRole(userRoles ...types.UserRole) func(handler http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			if auth, err := auth.Authentication.Get(ctx); err != nil {
 				http.Error(w, err.Error(), http.StatusForbidden)
-			} else if auth.CurrentUserRole() == nil || *auth.CurrentUserRole() != userRole {
+			} else if auth.CurrentUserRole() == nil || !slices.Contains(userRoles, *auth.CurrentUserRole()) {
 				http.Error(w, "insufficient permissions", http.StatusForbidden)
 			} else {
 				handler.ServeHTTP(w, r)
@@ -82,6 +83,9 @@ func UserRoleMiddleware(userRole types.UserRole) func(handler http.Handler) http
 		return http.HandlerFunc(fn)
 	}
 }
+
+var RequireReadWriteOrAdmin = RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)
+var RequireAdmin = RequireAnyUserRole(types.UserRoleAdmin)
 
 func RequireVendor(handler http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {

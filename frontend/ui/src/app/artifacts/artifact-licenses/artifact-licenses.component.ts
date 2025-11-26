@@ -1,20 +1,10 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
+import {Component, inject, TemplateRef} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {
-  catchError,
-  EMPTY,
-  filter,
-  firstValueFrom,
-  map,
-  Observable,
-  shareReplay,
-  Subject,
-  switchMap,
-  takeUntil,
-} from 'rxjs';
+import {catchError, EMPTY, filter, firstValueFrom, map, Observable, shareReplay, switchMap} from 'rxjs';
 import {isExpired} from '../../../util/dates';
 import {getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';
@@ -22,31 +12,21 @@ import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {modalFlyInOut} from '../../animations/modal';
 import {UuidComponent} from '../../components/uuid';
-import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {
   ArtifactLicense,
   ArtifactLicenseSelection,
   ArtifactLicensesService,
 } from '../../services/artifact-licenses.service';
 import {ArtifactsService} from '../../services/artifacts.service';
+import {AuthService} from '../../services/auth.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-artifact-licenses',
-  imports: [
-    ReactiveFormsModule,
-    AsyncPipe,
-    FaIconComponent,
-    UuidComponent,
-    DatePipe,
-    RequireVendorDirective,
-    EditArtifactLicenseComponent,
-  ],
+  imports: [ReactiveFormsModule, AsyncPipe, FaIconComponent, UuidComponent, DatePipe, EditArtifactLicenseComponent],
   templateUrl: './artifact-licenses.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })

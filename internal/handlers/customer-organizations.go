@@ -21,9 +21,11 @@ import (
 func CustomerOrganizationsRouter(r chi.Router) {
 	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getCustomerOrganizationsHandler())
-		r.Post("/", createCustomerOrganizationHandler())
-		r.Put("/{id}", updateCustomerOrganizationHandler())
-		r.Delete("/{id}", deleteCustomerOrganizationHandler())
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+			r.Post("/", createCustomerOrganizationHandler())
+			r.Put("/{id}", updateCustomerOrganizationHandler())
+			r.Delete("/{id}", deleteCustomerOrganizationHandler())
+		})
 	})
 }
 

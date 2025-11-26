@@ -24,14 +24,15 @@ import (
 
 func DeploymentsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
-	r.Put("/", putDeployment)
-	r.Route("/{deploymentId}", func(r chi.Router) {
-		r.Use(deploymentMiddleware)
-		r.Patch("/", patchDeploymentHandler())
-		r.Delete("/", deleteDeploymentHandler())
+	r.With(middleware.RequireReadWriteOrAdmin).Put("/", putDeployment)
+	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chi.Router) {
 		r.Get("/status", getDeploymentStatus)
 		r.Get("/logs", getDeploymentLogsHandler())
 		r.Get("/logs/resources", getDeploymentLogsResourcesHandler())
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+			r.Patch("/", patchDeploymentHandler())
+			r.Delete("/", deleteDeploymentHandler())
+		})
 	})
 }
 

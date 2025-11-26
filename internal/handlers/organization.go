@@ -22,9 +22,8 @@ import (
 func OrganizationRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganization)
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.RequireVendor)
-		r.Put("/", updateOrganization)
+	r.With(middleware.RequireVendor).Group(func(r chi.Router) {
+		r.With(middleware.RequireAdmin).Put("/", updateOrganization)
 		r.Post("/", createOrganization)
 	})
 	r.Route("/branding", OrganizationBrandingRouter)

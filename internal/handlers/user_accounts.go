@@ -28,8 +28,8 @@ import (
 func UserAccountsRouter(r chi.Router) {
 	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
-		r.Post("/", createUserAccountHandler)
-		r.Route("/{userId}", func(r chi.Router) {
+		r.With(middleware.RequireReadWriteOrAdmin).Post("/", createUserAccountHandler)
+		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
 			r.Delete("/", deleteUserAccountHandler)
 			r.Patch("/image", patchImageUserAccount)
@@ -91,7 +91,17 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	userHasExisted := false
 
 	if customerOrgID := auth.CurrentCustomerOrgID(); customerOrgID != nil {
+		if *auth.CurrentUserRole() != types.UserRoleAdmin {
+			http.Error(w, "must be admin to create users", http.StatusForbidden)
+			return
+		}
+
 		body.CustomerOrganizationID = customerOrgID
+	} else {
+		if *auth.CurrentUserRole() != types.UserRoleAdmin && body.CustomerOrganizationID == nil {
+			http.Error(w, "user must be admin to create non-customer users", http.StatusForbidden)
+			return
+		}
 	}
 
 	if body.CustomerOrganizationID != nil {
@@ -245,6 +255,19 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	userAccount := internalctx.GetUserAccount(ctx)
 	auth := auth.Authentication.Require(ctx)
+
+	if *auth.CurrentUserRole() != types.UserRoleAdmin {
+		if auth.CurrentCustomerOrgID() != nil {
+			http.Error(w, "admin role needed to delete user", http.StatusForbidden)
+			return
+		}
+
+		if userAccount.CustomerOrganizationID == nil {
+			http.Error(w, "admin role needed to delete non-customer user", http.StatusForbidden)
+			return
+		}
+	}
+
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.RunTx(ctx, func(ctx context.Context) error {
