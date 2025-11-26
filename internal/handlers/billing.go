@@ -25,6 +25,7 @@ func BillingRouter(r chi.Router) {
 
 	r.Get("/subscription", getSubscriptionHandler)
 	r.Post("/subscription", postSubscriptionHandler)
+	r.Post("/customer-portal", createCustomerPortalSessionHandler)
 }
 
 func getSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
@@ -232,6 +233,51 @@ func postSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, api.CheckoutResponse{
 		SessionID: session.ID,
 		URL:       session.URL,
+	})
+}
+
+func createCustomerPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	auth := auth.Authentication.Require(ctx)
+	org := auth.CurrentOrg()
+
+	// Check if organization has a Stripe customer ID
+	if org.StripeCustomerId == nil || *org.StripeCustomerId == "" {
+		http.Error(w, "no stripe customer found for organization", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		ReturnURL string `json:"returnUrl"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		log.Debug("bad json payload", zap.Error(err))
+		http.Error(w, "bad json payload", http.StatusBadRequest)
+		return
+	}
+
+	// Default return URL if not provided
+	if body.ReturnURL == "" {
+		body.ReturnURL = r.Header.Get("Referer")
+		if body.ReturnURL == "" {
+			body.ReturnURL = "/subscription"
+		}
+	}
+
+	session, err := billing.CreateCustomerPortalSession(ctx, billing.CustomerPortalSessionParams{
+		CustomerID: *org.StripeCustomerId,
+		ReturnURL:  body.ReturnURL,
+	})
+	if err != nil {
+		log.Error("failed to create customer portal session", zap.Error(err))
+		http.Error(w, "failed to create customer portal session", http.StatusInternalServerError)
+		return
+	}
+
+	RespondJSON(w, map[string]string{
+		"url": session.URL,
 	})
 }
 

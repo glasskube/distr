@@ -26,7 +26,8 @@ const (
 		o.email_from_address,
 		o.subscription_type,
 		o.subscription_ends_at,
-		o.subscription_external_id,
+		o.stripe_customer_id,
+		o.stripe_subscription_id,
 		o.subscription_customer_organization_quantity,
 		o.subscription_user_account_quantity
 	`
@@ -64,18 +65,20 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			slug = @slug,
 			subscription_type = @subscription_type,
 			subscription_ends_at = @subscription_ends_at,
-			subscription_external_id = @subscription_external_id,
+			stripe_customer_id = @stripe_customer_id,
+			stripe_subscription_id = @stripe_subscription_id,
 			subscription_customer_organization_quantity = @subscription_customer_organization_quantity,
 			subscription_user_account_quantity = @subscription_user_account_quantity
 		WHERE id = @id
 		RETURNING `+organizationOutputExpr,
 		pgx.NamedArgs{
-			"id":                       org.ID,
-			"name":                     org.Name,
-			"slug":                     org.Slug,
-			"subscription_type":        org.SubscriptionType,
-			"subscription_ends_at":     org.SubscriptionEndsAt.UTC(),
-			"subscription_external_id": org.StripeSubscriptionId,
+			"id":                     org.ID,
+			"name":                   org.Name,
+			"slug":                   org.Slug,
+			"subscription_type":      org.SubscriptionType,
+			"subscription_ends_at":   org.SubscriptionEndsAt.UTC(),
+			"stripe_customer_id":     org.StripeCustomerId,
+			"stripe_subscription_id": org.StripeSubscriptionId,
 			"subscription_customer_organization_quantity": org.SubscriptionCustomerOrganizationQty,
 			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
 		},
@@ -141,7 +144,7 @@ func GetOrganizationBySubscriptionID(ctx context.Context, subscriptionID string)
 
 	rows, err := db.Query(
 		ctx,
-		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE subscription_external_id = @id",
+		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE stripe_subscription_id = @id",
 		pgx.NamedArgs{"subscriptionId": subscriptionID},
 	)
 	if err != nil {

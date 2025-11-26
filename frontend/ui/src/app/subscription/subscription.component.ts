@@ -1,6 +1,6 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faShoppingCart} from '@fortawesome/free-solid-svg-icons';
+import {faShoppingCart, faCreditCard} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
@@ -16,12 +16,12 @@ import {CommonModule} from '@angular/common';
 })
 export class SubscriptionComponent implements OnInit {
   protected readonly faShoppingCart = faShoppingCart;
+  protected readonly faCreditCard = faCreditCard;
 
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
 
-  protected subscriptionInfo = signal<SubscriptionInfo | null>(null);
-  protected loading = signal(true);
+  protected subscriptionInfo = signal<SubscriptionInfo | undefined>(undefined);
 
   protected readonly form = new FormGroup({
     subscriptionType: new FormControl<SubscriptionType>('pro', [Validators.required]),
@@ -48,8 +48,6 @@ export class SubscriptionComponent implements OnInit {
       if (msg) {
         this.toast.error(msg);
       }
-    } finally {
-      this.loading.set(false);
     }
   }
 
@@ -86,6 +84,32 @@ export class SubscriptionComponent implements OnInit {
         };
 
         // Call the checkout endpoint which will redirect to Stripe
+        await this.subscriptionService.checkout(body);
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      }
+    }
+  }
+
+  async updateQuantities() {
+    this.form.markAllAsTouched();
+    if (this.form.valid) {
+      const info = this.subscriptionInfo();
+      if (!info) return;
+
+      try {
+        const body = {
+          subscriptionType: info.subscriptionType,
+          billingMode: 'monthly' as const, // Use current billing mode
+          subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
+          subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
+          currency: 'usd', // Use current currency
+        };
+
+        // Call the checkout endpoint which will create a new subscription with updated quantities
         await this.subscriptionService.checkout(body);
       } catch (e) {
         const msg = getFormDisplayedError(e);
@@ -148,5 +172,50 @@ export class SubscriptionComponent implements OnInit {
       info.currentMaxUsersPerCustomer <= info.starterLimits.maxUsersPerCustomerOrganization &&
       info.currentMaxDeploymentTargetsPerCustomer <= info.starterLimits.maxDeploymentsPerCustomerOrganization
     );
+  }
+
+  getPlanDisplayName(subscriptionType: SubscriptionType): string {
+    switch (subscriptionType) {
+      case 'trial':
+        return 'Trial';
+      case 'starter':
+        return 'Distr Starter';
+      case 'pro':
+        return 'Distr Pro';
+      case 'enterprise':
+        return 'Distr Enterprise';
+      default:
+        return '';
+    }
+  }
+
+  hasSubscriptionQuantityLimits(): boolean {
+    const info = this.subscriptionInfo();
+    return !!(
+      info &&
+      (info.subscriptionCustomerOrganizationQuantity !== null ||
+        info.subscriptionUserAccountQuantity !== null)
+    );
+  }
+
+  isTrialSubscription(): boolean {
+    const info = this.subscriptionInfo();
+    return info?.subscriptionType === 'trial';
+  }
+
+  hasActiveSubscription(): boolean {
+    const info = this.subscriptionInfo();
+    return info?.subscriptionType === 'starter' || info?.subscriptionType === 'pro';
+  }
+
+  async manageSubscription() {
+    try {
+      await this.subscriptionService.openCustomerPortal();
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    }
   }
 }

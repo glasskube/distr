@@ -9,7 +9,8 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/stripe/stripe-go/v83"
-	"github.com/stripe/stripe-go/v83/checkout/session"
+	"github.com/stripe/stripe-go/v83/billingportal/session"
+	checkoutsession "github.com/stripe/stripe-go/v83/checkout/session"
 )
 
 func GetSubscriptionType(subscription stripe.Subscription) (*types.SubscriptionType, error) {
@@ -105,6 +106,21 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 				"organizationId": params.OrganizationID,
 			},
 		},
+	}
+
+	return checkoutsession.New(sessionParams)
+}
+
+type CustomerPortalSessionParams struct {
+	CustomerID string
+	ReturnURL  string
+}
+
+func CreateCustomerPortalSession(ctx context.Context, params CustomerPortalSessionParams) (*stripe.BillingPortalSession, error) {
+	sessionParams := &stripe.BillingPortalSessionParams{
+		Params:    stripe.Params{Context: ctx},
+		Customer:  util.PtrTo(params.CustomerID),
+		ReturnURL: util.PtrTo(params.ReturnURL),
 	}
 
 	return session.New(sessionParams)

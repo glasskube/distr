@@ -31,4 +31,21 @@ export class SubscriptionService {
 
     window.location.href = response.url;
   }
+
+  async openCustomerPortal(returnUrl?: string): Promise<void> {
+    // Create customer portal session on backend
+    const response = await firstValueFrom(
+      this.httpClient.post<{
+        url: string;
+      }>('/api/v1/billing/customer-portal', {
+        returnUrl: returnUrl || window.location.href,
+      })
+    );
+
+    if (!response?.url) {
+      throw new Error('Failed to create customer portal session');
+    }
+
+    window.location.href = response.url;
+  }
 }

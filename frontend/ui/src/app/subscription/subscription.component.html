@@ -7,15 +7,7 @@
         </h1>
         <p class="text-gray-500 dark:text-gray-400">Manage your Distr subscription and view usage.</p>
 
-        @if (loading()) {
-          <div class="flex justify-center items-center py-8">
-            <div
-              class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-              role="status">
-              <span class="sr-only">Loading...</span>
-            </div>
-          </div>
-        } @else if (subscriptionInfo()) {
+        @if (subscriptionInfo(); as subscriptionInfoData) {
           <form [formGroup]="form" (ngSubmit)="checkout()">
             <div class="grid gap-6 mb-4 sm:mb-6 mt-6">
               <!-- Current Usage -->
@@ -25,46 +17,62 @@
                   <div class="flex flex-col p-4 bg-orange-50 dark:bg-gray-700 rounded-lg text-center">
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Internal Users</p>
                     <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-auto">
-                      {{ subscriptionInfo()!.currentUserAccountCount }}
+                      {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">vendor team members</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      @if (subscriptionInfoData.subscriptionUserAccountQuantity !== null) {
+                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} allowed
+                        <br />
+                        <span class="text-xs text-gray-400">
+                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} limit
+                        </span>
+                      } @else {
+                        vendor team members
+                      }
+                    </p>
                   </div>
                   <div class="flex flex-col p-4 bg-blue-50 dark:bg-gray-700 rounded-lg text-center">
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Customer Organizations</p>
                     <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-auto">
-                      {{ subscriptionInfo()!.currentCustomerOrganizationCount }}
+                      {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfo()!.subscriptionType === 'trial') {
+                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity !== null) {
+                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} allowed
+                        <br />
+                        <span class="text-xs text-gray-400">
+                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} limit
+                        </span>
+                      } @else if (subscriptionInfoData.subscriptionType === 'trial') {
                         of
                         {{
-                          subscriptionInfo()!.trialLimits.maxCustomerOrganizations === -1
+                          subscriptionInfoData.trialLimits.maxCustomerOrganizations === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.trialLimits.maxCustomerOrganizations
+                            : subscriptionInfoData.trialLimits.maxCustomerOrganizations
                         }}
                         allowed
-                      } @else if (subscriptionInfo()!.subscriptionType === 'starter') {
+                      } @else if (subscriptionInfoData.subscriptionType === 'starter') {
                         of
                         {{
-                          subscriptionInfo()!.starterLimits.maxCustomerOrganizations === -1
+                          subscriptionInfoData.starterLimits.maxCustomerOrganizations === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.starterLimits.maxCustomerOrganizations
+                            : subscriptionInfoData.starterLimits.maxCustomerOrganizations
                         }}
                         allowed
-                      } @else if (subscriptionInfo()!.subscriptionType === 'pro') {
+                      } @else if (subscriptionInfoData.subscriptionType === 'pro') {
                         of
                         {{
-                          subscriptionInfo()!.proLimits.maxCustomerOrganizations === -1
+                          subscriptionInfoData.proLimits.maxCustomerOrganizations === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.proLimits.maxCustomerOrganizations
+                            : subscriptionInfoData.proLimits.maxCustomerOrganizations
                         }}
                         allowed
                       } @else {
                         of
                         {{
-                          subscriptionInfo()!.enterpriseLimits.maxCustomerOrganizations === -1
+                          subscriptionInfoData.enterpriseLimits.maxCustomerOrganizations === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.enterpriseLimits.maxCustomerOrganizations
+                            : subscriptionInfoData.enterpriseLimits.maxCustomerOrganizations
                         }}
                         allowed
                       }
@@ -73,39 +81,39 @@
                   <div class="flex flex-col p-4 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Highest User count per Customer</p>
                     <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-auto">
-                      {{ subscriptionInfo()!.currentMaxUsersPerCustomer }}
+                      {{ subscriptionInfoData.currentMaxUsersPerCustomer }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfo()!.subscriptionType === 'trial') {
+                      @if (subscriptionInfoData.subscriptionType === 'trial') {
                         of
                         {{
-                          subscriptionInfo()!.trialLimits.maxUsersPerCustomerOrganization === -1
+                          subscriptionInfoData.trialLimits.maxUsersPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.trialLimits.maxUsersPerCustomerOrganization
+                            : subscriptionInfoData.trialLimits.maxUsersPerCustomerOrganization
                         }}
                         allowed
-                      } @else if (subscriptionInfo()!.subscriptionType === 'starter') {
+                      } @else if (subscriptionInfoData.subscriptionType === 'starter') {
                         of
                         {{
-                          subscriptionInfo()!.starterLimits.maxUsersPerCustomerOrganization === -1
+                          subscriptionInfoData.starterLimits.maxUsersPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.starterLimits.maxUsersPerCustomerOrganization
+                            : subscriptionInfoData.starterLimits.maxUsersPerCustomerOrganization
                         }}
                         allowed
-                      } @else if (subscriptionInfo()!.subscriptionType === 'pro') {
+                      } @else if (subscriptionInfoData.subscriptionType === 'pro') {
                         of
                         {{
-                          subscriptionInfo()!.proLimits.maxUsersPerCustomerOrganization === -1
+                          subscriptionInfoData.proLimits.maxUsersPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.proLimits.maxUsersPerCustomerOrganization
+                            : subscriptionInfoData.proLimits.maxUsersPerCustomerOrganization
                         }}
                         allowed
                       } @else {
                         of
                         {{
-                          subscriptionInfo()!.enterpriseLimits.maxUsersPerCustomerOrganization === -1
+                          subscriptionInfoData.enterpriseLimits.maxUsersPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.enterpriseLimits.maxUsersPerCustomerOrganization
+                            : subscriptionInfoData.enterpriseLimits.maxUsersPerCustomerOrganization
                         }}
                         allowed
                       }
@@ -114,39 +122,39 @@
                   <div class="flex flex-col p-4 bg-purple-50 dark:bg-gray-700 rounded-lg text-center">
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Highest Deployment count per Customer</p>
                     <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-auto">
-                      {{ subscriptionInfo()!.currentMaxDeploymentTargetsPerCustomer }}
+                      {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfo()!.subscriptionType === 'trial') {
+                      @if (subscriptionInfoData.subscriptionType === 'trial') {
                         of
                         {{
-                          subscriptionInfo()!.trialLimits.maxDeploymentsPerCustomerOrganization === -1
+                          subscriptionInfoData.trialLimits.maxDeploymentsPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.trialLimits.maxDeploymentsPerCustomerOrganization
+                            : subscriptionInfoData.trialLimits.maxDeploymentsPerCustomerOrganization
                         }}
                         allowed
-                      } @else if (subscriptionInfo()!.subscriptionType === 'starter') {
+                      } @else if (subscriptionInfoData.subscriptionType === 'starter') {
                         of
                         {{
-                          subscriptionInfo()!.starterLimits.maxDeploymentsPerCustomerOrganization === -1
+                          subscriptionInfoData.starterLimits.maxDeploymentsPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.starterLimits.maxDeploymentsPerCustomerOrganization
+                            : subscriptionInfoData.starterLimits.maxDeploymentsPerCustomerOrganization
                         }}
                         allowed
-                      } @else if (subscriptionInfo()!.subscriptionType === 'pro') {
+                      } @else if (subscriptionInfoData.subscriptionType === 'pro') {
                         of
                         {{
-                          subscriptionInfo()!.proLimits.maxDeploymentsPerCustomerOrganization === -1
+                          subscriptionInfoData.proLimits.maxDeploymentsPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.proLimits.maxDeploymentsPerCustomerOrganization
+                            : subscriptionInfoData.proLimits.maxDeploymentsPerCustomerOrganization
                         }}
                         allowed
                       } @else {
                         of
                         {{
-                          subscriptionInfo()!.enterpriseLimits.maxDeploymentsPerCustomerOrganization === -1
+                          subscriptionInfoData.enterpriseLimits.maxDeploymentsPerCustomerOrganization === -1
                             ? 'unlimited'
-                            : subscriptionInfo()!.enterpriseLimits.maxDeploymentsPerCustomerOrganization
+                            : subscriptionInfoData.enterpriseLimits.maxDeploymentsPerCustomerOrganization
                         }}
                         allowed
                       }
@@ -162,19 +170,103 @@
                   <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Plan</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                      {{ subscriptionInfo()!.subscriptionType }}
+                      {{ subscriptionInfoData.subscriptionType }}
                     </p>
                   </div>
                   <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Ends At</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white">
-                      {{ subscriptionInfo()!.subscriptionEndsAt | date: 'medium' }}
+                      {{ subscriptionInfoData.subscriptionEndsAt | date: 'medium' }}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <!-- Plan Selection -->
+              <!-- Manage Subscription (for active subscriptions) -->
+              @if (hasActiveSubscription()) {
+                <div class="space-y-4">
+                  <h2 class="text-xl font-bold dark:text-white">Manage Subscription</h2>
+                  <div
+                    class="p-6 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 rounded-lg">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Access the Stripe Customer Portal to manage your subscription, download invoices, and update your
+                      payment method.
+                    </p>
+                    <button
+                      type="button"
+                      (click)="manageSubscription()"
+                      class="text-white inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-6 py-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                      <fa-icon [icon]="faCreditCard" size="lg" class="h-4 w-4 mr-2"></fa-icon>
+                      Manage Subscription & Billing
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Change License Quantities -->
+                <div class="space-y-4">
+                  <h2 class="text-xl font-bold dark:text-white">Change License Quantities</h2>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Update your license quantities below. Changes will be reflected in your next billing cycle.
+                  </p>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="userAccountQuantity"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Internal Users *
+                      </label>
+                      <input
+                        formControlName="userAccountQuantity"
+                        type="number"
+                        name="userAccountQuantity"
+                        id="userAccountQuantity"
+                        [min]="subscriptionInfoData.currentUserAccountCount"
+                        class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        [placeholder]="subscriptionInfoData.currentUserAccountCount.toString()"
+                        required />
+                      <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        Number of internal team members (minimum: {{
+                          subscriptionInfoData.currentUserAccountCount
+                        }})
+                      </p>
+                    </div>
+                    <div>
+                      <label
+                        for="customerOrganizationQuantity"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Customer Organizations *
+                      </label>
+                      <input
+                        formControlName="customerOrganizationQuantity"
+                        type="number"
+                        name="customerOrganizationQuantity"
+                        id="customerOrganizationQuantity"
+                        [min]="subscriptionInfoData.currentCustomerOrganizationCount"
+                        class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        [placeholder]="subscriptionInfoData.currentCustomerOrganizationCount.toString()"
+                        required />
+                      <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        Number of external customer organizations (minimum: {{
+                          subscriptionInfoData.currentCustomerOrganizationCount
+                        }})
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      (click)="updateQuantities()"
+                      [disabled]="form.invalid"
+                      class="text-white inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-6 py-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                      <fa-icon [icon]="faShoppingCart" size="lg" class="h-4 w-4 mr-2"></fa-icon>
+                      Update Quantities
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- Plan Selection (for trial subscriptions) -->
+              @if (isTrialSubscription()) {
               <div class="space-y-4">
                 <h2 class="text-xl font-bold dark:text-white">Choose Your Plan</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -232,7 +324,7 @@
                 </div>
               </div>
 
-              <!-- Billing Mode -->
+              <!-- Billing Mode (for trial subscriptions) -->
               <div class="space-y-4">
                 <h2 class="text-xl font-bold dark:text-white">Billing Period</h2>
                 <div class="flex gap-4">
@@ -359,6 +451,7 @@
                   .
                 </p>
               </div>
+              }
             </div>
           </form>
         }
