@@ -194,6 +194,38 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func patchUserAccountHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.Authentication.Require(ctx)
+		userAccount := internalctx.GetUserAccount(ctx)
+
+		if *auth.CurrentUserRole() != types.UserRoleAdmin {
+			if auth.CurrentCustomerOrgID() != nil {
+				http.Error(w, "admin role needed to patch user", http.StatusForbidden)
+				return
+			}
+
+			if userAccount.CustomerOrganizationID == nil {
+				http.Error(w, "admin role needed to patch non-customer user", http.StatusForbidden)
+				return
+			}
+		}
+
+		body, err := JsonBody[struct {
+			UserRole *types.UserRole `json:"userRole"`
+		}](w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if body.UserRole != nil && *body.UserRole != userAccount.UserRole {
+		}
+	}
+}
+
 func resendUserInviteHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
