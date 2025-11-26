@@ -1,63 +1,95 @@
-import {
-  Directive,
-  EmbeddedViewRef,
-  inject,
-  Input,
-  OnChanges,
-  OnInit,
-  SimpleChanges,
-  TemplateRef,
-  ViewContainerRef,
-} from '@angular/core';
-import {AuthService} from '../services/auth.service';
+import {Directive, effect, EmbeddedViewRef, inject, input, OnInit, TemplateRef, ViewContainerRef} from '@angular/core';
 import {UserRole} from '@glasskube/distr-sdk';
+import {AuthService} from '../services/auth.service';
 
-@Directive({selector: '[appRequiredRole]'})
-export class RequireRoleDirective implements OnChanges {
-  private readonly auth = inject(AuthService);
+abstract class EmbeddedViewToggler {
   private readonly templateRef = inject(TemplateRef);
   private readonly viewContainerRef = inject(ViewContainerRef);
   private embeddedViewRef: EmbeddedViewRef<unknown> | null = null;
-  @Input({required: true, alias: 'appRequiredRole'}) public role!: UserRole;
 
-  public ngOnChanges(changes: SimpleChanges): void {
-    if (changes['role']) {
-      if (this.auth.hasRole(this.role)) {
-        if (this.embeddedViewRef === null) {
-          this.embeddedViewRef = this.viewContainerRef.createEmbeddedView(this.templateRef);
-        }
-      } else {
-        if (this.embeddedViewRef !== null) {
-          this.embeddedViewRef.destroy();
-          this.embeddedViewRef = null;
-        }
-      }
+  protected showEmbeddedView() {
+    if (this.embeddedViewRef === null) {
+      this.embeddedViewRef = this.viewContainerRef.createEmbeddedView(this.templateRef);
     }
+  }
+
+  protected hideEmbeddedView() {
+    if (this.embeddedViewRef !== null) {
+      this.embeddedViewRef.destroy();
+      this.embeddedViewRef = null;
+    }
+  }
+
+  protected toggleEmbeddedView(value: boolean) {
+    if (value) {
+      this.showEmbeddedView();
+    } else {
+      this.hideEmbeddedView();
+    }
+  }
+}
+
+@Directive({selector: '[appRequiredRole]'})
+export class RequireRoleDirective extends EmbeddedViewToggler {
+  public readonly role = input.required<UserRole | UserRole[]>({alias: 'appRequiredRole'});
+
+  private readonly auth = inject(AuthService);
+
+  constructor() {
+    super();
+    effect(() => this.toggleEmbeddedView(this.auth.hasAnyRole(...[this.role()].flat())));
   }
 }
 
 @Directive({selector: '[appRequireVendor]'})
-export class RequireVendorDirective implements OnInit {
+export class RequireVendorDirective extends EmbeddedViewToggler implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly templateRef = inject(TemplateRef);
-  private readonly viewContainerRef = inject(ViewContainerRef);
 
   public ngOnInit(): void {
-    if (this.auth.isVendor()) {
-      this.viewContainerRef.createEmbeddedView(this.templateRef);
-    }
+    console.log('RequireVendorDirective ngOnInit', this.auth.isVendor());
+    this.toggleEmbeddedView(this.auth.isVendor());
   }
 }
 
 @Directive({selector: '[appRequireCustomer]'})
-export class RequireCustomerDirective implements OnInit {
+export class RequireCustomerDirective extends EmbeddedViewToggler implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly templateRef = inject(TemplateRef);
-  private readonly viewContainerRef = inject(ViewContainerRef);
 
   public ngOnInit(): void {
-    if (this.auth.isCustomer()) {
-      this.viewContainerRef.createEmbeddedView(this.templateRef);
+    this.toggleEmbeddedView(this.auth.isCustomer());
+  }
+}
+
+export interface PermissionsInput {
+  customer?: boolean;
+  vendor?: boolean;
+  role?: UserRole | UserRole[];
+}
+
+@Directive({selector: '[appPermissions]'})
+export class PermissionsDirective extends EmbeddedViewToggler {
+  public readonly permissions = input.required<PermissionsInput>({alias: 'appPermissions'});
+
+  private readonly auth = inject(AuthService);
+
+  constructor() {
+    super();
+    effect(() => this.toggleEmbeddedView(this.isSatisfied(this.permissions())));
+  }
+
+  private isSatisfied(permissions: PermissionsInput): boolean {
+    if (permissions.customer && !this.auth.isCustomer()) {
+      return false;
     }
+
+    if (permissions.vendor && !this.auth.isVendor()) {
+      return false;
+    }
+
+    if (permissions.role && !this.auth.hasAnyRole(...[permissions.role].flat())) {
+      return false;
+    }
+
+    return true;
   }
 }

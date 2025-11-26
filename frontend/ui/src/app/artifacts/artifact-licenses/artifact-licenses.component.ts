@@ -33,6 +33,8 @@ import {CustomerOrganizationsService} from '../../services/customer-organization
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-artifact-licenses',
@@ -48,18 +50,30 @@ import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
   templateUrl: './artifact-licenses.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ArtifactLicensesComponent implements OnDestroy {
-  private readonly destroyed$ = new Subject<void>();
+export class ArtifactLicensesComponent {
+  protected readonly auth = inject(AuthService);
   private readonly artifactLicensesService = inject(ArtifactLicensesService);
+  private readonly overlay = inject(OverlayService);
+  private readonly toast = inject(ToastService);
+  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
+  private readonly artifactsService = inject(ArtifactsService);
+
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPen = faPen;
+  protected readonly faPlus = faPlus;
+  protected readonly faTrash = faTrash;
+  protected readonly faXmark = faXmark;
+  protected readonly isExpired = isExpired;
 
   filterForm = new FormGroup({
     search: new FormControl(''),
   });
+
   licenses$: Observable<ArtifactLicense[]> = filteredByFormControl(
     this.artifactLicensesService.list(),
     this.filterForm.controls.search,
     (it: ArtifactLicense, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
-  ).pipe(takeUntil(this.destroyed$));
+  ).pipe(takeUntilDestroyed());
 
   editForm = new FormGroup({
     license: new FormControl<ArtifactLicense | undefined>(undefined, {
@@ -70,15 +84,10 @@ export class ArtifactLicensesComponent implements OnDestroy {
   editFormLoading = false;
 
   private manageLicenseDrawerRef?: DialogRef;
-  protected readonly faMagnifyingGlass = faMagnifyingGlass;
 
-  private readonly overlay = inject(OverlayService);
-  private readonly toast = inject(ToastService);
-  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
   private readonly customerOrganizations$ = this.customerOrganizationService
     .getCustomerOrganizations()
     .pipe(shareReplay(1));
-  private readonly artifactsService = inject(ArtifactsService);
   private readonly artifacts$ = this.artifactsService.list();
 
   openDrawer(templateRef: TemplateRef<unknown>, license?: ArtifactLicense) {
@@ -138,11 +147,6 @@ export class ArtifactLicensesComponent implements OnDestroy {
       .subscribe();
   }
 
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
-  }
-
   getArtifactColumn(selection?: ArtifactLicenseSelection[]): Observable<string | undefined> {
     return selection?.[0]?.artifactId
       ? this.artifacts$.pipe(
@@ -157,10 +161,4 @@ export class ArtifactLicensesComponent implements OnDestroy {
       ? this.customerOrganizations$.pipe(map((users) => users.find((u) => u.id === customerOrganizationId)?.name))
       : EMPTY;
   }
-
-  protected readonly faPlus = faPlus;
-  protected readonly isExpired = isExpired;
-  protected readonly faPen = faPen;
-  protected readonly faTrash = faTrash;
-  protected readonly faXmark = faXmark;
 }

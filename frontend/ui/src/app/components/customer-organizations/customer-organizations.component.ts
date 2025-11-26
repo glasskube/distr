@@ -24,6 +24,7 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UuidComponent} from '../uuid';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   templateUrl: './customer-organizations.component.html',
@@ -54,6 +55,7 @@ export class CustomerOrganizationsComponent {
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(FormBuilder).nonNullable;
   protected readonly featureFlags = inject(FeatureFlagService);
+  protected readonly auth = inject(AuthService);
 
   protected readonly filterForm = this.fb.group({
     search: this.fb.control(''),

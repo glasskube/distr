@@ -24,6 +24,7 @@ import {OrganizationService} from '../../services/organization.service';
 import {OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -45,6 +46,7 @@ import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, Artifac
   templateUrl: './artifact-versions.component.html',
 })
 export class ArtifactVersionsComponent {
+  protected readonly auth = inject(AuthService);
   private readonly artifacts = inject(ArtifactsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

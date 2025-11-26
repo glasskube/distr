@@ -1,4 +1,4 @@
-import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
+import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -39,7 +39,6 @@ import {UuidComponent} from '../uuid';
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
-    TitleCasePipe,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],

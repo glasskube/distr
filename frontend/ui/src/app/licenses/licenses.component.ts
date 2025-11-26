@@ -19,6 +19,8 @@ import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {ApplicationLicense} from '../types/application-license';
 import {EditLicenseComponent} from './edit-license.component';
+import {AuthService} from '../services/auth.service';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-licenses',
@@ -35,19 +37,21 @@ import {EditLicenseComponent} from './edit-license.component';
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class LicensesComponent implements OnDestroy {
-  private readonly destroyed$ = new Subject<void>();
+export class LicensesComponent {
+  protected readonly auth = inject(AuthService);
   private readonly licensesService = inject(LicensesService);
   private readonly applicationsService = inject(ApplicationsService);
 
   filterForm = new FormGroup({
     search: new FormControl(''),
   });
+
   licenses$: Observable<ApplicationLicense[]> = filteredByFormControl(
     this.licensesService.list(),
     this.filterForm.controls.search,
     (it: ApplicationLicense, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
-  ).pipe(takeUntil(this.destroyed$));
+  ).pipe(takeUntilDestroyed());
+
   applications$ = this.applicationsService.list();
 
   editForm = new FormGroup({
@@ -56,6 +60,7 @@ export class LicensesComponent implements OnDestroy {
       validators: Validators.required,
     }),
   });
+
   editFormLoading = false;
 
   private manageLicenseDrawerRef?: DialogRef;
@@ -122,10 +127,5 @@ export class LicensesComponent implements OnDestroy {
         })
       )
       .subscribe();
-  }
-
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
   }
 }

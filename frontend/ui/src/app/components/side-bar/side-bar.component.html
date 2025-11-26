@@ -5,22 +5,24 @@
   #asideElement>
   <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
     <ul class="space-y-2 font-medium flex-1" *appRequireVendor>
-      <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/tutorials"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <fa-icon
-            [icon]="faLightbulb"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="flex-grow ms-3">Tutorials</span>
-          @if (tutorialsService.notAllStarted$ | async) {
-            <span class="w-2.5 h-2.5 mr-1.5 text-xs font-semibold rounded-full bg-blue-700 dark:bg-blue-600"></span>
-          }
-        </a>
-      </li>
+      @if (auth.hasAnyRole('admin')) {
+        <li>
+          <a
+            (click)="sidebar.hide()"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/tutorials"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faLightbulb"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="flex-grow ms-3">Tutorials</span>
+            @if (tutorialsService.notAllStarted$ | async) {
+              <span class="w-2.5 h-2.5 mr-1.5 text-xs font-semibold rounded-full bg-blue-700 dark:bg-blue-600"></span>
+            }
+          </a>
+        </li>
+      }
       <li>
         <a
           (click)="sidebar.hide()"
@@ -228,44 +230,50 @@
         </a>
       </li>
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/users">
-          <fa-icon
-            [icon]="faUsers"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Users</span>
-        </a>
-      </li>
+      @if (auth.hasRole('admin')) {
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/users">
+            <fa-icon
+              [icon]="faUsers"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Users</span>
+          </a>
+        </li>
+      }
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/branding">
-          <fa-icon
-            [icon]="faPalette"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Branding</span>
-        </a>
-      </li>
+      @if (auth.hasAnyRole('read_write', 'admin')) {
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/branding">
+            <fa-icon
+              [icon]="faPalette"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Branding</span>
+          </a>
+        </li>
+      }
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/settings">
-          <fa-icon
-            [icon]="faGear"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Settings</span>
-        </a>
-      </li>
+      @if (auth.hasRole('admin')) {
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/settings">
+            <fa-icon
+              [icon]="faGear"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Settings</span>
+          </a>
+        </li>
+      }
     </ul>
 
     <ul class="space-y-2 font-medium flex-1" *appRequireCustomer>
@@ -311,20 +319,22 @@
         </a>
       </li>
 
-      <hr class="border-gray-200 dark:border-gray-600" />
+      @if (auth.hasRole('admin')) {
+        <hr class="border-gray-200 dark:border-gray-600" />
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/users">
-          <fa-icon
-            [icon]="faUsers"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Users</span>
-        </a>
-      </li>
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/users">
+            <fa-icon
+              [icon]="faUsers"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Users</span>
+          </a>
+        </li>
+      }
     </ul>
 
     @if (feedbackAlert) {

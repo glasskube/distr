@@ -27,9 +27,9 @@ import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.
 import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
 
-function requiredRoleGuard(userRole: UserRole): CanActivateFn {
+function requiredRoleGuard(...userRole: UserRole[]): CanActivateFn {
   return () => {
-    if (inject(AuthService).hasRole(userRole)) {
+    if (inject(AuthService).hasAnyRole(...userRole)) {
       return true;
     }
     return inject(Router).createUrlTree(['/']);
@@ -122,18 +122,19 @@ export const routes: Routes = [
   {
     path: 'users',
     component: VendorUsersComponent,
+    canActivate: [requiredRoleGuard('admin')],
   },
   {
     path: 'branding',
     component: OrganizationBrandingComponent,
     data: {userRole: 'vendor'},
-    canActivate: [requireVendor],
+    canActivate: [requireVendor, requiredRoleGuard('read_write', 'admin')],
   },
   {
     path: 'settings',
     component: OrganizationSettingsComponent,
     data: {userRole: 'vendor'},
-    canActivate: [requireVendor],
+    canActivate: [requireVendor, requiredRoleGuard('admin')],
   },
   {
     path: 'licenses',
@@ -161,7 +162,7 @@ export const routes: Routes = [
   },
   {
     path: 'tutorials',
-    canActivate: [requireVendor],
+    canActivate: [requireVendor, requiredRoleGuard('admin')],
     children: [
       {
         path: '',

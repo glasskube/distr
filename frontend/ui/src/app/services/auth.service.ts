@@ -64,6 +64,10 @@ export class AuthService {
     return this.getClaims()?.role === role;
   }
 
+  public hasAnyRole(...roles: UserRole[]): boolean {
+    return roles.some((role) => this.hasRole(role));
+  }
+
   public isVendor(): boolean {
     return this.getClaims()?.c_org === undefined;
   }
