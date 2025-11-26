@@ -1,5 +1,5 @@
 import {Component, inject} from '@angular/core';
-import {startWith, Subject, switchMap} from 'rxjs';
+import {map, startWith, Subject, switchMap} from 'rxjs';
 import {UsersService} from '../../../services/users.service';
 import {UsersComponent} from '../users.component';
 import {toSignal} from '@angular/core/rxjs-interop';
@@ -22,7 +22,8 @@ export class VendorUsersComponent {
   protected readonly users = toSignal(
     this.refresh$.pipe(
       startWith(undefined),
-      switchMap(() => this.usersService.getUsers())
+      switchMap(() => this.usersService.getUsers()),
+      map((users) => (this.auth.isVendor() ? users.filter((user) => user.customerOrganizationId === undefined) : users))
     )
   );
   protected readonly userRole = this.auth.getClaims()!.role;

@@ -1,4 +1,4 @@
-import {AsyncPipe, DatePipe} from '@angular/common';
+import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
 import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -39,6 +39,7 @@ import {UuidComponent} from '../uuid';
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
+    TitleCasePipe,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
@@ -53,14 +54,15 @@ export class UsersComponent {
   private readonly overlay = inject(OverlayService);
   protected readonly auth = inject(AuthService);
 
-  protected readonly currentUserRole = this.auth.getClaims()!.role;
-
+  protected readonly faBox = faBox;
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faClipboard = faClipboard;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faPlus = faPlus;
   protected readonly faRepeat = faRepeat;
-  protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
-  protected readonly faClipboard = faClipboard;
+  protected readonly faUserCircle = faUserCircle;
+  protected readonly faXmark = faXmark;
 
   protected readonly filterForm = new FormGroup({
     search: new FormControl(''),
@@ -180,8 +182,4 @@ export class UsersComponent {
       this.toast.success('Invite URL has been copied');
     }
   }
-
-  protected readonly faCircleExclamation = faCircleExclamation;
-  protected readonly faUserCircle = faUserCircle;
-  protected readonly faBox = faBox;
 }
