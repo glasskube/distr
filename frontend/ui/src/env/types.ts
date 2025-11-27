@@ -1,5 +1,8 @@
+export type Edition = 'community' | 'enterprise';
+
 export interface Environment {
   production: boolean;
+  edition: Edition;
 }
 
 export interface RemoteEnvironment {

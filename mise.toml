@@ -22,23 +22,26 @@ sources = ["package.json", "pnpm-lock.yaml"]
 [tasks.go-tidy]
 run = 'go mod tidy'
 
-[tasks."build:frontend-dev"]
+[tasks."build:frontend:dev"]
 run = 'pnpm build:dev'
 depends = ["frontend-deps"]
 sources = ["node_modules/**/*", "frontend/ui/**/*"]
-outputs = ["internal/frontend/dist/ui/"]
 
-[tasks."build:frontend-prod"]
-run = 'pnpm build:prod'
+[tasks."build:frontend:community"]
+run = 'pnpm build:community'
 depends = ["frontend-deps"]
-sources = ["node_modules/**/*", "frontend/ui/**/*"]
-outputs = ["internal/frontend/dist/ui/"]
 
-[tasks."build:hub"]
-run = 'go build -ldflags="{{vars.ldflags}}" -o dist/distr ./cmd/hub'
-depends = ["go-tidy", "build:frontend-prod"]
-sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
-outputs = ["dist/distr"]
+[tasks."build:frontend:enterprise"]
+run = 'pnpm build:enterprise'
+depends = ["frontend-deps"]
+
+[tasks."build:hub:community"]
+run = 'go build -ldflags="{{vars.ldflags}} -X github.com/glasskube/distr/internal/buildconfig.edition=community" -o dist/distr ./cmd/hub'
+depends = ["go-tidy", "build:frontend:community"]
+
+[tasks."build:hub:enterprise"]
+run = 'go build -ldflags="{{vars.ldflags}} -X github.com/glasskube/distr/internal/buildconfig.edition=enterprise" -o dist/distr ./cmd/hub'
+depends = ["go-tidy", "build:frontend:enterprise"]
 
 [tasks."build:mcp"]
 run = 'go build -ldflags="{{vars.ldflags}}" -o dist/mcp-server ./cmd/mcp'
@@ -78,7 +81,7 @@ run = {tasks=["format:go", "format:frontend"]}
 alias = "serve"
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
 description = 'Starts the hub server. Protip: auto-reload with "mise watch serve -r"'
-depends = ["go-tidy", "build:frontend-dev"]
+depends = ["go-tidy", "build:frontend:dev"]
 sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
 
 [tasks."run:hub:db-migrate"]
