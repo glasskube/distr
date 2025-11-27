@@ -234,6 +234,13 @@ func GetVersionsForArtifact(ctx context.Context, artifactID uuid.UUID, customerO
 			AND av.name LIKE '%:%'
 			AND (
 				@isVendorUser
+				-- only check license if there is at least one license in this organization
+				OR NOT EXISTS (
+					SELECT al.id
+					FROM artifact a
+					JOIN ArtifactLicense al ON a.organization_id = al.organization_id
+					WHERE a.id = @artifactId
+				)
 				-- license check
 				OR EXISTS (
 					-- license for all versions of the artifact
