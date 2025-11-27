@@ -15,8 +15,6 @@ sdk/js/node_modules
 sdk/js/dist
 
 # IDEs and editors
-.idea/
-*.iml
 .project
 .classpath
 .c9/
