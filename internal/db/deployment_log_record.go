@@ -14,6 +14,7 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"go.uber.org/zap"
 )
 
 const (
@@ -181,26 +182,52 @@ func CleanupDeploymentLogRecords(ctx context.Context) (int64, error) {
 	}
 
 	db := internalctx.GetDb(ctx)
-	cmd, err := db.Exec(
+	log := internalctx.GetLogger(ctx)
+
+	rows, err := db.Query(
 		ctx,
-		`DELETE FROM DeploymentLogRecord
-		WHERE id NOT IN (
-			SELECT keep.id FROM (
-				SELECT DISTINCT lr.deployment_id, lr.resource FROM DeploymentLogRecord lr
-			) rn
-			JOIN LATERAL (
-				SELECT *
-				FROM DeploymentLogRecord lr
-				WHERE lr.deployment_id = rn.deployment_id AND lr.resource = rn.resource
-				ORDER BY lr.timestamp DESC
-				LIMIT @limit
-			) keep ON true
-		)`,
-		pgx.NamedArgs{"limit": limit},
+		`SELECT `+deploymentLogRecordOutputExpr+` FROM (
+			SELECT *,
+				row_number() OVER (PARTITION BY (deployment_id, resource) ORDER BY timestamp DESC) AS rnk
+				FROM DeploymentLogRecord
+		) lr
+		WHERE rnk = @limit`,
+		// "limit + 1" because we want to get the newest record that should be deleted.
+		// This is an optimization to avoid unnecessary queries for resources that have exactly [limit] entries.
+		pgx.NamedArgs{"limit": *limit + 1},
 	)
 	if err != nil {
-		return 0, fmt.Errorf("error cleaning up DeploymentLogRecords: %w", err)
-	} else {
-		return cmd.RowsAffected(), nil
+		return 0, fmt.Errorf("error querying DeploymentLogRecords: %w", err)
 	}
+
+	records, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentLogRecord])
+	if err != nil {
+		return 0, fmt.Errorf("error collecting rows: %w", err)
+	}
+
+	var deleted int64
+	var aggErr error
+	for _, record := range records {
+		cmd, err := db.Exec(
+			ctx,
+			`DELETE FROM DeploymentLogRecord
+			WHERE deployment_id = @deploymentId
+				AND resource = @resource
+				AND timestamp <= @timestamp`,
+			pgx.NamedArgs{"deploymentId": record.DeploymentID, "resource": record.Resource, "timestamp": record.Timestamp},
+		)
+		log.Debug("deleted DeploymentLogRecords",
+			zap.Stringer("deploymentId", record.DeploymentID),
+			zap.String("resource", record.Resource),
+			zap.Time("pivotTimestamp", record.Timestamp),
+			zap.Int64("deleted", cmd.RowsAffected()),
+			zap.Error(err))
+		if err != nil {
+			aggErr = errors.Join(aggErr, err)
+		} else {
+			deleted += cmd.RowsAffected()
+		}
+	}
+
+	return deleted, aggErr
 }

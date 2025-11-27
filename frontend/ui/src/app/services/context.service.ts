@@ -1,8 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {map, Observable, shareReplay} from 'rxjs';
+import {map, Observable, shareReplay, tap} from 'rxjs';
 import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {Organization, OrganizationWithUserRole} from '../types/organization';
+import posthog from 'posthog-js';
 
 interface ContextResponse {
   user: UserAccountWithRole;
@@ -18,7 +19,10 @@ interface ContextResponse {
 export class ContextService {
   private readonly baseUrl = '/api/v1/context';
   private readonly httpClient = inject(HttpClient);
-  private readonly cache = this.httpClient.get<ContextResponse>(this.baseUrl).pipe(shareReplay(1));
+  private readonly cache = this.httpClient.get<ContextResponse>(this.baseUrl).pipe(
+    tap((ctx) => posthog.group('organization', ctx.organization.id!, {name: ctx.organization.name})),
+    shareReplay(1)
+  );
 
   public getUser(): Observable<UserAccountWithRole> {
     return this.cache.pipe(map((ctx) => ctx.user));
