@@ -9,6 +9,7 @@ import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.
 import {UsersComponent} from './components/users/users.component';
 import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
+import {SubscriptionComponent} from './subscription/subscription.component';
 import {LicensesComponent} from './licenses/licenses.component';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {CanActivateFn, Router, Routes} from '@angular/router';
@@ -120,6 +121,11 @@ export const routes: Routes = [
     path: 'settings',
     component: OrganizationSettingsComponent,
     data: {userRole: 'vendor'},
+    canActivate: [requiredRoleGuard('vendor')],
+  },
+  {
+    path: 'subscription',
+    component: SubscriptionComponent,
     canActivate: [requiredRoleGuard('vendor')],
   },
   {

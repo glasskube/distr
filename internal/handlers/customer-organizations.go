@@ -39,7 +39,7 @@ func getCustomerOrganizationsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			RespondJSON(w, mapping.List(customerOrganizations, mapping.CustomerOrganizationWithUserCountToAPI))
+			RespondJSON(w, mapping.List(customerOrganizations, mapping.CustomerOrganizationWithUsageToAPI))
 		}
 	}
 }

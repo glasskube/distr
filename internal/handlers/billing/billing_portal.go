@@ -1,0 +1,56 @@
+package billing
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/billing"
+	internalctx "github.com/glasskube/distr/internal/context"
+	"go.uber.org/zap"
+)
+
+func CreateBillingPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	auth := auth.Authentication.Require(ctx)
+	org := auth.CurrentOrg()
+
+	// Check if organization has a Stripe customer ID
+	if org.StripeCustomerId == nil || *org.StripeCustomerId == "" {
+		http.Error(w, "no stripe customer found for organization", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		ReturnURL string `json:"returnUrl"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		log.Debug("bad json payload", zap.Error(err))
+		http.Error(w, "bad json payload", http.StatusBadRequest)
+		return
+	}
+
+	// Default return URL if not provided
+	if body.ReturnURL == "" {
+		body.ReturnURL = r.Header.Get("Referer")
+		if body.ReturnURL == "" {
+			body.ReturnURL = "/subscription"
+		}
+	}
+
+	session, err := billing.CreateBillingPortalSession(ctx, billing.BillingPortalSessionParams{
+		CustomerID: *org.StripeCustomerId,
+		ReturnURL:  body.ReturnURL,
+	})
+	if err != nil {
+		log.Error("failed to create billing portal session", zap.Error(err))
+		http.Error(w, "failed to create billing portal session", http.StatusInternalServerError)
+		return
+	}
+
+	respondJSON(w, map[string]string{
+		"url": session.URL,
+	})
+}

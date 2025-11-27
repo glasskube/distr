@@ -19,7 +19,8 @@ type CustomerOrganization struct {
 	ImageURL  string     `json:"imageUrl,omitempty"`
 }
 
-type CustomerOrganizationWithUserCount struct {
+type CustomerOrganizationWithUsage struct {
 	CustomerOrganization
-	UserCount int64 `json:"userCount"`
+	UserCount             int64 `json:"userCount"`
+	DeploymentTargetCount int64 `json:"deploymentTargetCount"`
 }

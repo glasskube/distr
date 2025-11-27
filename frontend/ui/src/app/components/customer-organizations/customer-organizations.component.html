@@ -50,6 +50,7 @@
               <th scope="col" class="p-4">Name</th>
               <th scope="col" class="p-4">Creation Date</th>
               <th scope="col" class="p-4 text-end"># of Users</th>
+              <th scope="col" class="p-4 text-end"># of Deployments</th>
               <th scope="col" class="p-4"></th>
             </tr>
           </thead>
@@ -87,6 +88,9 @@
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white text-end">
                   {{ customer.userCount | number }}
+                </td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white text-end">
+                  {{ customer.deploymentTargetCount | number }}
                 </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">

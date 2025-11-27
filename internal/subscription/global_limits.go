@@ -11,8 +11,8 @@ type Limit int64
 const (
 	Unlimited Limit = -1
 
-	MaxCustomersPerOrganizationStarter   Limit = 1
-	MaxCustomersPerOrganizationPro       Limit = 50
+	MaxCustomersPerOrganizationStarter   Limit = 3
+	MaxCustomersPerOrganizationPro       Limit = 100
 	MaxCustomersPerOrganizationUnlimited Limit = Unlimited
 
 	MaxUsersPerCustomerOrganizationStarter   Limit = 1

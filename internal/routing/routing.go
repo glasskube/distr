@@ -8,6 +8,7 @@ import (
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/frontend"
 	"github.com/glasskube/distr/internal/handlers"
+	"github.com/glasskube/distr/internal/handlers/billing"
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/oidc"
@@ -80,7 +81,7 @@ func ApiRouter(
 				r.Route("/artifact-licenses", handlers.ArtifactLicensesRouter)
 				r.Route("/artifact-pulls", handlers.ArtifactPullsRouter)
 				r.Route("/artifacts", handlers.ArtifactsRouter)
-				r.Route("/billing", handlers.BillingRouter)
+				r.Route("/billing", billing.Router)
 				r.Route("/context", handlers.ContextRouter)
 				r.Route("/customer-organizations", handlers.CustomerOrganizationsRouter)
 				r.Route("/dashboard", handlers.DashboardRouter)

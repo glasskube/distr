@@ -120,7 +120,8 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 		return err
 	}
 
-	org.SubscriptionExternalID = &subscription.ID
+	org.StripeSubscriptionId = &subscription.ID
+	org.StripeCustomerId = &subscription.Customer.ID
 
 	if subscription.Status == stripe.SubscriptionStatusCanceled {
 		org.SubscriptionEndsAt = time.Now()
