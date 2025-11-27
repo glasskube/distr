@@ -33,7 +33,7 @@ Distr enables software and AI companies to distribute applications to self-manag
 - Access the API using our [**rich SDK**](#distr-sdk)
 - Fully Open Source and [self-hostable](#self-hosting)
 
-Check out the hosted version at https://signup.distr.sh/
+Check out the hosted version at https://distr.sh/get-started/.
 
 ## About
 
