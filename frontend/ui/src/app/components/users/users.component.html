@@ -85,15 +85,41 @@
             {{ user.joinedOrgAt | date: 'short' }}
           </td>
           <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-            @switch (user.userRole) {
-              @case ('read_only') {
-                Read Only
+            @if (editRoleUserId() === user.id) {
+              <form [formGroup]="editRoleForm" class="flex" (ngSubmit)="submitEditUserRoleForm()">
+                <select
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm w-32 rounded-s-lg focus:ring-blue-500 focus:border-blue-500 block px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  id="user-role-select"
+                  formControlName="userRole">
+                  <option value="read_only">Read Only</option>
+                  <option value="read_write">Read/Write</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button
+                  type="submit"
+                  class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-e-lg text-sm px-3 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                  <fa-icon [icon]="faCheck" />
+                </button>
+              </form>
+            } @else {
+              @switch (user.userRole) {
+                @case ('read_only') {
+                  Read Only
+                }
+                @case ('read_write') {
+                  Read/Write
+                }
+                @case ('admin') {
+                  Admin
+                }
               }
-              @case ('read_write') {
-                Read/Write
-              }
-              @case ('admin') {
-                Admin
+              @if (auth.hasRole('admin') || (auth.isVendor() && auth.hasRole('read_write'))) {
+                <button
+                  aria-label="Edit User Role"
+                  (click)="editUserRole(user)"
+                  class="text-gray-900 dark:text-gray-400 ms-1">
+                  <fa-icon [icon]="faPen"></fa-icon>
+                </button>
               }
             }
           </td>

@@ -84,8 +84,10 @@ func RequireAnyUserRole(userRoles ...types.UserRole) func(handler http.Handler) 
 	}
 }
 
-var RequireReadWriteOrAdmin = RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)
-var RequireAdmin = RequireAnyUserRole(types.UserRoleAdmin)
+var (
+	RequireReadWriteOrAdmin = RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)
+	RequireAdmin            = RequireAnyUserRole(types.UserRoleAdmin)
+)
 
 func RequireVendor(handler http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {

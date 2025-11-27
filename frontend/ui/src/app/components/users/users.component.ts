@@ -1,13 +1,15 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
+import {Component, inject, input, output, signal, TemplateRef, viewChild} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
+  faCheck,
   faCircleExclamation,
   faClipboard,
   faMagnifyingGlass,
+  faPen,
   faPlus,
   faRepeat,
   faTrash,
@@ -54,9 +56,11 @@ export class UsersComponent {
   protected readonly auth = inject(AuthService);
 
   protected readonly faBox = faBox;
+  protected readonly faCheck = faCheck;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faClipboard = faClipboard;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPen = faPen;
   protected readonly faPlus = faPlus;
   protected readonly faRepeat = faRepeat;
   protected readonly faTrash = faTrash;
@@ -78,17 +82,59 @@ export class UsersComponent {
 
   private readonly inviteUserDialog = viewChild.required<TemplateRef<unknown>>('inviteUserDialog');
   private modalRef?: DialogRef;
-  protected inviteForm = new FormGroup({
+  protected readonly inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-    userRole: new FormControl<UserRole | undefined>('admin', {nonNullable: true, validators: [Validators.required]}),
+    userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),
   });
   protected inviteFormLoading = false;
   protected inviteUrl: string | null = null;
 
+  protected readonly editRoleUserId = signal<string | null>(null);
+  protected readonly editRoleForm = new FormGroup({
+    userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),
+  });
+  protected editRoleFormLoading = false;
+
   public showInviteDialog(reset?: boolean): void {
     this.closeInviteDialog(reset);
     this.modalRef = this.overlay.showModal(this.inviteUserDialog());
+  }
+
+  protected editUserRole(user: UserAccountWithRole): void {
+    if (!user.id) {
+      return;
+    }
+    this.editRoleFormLoading = false;
+    this.editRoleUserId.set(user.id);
+    this.editRoleForm.reset(user);
+  }
+
+  protected async submitEditUserRoleForm(): Promise<void> {
+    this.editRoleForm.markAllAsTouched();
+
+    const userId = this.editRoleUserId();
+    const userRole = this.editRoleForm.value.userRole;
+    if (!userId || !userRole) {
+      return;
+    }
+
+    if (this.editRoleForm.valid) {
+      this.editRoleFormLoading = true;
+      try {
+        await firstValueFrom(this.usersService.patchUserAccount(userId, {userRole}));
+        this.editRoleUserId.set(null);
+        this.editRoleForm.reset();
+        this.toast.success('User role has been updated');
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editRoleFormLoading = false;
+      }
+    }
   }
 
   public async submitInviteForm(): Promise<void> {

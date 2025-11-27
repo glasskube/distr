@@ -12,6 +12,10 @@ export interface CreateUserAccountRequest {
   customerOrganizationId?: string;
 }
 
+export interface PatchUserAccountRequest {
+  userRole?: UserRole;
+}
+
 export interface UserAccountInvitationResponse {
   user: UserAccountWithRole;
   inviteUrl: string;
@@ -62,6 +66,15 @@ export class UsersService {
 
   public patchImage(userId: string, imageId: string) {
     return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId}).pipe(
+      tap((it) => {
+        this.cache.save(it);
+        this.selfUpdate.next(it);
+      })
+    );
+  }
+
+  public patchUserAccount(userId: string, request: PatchUserAccountRequest) {
+    return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}`, request).pipe(
       tap((it) => {
         this.cache.save(it);
         this.selfUpdate.next(it);

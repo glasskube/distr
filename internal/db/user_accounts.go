@@ -213,6 +213,32 @@ func CreateUserAccountOrganizationAssignment(
 	return err
 }
 
+func UpdateUserAccountOrganizationAssignment(
+	ctx context.Context,
+	userID, orgID uuid.UUID,
+	role types.UserRole,
+	customerOrganizationID *uuid.UUID,
+) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx,
+		"UPDATE Organization_UserAccount SET user_role = @role, customer_organization_id = @customerOrganizationID "+
+			"WHERE organization_id = @orgId AND user_account_id = @userId",
+		pgx.NamedArgs{
+			"userId":                 userID,
+			"orgId":                  orgID,
+			"role":                   role,
+			"customerOrganizationID": customerOrganizationID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update Organization_UserAccount: %w", err)
+	} else if cmd.RowsAffected() == 0 {
+		return fmt.Errorf("%w: user not found in org", apierrors.ErrNotFound)
+	} else {
+		return nil
+	}
+}
+
 func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (
 	[]types.UserAccountWithUserRole,
 	error,

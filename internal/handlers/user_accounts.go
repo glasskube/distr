@@ -31,6 +31,7 @@ func UserAccountsRouter(r chi.Router) {
 		r.With(middleware.RequireReadWriteOrAdmin).Post("/", createUserAccountHandler)
 		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
+			r.Patch("/", patchUserAccountHandler())
 			r.Delete("/", deleteUserAccountHandler)
 			r.Patch("/image", patchImageUserAccount)
 			r.With(inviteUserRateLimiter).
@@ -97,11 +98,9 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		body.CustomerOrganizationID = customerOrgID
-	} else {
-		if *auth.CurrentUserRole() != types.UserRoleAdmin && body.CustomerOrganizationID == nil {
-			http.Error(w, "user must be admin to create non-customer users", http.StatusForbidden)
-			return
-		}
+	} else if *auth.CurrentUserRole() != types.UserRoleAdmin && body.CustomerOrganizationID == nil {
+		http.Error(w, "user must be admin to create non-customer users", http.StatusForbidden)
+		return
 	}
 
 	if body.CustomerOrganizationID != nil {
@@ -222,7 +221,31 @@ func patchUserAccountHandler() http.HandlerFunc {
 		}
 
 		if body.UserRole != nil && *body.UserRole != userAccount.UserRole {
+			if userAccount.ID == auth.CurrentUserID() {
+				http.Error(w, "users cannot change their own role", http.StatusForbidden)
+				return
+			}
+			err = db.UpdateUserAccountOrganizationAssignment(
+				ctx,
+				userAccount.ID,
+				*auth.CurrentOrgID(),
+				*body.UserRole,
+				userAccount.CustomerOrganizationID,
+			)
+			if errors.Is(err, apierrors.ErrNotFound) {
+				http.NotFound(w, r)
+				return
+			} else if err != nil {
+				log.Info("user update failed", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				userAccount.UserRole = *body.UserRole
+			}
 		}
+
+		RespondJSON(w, mapping.UserAccountToAPI(*userAccount))
 	}
 }
 
