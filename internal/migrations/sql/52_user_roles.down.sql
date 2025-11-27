@@ -15,3 +15,8 @@ UPDATE Organization_UserAccount
 
 ALTER TABLE Organization_UserAccount
   ALTER COLUMN user_role SET NOT NULL;
+
+-- Recreate the constraint, since it is dropped implicitly by recreating the user_role column in the "up" migration
+ALTER TABLE Organization_UserAccount
+  ADD CONSTRAINT customer_organization_id_null_check
+    CHECK ((user_role = 'customer') = (customer_organization_id IS NOT NULL));
