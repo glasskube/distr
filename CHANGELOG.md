@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.3](https://github.com/glasskube/distr/compare/1.16.2...1.16.3) (2025-11-27)
+
+
+### Other
+
+* add posthog groups ([#1460](https://github.com/glasskube/distr/issues/1460); cherry-picked) ([7484648](https://github.com/glasskube/distr/commit/7484648f6e4576ef55765e0bb8ce1522e6c09937))
+
+
+### Performance
+
+* **backend:** optimize DeploymentLogRecord cleanup routine ([#1455](https://github.com/glasskube/distr/issues/1455); cherry-picked) ([2c33d62](https://github.com/glasskube/distr/commit/2c33d6234cbf3c5d6f1d4203895d3d0c99e151a7))
+
 ## [1.16.2](https://github.com/glasskube/distr/compare/1.16.1...1.16.2) (2025-11-24)
 
 
