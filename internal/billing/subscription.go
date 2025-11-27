@@ -9,8 +9,8 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/stripe/stripe-go/v83"
-	"github.com/stripe/stripe-go/v83/billingportal/session"
 	checkoutsession "github.com/stripe/stripe-go/v83/checkout/session"
+	"github.com/stripe/stripe-go/v83/subscription"
 )
 
 func GetSubscriptionType(subscription stripe.Subscription) (*types.SubscriptionType, error) {
@@ -111,17 +111,64 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 	return checkoutsession.New(sessionParams)
 }
 
-type CustomerPortalSessionParams struct {
-	CustomerID string
-	ReturnURL  string
+type SubscriptionUpdateParams struct {
+	SubscriptionID          string
+	CustomerOrganizationQty int64
+	UserAccountQty          int64
+	ReturnURL               string
 }
 
-func CreateCustomerPortalSession(ctx context.Context, params CustomerPortalSessionParams) (*stripe.BillingPortalSession, error) {
-	sessionParams := &stripe.BillingPortalSessionParams{
-		Params:    stripe.Params{Context: ctx},
-		Customer:  util.PtrTo(params.CustomerID),
-		ReturnURL: util.PtrTo(params.ReturnURL),
+func UpdateSubscription(ctx context.Context, params SubscriptionUpdateParams) (*stripe.Subscription, error) {
+	// Get the existing subscription to find the price IDs
+	sub, err := subscription.Get(params.SubscriptionID, &stripe.SubscriptionParams{
+		Params: stripe.Params{Context: ctx},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
-	return session.New(sessionParams)
+	// Find the existing subscription items with their price IDs
+	var customerPriceID, userPriceID string
+	var customerItemID, userItemID string
+
+	for _, item := range sub.Items.Data {
+		if item.Price != nil && item.Price.LookupKey != "" {
+			if slices.Contains(CustomerPriceKeys, item.Price.LookupKey) {
+				customerPriceID = item.Price.ID
+				customerItemID = item.ID
+			} else if slices.Contains(UserPriceKeys, item.Price.LookupKey) {
+				userPriceID = item.Price.ID
+				userItemID = item.ID
+			}
+		}
+	}
+
+	if customerPriceID == "" || userPriceID == "" {
+		return nil, fmt.Errorf("could not find price IDs in subscription")
+	}
+
+	// Update the subscription with new quantities
+	// Stripe will automatically prorate the charges
+	updateParams := &stripe.SubscriptionParams{
+		Params: stripe.Params{Context: ctx},
+		Items: []*stripe.SubscriptionItemsParams{
+			{
+				ID:       util.PtrTo(customerItemID),
+				Price:    util.PtrTo(customerPriceID),
+				Quantity: util.PtrTo(params.CustomerOrganizationQty),
+			},
+			{
+				ID:       util.PtrTo(userItemID),
+				Price:    util.PtrTo(userPriceID),
+				Quantity: util.PtrTo(params.UserAccountQty),
+			},
+		},
+	}
+
+	updatedSub, err := subscription.Update(params.SubscriptionID, updateParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	return updatedSub, nil
 }

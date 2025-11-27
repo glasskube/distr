@@ -97,20 +97,20 @@ export class SubscriptionComponent implements OnInit {
   async updateQuantities() {
     this.form.markAllAsTouched();
     if (this.form.valid) {
-      const info = this.subscriptionInfo();
-      if (!info) return;
-
       try {
         const body = {
-          subscriptionType: info.subscriptionType,
-          billingMode: 'monthly' as const, // Use current billing mode
           subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
           subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
-          currency: 'usd', // Use current currency
         };
 
-        // Call the checkout endpoint which will create a new subscription with updated quantities
-        await this.subscriptionService.checkout(body);
+        // Call the update subscription endpoint
+        const updatedInfo = await this.subscriptionService.updateSubscription(body);
+
+        // Update the subscription info signal with the new data
+        this.subscriptionInfo.set(updatedInfo);
+
+        // Show success message
+        this.toast.success('Subscription updated successfully');
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
@@ -160,6 +160,46 @@ export class SubscriptionComponent implements OnInit {
     };
   }
 
+  getCurrentPlanLimit(
+    metric: 'customerOrganizations' | 'usersPerCustomer' | 'deploymentsPerCustomer'
+  ): string | number {
+    const info = this.subscriptionInfo();
+    if (!info) {
+      return '';
+    }
+
+    let limits;
+    switch (info.subscriptionType) {
+      case 'trial':
+        limits = info.trialLimits;
+        break;
+      case 'starter':
+        limits = info.starterLimits;
+        break;
+      case 'pro':
+        limits = info.proLimits;
+        break;
+      case 'enterprise':
+        limits = info.enterpriseLimits;
+        break;
+      default:
+        return '';
+    }
+
+    switch (metric) {
+      case 'customerOrganizations':
+        return limits.maxCustomerOrganizations === -1 ? 'unlimited' : limits.maxCustomerOrganizations;
+      case 'usersPerCustomer':
+        return limits.maxUsersPerCustomerOrganization === -1 ? 'unlimited' : limits.maxUsersPerCustomerOrganization;
+      case 'deploymentsPerCustomer':
+        return limits.maxDeploymentsPerCustomerOrganization === -1
+          ? 'unlimited'
+          : limits.maxDeploymentsPerCustomerOrganization;
+      default:
+        return '';
+    }
+  }
+
   canSelectStarterPlan(): boolean {
     const info = this.subscriptionInfo();
     if (!info) {
@@ -193,8 +233,7 @@ export class SubscriptionComponent implements OnInit {
     const info = this.subscriptionInfo();
     return !!(
       info &&
-      (info.subscriptionCustomerOrganizationQuantity !== null ||
-        info.subscriptionUserAccountQuantity !== null)
+      (info.subscriptionCustomerOrganizationQuantity !== null || info.subscriptionUserAccountQuantity !== null)
     );
   }
 
@@ -210,7 +249,7 @@ export class SubscriptionComponent implements OnInit {
 
   async manageSubscription() {
     try {
-      await this.subscriptionService.openCustomerPortal();
+      await this.subscriptionService.openBillingPortal();
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg) {

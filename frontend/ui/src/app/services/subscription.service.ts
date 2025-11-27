@@ -8,10 +8,10 @@ import {CheckoutRequest, SubscriptionInfo} from '../types/subscription';
 })
 export class SubscriptionService {
   private readonly httpClient = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/billing/subscription';
+  private readonly baseUrl = '/api/v1/billing/billing';
 
   get(): Observable<SubscriptionInfo> {
-    return this.httpClient.get<SubscriptionInfo>(this.baseUrl);
+    return this.httpClient.get<SubscriptionInfo>(`${this.baseUrl}/subscription`);
   }
 
   async checkout(request: CheckoutRequest): Promise<void> {
@@ -22,7 +22,7 @@ export class SubscriptionService {
       this.httpClient.post<{
         sessionId: string;
         url: string;
-      }>(this.baseUrl, request)
+      }>(`${this.baseUrl}/subscription`, request)
     );
 
     if (!response?.url) {
@@ -32,18 +32,34 @@ export class SubscriptionService {
     window.location.href = response.url;
   }
 
-  async openCustomerPortal(returnUrl?: string): Promise<void> {
-    // Create customer portal session on backend
+  async updateSubscription(request: {
+    subscriptionUserAccountQuantity: number;
+    subscriptionCustomerOrganizationQuantity: number;
+  }): Promise<SubscriptionInfo> {
+    // Update subscription quantities
+    const response = await firstValueFrom(
+      this.httpClient.put<SubscriptionInfo>(`${this.baseUrl}/subscription`, request)
+    );
+
+    if (!response) {
+      throw new Error('Failed to update subscription');
+    }
+
+    return response;
+  }
+
+  async openBillingPortal(returnUrl?: string): Promise<void> {
+    // Create billing portal session on backend
     const response = await firstValueFrom(
       this.httpClient.post<{
         url: string;
-      }>('/api/v1/billing/customer-portal', {
+      }>(`${this.baseUrl}/billing-portal`, {
         returnUrl: returnUrl || window.location.href,
       })
     );
 
     if (!response?.url) {
-      throw new Error('Failed to create customer portal session');
+      throw new Error('Failed to create billing portal session');
     }
 
     window.location.href = response.url;

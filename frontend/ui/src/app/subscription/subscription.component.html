@@ -24,7 +24,7 @@
                         of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} allowed
                         <br />
                         <span class="text-xs text-gray-400">
-                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} limit
+                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} subscription limit
                         </span>
                       } @else {
                         vendor team members
@@ -41,7 +41,8 @@
                         of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} allowed
                         <br />
                         <span class="text-xs text-gray-400">
-                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} limit
+                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} subscription limit (plan max:
+                          {{ getCurrentPlanLimit('customerOrganizations') }})
                         </span>
                       } @else if (subscriptionInfoData.subscriptionType === 'trial') {
                         of
@@ -225,9 +226,7 @@
                         [placeholder]="subscriptionInfoData.currentUserAccountCount.toString()"
                         required />
                       <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                        Number of internal team members (minimum: {{
-                          subscriptionInfoData.currentUserAccountCount
-                        }})
+                        Number of internal team members (minimum: {{ subscriptionInfoData.currentUserAccountCount }})
                       </p>
                     </div>
                     <div>
@@ -246,9 +245,8 @@
                         [placeholder]="subscriptionInfoData.currentCustomerOrganizationCount.toString()"
                         required />
                       <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                        Number of external customer organizations (minimum: {{
-                          subscriptionInfoData.currentCustomerOrganizationCount
-                        }})
+                        Number of external customer organizations (minimum:
+                        {{ subscriptionInfoData.currentCustomerOrganizationCount }})
                       </p>
                     </div>
                   </div>
@@ -267,190 +265,188 @@
 
               <!-- Plan Selection (for trial subscriptions) -->
               @if (isTrialSubscription()) {
-              <div class="space-y-4">
-                <h2 class="text-xl font-bold dark:text-white">Choose Your Plan</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Starter Plan -->
-                  <label
-                    [class.ring-2]="form.value.subscriptionType === 'starter'"
-                    [class.ring-primary-600]="form.value.subscriptionType === 'starter'"
-                    [class.opacity-50]="!canSelectStarterPlan()"
-                    [class.cursor-not-allowed]="!canSelectStarterPlan()"
-                    [class.cursor-pointer]="canSelectStarterPlan()"
-                    [class.hover:border-primary-300]="canSelectStarterPlan()"
-                    class="flex flex-col p-4 border-2 border-gray-200 rounded-lg dark:border-gray-700 dark:hover:border-primary-700">
-                    <input
-                      type="radio"
-                      formControlName="subscriptionType"
-                      value="starter"
-                      [disabled]="!canSelectStarterPlan()"
-                      class="sr-only" />
-                    <div class="flex justify-between items-start mb-2">
-                      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Starter</h3>
-                    </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Perfect for initial market validation</p>
-                    <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      <li>✓ {{ getPlanLimits('starter').customers }}</li>
-                      <li>✓ {{ getPlanLimits('starter').users }}</li>
-                      <li>✓ {{ getPlanLimits('starter').deployments }}</li>
-                      <li>✓ Up to 100 GB storage</li>
-                    </ul>
-                    @if (!canSelectStarterPlan()) {
-                      <p class="text-xs text-red-600 dark:text-red-400 mt-2">
-                        ⚠️ Your current usage exceeds Starter plan limits
+                <div class="space-y-4">
+                  <h2 class="text-xl font-bold dark:text-white">Choose Your Plan</h2>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Starter Plan -->
+                    <label
+                      [class.ring-2]="form.value.subscriptionType === 'starter'"
+                      [class.ring-primary-600]="form.value.subscriptionType === 'starter'"
+                      [class.opacity-50]="!canSelectStarterPlan()"
+                      [class.cursor-not-allowed]="!canSelectStarterPlan()"
+                      [class.cursor-pointer]="canSelectStarterPlan()"
+                      [class.hover:border-primary-300]="canSelectStarterPlan()"
+                      class="flex flex-col p-4 border-2 border-gray-200 rounded-lg dark:border-gray-700 dark:hover:border-primary-700">
+                      <input
+                        type="radio"
+                        formControlName="subscriptionType"
+                        value="starter"
+                        [disabled]="!canSelectStarterPlan()"
+                        class="sr-only" />
+                      <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Starter</h3>
+                      </div>
+                      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Perfect for initial market validation</p>
+                      <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <li>✓ {{ getPlanLimits('starter').customers }}</li>
+                        <li>✓ {{ getPlanLimits('starter').users }}</li>
+                        <li>✓ {{ getPlanLimits('starter').deployments }}</li>
+                        <li>✓ Up to 100 GB storage</li>
+                      </ul>
+                      @if (!canSelectStarterPlan()) {
+                        <p class="text-xs text-red-600 dark:text-red-400 mt-2">
+                          ⚠️ Your current usage exceeds Starter plan limits
+                        </p>
+                      }
+                    </label>
+
+                    <!-- Pro Plan -->
+                    <label
+                      [class.ring-2]="form.value.subscriptionType === 'pro'"
+                      [class.ring-primary-600]="form.value.subscriptionType === 'pro'"
+                      class="flex flex-col p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-300 dark:border-gray-700 dark:hover:border-primary-700">
+                      <input type="radio" formControlName="subscriptionType" value="pro" class="sr-only" />
+                      <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Pro</h3>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Most Popular</span>
+                      </div>
+                      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Production rollouts with governance</p>
+                      <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <li>✓ {{ getPlanLimits('pro').customers }} customers</li>
+                        <li>✓ {{ getPlanLimits('pro').users }}</li>
+                        <li>✓ {{ getPlanLimits('pro').deployments }}</li>
+                        <li>✓ Up to 1 TB storage</li>
+                        <li>✓ SSO + RBAC, License management</li>
+                      </ul>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Billing Mode (for trial subscriptions) -->
+                <div class="space-y-4">
+                  <h2 class="text-xl font-bold dark:text-white">Billing Period</h2>
+                  <div class="flex gap-4">
+                    <label class="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        formControlName="billingMode"
+                        value="monthly"
+                        class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Monthly</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        formControlName="billingMode"
+                        value="yearly"
+                        class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                        Yearly
+                        <span class="text-green-600 dark:text-green-400">(Save 20%)</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Currency Selection -->
+                <div class="space-y-4">
+                  <h2 class="text-xl font-bold dark:text-white">Currency</h2>
+                  <div>
+                    <label for="currency" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Select Currency *
+                    </label>
+                    <select
+                      formControlName="currency"
+                      id="currency"
+                      class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+                      <option value="usd">USD ($) - US Dollar</option>
+                      <option value="eur">EUR (€) - Euro</option>
+                    </select>
+                    <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                      Choose the currency for your subscription billing
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Quantities -->
+                <div class="space-y-4">
+                  <h2 class="text-xl font-bold dark:text-white">License Quantities</h2>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="userAccountQuantity"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Internal Users *
+                      </label>
+                      <input
+                        formControlName="userAccountQuantity"
+                        type="number"
+                        name="userAccountQuantity"
+                        id="userAccountQuantity"
+                        min="1"
+                        class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        placeholder="1"
+                        required />
+                      <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        Number of internal team members accessing Distr
                       </p>
-                    }
-                  </label>
-
-                  <!-- Pro Plan -->
-                  <label
-                    [class.ring-2]="form.value.subscriptionType === 'pro'"
-                    [class.ring-primary-600]="form.value.subscriptionType === 'pro'"
-                    class="flex flex-col p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-300 dark:border-gray-700 dark:hover:border-primary-700">
-                    <input type="radio" formControlName="subscriptionType" value="pro" class="sr-only" />
-                    <div class="flex justify-between items-start mb-2">
-                      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Pro</h3>
-                      <span class="text-sm text-gray-500 dark:text-gray-400">Most Popular</span>
                     </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Production rollouts with governance</p>
-                    <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      <li>✓ {{ getPlanLimits('pro').customers }} customers</li>
-                      <li>✓ {{ getPlanLimits('pro').users }}</li>
-                      <li>✓ {{ getPlanLimits('pro').deployments }}</li>
-                      <li>✓ Up to 1 TB storage</li>
-                      <li>✓ SSO + RBAC, License management</li>
-                    </ul>
-                  </label>
+                    <div>
+                      <label
+                        for="customerOrganizationQuantity"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                        Customer Organizations *
+                      </label>
+                      <input
+                        formControlName="customerOrganizationQuantity"
+                        type="number"
+                        name="customerOrganizationQuantity"
+                        id="customerOrganizationQuantity"
+                        min="1"
+                        class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        placeholder="1"
+                        required />
+                      <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        Number of external customer organizations
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Billing Mode (for trial subscriptions) -->
-              <div class="space-y-4">
-                <h2 class="text-xl font-bold dark:text-white">Billing Period</h2>
-                <div class="flex gap-4">
-                  <label class="flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      formControlName="billingMode"
-                      value="monthly"
-                      class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Monthly</span>
-                  </label>
-                  <label class="flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      formControlName="billingMode"
-                      value="yearly"
-                      class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                      Yearly
-                      <span class="text-green-600 dark:text-green-400">(Save 20%)</span>
-                    </span>
-                  </label>
+                <!-- Price Preview -->
+                <div
+                  class="p-6 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 rounded-lg">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">Estimated Cost</p>
+                      <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                        {{ getPreviewPrice() | currency: form.value.currency?.toUpperCase() || 'USD' }}
+                        <span class="text-lg font-normal text-gray-600 dark:text-gray-400">
+                          / {{ form.value.billingMode === 'monthly' ? 'month' : 'year' }}
+                        </span>
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Currency exchange fees might apply.</p>
+                    </div>
+                    <button
+                      type="submit"
+                      [disabled]="form.invalid"
+                      class="text-white inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-6 py-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                      <fa-icon [icon]="faShoppingCart" size="lg" class="h-4 w-4 mr-2"></fa-icon>
+                      Proceed to Checkout
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Currency Selection -->
-              <div class="space-y-4">
-                <h2 class="text-xl font-bold dark:text-white">Currency</h2>
-                <div>
-                  <label for="currency" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                    Select Currency *
-                  </label>
-                  <select
-                    formControlName="currency"
-                    id="currency"
-                    class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                    <option value="usd">USD ($) - US Dollar</option>
-                    <option value="eur">EUR (€) - Euro</option>
-                  </select>
-                  <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                    Choose the currency for your subscription billing
+                <div class="p-4 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <p>
+                    <strong>Note:</strong>
+                    For Enterprise plans with unlimited usage, please
+                    <a href="https://distr.sh/contact/" target="_blank" class="text-primary-600 hover:underline">
+                      contact our sales team
+                    </a>
+                    .
                   </p>
                 </div>
-              </div>
-
-              <!-- Quantities -->
-              <div class="space-y-4">
-                <h2 class="text-xl font-bold dark:text-white">License Quantities</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      for="userAccountQuantity"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Internal Users *
-                    </label>
-                    <input
-                      formControlName="userAccountQuantity"
-                      type="number"
-                      name="userAccountQuantity"
-                      id="userAccountQuantity"
-                      min="1"
-                      class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="1"
-                      required />
-                    <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                      Number of internal team members accessing Distr
-                    </p>
-                  </div>
-                  <div>
-                    <label
-                      for="customerOrganizationQuantity"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Customer Organizations *
-                    </label>
-                    <input
-                      formControlName="customerOrganizationQuantity"
-                      type="number"
-                      name="customerOrganizationQuantity"
-                      id="customerOrganizationQuantity"
-                      min="1"
-                      class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="1"
-                      required />
-                    <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                      Number of external customer organizations
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Price Preview -->
-              <div
-                class="p-6 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 rounded-lg">
-                <div class="flex justify-between items-center">
-                  <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Estimated Cost</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">
-                      {{ getPreviewPrice() | currency: form.value.currency?.toUpperCase() || 'USD' }}
-                      <span class="text-lg font-normal text-gray-600 dark:text-gray-400">
-                        / {{ form.value.billingMode === 'monthly' ? 'month' : 'year' }}
-                      </span>
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Currency exchange fees might apply.
-                    </p>
-                  </div>
-                  <button
-                    type="submit"
-                    [disabled]="form.invalid"
-                    class="text-white inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-6 py-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <fa-icon [icon]="faShoppingCart" size="lg" class="h-4 w-4 mr-2"></fa-icon>
-                    Proceed to Checkout
-                  </button>
-                </div>
-              </div>
-
-              <div class="p-4 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <p>
-                  <strong>Note:</strong>
-                  For Enterprise plans with unlimited usage, please
-                  <a href="https://distr.sh/contact/" target="_blank" class="text-primary-600 hover:underline">
-                    contact our sales team
-                  </a>
-                  .
-                </p>
-              </div>
               }
             </div>
           </form>
