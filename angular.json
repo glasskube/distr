@@ -36,7 +36,7 @@
             ]
           },
           "configurations": {
-            "production": {
+            "production-community": {
               "budgets": [
                 {
                   "type": "initial",
@@ -54,6 +54,27 @@
                 {
                   "replace": "frontend/ui/src/env/env.ts",
                   "with": "frontend/ui/src/env/env.prod.ts"
+                }
+              ]
+            },
+            "production-enterprise": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "5MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kB",
+                  "maximumError": "4kB"
+                }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "frontend/ui/src/env/env.ts",
+                  "with": "frontend/ui/src/env/env.prod-ee.ts"
                 }
               ]
             },
