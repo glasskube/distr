@@ -123,7 +123,7 @@ jobs:
         with:
           file: pnpm-lock.yaml
           output-file: dist/frontend.spdx.json
-          artifact-name: frontend-${{ matrix.edition.suffix }}.spdx.json
+          artifact-name: frontend${{ matrix.edition.suffix }}.spdx.json
           format: spdx-json
           upload-release-assets: false
 
