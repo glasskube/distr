@@ -17,7 +17,7 @@ importers:
         version: 7.7.1
       prettier:
         specifier: ^3.5.3
-        version: 3.7.1
+        version: 3.7.2
       rimraf:
         specifier: ^6.0.1
         version: 6.1.2
@@ -121,8 +121,8 @@ packages:
     resolution: {integrity: sha512-oWyT4gICAu+kaA7QWk/jvCHWarMKNs6pXOGWKDTr7cw4IGcUbW+PeTfbaQiLGheFRpjo6O9J0PmyMfQPjH71oA==}
     engines: {node: 20 || >=22}
 
-  prettier@3.7.1:
-    resolution: {integrity: sha512-RWKXE4qB3u5Z6yz7omJkjWwmTfLdcbv44jUVHC5NpfXwFGzvpQM798FGv/6WNK879tc+Cn0AAyherCl1KjbyZQ==}
+  prettier@3.7.2:
+    resolution: {integrity: sha512-n3HV2J6QhItCXndGa3oMWvWFAgN1ibnS7R9mt6iokScBOC0Ul9/iZORmU2IWUMcyAQaMPjTlY3uT34TqocUxMA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -262,7 +262,7 @@ snapshots:
       lru-cache: 11.2.2
       minipass: 7.1.2
 
-  prettier@3.7.1: {}
+  prettier@3.7.2: {}
 
   punycode.js@2.3.1: {}
 
