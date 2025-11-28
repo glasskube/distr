@@ -1,5 +1,5 @@
 import {Component, inject} from '@angular/core';
-import {startWith, Subject, switchMap} from 'rxjs';
+import {map, startWith, Subject, switchMap} from 'rxjs';
 import {UsersService} from '../../../services/users.service';
 import {UsersComponent} from '../users.component';
 import {toSignal} from '@angular/core/rxjs-interop';
@@ -19,11 +19,12 @@ export class VendorUsersComponent {
   private readonly usersService = inject(UsersService);
   private readonly auth = inject(AuthService);
   protected readonly refresh$ = new Subject<void>();
+  protected readonly userRole = this.auth.getClaims()!.role;
   protected readonly users = toSignal(
     this.refresh$.pipe(
       startWith(undefined),
-      switchMap(() => this.usersService.getUsers())
+      switchMap(() => this.usersService.getUsers()),
+      map((users) => users.filter((user) => user.userRole === this.userRole))
     )
   );
-  protected readonly userRole = this.auth.getClaims()!.role;
 }

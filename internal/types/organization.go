@@ -11,18 +11,31 @@ import (
 )
 
 type Organization struct {
-	ID               uuid.UUID `db:"id" json:"id"`
-	CreatedAt        time.Time `db:"created_at" json:"createdAt"`
-	Name             string    `db:"name" json:"name"`
-	Slug             *string   `db:"slug" json:"slug"`
-	Features         []Feature `db:"features" json:"features"`
-	AppDomain        *string   `db:"app_domain" json:"appDomain"`
-	RegistryDomain   *string   `db:"registry_domain" json:"registryDomain"`
-	EmailFromAddress *string   `db:"email_from_address" json:"emailFromAddress"`
+	ID                                  uuid.UUID        `db:"id" json:"id"`
+	CreatedAt                           time.Time        `db:"created_at" json:"createdAt"`
+	Name                                string           `db:"name" json:"name"`
+	Slug                                *string          `db:"slug" json:"slug"`
+	Features                            []Feature        `db:"features" json:"features"`
+	AppDomain                           *string          `db:"app_domain" json:"appDomain"`
+	RegistryDomain                      *string          `db:"registry_domain" json:"registryDomain"`
+	EmailFromAddress                    *string          `db:"email_from_address" json:"emailFromAddress"`
+	SubscriptionType                    SubscriptionType `db:"subscription_type" json:"subscriptionType"`
+	SubscriptionEndsAt                  time.Time        `db:"subscription_ends_at" json:"subscriptionEndsAt"`
+	SubscriptionExternalID              *string          `db:"subscription_external_id" json:"subscriptionExternalId"`
+	SubscriptionCustomerOrganizationQty *int64           `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
+	SubscriptionUserAccountQty          *int64           `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {
 	return slices.Contains(org.Features, feature)
+}
+
+func (org *Organization) HasActiveSubscription() bool {
+	return org.SubscriptionEndsAt.After(time.Now())
+}
+
+func (org *Organization) HasActiveSubscriptionWithType(st SubscriptionType) bool {
+	return org.HasActiveSubscription() && org.SubscriptionType == st
 }
 
 type OrganizationWithUserRole struct {
