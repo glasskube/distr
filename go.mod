@@ -26,7 +26,7 @@ require (
 	github.com/go-chi/jwtauth/v5 v5.3.3
 	github.com/go-co-op/gocron/v2 v2.18.2
 	github.com/go-logr/zapr v1.3.0
-	github.com/golang-migrate/migrate/v4 v4.19.0
+	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6
 	github.com/jackc/pgx/v5 v5.7.6
@@ -63,7 +63,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute/metadata v0.7.0 // indirect
+	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 )
 
