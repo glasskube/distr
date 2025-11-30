@@ -90,13 +90,10 @@ const inviteComponentGuard: CanActivateFn = async () => {
 const baseRouteRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  switch (auth.getClaims()?.role) {
-    case 'customer':
-      return router.createUrlTree(['/home']);
-    case 'vendor':
-      return router.createUrlTree(['/dashboard']);
-    default:
-      return false;
+  if (auth.isVendor()) {
+    return router.createUrlTree(['/dashboard']);
+  } else {
+    return router.createUrlTree(['/home']);
   }
 };
 

@@ -11,8 +11,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/contenttype"
 	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/middleware"
-	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -31,8 +29,6 @@ func RespondJSON(w http.ResponseWriter, data any) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
-
-var requireUserRoleVendor = middleware.UserRoleMiddleware(types.UserRoleVendor)
 
 func readMultipartFile(w http.ResponseWriter, r *http.Request, formKey string) ([]byte, bool) {
 	log := internalctx.GetLogger(r.Context())

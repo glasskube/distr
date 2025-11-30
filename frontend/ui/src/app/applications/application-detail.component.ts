@@ -44,6 +44,8 @@ import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {PermissionsDirective} from '../directives/required-role.directive';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-application-detail',
@@ -71,6 +73,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   private readonly applicationService = inject(ApplicationsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
   readonly applications$: Observable<Application[]> = this.applicationService.list();
   filterForm = new FormGroup({
     showArchived: new FormControl<boolean>(false),
@@ -161,6 +164,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   protected readonly faArchive = faArchive;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faBox = faBox;
+
   protected readonly isArchived = isArchived;
   readonly breadcrumbDropdown = signal(false);
   readonly isVersionFormExpanded = signal(false);

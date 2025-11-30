@@ -35,7 +35,7 @@ func NewAuthorizer() Authorizer {
 // Authorize implements ArtifactsAuthorizer.
 func (a *authorizer) Authorize(ctx context.Context, nameStr string, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
-	if action == ActionWrite && *auth.CurrentUserRole() != types.UserRoleVendor {
+	if action == ActionWrite && auth.CurrentCustomerOrgID() != nil {
 		return ErrAccessDenied
 	}
 
@@ -51,7 +51,7 @@ func (a *authorizer) Authorize(ctx context.Context, nameStr string, action Actio
 // AuthorizeReference implements ArtifactsAuthorizer.
 func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, reference string, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
-	if action == ActionWrite && *auth.CurrentUserRole() != types.UserRoleVendor {
+	if action == ActionWrite && auth.CurrentCustomerOrgID() != nil {
 		return ErrAccessDenied
 	}
 
@@ -60,7 +60,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 		return err
 	} else if org.Slug == nil || *org.Slug != name.OrgName {
 		return ErrAccessDenied
-	} else if action != ActionWrite && *auth.CurrentUserRole() != types.UserRoleVendor {
+	} else if action != ActionWrite && auth.CurrentCustomerOrgID() != nil {
 		if org.HasFeature(types.FeatureLicensing) {
 			err := db.CheckLicenseForArtifact(ctx, name.OrgName, name.ArtifactName, reference, *auth.CurrentCustomerOrgID())
 			if errors.Is(err, apierrors.ErrForbidden) {
@@ -77,7 +77,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 func (a *authorizer) AuthorizeBlob(ctx context.Context, digest digest.Digest, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
-	if *auth.CurrentUserRole() != types.UserRoleVendor {
+	if auth.CurrentCustomerOrgID() != nil {
 		if action == ActionWrite {
 			return ErrAccessDenied
 		} else if auth.CurrentOrg().HasFeature(types.FeatureLicensing) {

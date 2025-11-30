@@ -1,17 +1,19 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {map, merge, Observable, of, shareReplay, Subject, switchMap, tap} from 'rxjs';
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
+import {map, merge, Observable, shareReplay, Subject, tap} from 'rxjs';
 import {ReactiveList} from './cache';
-import {AuthService} from './auth.service';
 import {ContextService} from './context.service';
-import {Organization} from '../types/organization';
 
 export interface CreateUserAccountRequest {
   email: string;
   name?: string;
   userRole: UserRole;
   customerOrganizationId?: string;
+}
+
+export interface PatchUserAccountRequest {
+  userRole?: UserRole;
 }
 
 export interface UserAccountInvitationResponse {
@@ -64,6 +66,15 @@ export class UsersService {
 
   public patchImage(userId: string, imageId: string) {
     return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId}).pipe(
+      tap((it) => {
+        this.cache.save(it);
+        this.selfUpdate.next(it);
+      })
+    );
+  }
+
+  public patchUserAccount(userId: string, request: PatchUserAccountRequest) {
+    return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}`, request).pipe(
       tap((it) => {
         this.cache.save(it);
         this.selfUpdate.next(it);

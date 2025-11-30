@@ -1,5 +1,5 @@
 import {Component, inject} from '@angular/core';
-import {startWith, Subject, switchMap} from 'rxjs';
+import {map, startWith, Subject, switchMap} from 'rxjs';
 import {UsersService} from '../../../services/users.service';
 import {UsersComponent} from '../users.component';
 import {toSignal} from '@angular/core/rxjs-interop';
@@ -9,7 +9,7 @@ import {AuthService} from '../../../services/auth.service';
   template: `<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
     <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
       <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-        <app-users (refresh)="refresh$.next()" [users]="users() ?? []" [userRole]="userRole" />
+        <app-users (refresh)="refresh$.next()" [users]="users() ?? []" />
       </div>
     </div>
   </section>`,
@@ -22,7 +22,8 @@ export class VendorUsersComponent {
   protected readonly users = toSignal(
     this.refresh$.pipe(
       startWith(undefined),
-      switchMap(() => this.usersService.getUsers())
+      switchMap(() => this.usersService.getUsers()),
+      map((users) => (this.auth.isVendor() ? users.filter((user) => user.customerOrganizationId === undefined) : users))
     )
   );
   protected readonly userRole = this.auth.getClaims()!.role;

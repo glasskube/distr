@@ -5,14 +5,12 @@ import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
-  faBuilding,
   faBuildingUser,
   faCircleExclamation,
   faEdit,
   faMagnifyingGlass,
   faPlus,
   faTrash,
-  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {CustomerOrganization} from '@glasskube/distr-sdk';
@@ -20,12 +18,13 @@ import {combineLatest, filter, firstValueFrom, map, startWith, Subject, switchMa
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UuidComponent} from '../uuid';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   templateUrl: './customer-organizations.component.html',
@@ -34,11 +33,11 @@ import {UuidComponent} from '../uuid';
     FontAwesomeModule,
     UuidComponent,
     DatePipe,
-    RequireRoleDirective,
     SecureImagePipe,
     AsyncPipe,
     DecimalPipe,
     RouterLink,
+    RequireVendorDirective,
   ],
   animations: [modalFlyInOut],
 })
@@ -56,6 +55,7 @@ export class CustomerOrganizationsComponent {
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(FormBuilder).nonNullable;
   protected readonly featureFlags = inject(FeatureFlagService);
+  protected readonly auth = inject(AuthService);
 
   protected readonly filterForm = this.fb.group({
     search: this.fb.control(''),

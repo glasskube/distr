@@ -55,7 +55,7 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	var artifacts []types.ArtifactWithDownloads
 	var err error
-	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+	if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
@@ -82,7 +82,7 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var licenseCustomerOrgID *uuid.UUID
-		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+		if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
@@ -117,7 +117,7 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var licenseCustomerOrgID *uuid.UUID
-		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+		if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {

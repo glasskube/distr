@@ -55,23 +55,17 @@
         <div class="my-4 gap-4 md:my-6 md:gap-12">
           <div class="space-y-4">
             <div class="flex space-x-4">
-              @if (application.imageUrl) {
-                <img
-                  (click)="uploadImage(application)"
-                  class="w-16 h-16 rounded-sm cursor-pointer"
-                  height="199"
-                  width="199"
-                  [attr.src]="application.imageUrl | secureImage | async"
-                  alt="" />
-              } @else {
-                <img
-                  (click)="uploadImage(application)"
-                  [ngSrc]="'/' + application.type + '.png'"
-                  [alt]="application.type"
-                  class="h-16 w-16 rounded-sm cursor-pointer"
-                  height="199"
-                  width="199" />
-              }
+              <button
+                type="button"
+                class="w-16 h-16 rounded-sm cursor-pointer overflow-hidden"
+                (click)="uploadImage(application)"
+                [disabled]="!auth.hasAnyRole('read_write', 'admin')">
+                @if (application.imageUrl) {
+                  <img height="199" width="199" [attr.src]="application.imageUrl | secureImage | async" alt="" />
+                } @else {
+                  <img [ngSrc]="'/' + application.type + '.png'" [alt]="application.type" height="199" width="199" />
+                }
+              </button>
               <div>
                 @if (editForm.enabled) {
                   <form [formGroup]="editForm" (ngSubmit)="saveApplication(application)">
@@ -110,12 +104,14 @@
                     <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                       {{ application.name }}
                     </h3>
-                    <button
-                      type="button"
-                      (click)="enableApplicationEdit(application)"
-                      class="cursor-pointer ml-2 text-sm py-1 px-2 text-gray-900 bg-white border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-                      <fa-icon [icon]="faEdit"></fa-icon>
-                    </button>
+                    @if (auth.hasAnyRole('read_write', 'admin')) {
+                      <button
+                        type="button"
+                        (click)="enableApplicationEdit(application)"
+                        class="cursor-pointer ml-2 text-sm py-1 px-2 text-gray-900 bg-white border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                        <fa-icon [icon]="faEdit"></fa-icon>
+                      </button>
+                    }
                   </div>
                 }
                 @if (application.id) {
@@ -126,16 +122,18 @@
                   {{ application.type }}
                 </span>
               </div>
-              <div class="inline-flex self-start items-end justify-end grow">
-                <button
-                  type="button"
-                  aria-label="Delete"
-                  (click)="deleteApplication(application)"
-                  class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                  <fa-icon [icon]="faTrash" class="h-4 w-4 mr-2"></fa-icon>
-                  Delete Application
-                </button>
-              </div>
+              @if (auth.hasAnyRole('read_write', 'admin')) {
+                <div class="inline-flex self-start items-end justify-end grow">
+                  <button
+                    type="button"
+                    aria-label="Delete"
+                    (click)="deleteApplication(application)"
+                    class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                    <fa-icon [icon]="faTrash" class="h-4 w-4 mr-2"></fa-icon>
+                    Delete Application
+                  </button>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -159,16 +157,18 @@
               <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
-                    <td class="px-1 py-3">
-                      @let versions = this.visibleVersions$ | async;
-                      @let all = isAllVersionsSelected(versions ?? []);
-                      <input
-                        type="checkbox"
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                        [checked]="all"
-                        [indeterminate]="!all && selectedVersionIds().size > 0"
-                        (change)="toggleAllVersionsSelected(versions ?? [])" />
-                    </td>
+                    @if (auth.hasAnyRole('read_write', 'admin')) {
+                      <td class="px-1 py-3">
+                        @let versions = this.visibleVersions$ | async;
+                        @let all = isAllVersionsSelected(versions ?? []);
+                        <input
+                          type="checkbox"
+                          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                          [checked]="all"
+                          [indeterminate]="!all && selectedVersionIds().size > 0"
+                          (change)="toggleAllVersionsSelected(versions ?? [])" />
+                      </td>
+                    }
                     @if (selectedVersionIds().size > 0) {
                       <td class="px-3 normal-case text-sm" [attr.colspan]="application.type === 'kubernetes' ? 8 : 5">
                         {{ selectedVersionIds().size }} selected
@@ -200,15 +200,17 @@
                       [class.hover:bg-gray-50]="!archived"
                       [class.dark:hover:bg-gray-600]="!archived"
                       class="bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-                      <td class="px-1 py-4">
-                        @if (!archived) {
-                          <input
-                            type="checkbox"
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                            [checked]="isVersionSelected(version)"
-                            (change)="toggleVersionSelected(version)" />
-                        }
-                      </td>
+                      @if (auth.hasAnyRole('read_write', 'admin')) {
+                        <td class="px-1 py-4">
+                          @if (!archived) {
+                            <input
+                              type="checkbox"
+                              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                              [checked]="isVersionSelected(version)"
+                              (change)="toggleVersionSelected(version)" />
+                          }
+                        </td>
+                      }
                       <td class="px-1 py-4">
                         <app-uuid [uuid]="version.id!" [small]="true"></app-uuid>
                       </td>
@@ -242,27 +244,29 @@
                           class="py-2 px-3 mr-2 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                           <fa-icon [icon]="faEye" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
                         </button>
-                        @if (!archived) {
+                        @if (auth.hasAnyRole('read_write', 'admin')) {
+                          @if (!archived) {
+                            <button
+                              (click)="archiveVersion(application, version)"
+                              class="py-2 px-3 mr-2 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                              <fa-icon [icon]="faArchive" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
+                              Archive
+                            </button>
+                          } @else {
+                            <button
+                              (click)="unArchiveVersion(application, version)"
+                              class="py-2 px-3 mr-4 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                              <fa-icon [icon]="faArchive" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
+                              Unarchive
+                            </button>
+                          }
                           <button
-                            (click)="archiveVersion(application, version)"
-                            class="py-2 px-3 mr-2 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                            <fa-icon [icon]="faArchive" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
-                            Archive
-                          </button>
-                        } @else {
-                          <button
-                            (click)="unArchiveVersion(application, version)"
-                            class="py-2 px-3 mr-4 items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                            <fa-icon [icon]="faArchive" class="h-4 w-4 text-gray-500 dark:text-gray-400"></fa-icon>
-                            Unarchive
+                            type="button"
+                            class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                            (click)="fillVersionFormWith(application, version)">
+                            Copy from
                           </button>
                         }
-                        <button
-                          type="button"
-                          class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                          (click)="fillVersionFormWith(application, version)">
-                          Copy from
-                        </button>
                       </td>
                     </tr>
                   }
@@ -271,17 +275,19 @@
             </div>
           }
 
-          <h3 class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">
-            <button
-              (click)="isVersionFormExpanded.set(!isVersionFormExpanded())"
-              [title]="'Click to ' + (isVersionFormExpanded() ? 'hide' : 'show') + ' the version form'">
-              <fa-icon
-                class="inline-block transition duration-100 ease-in-out"
-                [class.-rotate-90]="!isVersionFormExpanded()"
-                [icon]="faChevronDown"></fa-icon>
-              New Version
-            </button>
-          </h3>
+          @if (auth.hasAnyRole('read_write', 'admin')) {
+            <h3 class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">
+              <button
+                (click)="isVersionFormExpanded.set(!isVersionFormExpanded())"
+                [title]="'Click to ' + (isVersionFormExpanded() ? 'hide' : 'show') + ' the version form'">
+                <fa-icon
+                  class="inline-block transition duration-100 ease-in-out"
+                  [class.-rotate-90]="!isVersionFormExpanded()"
+                  [icon]="faChevronDown"></fa-icon>
+                New Version
+              </button>
+            </h3>
+          }
 
           @if (isVersionFormExpanded()) {
             <form [formGroup]="newVersionForm" (ngSubmit)="createVersion(application)">

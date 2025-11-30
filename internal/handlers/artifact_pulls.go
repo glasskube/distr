@@ -10,7 +10,6 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -18,7 +17,7 @@ import (
 func ArtifactPullsRouter(r chi.Router) {
 	r.Use(
 		middleware.RequireOrgAndRole,
-		middleware.UserRoleMiddleware(types.UserRoleVendor),
+		middleware.RequireVendor,
 	)
 	r.Get("/", getArtifactPullsHandler())
 }

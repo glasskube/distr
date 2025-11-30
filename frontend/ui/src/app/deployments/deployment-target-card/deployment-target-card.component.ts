@@ -201,7 +201,7 @@ export class DeploymentTargetCardComponent {
     if (dt.currentStatus !== undefined) {
       const message = `If you continue, the previous authentication secret for ${dt.name} becomes invalid. Continue?`;
       const warning =
-        dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+        dt.customerOrganization !== undefined && this.auth.isVendor()
           ? {message: this.customerManagedWarning}
           : undefined;
       if (!(await firstValueFrom(this.overlay.confirm({message: {message, warning}})))) {
@@ -274,7 +274,7 @@ export class DeploymentTargetCardComponent {
   protected deleteDeploymentTarget() {
     const dt = this.deploymentTarget();
     const warning =
-      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+      dt.customerOrganization !== undefined && this.auth.isVendor()
         ? {message: this.customerManagedWarning}
         : undefined;
     this.overlay
@@ -303,7 +303,7 @@ export class DeploymentTargetCardComponent {
   protected async deleteDeployment(d: DeploymentWithLatestRevision, confirmTemplate: TemplateRef<any>) {
     const dt = this.deploymentTarget();
     const warning =
-      dt.createdBy?.userRole === 'customer' && this.auth.hasRole('vendor')
+      dt.customerOrganization !== undefined && this.auth.isVendor()
         ? {message: this.customerManagedWarning}
         : undefined;
     if (d.id) {

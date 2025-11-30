@@ -2,7 +2,6 @@ package mailsending
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -11,6 +10,7 @@ import (
 	"github.com/glasskube/distr/internal/mail"
 	"github.com/glasskube/distr/internal/mailtemplates"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +18,7 @@ func SendUserInviteMail(
 	ctx context.Context,
 	userAccount types.UserAccount,
 	organization types.OrganizationWithBranding,
-	userRole types.UserRole,
+	customerOrgID *uuid.UUID,
 	inviteURL string,
 ) error {
 	mailer := internalctx.GetMailer(ctx)
@@ -31,8 +31,7 @@ func SendUserInviteMail(
 	}
 	from.Name = organization.Name
 	var email mail.Mail
-	switch userRole {
-	case types.UserRoleCustomer:
+	if customerOrgID != nil {
 		if currentUser, err := db.GetUserAccountByID(ctx, auth.CurrentUserID()); err != nil {
 			log.Error("could not get current user for invite mail", zap.Error(err))
 			return err
@@ -46,15 +45,13 @@ func SendUserInviteMail(
 				mail.HtmlBodyTemplate(mailtemplates.InviteCustomer(userAccount, organization, inviteURL)),
 			)
 		}
-	case types.UserRoleVendor:
+	} else {
 		email = mail.New(
 			mail.To(userAccount.Email),
 			mail.From(*from),
 			mail.Subject("Welcome to Distr"),
 			mail.HtmlBodyTemplate(mailtemplates.InviteUser(userAccount, organization, inviteURL)),
 		)
-	default:
-		return fmt.Errorf("unknown UserRole: %v", userRole)
 	}
 
 	if err := mailer.Send(ctx, email); err != nil {

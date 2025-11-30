@@ -1,4 +1,4 @@
-import {Component, effect, ElementRef, inject, signal, ViewChild, WritableSignal} from '@angular/core';
+import {Component, effect, ElementRef, inject, signal, viewChild, ViewChild, WritableSignal} from '@angular/core';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -19,13 +19,18 @@ import {
   faUserCheck,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {
+  RequireCustomerDirective,
+  RequireRoleDirective,
+  RequireVendorDirective,
+} from '../../directives/required-role.directive';
 import {SidebarService} from '../../services/sidebar.service';
 import {buildConfig} from '../../../buildconfig';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {TutorialsService} from '../../services/tutorials.service';
+import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -34,19 +39,21 @@ import {TutorialsService} from '../../services/tutorials.service';
   imports: [
     RouterLink,
     FaIconComponent,
-    RequireRoleDirective,
     AsyncPipe,
     RouterLinkActive,
     CdkOverlayOrigin,
     CdkConnectedOverlay,
     NgTemplateOutlet,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
 })
 export class SideBarComponent {
-  public readonly sidebar = inject(SidebarService);
-  public readonly featureFlags = inject(FeatureFlagService);
+  protected readonly auth = inject(AuthService);
+  protected readonly sidebar = inject(SidebarService);
+  protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly tutorialsService = inject(TutorialsService);
-  public feedbackAlert = true;
+
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faServer = faServer;
@@ -63,17 +70,19 @@ export class SideBarComponent {
   protected readonly faHome = faHome;
   protected readonly faChevronDown = faChevronDown;
 
-  @ViewChild('asideElement') private asideElement?: ElementRef<HTMLElement>;
+  protected feedbackAlert = true;
   protected readonly agentsSubMenuOpen = signal(true);
   protected readonly licenseSubMenuOpen = signal(true);
   protected readonly registrySubMenuOpen = signal(true);
   protected readonly licenseOverlayOpen = signal(false);
 
+  private readonly asideElement = viewChild.required<ElementRef<HTMLElement>>('asideElement');
+
   constructor() {
     effect(() => {
       const show = this.sidebar.showSidebar();
-      this.asideElement?.nativeElement.classList.toggle('translate-x-0', show);
-      this.asideElement?.nativeElement.classList.toggle('-translate-x-full', !show);
+      this.asideElement().nativeElement.classList.toggle('translate-x-0', show);
+      this.asideElement().nativeElement.classList.toggle('-translate-x-full', !show);
     });
   }
 

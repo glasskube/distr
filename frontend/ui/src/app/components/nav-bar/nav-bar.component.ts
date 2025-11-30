@@ -45,6 +45,7 @@ import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -66,6 +67,8 @@ type SwitchOptions = {
     TitleCasePipe,
     AutotrimDirective,
     ReactiveFormsModule,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
   animations: [dropdownAnimation, modalFlyInOut],
 })
@@ -102,7 +105,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
       return {
         currentOrg,
         availableOrgs: orgs.filter((o) => o.id !== currentOrg.id),
-        isVendorSomewhere: orgs.some((o) => o.userRole === 'vendor'),
+        isVendorSomewhere: orgs.some((o) => o.customerOrganizationId === undefined),
       };
     })
   );
@@ -140,7 +143,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
   }
 
   private async initBranding() {
-    if (this.auth.hasRole('customer')) {
+    if (this.auth.isCustomer()) {
       try {
         const branding = await lastValueFrom(this.organizationBranding.get());
         if (branding.logo) {
