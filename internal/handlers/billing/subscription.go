@@ -208,7 +208,7 @@ func validateSubscriptionQuantities(
 	usage *currentUsageCounts,
 ) error {
 	// Validate that requested quantities meet current usage minimums
-	if customerOrgQty < int64(usage.customerOrganizationCount) {
+	if customerOrgQty < usage.customerOrganizationCount {
 		return fmt.Errorf(
 			"customer organization quantity (%d) cannot be less than current count (%d)",
 			customerOrgQty,
@@ -226,7 +226,7 @@ func validateSubscriptionQuantities(
 
 	// Validate that the subscription type limits can accommodate the requested quantities
 	customerOrgLimit := subscription.GetCustomersPerOrganizationLimit(subscriptionType)
-	if customerOrgLimit != subscription.Unlimited && customerOrgQty > int64(customerOrgLimit) {
+	if customerOrgLimit.IsReached(customerOrgQty) {
 		return fmt.Errorf(
 			"subscription type %v can have at most %v customer organizations, but %v were requested",
 			subscriptionType,
@@ -237,9 +237,7 @@ func validateSubscriptionQuantities(
 
 	// Validate that the subscription type can accommodate current max users per customer
 	usersPerCustomerLimit := subscription.GetUsersPerCustomerOrganizationLimit(subscriptionType)
-	if usersPerCustomerLimit != subscription.Unlimited &&
-		usage.maxUsersPerCustomer > 0 &&
-		usage.maxUsersPerCustomer > int64(usersPerCustomerLimit) {
+	if usersPerCustomerLimit.IsReached(usage.maxUsersPerCustomer) {
 		return fmt.Errorf(
 			"subscription type %v allows at most %v users per customer organization, "+
 				"but you currently have a customer with %v users",
@@ -251,9 +249,7 @@ func validateSubscriptionQuantities(
 
 	// Validate that the subscription type can accommodate current max deployments per customer
 	deploymentsPerCustomerLimit := subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(subscriptionType)
-	if deploymentsPerCustomerLimit != subscription.Unlimited &&
-		usage.maxDeploymentTargetsPerCustomer > 0 &&
-		usage.maxDeploymentTargetsPerCustomer > int64(deploymentsPerCustomerLimit) {
+	if deploymentsPerCustomerLimit.IsReached(usage.maxDeploymentTargetsPerCustomer) {
 		return fmt.Errorf(
 			"subscription type %v allows at most %v deployment targets per customer organization, "+
 				"but you currently have a customer with %v deployment targets",
