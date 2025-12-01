@@ -27,5 +27,4 @@ export interface CheckoutRequest {
   billingMode: 'monthly' | 'yearly';
   subscriptionUserAccountQuantity: number;
   subscriptionCustomerOrganizationQuantity: number;
-  currency: string;
 }

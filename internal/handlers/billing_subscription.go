@@ -42,18 +42,12 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		BillingMode             billing.BillingMode    `json:"billingMode"`
 		CustomerOrganizationQty int64                  `json:"subscriptionCustomerOrganizationQuantity"`
 		UserAccountQty          int64                  `json:"subscriptionUserAccountQuantity"`
-		Currency                string                 `json:"currency"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		log.Debug("bad json payload", zap.Error(err))
 		http.Error(w, "bad json payload", http.StatusBadRequest)
 		return
-	}
-
-	// Default to USD if no currency is provided
-	if body.Currency == "" {
-		body.Currency = "usd"
 	}
 
 	// Get current usage counts
@@ -81,7 +75,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		BillingMode:             body.BillingMode,
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
 		UserAccountQty:          body.UserAccountQty,
-		Currency:                body.Currency,
+		Currency:                "usd",
 		SuccessURL:              fmt.Sprintf("%v/subscription/callback", handlerutil.GetRequestSchemeAndHost(r)),
 	})
 	if err != nil {

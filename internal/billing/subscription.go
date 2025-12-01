@@ -95,7 +95,6 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 	sessionParams := &stripe.CheckoutSessionParams{
 		Params:     stripe.Params{Context: ctx},
 		Mode:       util.PtrTo(string(stripe.CheckoutSessionModeSubscription)),
-		Currency:   util.PtrTo(params.Currency),
 		SuccessURL: util.PtrTo(params.SuccessURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{Price: &prices.CustomerPriceID, Quantity: util.PtrTo(params.CustomerOrganizationQty)},

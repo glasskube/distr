@@ -29,7 +29,6 @@ export class SubscriptionComponent implements OnInit {
     billingMode: new FormControl<'monthly' | 'yearly'>('monthly', [Validators.required]),
     userAccountQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
     customerOrganizationQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
-    currency: new FormControl<string>('usd', [Validators.required]),
   });
 
   async ngOnInit() {
@@ -81,7 +80,6 @@ export class SubscriptionComponent implements OnInit {
           billingMode: this.form.value.billingMode!,
           subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
           subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
-          currency: this.form.value.currency!,
         };
 
         // Call the checkout endpoint which will redirect to Stripe
