@@ -1,6 +1,10 @@
 package api
 
-import "github.com/glasskube/distr/internal/types"
+import (
+	"time"
+
+	"github.com/glasskube/distr/internal/types"
+)
 
 type SubscriptionLimits struct {
 	MaxCustomerOrganizations        int64 `json:"maxCustomerOrganizations"`
@@ -10,7 +14,7 @@ type SubscriptionLimits struct {
 
 type SubscriptionInfo struct {
 	SubscriptionType                       types.SubscriptionType `json:"subscriptionType"`
-	SubscriptionEndsAt                     string                 `json:"subscriptionEndsAt"`
+	SubscriptionEndsAt                     time.Time              `json:"subscriptionEndsAt"`
 	SubscriptionExternalID                 *string                `json:"subscriptionExternalId"`
 	SubscriptionCustomerOrganizationQty    *int64                 `json:"subscriptionCustomerOrganizationQuantity"`
 	SubscriptionUserAccountQty             *int64                 `json:"subscriptionUserAccountQuantity"`

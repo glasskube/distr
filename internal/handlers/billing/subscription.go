@@ -325,7 +325,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
-		SubscriptionEndsAt:                     org.SubscriptionEndsAt.Format("2006-01-02"),
+		SubscriptionEndsAt:                     org.SubscriptionEndsAt,
 		SubscriptionExternalID:                 org.StripeSubscriptionID,
 		SubscriptionCustomerOrganizationQty:    org.SubscriptionCustomerOrganizationQty,
 		SubscriptionUserAccountQty:             org.SubscriptionUserAccountQty,
