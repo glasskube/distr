@@ -11,10 +11,11 @@ func Router(r chi.Router) {
 
 	r.Route("/billing", func(r chi.Router) {
 		// Subscription management
-		r.Get("/subscription", GetSubscriptionHandler)
-		r.Post("/subscription", CreateSubscriptionHandler)
-		r.Put("/subscription", UpdateSubscriptionHandler)
-
+		r.Route("/subscription", func(r chi.Router) {
+			r.Get("/", GetSubscriptionHandler)
+			r.Post("/", CreateSubscriptionHandler)
+			r.Put("/", UpdateSubscriptionHandler)
+		})
 		// Billing portal
 		r.Post("/billing-portal", CreateBillingPortalSessionHandler)
 	})
