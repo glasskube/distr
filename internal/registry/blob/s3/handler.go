@@ -1,7 +1,6 @@
 package s3
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -14,12 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/registry/blob"
+	"github.com/glasskube/distr/internal/tmpstream"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/opencontainers/go-digest"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
+	"go.uber.org/zap"
 )
 
 const (
@@ -135,10 +137,20 @@ func (handler *blobHandler) Put(
 
 	// The AWS S3 SDK requires a io.ReadSeeker event though the interface only specifies io.Reader
 	if _, ok := r.(io.Seeker); !ok {
-		if data, err := io.ReadAll(r); err != nil {
+		if s, err := tmpstream.New(r); err != nil {
 			return err
 		} else {
-			r = bytes.NewReader(data)
+			defer func() {
+				if err := s.Destroy(); err != nil {
+					internalctx.GetLogger(ctx).Warn("ephemeral resource cleanup error", zap.Error(err))
+				}
+			}()
+			if sr, err := s.Get(); err != nil {
+				return err
+			} else {
+				defer sr.Close()
+				r = sr
+			}
 		}
 	}
 
@@ -213,12 +225,28 @@ func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader
 		return 0, blob.NewErrBadUpload("range is not as expected")
 	}
 
-	var br *bytes.Reader
-	if data, err := io.ReadAll(r); err != nil {
-		return 0, err
+	if s, err := tmpstream.New(r); err != nil {
+		return 0, fmt.Errorf("failed to create tmp stream: %w", err)
 	} else {
-		size += int64(len(data))
-		br = bytes.NewReader(data)
+		defer func() {
+			if err := s.Destroy(); err != nil {
+				internalctx.GetLogger(ctx).Warn("ephemeral resource cleanup error", zap.Error(err))
+			}
+		}()
+		if sr, err := s.Get(); err != nil {
+			return 0, fmt.Errorf("failed to get tmp stream reader: %w", err)
+		} else {
+			defer sr.Close()
+			if srl, err := io.Copy(io.Discard, sr); err != nil {
+				return 0, fmt.Errorf("failed to get stream reader length: %w", err)
+			} else {
+				size += srl
+				if _, err := sr.Seek(0, io.SeekStart); err != nil {
+					return 0, fmt.Errorf("failed to reset stream reader position to 0: %w", err)
+				}
+			}
+			r = sr
+		}
 	}
 
 	if _, err := handler.s3Client.UploadPart(ctx, &s3.UploadPartInput{
@@ -226,7 +254,7 @@ func (handler *blobHandler) PutChunk(ctx context.Context, id string, r io.Reader
 		Key:        &uploadKey,
 		UploadId:   uploadID,
 		PartNumber: &partNumber,
-		Body:       br,
+		Body:       r,
 	}); err != nil {
 		return 0, err
 	}

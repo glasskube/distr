@@ -48,6 +48,7 @@ var (
 	registration                           RegistrationMode
 	registryEnabled                        bool
 	registryS3Config                       S3Config
+	registryScratchDir                     *string
 	artifactTagsDefaultLimitPerOrg         int
 	cleanupDeploymentRevisionStatusCron    *string
 	cleanupDeploymentRevisionStatusTimeout time.Duration
@@ -149,6 +150,7 @@ func Initialize() {
 		registryS3Config.ResignForGCP = envutil.GetEnvParsedOrDefault(
 			"REGISTRY_RESIGN_FOR_GCP", strconv.ParseBool, false,
 		)
+		registryScratchDir = envutil.GetEnvOrNil("REGISTRY_SCRATCH_DIR")
 	}
 	artifactTagsDefaultLimitPerOrg = envutil.GetEnvParsedOrDefault(
 		"ARTIFACT_TAGS_DEFAULT_LIMIT_PER_ORG", envparse.NonNegativeNumber, 0,
@@ -333,6 +335,10 @@ func RegistryEnabled() bool {
 
 func RegistryS3Config() S3Config {
 	return registryS3Config
+}
+
+func RegistryScratchDir() *string {
+	return registryScratchDir
 }
 
 func ArtifactTagsDefaultLimitPerOrg() int {
