@@ -3,6 +3,7 @@ package subscription
 import (
 	"fmt"
 
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/types"
 )
 
@@ -70,5 +71,13 @@ func GetDeploymentTargetsPerCustomerOrganizationLimit(st types.SubscriptionType)
 		return MaxDeploymentTargetsPerCustomerOrganizationUnlimited
 	default:
 		panic(fmt.Sprintf("invalid subscription type: %v", st))
+	}
+}
+
+func GetSubscriptionLimits(st types.SubscriptionType) api.SubscriptionLimits {
+	return api.SubscriptionLimits{
+		MaxCustomerOrganizations:        int64(GetCustomersPerOrganizationLimit(st)),
+		MaxUsersPerCustomerOrganization: int64(GetUsersPerCustomerOrganizationLimit(st)),
+		MaxDeploymentsPerCustomerOrg:    int64(GetDeploymentTargetsPerCustomerOrganizationLimit(st)),
 	}
 }

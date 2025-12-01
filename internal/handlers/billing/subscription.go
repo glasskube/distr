@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/api"
+	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/billing"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -271,53 +271,10 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 	}
 
 	// Build limits for all subscription types
-	trialLimits := api.SubscriptionLimits{
-		MaxCustomerOrganizations: int64(
-			subscription.GetCustomersPerOrganizationLimit(types.SubscriptionTypeTrial),
-		),
-		MaxUsersPerCustomerOrganization: int64(
-			subscription.GetUsersPerCustomerOrganizationLimit(types.SubscriptionTypeTrial),
-		),
-		MaxDeploymentsPerCustomerOrg: int64(
-			subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(types.SubscriptionTypeTrial),
-		),
-	}
-
-	starterLimits := api.SubscriptionLimits{
-		MaxCustomerOrganizations: int64(
-			subscription.GetCustomersPerOrganizationLimit(types.SubscriptionTypeStarter),
-		),
-		MaxUsersPerCustomerOrganization: int64(
-			subscription.GetUsersPerCustomerOrganizationLimit(types.SubscriptionTypeStarter),
-		),
-		MaxDeploymentsPerCustomerOrg: int64(
-			subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(types.SubscriptionTypeStarter),
-		),
-	}
-
-	proLimits := api.SubscriptionLimits{
-		MaxCustomerOrganizations: int64(
-			subscription.GetCustomersPerOrganizationLimit(types.SubscriptionTypePro),
-		),
-		MaxUsersPerCustomerOrganization: int64(
-			subscription.GetUsersPerCustomerOrganizationLimit(types.SubscriptionTypePro),
-		),
-		MaxDeploymentsPerCustomerOrg: int64(
-			subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(types.SubscriptionTypePro),
-		),
-	}
-
-	enterpriseLimits := api.SubscriptionLimits{
-		MaxCustomerOrganizations: int64(
-			subscription.GetCustomersPerOrganizationLimit(types.SubscriptionTypeEnterprise),
-		),
-		MaxUsersPerCustomerOrganization: int64(
-			subscription.GetUsersPerCustomerOrganizationLimit(types.SubscriptionTypeEnterprise),
-		),
-		MaxDeploymentsPerCustomerOrg: int64(
-			subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(types.SubscriptionTypeEnterprise),
-		),
-	}
+	trialLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeStarter)
+	starterLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeStarter)
+	proLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypePro)
+	enterpriseLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)
 
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,

@@ -6,6 +6,11 @@ import (
 	"github.com/glasskube/distr/internal/types"
 )
 
+type CheckoutResponse struct {
+	SessionID string `json:"sessionId"`
+	URL       string `json:"url"`
+}
+
 type SubscriptionLimits struct {
 	MaxCustomerOrganizations        int64 `json:"maxCustomerOrganizations"`
 	MaxUsersPerCustomerOrganization int64 `json:"maxUsersPerCustomerOrganization"`
