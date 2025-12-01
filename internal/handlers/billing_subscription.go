@@ -1,4 +1,4 @@
-package billing
+package handlers
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func GetSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, info)
+	RespondJSON(w, info)
 }
 
 func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +90,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, api.CheckoutResponse{
+	RespondJSON(w, api.CheckoutResponse{
 		SessionID: session.ID,
 		URL:       session.URL,
 	})
@@ -197,7 +197,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, info)
+	RespondJSON(w, info)
 }
 
 // validateSubscriptionQuantities validates that the requested quantities meet all requirements
@@ -335,12 +335,4 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 		maxUsersPerCustomer:             maxUsersPerCustomer,
 		maxDeploymentTargetsPerCustomer: maxDeploymentTargetsPerCustomer,
 	}, nil
-}
-
-// respondJSON is a helper function to send JSON responses
-func respondJSON(w http.ResponseWriter, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
-	}
 }

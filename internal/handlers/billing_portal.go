@@ -1,4 +1,4 @@
-package billing
+package handlers
 
 import (
 	"encoding/json"
@@ -44,7 +44,7 @@ func CreateBillingPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, map[string]string{
+	RespondJSON(w, map[string]string{
 		"url": session.URL,
 	})
 }

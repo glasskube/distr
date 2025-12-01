@@ -18,14 +18,9 @@ export class SubscriptionService {
     // Create checkout session on backend
     const response = await firstValueFrom(
       this.httpClient.post<{
-        sessionId: string;
         url: string;
       }>(`${this.baseUrl}/subscription`, request)
     );
-
-    if (!response?.url) {
-      throw new Error('Failed to create checkout session');
-    }
 
     window.location.href = response.url;
   }

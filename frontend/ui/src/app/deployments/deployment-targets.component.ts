@@ -100,9 +100,7 @@ export class DeploymentTargetsComponent implements AfterViewInit {
   private readonly organization = toSignal(this.organizationService.get());
   protected readonly limit = computed(() => {
     const org = this.organization();
-    return !(org && org.subscriptionLimits)
-      ? undefined
-      : org.subscriptionLimits.maxDeploymentsPerCustomerOrganization;
+    return !(org && org.subscriptionLimits) ? undefined : org.subscriptionLimits.maxDeploymentsPerCustomerOrganization;
   });
   protected readonly count = toSignal(
     combineLatest([this.deploymentTargets$, this.context.getUser()]).pipe(

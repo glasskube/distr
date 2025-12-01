@@ -32,7 +32,6 @@ import {SubscriptionType} from '../../types/organization';
 import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
 
-
 @Component({
   selector: 'app-users',
   imports: [
