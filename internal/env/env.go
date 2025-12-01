@@ -120,10 +120,11 @@ func Initialize() {
 	}
 	if mailerConfig.Type == MailerTypeSMTP {
 		mailerConfig.SmtpConfig = &MailerSMTPConfig{
-			Host:     envutil.GetEnv("MAILER_SMTP_HOST"),
-			Port:     envutil.RequireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
-			Username: envutil.GetEnv("MAILER_SMTP_USERNAME"),
-			Password: envutil.GetEnv("MAILER_SMTP_PASSWORD"),
+			Host:        envutil.GetEnv("MAILER_SMTP_HOST"),
+			Port:        envutil.RequireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
+			Username:    envutil.GetEnv("MAILER_SMTP_USERNAME"),
+			Password:    envutil.GetEnv("MAILER_SMTP_PASSWORD"),
+			ImplicitTLS: envutil.GetEnvParsedOrDefault("MAILER_SMTP_IMPLICIT_TLS", strconv.ParseBool, false),
 		}
 	}
 
