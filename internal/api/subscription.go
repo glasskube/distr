@@ -15,7 +15,7 @@ type SubscriptionInfo struct {
 	SubscriptionCustomerOrganizationQty    *int64                 `json:"subscriptionCustomerOrganizationQuantity"`
 	SubscriptionUserAccountQty             *int64                 `json:"subscriptionUserAccountQuantity"`
 	CurrentUserAccountCount                int64                  `json:"currentUserAccountCount"`
-	CurrentCustomerOrganizationCount       int                    `json:"currentCustomerOrganizationCount"`
+	CurrentCustomerOrganizationCount       int64                  `json:"currentCustomerOrganizationCount"`
 	CurrentMaxUsersPerCustomer             int64                  `json:"currentMaxUsersPerCustomer"`
 	CurrentMaxDeploymentTargetsPerCustomer int64                  `json:"currentMaxDeploymentTargetsPerCustomer"`
 	TrialLimits                            SubscriptionLimits     `json:"trialLimits"`

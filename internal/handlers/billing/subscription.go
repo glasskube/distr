@@ -345,7 +345,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 // currentUsageCounts represents the current usage counts for an organization
 type currentUsageCounts struct {
 	userAccountCount                int64
-	customerOrganizationCount       int
+	customerOrganizationCount       int64
 	maxUsersPerCustomer             int64
 	maxDeploymentTargetsPerCustomer int64
 }
@@ -378,7 +378,7 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 
 	return &currentUsageCounts{
 		userAccountCount:                userAccountCount,
-		customerOrganizationCount:       len(customerOrgs),
+		customerOrganizationCount:       int64(len(customerOrgs)),
 		maxUsersPerCustomer:             maxUsersPerCustomer,
 		maxDeploymentTargetsPerCustomer: maxDeploymentTargetsPerCustomer,
 	}, nil

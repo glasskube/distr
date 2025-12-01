@@ -14,12 +14,8 @@ type CustomerOrganization struct {
 	Name           string     `db:"name" json:"name"`
 }
 
-type CustomerOrganizationWithUserCount struct {
-	CustomerOrganization
-	UserCount int64 `db:"user_count" json:"userCount"`
-}
-
 type CustomerOrganizationWithUsage struct {
-	CustomerOrganizationWithUserCount
+	CustomerOrganization
+	UserCount             int64 `db:"user_count" json:"userCount"`
 	DeploymentTargetCount int64 `db:"deployment_target_count" json:"deploymentTargetCount"`
 }
