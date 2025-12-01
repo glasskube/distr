@@ -82,7 +82,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
 		UserAccountQty:          body.UserAccountQty,
 		Currency:                body.Currency,
-		SuccessURL:              fmt.Sprintf("%v/billing/success", handlerutil.GetRequestSchemeAndHost(r)),
+		SuccessURL:              fmt.Sprintf("%v/subscription/callback", handlerutil.GetRequestSchemeAndHost(r)),
 	})
 	if err != nil {
 		log.Error("failed to create checkout session", zap.Error(err))
