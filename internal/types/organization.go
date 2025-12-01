@@ -21,8 +21,8 @@ type Organization struct {
 	EmailFromAddress                    *string          `db:"email_from_address" json:"emailFromAddress"`
 	SubscriptionType                    SubscriptionType `db:"subscription_type" json:"subscriptionType"`
 	SubscriptionEndsAt                  time.Time        `db:"subscription_ends_at" json:"subscriptionEndsAt"`
-	StripeCustomerId                    *string          `db:"stripe_customer_id" json:"stripeCustomerId"`
-	StripeSubscriptionId                *string          `db:"stripe_subscription_id" json:"stripeSubscriptionId"`
+	StripeCustomerID                    *string          `db:"stripe_customer_id" json:"stripeCustomerId"`
+	StripeSubscriptionID                *string          `db:"stripe_subscription_id" json:"stripeSubscriptionId"`
 	SubscriptionCustomerOrganizationQty *int64           `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
 	SubscriptionUserAccountQty          *int64           `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
 }

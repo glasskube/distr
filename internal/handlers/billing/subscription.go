@@ -108,7 +108,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if org.StripeSubscriptionId == nil || *org.StripeSubscriptionId == "" {
+	if org.StripeSubscriptionID == nil || *org.StripeSubscriptionID == "" {
 		http.Error(w, "no active subscription found", http.StatusBadRequest)
 		return
 	}
@@ -145,7 +145,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Update the subscription via Stripe
 	updatedSub, err := billing.UpdateSubscription(ctx, billing.SubscriptionUpdateParams{
-		SubscriptionID:          *org.StripeSubscriptionId,
+		SubscriptionID:          *org.StripeSubscriptionID,
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
 		UserAccountQty:          body.UserAccountQty,
 		ReturnURL:               fmt.Sprintf("%v/subscription", handlerutil.GetRequestSchemeAndHost(r)),
@@ -326,7 +326,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt.Format("2006-01-02"),
-		SubscriptionExternalID:                 org.StripeSubscriptionId,
+		SubscriptionExternalID:                 org.StripeSubscriptionID,
 		SubscriptionCustomerOrganizationQty:    org.SubscriptionCustomerOrganizationQty,
 		SubscriptionUserAccountQty:             org.SubscriptionUserAccountQty,
 		CurrentUserAccountCount:                usage.userAccountCount,

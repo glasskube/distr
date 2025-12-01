@@ -17,7 +17,7 @@ func CreateBillingPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
 	org := auth.CurrentOrg()
 
 	// Check if organization has a Stripe customer ID
-	if org.StripeCustomerId == nil || *org.StripeCustomerId == "" {
+	if org.StripeCustomerID == nil || *org.StripeCustomerID == "" {
 		http.Error(w, "no stripe customer found for organization", http.StatusBadRequest)
 		return
 	}
@@ -41,7 +41,7 @@ func CreateBillingPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, err := billing.CreateBillingPortalSession(ctx, billing.BillingPortalSessionParams{
-		CustomerID: *org.StripeCustomerId,
+		CustomerID: *org.StripeCustomerID,
 		ReturnURL:  body.ReturnURL,
 	})
 	if err != nil {
