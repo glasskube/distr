@@ -15,8 +15,6 @@ export class SubscriptionService {
   }
 
   async checkout(request: CheckoutRequest): Promise<void> {
-    console.log('checkout');
-
     // Create checkout session on backend
     const response = await firstValueFrom(
       this.httpClient.post<{
@@ -53,7 +51,7 @@ export class SubscriptionService {
     const response = await firstValueFrom(
       this.httpClient.post<{
         url: string;
-      }>(`${this.baseUrl}/billing-portal`, {
+      }>(`${this.baseUrl}/portal`, {
         returnUrl: returnUrl || window.location.href,
       })
     );

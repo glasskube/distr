@@ -2,11 +2,13 @@ package billing
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/billing"
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/handlerutil"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +20,7 @@ func CreateBillingPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if organization has a Stripe customer ID
 	if org.StripeCustomerID == nil || *org.StripeCustomerID == "" {
-		http.Error(w, "no stripe customer found for organization", http.StatusBadRequest)
+		http.Error(w, "no stripe customer found for organization", http.StatusConflict)
 		return
 	}
 
@@ -32,18 +34,11 @@ func CreateBillingPortalSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Default return URL if not provided
-	if body.ReturnURL == "" {
-		body.ReturnURL = r.Header.Get("Referer")
-		if body.ReturnURL == "" {
-			body.ReturnURL = "/subscription"
-		}
-	}
-
 	session, err := billing.CreateBillingPortalSession(ctx, billing.BillingPortalSessionParams{
 		CustomerID: *org.StripeCustomerID,
-		ReturnURL:  body.ReturnURL,
+		ReturnURL:  fmt.Sprintf("%v/subscription", handlerutil.GetRequestSchemeAndHost(r)),
 	})
+
 	if err != nil {
 		log.Error("failed to create billing portal session", zap.Error(err))
 		http.Error(w, "failed to create billing portal session", http.StatusInternalServerError)

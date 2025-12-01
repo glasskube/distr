@@ -17,6 +17,6 @@ func Router(r chi.Router) {
 			r.Put("/", UpdateSubscriptionHandler)
 		})
 		// Billing portal
-		r.Post("/billing-portal", CreateBillingPortalSessionHandler)
+		r.Post("/portal", CreateBillingPortalSessionHandler)
 	})
 }

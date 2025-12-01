@@ -8,6 +8,7 @@ import {ToastService} from '../services/toast.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
 import {CommonModule} from '@angular/common';
+import {never} from '../../util/exhaust';
 
 @Component({
   selector: 'app-subscription',
@@ -141,7 +142,7 @@ export class SubscriptionComponent implements OnInit {
         limits = info.enterpriseLimits;
         break;
       default:
-        return {customers: '', users: '', deployments: ''};
+        return never(plan);
     }
 
     return {
@@ -183,7 +184,7 @@ export class SubscriptionComponent implements OnInit {
         limits = info.enterpriseLimits;
         break;
       default:
-        return '';
+        return never(info.subscriptionType);
     }
 
     switch (metric) {
@@ -196,7 +197,7 @@ export class SubscriptionComponent implements OnInit {
           ? 'unlimited'
           : limits.maxDeploymentsPerCustomerOrganization;
       default:
-        return '';
+        return never(metric);
     }
   }
 
@@ -225,16 +226,8 @@ export class SubscriptionComponent implements OnInit {
       case 'enterprise':
         return 'Distr Enterprise';
       default:
-        return '';
+        return never(subscriptionType);
     }
-  }
-
-  hasSubscriptionQuantityLimits(): boolean {
-    const info = this.subscriptionInfo();
-    return !!(
-      info &&
-      (info.subscriptionCustomerOrganizationQuantity !== null || info.subscriptionUserAccountQuantity !== null)
-    );
   }
 
   isTrialSubscription(): boolean {
