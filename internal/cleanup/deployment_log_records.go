@@ -10,10 +10,7 @@ import (
 
 func RunDeploymentLogRecordCleanup(ctx context.Context) error {
 	log := internalctx.GetLogger(ctx)
-	if count, err := db.CleanupDeploymentLogRecords(ctx); err != nil {
-		return err
-	} else {
-		log.Info("DeploymentLogRecord cleanup finished", zap.Int64("rowsDeleted", count))
-		return nil
-	}
+	count, err := db.CleanupDeploymentLogRecords(ctx)
+	log.Info("DeploymentLogRecord cleanup finished", zap.Int64("rowsDeleted", count), zap.Error(err))
+	return err
 }

@@ -90,7 +90,12 @@ hub:
     #    secretKeyRef:
     #      name: ""
     #      key: ""
-    # - name: REGISTRATION # User Registration Mode – can be one of "enabled" (default), "hidden", "disabled"
+    # Set MAILER_SMTP_IMPLICIT_TLS to "true", if you want to use SMTP over implicit TLS, rather than STARTTLS.
+    # Generally, implicit TLS is required if your SMTP port is 465.
+    # - name: MAILER_SMTP_IMPLICIT_TLS
+    #   value: 'true'
+    # User Registration Mode – can be one of "enabled" (default), "hidden", "disabled"
+    # - name: REGISTRATION
     #   value: enabled
     - name: USER_EMAIL_VERIFICATION_REQUIRED
       value: 'false'
