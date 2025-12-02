@@ -158,7 +158,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
 
   /**
    * The license control is ENABLED when deploying to a customer managed target and there is no deployment yet.
-   * A vendor might be required to choose a license for a customer managed deplyoment target with no previous
+   * A vendor might be required to choose a license for a customer managed deployment target with no previous
    * deployment but they may only choose a license owned by the same customer.
    */
   private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deployment$]).pipe(
