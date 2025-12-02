@@ -139,30 +139,6 @@ func GetOrganizationByID(ctx context.Context, orgID uuid.UUID) (*types.Organizat
 	}
 }
 
-func GetOrganizationBySubscriptionID(ctx context.Context, subscriptionID string) (*types.Organization, error) {
-	db := internalctx.GetDb(ctx)
-
-	rows, err := db.Query(
-		ctx,
-		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE stripe_subscription_id = @id",
-		pgx.NamedArgs{"subscriptionId": subscriptionID},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query Organization: %w", err)
-	}
-
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Organization])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = apierrors.ErrNotFound
-		}
-
-		return nil, fmt.Errorf("failed to scan Organization: %w", err)
-	}
-
-	return &result, nil
-}
-
 func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.OrganizationWithBranding, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
