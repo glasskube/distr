@@ -218,7 +218,7 @@ func validateDeploymentRequest(
 				if errors.Is(err, apierrors.ErrNotFound) {
 					return licenseNotFoundError(w)
 				} else {
-					log.Error("could not ApplicationLicense", zap.Error(err))
+					log.Error("could not get ApplicationLicense", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return err
@@ -226,7 +226,7 @@ func validateDeploymentRequest(
 			}
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
 			if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgId, nil); err != nil {
-				log.Error("could not ApplicationLicense", zap.Error(err))
+				log.Error("could not get ApplicationLicense", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return err
