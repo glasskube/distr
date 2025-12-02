@@ -30,7 +30,6 @@ import {TutorialsService} from '../../services/tutorials.service';
 import {OrganizationService} from '../../services/organization.service';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {map} from 'rxjs';
-import dayjs from 'dayjs';
 
 @Component({
   selector: 'app-side-bar',
@@ -78,9 +77,6 @@ export class SideBarComponent {
   protected readonly organization$ = this.organizationService.get();
 
   protected readonly isTrial = toSignal(this.organization$.pipe(map((org) => org.subscriptionType === 'trial')));
-  protected readonly isSubscriptionExpired = toSignal(
-    this.organization$.pipe(map((org) => dayjs(org.subscriptionEndsAt).isBefore()))
-  );
 
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);
