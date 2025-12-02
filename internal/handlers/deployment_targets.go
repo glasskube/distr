@@ -101,6 +101,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 				log.Warn("could not create DeploymentTarget", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
 			}
 
 			return nil

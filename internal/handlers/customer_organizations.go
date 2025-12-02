@@ -76,6 +76,7 @@ func createCustomerOrganizationHandler() http.HandlerFunc {
 				log.Error("failed to create customer org", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
 			}
 
 			return nil
