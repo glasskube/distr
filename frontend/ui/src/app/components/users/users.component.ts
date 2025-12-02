@@ -1,6 +1,6 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, input, output, signal, TemplateRef, viewChild} from '@angular/core';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {Component, computed, inject, input, output, signal, TemplateRef, viewChild} from '@angular/core';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -25,9 +25,11 @@ import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
+import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
+import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
 
 @Component({
@@ -41,6 +43,7 @@ import {UuidComponent} from '../uuid';
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
+    QuotaLimitComponent,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
@@ -52,6 +55,7 @@ export class UsersComponent {
 
   private readonly toast = inject(ToastService);
   private readonly usersService = inject(UsersService);
+  private readonly organizationService = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
   protected readonly auth = inject(AuthService);
 
@@ -89,6 +93,17 @@ export class UsersComponent {
   });
   protected inviteFormLoading = false;
   protected inviteUrl: string | null = null;
+
+  protected readonly organization = toSignal(this.organizationService.get());
+
+  protected readonly limit = computed(() => {
+    const org = this.organization();
+    return !(org && org.subscriptionLimits)
+      ? undefined
+      : org.customerOrganizationId === undefined
+        ? org.subscriptionUserAccountQuantity
+        : org.subscriptionLimits.maxUsersPerCustomerOrganization;
+  });
 
   protected readonly editRoleUserId = signal<string | null>(null);
   protected readonly editRoleForm = new FormGroup({

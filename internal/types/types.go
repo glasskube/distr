@@ -42,6 +42,7 @@ type (
 	DockerType            string
 	Tutorial              string
 	FileScope             string
+	SubscriptionType      string
 )
 
 const (
@@ -69,6 +70,11 @@ const (
 
 	FileScopePlatform     FileScope = "platform"
 	FileScopeOrganization FileScope = "organization"
+
+	SubscriptionTypeStarter    SubscriptionType = "starter"
+	SubscriptionTypePro        SubscriptionType = "pro"
+	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
+	SubscriptionTypeTrial      SubscriptionType = "trial"
 )
 
 type Base struct {

@@ -1,8 +1,11 @@
 <aside
   id="logo-sidebar"
-  class="fixed top-16 left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
-  aria-label="Sidebar"
-  #asideElement>
+  class="fixed left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+  [class.top-16]="!isTrial()"
+  [class.top-33]="isTrial()"
+  [class.translate-x-0]="sidebar.showSidebar()"
+  [class.-translate-x-full]="!sidebar.showSidebar()"
+  aria-label="Sidebar">
   <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
     <ul class="space-y-2 font-medium flex-1" *appRequireVendor>
       @if (auth.hasAnyRole('admin')) {
@@ -171,7 +174,7 @@
             <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Licenses</span>
             <span
               class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
-              >Beta</span
+              >Pro</span
             >
             <ng-template
               cdkConnectedOverlay
@@ -265,6 +268,19 @@
           <a
             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
             routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/subscription">
+            <fa-icon
+              [icon]="faCreditCard"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Subscription</span>
+          </a>
+        </li>
+
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
             routerLink="/settings">
             <fa-icon
               [icon]="faGear"
@@ -337,7 +353,7 @@
       }
     </ul>
 
-    @if (feedbackAlert) {
+    @if (isTrial() && feedbackAlert) {
       <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert" *appRequireVendor>
         <div class="flex justify-between items-center mb-3">
           <span

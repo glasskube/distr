@@ -19,6 +19,7 @@ import (
 	"github.com/glasskube/distr/internal/mailsending"
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -103,6 +104,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var customerOrganization *types.CustomerOrganizationWithUsage
 	if body.CustomerOrganizationID != nil {
 		if co, err := db.GetCustomerOrganizationByID(
 			ctx,
@@ -115,6 +117,8 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		} else {
+			customerOrganization = co
 		}
 	}
 
@@ -126,6 +130,34 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		} else {
 			organization = *result
+		}
+
+		var limitReached bool
+		if customerOrganization != nil {
+			limitReached, err = subscription.IsCustomerUserAccountLimitReached(
+				organization.Organization,
+				*customerOrganization,
+			)
+			if err != nil {
+				err = fmt.Errorf("failed to check customer user account limit: %w", err)
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			}
+		} else {
+			limitReached, err = subscription.IsVendorUserAccountLimitReached(ctx, organization.Organization)
+			if err != nil {
+				err = fmt.Errorf("failed to check vendor user account limit: %w", err)
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			}
+		}
+
+		if limitReached {
+			err = errors.New("user limit reached")
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return err
 		}
 
 		if existingUA, err := db.GetUserAccountByEmail(ctx, body.Email); errors.Is(err, apierrors.ErrNotFound) {

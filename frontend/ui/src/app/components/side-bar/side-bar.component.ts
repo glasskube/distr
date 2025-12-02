@@ -9,6 +9,7 @@ import {
   faCheckDouble,
   faChevronDown,
   faCodeFork,
+  faCreditCard,
   faDashboard,
   faGear,
   faHome,
@@ -31,6 +32,9 @@ import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {TutorialsService} from '../../services/tutorials.service';
 import {AuthService} from '../../services/auth.service';
+import {OrganizationService} from '../../services/organization.service';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {map} from 'rxjs';
 
 @Component({
   selector: 'app-side-bar',
@@ -53,19 +57,20 @@ export class SideBarComponent {
   protected readonly sidebar = inject(SidebarService);
   protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly tutorialsService = inject(TutorialsService);
+  private readonly organizationService = inject(OrganizationService);
+
+  protected readonly buildConfig = buildConfig;
 
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;
-  protected readonly faServer = faServer;
   protected readonly faLightbulb = faLightbulb;
   protected readonly faKey = faKey;
   protected readonly faGear = faGear;
   protected readonly faUsers = faUsers;
-  protected readonly faCheckDouble = faCheckDouble;
   protected readonly faPalette = faPalette;
   protected readonly faAddressBook = faAddressBook;
   protected readonly faBox = faBox;
-  protected readonly buildConfig = buildConfig;
+  protected readonly faCreditCard = faCreditCard;
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
   protected readonly faChevronDown = faChevronDown;
@@ -76,19 +81,11 @@ export class SideBarComponent {
   protected readonly registrySubMenuOpen = signal(true);
   protected readonly licenseOverlayOpen = signal(false);
 
-  private readonly asideElement = viewChild.required<ElementRef<HTMLElement>>('asideElement');
+  protected readonly organization$ = this.organizationService.get();
 
-  constructor() {
-    effect(() => {
-      const show = this.sidebar.showSidebar();
-      this.asideElement().nativeElement.classList.toggle('translate-x-0', show);
-      this.asideElement().nativeElement.classList.toggle('-translate-x-full', !show);
-    });
-  }
+  protected readonly isTrial = toSignal(this.organization$.pipe(map((org) => org.subscriptionType === 'trial')));
 
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);
   }
-
-  protected readonly faUserCheck = faUserCheck;
 }

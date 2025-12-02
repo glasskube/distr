@@ -16,11 +16,12 @@ func CustomerOrganizationToAPI(customerOrganization types.CustomerOrganization) 
 	}
 }
 
-func CustomerOrganizationWithUserCountToAPI(
-	customerOrganizationWithUserCount types.CustomerOrganizationWithUserCount,
-) api.CustomerOrganizationWithUserCount {
-	return api.CustomerOrganizationWithUserCount{
-		CustomerOrganization: CustomerOrganizationToAPI(customerOrganizationWithUserCount.CustomerOrganization),
-		UserCount:            customerOrganizationWithUserCount.UserCount,
+func CustomerOrganizationWithUsageToAPI(
+	customerOrganizationWithUsage types.CustomerOrganizationWithUsage,
+) api.CustomerOrganizationWithUsage {
+	return api.CustomerOrganizationWithUsage{
+		CustomerOrganization:  CustomerOrganizationToAPI(customerOrganizationWithUsage.CustomerOrganization),
+		UserCount:             customerOrganizationWithUsage.UserCount,
+		DeploymentTargetCount: customerOrganizationWithUsage.DeploymentTargetCount,
 	}
 }

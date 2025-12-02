@@ -12,6 +12,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -37,7 +38,7 @@ func OrganizationsRouter(r chi.Router) {
 func getOrganization(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	RespondJSON(w, auth.CurrentOrg())
+	RespondJSON(w, mapping.OrganizationToAPI(*auth.CurrentOrg()))
 }
 
 func updateOrganization(w http.ResponseWriter, r *http.Request) {

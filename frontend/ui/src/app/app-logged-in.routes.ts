@@ -1,11 +1,12 @@
 import {inject} from '@angular/core';
 import {CanActivateFn, Router, Routes} from '@angular/router';
-import {UserRole} from '@glasskube/distr-sdk';
-import {firstValueFrom} from 'rxjs';
+import dayjs from 'dayjs';
+import {firstValueFrom, map} from 'rxjs';
 import {getRemoteEnvironment} from '../env/remote';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
 import {ApplicationsPageComponent} from './applications/applications-page.component';
+import {UserRole} from '@glasskube/distr-sdk';
 import {ArtifactLicensesComponent} from './artifacts/artifact-licenses/artifact-licenses.component';
 import {ArtifactPullsComponent} from './artifacts/artifact-pulls/artifact-pulls.component';
 import {ArtifactVersionsComponent} from './artifacts/artifact-versions/artifact-versions.component';
@@ -21,7 +22,10 @@ import {OrganizationBrandingComponent} from './organization-branding/organizatio
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
 import {AuthService} from './services/auth.service';
 import {FeatureFlagService} from './services/feature-flag.service';
+import {OrganizationService} from './services/organization.service';
 import {ToastService} from './services/toast.service';
+import {SubscriptionCallbackComponent} from './subscription/subscription-callback.component';
+import {SubscriptionComponent} from './subscription/subscription.component';
 import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
@@ -70,117 +74,152 @@ function registryHostSetOrRedirectGuard(redirectTo: string): CanActivateFn {
   };
 }
 
+function subscriptionGuard(): CanActivateFn {
+  return () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+    const organizationService = inject(OrganizationService);
+    return (
+      auth.isCustomer() ||
+      organizationService
+        .get()
+        .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/subscription']) : true)))
+    );
+  };
+}
+
 export const routes: Routes = [
   {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [requireVendor],
-  },
-  {
-    path: 'home',
-    component: HomeComponent,
-    canActivate: [requireCustomer],
-  },
-  {
-    path: 'applications',
-    canActivate: [requireVendor],
+    path: '',
+    canActivate: [subscriptionGuard()],
     children: [
       {
-        path: '',
-        pathMatch: 'full',
-        component: ApplicationsPageComponent,
+        path: 'dashboard',
+        component: DashboardComponent,
+        canActivate: [requireVendor],
       },
       {
-        path: ':applicationId',
-        component: ApplicationDetailComponent,
+        path: 'home',
+        component: HomeComponent,
+        canActivate: [requireCustomer],
       },
-    ],
-  },
-  {path: 'deployments', component: DeploymentTargetsComponent},
-  {
-    path: 'artifacts',
-    children: [
-      {path: '', pathMatch: 'full', component: ArtifactsComponent},
-      {path: ':id', component: ArtifactVersionsComponent},
-    ],
-  },
-  {
-    path: 'artifact-pulls',
-    component: ArtifactPullsComponent,
-    canActivate: [requireVendor],
-  },
-  {
-    path: 'customers',
-    component: CustomerOrganizationsComponent,
-    canActivate: [requireVendor],
-  },
-  {
-    path: 'customers/:customerOrganizationId',
-    component: CustomerUsersComponent,
-    canActivate: [requireVendor],
-  },
-  {
-    path: 'users',
-    component: VendorUsersComponent,
-    canActivate: [requiredRoleGuard('admin')],
-  },
-  {
-    path: 'branding',
-    component: OrganizationBrandingComponent,
-    data: {userRole: 'vendor'},
-    canActivate: [requireVendor, requiredRoleGuard('read_write', 'admin')],
-  },
-  {
-    path: 'settings',
-    component: OrganizationSettingsComponent,
-    data: {userRole: 'vendor'},
-    canActivate: [requireVendor, requiredRoleGuard('admin')],
-  },
-  {
-    path: 'licenses',
-    canActivate: [requireVendor, licensingEnabledGuard()],
-    data: {userRole: 'vendor'},
-    children: [
       {
         path: 'applications',
-        component: LicensesComponent,
+        canActivate: [requireVendor],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            component: ApplicationsPageComponent,
+          },
+          {
+            path: ':applicationId',
+            component: ApplicationDetailComponent,
+          },
+        ],
       },
+      {path: 'deployments', component: DeploymentTargetsComponent},
       {
         path: 'artifacts',
-        component: ArtifactLicensesComponent,
-      },
-    ],
-  },
-  {
-    path: 'settings',
-    children: [
-      {
-        path: 'access-tokens',
-        component: AccessTokensComponent,
-      },
-    ],
-  },
-  {
-    path: 'tutorials',
-    canActivate: [requireVendor, requiredRoleGuard('admin')],
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        component: TutorialsComponent,
+        children: [
+          {path: '', pathMatch: 'full', component: ArtifactsComponent},
+          {path: ':id', component: ArtifactVersionsComponent},
+        ],
       },
       {
-        path: 'agents',
-        component: AgentsTutorialComponent,
+        path: 'artifact-pulls',
+        component: ArtifactPullsComponent,
+        canActivate: [requireVendor],
+      },
+      {
+        path: 'customers',
+        component: CustomerOrganizationsComponent,
+        canActivate: [requireVendor],
+      },
+      {
+        path: 'customers/:customerOrganizationId',
+        component: CustomerUsersComponent,
+        canActivate: [requireVendor],
+      },
+      {
+        path: 'users',
+        component: VendorUsersComponent,
+        canActivate: [requiredRoleGuard('admin')],
       },
       {
         path: 'branding',
-        component: BrandingTutorialComponent,
+        component: OrganizationBrandingComponent,
+        data: {userRole: 'vendor'},
+        canActivate: [requireVendor, requiredRoleGuard('read_write', 'admin')],
       },
       {
-        path: 'registry',
-        canActivate: [registryHostSetOrRedirectGuard('/tutorials')],
-        component: RegistryTutorialComponent,
+        path: 'settings',
+        component: OrganizationSettingsComponent,
+        data: {userRole: 'vendor'},
+        canActivate: [requireVendor, requiredRoleGuard('admin')],
+      },
+      {
+        path: 'licenses',
+        canActivate: [requireVendor, licensingEnabledGuard()],
+        data: {userRole: 'vendor'},
+        children: [
+          {
+            path: 'applications',
+            component: LicensesComponent,
+          },
+          {
+            path: 'artifacts',
+            component: ArtifactLicensesComponent,
+          },
+        ],
+      },
+      {
+        path: 'settings',
+        children: [
+          {
+            path: 'access-tokens',
+            component: AccessTokensComponent,
+          },
+        ],
+      },
+      {
+        path: 'tutorials',
+        canActivate: [requireVendor, requiredRoleGuard('admin')],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            component: TutorialsComponent,
+          },
+          {
+            path: 'agents',
+            component: AgentsTutorialComponent,
+          },
+          {
+            path: 'branding',
+            component: BrandingTutorialComponent,
+          },
+          {
+            path: 'registry',
+            canActivate: [registryHostSetOrRedirectGuard('/tutorials')],
+            component: RegistryTutorialComponent,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'subscription',
+    canActivate: [requireVendor, requiredRoleGuard('admin')],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        component: SubscriptionComponent,
+      },
+      {
+        path: 'callback',
+        component: SubscriptionCallbackComponent,
       },
     ],
   },

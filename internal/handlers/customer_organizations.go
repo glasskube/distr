@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -39,7 +41,7 @@ func getCustomerOrganizationsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			RespondJSON(w, mapping.List(customerOrganizations, mapping.CustomerOrganizationWithUserCountToAPI))
+			RespondJSON(w, mapping.List(customerOrganizations, mapping.CustomerOrganizationWithUsageToAPI))
 		}
 	}
 }
@@ -60,9 +62,29 @@ func createCustomerOrganizationHandler() http.HandlerFunc {
 			ImageID:        request.ImageID,
 		}
 
-		if err := db.CreateCustomerOrganization(ctx, &customerOrganization); err != nil {
-			log.Error("failed to create customer org", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
+		err = db.RunTx(ctx, func(ctx context.Context) error {
+			if limitReached, err := subscription.IsCustomerOrganizationLimitReached(ctx, *auth.CurrentOrg()); err != nil {
+				log.Error("failed to get customer orgs", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			} else if limitReached {
+				err = errors.New("customer limit reached")
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return err
+			}
+
+			if err := db.CreateCustomerOrganization(ctx, &customerOrganization); err != nil {
+				log.Error("failed to create customer org", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			RespondJSON(w, mapping.CustomerOrganizationToAPI(customerOrganization))
