@@ -71,16 +71,17 @@ const (
 
 func GetDeploymentTargets(
 	ctx context.Context,
-	orgID, userID uuid.UUID,
-	userRole types.UserRole,
+	orgID uuid.UUID,
+	customerOrgID *uuid.UUID,
 ) ([]types.DeploymentTargetWithCreatedBy, error) {
 	db := internalctx.GetDb(ctx)
+	isVendor := customerOrgID == nil
 	if rows, err := db.Query(ctx,
 		"SELECT"+deploymentTargetWithStatusOutputExpr+"FROM"+deploymentTargetFromExpr+
 			"WHERE dt.organization_id = @orgId AND j.organization_id = dt.organization_id "+
-			"AND (dt.customer_organization_id = j.customer_organization_id OR @userRole = 'vendor') "+
+			"AND (@isVendor OR dt.customer_organization_id = @customerOrgId) "+
 			"ORDER BY u.name, u.email, dt.name",
-		pgx.NamedArgs{"orgId": orgID, "userId": userID, "userRole": userRole},
+		pgx.NamedArgs{"orgId": orgID, "customerOrgId": customerOrgID, "isVendor": isVendor},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
 	} else if result, err := pgx.CollectRows(
@@ -95,6 +96,30 @@ func GetDeploymentTargets(
 			}
 		}
 		return result, nil
+	}
+}
+
+func CountDeploymentTargets(ctx context.Context, orgID uuid.UUID, customerOrgID *uuid.UUID) (int64, error) {
+	db := internalctx.GetDb(ctx)
+
+	customerOwned := customerOrgID == nil
+
+	rows, err := db.Query(ctx,
+		`SELECT count(*)
+		FROM DeploymentTarget
+		WHERE organization_id = @orgId
+			AND (customer_organization_id = @customerOrgId
+		    OR ( @customerOwned AND customer_organization_id is null))`,
+		pgx.NamedArgs{"orgId": orgID, "customerOrgId": customerOrgID, "customerOwned": customerOwned},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count DeploymentTargets: %w", err)
+	}
+
+	if count, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[int64]); err != nil {
+		return 0, fmt.Errorf("failed to count DeploymentTargets: %w", err)
+	} else {
+		return count, nil
 	}
 }
 

@@ -4,6 +4,12 @@ export type Feature = 'licensing';
 
 export type SubscriptionType = 'trial' | 'starter' | 'pro' | 'enterprise';
 
+export interface SubscriptionLimits {
+  maxCustomerOrganizations: number;
+  maxUsersPerCustomerOrganization: number;
+  maxDeploymentsPerCustomerOrganization: number;
+}
+
 export interface Organization extends BaseModel, Named {
   slug?: string;
   features: Feature[];
@@ -11,7 +17,10 @@ export interface Organization extends BaseModel, Named {
   registryDomain?: string;
   emailFromAddress?: string;
   subscriptionType?: SubscriptionType;
+  subscriptionLimits?: SubscriptionLimits;
   subscriptionEndsAt?: string;
+  subscriptionCustomerOrganizationQuantity?: number;
+  subscriptionUserAccountQuantity?: number;
 }
 
 export interface OrganizationWithUserRole extends Organization {

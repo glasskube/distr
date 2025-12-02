@@ -30,9 +30,13 @@ export class AppComponent implements OnInit {
 
   public ngOnInit() {
     this.navigationEnd$.subscribe(() => {
-      const email = this.auth.getClaims()?.email;
-      Sentry.setUser({email});
-      posthog.setPersonProperties({email});
+      const jwtClaims = this.auth.getClaims();
+      if (jwtClaims) {
+        const email = jwtClaims.email;
+        Sentry.setUser({email});
+        posthog.setPersonProperties({email});
+        posthog.group('organization', jwtClaims.org);
+      }
       posthog.capture('$pageview');
     });
   }

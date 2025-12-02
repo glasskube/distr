@@ -1,0 +1,3 @@
+DROP INDEX DeploymentLogRecord_deployment_id_resource_timestamp;
+
+CREATE INDEX DeploymentLogRecord_created_at ON DeploymentLogRecord (deployment_id, created_at);

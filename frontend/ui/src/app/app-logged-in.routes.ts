@@ -24,6 +24,8 @@ import {AuthService} from './services/auth.service';
 import {FeatureFlagService} from './services/feature-flag.service';
 import {OrganizationService} from './services/organization.service';
 import {ToastService} from './services/toast.service';
+import {SubscriptionCallbackComponent} from './subscription/subscription-callback.component';
+import {SubscriptionComponent} from './subscription/subscription.component';
 import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.component';
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
@@ -138,6 +140,21 @@ export const routes: Routes = [
         component: OrganizationSettingsComponent,
         data: {userRole: 'vendor'},
         canActivate: [requiredRoleGuard('vendor')],
+      },
+      {
+        path: 'subscription',
+        canActivate: [requiredRoleGuard('vendor')],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            component: SubscriptionComponent,
+          },
+          {
+            path: 'callback',
+            component: SubscriptionCallbackComponent,
+          },
+        ],
       },
       {
         path: 'licenses',
