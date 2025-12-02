@@ -138,7 +138,6 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		var limitReached bool
 		if customerOrganization != nil {
 			limitReached, err = subscription.IsCustomerUserAccountLimitReached(
-				ctx,
 				organization.Organization,
 				*customerOrganization,
 			)

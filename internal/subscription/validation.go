@@ -24,7 +24,6 @@ func IsVendorUserAccountLimitReached(ctx context.Context, org types.Organization
 }
 
 func IsCustomerUserAccountLimitReached(
-	ctx context.Context,
 	org types.Organization,
 	customerOrganization types.CustomerOrganizationWithUsage,
 ) (bool, error) {
