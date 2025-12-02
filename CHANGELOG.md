@@ -1,5 +1,71 @@
 # Changelog
 
+## [2.0.0-rc.1](https://github.com/glasskube/distr/compare/1.16.1...2.0.0-rc.1) (2025-12-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* add customer organizations ([#1388](https://github.com/glasskube/distr/issues/1388))
+
+### Features
+
+* add customer organizations ([#1388](https://github.com/glasskube/distr/issues/1388)) ([d7084eb](https://github.com/glasskube/distr/commit/d7084ebe0b189c73becf34f3f5af9b7e91a7fa67))
+* subscription management via Stripe ([#1426](https://github.com/glasskube/distr/issues/1426)) ([d496d14](https://github.com/glasskube/distr/commit/d496d1448c92212428960725a1d3fd30d05fd0a4))
+* user roles ([#1448](https://github.com/glasskube/distr/issues/1448)) ([de7af21](https://github.com/glasskube/distr/commit/de7af21f8e4797bfe034e4cc6e6a7620e99f4c5f))
+
+
+### Bug Fixes
+
+* add support for SMTP with implicit TLS ([#1469](https://github.com/glasskube/distr/issues/1469)) ([e02d6a5](https://github.com/glasskube/distr/commit/e02d6a552dc65a7f374ff2e911c4162954ee1a8a))
+* **backend:** prevent error when two deployment target status with same timestamp ([#1435](https://github.com/glasskube/distr/issues/1435)) ([54f0436](https://github.com/glasskube/distr/commit/54f04364ff5ac44f751df5ef2fa8fd2d1c15dba7))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1430](https://github.com/glasskube/distr/issues/1430)) ([71c9b66](https://github.com/glasskube/distr/commit/71c9b66b9837898c3fb7b9d6a4cc4ae16df58a99))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1450](https://github.com/glasskube/distr/issues/1450)) ([9872064](https://github.com/glasskube/distr/commit/98720648c7c7c75b9f2a48e444d6935188e22fd2))
+* **deps:** update module github.com/aws/smithy-go to v1.24.0 ([#1473](https://github.com/glasskube/distr/issues/1473)) ([63db29c](https://github.com/glasskube/distr/commit/63db29c028e85fb6f7ed8e902439b1763904e60d))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.39.0 ([#1442](https://github.com/glasskube/distr/issues/1442)) ([0a954cc](https://github.com/glasskube/distr/commit/0a954cc4b09b56e3ec1651e8294b612e167b85de))
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.40.0 ([#1464](https://github.com/glasskube/distr/issues/1464)) ([05db0da](https://github.com/glasskube/distr/commit/05db0dab21114fd05e08a94113f8aff69b00cc6c))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.18.1 ([#1441](https://github.com/glasskube/distr/issues/1441)) ([934d2fa](https://github.com/glasskube/distr/commit/934d2fa3168f68dc587ff54852ffd85cf9676d9d))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.18.2 ([#1452](https://github.com/glasskube/distr/issues/1452)) ([081f05f](https://github.com/glasskube/distr/commit/081f05fdd559d9df126963aef9307a161709e0c6))
+* **deps:** update module github.com/golang-migrate/migrate/v4 to v4.19.1 ([#1468](https://github.com/glasskube/distr/issues/1468)) ([b622e3b](https://github.com/glasskube/distr/commit/b622e3b6213431a2ac4c79564ca056545d8f52df))
+* **deps:** update module github.com/mark3labs/mcp-go to v0.43.1 ([#1431](https://github.com/glasskube/distr/issues/1431)) ([b1b0b9b](https://github.com/glasskube/distr/commit/b1b0b9bb5492738d3707a0b5cd5b6c4596084753))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.141.0 ([#1474](https://github.com/glasskube/distr/issues/1474)) ([bb10280](https://github.com/glasskube/distr/commit/bb1028052f0f83ab3164bb42ca2a7de0998d093e))
+* fix deployment target visibility for customer organizations ([#1445](https://github.com/glasskube/distr/issues/1445)) ([2b1956f](https://github.com/glasskube/distr/commit/2b1956fa3babbcd2d874e867b6650a7a05601ae0))
+
+
+### Other
+
+* add link to Distr Homepage ([#1454](https://github.com/glasskube/distr/issues/1454)) ([ac50a07](https://github.com/glasskube/distr/commit/ac50a078bc1eb11899f61daa72e2198228ca122e))
+* add posthog groups ([#1460](https://github.com/glasskube/distr/issues/1460)) ([9807ac9](https://github.com/glasskube/distr/commit/9807ac9c8af6d16095abdbe10567826b299747ee))
+* **deps:** update angular monorepo to v20.3.14 ([#1449](https://github.com/glasskube/distr/issues/1449)) ([4d1d6a0](https://github.com/glasskube/distr/commit/4d1d6a0dd5393b954147edfb699bdfa5b6230037))
+* **deps:** update angular monorepo to v20.3.15 ([#1470](https://github.com/glasskube/distr/issues/1470)) ([ec8e533](https://github.com/glasskube/distr/commit/ec8e533ce8de9529a82a88a1647cd9bafa06e590))
+* **deps:** update angular-cli monorepo to v20.3.12 ([#1447](https://github.com/glasskube/distr/issues/1447)) ([414cad7](https://github.com/glasskube/distr/commit/414cad70619c9f793816dc09db7c1f27ead3c94c))
+* **deps:** update axllent/mailpit docker tag to v1.28.0 ([#1451](https://github.com/glasskube/distr/issues/1451)) ([b51ccca](https://github.com/glasskube/distr/commit/b51cccacc7c347d8582b77411e7e91e25a24f5a1))
+* **deps:** update dependency jasmine-core to ~5.13.0 ([#1476](https://github.com/glasskube/distr/issues/1476)) ([00d7fb9](https://github.com/glasskube/distr/commit/00d7fb9b7dd16c10a7ede70d08f8083148e3f3e6))
+* **deps:** update dependency pnpm to v10.24.0 ([#1463](https://github.com/glasskube/distr/issues/1463)) ([5270b43](https://github.com/glasskube/distr/commit/5270b4330064eeb985e24899a783d56906957813))
+* **deps:** update dependency posthog-js to v1.298.0 ([#1433](https://github.com/glasskube/distr/issues/1433)) ([744d2eb](https://github.com/glasskube/distr/commit/744d2eb97d6439ba57eda1068c4c94fd7f8fc71f))
+* **deps:** update dependency prettier to v3.7.0 ([#1453](https://github.com/glasskube/distr/issues/1453)) ([b2ccd7b](https://github.com/glasskube/distr/commit/b2ccd7b2d6c7af0cd0ff53528b8eb38b8976d919))
+* **deps:** update dependency prettier to v3.7.1 ([#1456](https://github.com/glasskube/distr/issues/1456)) ([edb723e](https://github.com/glasskube/distr/commit/edb723e50818775de67f550ce10bc4971739acc7))
+* **deps:** update dependency prettier to v3.7.2 ([#1465](https://github.com/glasskube/distr/issues/1465)) ([ee7b9f4](https://github.com/glasskube/distr/commit/ee7b9f48d2d5f0e65357c0995ce9edfd89d55f49))
+* **deps:** update dependency prettier to v3.7.3 ([#1467](https://github.com/glasskube/distr/issues/1467)) ([718dc32](https://github.com/glasskube/distr/commit/718dc32dad5ac2a363a28659b2164dc135e30665))
+* **deps:** update dependency typedoc to v0.28.15 ([#1466](https://github.com/glasskube/distr/issues/1466)) ([98d09dc](https://github.com/glasskube/distr/commit/98d09dcb449e2235d321589521f2a8501f5d4efa))
+* **deps:** update docker/metadata-action action to v5.10.0 ([#1459](https://github.com/glasskube/distr/issues/1459)) ([02b59d5](https://github.com/glasskube/distr/commit/02b59d5b01d0929de7640c1f2555a8909fc58558))
+* **deps:** update ghcr.io/glasskube/distr docker tag to v1.16.2 ([#1438](https://github.com/glasskube/distr/issues/1438)) ([ece3264](https://github.com/glasskube/distr/commit/ece3264ed449a990baeb666d0ebb2b2e43bb341a))
+* **deps:** update ghcr.io/glasskube/distr docker tag to v1.16.3 ([#1461](https://github.com/glasskube/distr/issues/1461)) ([9722ab3](https://github.com/glasskube/distr/commit/9722ab339bfe1672474157a3255287d290bb3366))
+* **deps:** update golangci/golangci-lint-action action to v9.1.0 ([#1429](https://github.com/glasskube/distr/issues/1429)) ([2a3214b](https://github.com/glasskube/distr/commit/2a3214b0cd9986387872285227606077c78c09e6))
+* **deps:** update sentry-javascript monorepo to v10.26.0 ([#1434](https://github.com/glasskube/distr/issues/1434)) ([e53501d](https://github.com/glasskube/distr/commit/e53501daa0cb90013f82dd018895cea2758d9d5c))
+* disable license checks if there are no licenses ([#1446](https://github.com/glasskube/distr/issues/1446)) ([70258b6](https://github.com/glasskube/distr/commit/70258b6102d8c58830dde6939b38f8b31fb57c1e))
+* release 2.0.0-rc.1 ([f2abf28](https://github.com/glasskube/distr/commit/f2abf2897fb3779233a142911377b5269898e55e))
+
+
+### Docs
+
+* add pre-release disclaimer ([8532b30](https://github.com/glasskube/distr/commit/8532b306d5409039dfdc265f8c36134d24d0f12e))
+* update sign-up url ([#1457](https://github.com/glasskube/distr/issues/1457)) ([f0b8e8f](https://github.com/glasskube/distr/commit/f0b8e8f09c92c257f0a99faa185ad141ad5a36ca))
+
+
+### Performance
+
+* **backend:** optimize DeploymentLogRecord cleanup routine ([#1455](https://github.com/glasskube/distr/issues/1455)) ([2caecc7](https://github.com/glasskube/distr/commit/2caecc7fc157f6de2d1f124c2a4ebee61d8a61b0))
+
 ## [1.16.1](https://github.com/glasskube/distr/compare/1.16.0...1.16.1) (2025-11-21)
 
 
