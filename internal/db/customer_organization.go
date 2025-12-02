@@ -61,7 +61,7 @@ func GetCustomerOrganizationByID(
 			`SELECT %v
 			FROM CustomerOrganization co
 			LEFT JOIN Organization_UserAccount oua ON co.id = oua.customer_organization_id
-			LEFT JOIN Deploymenttarget dt ON co.id = dt.customer_organization_id
+			LEFT JOIN DeploymentTarget dt ON co.id = dt.customer_organization_id
 			WHERE co.id = @id
 			GROUP BY %v
 			ORDER BY co.name`,
@@ -89,7 +89,7 @@ func GetCustomerOrganizationsByOrganizationID(
 			`SELECT %v
 			FROM CustomerOrganization co
 			LEFT JOIN Organization_UserAccount oua ON co.id = oua.customer_organization_id
-			LEFT JOIN Deploymenttarget dt ON co.id = dt.customer_organization_id
+			LEFT JOIN DeploymentTarget dt ON co.id = dt.customer_organization_id
 			WHERE co.organization_id = @orgId
 			GROUP BY %v
 			ORDER BY co.name`,
