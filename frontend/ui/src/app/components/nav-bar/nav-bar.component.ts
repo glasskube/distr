@@ -19,7 +19,7 @@ import {
   faShuffle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {catchError, combineLatestWith, EMPTY, lastValueFrom, map, Observable, of, Subject, takeUntil} from 'rxjs';
+import {catchError, combineLatestWith, EMPTY, lastValueFrom, map, Observable, of} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {AuthService} from '../../services/auth.service';
