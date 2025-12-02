@@ -159,30 +159,33 @@ export class SubscriptionComponent implements OnInit {
     };
   }
 
-  getCurrentPlanLimit(
-    metric: 'customerOrganizations' | 'usersPerCustomer' | 'deploymentsPerCustomer'
-  ): string | number {
+  private getPlanLimitsObject(subscriptionType: SubscriptionType) {
     const info = this.subscriptionInfo();
     if (!info) {
-      return '';
+      return null;
     }
 
-    let limits;
-    switch (info.subscriptionType) {
+    switch (subscriptionType) {
       case 'trial':
-        limits = info.trialLimits;
-        break;
+        return info.trialLimits;
       case 'starter':
-        limits = info.starterLimits;
-        break;
+        return info.starterLimits;
       case 'pro':
-        limits = info.proLimits;
-        break;
+        return info.proLimits;
       case 'enterprise':
-        limits = info.enterpriseLimits;
-        break;
+        return info.enterpriseLimits;
       default:
-        return never(info.subscriptionType);
+        return never(subscriptionType);
+    }
+  }
+
+  getPlanLimit(
+    subscriptionType: SubscriptionType,
+    metric: 'customerOrganizations' | 'usersPerCustomer' | 'deploymentsPerCustomer'
+  ): string | number {
+    const limits = this.getPlanLimitsObject(subscriptionType);
+    if (!limits) {
+      return '';
     }
 
     switch (metric) {
@@ -197,6 +200,16 @@ export class SubscriptionComponent implements OnInit {
       default:
         return never(metric);
     }
+  }
+
+  getCurrentPlanLimit(
+    metric: 'customerOrganizations' | 'usersPerCustomer' | 'deploymentsPerCustomer'
+  ): string | number {
+    const info = this.subscriptionInfo();
+    if (!info) {
+      return '';
+    }
+    return this.getPlanLimit(info.subscriptionType, metric);
   }
 
   canSelectStarterPlan(): boolean {

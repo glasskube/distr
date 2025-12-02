@@ -33,9 +33,7 @@
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (
-                        subscriptionInfoData.subscriptionCustomerOrganizationQuantity
-                      ) {
+                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity) {
                         of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} licenses used
                       }
                       @if (subscriptionInfoData.subscriptionType === 'starter') {
@@ -44,7 +42,6 @@
                           ({{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} max:
                           {{ getCurrentPlanLimit('customerOrganizations') }})
                         </span>
-
                       }
                     </p>
                   </div>
@@ -54,39 +51,7 @@
                       {{ subscriptionInfoData.currentMaxUsersPerCustomer }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionType === 'trial') {
-                        of
-                        {{
-                          subscriptionInfoData.trialLimits.maxUsersPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.trialLimits.maxUsersPerCustomerOrganization
-                        }}
-                        allowed
-                      } @else if (subscriptionInfoData.subscriptionType === 'starter') {
-                        of
-                        {{
-                          subscriptionInfoData.starterLimits.maxUsersPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.starterLimits.maxUsersPerCustomerOrganization
-                        }}
-                        allowed
-                      } @else if (subscriptionInfoData.subscriptionType === 'pro') {
-                        of
-                        {{
-                          subscriptionInfoData.proLimits.maxUsersPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.proLimits.maxUsersPerCustomerOrganization
-                        }}
-                        allowed
-                      } @else {
-                        of
-                        {{
-                          subscriptionInfoData.enterpriseLimits.maxUsersPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.enterpriseLimits.maxUsersPerCustomerOrganization
-                        }}
-                        allowed
-                      }
+                      of {{ getCurrentPlanLimit('usersPerCustomer') }} allowed
                     </p>
                   </div>
                   <div class="flex flex-col p-4 bg-purple-50 dark:bg-gray-700 rounded-lg text-center">
@@ -95,39 +60,7 @@
                       {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionType === 'trial') {
-                        of
-                        {{
-                          subscriptionInfoData.trialLimits.maxDeploymentsPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.trialLimits.maxDeploymentsPerCustomerOrganization
-                        }}
-                        allowed
-                      } @else if (subscriptionInfoData.subscriptionType === 'starter') {
-                        of
-                        {{
-                          subscriptionInfoData.starterLimits.maxDeploymentsPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.starterLimits.maxDeploymentsPerCustomerOrganization
-                        }}
-                        allowed
-                      } @else if (subscriptionInfoData.subscriptionType === 'pro') {
-                        of
-                        {{
-                          subscriptionInfoData.proLimits.maxDeploymentsPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.proLimits.maxDeploymentsPerCustomerOrganization
-                        }}
-                        allowed
-                      } @else {
-                        of
-                        {{
-                          subscriptionInfoData.enterpriseLimits.maxDeploymentsPerCustomerOrganization === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.enterpriseLimits.maxDeploymentsPerCustomerOrganization
-                        }}
-                        allowed
-                      }
+                      of {{ getCurrentPlanLimit('deploymentsPerCustomer') }} allowed
                     </p>
                   </div>
                 </div>
