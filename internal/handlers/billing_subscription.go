@@ -220,7 +220,7 @@ func validateSubscriptionQuantities(
 
 	// Validate that the subscription type limits can accommodate the requested quantities
 	customerOrgLimit := subscription.GetCustomersPerOrganizationLimit(subscriptionType)
-	if customerOrgLimit.IsReached(customerOrgQty) {
+	if customerOrgLimit.IsExceeded(customerOrgQty) {
 		return fmt.Errorf(
 			"subscription type %v can have at most %v customer organizations, but %v were requested",
 			subscriptionType,
@@ -231,7 +231,7 @@ func validateSubscriptionQuantities(
 
 	// Validate that the subscription type can accommodate current max users per customer
 	usersPerCustomerLimit := subscription.GetUsersPerCustomerOrganizationLimit(subscriptionType)
-	if usersPerCustomerLimit.IsReached(usage.maxUsersPerCustomer) {
+	if usersPerCustomerLimit.IsExceeded(usage.maxUsersPerCustomer) {
 		return fmt.Errorf(
 			"subscription type %v allows at most %v users per customer organization, "+
 				"but you currently have a customer with %v users",
@@ -243,7 +243,7 @@ func validateSubscriptionQuantities(
 
 	// Validate that the subscription type can accommodate current max deployments per customer
 	deploymentsPerCustomerLimit := subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(subscriptionType)
-	if deploymentsPerCustomerLimit.IsReached(usage.maxDeploymentTargetsPerCustomer) {
+	if deploymentsPerCustomerLimit.IsExceeded(usage.maxDeploymentTargetsPerCustomer) {
 		return fmt.Errorf(
 			"subscription type %v allows at most %v deployment targets per customer organization, "+
 				"but you currently have a customer with %v deployment targets",

@@ -26,6 +26,10 @@ const (
 )
 
 func (l Limit) IsReached(other int64) bool {
+	return l != Unlimited && int64(l) <= other
+}
+
+func (l Limit) IsExceeded(other int64) bool {
 	return l != Unlimited && int64(l) < other
 }
 
