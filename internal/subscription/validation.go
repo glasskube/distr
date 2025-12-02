@@ -16,7 +16,7 @@ func IsVendorUserAccountLimitReached(ctx context.Context, org types.Organization
 		return false, nil
 	} else if org.SubscriptionUserAccountQty == nil {
 		return true, nil
-	} else if vendorCount, err := db.CountUserAccountsByOrgIDAndRole(ctx, org.ID, types.UserRoleVendor); err != nil {
+	} else if vendorCount, err := db.CountVendorUserAccountsByOrgID(ctx, org.ID); err != nil {
 		return true, err
 	} else {
 		return vendorCount >= *org.SubscriptionUserAccountQty, nil

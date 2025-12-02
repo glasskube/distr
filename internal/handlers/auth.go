@@ -63,7 +63,7 @@ func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.R
 		}
 
 		if user, org, err := db.GetUserAccountAndOrg(
-			ctx, auth.CurrentUserID(), request.OrganizationID, nil); errors.Is(err, apierrors.ErrNotFound) {
+			ctx, auth.CurrentUserID(), request.OrganizationID); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		} else if err != nil {
@@ -110,7 +110,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		} else if len(orgs) < 1 {
 			org.Name = user.Email
-			org.UserRole = types.UserRoleVendor
+			org.UserRole = types.UserRoleAdmin
 			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
 				return err
 			} else if err := db.CreateUserAccountOrganizationAssignment(

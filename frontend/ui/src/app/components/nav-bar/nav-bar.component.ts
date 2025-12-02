@@ -1,6 +1,6 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -36,6 +36,7 @@ import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import dayjs from 'dayjs';
 
@@ -60,6 +61,8 @@ type SwitchOptions = {
     TitleCasePipe,
     AutotrimDirective,
     ReactiveFormsModule,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
   animations: [dropdownAnimation, modalFlyInOut],
 })
@@ -95,7 +98,7 @@ export class NavBarComponent implements OnInit {
       return {
         currentOrg,
         availableOrgs: orgs.filter((o) => o.id !== currentOrg.id),
-        isVendorSomewhere: orgs.some((o) => o.userRole === 'vendor'),
+        isVendorSomewhere: orgs.some((o) => o.customerOrganizationId === undefined),
       };
     })
   );
@@ -128,7 +131,7 @@ export class NavBarComponent implements OnInit {
   }
 
   private async initBranding() {
-    if (this.auth.hasRole('customer')) {
+    if (this.auth.isCustomer()) {
       try {
         const branding = await lastValueFrom(this.organizationBranding.get());
         if (branding.logo) {

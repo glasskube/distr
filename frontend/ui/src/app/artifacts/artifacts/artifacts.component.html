@@ -17,7 +17,7 @@
                 echo "YOUR-ACCESS-TOKEN" | docker login {{ host }} --password-stdin -u -
               </code>
             </div>
-            <div class="font-medium mt-1" *appRequiredRole="'vendor'">
+            <div class="font-medium mt-1" *appRequireVendor>
               Then you can start tagging and pushing your images. For example, you can try the following commands to
               push your own
               <a
@@ -37,7 +37,7 @@
                 docker push {{ host }}/{{ slug }}/hello-world:v1.0.0
               </code>
             </div>
-            <div *appRequiredRole="'customer'">
+            <div *appRequireCustomer>
               <div class="font-medium mt-1">
                 After the login you can start pulling images from the registry. For example, you can try the following
               </div>
@@ -47,14 +47,14 @@
             </div>
           } @else {
             Your Distr Hub does not have the registry enabled.
-            <ng-container *appRequiredRole="'vendor'"
+            <ng-container *appRequireVendor
               >You can enable it by setting the corresponding environment variables of the Distr Hub.
               <!-- TODO link to docs -->
             </ng-container>
           }
         } @else {
           It seems your organization does not have a slug set yet.
-          <ng-container *appRequiredRole="'vendor'"
+          <ng-container *appRequireVendor
             >To use the registry, please set a slug in
             <a class="text-gray-600 dark:text-gray-400 underline" routerLink="/settings">Settings</a>.
           </ng-container>
@@ -108,7 +108,7 @@
                   <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
                 </p>
               </div>
-              <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
+              <div class="flex flex-col items-end gap-1" *appRequireVendor>
                 <app-artifacts-download-count [source]="artifact"></app-artifacts-download-count>
                 <app-artifacts-downloaded-by [source]="artifact"></app-artifacts-downloaded-by>
               </div>

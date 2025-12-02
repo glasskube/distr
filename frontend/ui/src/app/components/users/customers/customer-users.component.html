@@ -55,7 +55,6 @@
 
       <app-users
         [customerOrganizationId]="customerOrganizationId()"
-        userRole="customer"
         [users]="users() ?? []"
         (refresh)="refresh$.next()" />
     </div>

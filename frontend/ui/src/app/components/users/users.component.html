@@ -12,7 +12,7 @@
           type="text"
           id="simple-search"
           [placeholder]="
-            currentUserRole === 'vendor' && userRole() === 'customer' ? 'Filter customers' : 'Filter users'
+            auth.isVendor() && customerOrganizationId() !== undefined ? 'Filter customers' : 'Filter users'
           "
           [formControl]="filterForm.controls.search"
           autotrim
@@ -23,20 +23,22 @@
   <div
     class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0 flex-grow">
     <app-quota-limit class="flex-grow" [usage]="users().length" [limit]="limit()" #quota></app-quota-limit>
-    <button
-      (click)="showInviteDialog()"
-      [disabled]="quota.isLimitReached()"
-      [title]="quota.isLimitReached() ? 'Limit reached' : ''"
-      type="button"
-      id="createApplicationButton"
-      class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-      <fa-icon [icon]="faPlus" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-      @if (currentUserRole === 'vendor' && userRole() === 'customer') {
-        Invite Customer
-      } @else {
-        Add User
-      }
-    </button>
+    @if ((auth.isVendor() && auth.hasRole('read_write')) || auth.hasRole('admin')) {
+      <button
+        (click)="showInviteDialog()"
+        [disabled]="quota.isLimitReached()"
+        [title]="quota.isLimitReached() ? 'Limit reached' : ''"
+        type="button"
+        id="createApplicationButton"
+        class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700disabled:opacity-50 disabled:cursor-not-allowed">
+        <fa-icon [icon]="faPlus" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
+        @if (auth.isVendor() && customerOrganizationId() !== undefined) {
+          Invite Customer
+        } @else {
+          Add User
+        }
+      </button>
+    }
   </div>
 </div>
 <div class="overflow-x-auto">
@@ -48,6 +50,7 @@
         <th scope="col" class="p-4">Name</th>
         <th scope="col" class="p-4">E-Mail</th>
         <th scope="col" class="p-4">Join Date</th>
+        <th scope="col" class="p-4">Role</th>
         <th scope="col" class="p-4"></th>
       </tr>
     </thead>
@@ -84,24 +87,65 @@
           <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
             {{ user.joinedOrgAt | date: 'short' }}
           </td>
+          <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+            @if (editRoleUserId() === user.id) {
+              <form [formGroup]="editRoleForm" class="flex" (ngSubmit)="submitEditUserRoleForm()">
+                <select
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm w-32 rounded-s-lg focus:ring-blue-500 focus:border-blue-500 block px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  id="user-role-select"
+                  formControlName="userRole">
+                  <option value="read_only">Viewer</option>
+                  <option value="read_write">User</option>
+                  <option value="admin">Administrator</option>
+                </select>
+                <button
+                  type="submit"
+                  class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-e-lg text-sm px-3 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                  <fa-icon [icon]="faCheck" />
+                </button>
+              </form>
+            } @else {
+              @switch (user.userRole) {
+                @case ('read_only') {
+                  Viewer
+                }
+                @case ('read_write') {
+                  User
+                }
+                @case ('admin') {
+                  Admin
+                }
+              }
+              @if (auth.hasRole('admin') || (auth.isVendor() && auth.hasRole('read_write'))) {
+                <button
+                  aria-label="Edit User Role"
+                  (click)="editUserRole(user)"
+                  class="text-gray-900 dark:text-gray-400 ms-1">
+                  <fa-icon [icon]="faPen"></fa-icon>
+                </button>
+              }
+            }
+          </td>
           <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
-            @if (!user.emailVerified) {
+            @if ((auth.isVendor() && auth.hasRole('read_write')) || auth.hasRole('admin')) {
+              @if (!user.emailVerified) {
+                <button
+                  *appRequireVendor
+                  type="button"
+                  (click)="resendInvitation(user)"
+                  class="py-2 px-3 text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                  <fa-icon [icon]="faRepeat" class="text-gray-500 dark:text-gray-400 h-4 w-4"></fa-icon>
+                  Resend invitation
+                </button>
+              }
               <button
-                *appRequiredRole="'vendor'"
                 type="button"
-                (click)="resendInvitation(user)"
-                class="py-2 px-3 text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                <fa-icon [icon]="faRepeat" class="text-gray-500 dark:text-gray-400 h-4 w-4"></fa-icon>
-                Resend invitation
+                aria-label="Delete"
+                (click)="deleteUser(user)"
+                class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
               </button>
             }
-            <button
-              type="button"
-              aria-label="Delete"
-              (click)="deleteUser(user)"
-              class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-              <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
-            </button>
           </td>
         </tr>
       }
@@ -113,11 +157,11 @@
   <div
     @modalFlyInOut
     style="transform-origin: top center"
-    class="p-4 w-full mt-12 max-h-full bg-white rounded-lg shadow-sm dark:bg-gray-900">
+    class="p-4 w-xl max-w-full mt-12 max-h-full bg-white rounded-lg shadow-sm dark:bg-gray-900">
     <!-- Modal header -->
     <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-        @if (currentUserRole === 'vendor' && userRole() === 'customer') {
+        @if (auth.isVendor() && customerOrganizationId() !== undefined) {
           Invite customer
         } @else {
           Add a user
@@ -131,6 +175,7 @@
         <span class="sr-only">Close modal</span>
       </button>
     </div>
+
     <!-- Modal body -->
     <div class="p-4 md:p-5 space-y-4">
       <section class="antialiased">
@@ -140,7 +185,7 @@
               <div class="flex flex-col space-y-5">
                 <div class="space-y-2">
                   <label for="name" class="block text-sm font-medium text-gray-900 dark:text-white">
-                    Full Name (optional)
+                    Full Name <span class="text-gray-500">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -154,7 +199,7 @@
 
                 <div class="space-y-2">
                   <label for="email" class="block text-sm font-medium text-gray-900 dark:text-white">
-                    E-Mail Address *
+                    E-Mail Address <span class="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -175,6 +220,42 @@
                     </div>
                   }
                 </div>
+                <div class="space-y-2">
+                  <label for="userRole" class="block text-sm font-medium text-gray-900 dark:text-white">
+                    User role <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="userRole"
+                    formControlName="userRole"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option value="read_only">Viewer</option>
+                    <option value="read_write">User</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+
+                  @if (inviteForm.controls.userRole.invalid && inviteForm.controls.userRole.touched) {
+                    <div class="text-sm text-red-600">This field is required</div>
+                  }
+
+                  @switch (inviteForm.controls.userRole.value) {
+                    @case ('read_only') {
+                      <div class="text-sm text-gray-500">
+                        Read-only users can view applications, deployments, artifacts and licenses.
+                      </div>
+                    }
+                    @case ('read_write') {
+                      <div class="text-sm text-gray-500">
+                        Read/Write users can view and modify applications, deployments, artifacts and licenses.
+                      </div>
+                    }
+                    @case ('admin') {
+                      <div class="text-sm text-gray-500">
+                        Administrator users can view, modify, and manage all aspects of the platform, including user
+                        management, organization settings and billing.
+                      </div>
+                    }
+                  }
+                </div>
 
                 <button
                   type="submit"
@@ -191,7 +272,7 @@
                 role="alert">
                 <div class="flex flex-col w-full">
                   <div class="font-medium">
-                    @if (currentUserRole === 'vendor' && userRole() === 'customer') {
+                    @if (auth.isVendor() && customerOrganizationId() !== undefined) {
                       Customer has been invited to the organization
                     } @else {
                       User has been invited to the organization

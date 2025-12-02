@@ -170,7 +170,7 @@ export class DeploymentTargetsComponent implements AfterViewInit {
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
-        if (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0) {
+        if (this.auth.isCustomer() && apps.length > 0 && dts.length === 0) {
           this.openWizard();
         }
       });
