@@ -20,7 +20,7 @@
 - [CreateAccessTokenRequest](interfaces/CreateAccessTokenRequest.md)
 - [CreateUpdateCustomerOrganizationRequest](interfaces/CreateUpdateCustomerOrganizationRequest.md)
 - [CustomerOrganization](interfaces/CustomerOrganization.md)
-- [CustomerOrganizationWithUserCount](interfaces/CustomerOrganizationWithUserCount.md)
+- [CustomerOrganizationWithUsage](interfaces/CustomerOrganizationWithUsage.md)
 - [Deployment](interfaces/Deployment.md)
 - [DeploymentRequest](interfaces/DeploymentRequest.md)
 - [DeploymentRevisionStatus](interfaces/DeploymentRevisionStatus.md)

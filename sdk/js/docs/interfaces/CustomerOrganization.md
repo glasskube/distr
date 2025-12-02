@@ -12,7 +12,7 @@
 
 ## Extended by
 
-- [`CustomerOrganizationWithUserCount`](CustomerOrganizationWithUserCount.md)
+- [`CustomerOrganizationWithUsage`](CustomerOrganizationWithUsage.md)
 
 ## Properties
 

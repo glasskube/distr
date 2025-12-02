@@ -6,8 +6,9 @@ export interface CustomerOrganization extends Required<BaseModel> {
   imageUrl?: string;
 }
 
-export interface CustomerOrganizationWithUserCount extends CustomerOrganization {
+export interface CustomerOrganizationWithUsage extends CustomerOrganization {
   userCount: number;
+  deploymentTargetCount: number;
 }
 
 export interface CreateUpdateCustomerOrganizationRequest {

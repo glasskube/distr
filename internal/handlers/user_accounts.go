@@ -107,7 +107,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var customerOrganization *types.CustomerOrganizationWithUserCount
+	var customerOrganization *types.CustomerOrganizationWithUsage
 	if body.CustomerOrganizationID != nil {
 		if co, err := db.GetCustomerOrganizationByID(
 			ctx,
