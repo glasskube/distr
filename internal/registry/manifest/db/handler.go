@@ -8,7 +8,7 @@ import (
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/db"
-	manifestpkg "github.com/glasskube/distr/internal/registry/manifest"
+	"github.com/glasskube/distr/internal/registry/manifest"
 	"github.com/glasskube/distr/internal/registry/name"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
@@ -18,28 +18,28 @@ import (
 
 type handler struct{}
 
-func NewManifestHandler() manifestpkg.ManifestHandler {
+func NewManifestHandler() manifest.ManifestHandler {
 	return &handler{}
 }
 
-// Delete implements manifestpkg.ManifestHandler.
+// Delete implements manifest.ManifestHandler.
 func (h *handler) Delete(ctx context.Context, name string, reference string) error {
 	panic("TODO: implement")
 }
 
-// Get implements manifestpkg.ManifestHandler.
-func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*manifestpkg.Manifest, error) {
+// Get implements manifest.ManifestHandler.
+func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*manifest.Manifest, error) {
 	if name, err := name.Parse(nameStr); err != nil {
-		return nil, fmt.Errorf("%w: %w", manifestpkg.ErrNameUnknown, err)
+		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else if av, err := db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
-			return nil, fmt.Errorf("%w: %w", manifestpkg.ErrNameUnknown, err)
+			return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 		}
 		return nil, err
 	} else {
-		return &manifestpkg.Manifest{
-			BlobWithData: manifestpkg.BlobWithData{
-				Blob: manifestpkg.Blob{
+		return &manifest.Manifest{
+			BlobWithData: manifest.BlobWithData{
+				Blob: manifest.Blob{
 					Digest: digest.Digest(av.ManifestBlobDigest),
 					Size:   av.ManifestBlobSize,
 				},
@@ -50,7 +50,7 @@ func (h *handler) Get(ctx context.Context, nameStr string, reference string) (*m
 	}
 }
 
-// List implements manifestpkg.ManifestHandler.
+// List implements manifest.ManifestHandler.
 func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	var artifacts []types.ArtifactWithDownloads
@@ -81,10 +81,10 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	return result, nil
 }
 
-// ListDigests implements manifestpkg.ManifestHandler.
+// ListDigests implements manifest.ManifestHandler.
 func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Digest, error) {
 	if name, err := name.Parse(nameStr); err != nil {
-		return nil, fmt.Errorf("%w: %w", manifestpkg.ErrNameUnknown, err)
+		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var licenseCustomerOrgID *uuid.UUID
@@ -93,7 +93,7 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
-				return nil, fmt.Errorf("%w: %w", manifestpkg.ErrNameUnknown, err)
+				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
 			return nil, err
 		} else if versions, err := db.GetVersionsForArtifact(
@@ -116,10 +116,10 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 	}
 }
 
-// ListTags implements manifestpkg.ManifestHandler.
+// ListTags implements manifest.ManifestHandler.
 func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last string) ([]string, error) {
 	if name, err := name.Parse(nameStr); err != nil {
-		return nil, fmt.Errorf("%w: %w", manifestpkg.ErrNameUnknown, err)
+		return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var licenseCustomerOrgID *uuid.UUID
@@ -128,7 +128,7 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
-				return nil, fmt.Errorf("%w: %w", manifestpkg.ErrNameUnknown, err)
+				return nil, fmt.Errorf("%w: %w", manifest.ErrNameUnknown, err)
 			}
 			return nil, err
 		} else if versions, err := db.GetVersionsForArtifact(
@@ -149,12 +149,12 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 	}
 }
 
-// Put implements manifestpkg.ManifestHandler.
+// Put implements manifest.ManifestHandler.
 func (h *handler) Put(
 	ctx context.Context,
 	nameStr, reference string,
-	manifest manifestpkg.Manifest,
-	blobs []manifestpkg.Blob,
+	manifestData manifest.Manifest,
+	blobs []manifest.Blob,
 ) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	name, err := name.Parse(nameStr)
@@ -170,10 +170,10 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.Digest),
-			ManifestBlobSize:       manifest.Size,
-			ManifestContentType:    manifest.ContentType,
-			ManifestData:           manifest.Data,
+			ManifestBlobDigest:     types.Digest(manifestData.Digest),
+			ManifestBlobSize:       manifestData.Size,
+			ManifestContentType:    manifestData.ContentType,
+			ManifestData:           manifestData.Data,
 			ArtifactID:             artifact.ID,
 		}
 
@@ -190,7 +190,7 @@ func (h *handler) Put(
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||
 			existingVersion.ManifestContentType != version.ManifestContentType {
-			return fmt.Errorf("%w: tag %s already exists with different content", manifestpkg.ErrTagAlreadyExists, reference)
+			return fmt.Errorf("%w: tag %s already exists with different content", manifest.ErrTagAlreadyExists, reference)
 		} else {
 			version = *existingVersion
 		}
