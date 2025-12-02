@@ -23,7 +23,13 @@ const (
 		o.features,
 		o.app_domain,
 		o.registry_domain,
-		o.email_from_address
+		o.email_from_address,
+		o.subscription_type,
+		o.subscription_ends_at,
+		o.stripe_customer_id,
+		o.stripe_subscription_id,
+		o.subscription_customer_organization_quantity,
+		o.subscription_user_account_quantity
 	`
 	organizationWithUserRoleOutputExpr = organizationOutputExpr + `,
 		j.user_role,
@@ -53,8 +59,31 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"UPDATE Organization AS o SET name = @name, slug = @slug WHERE id = @id RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"id": org.ID, "name": org.Name, "slug": org.Slug},
+		`UPDATE Organization AS o
+		SET
+			name = @name,
+			slug = @slug,
+			features = @features,
+			subscription_type = @subscription_type,
+			subscription_ends_at = @subscription_ends_at,
+			stripe_customer_id = @stripe_customer_id,
+			stripe_subscription_id = @stripe_subscription_id,
+			subscription_customer_organization_quantity = @subscription_customer_organization_quantity,
+			subscription_user_account_quantity = @subscription_user_account_quantity
+		WHERE id = @id
+		RETURNING `+organizationOutputExpr,
+		pgx.NamedArgs{
+			"id":                     org.ID,
+			"name":                   org.Name,
+			"features":               org.Features,
+			"slug":                   org.Slug,
+			"subscription_type":      org.SubscriptionType,
+			"subscription_ends_at":   org.SubscriptionEndsAt.UTC(),
+			"stripe_customer_id":     org.StripeCustomerID,
+			"stripe_subscription_id": org.StripeSubscriptionID,
+			"subscription_customer_organization_quantity": org.SubscriptionCustomerOrganizationQty,
+			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
+		},
 	)
 	if err != nil {
 		return err
