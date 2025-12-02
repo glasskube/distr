@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
-import {map, merge, Observable, shareReplay, Subject, tap} from 'rxjs';
+import {filter, map, merge, Observable, of, shareReplay, Subject, switchMap, tap} from 'rxjs';
 import {ReactiveList} from './cache';
 import {ContextService} from './context.service';
 
@@ -33,8 +33,11 @@ export class UsersService {
   private readonly contextService = inject(ContextService);
   private readonly cache = new UserAccountsReactiveList(this.httpClient.get<UserAccountWithRole[]>(this.baseUrl));
 
-  private readonly selfUpdate = new Subject<UserAccountWithRole>();
-  private readonly self$ = merge(this.selfUpdate.asObservable(), this.contextService.getUser()).pipe(shareReplay(1));
+  private readonly userAccountUpdates$ = new Subject<UserAccountWithRole>();
+  private readonly self$ = this.contextService.getUser().pipe(
+    switchMap((user) => merge(of(user), this.userAccountUpdates$.pipe(filter((it) => it.id === user.id)))),
+    shareReplay(1)
+  );
 
   public get(): Observable<UserAccountWithRole> {
     return this.self$;
@@ -68,7 +71,7 @@ export class UsersService {
     return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}/image`, {imageId}).pipe(
       tap((it) => {
         this.cache.save(it);
-        this.selfUpdate.next(it);
+        this.userAccountUpdates$.next(it);
       })
     );
   }
@@ -77,7 +80,7 @@ export class UsersService {
     return this.httpClient.patch<UserAccountWithRole>(`${this.baseUrl}/${userId}`, request).pipe(
       tap((it) => {
         this.cache.save(it);
-        this.selfUpdate.next(it);
+        this.userAccountUpdates$.next(it);
       })
     );
   }
