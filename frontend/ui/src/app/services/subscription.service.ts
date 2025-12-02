@@ -8,7 +8,7 @@ import {CheckoutRequest, SubscriptionInfo} from '../types/subscription';
 })
 export class SubscriptionService {
   private readonly httpClient = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/billing/billing';
+  private readonly baseUrl = '/api/v1/billing';
 
   get(): Observable<SubscriptionInfo> {
     return this.httpClient.get<SubscriptionInfo>(`${this.baseUrl}/subscription`);
