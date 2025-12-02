@@ -12,6 +12,7 @@ import (
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/authn/authinfo"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
@@ -43,8 +44,7 @@ func getDeploymentTargets(w http.ResponseWriter, r *http.Request) {
 	deploymentTargets, err := db.GetDeploymentTargets(
 		ctx,
 		*auth.CurrentOrgID(),
-		auth.CurrentUserID(),
-		*auth.CurrentUserRole(),
+		auth.CurrentCustomerOrgID(),
 	)
 	if err != nil {
 		internalctx.GetLogger(ctx).Error("failed to get DeploymentTargets", zap.Error(err))
@@ -74,7 +74,13 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
-		if err = db.CreateDeploymentTarget(ctx, &dt, *auth.CurrentOrgID(), auth.CurrentUserID()); err != nil {
+		if err = db.CreateDeploymentTarget(
+			ctx,
+			&dt,
+			*auth.CurrentOrgID(),
+			auth.CurrentUserID(),
+			auth.CurrentCustomerOrgID(),
+		); err != nil {
 			log.Warn("could not create DeploymentTarget", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -126,7 +132,10 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	if dt.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
 	} else if currentUser, err := db.GetUserAccountWithRole(
-		ctx, auth.CurrentUserID(), *auth.CurrentOrgID(),
+		ctx,
+		auth.CurrentUserID(),
+		*auth.CurrentOrgID(),
+		auth.CurrentCustomerOrgID(),
 	); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else if currentUser.UserRole != types.UserRoleVendor && dt.CreatedByUserAccountID != currentUser.ID {
@@ -220,8 +229,7 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 		orgId := auth.CurrentOrgID()
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, id, orgId); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
-		} else if *auth.CurrentUserRole() == types.UserRoleCustomer &&
-			deploymentTarget.CreatedByUserAccountID != auth.CurrentUserID() {
+		} else if !isDeploymentTargetVisible(auth, deploymentTarget.DeploymentTarget) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get DeploymentTarget", zap.Error(err))
@@ -232,4 +240,12 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 			wh.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
+}
+
+func isDeploymentTargetVisible(auth authinfo.AuthInfo, target types.DeploymentTarget) bool {
+	if *auth.CurrentUserRole() == types.UserRoleCustomer {
+		return target.CustomerOrganizationID != nil && *target.CustomerOrganizationID == *auth.CurrentCustomerOrgID()
+	}
+
+	return true
 }

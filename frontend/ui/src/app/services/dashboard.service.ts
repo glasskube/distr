@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
+import {CustomerOrganization} from '@glasskube/distr-sdk';
 import {Observable} from 'rxjs';
-import {UserAccountWithRole} from '@glasskube/distr-sdk';
 import {ArtifactWithTags} from './artifacts.service';
 
 export interface DashboardArtifact {
@@ -10,7 +10,7 @@ export interface DashboardArtifact {
 }
 
 export interface ArtifactsByCustomer {
-  customer: UserAccountWithRole;
+  customer: CustomerOrganization;
   artifacts?: DashboardArtifact[];
 }
 

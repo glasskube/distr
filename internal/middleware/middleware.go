@@ -122,6 +122,12 @@ func RateLimitUserIDKey(r *http.Request) (string, error) {
 	}
 }
 
+func RateLimitPathValueKey(name string) func(r *http.Request) (string, error) {
+	return func(r *http.Request) (string, error) {
+		return r.PathValue(name), nil
+	}
+}
+
 func RateLimitCurrentDeploymentTargetIdKeyFunc(r *http.Request) (string, error) {
 	if auth, err := auth.AgentAuthentication.Get(r.Context()); err != nil {
 		return "", err

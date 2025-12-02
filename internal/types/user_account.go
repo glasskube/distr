@@ -13,6 +13,7 @@ type UserAccount struct {
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
 	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
+	EmailVerified   bool       `db:"email_verified" json:"emailVerified"`
 	PasswordHash    []byte     `db:"password_hash" json:"-"`
 	PasswordSalt    []byte     `db:"password_salt" json:"-"`
 	Name            string     `db:"name" json:"name,omitempty"`
@@ -21,19 +22,24 @@ type UserAccount struct {
 	// Remember to update AsUserAccountWithRole when adding fields!
 }
 
-func (u *UserAccount) AsUserAccountWithRole(role UserRole, joinedOrgAt time.Time) UserAccountWithUserRole {
+func (u *UserAccount) AsUserAccountWithRole(
+	role UserRole,
+	customerOrganizationID *uuid.UUID,
+	joinedOrgAt time.Time,
+) UserAccountWithUserRole {
 	return UserAccountWithUserRole{
-		ID:              u.ID,
-		CreatedAt:       u.CreatedAt,
-		Email:           u.Email,
-		EmailVerifiedAt: util.PtrCopy(u.EmailVerifiedAt),
-		PasswordHash:    slices.Clone(u.PasswordHash),
-		PasswordSalt:    slices.Clone(u.PasswordSalt),
-		Name:            u.Name,
-		ImageID:         u.ImageID,
-		Password:        u.Password,
-		UserRole:        role,
-		JoinedOrgAt:     joinedOrgAt,
+		ID:                     u.ID,
+		CreatedAt:              u.CreatedAt,
+		Email:                  u.Email,
+		EmailVerifiedAt:        util.PtrCopy(u.EmailVerifiedAt),
+		PasswordHash:           slices.Clone(u.PasswordHash),
+		PasswordSalt:           slices.Clone(u.PasswordSalt),
+		Name:                   u.Name,
+		ImageID:                u.ImageID,
+		Password:               u.Password,
+		UserRole:               role,
+		JoinedOrgAt:            joinedOrgAt,
+		CustomerOrganizationID: customerOrganizationID,
 	}
 }
 
@@ -43,13 +49,18 @@ type UserAccountWithUserRole struct {
 	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
 	Email           string     `db:"email" json:"email"`
 	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
+	EmailVerified   bool       `db:"email_verified" json:"emailVerified"`
 	PasswordHash    []byte     `db:"password_hash" json:"-"`
 	PasswordSalt    []byte     `db:"password_salt" json:"-"`
 	Name            string     `db:"name" json:"name,omitempty"`
 	ImageID         *uuid.UUID `db:"image_id" json:"-"`
-	UserRole        UserRole   `db:"user_role" json:"userRole"`        // not copy+pasted
-	JoinedOrgAt     time.Time  `db:"joined_org_at" json:"joinedOrgAt"` // not copy+pasted
-	Password        string     `db:"-" json:"-"`
+	// not copy+pasted
+	UserRole UserRole `db:"user_role" json:"userRole"`
+	// not copy+pasted
+	JoinedOrgAt time.Time `db:"joined_org_at" json:"joinedOrgAt"`
+	// not copy+pasted
+	CustomerOrganizationID *uuid.UUID `db:"customer_organization_id" json:"customerOrganizationId,omitempty"`
+	Password               string     `db:"-" json:"-"`
 	// Remember to update AsUserAccount when adding fields!
 }
 

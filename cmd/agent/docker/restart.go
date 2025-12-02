@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/command/stack/options"
-	"github.com/docker/cli/cli/command/stack/swarm"
-	"github.com/docker/cli/opts"
+	"github.com/docker/cli/cli/compose/convert"
 	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
-	swarmtypes "github.com/docker/docker/api/types/swarm"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/swarm"
 	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -37,18 +36,19 @@ func RunDockerComposeRestart(ctx context.Context, deployment AgentDeployment) er
 }
 
 func RunDockerSwarmRestart(ctx context.Context, deployment AgentDeployment) error {
-	services, err := swarm.GetServices(
+	apiClient := dockerCli.Client()
+	services, err := apiClient.ServiceList(
 		ctx,
-		dockerCli,
-		options.Services{Namespace: deployment.ProjectName, Filter: opts.NewFilterOpt()},
+		swarm.ServiceListOptions{
+			Filters: filters.NewArgs(filters.Arg("label", convert.LabelNamespace+"="+deployment.ProjectName)),
+		},
 	)
 	if err != nil {
 		return err
 	}
 	var aggErr error
-	apiClient := dockerCli.Client()
 	for _, svc := range services {
-		var options swarmtypes.ServiceUpdateOptions
+		var options swarm.ServiceUpdateOptions
 		spec := svc.Spec
 		spec.TaskTemplate.ForceUpdate++
 		image := spec.TaskTemplate.ContainerSpec.Image

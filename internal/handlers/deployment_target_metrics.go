@@ -13,17 +13,19 @@ import (
 )
 
 func DeploymentTargetMetricsRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgAndRole, requireUserRoleVendor)
+	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getLatestDeploymentTargetMetrics)
 }
 
 func getLatestDeploymentTargetMetrics(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	if deploymentTargetMetrics, err := db.GetLatestDeploymentTargetMetrics(ctx,
+
+	if deploymentTargetMetrics, err := db.GetLatestDeploymentTargetMetrics(
+		ctx,
 		*auth.CurrentOrgID(),
-		auth.CurrentUserID(),
-		*auth.CurrentUserRole()); err != nil {
+		auth.CurrentCustomerOrgID(),
+	); err != nil {
 		internalctx.GetLogger(ctx).Error("failed to get deployment target metrics", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)

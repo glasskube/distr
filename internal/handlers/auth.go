@@ -114,7 +114,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
 				return err
 			} else if err := db.CreateUserAccountOrganizationAssignment(
-				ctx, user.ID, org.ID, org.UserRole); err != nil {
+				ctx, user.ID, org.ID, org.UserRole, org.CustomerOrganizationID); err != nil {
 				return err
 			}
 		} else {
@@ -143,11 +143,13 @@ func authLoginConfigHandler() http.HandlerFunc {
 		OIDCGithubEnabled    bool `json:"oidcGithubEnabled"`
 		OIDCGoogleEnabled    bool `json:"oidcGoogleEnabled"`
 		OIDCMicrosoftEnabled bool `json:"oidcMicrosoftEnabled"`
+		OIDCGenericEnabled   bool `json:"oidcGenericEnabled"`
 	}{
 		RegistrationEnabled:  env.Registration() == env.RegistrationEnabled,
 		OIDCGithubEnabled:    env.OIDCGithubEnabled(),
 		OIDCGoogleEnabled:    env.OIDCGoogleEnabled(),
 		OIDCMicrosoftEnabled: env.OIDCMicrosoftEnabled(),
+		OIDCGenericEnabled:   env.OIDCGenericEnabled(),
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		RespondJSON(w, resp)
@@ -232,20 +234,28 @@ func authResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 	} else {
-		var org *types.Organization
+		var organization *types.OrganizationWithBranding
 		mailOpts := []mail.MailOpt{
 			mail.To(user.Email),
 			mail.Subject("Password reset"),
 		}
 		if len(orgs) > 0 {
-			org = &orgs[0].Organization
-			if from, err := customdomains.EmailFromAddressParsedOrDefault(*org); err == nil {
+			if result, err := db.GetOrganizationWithBranding(ctx, orgs[0].ID); err != nil {
+				err = fmt.Errorf("failed to get org with branding: %w", err)
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			} else {
+				organization = result
+			}
+
+			if from, err := customdomains.EmailFromAddressParsedOrDefault(organization.Organization); err == nil {
 				mailOpts = append(mailOpts, mail.From(*from))
 			} else {
 				log.Warn("error parsing custom from address", zap.Error(err))
 			}
 		}
-		mailOpts = append(mailOpts, mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, org, token)))
+		mailOpts = append(mailOpts, mail.HtmlBodyTemplate(mailtemplates.PasswordReset(*user, organization, token)))
 		if err := mailer.Send(ctx, mail.New(mailOpts...)); err != nil {
 			log.Warn("could not send reset mail", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)

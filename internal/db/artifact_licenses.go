@@ -16,7 +16,7 @@ import (
 
 const (
 	artifactLicenseOutExpr = `al.id, al.created_at, al.name, al.expires_at, ` +
-		`al.owner_useraccount_id, al.organization_id `
+		`al.customer_organization_id, al.organization_id `
 	artifactSelectionsOutExpor = `
 		(
 			SELECT array_agg(DISTINCT row(
@@ -56,18 +56,18 @@ func CreateArtifactLicense(ctx context.Context, license *types.ArtifactLicenseBa
 	rows, err := db.Query(ctx, `
 		WITH inserted AS (
 			INSERT INTO ArtifactLicense (
-				name, expires_at, organization_id, owner_useraccount_id
+				name, expires_at, organization_id, customer_organization_id
 			) VALUES (
-				@name, @expiresAt, @organizationId, @ownerUserAccountId
+				@name, @expiresAt, @organizationId, @customerOrganizationId
 			) RETURNING *
 		)
 		SELECT `+artifactLicenseOutExpr+`
 		FROM inserted al`,
 		pgx.NamedArgs{
-			"name":               license.Name,
-			"expiresAt":          license.ExpiresAt,
-			"organizationId":     license.OrganizationID,
-			"ownerUserAccountId": license.OwnerUserAccountID,
+			"name":                   license.Name,
+			"expiresAt":              license.ExpiresAt,
+			"organizationId":         license.OrganizationID,
+			"customerOrganizationId": license.CustomerOrganizationID,
 		},
 	)
 	if err != nil {
@@ -92,16 +92,16 @@ func UpdateArtifactLicense(ctx context.Context, license *types.ArtifactLicenseBa
 			UPDATE ArtifactLicense SET
 			name = @name,
             expires_at = @expiresAt,
-            owner_useraccount_id = @ownerUserAccountId
+            customer_organization_id = @customerOrganizationId
 		 	WHERE id = @id RETURNING *
 		)
 		SELECT `+artifactLicenseOutExpr+`
 		FROM updated al`,
 		pgx.NamedArgs{
-			"id":                 license.ID,
-			"name":               license.Name,
-			"expiresAt":          license.ExpiresAt,
-			"ownerUserAccountId": license.OwnerUserAccountID,
+			"id":                     license.ID,
+			"name":                   license.Name,
+			"expiresAt":              license.ExpiresAt,
+			"customerOrganizationId": license.CustomerOrganizationID,
 		},
 	)
 	if err != nil {

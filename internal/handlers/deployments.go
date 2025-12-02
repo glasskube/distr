@@ -218,15 +218,22 @@ func validateDeploymentRequest(
 				if errors.Is(err, apierrors.ErrNotFound) {
 					return licenseNotFoundError(w)
 				} else {
-					log.Error("could not ApplicationLicense", zap.Error(err))
+					log.Error("could not get ApplicationLicense", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return err
 				}
 			}
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			// license ID is required for customer but optional for vendor
-			return badRequestError(w, "applicationLicenseId is required")
+			if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgId, nil); err != nil {
+				log.Error("could not get ApplicationLicense", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			} else if len(licenses) > 0 {
+				// license ID is required for customer but optional for vendor
+				return badRequestError(w, "applicationLicenseId is required")
+			}
 		}
 	} else if request.ApplicationLicenseID != nil {
 		return badRequestError(w, "unexpected applicationLicenseId")
@@ -273,13 +280,14 @@ func validateDeploymentRequestLicense(
 		if license.OrganizationID != *auth.CurrentOrgID() {
 			return licenseNotFoundError(w)
 		}
-		if license.OwnerUserAccountID == nil {
+		if license.CustomerOrganizationID == nil {
 			return invalidLicenseError(w)
 		}
-		if *auth.CurrentUserRole() == types.UserRoleCustomer && *license.OwnerUserAccountID != auth.CurrentUserID() {
+		if *auth.CurrentUserRole() == types.UserRoleCustomer &&
+			*license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
 			return licenseNotFoundError(w)
 		}
-		if target.CreatedByUserAccountID != *license.OwnerUserAccountID {
+		if target.CustomerOrganizationID == nil || *target.CustomerOrganizationID != *license.CustomerOrganizationID {
 			return invalidLicenseError(w)
 		}
 		if len(license.Versions) > 0 && !license.HasVersionWithID(request.ApplicationVersionID) {
@@ -314,8 +322,7 @@ func validateDeploymentRequestDeploymentTarget(
 ) error {
 	auth := auth.Authentication.Require(ctx)
 
-	if *auth.CurrentUserRole() == types.UserRoleCustomer &&
-		target.CreatedByUserAccountID != auth.CurrentUserID() {
+	if !isDeploymentTargetVisible(auth, target.DeploymentTarget) {
 		err := errors.New("DeploymentTarget not found")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return err

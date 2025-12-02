@@ -28,13 +28,49 @@
                 <h2 class="text-2xl font-semibold truncate">
                   {{ artifact.name }}
                 </h2>
-                <p class="text-sm text-gray-500 truncate dark:text-gray-400 mt-1">
+                <p class="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
                   <app-uuid [uuid]="artifact.id" [small]="true"></app-uuid>
                 </p>
               </div>
-              <app-artifacts-download-count
-                *appRequiredRole="'vendor'"
-                [source]="artifact"></app-artifacts-download-count>
+
+              <ng-container *appRequiredRole="'vendor'">
+                <button
+                  type="button"
+                  class="text-gray-500 dark:text-gray-400 self-start px-1"
+                  cdkOverlayOrigin
+                  #dropdownTrigger="cdkOverlayOrigin"
+                  (click)="showDropdown.set(true)">
+                  <fa-icon [icon]="faEllipsisVertical" />
+                </button>
+
+                <app-artifacts-download-count class="self-start" [source]="artifact" />
+
+                <ng-template
+                  cdkConnectedOverlay
+                  [cdkConnectedOverlayHasBackdrop]="true"
+                  (backdropClick)="showDropdown.set(false)"
+                  (detach)="showDropdown.set(false)"
+                  cdkConnectedOverlayBackdropClass="transparent"
+                  [cdkConnectedOverlayOrigin]="dropdownTrigger"
+                  [cdkConnectedOverlayPositions]="[
+                    {originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top'},
+                  ]"
+                  [cdkConnectedOverlayOpen]="showDropdown()">
+                  <div
+                    @dropdown
+                    style="transform-origin: top center"
+                    class="text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600 overflow-hidden">
+                    <button
+                      type="button"
+                      aria-label="Delete"
+                      (click)="deleteArtifact(artifact)"
+                      class="text-start block w-full px-4 py-2 text-sm text-red-700 enabled:hover:text-white enabled:hover:bg-red-800 dark:text-red-500 dark:enabled:hover:text-white dark:enabled:hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed">
+                      <fa-icon [icon]="faTrash" class="inline-block mr-2" />
+                      Delete
+                    </button>
+                  </div>
+                </ng-template>
+              </ng-container>
             </div>
 
             @if (getArtifactUsage(artifact); as usage) {
@@ -46,27 +82,6 @@
                 </div>
               </div>
             }
-
-            <!--
-            @if (updateTag$ | async; as updateTag) {
-              <div
-                class="flex text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-                role="alert">
-                <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
-                <div>
-                  <span class="font-medium">Some customers are not using the latest version of this artifact.</span>
-                </div>
-              </div>
-              <div
-                class="flex text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
-                role="alert">
-                <fa-icon [icon]="faWarning" class="me-4"></fa-icon>
-                <div>
-                  <span class="font-medium">Some customers are affected by a critical vulnerability.</span>
-                </div>
-              </div>
-            }
-            -->
           </div>
         </div>
       </div>
@@ -75,69 +90,43 @@
         <div class="overflow-x-auto">
           <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
             @for (version of artifact.versions; track version.digest) {
-              <li class="py-3 px-6 sm:py-4">
-                <div class="flex items-center gap-2">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-row gap-1">
-                      @for (label of version.tags; track label.name) {
-                        @if (label.name === 'latest') {
+              @if (version.tags.length) {
+                <li class="py-3 px-6 sm:py-4">
+                  <div class="flex items-center gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex flex-row gap-1 flex-wrap">
+                        @for (label of version.tags; track label.name) {
                           <span
-                            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-green-400 border border-green-400">
+                            class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400 flex items-center gap-1">
                             {{ label.name }}
-                          </span>
-                        } @else {
-                          <span
-                            class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400">
-                            {{ label.name }}
+                            <button
+                              *appRequiredRole="'vendor'"
+                              type="button"
+                              [attr.aria-label]="'Delete tag ' + label.name"
+                              (click)="deleteArtifactTag(artifact, version, label.name)"
+                              class="-mr-1 text-red-400 hover:text-red-600 transition-colors">
+                              <fa-icon [icon]="faXmark"></fa-icon>
+                            </button>
                           </span>
                         }
-                      }
-                    </div>
-                    <ul class="flex gap-3 mt-1 text-xs font-normal text-gray-500 truncate dark:text-gray-400">
-                      <li>{{ version.createdAt | relativeDate }}</li>
-                      @if (version.size > 0) {
-                        <li>{{ version.size | bytes }}</li>
-                      }
-                      <li><app-artifacts-hash [hash]="version.digest"></app-artifacts-hash></li>
-                    </ul>
-                  </div>
-                  <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
-                    <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
-                    <app-artifacts-downloaded-by [source]="version"> </app-artifacts-downloaded-by>
-                  </div>
-                </div>
-
-                @if (version.lastScannedAt || version.sbom) {
-                  <div class="flex mt-2 justify-between">
-                    @if (version.lastScannedAt) {
-                      <app-artifacts-vulnerability-report
-                        [vulns]="version.vulnerabilities"
-                        [date]="version.lastScannedAt">
-                      </app-artifacts-vulnerability-report>
-                    }
-                    @if (version.sbom) {
-                      <div class="flex row gap-4">
-                        <div>
-                          <button
-                            type="button"
-                            class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                            <fa-icon class="me-1" [icon]="faFile"></fa-icon>
-                            Release Notes
-                          </button>
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            class="py-1 px-2 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                            <fa-icon class="me-1" [icon]="faDownload"></fa-icon>
-                            Download SBOM
-                          </button>
-                        </div>
                       </div>
-                    }
+                      <ul class="flex gap-3 mt-1 text-xs font-normal text-gray-500 truncate dark:text-gray-400">
+                        <li>{{ version.createdAt | relativeDate }}</li>
+                        @if (version.size > 0) {
+                          <li>{{ version.size | bytes }}</li>
+                        }
+                        <li>
+                          <app-artifacts-hash [hash]="version.digest"></app-artifacts-hash>
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
+                      <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
+                      <app-artifacts-downloaded-by [source]="version"></app-artifacts-downloaded-by>
+                    </div>
                   </div>
-                }
-              </li>
+                </li>
+              }
             }
           </ul>
         </div>

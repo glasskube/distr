@@ -3,7 +3,16 @@ import {Component, inject, OnDestroy, OnInit, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBox,
+  faCircleExclamation,
+  faDownload,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
   combineLatest,
@@ -40,6 +49,7 @@ import {modalFlyInOut} from '../../animations/modal';
 import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
 import {UsersService} from '../../services/users.service';
 import {ArtifactsService} from '../../services/artifacts.service';
+import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 
 @Component({
   selector: 'app-artifact-licenses',
@@ -81,8 +91,10 @@ export class ArtifactLicensesComponent implements OnDestroy {
 
   private readonly overlay = inject(OverlayService);
   private readonly toast = inject(ToastService);
-  private readonly usersService = inject(UsersService);
-  private readonly users$ = this.usersService.getUsers();
+  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
+  private readonly customerOrganizations$ = this.customerOrganizationService
+    .getCustomerOrganizations()
+    .pipe(shareReplay(1));
   private readonly artifactsService = inject(ArtifactsService);
   private readonly artifacts$ = this.artifactsService.list();
 
@@ -157,12 +169,9 @@ export class ArtifactLicensesComponent implements OnDestroy {
       : EMPTY;
   }
 
-  getOwnerColumn(userAccountId?: string): Observable<string | undefined> {
-    return userAccountId
-      ? this.users$.pipe(
-          map((users) => users.find((u) => u.id === userAccountId)),
-          map((u) => u?.name ?? u?.email)
-        )
+  getOwnerColumn(customerOrganizationId?: string): Observable<string | undefined> {
+    return customerOrganizationId
+      ? this.customerOrganizations$.pipe(map((users) => users.find((u) => u.id === customerOrganizationId)?.name))
       : EMPTY;
   }
 
@@ -171,4 +180,5 @@ export class ArtifactLicensesComponent implements OnDestroy {
   protected readonly faPen = faPen;
   protected readonly faTrash = faTrash;
   protected readonly faXmark = faXmark;
+  protected readonly faCircleExclamation = faCircleExclamation;
 }

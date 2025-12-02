@@ -11,9 +11,9 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -26,6 +26,10 @@ func ArtifactsRouter(r chi.Router) {
 		r.Use(artifactMiddleware)
 		r.Get("/", getArtifact)
 		r.With(requireUserRoleVendor).Patch("/image", patchImageArtifactHandler)
+		r.With(requireUserRoleVendor).Delete("/", deleteArtifactHandler)
+		r.Route("/tags/{tagName}", func(r chi.Router) {
+			r.With(requireUserRoleVendor).Delete("/", deleteArtifactTagHandler)
+		})
 	})
 }
 
@@ -37,7 +41,16 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 	var artifacts []types.ArtifactWithDownloads
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), auth.CurrentUserID())
+		if licenses, err1 := db.GetArtifactLicenses(ctx, *auth.CurrentOrgID()); err1 != nil {
+			log.Error("failed to get artifact licenses", zap.Error(err1))
+			sentry.GetHubFromContext(ctx).CaptureException(err1)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if len(licenses) > 0 {
+			artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
+		} else {
+			artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
+		}
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
 	}
@@ -47,13 +60,13 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	} else {
-		RespondJSON(w, api.MapArtifactsToResponse(artifacts))
+		RespondJSON(w, mapping.List(artifacts, mapping.ArtifactsWithDownloadsToAPI))
 	}
 }
 
 func getArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	RespondJSON(w, api.AsArtifact(*internalctx.GetArtifact(ctx)))
+	RespondJSON(w, mapping.ArtifactToAPI(*internalctx.GetArtifact(ctx)))
 }
 
 var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body api.PatchImageRequest) (any, error) {
@@ -61,9 +74,111 @@ var patchImageArtifactHandler = patchImageHandler(func(ctx context.Context, body
 	if err := db.UpdateArtifactImage(ctx, artifact, body.ImageID); err != nil {
 		return nil, err
 	} else {
-		return api.AsArtifact(*artifact), nil
+		return mapping.ArtifactToAPI(*artifact), nil
 	}
 })
+
+func deleteArtifactHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	artifact := internalctx.GetArtifact(ctx)
+
+	err := db.RunTx(ctx, func(ctx context.Context) error {
+		isReferenced, err := db.ArtifactIsReferencedInLicenses(ctx, artifact.ID)
+		if err != nil {
+			return err
+		}
+		if isReferenced {
+			return apierrors.NewBadRequest("Cannot delete artifact: it is referenced in one or more licenses.")
+		}
+
+		if err := db.DeleteArtifactWithID(ctx, artifact.ID); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if errors.Is(err, apierrors.ErrBadRequest) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Error("error deleting artifact", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func deleteArtifactTagHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := internalctx.GetLogger(ctx)
+	artifact := internalctx.GetArtifact(ctx)
+
+	tagName := r.PathValue("tagName")
+	if tagName == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	err := db.RunTx(ctx, func(ctx context.Context) error {
+		// Step 1: Validate version exists and fetch it
+		version, err := db.GetArtifactVersionByTag(ctx, artifact.ID, tagName)
+		if err != nil {
+			return err
+		}
+
+		// Step 2: Fetch all versions with the same digest
+		versionsWithSameDigest, err := db.GetArtifactVersionsByDigest(ctx, artifact.ID, string(version.ManifestBlobDigest))
+		if err != nil {
+			return err
+		}
+
+		// Step 3: Enhanced license check
+		if err := db.CheckArtifactVersionDeletionForLicenses(ctx, artifact.ID, version, versionsWithSameDigest); err != nil {
+			return err
+		}
+
+		// Step 4: Check if this is the last non-SHA tag of the artifact
+		isLast, err := db.IsLastTagOfArtifact(ctx, artifact.ID, tagName)
+		if err != nil {
+			return err
+		}
+		if isLast {
+			return apierrors.NewConflict(
+				"Cannot delete tag: it is the last tag of the artifact. At least one tag must remain for the artifact.",
+			)
+		}
+
+		// Step 5: Delete the tag
+		return db.DeleteArtifactTag(ctx, artifact.ID, tagName)
+	})
+	if err != nil {
+		if errors.Is(err, apierrors.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if errors.Is(err, apierrors.ErrBadRequest) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, apierrors.ErrConflict) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+		log.Error("error deleting artifact tag", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
 
 func artifactMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +193,7 @@ func artifactMiddleware(h http.Handler) http.Handler {
 			http.NotFound(w, r)
 			return
 		} else if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, util.PtrTo(auth.CurrentUserID()))
+			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, auth.CurrentCustomerOrgID())
 		} else {
 			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)
 		}

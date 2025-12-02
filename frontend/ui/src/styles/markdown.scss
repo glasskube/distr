@@ -7,6 +7,7 @@
     h5,
     h6 {
       @apply font-display;
+      @apply dark:text-white;
 
       &:not(h1) {
         @apply font-bold;
@@ -17,33 +18,39 @@
     h1 {
       @apply font-extrabold;
       @apply text-4xl;
-      @apply mt-5;
+      @apply mt-6;
+      @apply mb-4;
     }
 
     h2 {
       @apply text-3xl;
-      @apply mt-4;
+      @apply mt-5;
+      @apply mb-4;
     }
 
     h3 {
       @apply text-2xl;
-      @apply mt-3;
+      @apply mt-4;
+      @apply mb-2;
     }
 
     h4 {
       @apply text-xl;
-      @apply mt-2;
+      @apply mt-3;
+      @apply mb-2;
     }
 
     h5 {
       @apply text-lg;
-      @apply mt-1;
+      @apply mt-2;
+      @apply mb-1;
     }
 
     pre {
       @apply rounded-md;
       @apply px-4;
       @apply py-2;
+      @apply border border-gray-200 dark:border-gray-600;
     }
 
     code:not(a *),
@@ -53,23 +60,23 @@
     }
 
     code {
-      @apply whitespace-pre-line;
+      @apply whitespace-pre;
     }
 
     code:not(pre *) {
       @apply rounded-sm;
       @apply px-1;
+      @apply border border-gray-200 dark:border-gray-600;
     }
 
     pre,
     code {
-      @apply bg-gray-200;
-      @apply dark:bg-gray-800;
+      @apply bg-gray-200 dark:bg-gray-800;
     }
 
     hr {
       @apply h-px;
-      @apply my-3;
+      @apply my-8;
       @apply bg-gray-300;
       @apply border-0;
       @apply dark:bg-gray-700;
@@ -79,6 +86,7 @@
     ol {
       @apply space-y-1;
       @apply list-inside;
+      @apply ms-3;
     }
 
     ul {
@@ -106,6 +114,37 @@
     ul {
       @apply text-gray-600;
       @apply dark:text-gray-300;
+      @apply my-2;
+    }
+
+    blockquote {
+      @apply border-l-4;
+      @apply ps-4;
+      @apply border-gray-300;
+      @apply dark:border-gray-700;
+      @apply italic;
+    }
+
+    table {
+      @apply w-full border-collapse;
+
+      tr {
+        @apply hover:bg-gray-100 dark:hover:bg-gray-700;
+      }
+
+      th,
+      td {
+        @apply px-1 border border-gray-200 dark:border-gray-600 dark:text-white;
+      }
+    }
+
+    summary {
+      @apply cursor-pointer;
+      @apply mb-2;
+    }
+
+    details {
+      @apply mb-2;
     }
   }
 }

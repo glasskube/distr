@@ -22,6 +22,12 @@
 
 ---
 
+### customerOrganizationId?
+
+> `optional` **customerOrganizationId**: `string`
+
+---
+
 ### email
 
 > **email**: `string`
@@ -29,6 +35,16 @@
 #### Inherited from
 
 [`UserAccount`](UserAccount.md).[`email`](UserAccount.md#email)
+
+---
+
+### emailVerified
+
+> **emailVerified**: `boolean`
+
+#### Inherited from
+
+[`UserAccount`](UserAccount.md).[`emailVerified`](UserAccount.md#emailverified)
 
 ---
 

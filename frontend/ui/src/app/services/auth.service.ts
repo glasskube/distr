@@ -28,6 +28,7 @@ export interface LoginConfig {
   oidcGithubEnabled?: boolean;
   oidcGoogleEnabled?: boolean;
   oidcMicrosoftEnabled?: boolean;
+  oidcGenericEnabled?: boolean;
 }
 
 @Injectable({providedIn: 'root'})
