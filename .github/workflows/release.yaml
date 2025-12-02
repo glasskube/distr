@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - v*.*.x
+      - v*.*.*-rc.x
   workflow_dispatch:
 
 jobs:
