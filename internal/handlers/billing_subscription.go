@@ -265,7 +265,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 	}
 
 	// Build limits for all subscription types
-	trialLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeStarter)
+	trialLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)
 	starterLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeStarter)
 	proLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypePro)
 	enterpriseLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)

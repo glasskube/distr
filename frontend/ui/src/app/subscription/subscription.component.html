@@ -20,7 +20,7 @@
                       {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionUserAccountQuantity !== null) {
+                      @if (subscriptionInfoData.subscriptionUserAccountQuantity) {
                         of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} allowed
                         <br />
                         <span class="text-xs text-gray-400">
@@ -37,7 +37,7 @@
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity !== null) {
+                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity) {
                         of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} allowed
                         <br />
                         <span class="text-xs text-gray-400">
