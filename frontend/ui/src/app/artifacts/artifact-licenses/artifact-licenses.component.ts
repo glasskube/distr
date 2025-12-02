@@ -3,7 +3,16 @@ import {Component, inject, OnDestroy, OnInit, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faBox, faDownload, faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBox,
+  faCircleExclamation,
+  faDownload,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {
   catchError,
   combineLatest,
@@ -171,4 +180,5 @@ export class ArtifactLicensesComponent implements OnDestroy {
   protected readonly faPen = faPen;
   protected readonly faTrash = faTrash;
   protected readonly faXmark = faXmark;
+  protected readonly faCircleExclamation = faCircleExclamation;
 }

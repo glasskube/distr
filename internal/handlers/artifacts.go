@@ -41,7 +41,16 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 	var artifacts []types.ArtifactWithDownloads
 	var err error
 	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
-		artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
+		if licenses, err1 := db.GetArtifactLicenses(ctx, *auth.CurrentOrgID()); err1 != nil {
+			log.Error("failed to get artifact licenses", zap.Error(err1))
+			sentry.GetHubFromContext(ctx).CaptureException(err1)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if len(licenses) > 0 {
+			artifacts, err = db.GetArtifactsByLicenseOwnerID(ctx, *auth.CurrentOrgID(), *auth.CurrentCustomerOrgID())
+		} else {
+			artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
+		}
 	} else {
 		artifacts, err = db.GetArtifactsByOrgID(ctx, *auth.CurrentOrgID())
 	}
