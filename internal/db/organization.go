@@ -63,6 +63,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 		SET
 			name = @name,
 			slug = @slug,
+			features = @features,
 			subscription_type = @subscription_type,
 			subscription_ends_at = @subscription_ends_at,
 			stripe_customer_id = @stripe_customer_id,
@@ -74,6 +75,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 		pgx.NamedArgs{
 			"id":                     org.ID,
 			"name":                   org.Name,
+			"features":               org.Features,
 			"slug":                   org.Slug,
 			"subscription_type":      org.SubscriptionType,
 			"subscription_ends_at":   org.SubscriptionEndsAt.UTC(),
