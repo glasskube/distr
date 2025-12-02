@@ -1,13 +1,15 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {Component, computed, inject, input, output, signal, TemplateRef, viewChild} from '@angular/core';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
+  faCheck,
   faCircleExclamation,
   faClipboard,
   faMagnifyingGlass,
+  faPen,
   faPlus,
   faRepeat,
   faTrash,
@@ -21,12 +23,14 @@ import {filteredByFormControl} from '../../../util/filter';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
+import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
+import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
-import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-users',
@@ -35,33 +39,37 @@ import {AuthService} from '../../services/auth.service';
     AsyncPipe,
     DatePipe,
     ReactiveFormsModule,
-    RequireRoleDirective,
+    RequireVendorDirective,
     AutotrimDirective,
     UuidComponent,
     SecureImagePipe,
+    QuotaLimitComponent,
   ],
   templateUrl: './users.component.html',
   animations: [modalFlyInOut],
 })
 export class UsersComponent {
   public readonly users = input.required<UserAccountWithRole[]>();
-  public readonly userRole = input.required<UserRole>();
   public readonly customerOrganizationId = input<string>();
   public readonly refresh = output<void>();
 
   private readonly toast = inject(ToastService);
   private readonly usersService = inject(UsersService);
+  private readonly organizationService = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
 
-  protected readonly currentUserRole = this.auth.getClaims()!.role;
-
+  protected readonly faBox = faBox;
+  protected readonly faCheck = faCheck;
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faClipboard = faClipboard;
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPen = faPen;
   protected readonly faPlus = faPlus;
   protected readonly faRepeat = faRepeat;
-  protected readonly faXmark = faXmark;
   protected readonly faTrash = faTrash;
-  protected readonly faClipboard = faClipboard;
+  protected readonly faUserCircle = faUserCircle;
+  protected readonly faXmark = faXmark;
 
   protected readonly filterForm = new FormGroup({
     search: new FormControl(''),
@@ -78,16 +86,70 @@ export class UsersComponent {
 
   private readonly inviteUserDialog = viewChild.required<TemplateRef<unknown>>('inviteUserDialog');
   private modalRef?: DialogRef;
-  protected inviteForm = new FormGroup({
+  protected readonly inviteForm = new FormGroup({
     email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
     name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
+    userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),
   });
   protected inviteFormLoading = false;
   protected inviteUrl: string | null = null;
 
+  protected readonly organization = toSignal(this.organizationService.get());
+
+  protected readonly limit = computed(() => {
+    const org = this.organization();
+    return !(org && org.subscriptionLimits)
+      ? undefined
+      : org.customerOrganizationId === undefined
+        ? org.subscriptionUserAccountQuantity
+        : org.subscriptionLimits.maxUsersPerCustomerOrganization;
+  });
+
+  protected readonly editRoleUserId = signal<string | null>(null);
+  protected readonly editRoleForm = new FormGroup({
+    userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),
+  });
+  protected editRoleFormLoading = false;
+
   public showInviteDialog(reset?: boolean): void {
     this.closeInviteDialog(reset);
     this.modalRef = this.overlay.showModal(this.inviteUserDialog());
+  }
+
+  protected editUserRole(user: UserAccountWithRole): void {
+    if (!user.id) {
+      return;
+    }
+    this.editRoleFormLoading = false;
+    this.editRoleUserId.set(user.id);
+    this.editRoleForm.reset(user);
+  }
+
+  protected async submitEditUserRoleForm(): Promise<void> {
+    this.editRoleForm.markAllAsTouched();
+
+    const userId = this.editRoleUserId();
+    const userRole = this.editRoleForm.value.userRole;
+    if (!userId || !userRole) {
+      return;
+    }
+
+    if (this.editRoleForm.valid) {
+      this.editRoleFormLoading = true;
+      try {
+        await firstValueFrom(this.usersService.patchUserAccount(userId, {userRole}));
+        this.editRoleUserId.set(null);
+        this.editRoleForm.reset();
+        this.toast.success('User role has been updated');
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editRoleFormLoading = false;
+      }
+    }
   }
 
   public async submitInviteForm(): Promise<void> {
@@ -99,14 +161,14 @@ export class UsersComponent {
           this.usersService.addUser({
             email: this.inviteForm.value.email!,
             name: this.inviteForm.value.name || undefined,
-            userRole: this.userRole(),
+            userRole: this.inviteForm.value.userRole ?? 'admin',
             customerOrganizationId: this.customerOrganizationId(),
           })
         );
         this.inviteUrl = result.inviteUrl;
         if (!this.inviteUrl) {
           this.toast.success(
-            `${this.userRole() === 'vendor' ? 'User' : 'Customer'} has been added to the organization`
+            `${result.user.customerOrganizationId === undefined ? 'User' : 'Customer'} has been added to the organization`
           );
           this.closeInviteDialog();
         }
@@ -180,8 +242,4 @@ export class UsersComponent {
       this.toast.success('Invite URL has been copied');
     }
   }
-
-  protected readonly faCircleExclamation = faCircleExclamation;
-  protected readonly faUserCircle = faUserCircle;
-  protected readonly faBox = faBox;
 }

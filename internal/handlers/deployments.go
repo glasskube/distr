@@ -24,14 +24,15 @@ import (
 
 func DeploymentsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
-	r.Put("/", putDeployment)
-	r.Route("/{deploymentId}", func(r chi.Router) {
-		r.Use(deploymentMiddleware)
-		r.Patch("/", patchDeploymentHandler())
-		r.Delete("/", deleteDeploymentHandler())
+	r.With(middleware.RequireReadWriteOrAdmin).Put("/", putDeployment)
+	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chi.Router) {
 		r.Get("/status", getDeploymentStatus)
 		r.Get("/logs", getDeploymentLogsHandler())
 		r.Get("/logs/resources", getDeploymentLogsResourcesHandler())
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+			r.Patch("/", patchDeploymentHandler())
+			r.Delete("/", deleteDeploymentHandler())
+		})
 	})
 }
 
@@ -119,8 +120,7 @@ func deleteDeploymentHandler() http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
 			}
-			if target.OrganizationID != orgId ||
-				(*auth.CurrentUserRole() != types.UserRoleVendor && target.CreatedByUserAccountID != auth.CurrentUserID()) {
+			if target.OrganizationID != orgId || !isDeploymentTargetVisible(auth, target.DeploymentTarget) {
 				http.NotFound(w, r)
 				return apierrors.ErrNotFound
 			}
@@ -218,15 +218,22 @@ func validateDeploymentRequest(
 				if errors.Is(err, apierrors.ErrNotFound) {
 					return licenseNotFoundError(w)
 				} else {
-					log.Error("could not ApplicationLicense", zap.Error(err))
+					log.Error("could not get ApplicationLicense", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return err
 				}
 			}
-		} else if *auth.CurrentUserRole() == types.UserRoleCustomer {
-			// license ID is required for customer but optional for vendor
-			return badRequestError(w, "applicationLicenseId is required")
+		} else if auth.CurrentCustomerOrgID() != nil {
+			if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgId, nil); err != nil {
+				log.Error("could not get ApplicationLicense", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			} else if len(licenses) > 0 {
+				// license ID is required for customer but optional for vendor
+				return badRequestError(w, "applicationLicenseId is required")
+			}
 		}
 	} else if request.ApplicationLicenseID != nil {
 		return badRequestError(w, "unexpected applicationLicenseId")
@@ -276,8 +283,7 @@ func validateDeploymentRequestLicense(
 		if license.CustomerOrganizationID == nil {
 			return invalidLicenseError(w)
 		}
-		if *auth.CurrentUserRole() == types.UserRoleCustomer &&
-			*license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
+		if auth.CurrentCustomerOrgID() != nil && *license.CustomerOrganizationID != *auth.CurrentCustomerOrgID() {
 			return licenseNotFoundError(w)
 		}
 		if target.CustomerOrganizationID == nil || *target.CustomerOrganizationID != *license.CustomerOrganizationID {

@@ -23,12 +23,16 @@ func FromUserJWT(token jwt.Token) (*SimpleAuthInfo, error) {
 	if userEmail, ok := token.Get(authjwt.UserEmailKey); ok {
 		result.userEmail = userEmail.(string)
 	}
-	if userRole, ok := token.Get(authjwt.UserRoleKey); ok {
-		result.userRole = util.PtrTo(types.UserRole(userRole.(string)))
+	if userRoleStr, ok := token.Get(authjwt.UserRoleKey); ok {
+		if userRole, err := types.ParseUserRole(userRoleStr.(string)); err != nil {
+			return nil, fmt.Errorf("%w: JWT userRole is invalid: %w", authn.ErrBadAuthentication, err)
+		} else {
+			result.userRole = &userRole
+		}
 	}
 	if orgID, ok := token.Get(authjwt.OrgIdKey); ok {
 		if parsedOrgID, err := uuid.Parse(orgID.(string)); err != nil {
-			return nil, fmt.Errorf("JWT orgId is invalid: %w", err)
+			return nil, fmt.Errorf("%w: JWT orgId is invalid: %w", authn.ErrBadAuthentication, err)
 		} else {
 			result.organizationID = util.PtrTo(parsedOrgID)
 		}

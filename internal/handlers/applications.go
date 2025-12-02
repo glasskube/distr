@@ -26,28 +26,36 @@ import (
 
 func ApplicationsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
+
 	r.Get("/", getApplications)
-	r.With(requireUserRoleVendor).Post("/", createApplication)
+
+	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).
+		Post("/", createApplication)
+
 	r.Route("/{applicationId}", func(r chi.Router) {
 		r.With(applicationMiddleware).Group(func(r chi.Router) {
 			r.Get("/", getApplication)
-			r.With(requireUserRoleVendor).Group(func(r chi.Router) {
+			r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
 				r.Delete("/", deleteApplication)
 				r.Put("/", updateApplication)
 				r.Patch("/", patchApplicationHandler())
 				r.Patch("/image", patchImageApplication)
 			})
 		})
+
 		r.Route("/versions", func(r chi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
-			r.With(applicationMiddleware).Group(func(r chi.Router) {
-				r.With(requireUserRoleVendor).Post("/", createApplicationVersion)
-			})
+			r.With(applicationMiddleware).
+				Group(func(r chi.Router) {
+					r.With(middleware.RequireVendor).
+						With(middleware.RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)).
+						Post("/", createApplicationVersion)
+				})
 			r.Route("/{applicationVersionId}", func(r chi.Router) {
 				r.Get("/", getApplicationVersion)
-				r.With(requireUserRoleVendor, applicationMiddleware).Put("/", updateApplicationVersion)
+				r.With(middleware.RequireVendor, applicationMiddleware).Put("/", updateApplicationVersion)
 				r.Get("/compose-file", getApplicationVersionComposeFile)
 				r.Get("/template-file", getApplicationVersionTemplateFile)
 				r.Get("/values-file", getApplicationVersionValuesFile)
@@ -189,8 +197,18 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	org := auth.CurrentOrg()
 	var err error
 	var applications []types.Application
-	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
-		applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID())
+	if org.HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
+		// Get applications based on license owner ID only if there is at least one license in the parent organization
+		if licenses, err1 := db.GetApplicationLicensesWithOrganizationID(ctx, *auth.CurrentOrgID(), nil); err1 != nil {
+			log.Error("failed to get application licenses", zap.Error(err1))
+			sentry.GetHubFromContext(ctx).CaptureException(err1)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if len(licenses) > 0 {
+			applications, err = db.GetApplicationsWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID())
+		} else {
+			applications, err = db.GetApplicationsByOrgID(ctx, *auth.CurrentOrgID())
+		}
 	} else {
 		applications, err = db.GetApplicationsByOrgID(ctx, *auth.CurrentOrgID())
 	}
@@ -210,11 +228,16 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 
 	org := auth.CurrentOrg()
-	if org.HasFeature(types.FeatureLicensing) && *auth.CurrentUserRole() == types.UserRoleCustomer {
+	if org.HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 		if applicationID, err := uuid.Parse(r.PathValue("applicationId")); err != nil {
 			http.NotFound(w, r)
 			return
-		} else {
+		} else if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, *auth.CurrentOrgID(), nil); err != nil {
+			log.Error("failed to get application licenses", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if len(licenses) > 0 {
 			application, err := db.GetApplicationWithLicenseOwnerID(ctx, *auth.CurrentCustomerOrgID(), applicationID)
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.NotFound(w, r)
@@ -225,6 +248,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 			} else {
 				RespondJSON(w, mapping.ApplicationToAPI(*application))
 			}
+		} else {
+			RespondJSON(w, mapping.ApplicationToAPI(*internalctx.GetApplication(ctx)))
 		}
 	} else {
 		RespondJSON(w, mapping.ApplicationToAPI(*internalctx.GetApplication(ctx)))

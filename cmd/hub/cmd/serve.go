@@ -14,6 +14,7 @@ import (
 	"github.com/glasskube/distr/internal/svc"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/spf13/cobra"
+	"github.com/stripe/stripe-go/v83"
 )
 
 type ServeOptions struct{ Migrate bool }
@@ -53,6 +54,10 @@ func runServe(ctx context.Context, opts ServeOptions) {
 			panic(err)
 		}
 	}()
+
+	if key := env.StripeAPIKey(); key != nil {
+		stripe.Key = *key
+	}
 
 	registry := util.Require(svc.New(ctx, svc.ExecDbMigration(opts.Migrate)))
 	defer func() { util.Must(registry.Shutdown(ctx)) }()

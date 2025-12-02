@@ -1,24 +1,32 @@
-import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {AutotrimDirective} from '../directives/autotrim.directive';
+import {Component, inject, TemplateRef} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap, takeUntil} from 'rxjs';
-import {filteredByFormControl} from '../../util/filter';
-import {LicensesService} from '../services/licenses.service';
-import {ApplicationLicense} from '../types/application-license';
-import {UuidComponent} from '../components/uuid';
-import {DialogRef, OverlayService} from '../services/overlay.service';
-import {getFormDisplayedError} from '../../util/errors';
-import {ToastService} from '../services/toast.service';
-import {RequireRoleDirective} from '../directives/required-role.directive';
-import {dropdownAnimation} from '../animations/dropdown';
-import {drawerFlyInOut} from '../animations/drawer';
-import {modalFlyInOut} from '../animations/modal';
-import {ApplicationsService} from '../services/applications.service';
-import {EditLicenseComponent} from './edit-license.component';
+import {
+  faCircleExclamation,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
+import {catchError, EMPTY, filter, firstValueFrom, Observable, switchMap} from 'rxjs';
 import {isExpired} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
+import {filteredByFormControl} from '../../util/filter';
+import {drawerFlyInOut} from '../animations/drawer';
+import {dropdownAnimation} from '../animations/dropdown';
+import {modalFlyInOut} from '../animations/modal';
+import {UuidComponent} from '../components/uuid';
+import {AutotrimDirective} from '../directives/autotrim.directive';
+import {ApplicationsService} from '../services/applications.service';
+import {AuthService} from '../services/auth.service';
+import {LicensesService} from '../services/licenses.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
+import {ToastService} from '../services/toast.service';
+import {ApplicationLicense} from '../types/application-license';
+import {EditLicenseComponent} from './edit-license.component';
 
 @Component({
   selector: 'app-licenses',
@@ -30,24 +38,27 @@ import {isExpired} from '../../util/dates';
     FaIconComponent,
     UuidComponent,
     DatePipe,
-    RequireRoleDirective,
     EditLicenseComponent,
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class LicensesComponent implements OnDestroy {
-  private readonly destroyed$ = new Subject<void>();
+export class LicensesComponent {
+  protected readonly auth = inject(AuthService);
   private readonly licensesService = inject(LicensesService);
   private readonly applicationsService = inject(ApplicationsService);
+  private readonly overlay = inject(OverlayService);
+  private readonly toast = inject(ToastService);
 
   filterForm = new FormGroup({
     search: new FormControl(''),
   });
+
   licenses$: Observable<ApplicationLicense[]> = filteredByFormControl(
     this.licensesService.list(),
     this.filterForm.controls.search,
     (it: ApplicationLicense, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
-  ).pipe(takeUntil(this.destroyed$));
+  ).pipe(takeUntilDestroyed());
+
   applications$ = this.applicationsService.list();
 
   editForm = new FormGroup({
@@ -56,18 +67,18 @@ export class LicensesComponent implements OnDestroy {
       validators: Validators.required,
     }),
   });
+
   editFormLoading = false;
 
   private manageLicenseDrawerRef?: DialogRef;
-  protected readonly faMagnifyingGlass = faMagnifyingGlass;
-  protected readonly faPlus = faPlus;
-  protected readonly faXmark = faXmark;
-  protected readonly faPen = faPen;
-  protected readonly faTrash = faTrash;
-  protected readonly isExpired = isExpired;
 
-  private readonly overlay = inject(OverlayService);
-  private readonly toast = inject(ToastService);
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPen = faPen;
+  protected readonly faPlus = faPlus;
+  protected readonly faTrash = faTrash;
+  protected readonly faXmark = faXmark;
+  protected readonly isExpired = isExpired;
 
   openDrawer(templateRef: TemplateRef<unknown>, license?: ApplicationLicense) {
     this.hideDrawer();
@@ -122,10 +133,5 @@ export class LicensesComponent implements OnDestroy {
         })
       )
       .subscribe();
-  }
-
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
   }
 }

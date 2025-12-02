@@ -45,7 +45,7 @@ func CreateUserAccountWithOrganization(
 		ctx,
 		userAccount.ID,
 		org.ID,
-		types.UserRoleVendor,
+		types.UserRoleAdmin,
 		nil,
 	); err != nil {
 		return nil, err
@@ -213,6 +213,32 @@ func CreateUserAccountOrganizationAssignment(
 	return err
 }
 
+func UpdateUserAccountOrganizationAssignment(
+	ctx context.Context,
+	userID, orgID uuid.UUID,
+	role types.UserRole,
+	customerOrganizationID *uuid.UUID,
+) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx,
+		"UPDATE Organization_UserAccount SET user_role = @role, customer_organization_id = @customerOrganizationID "+
+			"WHERE organization_id = @orgId AND user_account_id = @userId",
+		pgx.NamedArgs{
+			"userId":                 userID,
+			"orgId":                  orgID,
+			"role":                   role,
+			"customerOrganizationID": customerOrganizationID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update Organization_UserAccount: %w", err)
+	} else if cmd.RowsAffected() == 0 {
+		return fmt.Errorf("%w: user not found in org", apierrors.ErrNotFound)
+	} else {
+		return nil
+	}
+}
+
 func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (
 	[]types.UserAccountWithUserRole,
 	error,
@@ -232,6 +258,26 @@ func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (
 		return nil, fmt.Errorf("could not map users: %w", err)
 	} else {
 		return result, nil
+	}
+}
+
+func CountVendorUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		`SELECT count(*)
+		FROM Organization_UserAccount
+		WHERE organization_id = @orgId
+		  	AND customer_organization_id IS NULL`,
+		pgx.NamedArgs{"orgId": orgID},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get user count: %w", err)
+	}
+
+	if count, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[int64]); err != nil {
+		return 0, fmt.Errorf("failed to get user count: %w", err)
+	} else {
+		return count, nil
 	}
 }
 
@@ -332,7 +378,7 @@ func GetUserAccountWithRole(
 	}
 }
 
-func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expectedRole *types.UserRole) (
+func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID) (
 	*types.UserAccountWithUserRole,
 	*types.Organization,
 	error,
@@ -344,12 +390,10 @@ func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID, expected
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
-			WHERE u.id = @id AND j.organization_id = @orgId AND (NOT @checkRole OR j.user_role = @role)`,
+			WHERE u.id = @id AND j.organization_id = @orgId`,
 		pgx.NamedArgs{
-			"id":        userID,
-			"orgId":     orgID,
-			"role":      expectedRole,
-			"checkRole": expectedRole != nil,
+			"id":    userID,
+			"orgId": orgID,
 		},
 	)
 	if err != nil {

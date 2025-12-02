@@ -76,6 +76,8 @@ var (
 	oidcGenericScopes                      *string
 	oidcGenericPKCEEnabled                 bool
 	wellKnownMicrosoftIdentityAssociation  []byte
+	stripeWebhookSecret                    *string
+	stripeAPIKey                           *string
 )
 
 func Initialize() {
@@ -120,10 +122,11 @@ func Initialize() {
 	}
 	if mailerConfig.Type == MailerTypeSMTP {
 		mailerConfig.SmtpConfig = &MailerSMTPConfig{
-			Host:     envutil.GetEnv("MAILER_SMTP_HOST"),
-			Port:     envutil.RequireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
-			Username: envutil.GetEnv("MAILER_SMTP_USERNAME"),
-			Password: envutil.GetEnv("MAILER_SMTP_PASSWORD"),
+			Host:        envutil.GetEnv("MAILER_SMTP_HOST"),
+			Port:        envutil.RequireEnvParsed("MAILER_SMTP_PORT", strconv.Atoi),
+			Username:    envutil.GetEnv("MAILER_SMTP_USERNAME"),
+			Password:    envutil.GetEnv("MAILER_SMTP_PASSWORD"),
+			ImplicitTLS: envutil.GetEnvParsedOrDefault("MAILER_SMTP_IMPLICIT_TLS", strconv.ParseBool, false),
 		}
 	}
 
@@ -220,6 +223,9 @@ func Initialize() {
 	}
 	wellKnownMicrosoftIdentityAssociation = envutil.GetEnvParsedOrDefault(
 		"WELLKNOWN_MICROSOFT_IDENTITY_ASSOCIATION_JSON", envparse.ByteSlice, nil)
+
+	stripeWebhookSecret = envutil.GetEnvOrNil("STRIPE_WEBHOOK_SECRET")
+	stripeAPIKey = envutil.GetEnvOrNil("STRIPE_API_KEY")
 }
 
 func DatabaseUrl() string {
@@ -458,4 +464,12 @@ func OIDCGenericScopes() []string {
 
 func WellKnownMicrosoftIdentityAssociation() []byte {
 	return wellKnownMicrosoftIdentityAssociation
+}
+
+func StripeWebhookSecret() *string {
+	return stripeWebhookSecret
+}
+
+func StripeAPIKey() *string {
+	return stripeAPIKey
 }
