@@ -46,7 +46,7 @@ jobs:
       matrix:
         edition:
           - name: community
-            suffix: ''
+            suffix: '-ce'
           - name: enterprise
             suffix: -ee
     steps:
