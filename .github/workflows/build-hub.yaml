@@ -47,8 +47,13 @@ jobs:
         edition:
           - name: community
             suffix: '-ce'
+            images: |
+              ghcr.io/glasskube/distr-ce
           - name: enterprise
             suffix: -ee
+            images: |
+              ghcr.io/glasskube/distr-ee
+              registry.distr.sh/glasskube/distr-ee
     steps:
       - name: Checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -147,9 +152,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
-          images: |
-            ghcr.io/glasskube/distr${{ matrix.edition.suffix }}
-            registry.distr.sh/glasskube/distr${{ matrix.edition.suffix }}
+          images: ${{ matrix.edition.images }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
