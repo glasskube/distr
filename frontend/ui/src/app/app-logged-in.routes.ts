@@ -68,7 +68,7 @@ const subscriptionGuard: CanActivateFn = () => {
     auth.hasRole('customer') ||
     organizationService
       .get()
-      .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/pricing']) : true)))
+      .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/subscription']) : true)))
   );
 };
 
