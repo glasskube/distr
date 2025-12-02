@@ -12,23 +12,28 @@
           </h1>
 
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Your subscription has been successfully updated. Please note that it may take a few moments for the changes
-            to be reflected in your account.
+            @if (isTrial()) {
+              Your successful payment is being processed. Please note that this may take a few moments.
+            } @else {
+              Your subscription has been successfully updated.
+            }
           </p>
 
-          <div class="space-y-3">
-            <a
-              routerLink="/subscription"
-              class="block w-full bg-primary-700 hover:bg-primary-800 text-white font-medium py-2.5 px-4 rounded-lg transition-colors dark:bg-primary-600 dark:hover:bg-primary-700">
-              View Subscription Details
-            </a>
+          @if (!isTrial()) {
+            <div class="space-y-3">
+              <a
+                routerLink="/subscription"
+                class="block w-full bg-primary-700 hover:bg-primary-800 text-white font-medium py-2.5 px-4 rounded-lg transition-colors dark:bg-primary-600 dark:hover:bg-primary-700">
+                View Subscription Details
+              </a>
 
-            <a
-              routerLink="/dashboard"
-              class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2.5 px-4 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">
-              Go to Dashboard
-            </a>
-          </div>
+              <a
+                routerLink="/dashboard"
+                class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2.5 px-4 rounded-lg transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">
+                Go to Dashboard
+              </a>
+            </div>
+          }
         </div>
       </div>
     </div>
