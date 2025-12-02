@@ -13,6 +13,7 @@ import {
   faCircleExclamation,
   faCircleInfo,
   faClipboard,
+  faExclamationTriangle,
   faLightbulb,
   faPlus,
   faShuffle,
@@ -36,7 +37,8 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
 import {RelativeDatePipe} from '../../../util/dates';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import dayjs from 'dayjs';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -62,8 +64,7 @@ type SwitchOptions = {
   ],
   animations: [dropdownAnimation, modalFlyInOut],
 })
-export class NavBarComponent implements OnInit, OnDestroy {
-  private destroyed$ = new Subject<void>();
+export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly overlay = inject(OverlayService);
   public readonly sidebar = inject(SidebarService);
@@ -89,7 +90,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
     })
   );
   protected readonly switchOptions$: Observable<SwitchOptions> = this.organizationService.getAll().pipe(
-    takeUntil(this.destroyed$),
+    takeUntilDestroyed(),
     combineLatestWith(this.organization$),
     map(([orgs, currentOrg]) => {
       return {
@@ -98,6 +99,11 @@ export class NavBarComponent implements OnInit, OnDestroy {
         isVendorSomewhere: orgs.some((o) => o.userRole === 'vendor'),
       };
     })
+  );
+
+  protected readonly isTrial = toSignal(this.organization$.pipe(map((org) => org.subscriptionType === 'trial')));
+  protected readonly isSubscriptionExpired = toSignal(
+    this.organization$.pipe(map((org) => dayjs(org.subscriptionEndsAt).isBefore()))
   );
 
   userOpened = false;
@@ -196,11 +202,6 @@ export class NavBarComponent implements OnInit, OnDestroy {
     location.assign('/login');
   }
 
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
-  }
-
   protected readonly faLightbulb = faLightbulb;
   protected readonly faArrowLeft = faArrowLeft;
   protected readonly faShuffle = faShuffle;
@@ -213,4 +214,5 @@ export class NavBarComponent implements OnInit, OnDestroy {
   protected readonly faCircleInfo = faCircleInfo;
   protected readonly faXmark = faXmark;
   protected readonly faClipboard = faClipboard;
+  protected readonly faExclamationTriangle = faExclamationTriangle;
 }
