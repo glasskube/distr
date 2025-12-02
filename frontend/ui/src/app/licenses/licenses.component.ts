@@ -3,7 +3,14 @@ import {AsyncPipe, DatePipe} from '@angular/common';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircleExclamation,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap, takeUntil} from 'rxjs';
 import {filteredByFormControl} from '../../util/filter';
 import {LicensesService} from '../services/licenses.service';
@@ -128,4 +135,6 @@ export class LicensesComponent implements OnDestroy {
     this.destroyed$.next();
     this.destroyed$.complete();
   }
+
+  protected readonly faCircleExclamation = faCircleExclamation;
 }
