@@ -12,9 +12,29 @@ import (
 	"github.com/opencontainers/go-digest"
 )
 
+type UserRole string
+
+const (
+	UserRoleReadOnly  UserRole = "read_only"
+	UserRoleReadWrite UserRole = "read_write"
+	UserRoleAdmin     UserRole = "admin"
+)
+
+func ParseUserRole(value string) (UserRole, error) {
+	switch value {
+	case string(UserRoleReadOnly):
+		return UserRoleReadOnly, nil
+	case string(UserRoleReadWrite):
+		return UserRoleReadWrite, nil
+	case string(UserRoleAdmin):
+		return UserRoleAdmin, nil
+	default:
+		return "", errors.New("invalid user role")
+	}
+}
+
 type (
 	DeploymentType        string
-	UserRole              string
 	HelmChartType         string
 	DeploymentStatusType  string
 	DeploymentTargetScope string
@@ -27,10 +47,6 @@ type (
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
 	DepolymentTypeKubernetes DeploymentType = "kubernetes"
-
-	UserRoleReadOnly  UserRole = "read_only"
-	UserRoleReadWrite UserRole = "read_write"
-	UserRoleAdmin     UserRole = "admin"
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
