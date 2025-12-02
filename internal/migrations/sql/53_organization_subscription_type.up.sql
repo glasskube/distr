@@ -6,4 +6,7 @@ ALTER TABLE Organization
   ADD COLUMN stripe_subscription_id TEXT,
   ADD COLUMN stripe_customer_id TEXT,
   ADD COLUMN subscription_customer_organization_quantity INTEGER,
-  ADD COLUMN subscription_user_account_quantity INTEGER;
+  ADD COLUMN subscription_user_account_quantity INTEGER,
+  ALTER COLUMN features SET DEFAULT '{licensing}';
+
+UPDATE Organization SET features = '{licensing}';

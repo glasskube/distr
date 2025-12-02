@@ -4,6 +4,7 @@ ALTER TABLE Organization
   DROP COLUMN stripe_subscription_id,
   DROP COLUMN stripe_customer_id,
   DROP COLUMN subscription_ends_at,
-  DROP COLUMN subscription_type;
+  DROP COLUMN subscription_type,
+  ALTER COLUMN features SET DEFAULT '{}';
 
 DROP TYPE SubscriptionType;
