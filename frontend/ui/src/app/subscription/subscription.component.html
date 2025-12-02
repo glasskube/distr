@@ -1,4 +1,4 @@
-<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased">
   <div class="mx-auto max-w-screen-lg">
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div class="justify-between m-4 sm:m-10 dark:border-gray-700">
@@ -177,7 +177,7 @@
                   <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Ends At</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white">
-                      {{ subscriptionInfoData.subscriptionEndsAt | date: 'mediumDate' }}
+                      {{ subscriptionInfoData.subscriptionEndsAt | date: 'longDate' }}
                     </p>
                   </div>
                 </div>
