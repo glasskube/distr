@@ -60,22 +60,24 @@ function registryHostSetOrRedirectGuard(redirectTo: string): CanActivateFn {
   };
 }
 
-const subscriptionGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-  const organizationService = inject(OrganizationService);
-  return (
-    auth.hasRole('customer') ||
-    organizationService
-      .get()
-      .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/subscription']) : true)))
-  );
-};
+function subscriptionGuard(): CanActivateFn {
+  return () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+    const organizationService = inject(OrganizationService);
+    return (
+      auth.hasRole('customer') ||
+      organizationService
+        .get()
+        .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/subscription']) : true)))
+    );
+  };
+}
 
 export const routes: Routes = [
   {
     path: '',
-    canActivate: [subscriptionGuard],
+    canActivate: [subscriptionGuard()],
     children: [
       {
         path: 'dashboard',
@@ -142,21 +144,6 @@ export const routes: Routes = [
         canActivate: [requiredRoleGuard('vendor')],
       },
       {
-        path: 'subscription',
-        canActivate: [requiredRoleGuard('vendor')],
-        children: [
-          {
-            path: '',
-            pathMatch: 'full',
-            component: SubscriptionComponent,
-          },
-          {
-            path: 'callback',
-            component: SubscriptionCallbackComponent,
-          },
-        ],
-      },
-      {
         path: 'licenses',
         canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
         data: {userRole: 'vendor'},
@@ -203,6 +190,21 @@ export const routes: Routes = [
             component: RegistryTutorialComponent,
           },
         ],
+      },
+    ],
+  },
+  {
+    path: 'subscription',
+    canActivate: [requiredRoleGuard('vendor')],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        component: SubscriptionComponent,
+      },
+      {
+        path: 'callback',
+        component: SubscriptionCallbackComponent,
       },
     ],
   },
