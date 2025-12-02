@@ -218,15 +218,22 @@ func validateDeploymentRequest(
 				if errors.Is(err, apierrors.ErrNotFound) {
 					return licenseNotFoundError(w)
 				} else {
-					log.Error("could not ApplicationLicense", zap.Error(err))
+					log.Error("could not get ApplicationLicense", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return err
 				}
 			}
 		} else if auth.CurrentCustomerOrgID() != nil {
-			// license ID is required for customer but optional for vendor
-			return badRequestError(w, "applicationLicenseId is required")
+			if licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgId, nil); err != nil {
+				log.Error("could not get ApplicationLicense", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			} else if len(licenses) > 0 {
+				// license ID is required for customer but optional for vendor
+				return badRequestError(w, "applicationLicenseId is required")
+			}
 		}
 	} else if request.ApplicationLicenseID != nil {
 		return badRequestError(w, "unexpected applicationLicenseId")

@@ -37,11 +37,12 @@ func createMailer(ctx context.Context) (mail.Mailer, error) {
 					mail.StaticFromAddress(config.FromAddress.String()),
 				},
 			},
-			Host:      config.SmtpConfig.Host,
-			Port:      config.SmtpConfig.Port,
-			Username:  config.SmtpConfig.Username,
-			Password:  config.SmtpConfig.Password,
-			TLSPolicy: gomail.TLSOpportunistic,
+			Host:        config.SmtpConfig.Host,
+			Port:        config.SmtpConfig.Port,
+			Username:    config.SmtpConfig.Username,
+			Password:    config.SmtpConfig.Password,
+			ImplicitTLS: config.SmtpConfig.ImplicitTLS,
+			TLSPolicy:   gomail.TLSOpportunistic,
 		}
 		return smtp.New(smtpConfig)
 	case env.MailerTypeSES:

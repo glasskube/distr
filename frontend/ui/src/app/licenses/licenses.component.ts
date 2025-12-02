@@ -1,10 +1,17 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, TemplateRef} from '@angular/core';
+import {Component, inject, OnDestroy, TemplateRef} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {catchError, EMPTY, filter, firstValueFrom, Observable, switchMap} from 'rxjs';
+import {
+  faCircleExclamation,
+  faMagnifyingGlass,
+  faPen,
+  faPlus,
+  faTrash,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
+import {catchError, EMPTY, filter, firstValueFrom, Observable, Subject, switchMap} from 'rxjs';
 import {isExpired} from '../../util/dates';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';
@@ -13,6 +20,7 @@ import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
+import {RequireRoleDirective} from '../directives/required-role.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {LicensesService} from '../services/licenses.service';
@@ -32,6 +40,7 @@ import {EditLicenseComponent} from './edit-license.component';
     UuidComponent,
     DatePipe,
     EditLicenseComponent,
+    RequireRoleDirective,
   ],
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
@@ -39,6 +48,8 @@ export class LicensesComponent {
   protected readonly auth = inject(AuthService);
   private readonly licensesService = inject(LicensesService);
   private readonly applicationsService = inject(ApplicationsService);
+  private readonly overlay = inject(OverlayService);
+  private readonly toast = inject(ToastService);
 
   filterForm = new FormGroup({
     search: new FormControl(''),
@@ -62,15 +73,14 @@ export class LicensesComponent {
   editFormLoading = false;
 
   private manageLicenseDrawerRef?: DialogRef;
-  protected readonly faMagnifyingGlass = faMagnifyingGlass;
-  protected readonly faPlus = faPlus;
-  protected readonly faXmark = faXmark;
-  protected readonly faPen = faPen;
-  protected readonly faTrash = faTrash;
-  protected readonly isExpired = isExpired;
 
-  private readonly overlay = inject(OverlayService);
-  private readonly toast = inject(ToastService);
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPen = faPen;
+  protected readonly faPlus = faPlus;
+  protected readonly faTrash = faTrash;
+  protected readonly faXmark = faXmark;
+  protected readonly isExpired = isExpired;
 
   openDrawer(templateRef: TemplateRef<unknown>, license?: ApplicationLicense) {
     this.hideDrawer();

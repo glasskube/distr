@@ -17,6 +17,7 @@ type Config struct {
 	Host, Username, Password string
 	Port                     int
 	TLSPolicy                gomail.TLSPolicy
+	ImplicitTLS              bool
 }
 
 var _ mail.Mailer = &smtpMailer{}
@@ -35,6 +36,9 @@ func New(config Config) (*smtpMailer, error) {
 			gomail.WithPassword(config.Password),
 			gomail.WithoutNoop(),
 		)
+	}
+	if config.ImplicitTLS {
+		options = append(options, gomail.WithSSL())
 	}
 	client, err := gomail.NewClient(config.Host, options...)
 
