@@ -21,66 +21,35 @@
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
                       @if (subscriptionInfoData.subscriptionUserAccountQuantity) {
-                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} allowed
-                        <br />
-                        <span class="text-xs text-gray-400">
-                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} subscription limit
-                        </span>
+                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} licenses used
                       } @else {
                         vendor team members
                       }
                     </p>
                   </div>
                   <div class="flex flex-col p-4 bg-blue-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Customer Organizations</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Customers</p>
                     <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-auto">
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity) {
-                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} allowed
+                      @if (
+                        subscriptionInfoData.subscriptionCustomerOrganizationQuantity
+                      ) {
+                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} licenses used
+                      }
+                      @if (subscriptionInfoData.subscriptionType === 'starter') {
                         <br />
                         <span class="text-xs text-gray-400">
-                          {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} subscription limit (plan max:
+                          ({{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} max:
                           {{ getCurrentPlanLimit('customerOrganizations') }})
                         </span>
-                      } @else if (subscriptionInfoData.subscriptionType === 'trial') {
-                        of
-                        {{
-                          subscriptionInfoData.trialLimits.maxCustomerOrganizations === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.trialLimits.maxCustomerOrganizations
-                        }}
-                        allowed
-                      } @else if (subscriptionInfoData.subscriptionType === 'starter') {
-                        of
-                        {{
-                          subscriptionInfoData.starterLimits.maxCustomerOrganizations === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.starterLimits.maxCustomerOrganizations
-                        }}
-                        allowed
-                      } @else if (subscriptionInfoData.subscriptionType === 'pro') {
-                        of
-                        {{
-                          subscriptionInfoData.proLimits.maxCustomerOrganizations === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.proLimits.maxCustomerOrganizations
-                        }}
-                        allowed
-                      } @else {
-                        of
-                        {{
-                          subscriptionInfoData.enterpriseLimits.maxCustomerOrganizations === -1
-                            ? 'unlimited'
-                            : subscriptionInfoData.enterpriseLimits.maxCustomerOrganizations
-                        }}
-                        allowed
+
                       }
                     </p>
                   </div>
                   <div class="flex flex-col p-4 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Highest User count per Customer</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Most User per Customer</p>
                     <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-auto">
                       {{ subscriptionInfoData.currentMaxUsersPerCustomer }}
                     </p>
@@ -121,7 +90,7 @@
                     </p>
                   </div>
                   <div class="flex flex-col p-4 bg-purple-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Highest Deployment count per Customer</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Most Deployments per Customer</p>
                     <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-auto">
                       {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }}
                     </p>
