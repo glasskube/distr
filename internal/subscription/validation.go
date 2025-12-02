@@ -45,8 +45,7 @@ func IsCustomerOrganizationLimitReached(ctx context.Context, org types.Organizat
 		if customerOrgCount, err := db.CountCustomerOrganizationsByOrganizationID(ctx, org.ID); err != nil {
 			return true, fmt.Errorf("could not query CustomerOrganization: %w", err)
 		} else {
-			return customerOrgCount >= *org.SubscriptionCustomerOrganizationQty,
-				nil
+			return customerOrgCount >= *org.SubscriptionCustomerOrganizationQty, nil
 		}
 	}
 }
