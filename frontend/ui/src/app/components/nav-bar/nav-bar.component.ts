@@ -36,7 +36,6 @@ import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {modalFlyInOut} from '../../animations/modal';
-import {RelativeDatePipe} from '../../../util/dates';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import dayjs from 'dayjs';
 
