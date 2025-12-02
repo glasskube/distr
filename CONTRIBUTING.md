@@ -13,7 +13,7 @@ You can either create an issue on GitHub or join our [Discord](https://discord.g
 ## How to run distr for development
 
 To run the Distr Hub locally, clone the repository and make sure that all necessary tools defined in [mise.toml](mise.toml) are installed.
-We recommend that you use [mise](https://mise.jdx.dev/) to install these (run `mise install` in the current directory) but you do don't have to.
+We recommend that you use [mise](https://mise.jdx.dev/) to install these (run `mise install` in the current directory) but you don't have to.
 
 We set the environment variable `DISTR_ENV` via `mise` (apply with `mise env` in the current directory), which points to the `.env.development.local` file containing reasonable defaults.
 However, you are also free to use any other way to provide your environment variables to the Distr Hub.
