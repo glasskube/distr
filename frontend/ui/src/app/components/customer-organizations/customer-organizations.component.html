@@ -143,6 +143,27 @@
     <div class="p-4 md:p-5 space-y-4">
       <section class="antialiased">
         <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
+          @if (featureFlags.isLicensingEnabled$ | async) {
+            @if (!createForm.value.id) {
+              <div
+                class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
+                role="alert">
+                <fa-icon [icon]="faCircleExclamation" />
+                <span class="sr-only">Info</span>
+                <div class="ms-3 text-sm font-medium">
+                  <p>
+                    As long as no license for application or artifacts is created,<br />
+                    customers will see all artifacts & applications.
+                  </p>
+                  <p>
+                    Afterwards, please make sure to assign a license to the new customer afterwards,<br />
+                    so that the customer will see the desired artifacts & applications.
+                  </p>
+                </div>
+              </div>
+            }
+          }
+
           <form class="mx-auto" (ngSubmit)="submitCreateForm()" [formGroup]="createForm">
             <div class="flex flex-col space-y-5">
               <div class="space-y-2">
@@ -159,20 +180,6 @@
                   <span class="text-red-500 text-xs">Name is required</span>
                 }
               </div>
-
-              @if (featureFlags.isLicensingEnabled$ | async) {
-                @if (!createForm.value.id) {
-                  <div
-                    class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
-                    role="alert">
-                    <fa-icon [icon]="faCircleExclamation" />
-                    <span class="sr-only">Info</span>
-                    <div class="ms-3 text-sm font-medium">
-                      Please make sure to assign a license to the new customer afterwards.
-                    </div>
-                  </div>
-                }
-              }
 
               <button
                 type="submit"

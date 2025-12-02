@@ -144,26 +144,25 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
-  protected readonly licenseControlVisible$ = this.featureFlags.isLicensingEnabled$.pipe(
-    combineLatestWith(this.deploymentTarget$),
+  protected readonly licenseControlVisible$ = combineLatest([
+    this.featureFlags.isLicensingEnabled$,
+    this.deploymentTarget$,
+    this.licenses.list(),
+  ]).pipe(
     map(
-      ([isLicensingEnabled, deploymentTarget]) =>
-        isLicensingEnabled && deploymentTarget?.createdBy?.userRole === 'customer'
+      ([isLicensingEnabled, deploymentTarget, licenses]) =>
+        isLicensingEnabled && deploymentTarget?.customerOrganization !== undefined && licenses.length > 0
     ),
     distinctUntilChanged()
   );
 
   /**
    * The license control is ENABLED when deploying to a customer managed target and there is no deployment yet.
-   * A vendor might be required to choose a license for a customer managed deplyoment target with no previous
+   * A vendor might be required to choose a license for a customer managed deployment target with no previous
    * deployment but they may only choose a license owned by the same customer.
    */
-  private readonly licenseControlEnabled$ = this.featureFlags.isLicensingEnabled$.pipe(
-    combineLatestWith(this.deploymentTarget$, this.deployment$),
-    map(
-      ([isLicensingEnabled, deploymentTarget, deployment]) =>
-        isLicensingEnabled && !deployment && deploymentTarget?.createdBy?.userRole === 'customer'
-    ),
+  private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deployment$]).pipe(
+    map(([isVisible, deployment]) => isVisible && !deployment),
     distinctUntilChanged()
   );
 
@@ -334,7 +333,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       });
 
     this.licenses$.pipe(takeUntil(this.destroyed$)).subscribe((licenses) => {
-      // Only update the form control, if the previously selected version is no longer in the list
+      // Only update the form control, if the previously selected license is no longer in the list
       if (
         licenses.length > 0 &&
         licenses[0].id &&

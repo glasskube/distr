@@ -46,10 +46,11 @@ type MailerConfig struct {
 }
 
 type MailerSMTPConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
+	Host        string
+	Port        int
+	Username    string
+	Password    string
+	ImplicitTLS bool
 }
 
 type S3Config struct {
