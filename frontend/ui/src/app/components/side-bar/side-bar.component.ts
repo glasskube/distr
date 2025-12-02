@@ -9,6 +9,7 @@ import {
   faCheckDouble,
   faChevronDown,
   faCodeFork,
+  faCreditCard,
   faDashboard,
   faGear,
   faHome,
@@ -60,6 +61,7 @@ export class SideBarComponent {
   protected readonly faPalette = faPalette;
   protected readonly faAddressBook = faAddressBook;
   protected readonly faBox = faBox;
+  protected readonly faCreditCard = faCreditCard;
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
   protected readonly faChevronDown = faChevronDown;

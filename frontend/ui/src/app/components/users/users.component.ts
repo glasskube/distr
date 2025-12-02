@@ -32,21 +32,6 @@ import {SubscriptionType} from '../../types/organization';
 import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
 
-function getUserAccountPerCustomerOrganizationLimit(subscriptionType: SubscriptionType): number | undefined {
-  switch (subscriptionType) {
-    case 'trial':
-      return undefined;
-    case 'starter':
-      return 1;
-    case 'pro':
-      return 10;
-    case 'enterprise':
-      return undefined;
-    default:
-      never(subscriptionType);
-  }
-}
-
 @Component({
   selector: 'app-users',
   imports: [
@@ -111,11 +96,11 @@ export class UsersComponent {
   protected readonly limit = computed(() => {
     const org = this.organization();
     const role = this.userRole();
-    return !(org && org.subscriptionType)
+    return !(org && org.subscriptionLimits)
       ? undefined
       : role === 'vendor'
         ? org.subscriptionUserAccountQuantity
-        : getUserAccountPerCustomerOrganizationLimit(org.subscriptionType);
+        : org.subscriptionLimits.maxUsersPerCustomerOrganization;
   });
 
   public showInviteDialog(reset?: boolean): void {

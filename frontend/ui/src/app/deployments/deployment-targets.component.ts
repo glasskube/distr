@@ -47,21 +47,6 @@ export interface CustomerDeploymentTargets {
   deploymentTargets: DeploymentTargetViewData[];
 }
 
-function getDeploymentTargetPerCustomerOrganizationLimit(subscriptionType: SubscriptionType): number | undefined {
-  switch (subscriptionType) {
-    case 'trial':
-      return undefined;
-    case 'starter':
-      return 1;
-    case 'pro':
-      return 3;
-    case 'enterprise':
-      return undefined;
-    default:
-      never(subscriptionType);
-  }
-}
-
 @Component({
   selector: 'app-deployment-targets',
   imports: [
@@ -115,9 +100,7 @@ export class DeploymentTargetsComponent implements AfterViewInit {
   private readonly organization = toSignal(this.organizationService.get());
   protected readonly limit = computed(() => {
     const org = this.organization();
-    return !(org && org.subscriptionType)
-      ? undefined
-      : getDeploymentTargetPerCustomerOrganizationLimit(org.subscriptionType);
+    return !(org && org.subscriptionLimits) ? undefined : org.subscriptionLimits.maxDeploymentsPerCustomerOrganization;
   });
   protected readonly count = toSignal(
     combineLatest([this.deploymentTargets$, this.context.getUser()]).pipe(

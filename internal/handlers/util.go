@@ -34,6 +34,9 @@ func RespondJSON(w http.ResponseWriter, data any) {
 
 var requireUserRoleVendor = middleware.UserRoleMiddleware(types.UserRoleVendor)
 
+// RequireUserRoleVendor is a middleware that requires the user to have the vendor role (exported for subpackages)
+var RequireUserRoleVendor = requireUserRoleVendor
+
 func readMultipartFile(w http.ResponseWriter, r *http.Request, formKey string) ([]byte, bool) {
 	log := internalctx.GetLogger(r.Context())
 	if file, head, err := r.FormFile(formKey); err != nil {

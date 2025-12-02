@@ -77,7 +77,9 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
 		err = db.RunTx(ctx, func(ctx context.Context) error {
-			limitReached, err := subscription.IsDeploymentTargetLimitReached(ctx, *auth.CurrentOrg(), dt.CustomerOrganizationID)
+			limitReached, err := subscription.IsDeploymentTargetLimitReached(
+				ctx, *auth.CurrentOrg(),
+				auth.CurrentCustomerOrgID())
 			if err != nil {
 				log.Warn("could not check deployment target limit", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
