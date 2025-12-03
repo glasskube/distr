@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.0.0-rc.2](https://github.com/glasskube/distr/compare/2.0.0-rc.1...2.0.0-rc.2) (2025-12-03)
+
+
+### Bug Fixes
+
+* always run organization updates in transactions ([#1496](https://github.com/glasskube/distr/issues/1496)) ([156ed00](https://github.com/glasskube/distr/commit/156ed00544c2bb74c5c5b05ed932e499daaaa634))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1485](https://github.com/glasskube/distr/issues/1485)) ([8806019](https://github.com/glasskube/distr/commit/8806019b2e2aa59071f64fe9cbe22f30c7f6732f))
+* **deps:** update module github.com/stripe/stripe-go/v83 to v84 ([#1480](https://github.com/glasskube/distr/issues/1480)) ([02707eb](https://github.com/glasskube/distr/commit/02707eb29d55ecd9f6ace2dfd918699f9ff9bd85))
+* populate CustomerOrganizationID when switching auth context ([#1491](https://github.com/glasskube/distr/issues/1491)) ([c82f08f](https://github.com/glasskube/distr/commit/c82f08f41d12c7dbd7ae1f09841a1c17db41bed3))
+* **ui:** fix button hover style ([#1497](https://github.com/glasskube/distr/issues/1497)) ([3b6c640](https://github.com/glasskube/distr/commit/3b6c640e5a5ed85ca71b7b6010a37fd11f10a78f))
+* **ui:** only display subscription upgrade notice to vendor admins ([#1489](https://github.com/glasskube/distr/issues/1489)) ([fa71ddb](https://github.com/glasskube/distr/commit/fa71ddbdaf1d9ff478d1b346123f5ac3de277b56))
+
+
+### Other
+
+* **deps:** update actions/checkout action to v6.0.1 ([#1484](https://github.com/glasskube/distr/issues/1484)) ([bf39358](https://github.com/glasskube/distr/commit/bf39358860a5749e5caa1b2eccd60219d7dc88e9))
+* **deps:** update actions/setup-node action to v6.1.0 ([#1486](https://github.com/glasskube/distr/issues/1486)) ([6986992](https://github.com/glasskube/distr/commit/69869928fe07861319106b27ef09f398de81cbc5))
+* **deps:** update dependency go to v1.25.5 ([#1481](https://github.com/glasskube/distr/issues/1481)) ([3d39453](https://github.com/glasskube/distr/commit/3d39453909e639668f00036d109ac5de7d26fb56))
+* **deps:** update dependency prettier to v3.7.4 ([#1488](https://github.com/glasskube/distr/issues/1488)) ([4288f58](https://github.com/glasskube/distr/commit/4288f58dafce00f1d5a365fc8b46604281f28073))
+* **deps:** update golangci/golangci-lint-action action to v9.2.0 ([#1487](https://github.com/glasskube/distr/issues/1487)) ([437334f](https://github.com/glasskube/distr/commit/437334f26d9e75b8069bbb55c613701587368738))
+* **registry:** improve Error for violating immutable tags ([#1305](https://github.com/glasskube/distr/issues/1305)) ([fb05687](https://github.com/glasskube/distr/commit/fb05687035b8344d2e327b4462c17b0115aa49fa))
+* remove debug logs ([#1492](https://github.com/glasskube/distr/issues/1492)) ([c37ebe5](https://github.com/glasskube/distr/commit/c37ebe5901d2a982260720dc3ab30bbb245b7d7f))
+
 ## [2.0.0-rc.1](https://github.com/glasskube/distr/compare/1.16.1...2.0.0-rc.1) (2025-12-02)
 
 
