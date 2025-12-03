@@ -1,13 +1,13 @@
 import {AnimationEvent} from '@angular/animations';
+import {NgTemplateOutlet} from '@angular/common';
 import {Component, HostBinding, HostListener, inject, OnInit, TemplateRef} from '@angular/core';
+import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, Subject} from 'rxjs';
 import {modalFlyInOut} from '../../animations/modal';
-import {DialogRef, OverlayData} from '../../services/overlay.service';
-import {NgTemplateOutlet} from '@angular/common';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {FormControl, ReactiveFormsModule} from '@angular/forms';
+import {DialogRef, OverlayData} from '../../services/overlay.service';
 
 export interface Message {
   message: string;

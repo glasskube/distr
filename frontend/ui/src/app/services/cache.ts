@@ -1,6 +1,6 @@
+import {BaseModel, Named} from '@glasskube/distr-sdk';
 import {concat, map, Observable, scan, shareReplay, Subject} from 'rxjs';
 import {compareBy, distinctBy, Predicate} from '../../util/arrays';
-import {BaseModel, Named} from '@glasskube/distr-sdk';
 
 type ReactiveListEvent<T> = {type: 'save' | 'remove'; object: T} | {type: 'reset'; objects: T[]};
 

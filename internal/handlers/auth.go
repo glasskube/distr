@@ -71,8 +71,9 @@ func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.R
 			log.Error("context switch failed", zap.Error(err))
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else if _, tokenString, err := authjwt.GenerateDefaultToken(user.AsUserAccount(), types.OrganizationWithUserRole{
-			Organization: *org,
-			UserRole:     user.UserRole,
+			Organization:           *org,
+			UserRole:               user.UserRole,
+			CustomerOrganizationID: user.CustomerOrganizationID,
 		}); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to generate token", zap.Error(err))

@@ -1,8 +1,8 @@
 import {animate, keyframes, state, style, transition, trigger} from '@angular/animations';
 import {Component} from '@angular/core';
-import {Toast} from 'ngx-toastr';
-import {faCheck, faCircleExclamation} from '@fortawesome/free-solid-svg-icons';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCheck, faCircleExclamation} from '@fortawesome/free-solid-svg-icons';
+import {Toast} from 'ngx-toastr';
 
 @Component({
   selector: '[toast-component]',

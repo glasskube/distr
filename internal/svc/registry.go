@@ -51,6 +51,7 @@ func newRegistry(ctx context.Context, reg *Registry) (*Registry, error) {
 	reg.logger.Info("initializing service registry",
 		zap.String("version", buildconfig.Version()),
 		zap.String("commit", buildconfig.Commit()),
+		zap.String("edition", buildconfig.Edition()),
 		zap.Bool("release", buildconfig.IsRelease()))
 
 	if tracers, err := reg.createTracer(ctx); err != nil {

@@ -1,10 +1,9 @@
 import {HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
-import {tap} from 'rxjs';
 import {inject} from '@angular/core';
-import {ToastService} from './toast.service';
-import {displayedInToast} from '../../util/errors';
 import {captureException} from '@sentry/browser';
-import {captureMessage} from '@sentry/angular';
+import {tap} from 'rxjs';
+import {displayedInToast} from '../../util/errors';
+import {ToastService} from './toast.service';
 
 export const errorToastInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);

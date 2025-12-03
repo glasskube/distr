@@ -8,9 +8,9 @@ import (
 
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/stripe/stripe-go/v83"
-	checkoutsession "github.com/stripe/stripe-go/v83/checkout/session"
-	"github.com/stripe/stripe-go/v83/subscription"
+	"github.com/stripe/stripe-go/v84"
+	checkoutsession "github.com/stripe/stripe-go/v84/checkout/session"
+	"github.com/stripe/stripe-go/v84/subscription"
 )
 
 func GetSubscriptionType(subscription stripe.Subscription) (*types.SubscriptionType, error) {

@@ -7,6 +7,10 @@ const (
 
 var edition = EnterpriseEdition
 
+func Edition() string {
+	return edition
+}
+
 func IsCommunityEdition() bool {
 	return edition == CommunityEdition
 }

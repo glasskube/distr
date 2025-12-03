@@ -2,6 +2,7 @@ import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, inject, Input, OnDestroy, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
@@ -12,25 +13,24 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import {Application, DeploymentType} from '@glasskube/distr-sdk';
 import {lastValueFrom, Observable, Subject, takeUntil} from 'rxjs';
+import {getFormDisplayedError} from '../../util/errors';
+import {filteredByFormControl} from '../../util/filter';
+import {SecureImagePipe} from '../../util/secureImage';
 import {drawerFlyInOut} from '../animations/drawer';
 import {dropdownAnimation} from '../animations/dropdown';
 import {modalFlyInOut} from '../animations/modal';
-import {ApplicationsService} from '../services/applications.service';
-import {DialogRef, OverlayService} from '../services/overlay.service';
-import {ToastService} from '../services/toast.service';
-import {filteredByFormControl} from '../../util/filter';
-import {getFormDisplayedError} from '../../util/errors';
-import {AutotrimDirective} from '../directives/autotrim.directive';
-import {Application, DeploymentType} from '@glasskube/distr-sdk';
 import {UuidComponent} from '../components/uuid';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 import {
   PermissionsDirective,
   RequireRoleDirective,
   RequireVendorDirective,
 } from '../directives/required-role.directive';
-import {Router, RouterLink} from '@angular/router';
-import {SecureImagePipe} from '../../util/secureImage';
+import {ApplicationsService} from '../services/applications.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-applications',

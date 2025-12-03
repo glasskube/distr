@@ -1,6 +1,9 @@
 import {OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe, TitleCasePipe} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -11,34 +14,30 @@ import {
   faChevronDown,
   faChevronUp,
   faCircleExclamation,
-  faCircleInfo,
   faClipboard,
-  faExclamationTriangle,
   faLightbulb,
   faPlus,
   faShuffle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import dayjs from 'dayjs';
 import {catchError, combineLatestWith, EMPTY, lastValueFrom, map, Observable, of} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
+import {SecureImagePipe} from '../../../util/secureImage';
 import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {OrganizationService} from '../../services/organization.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {SidebarService} from '../../services/sidebar.service';
 import {ToastService} from '../../services/toast.service';
-import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {UsersService} from '../../services/users.service';
-import {SecureImagePipe} from '../../../util/secureImage';
-import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
-import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {DialogRef, OverlayService} from '../../services/overlay.service';
-import {modalFlyInOut} from '../../animations/modal';
-import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
-import dayjs from 'dayjs';
+import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
+import {NavBarSubscriptionBannerComponent} from './nav-bar-subscription-banner/nav-bar-subscription-banner.component';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -52,12 +51,12 @@ type SwitchOptions = {
   templateUrl: './nav-bar.component.html',
   imports: [
     ColorSchemeSwitcherComponent,
+    NavBarSubscriptionBannerComponent,
     OverlayModule,
     FaIconComponent,
     RouterLink,
     SecureImagePipe,
     AsyncPipe,
-    DatePipe,
     TitleCasePipe,
     AutotrimDirective,
     ReactiveFormsModule,
@@ -213,8 +212,6 @@ export class NavBarComponent implements OnInit {
   protected readonly faChevronUp = faChevronUp;
   protected readonly faPlus = faPlus;
   protected readonly faCircleExclamation = faCircleExclamation;
-  protected readonly faCircleInfo = faCircleInfo;
   protected readonly faXmark = faXmark;
   protected readonly faClipboard = faClipboard;
-  protected readonly faExclamationTriangle = faExclamationTriangle;
 }

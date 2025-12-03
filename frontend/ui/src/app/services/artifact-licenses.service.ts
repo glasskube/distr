@@ -1,11 +1,9 @@
-import {inject, Injectable} from '@angular/core';
-import {combineLatestWith, EMPTY, first, map, Observable, tap} from 'rxjs';
-import {BaseModel, Named, UserAccount} from '@glasskube/distr-sdk';
-import {Artifact, ArtifactsService, ArtifactWithTags, TaggedArtifactVersion} from './artifacts.service';
-import {CrudService} from './interfaces';
-import {DefaultReactiveList, ReactiveList} from './cache';
-import {UsersService} from './users.service';
 import {HttpClient} from '@angular/common/http';
+import {Injectable} from '@angular/core';
+import {BaseModel, Named} from '@glasskube/distr-sdk';
+import {Observable, tap} from 'rxjs';
+import {DefaultReactiveList, ReactiveList} from './cache';
+import {CrudService} from './interfaces';
 
 export interface ArtifactLicenseSelection {
   artifactId: string;

@@ -2,9 +2,9 @@ import {Component, inject} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {firstValueFrom, lastValueFrom} from 'rxjs';
+import {getFormDisplayedError} from '../../util/errors';
 import {AuthService} from '../services/auth.service';
 import {SettingsService} from '../services/settings.service';
-import {getFormDisplayedError} from '../../util/errors';
 
 @Component({
   selector: 'app-password-reset',

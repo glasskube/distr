@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {DeploymentRevisionStatus} from '@glasskube/distr-sdk';
-import {Observable, switchMap, timer} from 'rxjs';
+import {Observable} from 'rxjs';
 import {TimeseriesOptions, timeseriesOptionsAsParams} from '../types/timeseries-options';
 
 @Injectable({

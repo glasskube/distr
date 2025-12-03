@@ -1,12 +1,12 @@
-import {Component, ElementRef, forwardRef, inject, input, Input, OnDestroy, OnInit, Signal} from '@angular/core';
+import {Component, ElementRef, forwardRef, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {defaultKeymap, history, historyKeymap, indentWithTab} from '@codemirror/commands';
 import {yaml} from '@codemirror/lang-yaml';
 import {HighlightStyle, indentOnInput, syntaxHighlighting} from '@codemirror/language';
+import {EditorState, StateEffect} from '@codemirror/state';
 import {EditorView, highlightSpecialChars, keymap} from '@codemirror/view';
 import {tags} from '@lezer/highlight';
 import {Subject} from 'rxjs';
-import {EditorState, StateEffect, StateEffectType} from '@codemirror/state';
 
 export type EditorLanguage = 'yaml';
 

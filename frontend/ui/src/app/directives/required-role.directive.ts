@@ -46,7 +46,6 @@ export class RequireVendorDirective extends EmbeddedViewToggler implements OnIni
   private readonly auth = inject(AuthService);
 
   public ngOnInit(): void {
-    console.log('RequireVendorDirective ngOnInit', this.auth.isVendor());
     this.toggleEmbeddedView(this.auth.isVendor());
   }
 }

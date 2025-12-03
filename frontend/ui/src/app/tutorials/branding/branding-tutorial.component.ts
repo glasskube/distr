@@ -1,5 +1,10 @@
+import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Router} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
   faB,
@@ -11,25 +16,19 @@ import {
   faPalette,
   faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
-import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
-import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {OrganizationBrandingService} from '../../services/organization-branding.service';
-import {Router, RouterLink} from '@angular/router';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
 import {CustomerOrganization, OrganizationBranding} from '@glasskube/distr-sdk';
-import {base64ToBlob} from '../../../util/blob';
+import {firstValueFrom, lastValueFrom, Observable, Subject} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
-import {HttpErrorResponse} from '@angular/common/http';
-import {ToastService} from '../../services/toast.service';
-import {UsersService} from '../../services/users.service';
-import {TutorialsService} from '../../services/tutorials.service';
-import {TutorialProgress} from '../../types/tutorials';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {AuthService} from '../../services/auth.service';
-import {getExistingTask, getLastExistingTask} from '../utils';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
+import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {ToastService} from '../../services/toast.service';
+import {TutorialsService} from '../../services/tutorials.service';
+import {UsersService} from '../../services/users.service';
+import {TutorialProgress} from '../../types/tutorials';
+import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
+import {getExistingTask, getLastExistingTask} from '../utils';
 
 const defaultBrandingDescription = `# Welcome
 

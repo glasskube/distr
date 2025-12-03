@@ -1,13 +1,13 @@
 import {bootstrapApplication} from '@angular/platform-browser';
+import * as Sentry from '@sentry/angular';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import posthog from 'posthog-js';
 import {AppComponent} from './app/app.component';
 import {appConfig} from './app/app.config';
-import {environment} from './env/env';
-import * as Sentry from '@sentry/angular';
 import {buildConfig} from './buildconfig';
+import {environment} from './env/env';
 import {getRemoteEnvironment} from './env/remote';
 
 dayjs.extend(duration);
@@ -21,7 +21,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
   if (remoteEnvironment.sentryDsn) {
     Sentry.init({
       enabled: environment.production,
-      release: buildConfig.version ?? buildConfig.commit,
+      release: buildConfig.sentryVersion ?? buildConfig.commit,
       dsn: remoteEnvironment.sentryDsn,
       environment: remoteEnvironment.sentryEnvironment,
       integrations: [Sentry.browserTracingIntegration()],

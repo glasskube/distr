@@ -1,9 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {map, Observable, shareReplay, tap} from 'rxjs';
-import {UserAccount, UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
-import {Organization, OrganizationWithUserRole} from '../types/organization';
+import {UserAccountWithRole} from '@glasskube/distr-sdk';
 import posthog from 'posthog-js';
+import {map, Observable, shareReplay, tap} from 'rxjs';
+import {Organization, OrganizationWithUserRole} from '../types/organization';
 
 interface ContextResponse {
   user: UserAccountWithRole;

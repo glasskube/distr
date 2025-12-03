@@ -1,10 +1,10 @@
-import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Tutorial, TutorialProgress, TutorialProgressRequest} from '../types/tutorials';
-import {map, Observable, shareReplay, Subject, startWith, switchMap, firstValueFrom} from 'rxjs';
+import {inject, Injectable} from '@angular/core';
 import {IconDefinition} from '@fortawesome/angular-fontawesome';
 import {faBox, faBoxesStacked, faPalette} from '@fortawesome/free-solid-svg-icons';
+import {firstValueFrom, map, Observable, shareReplay, startWith, Subject, switchMap} from 'rxjs';
 import {getExistingTask} from '../tutorials/utils';
+import {Tutorial, TutorialProgress, TutorialProgressRequest} from '../types/tutorials';
 
 interface TutorialView {
   id: Tutorial;
