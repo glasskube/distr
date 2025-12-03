@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/glasskube/distr/internal/types"
-	"github.com/stripe/stripe-go/v83"
-	"github.com/stripe/stripe-go/v83/price"
+	"github.com/stripe/stripe-go/v84"
+	"github.com/stripe/stripe-go/v84/price"
 )
 
 type BillingMode string

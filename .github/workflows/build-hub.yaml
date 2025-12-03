@@ -69,7 +69,7 @@ jobs:
         with:
           version: 10
       - name: Setup node.js
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: '24'
           cache: pnpm
@@ -84,7 +84,7 @@ jobs:
       - name: Lint with prettier
         run: pnpm run lint
       - name: Lint with golangci-lint
-        uses: golangci/golangci-lint-action@e7fa5ac41e1cf5b7d48e45e42232ce7ada589601 # v9.1.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: v2.6.2
 
@@ -99,14 +99,15 @@ jobs:
           rm internal/frontend/dist/ui/browser/*.map || exit 1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VERSION: ${{ github.ref_name }}${{ matrix.edition.suffix }}
+          VERSION: ${{ github.ref_name }}
+          SENTRY_VERSION: ${{ github.ref_name }}${{ matrix.edition.suffix }}
 
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
           CGO_ENABLED: '0'
           LDFLAGS: >-
-            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}${{ matrix.edition.suffix }}
+            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
             -X github.com/glasskube/distr/internal/buildconfig.edition=${{ matrix.edition.name }}
 

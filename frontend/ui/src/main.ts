@@ -21,7 +21,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
   if (remoteEnvironment.sentryDsn) {
     Sentry.init({
       enabled: environment.production,
-      release: buildConfig.version ?? buildConfig.commit,
+      release: buildConfig.sentryVersion ?? buildConfig.commit,
       dsn: remoteEnvironment.sentryDsn,
       environment: remoteEnvironment.sentryEnvironment,
       integrations: [Sentry.browserTracingIntegration()],
