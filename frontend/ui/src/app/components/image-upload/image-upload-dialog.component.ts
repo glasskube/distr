@@ -1,15 +1,15 @@
 import {AnimationEvent} from '@angular/animations';
+import {AsyncPipe} from '@angular/common';
 import {Component, HostBinding, HostListener, inject, OnDestroy, OnInit, signal} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil} from 'rxjs';
-import {modalFlyInOut} from '../../animations/modal';
-import {DialogRef, OverlayData} from '../../services/overlay.service';
-import {AsyncPipe} from '@angular/common';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {getFormDisplayedError} from '../../../util/errors';
-import {ToastService} from '../../services/toast.service';
+import {modalFlyInOut} from '../../animations/modal';
 import {FileScope, FilesService} from '../../services/files.service';
+import {DialogRef, OverlayData} from '../../services/overlay.service';
+import {ToastService} from '../../services/toast.service';
 
 export interface ImageUploadContext {
   scope?: FileScope;

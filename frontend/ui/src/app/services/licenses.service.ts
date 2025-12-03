@@ -1,10 +1,9 @@
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {catchError, Observable, of, tap, throwError} from 'rxjs';
+import {Observable, tap} from 'rxjs';
+import {ApplicationLicense} from '../types/application-license';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
-import {ApplicationLicense} from '../types/application-license';
 
 @Injectable({
   providedIn: 'root',

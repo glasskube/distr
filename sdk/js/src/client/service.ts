@@ -1,4 +1,4 @@
-import {Client, ClientConfig} from './client';
+import semver from 'semver/preload';
 import {
   Application,
   ApplicationVersion,
@@ -8,7 +8,7 @@ import {
   DeploymentType,
   HelmChartType,
 } from '../types';
-import semver from 'semver/preload';
+import {Client, ClientConfig} from './client';
 import {ConditionalPartial, defaultClientConfig} from './config';
 
 /**

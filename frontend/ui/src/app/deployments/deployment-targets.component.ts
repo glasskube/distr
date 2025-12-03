@@ -15,7 +15,6 @@ import {catchError, combineLatest, combineLatestWith, first, map, Observable, of
 import {SemVer} from 'semver';
 import {compareBy, maxBy} from '../../util/arrays';
 import {isArchived} from '../../util/dates';
-import {never} from '../../util/exhaust';
 import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
@@ -32,7 +31,6 @@ import {DeploymentTargetsService} from '../services/deployment-targets.service';
 import {LicensesService} from '../services/licenses.service';
 import {OrganizationService} from '../services/organization.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
-import {SubscriptionType} from '../types/organization';
 import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
 
@@ -170,7 +168,7 @@ export class DeploymentTargetsComponent implements AfterViewInit {
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
-        if (this.auth.hasRole('customer') && apps.length > 0 && dts.length === 0) {
+        if (this.auth.isCustomer() && apps.length > 0 && dts.length === 0) {
           this.openWizard();
         }
       });

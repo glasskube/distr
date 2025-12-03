@@ -7,18 +7,18 @@ import {faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
   Application,
   ApplicationVersion,
-  DeploymentRequest,
   DeploymentTarget,
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
 import {combineLatest, firstValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
+import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
 import {modalFlyInOut} from '../../animations/modal';
 import {
-  mapToDeploymentRequest,
   DeploymentFormComponent,
   DeploymentFormValue,
+  mapToDeploymentRequest,
 } from '../../deployment-form/deployment-form.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {ApplicationsService} from '../../services/applications.service';
@@ -27,7 +27,6 @@ import {FeatureFlagService} from '../../services/feature-flag.service';
 import {ToastService} from '../../services/toast.service';
 import {ConnectInstructionsComponent} from '../connect-instructions/connect-instructions.component';
 import {InstallationWizardStepperComponent} from './installation-wizard-stepper.component';
-import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
 
 @Component({
   selector: 'app-installation-wizard',

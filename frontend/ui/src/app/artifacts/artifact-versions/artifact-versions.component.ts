@@ -1,3 +1,4 @@
+import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, resource, signal} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -6,24 +7,24 @@ import {faBox, faEllipsisVertical, faTrash, faXmark} from '@fortawesome/free-sol
 import {catchError, distinctUntilChanged, filter, firstValueFrom, map, NEVER, switchMap, tap} from 'rxjs';
 import {getRemoteEnvironment} from '../../../env/remote';
 import {RelativeDatePipe} from '../../../util/dates';
+import {getFormDisplayedError} from '../../../util/errors';
+import {SecureImagePipe} from '../../../util/secureImage';
 import {BytesPipe} from '../../../util/units';
+import {dropdownAnimation} from '../../animations/dropdown';
 import {ClipComponent} from '../../components/clip.component';
 import {UuidComponent} from '../../components/uuid';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {
   ArtifactsService,
   ArtifactWithTags,
   HasDownloads,
   TaggedArtifactVersion,
 } from '../../services/artifacts.service';
+import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
-import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
-import {SecureImagePipe} from '../../../util/secureImage';
 import {OverlayService} from '../../services/overlay.service';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
 import {ToastService} from '../../services/toast.service';
-import {getFormDisplayedError} from '../../../util/errors';
-import {OverlayModule} from '@angular/cdk/overlay';
-import {dropdownAnimation} from '../../animations/dropdown';
+import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
 
 @Component({
   selector: 'app-artifact-tags',
@@ -38,13 +39,14 @@ import {dropdownAnimation} from '../../animations/dropdown';
     ClipComponent,
     BytesPipe,
     SecureImagePipe,
-    RequireRoleDirective,
+    RequireVendorDirective,
     OverlayModule,
   ],
   animations: [dropdownAnimation],
   templateUrl: './artifact-versions.component.html',
 })
 export class ArtifactVersionsComponent {
+  protected readonly auth = inject(AuthService);
   private readonly artifacts = inject(ArtifactsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

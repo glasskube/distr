@@ -23,9 +23,8 @@ import (
 func OrganizationRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganization)
-	r.Group(func(r chi.Router) {
-		r.Use(requireUserRoleVendor)
-		r.Put("/", updateOrganization)
+	r.With(middleware.RequireVendor).Group(func(r chi.Router) {
+		r.With(middleware.RequireAdmin).Put("/", updateOrganization)
 		r.Post("/", createOrganization)
 	})
 	r.Route("/branding", OrganizationBrandingRouter)
@@ -96,7 +95,7 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		if err := db.CreateUserAccountOrganizationAssignment(
-			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleVendor, nil); err != nil {
+			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleAdmin, nil); err != nil {
 			return err
 		}
 		return nil
@@ -111,7 +110,7 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 	} else {
 		RespondJSON(w, types.OrganizationWithUserRole{
 			Organization: organization,
-			UserRole:     types.UserRoleVendor,
+			UserRole:     types.UserRoleAdmin,
 			JoinedOrgAt:  time.Now(),
 		})
 	}

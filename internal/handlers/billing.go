@@ -6,11 +6,17 @@ import (
 )
 
 func BillingRouter(r chi.Router) {
-	r.Use(middleware.RequireOrgAndRole, RequireUserRoleVendor)
+	r.Use(middleware.RequireOrgAndRole, middleware.RequireVendor)
 	r.Route("/subscription", func(r chi.Router) {
 		r.Get("/", GetSubscriptionHandler)
-		r.Post("/", CreateSubscriptionHandler)
-		r.Put("/", UpdateSubscriptionHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.RequireAdmin)
+			r.Post("/", CreateSubscriptionHandler)
+			r.Put("/", UpdateSubscriptionHandler)
+		})
 	})
-	r.Post("/portal", CreateBillingPortalSessionHandler)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireAdmin)
+		r.Post("/portal", CreateBillingPortalSessionHandler)
+	})
 }

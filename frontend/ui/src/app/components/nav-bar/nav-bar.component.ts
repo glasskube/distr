@@ -1,6 +1,9 @@
 import {OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -19,25 +22,23 @@ import {
   faShuffle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
+import dayjs from 'dayjs';
 import {catchError, combineLatestWith, EMPTY, lastValueFrom, map, Observable, of} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
+import {SecureImagePipe} from '../../../util/secureImage';
 import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {OrganizationService} from '../../services/organization.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {SidebarService} from '../../services/sidebar.service';
 import {ToastService} from '../../services/toast.service';
-import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {UsersService} from '../../services/users.service';
-import {SecureImagePipe} from '../../../util/secureImage';
-import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
-import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {DialogRef, OverlayService} from '../../services/overlay.service';
-import {modalFlyInOut} from '../../animations/modal';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
-import dayjs from 'dayjs';
+import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -60,6 +61,8 @@ type SwitchOptions = {
     TitleCasePipe,
     AutotrimDirective,
     ReactiveFormsModule,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
   animations: [dropdownAnimation, modalFlyInOut],
 })
@@ -95,7 +98,7 @@ export class NavBarComponent implements OnInit {
       return {
         currentOrg,
         availableOrgs: orgs.filter((o) => o.id !== currentOrg.id),
-        isVendorSomewhere: orgs.some((o) => o.userRole === 'vendor'),
+        isVendorSomewhere: orgs.some((o) => o.customerOrganizationId === undefined),
       };
     })
   );
@@ -128,7 +131,7 @@ export class NavBarComponent implements OnInit {
   }
 
   private async initBranding() {
-    if (this.auth.hasRole('customer')) {
+    if (this.auth.isCustomer()) {
       try {
         const branding = await lastValueFrom(this.organizationBranding.get());
         if (branding.logo) {

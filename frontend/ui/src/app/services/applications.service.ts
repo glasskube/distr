@@ -1,10 +1,9 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {catchError, Observable, of, startWith, Subject, switchMap, tap, throwError} from 'rxjs';
+import {Application, ApplicationVersion, PatchApplicationRequest} from '@glasskube/distr-sdk';
+import {catchError, Observable, of, Subject, switchMap, tap, throwError} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
-import {Application, ApplicationVersion, DeploymentTarget, PatchApplicationRequest} from '@glasskube/distr-sdk';
-import {ArtifactWithTags} from './artifacts.service';
 
 @Injectable({
   providedIn: 'root',

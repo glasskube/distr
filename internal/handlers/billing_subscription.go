@@ -300,7 +300,7 @@ type currentUsageCounts struct {
 // getCurrentUsageCounts retrieves the current usage counts for the given organization
 func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageCounts, error) {
 	// Get current user account count
-	userAccountCount, err := db.CountUserAccountsByOrgIDAndRole(ctx, orgID, types.UserRoleVendor)
+	userAccountCount, err := db.CountVendorUserAccountsByOrgID(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user accounts: %w", err)
 	}

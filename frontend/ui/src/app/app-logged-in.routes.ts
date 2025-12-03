@@ -1,8 +1,8 @@
 import {inject} from '@angular/core';
 import {CanActivateFn, Router, Routes} from '@angular/router';
+import {UserRole} from '@glasskube/distr-sdk';
 import dayjs from 'dayjs';
 import {firstValueFrom, map} from 'rxjs';
-import {UserRole} from '../../../../sdk/js/src';
 import {getRemoteEnvironment} from '../env/remote';
 import {AccessTokensComponent} from './access-tokens/access-tokens.component';
 import {ApplicationDetailComponent} from './applications/application-detail.component';
@@ -31,14 +31,28 @@ import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.
 import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
 
-function requiredRoleGuard(userRole: UserRole): CanActivateFn {
+function requiredRoleGuard(...userRole: UserRole[]): CanActivateFn {
   return () => {
-    if (inject(AuthService).hasRole(userRole)) {
+    if (inject(AuthService).hasAnyRole(...userRole)) {
       return true;
     }
     return inject(Router).createUrlTree(['/']);
   };
 }
+
+const requireVendor: CanActivateFn = () => {
+  if (inject(AuthService).isVendor()) {
+    return true;
+  }
+  return inject(Router).createUrlTree(['/']);
+};
+
+const requireCustomer: CanActivateFn = () => {
+  if (inject(AuthService).isCustomer()) {
+    return true;
+  }
+  return inject(Router).createUrlTree(['/']);
+};
 
 function licensingEnabledGuard(): CanActivateFn {
   return async () => {
@@ -66,7 +80,7 @@ function subscriptionGuard(): CanActivateFn {
     const router = inject(Router);
     const organizationService = inject(OrganizationService);
     return (
-      auth.hasRole('customer') ||
+      auth.isCustomer() ||
       organizationService
         .get()
         .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/subscription']) : true)))
@@ -82,16 +96,16 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponent,
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor],
       },
       {
         path: 'home',
         component: HomeComponent,
-        canActivate: [requiredRoleGuard('customer')],
+        canActivate: [requireCustomer],
       },
       {
         path: 'applications',
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor],
         children: [
           {
             path: '',
@@ -115,37 +129,38 @@ export const routes: Routes = [
       {
         path: 'artifact-pulls',
         component: ArtifactPullsComponent,
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor],
       },
       {
         path: 'customers',
         component: CustomerOrganizationsComponent,
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor],
       },
       {
         path: 'customers/:customerOrganizationId',
         component: CustomerUsersComponent,
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor],
       },
       {
         path: 'users',
         component: VendorUsersComponent,
+        canActivate: [requiredRoleGuard('admin')],
       },
       {
         path: 'branding',
         component: OrganizationBrandingComponent,
         data: {userRole: 'vendor'},
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor, requiredRoleGuard('read_write', 'admin')],
       },
       {
         path: 'settings',
         component: OrganizationSettingsComponent,
         data: {userRole: 'vendor'},
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor, requiredRoleGuard('admin')],
       },
       {
         path: 'licenses',
-        canActivate: [requiredRoleGuard('vendor'), licensingEnabledGuard()],
+        canActivate: [requireVendor, licensingEnabledGuard()],
         data: {userRole: 'vendor'},
         children: [
           {
@@ -169,7 +184,7 @@ export const routes: Routes = [
       },
       {
         path: 'tutorials',
-        canActivate: [requiredRoleGuard('vendor')],
+        canActivate: [requireVendor, requiredRoleGuard('admin')],
         children: [
           {
             path: '',
@@ -195,7 +210,7 @@ export const routes: Routes = [
   },
   {
     path: 'subscription',
-    canActivate: [requiredRoleGuard('vendor')],
+    canActivate: [requireVendor, requiredRoleGuard('admin')],
     children: [
       {
         path: '',

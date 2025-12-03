@@ -18,7 +18,8 @@ import {combineLatest, filter, firstValueFrom, map, startWith, Subject, switchMa
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {OrganizationService} from '../../services/organization.service';
@@ -34,11 +35,11 @@ import {UuidComponent} from '../uuid';
     FontAwesomeModule,
     UuidComponent,
     DatePipe,
-    RequireRoleDirective,
     SecureImagePipe,
     AsyncPipe,
     DecimalPipe,
     RouterLink,
+    RequireVendorDirective,
     QuotaLimitComponent,
   ],
   animations: [modalFlyInOut],
@@ -58,6 +59,7 @@ export class CustomerOrganizationsComponent {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly organizationService = inject(OrganizationService);
   protected readonly featureFlags = inject(FeatureFlagService);
+  protected readonly auth = inject(AuthService);
 
   private readonly organization = toSignal(this.organizationService.get());
   protected readonly limit = computed(() => this.organization()?.subscriptionCustomerOrganizationQuantity);

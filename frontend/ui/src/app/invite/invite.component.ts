@@ -1,10 +1,10 @@
 import {Component, inject} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {firstValueFrom} from 'rxjs';
-import {AuthService} from '../services/auth.service';
-import {SettingsService} from '../services/settings.service';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
+import {AuthService} from '../services/auth.service';
+import {SettingsService} from '../services/settings.service';
 
 @Component({
   selector: 'app-invite',

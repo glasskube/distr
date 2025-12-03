@@ -1,4 +1,7 @@
-import {Component, effect, ElementRef, inject, signal, ViewChild, WritableSignal} from '@angular/core';
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
+import {Component, inject, signal, WritableSignal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -6,9 +9,7 @@ import {
   faArrowRightLong,
   faBox,
   faBoxesStacked,
-  faCheckDouble,
   faChevronDown,
-  faCodeFork,
   faCreditCard,
   faDashboard,
   faGear,
@@ -16,20 +17,16 @@ import {
   faKey,
   faLightbulb,
   faPalette,
-  faServer,
-  faUserCheck,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
-import {SidebarService} from '../../services/sidebar.service';
-import {buildConfig} from '../../../buildconfig';
-import {FeatureFlagService} from '../../services/feature-flag.service';
-import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
-import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {TutorialsService} from '../../services/tutorials.service';
-import {OrganizationService} from '../../services/organization.service';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {map} from 'rxjs';
+import {buildConfig} from '../../../buildconfig';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
+import {FeatureFlagService} from '../../services/feature-flag.service';
+import {OrganizationService} from '../../services/organization.service';
+import {SidebarService} from '../../services/sidebar.service';
+import {TutorialsService} from '../../services/tutorials.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -38,15 +35,17 @@ import {map} from 'rxjs';
   imports: [
     RouterLink,
     FaIconComponent,
-    RequireRoleDirective,
     AsyncPipe,
     RouterLinkActive,
     CdkOverlayOrigin,
     CdkConnectedOverlay,
     NgTemplateOutlet,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
 })
 export class SideBarComponent {
+  protected readonly auth = inject(AuthService);
   protected readonly sidebar = inject(SidebarService);
   protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly tutorialsService = inject(TutorialsService);

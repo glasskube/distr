@@ -24,6 +24,7 @@ const (
 	UserRoleKey          = "role"
 	UserImageURLKey      = "image_url"
 	OrgIdKey             = "org"
+	CustomerOrgIDKey     = "c_org"
 	PasswordResetKey     = "password_reset"
 
 	audienceUserValue  = "user"
@@ -77,6 +78,9 @@ func generateUserToken(
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole
 		claims[OrgIdKey] = org.ID.String()
+		if org.CustomerOrganizationID != nil {
+			claims[CustomerOrgIDKey] = org.CustomerOrganizationID.String()
+		}
 	}
 	maps.Copy(claims, extraClaims)
 	return JWTAuth().Encode(claims)

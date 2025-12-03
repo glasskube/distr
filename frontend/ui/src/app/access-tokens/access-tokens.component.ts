@@ -4,16 +4,16 @@ import {Component, inject, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faClipboard, faMagnifyingGlass, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '@glasskube/distr-sdk';
 import dayjs from 'dayjs';
 import {firstValueFrom, startWith, Subject, switchMap} from 'rxjs';
 import {isExpired, RelativeDatePipe} from '../../util/dates';
 import {drawerFlyInOut} from '../animations/drawer';
+import {ClipComponent} from '../components/clip.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AccessTokensService} from '../services/access-tokens.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '@glasskube/distr-sdk';
-import {ClipComponent} from '../components/clip.component';
 
 @Component({
   selector: 'app-access-tokens',

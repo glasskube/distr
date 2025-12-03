@@ -1,11 +1,11 @@
 import {Component, inject, Input} from '@angular/core';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faClipboard} from '@fortawesome/free-regular-svg-icons';
+import {faClipboardCheck} from '@fortawesome/free-solid-svg-icons';
+import {DeploymentTarget} from '@glasskube/distr-sdk';
 import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ToastService} from '../../services/toast.service';
-import {faClipboard} from '@fortawesome/free-regular-svg-icons';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faClipboardCheck} from '@fortawesome/free-solid-svg-icons';
-import {DeploymentTarget} from '@glasskube/distr-sdk';
 
 @Component({
   selector: 'app-connect-instructions',

@@ -1,8 +1,8 @@
-import {Component} from '@angular/core';
 import {CdkStepper, CdkStepperModule} from '@angular/cdk/stepper';
+import {NgTemplateOutlet} from '@angular/common';
+import {Component} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {NgTemplateOutlet} from '@angular/common';
 import {faCircle, faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 
 @Component({

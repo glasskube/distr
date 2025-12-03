@@ -1,10 +1,10 @@
 import {HttpClient, HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
+import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
+import dayjs from 'dayjs';
 import {jwtDecode} from 'jwt-decode';
 import {catchError, map, Observable, of, tap, throwError} from 'rxjs';
-import dayjs from 'dayjs';
-import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
-import {Organization, OrganizationWithUserRole} from '../types/organization';
+import {Organization} from '../types/organization';
 
 const tokenStorageKey = 'cloud_token';
 const actionTokenStorageKey = 'distr_action_token';
@@ -13,6 +13,7 @@ const authBaseUrl = '/api/v1/auth';
 export interface JWTClaims {
   sub: string;
   org: string;
+  c_org: string;
   email: string;
   password_reset: boolean;
   email_verified: boolean;
@@ -61,6 +62,18 @@ export class AuthService {
 
   public hasRole(role: UserRole): boolean {
     return this.getClaims()?.role === role;
+  }
+
+  public hasAnyRole(...roles: UserRole[]): boolean {
+    return roles.some((role) => this.hasRole(role));
+  }
+
+  public isVendor(): boolean {
+    return this.getClaims()?.c_org === undefined;
+  }
+
+  public isCustomer(): boolean {
+    return this.getClaims()?.c_org !== undefined;
   }
 
   public login(email: string, password: string): Observable<void> {

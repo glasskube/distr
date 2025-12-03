@@ -11,8 +11,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/internal/contenttype"
 	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/middleware"
-	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -31,11 +29,6 @@ func RespondJSON(w http.ResponseWriter, data any) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
-
-var requireUserRoleVendor = middleware.UserRoleMiddleware(types.UserRoleVendor)
-
-// RequireUserRoleVendor is a middleware that requires the user to have the vendor role (exported for subpackages)
-var RequireUserRoleVendor = requireUserRoleVendor
 
 func readMultipartFile(w http.ResponseWriter, r *http.Request, formKey string) ([]byte, bool) {
 	log := internalctx.GetLogger(r.Context())

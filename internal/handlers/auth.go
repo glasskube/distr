@@ -63,7 +63,7 @@ func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.R
 		}
 
 		if user, org, err := db.GetUserAccountAndOrg(
-			ctx, auth.CurrentUserID(), request.OrganizationID, nil); errors.Is(err, apierrors.ErrNotFound) {
+			ctx, auth.CurrentUserID(), request.OrganizationID); errors.Is(err, apierrors.ErrNotFound) {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		} else if err != nil {
@@ -71,8 +71,9 @@ func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.R
 			log.Error("context switch failed", zap.Error(err))
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else if _, tokenString, err := authjwt.GenerateDefaultToken(user.AsUserAccount(), types.OrganizationWithUserRole{
-			Organization: *org,
-			UserRole:     user.UserRole,
+			Organization:           *org,
+			UserRole:               user.UserRole,
+			CustomerOrganizationID: user.CustomerOrganizationID,
 		}); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to generate token", zap.Error(err))
@@ -110,7 +111,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		} else if len(orgs) < 1 {
 			org.Name = user.Email
-			org.UserRole = types.UserRoleVendor
+			org.UserRole = types.UserRoleAdmin
 			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
 				return err
 			} else if err := db.CreateUserAccountOrganizationAssignment(

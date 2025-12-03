@@ -1,17 +1,17 @@
+import {AsyncPipe} from '@angular/common';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnInit, signal} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk} from '@fortawesome/free-solid-svg-icons';
-import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {OrganizationBrandingService} from '../services/organization-branding.service';
-import {lastValueFrom, map, Observable} from 'rxjs';
-import {HttpErrorResponse} from '@angular/common/http';
-import {getFormDisplayedError} from '../../util/errors';
-import {ToastService} from '../services/toast.service';
-import {AsyncPipe} from '@angular/common';
-import {base64ToBlob} from '../../util/blob';
-import {AutotrimDirective} from '../directives/autotrim.directive';
 import {OrganizationBranding} from '@glasskube/distr-sdk';
 import {MarkdownPipe} from 'ngx-markdown';
+import {lastValueFrom, map, Observable} from 'rxjs';
+import {base64ToBlob} from '../../util/blob';
+import {getFormDisplayedError} from '../../util/errors';
+import {AutotrimDirective} from '../directives/autotrim.directive';
+import {OrganizationBrandingService} from '../services/organization-branding.service';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-organization-branding',
