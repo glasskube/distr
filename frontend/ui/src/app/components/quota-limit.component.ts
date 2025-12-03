@@ -29,6 +29,7 @@ export class QuotaLimitComponent {
   protected readonly percentage = computed(() => {
     const u = this.usage();
     const l = this.limit();
+    console.log(u, l);
     if (l === undefined || l < 0) {
       return 0;
     }
