@@ -114,7 +114,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
-                        for="userAccountQuantity"
+                        for="userAccountQuantity-update"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                         Internal Users *
                       </label>
@@ -122,7 +122,7 @@
                         formControlName="userAccountQuantity"
                         type="number"
                         name="userAccountQuantity"
-                        id="userAccountQuantity"
+                        id="userAccountQuantity-update"
                         [min]="subscriptionInfoData.currentUserAccountCount"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         [placeholder]="subscriptionInfoData.currentUserAccountCount.toString()"
@@ -133,7 +133,7 @@
                     </div>
                     <div>
                       <label
-                        for="customerOrganizationQuantity"
+                        for="customerOrganizationQuantity-update"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                         Customer Organizations *
                       </label>
@@ -141,7 +141,7 @@
                         formControlName="customerOrganizationQuantity"
                         type="number"
                         name="customerOrganizationQuantity"
-                        id="customerOrganizationQuantity"
+                        id="customerOrganizationQuantity-update"
                         [min]="subscriptionInfoData.currentCustomerOrganizationCount"
                         [max]="getCurrentPlanLimit('customerOrganizations')"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -158,10 +158,10 @@
                     <button
                       type="button"
                       (click)="updateQuantities()"
-                      [disabled]="form.invalid"
+                      [disabled]="form.invalid || !hasQuantitiesChanged()"
                       class="text-white inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-6 py-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <fa-icon [icon]="faShoppingCart" size="lg" class="h-4 w-4 mr-2"></fa-icon>
-                      Update Quantities
+                      Proceed
                     </button>
                   </div>
                 </div>
@@ -258,7 +258,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
-                        for="userAccountQuantity"
+                        for="userAccountQuantity-checkout"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                         Internal Users *
                       </label>
@@ -266,7 +266,7 @@
                         formControlName="userAccountQuantity"
                         type="number"
                         name="userAccountQuantity"
-                        id="userAccountQuantity"
+                        id="userAccountQuantity-checkout"
                         min="1"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="1"
@@ -277,7 +277,7 @@
                     </div>
                     <div>
                       <label
-                        for="customerOrganizationQuantity"
+                        for="customerOrganizationQuantity-checkout"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                         Customer Organizations *
                       </label>
@@ -285,8 +285,8 @@
                         formControlName="customerOrganizationQuantity"
                         type="number"
                         name="customerOrganizationQuantity"
-                        id="customerOrganizationQuantity"
-                        min="1"
+                        id="customerOrganizationQuantity-checkout"
+                        min="0"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="1"
                         required />
@@ -337,4 +337,11 @@
       </div>
     </div>
   </div>
+
+  <ng-template #updateModal>
+    <app-subscription-update-modal
+      [pendingUpdate]="pendingUpdate()"
+      (closed)="hideModal()"
+      (confirmed)="onModalConfirmed($event)"></app-subscription-update-modal>
+  </ng-template>
 </section>

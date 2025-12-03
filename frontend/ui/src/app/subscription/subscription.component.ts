@@ -1,19 +1,23 @@
+import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, computed, inject, OnInit, signal, TemplateRef, ViewChild} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCreditCard, faShoppingCart} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {never} from '../../util/exhaust';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
 import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
+import {PendingSubscriptionUpdate, SubscriptionUpdateModalComponent} from './subscription-update-modal.component';
 
 @Component({
   selector: 'app-subscription',
   templateUrl: './subscription.component.html',
-  imports: [FaIconComponent, ReactiveFormsModule, CommonModule],
+  imports: [FaIconComponent, ReactiveFormsModule, CommonModule, OverlayModule, SubscriptionUpdateModalComponent],
 })
 export class SubscriptionComponent implements OnInit {
   protected readonly faShoppingCart = faShoppingCart;
@@ -21,14 +25,36 @@ export class SubscriptionComponent implements OnInit {
 
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
+  private readonly overlay = inject(OverlayService);
 
   protected subscriptionInfo = signal<SubscriptionInfo | undefined>(undefined);
+  protected pendingUpdate = signal<PendingSubscriptionUpdate | undefined>(undefined);
+
+  private modal?: DialogRef;
+
+  @ViewChild('updateModal') protected readonly updateModal!: TemplateRef<unknown>;
 
   protected readonly form = new FormGroup({
     subscriptionType: new FormControl<SubscriptionType>('pro', [Validators.required]),
     billingMode: new FormControl<'monthly' | 'yearly'>('monthly', [Validators.required]),
     userAccountQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
-    customerOrganizationQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
+    customerOrganizationQuantity: new FormControl<number>(1, [Validators.required, Validators.min(0)]),
+  });
+
+  protected readonly formValues = toSignal(this.form.valueChanges, {initialValue: this.form.value});
+
+  protected readonly hasQuantitiesChanged = computed(() => {
+    const info = this.subscriptionInfo();
+    const values = this.formValues();
+
+    if (!info) {
+      return false;
+    }
+
+    return (
+      values.userAccountQuantity !== info.subscriptionUserAccountQuantity ||
+      values.customerOrganizationQuantity !== info.subscriptionCustomerOrganizationQuantity
+    );
   });
 
   async ngOnInit() {
@@ -96,51 +122,70 @@ export class SubscriptionComponent implements OnInit {
   async updateQuantities() {
     this.form.markAllAsTouched();
     if (this.form.valid) {
-      try {
-        const body = {
-          subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
-          subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
-        };
-
-        // Call the update subscription endpoint
-        const updatedInfo = await this.subscriptionService.updateSubscription(body);
-
-        // Update the subscription info signal with the new data
-        this.subscriptionInfo.set(updatedInfo);
-
-        // Show success message
-        this.toast.success('Subscription updated successfully');
-      } catch (e) {
-        const msg = getFormDisplayedError(e);
-        if (msg) {
-          this.toast.error(msg);
-        }
+      const info = this.subscriptionInfo();
+      if (!info) {
+        return;
       }
+
+      // Calculate current and new prices
+      const oldPrice = this.calculateCurrentPrice();
+      const newPrice = this.getPreviewPrice();
+
+      // Set pending update and show confirmation modal
+      this.pendingUpdate.set({
+        userAccountQuantity: this.form.value.userAccountQuantity!,
+        customerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
+        newPrice,
+        oldPrice,
+      });
+
+      this.hideModal();
+      this.modal = this.overlay.showModal(this.updateModal, {
+        hasBackdrop: true,
+        backdropStyleOnly: true,
+        positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+      });
     }
   }
 
-  getPlanLimits(plan: SubscriptionType): {customers: string; users: string; deployments: string} {
+  onModalConfirmed(updatedInfo: SubscriptionInfo) {
+    this.subscriptionInfo.set(updatedInfo);
+    this.hideModal();
+  }
+
+  hideModal() {
+    this.modal?.close();
+  }
+
+  private calculateCurrentPrice(): number {
     const info = this.subscriptionInfo();
-    if (!info) {
-      return {customers: '', users: '', deployments: ''};
+    if (!info || !info.subscriptionUserAccountQuantity || !info.subscriptionCustomerOrganizationQuantity) {
+      return 0;
     }
 
-    let limits;
-    switch (plan) {
-      case 'trial':
-        limits = info.trialLimits;
-        break;
-      case 'starter':
-        limits = info.starterLimits;
-        break;
-      case 'pro':
-        limits = info.proLimits;
-        break;
-      case 'enterprise':
-        limits = info.enterpriseLimits;
-        break;
-      default:
-        return never(plan);
+    const subscriptionType = info.subscriptionType;
+    const userQty = info.subscriptionUserAccountQuantity;
+    const customerQty = info.subscriptionCustomerOrganizationQuantity;
+
+    let userPrice = 0;
+    let customerPrice = 0;
+
+    // Assume monthly billing for current price (adjust if you have billing mode info)
+    if (subscriptionType === 'starter') {
+      userPrice = 19;
+      customerPrice = 29;
+    } else if (subscriptionType === 'pro') {
+      userPrice = 29;
+      customerPrice = 69;
+    }
+
+    return userPrice * userQty + customerPrice * customerQty;
+  }
+
+  getPlanLimits(plan: SubscriptionType): {customers: string; users: string; deployments: string} {
+    const limits = this.getPlanLimitsObject(plan);
+    if (!limits) {
+      return {customers: '', users: '', deployments: ''};
     }
 
     return {
