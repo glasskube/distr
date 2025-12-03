@@ -1,11 +1,11 @@
+import {AsyncPipe} from '@angular/common';
 import {Component, inject} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCircle, faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {faArrowRight, faCheck, faLightbulb} from '@fortawesome/free-solid-svg-icons';
 import {TutorialsService} from '../services/tutorials.service';
-import {AsyncPipe} from '@angular/common';
-import {faCircle, faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 
 @Component({
   selector: 'app-tutorials',

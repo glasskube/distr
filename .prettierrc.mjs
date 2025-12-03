@@ -5,10 +5,11 @@
 const config = {
   bracketSameLine: true,
   bracketSpacing: false,
-  singleQuote: true,
-  semi: true,
-  tabWidth: 2,
+  plugins: ['prettier-plugin-organize-imports'],
   printWidth: 120,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
   trailingComma: 'es5',
 };
 

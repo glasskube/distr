@@ -1,5 +1,5 @@
-import {combineLatest, map, Observable, startWith} from 'rxjs';
 import {FormControl} from '@angular/forms';
+import {combineLatest, map, Observable, startWith} from 'rxjs';
 
 export function filteredByFormControl<T>(
   dataSource: Observable<T[]>,

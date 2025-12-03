@@ -1,10 +1,10 @@
 import {AsyncPipe} from '@angular/common';
-import {Component, inject} from '@angular/core';
-import {catchError, EMPTY, map, Observable} from 'rxjs';
-import {OrganizationBrandingService} from '../../services/organization-branding.service';
-import {MarkdownPipe} from 'ngx-markdown';
 import {HttpErrorResponse} from '@angular/common/http';
+import {Component, inject} from '@angular/core';
+import {MarkdownPipe} from 'ngx-markdown';
+import {catchError, EMPTY, map, Observable} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
+import {OrganizationBrandingService} from '../../services/organization-branding.service';
 import {ToastService} from '../../services/toast.service';
 
 @Component({

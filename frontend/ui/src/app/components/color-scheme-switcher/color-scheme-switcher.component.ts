@@ -1,8 +1,8 @@
-import {Component, inject} from '@angular/core';
 import {NgIf} from '@angular/common';
-import {ColorSchemeService} from '../../services/color-scheme.service';
+import {Component, inject} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMoon, faSun} from '@fortawesome/free-solid-svg-icons';
+import {ColorSchemeService} from '../../services/color-scheme.service';
 
 @Component({
   selector: 'app-color-scheme-switcher',

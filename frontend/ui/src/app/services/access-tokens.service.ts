@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
 import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest} from '@glasskube/distr-sdk';
+import {Observable} from 'rxjs';
 
 const baseUrl = '/api/v1/settings/tokens';
 

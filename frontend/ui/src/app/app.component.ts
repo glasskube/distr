@@ -1,11 +1,11 @@
 import {Component, effect, inject, OnInit} from '@angular/core';
 import {Event, NavigationEnd, Router, RouterOutlet} from '@angular/router';
-import posthog from 'posthog-js';
-import {filter, Observable} from 'rxjs';
-import {ColorSchemeService} from './services/color-scheme.service';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import * as Sentry from '@sentry/angular';
+import posthog from 'posthog-js';
+import {filter, Observable} from 'rxjs';
 import {AuthService} from './services/auth.service';
+import {ColorSchemeService} from './services/color-scheme.service';
 import {OverlayService} from './services/overlay.service';
 
 @Component({

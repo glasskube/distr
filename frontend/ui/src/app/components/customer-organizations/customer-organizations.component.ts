@@ -19,6 +19,7 @@ import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {RequireVendorDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {OrganizationService} from '../../services/organization.service';
@@ -26,7 +27,6 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
-import {AuthService} from '../../services/auth.service';
 
 @Component({
   templateUrl: './customer-organizations.component.html',

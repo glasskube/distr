@@ -42,10 +42,9 @@ import {EditorComponent} from '../components/editor.component';
 import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
+import {AuthService} from '../services/auth.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
-import {PermissionsDirective} from '../directives/required-role.directive';
-import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-application-detail',

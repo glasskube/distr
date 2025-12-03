@@ -2,7 +2,7 @@ import {Component, computed, inject, input} from '@angular/core';
 import {map, Observable} from 'rxjs';
 import {DeploymentLogsService} from '../../services/deployment-logs.service';
 import {DeploymentLogRecord} from '../../types/deployment-log-record';
-import {TimeseriesTableComponent, TimeseriesEntry, TimeseriesSource} from './timeseries-table.component';
+import {TimeseriesEntry, TimeseriesSource, TimeseriesTableComponent} from './timeseries-table.component';
 
 function logRecordToTimeseriesEntry(record: DeploymentLogRecord): TimeseriesEntry {
   return {date: record.timestamp, status: record.severity, detail: record.body};

@@ -1,10 +1,10 @@
 import {HttpClient, HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
+import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
+import dayjs from 'dayjs';
 import {jwtDecode} from 'jwt-decode';
 import {catchError, map, Observable, of, tap, throwError} from 'rxjs';
-import dayjs from 'dayjs';
-import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
-import {Organization, OrganizationWithUserRole} from '../types/organization';
+import {Organization} from '../types/organization';
 
 const tokenStorageKey = 'cloud_token';
 const actionTokenStorageKey = 'distr_action_token';

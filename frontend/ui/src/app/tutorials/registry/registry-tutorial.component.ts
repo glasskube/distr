@@ -1,5 +1,10 @@
+import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
+import {HttpErrorResponse} from '@angular/common/http';
 import {AfterViewInit, Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
   faB,
@@ -11,26 +16,21 @@ import {
   faPalette,
   faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
-import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
-import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {combineLatest, firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {AccessTokenWithKey} from '@glasskube/distr-sdk';
-import {getFormDisplayedError} from '../../../util/errors';
-import {HttpErrorResponse} from '@angular/common/http';
-import {ToastService} from '../../services/toast.service';
-import {TutorialsService} from '../../services/tutorials.service';
-import {TutorialProgress} from '../../types/tutorials';
-import {Organization} from '../../types/organization';
-import {OrganizationService} from '../../services/organization.service';
-import {slugMaxLength, slugPattern} from '../../../util/slug';
+import {combineLatest, firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {getRemoteEnvironment} from '../../../env/remote';
-import {AccessTokensService} from '../../services/access-tokens.service';
+import {getFormDisplayedError} from '../../../util/errors';
+import {slugMaxLength, slugPattern} from '../../../util/slug';
 import {ClipComponent} from '../../components/clip.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {AccessTokensService} from '../../services/access-tokens.service';
+import {OrganizationService} from '../../services/organization.service';
+import {ToastService} from '../../services/toast.service';
+import {TutorialsService} from '../../services/tutorials.service';
+import {Organization} from '../../types/organization';
+import {TutorialProgress} from '../../types/tutorials';
+import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
 import {getExistingTask} from '../utils';
 
 const tutorialId = 'registry';

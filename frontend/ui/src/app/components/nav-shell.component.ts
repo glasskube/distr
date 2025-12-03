@@ -1,11 +1,11 @@
 import {Component, inject} from '@angular/core';
-import {RouterOutlet} from '@angular/router';
-import {NavBarComponent} from './nav-bar/nav-bar.component';
-import {SideBarComponent} from './side-bar/side-bar.component';
 import {toSignal} from '@angular/core/rxjs-interop';
+import {RouterOutlet} from '@angular/router';
 import dayjs from 'dayjs';
 import {map} from 'rxjs';
 import {OrganizationService} from '../services/organization.service';
+import {NavBarComponent} from './nav-bar/nav-bar.component';
+import {SideBarComponent} from './side-bar/side-bar.component';
 
 @Component({
   selector: 'app-nav-shell',

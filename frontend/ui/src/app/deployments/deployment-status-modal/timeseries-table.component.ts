@@ -1,8 +1,8 @@
-import {Component, input, output} from '@angular/core';
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {filter, interval, map, merge, Observable, scan, Subject, switchMap, tap, zip} from 'rxjs';
+import {Component, input} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {compareBy, distinctBy} from '../../../util/arrays';
+import {filter, interval, map, merge, Observable, scan, Subject, switchMap, tap} from 'rxjs';
+import {distinctBy} from '../../../util/arrays';
 
 export interface TimeseriesEntry {
   id?: string;

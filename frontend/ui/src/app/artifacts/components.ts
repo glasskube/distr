@@ -1,12 +1,12 @@
+import {AsyncPipe} from '@angular/common';
 import {Component, computed, inject, input, signal} from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faDownload, faEllipsis} from '@fortawesome/free-solid-svg-icons';
+import {catchError, map, of, switchMap, zip} from 'rxjs';
+import {SecureImagePipe} from '../../util/secureImage';
 import {HasDownloads} from '../services/artifacts.service';
 import {UsersService} from '../services/users.service';
-import {toObservable} from '@angular/core/rxjs-interop';
-import {catchError, EMPTY, filter, map, NEVER, of, switchMap, tap, zip} from 'rxjs';
-import {AsyncPipe} from '@angular/common';
-import {SecureImagePipe} from '../../util/secureImage';
 
 @Component({
   selector: 'app-artifacts-download-count',

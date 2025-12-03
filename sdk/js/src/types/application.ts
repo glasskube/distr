@@ -1,5 +1,5 @@
 import {BaseModel, Named} from './base';
-import {DeploymentType, HelmChartType, DockerType} from './deployment';
+import {DeploymentType, HelmChartType} from './deployment';
 
 export interface Application extends BaseModel, Named {
   type: DeploymentType;
