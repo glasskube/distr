@@ -11,7 +11,7 @@ import {Component, computed, input} from '@angular/core';
           <div
             class="h-1.5 rounded-full"
             [class.bg-green-600]="!isLimitDanger()"
-            [class.bg-blue-600]="isLimitDanger() && !isLimitCritical() && !isLimitReached()"
+            [class.bg-blue-600]="isLimitDanger() && !isLimitCritical()"
             [class.bg-yellow-400]="isLimitCritical() && !isLimitReached()"
             [class.bg-red-600]="isLimitReached()"
             [class.dark:bg-red-500]="isLimitReached()"
