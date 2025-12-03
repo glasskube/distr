@@ -99,14 +99,15 @@ jobs:
           rm internal/frontend/dist/ui/browser/*.map || exit 1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VERSION: ${{ github.ref_name }}${{ matrix.edition.suffix }}
+          VERSION: ${{ github.ref_name }}
+          SENTRY_VERSION: ${{ github.ref_name }}${{ matrix.edition.suffix }}
 
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
           CGO_ENABLED: '0'
           LDFLAGS: >-
-            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}${{ matrix.edition.suffix }}
+            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
             -X github.com/glasskube/distr/internal/buildconfig.edition=${{ matrix.edition.name }}
 

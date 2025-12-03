@@ -12,12 +12,14 @@ if (!version) {
   }
 }
 
+let sentryVersion = env['SENTRY_VERSION'] || version;
+
 let commit = env['COMMIT'];
 if (!commit) {
   commit = execSync('git rev-parse --short HEAD').toString().trim();
 }
 
-const buildconfig = {version, commit, release: version !== 'snapshot'};
+const buildconfig = {version, sentryVersion, commit, release: version !== 'snapshot'};
 
 console.log(buildconfig);
 
