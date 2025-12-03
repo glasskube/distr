@@ -117,56 +117,58 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 		return err
 	}
 
-	org, err := db.GetOrganizationByID(ctx, orgId)
-	if err != nil {
-		return err
-	}
+	return db.RunTxRR(ctx, func(ctx context.Context) error {
+		org, err := db.GetOrganizationByID(ctx, orgId)
+		if err != nil {
+			return err
+		}
 
-	org.StripeSubscriptionID = &subscription.ID
-	org.StripeCustomerID = &subscription.Customer.ID
+		org.StripeSubscriptionID = &subscription.ID
+		org.StripeCustomerID = &subscription.Customer.ID
 
-	if subscription.Status == stripe.SubscriptionStatusCanceled {
-		org.SubscriptionEndsAt = time.Now()
-	} else if currentPeriodEnd, err := billing.GetCurrentPeriodEnd(subscription); err != nil {
-		return err
-	} else {
-		org.SubscriptionEndsAt = *currentPeriodEnd
-	}
+		if subscription.Status == stripe.SubscriptionStatusCanceled {
+			org.SubscriptionEndsAt = time.Now()
+		} else if currentPeriodEnd, err := billing.GetCurrentPeriodEnd(subscription); err != nil {
+			return err
+		} else {
+			org.SubscriptionEndsAt = *currentPeriodEnd
+		}
 
-	if subscriptionType, err := billing.GetSubscriptionType(subscription); err != nil {
-		return err
-	} else {
-		org.SubscriptionType = *subscriptionType
-	}
+		if subscriptionType, err := billing.GetSubscriptionType(subscription); err != nil {
+			return err
+		} else {
+			org.SubscriptionType = *subscriptionType
+		}
 
-	if qty, err := billing.GetCustomerOrganizationQty(subscription); err != nil {
-		return err
-	} else {
-		org.SubscriptionCustomerOrganizationQty = &qty
-	}
+		if qty, err := billing.GetCustomerOrganizationQty(subscription); err != nil {
+			return err
+		} else {
+			org.SubscriptionCustomerOrganizationQty = &qty
+		}
 
-	if qty, err := billing.GetUserAccountQty(subscription); err != nil {
-		return err
-	} else {
-		org.SubscriptionUserAccountQty = &qty
-	}
+		if qty, err := billing.GetUserAccountQty(subscription); err != nil {
+			return err
+		} else {
+			org.SubscriptionUserAccountQty = &qty
+		}
 
-	if org.SubscriptionType == types.SubscriptionTypeStarter {
-		org.Features = []types.Feature{}
-	} else {
-		org.Features = []types.Feature{types.FeatureLicensing}
-	}
+		if org.SubscriptionType == types.SubscriptionTypeStarter {
+			org.Features = []types.Feature{}
+		} else {
+			org.Features = []types.Feature{types.FeatureLicensing}
+		}
 
-	log.Info("updated organization subscription",
-		zap.Stringer("organizationId", org.ID),
-		zap.String("subscriptionType", string(org.SubscriptionType)),
-		zap.Time("subscriptionEndsAt", org.SubscriptionEndsAt),
-		zap.Int64p("userAccountQty", org.SubscriptionUserAccountQty),
-		zap.Int64p("customerOrganizationQty", org.SubscriptionCustomerOrganizationQty))
+		log.Info("updated organization subscription",
+			zap.Stringer("organizationId", org.ID),
+			zap.String("subscriptionType", string(org.SubscriptionType)),
+			zap.Time("subscriptionEndsAt", org.SubscriptionEndsAt),
+			zap.Int64p("userAccountQty", org.SubscriptionUserAccountQty),
+			zap.Int64p("customerOrganizationQty", org.SubscriptionCustomerOrganizationQty))
 
-	if err := db.UpdateOrganization(ctx, org); err != nil {
-		return err
-	}
+		if err := db.UpdateOrganization(ctx, org); err != nil {
+			return err
+		}
 
-	return nil
+		return nil
+	})
 }

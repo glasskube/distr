@@ -5,25 +5,56 @@ import (
 	"errors"
 
 	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/glasskube/distr/internal/db/queryable"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/multierr"
 )
 
+// RunTx runs a transaction with the PostgreSQL default isolation level (ReadCommitted).
 func RunTx(ctx context.Context, f func(ctx context.Context) error) (finalErr error) {
 	db := internalctx.GetDb(ctx)
 	if tx, err := db.Begin(ctx); err != nil {
 		return err
 	} else {
-		defer func() {
-			// Rollback is safe to call after commit but we have to silence ErrTxClosed
-			if err := tx.Rollback(ctx); !errors.Is(err, pgx.ErrTxClosed) {
-				multierr.AppendInto(&finalErr, err)
-			}
-		}()
-		if err := f(internalctx.WithDb(ctx, tx)); err != nil {
+		return runTxFunc(ctx, tx, f)
+	}
+}
+
+// RunTxRR runs a transaction with isolation level RepeatableRead.
+func RunTxRR(ctx context.Context, f func(ctx context.Context) error) (finalErr error) {
+	return RunTxIso(ctx, pgx.RepeatableRead, f)
+}
+
+// RunTxIso runs a transaction with the specified isolation level.
+func RunTxIso(ctx context.Context, isoLevel pgx.TxIsoLevel, f func(ctx context.Context) error) error {
+	db := internalctx.GetDb(ctx)
+	if conn, ok := db.(queryable.Conn); ok {
+		if tx, err := conn.BeginEx(ctx, &pgx.TxOptions{IsoLevel: isoLevel}); err != nil {
 			return err
 		} else {
-			return tx.Commit(ctx)
+			return runTxFunc(ctx, tx, f)
 		}
+	} else if conn, ok := db.(queryable.PoolConn); ok {
+		if tx, err := conn.BeginTx(ctx, pgx.TxOptions{IsoLevel: isoLevel}); err != nil {
+			return err
+		} else {
+			return runTxFunc(ctx, tx, f)
+		}
+	} else {
+		return errors.New("RunTxIso can not be called from within an existing transaction")
+	}
+}
+
+func runTxFunc(ctx context.Context, tx pgx.Tx, f func(ctx context.Context) error) (finalErr error) {
+	defer func() {
+		// Rollback is safe to call after commit but we have to silence ErrTxClosed
+		if err := tx.Rollback(ctx); !errors.Is(err, pgx.ErrTxClosed) {
+			multierr.AppendInto(&finalErr, err)
+		}
+	}()
+	if err := f(internalctx.WithDb(ctx, tx)); err != nil {
+		return err
+	} else {
+		return tx.Commit(ctx)
 	}
 }
