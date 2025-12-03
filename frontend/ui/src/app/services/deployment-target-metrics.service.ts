@@ -1,7 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {merge, Observable, shareReplay, Subject, switchMap, tap, timer} from 'rxjs';
-import {DefaultReactiveList} from './cache';
+import {Observable, shareReplay, switchMap, timer} from 'rxjs';
 
 interface AgentDeploymentTargetMetrics {
   cpuCoresMillis: number;

@@ -1,14 +1,14 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk, faLightbulb} from '@fortawesome/free-solid-svg-icons';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
-import {ToastService} from '../services/toast.service';
+import {slugMaxLength, slugPattern} from '../../util/slug';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {OrganizationService} from '../services/organization.service';
+import {ToastService} from '../services/toast.service';
 import {Organization} from '../types/organization';
-import {slugMaxLength, slugPattern} from '../../util/slug';
 
 @Component({
   selector: 'app-organization-settings',

@@ -1,5 +1,11 @@
+import {Platform} from '@angular/cdk/platform';
+import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
+import {HttpErrorResponse} from '@angular/common/http';
 import {AfterViewInit, Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
   faBox,
@@ -10,23 +16,17 @@ import {
   faPalette,
   faWarning,
 } from '@fortawesome/free-solid-svg-icons';
-import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
-import {Platform} from '@angular/cdk/platform';
-import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCircleCheck, faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
-import {HttpErrorResponse} from '@angular/common/http';
+import {ClipComponent} from '../../components/clip.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {ApplicationsService} from '../../services/applications.service';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ToastService} from '../../services/toast.service';
 import {TutorialsService} from '../../services/tutorials.service';
 import {TutorialProgress} from '../../types/tutorials';
+import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
 import {getExistingTask, getLastExistingTask} from '../utils';
-import {ApplicationsService} from '../../services/applications.service';
-import {DeploymentTargetsService} from '../../services/deployment-targets.service';
-import {ClipComponent} from '../../components/clip.component';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
 
 const tutorialId = 'agents';
 const welcomeStep = 'welcome';

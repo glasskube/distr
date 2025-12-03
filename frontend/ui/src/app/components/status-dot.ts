@@ -1,6 +1,6 @@
 import {NgClass} from '@angular/common';
 import {Component, computed, input} from '@angular/core';
-import {Deployment, DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
+import {DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
 import {isStale} from '../../util/model';
 
 @Component({

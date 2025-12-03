@@ -1,13 +1,13 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
-import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-customer-card/artifacts-by-customer-card.component';
-import {DashboardService} from '../../services/dashboard.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {catchError, combineLatestWith, first, map, of, shareReplay, Subject, switchMap, takeUntil} from 'rxjs';
-import {DeploymentTargetsService} from '../../services/deployment-targets.service';
+import {ArtifactsByCustomerCardComponent} from '../../artifacts/artifacts-by-customer-card/artifacts-by-customer-card.component';
 import {DeploymentTargetCardComponent} from '../../deployments/deployment-target-card/deployment-target-card.component';
-import {DeploymentTargetsMetricsService} from '../../services/deployment-target-metrics.service';
 import {DeploymentTargetViewData} from '../../deployments/deployment-targets.component';
+import {DashboardService} from '../../services/dashboard.service';
+import {DeploymentTargetsMetricsService} from '../../services/deployment-target-metrics.service';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
 import {ToastService} from '../../services/toast.service';
 
 @Component({

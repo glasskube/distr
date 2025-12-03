@@ -1,9 +1,9 @@
 import {Component, inject} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {map, startWith, Subject, switchMap} from 'rxjs';
+import {AuthService} from '../../../services/auth.service';
 import {UsersService} from '../../../services/users.service';
 import {UsersComponent} from '../users.component';
-import {toSignal} from '@angular/core/rxjs-interop';
-import {AuthService} from '../../../services/auth.service';
 
 @Component({
   template: `<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased">

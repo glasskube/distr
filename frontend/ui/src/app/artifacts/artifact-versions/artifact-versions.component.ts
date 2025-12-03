@@ -20,11 +20,11 @@ import {
   HasDownloads,
   TaggedArtifactVersion,
 } from '../../services/artifacts.service';
+import {AuthService} from '../../services/auth.service';
 import {OrganizationService} from '../../services/organization.service';
 import {OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent, ArtifactsHashComponent} from '../components';
-import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-artifact-tags',

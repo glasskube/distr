@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Observable, of, tap} from 'rxjs';
 import {OrganizationBranding} from '@glasskube/distr-sdk';
+import {Observable, of, tap} from 'rxjs';
 
 @Injectable({
   providedIn: 'root',

@@ -16,8 +16,8 @@ import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
-import {VerifyComponent} from './verify/verify.component';
 import {UsersService} from './services/users.service';
+import {VerifyComponent} from './verify/verify.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);

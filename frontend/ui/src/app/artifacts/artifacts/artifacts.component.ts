@@ -10,11 +10,7 @@ import {getRemoteEnvironment} from '../../../env/remote';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {UuidComponent} from '../../components/uuid';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {
-  RequireCustomerDirective,
-  RequireRoleDirective,
-  RequireVendorDirective,
-} from '../../directives/required-role.directive';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {ArtifactsService} from '../../services/artifacts.service';
 import {OrganizationService} from '../../services/organization.service';
 import {ArtifactsDownloadCountComponent, ArtifactsDownloadedByComponent} from '../components';

@@ -1,14 +1,14 @@
+import {CommonModule} from '@angular/common';
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faShoppingCart, faCreditCard} from '@fortawesome/free-solid-svg-icons';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCreditCard, faShoppingCart} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
-import {ToastService} from '../services/toast.service';
-import {SubscriptionService} from '../services/subscription.service';
-import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
-import {CommonModule} from '@angular/common';
 import {never} from '../../util/exhaust';
+import {SubscriptionService} from '../services/subscription.service';
+import {ToastService} from '../services/toast.service';
+import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
 
 @Component({
   selector: 'app-subscription',

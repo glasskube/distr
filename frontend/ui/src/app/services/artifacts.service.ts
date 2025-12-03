@@ -1,6 +1,6 @@
+import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {map, Observable, of, switchMap, tap} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
 import {DefaultReactiveList, ReactiveList} from './cache';
 
 export interface HasDownloads {

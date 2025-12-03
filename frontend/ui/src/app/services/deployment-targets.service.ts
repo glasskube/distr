@@ -1,27 +1,15 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {
-  EMPTY,
-  MonoTypeOperatorFunction,
-  Observable,
-  retry,
-  shareReplay,
-  Subject,
-  switchMap,
-  tap,
-  timer,
-  merge,
-  map,
-} from 'rxjs';
-import {ReactiveList} from './cache';
-import {CrudService} from './interfaces';
-import {
   Deployment,
   DeploymentRequest,
   DeploymentTarget,
   DeploymentTargetAccessResponse,
   PatchDeploymentRequest,
 } from '@glasskube/distr-sdk';
+import {EMPTY, merge, Observable, retry, shareReplay, Subject, switchMap, tap, timer} from 'rxjs';
+import {ReactiveList} from './cache';
+import {CrudService} from './interfaces';
 
 class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   protected override identify = (dt: DeploymentTarget) => dt.id;

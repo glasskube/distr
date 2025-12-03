@@ -1,8 +1,8 @@
 import {Component, inject} from '@angular/core';
-import {SettingsService} from '../services/settings.service';
 import {firstValueFrom} from 'rxjs';
-import {ToastService} from '../services/toast.service';
 import {AuthService} from '../services/auth.service';
+import {SettingsService} from '../services/settings.service';
+import {ToastService} from '../services/toast.service';
 
 @Component({
   selector: 'app-verify',

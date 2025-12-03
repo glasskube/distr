@@ -1,6 +1,6 @@
-import {MarkedOptions, MarkedRenderer} from 'ngx-markdown';
-import {parseInline} from 'marked';
 import {captureException} from '@sentry/angular';
+import {parseInline} from 'marked';
+import {MarkedOptions, MarkedRenderer} from 'ngx-markdown';
 
 export function markedOptionsFactory(): MarkedOptions {
   const renderer = new MarkedRenderer();

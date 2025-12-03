@@ -1,6 +1,6 @@
-import {inject, Pipe, PipeTransform} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {inject, Pipe, PipeTransform} from '@angular/core';
+import {SafeUrl} from '@angular/platform-browser';
 import {map, Observable, of} from 'rxjs';
 
 @Pipe({
