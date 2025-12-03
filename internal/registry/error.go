@@ -128,5 +128,5 @@ var regErrDeniedQuotaExceeded = &regError{
 var regErrTagAlreadyExists = &regError{
 	Status:  http.StatusConflict,
 	Code:    "UNSUPPORTED",
-	Message: "An image for this tag already exists and cannot be overwritten",
+	Message: "this tag already exists and cannot be overwritten",
 }
