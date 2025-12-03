@@ -153,7 +153,7 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 func (h *handler) Put(
 	ctx context.Context,
 	nameStr, reference string,
-	manifest manifest.Manifest,
+	manifestData manifest.Manifest,
 	blobs []manifest.Blob,
 ) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
@@ -170,10 +170,10 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.Digest),
-			ManifestBlobSize:       manifest.Size,
-			ManifestContentType:    manifest.ContentType,
-			ManifestData:           manifest.Data,
+			ManifestBlobDigest:     types.Digest(manifestData.Digest),
+			ManifestBlobSize:       manifestData.Size,
+			ManifestContentType:    manifestData.ContentType,
+			ManifestData:           manifestData.Data,
 			ArtifactID:             artifact.ID,
 		}
 
@@ -190,7 +190,7 @@ func (h *handler) Put(
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||
 			existingVersion.ManifestContentType != version.ManifestContentType {
-			return fmt.Errorf("reference already exists with different manifest digest")
+			return fmt.Errorf("%w: tag %s already exists with different content", manifest.ErrTagAlreadyExists, reference)
 		} else {
 			version = *existingVersion
 		}
