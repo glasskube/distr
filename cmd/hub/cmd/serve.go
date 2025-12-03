@@ -14,7 +14,7 @@ import (
 	"github.com/glasskube/distr/internal/svc"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/spf13/cobra"
-	"github.com/stripe/stripe-go/v83"
+	"github.com/stripe/stripe-go/v84"
 )
 
 type ServeOptions struct{ Migrate bool }

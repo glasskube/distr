@@ -21,6 +21,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {map} from 'rxjs';
 import {buildConfig} from '../../../buildconfig';
+import {environment} from '../../../env/env';
 import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
@@ -52,6 +53,7 @@ export class SideBarComponent {
   private readonly organizationService = inject(OrganizationService);
 
   protected readonly buildConfig = buildConfig;
+  protected readonly edition = environment.edition;
 
   protected readonly faDashboard = faDashboard;
   protected readonly faBoxesStacked = faBoxesStacked;

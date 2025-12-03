@@ -5,15 +5,15 @@ if [ -z "$SENTRY_AUTH_TOKEN" ]; then
   exit 1
 fi
 
-if [ -z "$VERSION" ]; then
-  echo "VERSION is not set"
+if [ -z "$SENTRY_VERSION" ]; then
+  echo "SENTRY_VERSION is not set"
   exit 1
 fi
 
 export SENTRY_ORG="glasskube"
 export SENTRY_PROJECT="distr-frontend"
 
-npx sentry-cli releases new "$VERSION"
-npx sentry-cli releases set-commits "$VERSION" --auto
-npx sentry-cli sourcemaps upload --release="$VERSION" internal/frontend/dist/ui/browser
-npx sentry-cli releases finalize "$VERSION"
+npx sentry-cli releases new "$SENTRY_VERSION"
+npx sentry-cli releases set-commits "$SENTRY_VERSION" --auto
+npx sentry-cli sourcemaps upload --release="$SENTRY_VERSION" internal/frontend/dist/ui/browser
+npx sentry-cli releases finalize "$SENTRY_VERSION"

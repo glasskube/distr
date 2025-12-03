@@ -124,3 +124,9 @@ var regErrDeniedQuotaExceeded = &regError{
 	Code:    "DENIED",
 	Message: "You have exhausted your organizations tag quota",
 }
+
+var regErrTagAlreadyExists = &regError{
+	Status:  http.StatusConflict,
+	Code:    "UNSUPPORTED",
+	Message: "this tag already exists and cannot be overwritten",
+}
