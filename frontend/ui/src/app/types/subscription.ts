@@ -1,3 +1,4 @@
+export const unlimited = -1;
 export type SubscriptionType = 'starter' | 'pro' | 'enterprise' | 'trial';
 
 export interface SubscriptionLimits {
@@ -9,9 +10,8 @@ export interface SubscriptionLimits {
 export interface SubscriptionInfo {
   subscriptionType: SubscriptionType;
   subscriptionEndsAt: string;
-  subscriptionExternalId?: string;
-  subscriptionCustomerOrganizationQuantity?: number;
-  subscriptionUserAccountQuantity?: number;
+  subscriptionCustomerOrganizationQuantity: number;
+  subscriptionUserAccountQuantity: number;
   currentUserAccountCount: number;
   currentCustomerOrganizationCount: number;
   currentMaxUsersPerCustomer: number;

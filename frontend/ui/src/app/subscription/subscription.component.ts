@@ -8,7 +8,7 @@ import {getFormDisplayedError} from '../../util/errors';
 import {never} from '../../util/exhaust';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
-import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
+import {SubscriptionInfo, SubscriptionType, unlimited} from '../types/subscription';
 
 @Component({
   selector: 'app-subscription',
@@ -18,6 +18,8 @@ import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
 export class SubscriptionComponent implements OnInit {
   protected readonly faShoppingCart = faShoppingCart;
   protected readonly faCreditCard = faCreditCard;
+
+  protected readonly unlimited = unlimited;
 
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
@@ -39,9 +41,14 @@ export class SubscriptionComponent implements OnInit {
       // Pre-fill form with current subscription values or defaults
       this.form.patchValue({
         subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
-        userAccountQuantity: info.subscriptionUserAccountQuantity ?? info.currentUserAccountCount,
+        userAccountQuantity:
+          info.subscriptionUserAccountQuantity !== unlimited
+            ? info.subscriptionUserAccountQuantity
+            : info.currentUserAccountCount,
         customerOrganizationQuantity:
-          info.subscriptionCustomerOrganizationQuantity ?? info.currentCustomerOrganizationCount,
+          info.subscriptionCustomerOrganizationQuantity !== unlimited
+            ? info.subscriptionCustomerOrganizationQuantity
+            : info.currentCustomerOrganizationCount,
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -145,15 +152,15 @@ export class SubscriptionComponent implements OnInit {
 
     return {
       customers:
-        limits.maxCustomerOrganizations === -1
+        limits.maxCustomerOrganizations === unlimited
           ? 'Unlimited customer organizations'
           : `Up to ${limits.maxCustomerOrganizations} customer organization${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
       users:
-        limits.maxUsersPerCustomerOrganization === -1
+        limits.maxUsersPerCustomerOrganization === unlimited
           ? 'Unlimited users per customer organization'
           : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer organization`,
       deployments:
-        limits.maxDeploymentsPerCustomerOrganization === -1
+        limits.maxDeploymentsPerCustomerOrganization === unlimited
           ? 'Unlimited deployments per customer'
           : `${limits.maxDeploymentsPerCustomerOrganization} active deployment${limits.maxDeploymentsPerCustomerOrganization > 1 ? 's' : ''} per customer`,
     };
@@ -190,11 +197,13 @@ export class SubscriptionComponent implements OnInit {
 
     switch (metric) {
       case 'customerOrganizations':
-        return limits.maxCustomerOrganizations === -1 ? 'unlimited' : limits.maxCustomerOrganizations;
+        return limits.maxCustomerOrganizations === unlimited ? 'unlimited' : limits.maxCustomerOrganizations;
       case 'usersPerCustomer':
-        return limits.maxUsersPerCustomerOrganization === -1 ? 'unlimited' : limits.maxUsersPerCustomerOrganization;
+        return limits.maxUsersPerCustomerOrganization === unlimited
+          ? 'unlimited'
+          : limits.maxUsersPerCustomerOrganization;
       case 'deploymentsPerCustomer':
-        return limits.maxDeploymentsPerCustomerOrganization === -1
+        return limits.maxDeploymentsPerCustomerOrganization === unlimited
           ? 'unlimited'
           : limits.maxDeploymentsPerCustomerOrganization;
       default:
@@ -229,7 +238,7 @@ export class SubscriptionComponent implements OnInit {
   getPlanDisplayName(subscriptionType: SubscriptionType): string {
     switch (subscriptionType) {
       case 'trial':
-        return 'Trial';
+        return 'Distr Pro Unlimited Trial';
       case 'starter':
         return 'Distr Starter';
       case 'pro':

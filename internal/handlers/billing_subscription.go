@@ -166,8 +166,8 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the organization in the database with new quantities
-	org.SubscriptionCustomerOrganizationQty = &customerOrgQty
-	org.SubscriptionUserAccountQty = &userAccountQty
+	org.SubscriptionCustomerOrganizationQty = customerOrgQty
+	org.SubscriptionUserAccountQty = userAccountQty
 
 	if err := db.UpdateOrganization(ctx, org); err != nil {
 		log.Error("failed to update organization", zap.Error(err))

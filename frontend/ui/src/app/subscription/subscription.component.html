@@ -20,8 +20,8 @@
                       {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionUserAccountQuantity) {
-                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} licenses used
+                      @if (subscriptionInfoData.subscriptionUserAccountQuantity !== unlimited) {
+                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} Users used
                       } @else {
                         vendor team members
                       }
@@ -33,16 +33,14 @@
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity) {
-                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} licenses used
+                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity !== unlimited) {
+                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} Customers used
                       }
-                      @if (subscriptionInfoData.subscriptionType === 'starter') {
-                        <br />
-                        <span class="text-xs text-gray-400">
-                          ({{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} max:
-                          {{ getCurrentPlanLimit('customerOrganizations') }})
-                        </span>
-                      }
+                      <br />
+                      <span class="text-xs text-gray-400">
+                        ({{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} max:
+                        {{ getCurrentPlanLimit('customerOrganizations') }})
+                      </span>
                     </p>
                   </div>
                   <div class="flex flex-col p-4 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
@@ -72,8 +70,8 @@
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Plan</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                      {{ subscriptionInfoData.subscriptionType }}
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                      {{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }}
                     </p>
                   </div>
                   <div>
@@ -105,11 +103,11 @@
                   </div>
                 </div>
 
-                <!-- Change License Quantities -->
+                <!-- Change Subscription Quantities -->
                 <div class="space-y-4">
-                  <h2 class="text-xl font-bold dark:text-white">Change License Quantities</h2>
+                  <h2 class="text-xl font-bold dark:text-white">Change Subscription Quantities</h2>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Update your license quantities below. Changes will be reflected in your next billing cycle.
+                    Update your subscription quantities below. Changes will be reflected in your next billing cycle.
                   </p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -254,7 +252,7 @@
 
                 <!-- Quantities -->
                 <div class="space-y-4">
-                  <h2 class="text-xl font-bold dark:text-white">License Quantities</h2>
+                  <h2 class="text-xl font-bold dark:text-white">Subscription Quantities</h2>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label

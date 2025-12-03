@@ -142,13 +142,13 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 	if qty, err := billing.GetCustomerOrganizationQty(subscription); err != nil {
 		return err
 	} else {
-		org.SubscriptionCustomerOrganizationQty = &qty
+		org.SubscriptionCustomerOrganizationQty = qty
 	}
 
 	if qty, err := billing.GetUserAccountQty(subscription); err != nil {
 		return err
 	} else {
-		org.SubscriptionUserAccountQty = &qty
+		org.SubscriptionUserAccountQty = qty
 	}
 
 	if org.SubscriptionType == types.SubscriptionTypeStarter {
@@ -161,8 +161,8 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 		zap.Stringer("organizationId", org.ID),
 		zap.String("subscriptionType", string(org.SubscriptionType)),
 		zap.Time("subscriptionEndsAt", org.SubscriptionEndsAt),
-		zap.Int64p("userAccountQty", org.SubscriptionUserAccountQty),
-		zap.Int64p("customerOrganizationQty", org.SubscriptionCustomerOrganizationQty))
+		zap.Int64("userAccountQty", org.SubscriptionUserAccountQty),
+		zap.Int64("customerOrganizationQty", org.SubscriptionCustomerOrganizationQty))
 
 	if err := db.UpdateOrganization(ctx, org); err != nil {
 		return err

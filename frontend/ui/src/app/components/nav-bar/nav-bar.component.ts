@@ -180,12 +180,7 @@ export class NavBarComponent implements OnInit {
     this.createOrgForm.markAllAsTouched();
     if (this.createOrgForm.valid) {
       try {
-        const created = await lastValueFrom(
-          this.organizationService.create({
-            name: this.createOrgForm.value.name!,
-            features: [],
-          })
-        );
+        const created = await lastValueFrom(this.organizationService.create(this.createOrgForm.value.name!));
         await this.switchContext(created, '/dashboard?from=new-org');
       } catch (e) {
         const msg = getFormDisplayedError(e);
