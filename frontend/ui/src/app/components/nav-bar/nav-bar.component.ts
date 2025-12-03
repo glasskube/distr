@@ -1,5 +1,5 @@
 import {OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe, TitleCasePipe} from '@angular/common';
+import {AsyncPipe, TitleCasePipe} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
@@ -14,9 +14,7 @@ import {
   faChevronDown,
   faChevronUp,
   faCircleExclamation,
-  faCircleInfo,
   faClipboard,
-  faExclamationTriangle,
   faLightbulb,
   faPlus,
   faShuffle,
@@ -39,6 +37,7 @@ import {ToastService} from '../../services/toast.service';
 import {UsersService} from '../../services/users.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
+import {NavBarSubscriptionBannerComponent} from './nav-bar-subscription-banner/nav-bar-subscription-banner.component';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -52,12 +51,12 @@ type SwitchOptions = {
   templateUrl: './nav-bar.component.html',
   imports: [
     ColorSchemeSwitcherComponent,
+    NavBarSubscriptionBannerComponent,
     OverlayModule,
     FaIconComponent,
     RouterLink,
     SecureImagePipe,
     AsyncPipe,
-    DatePipe,
     TitleCasePipe,
     AutotrimDirective,
     ReactiveFormsModule,
@@ -213,8 +212,6 @@ export class NavBarComponent implements OnInit {
   protected readonly faChevronUp = faChevronUp;
   protected readonly faPlus = faPlus;
   protected readonly faCircleExclamation = faCircleExclamation;
-  protected readonly faCircleInfo = faCircleInfo;
   protected readonly faXmark = faXmark;
   protected readonly faClipboard = faClipboard;
-  protected readonly faExclamationTriangle = faExclamationTriangle;
 }
