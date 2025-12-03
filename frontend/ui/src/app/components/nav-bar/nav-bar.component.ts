@@ -39,6 +39,7 @@ import {Organization, OrganizationWithUserRole} from '../../types/organization';
 import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {NavBarSubscriptionBannerComponent} from './nav-bar-subscription-banner/nav-bar-subscription-banner.component';
 
+
 type SwitchOptions = {
   currentOrg: Organization;
   availableOrgs: OrganizationWithUserRole[];
