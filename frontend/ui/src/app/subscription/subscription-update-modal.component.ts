@@ -13,6 +13,7 @@ export interface PendingSubscriptionUpdate {
   customerOrganizationQuantity: number;
   newPrice: number;
   oldPrice: number;
+  billingPeriodSuffix: string;
 }
 
 @Component({
@@ -46,7 +47,6 @@ export class SubscriptionUpdateModalComponent {
       const updatedInfo = await this.subscriptionService.updateSubscription(body);
       this.toast.success('Subscription updated successfully');
       this.confirmed.emit(updatedInfo);
-      this.close();
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg) {

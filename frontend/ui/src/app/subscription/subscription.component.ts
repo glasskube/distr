@@ -131,12 +131,17 @@ export class SubscriptionComponent implements OnInit {
       const oldPrice = this.calculateCurrentPrice();
       const newPrice = this.getPreviewPrice();
 
+      // Determine billing period suffix based on subscription billing mode
+      const billingMode = info.subscriptionBillingMode || 'monthly';
+      const billingPeriodSuffix = billingMode === 'monthly' ? 'month' : 'year';
+
       // Set pending update and show confirmation modal
       this.pendingUpdate.set({
         userAccountQuantity: this.form.value.userAccountQuantity!,
         customerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
         newPrice,
         oldPrice,
+        billingPeriodSuffix,
       });
 
       this.hideModal();
@@ -159,24 +164,28 @@ export class SubscriptionComponent implements OnInit {
 
   private calculateCurrentPrice(): number {
     const info = this.subscriptionInfo();
-    if (!info || !info.subscriptionUserAccountQuantity || !info.subscriptionCustomerOrganizationQuantity) {
+    if (
+      !info ||
+      info.subscriptionUserAccountQuantity == null ||
+      info.subscriptionCustomerOrganizationQuantity == null
+    ) {
       return 0;
     }
 
     const subscriptionType = info.subscriptionType;
+    const billingMode = info.subscriptionBillingMode || 'monthly';
     const userQty = info.subscriptionUserAccountQuantity;
     const customerQty = info.subscriptionCustomerOrganizationQuantity;
 
     let userPrice = 0;
     let customerPrice = 0;
 
-    // Assume monthly billing for current price (adjust if you have billing mode info)
     if (subscriptionType === 'starter') {
-      userPrice = 19;
-      customerPrice = 29;
+      userPrice = billingMode === 'monthly' ? 19 : 192;
+      customerPrice = billingMode === 'monthly' ? 29 : 288;
     } else if (subscriptionType === 'pro') {
-      userPrice = 29;
-      customerPrice = 69;
+      userPrice = billingMode === 'monthly' ? 29 : 288;
+      customerPrice = billingMode === 'monthly' ? 69 : 672;
     }
 
     return userPrice * userQty + customerPrice * customerQty;

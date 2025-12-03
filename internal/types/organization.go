@@ -23,6 +23,7 @@ type Organization struct {
 	SubscriptionEndsAt                  time.Time        `db:"subscription_ends_at" json:"subscriptionEndsAt"`
 	StripeCustomerID                    *string          `db:"stripe_customer_id" json:"stripeCustomerId"`
 	StripeSubscriptionID                *string          `db:"stripe_subscription_id" json:"stripeSubscriptionId"`
+	SubscriptionBillingMode             *string          `db:"subscription_billing_mode" json:"subscriptionBillingMode"`
 	SubscriptionCustomerOrganizationQty *int64           `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
 	SubscriptionUserAccountQty          *int64           `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
 }

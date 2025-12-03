@@ -21,6 +21,7 @@ type SubscriptionInfo struct {
 	SubscriptionType                       types.SubscriptionType `json:"subscriptionType"`
 	SubscriptionEndsAt                     time.Time              `json:"subscriptionEndsAt"`
 	SubscriptionExternalID                 *string                `json:"subscriptionExternalId"`
+	SubscriptionBillingMode                *string                `json:"subscriptionBillingMode"`
 	SubscriptionCustomerOrganizationQty    *int64                 `json:"subscriptionCustomerOrganizationQuantity"`
 	SubscriptionUserAccountQty             *int64                 `json:"subscriptionUserAccountQuantity"`
 	CurrentUserAccountCount                int64                  `json:"currentUserAccountCount"`

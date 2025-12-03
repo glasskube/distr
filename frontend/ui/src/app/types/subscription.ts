@@ -10,6 +10,7 @@ export interface SubscriptionInfo {
   subscriptionType: SubscriptionType;
   subscriptionEndsAt: string;
   subscriptionExternalId?: string;
+  subscriptionBillingMode?: 'monthly' | 'yearly';
   subscriptionCustomerOrganizationQuantity?: number;
   subscriptionUserAccountQuantity?: number;
   currentUserAccountCount: number;

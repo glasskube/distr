@@ -274,6 +274,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt,
 		SubscriptionExternalID:                 org.StripeSubscriptionID,
+		SubscriptionBillingMode:                org.SubscriptionBillingMode,
 		SubscriptionCustomerOrganizationQty:    org.SubscriptionCustomerOrganizationQty,
 		SubscriptionUserAccountQty:             org.SubscriptionUserAccountQty,
 		CurrentUserAccountCount:                usage.userAccountCount,
