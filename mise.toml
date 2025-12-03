@@ -8,9 +8,9 @@ pnpm = "10.24.0"
 stripe = "1.33.0"
 
 [env]
+_.source = ['hack/current-commit.sh']
 DISTR_ENV = '.env.development.local'
-VERSION = "snapshot"
-COMMIT = "TODO"
+VERSION = 'snapshot'
 CGO_ENABLED = "0"
 
 [vars]

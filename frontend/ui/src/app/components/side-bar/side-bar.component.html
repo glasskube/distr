@@ -392,10 +392,15 @@
       </div>
     }
 
-    <div class="text-center text-xs text-gray-300 dark:text-gray-600">
-      {{ buildConfig.version }}
-      (<code>{{ buildConfig.commit }}</code
-      >)
+    <div class="flex flex-col items-center text-xs">
+      @if (edition === 'community') {
+        <div class="text-gray-500 dark:text-gray-400">Community Edition</div>
+      }
+      <div class="text-gray-300 dark:text-gray-600">
+        {{ buildConfig.version }}
+        (<code>{{ buildConfig.commit }}</code
+        >)
+      </div>
     </div>
   </div>
 </aside>
