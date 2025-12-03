@@ -1,6 +1,6 @@
 import {BaseModel} from './base';
 
-export type UserRole = 'vendor' | 'customer';
+export type UserRole = 'read_only' | 'read_write' | 'admin';
 
 export interface UserAccount extends BaseModel {
   email: string;

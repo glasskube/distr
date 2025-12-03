@@ -3,7 +3,7 @@ import {inject, Injectable} from '@angular/core';
 import {
   CreateUpdateCustomerOrganizationRequest,
   CustomerOrganization,
-  CustomerOrganizationWithUserCount,
+  CustomerOrganizationWithUsage,
 } from '@glasskube/distr-sdk';
 import {Observable} from 'rxjs';
 
@@ -15,8 +15,8 @@ const baseUrl = '/api/v1/customer-organizations';
 export class CustomerOrganizationsService {
   private readonly httpClient = inject(HttpClient);
 
-  public getCustomerOrganizations(): Observable<CustomerOrganizationWithUserCount[]> {
-    return this.httpClient.get<CustomerOrganizationWithUserCount[]>(baseUrl);
+  public getCustomerOrganizations(): Observable<CustomerOrganizationWithUsage[]> {
+    return this.httpClient.get<CustomerOrganizationWithUsage[]>(baseUrl);
   }
 
   public getCustomerOrganizationById(id: string): Observable<CustomerOrganization> {

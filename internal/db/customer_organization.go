@@ -22,6 +22,10 @@ const (
 		co.image_id,
 		co.name
 	`
+	customerOrganizationWithUsageOutputExpr = customerOrganizationOutputExpr + `,
+		count(oua.user_account_id) as user_count,
+    	count(dt.id) as deployment_target_count
+	`
 )
 
 func CreateCustomerOrganization(ctx context.Context, customerOrg *types.CustomerOrganization) error {
@@ -50,17 +54,25 @@ func CreateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 func GetCustomerOrganizationByID(
 	ctx context.Context,
 	id uuid.UUID,
-) (*types.CustomerOrganization, error) {
+) (*types.CustomerOrganizationWithUsage, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+customerOrganizationOutputExpr+
-			" FROM CustomerOrganization co WHERE co.id = @id ORDER BY co.name",
+		fmt.Sprintf(
+			`SELECT %v
+			FROM CustomerOrganization co
+			LEFT JOIN Organization_UserAccount oua ON co.id = oua.customer_organization_id
+			LEFT JOIN DeploymentTarget dt ON co.id = dt.customer_organization_id
+			WHERE co.id = @id
+			GROUP BY %v
+			ORDER BY co.name`,
+			customerOrganizationWithUsageOutputExpr, customerOrganizationOutputExpr,
+		),
 		pgx.NamedArgs{"id": id},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query CustomerOrganization: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.CustomerOrganization])
+	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.CustomerOrganizationWithUsage])
 	if err != nil {
 		return nil, fmt.Errorf("could not collect CustomerOrganization: %w", err)
 	}
@@ -70,28 +82,45 @@ func GetCustomerOrganizationByID(
 func GetCustomerOrganizationsByOrganizationID(
 	ctx context.Context,
 	orgID uuid.UUID,
-) ([]types.CustomerOrganizationWithUserCount, error) {
+) ([]types.CustomerOrganizationWithUsage, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		fmt.Sprintf(
-			`SELECT %v, count(oua.user_account_id) as user_count
+			`SELECT %v
 			FROM CustomerOrganization co
 			LEFT JOIN Organization_UserAccount oua ON co.id = oua.customer_organization_id
+			LEFT JOIN DeploymentTarget dt ON co.id = dt.customer_organization_id
 			WHERE co.organization_id = @orgId
 			GROUP BY %v
 			ORDER BY co.name`,
-			customerOrganizationOutputExpr, customerOrganizationOutputExpr,
+			customerOrganizationWithUsageOutputExpr, customerOrganizationOutputExpr,
 		),
 		pgx.NamedArgs{"orgId": orgID},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not query CustomerOrganization: %w", err)
 	}
-	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.CustomerOrganizationWithUserCount])
+	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.CustomerOrganizationWithUsage])
 	if err != nil {
 		return nil, fmt.Errorf("could not collect CustomerOrganization: %w", err)
 	}
 	return result, nil
+}
+
+func CountCustomerOrganizationsByOrganizationID(ctx context.Context, organizationID uuid.UUID) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT count(*) FROM CustomerOrganization WHERE organization_id = @organizationId",
+		pgx.NamedArgs{"organizationId": organizationID},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("could not query CustomerOrganization: %w", err)
+	}
+	if count, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[int64]); err != nil {
+		return 0, fmt.Errorf("could not count CustomerOrganizations: %w", err)
+	} else {
+		return count, nil
+	}
 }
 
 func UpdateCustomerOrganization(ctx context.Context, customerOrg *types.CustomerOrganization) error {

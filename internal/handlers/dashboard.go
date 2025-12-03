@@ -19,7 +19,7 @@ import (
 )
 
 func DashboardRouter(r chi.Router) {
-	r.With(requireUserRoleVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/artifacts-by-customer", getArtifactsByCustomer)
 	})
 }

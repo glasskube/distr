@@ -2,9 +2,9 @@
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / CustomerOrganizationWithUserCount
+[@glasskube/distr-sdk](../README.md) / CustomerOrganizationWithUsage
 
-# Interface: CustomerOrganizationWithUserCount
+# Interface: CustomerOrganizationWithUsage
 
 ## Extends
 
@@ -19,6 +19,12 @@
 #### Inherited from
 
 [`BaseModel`](BaseModel.md).[`createdAt`](BaseModel.md#createdat)
+
+---
+
+### deploymentTargetCount
+
+> **deploymentTargetCount**: `number`
 
 ---
 

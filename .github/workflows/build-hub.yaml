@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - run: hack/validate-migrations.sh
 
   build:
@@ -42,9 +42,21 @@ jobs:
       contents: read
       id-token: write
       packages: write
+    strategy:
+      matrix:
+        edition:
+          - name: community
+            suffix: '-ce'
+            images: |
+              ghcr.io/glasskube/distr-ce
+          - name: enterprise
+            suffix: -ee
+            images: |
+              ghcr.io/glasskube/distr-ee
+              registry.distr.sh/glasskube/distr-ee
     steps:
       - name: Checkout
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Setup Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
@@ -78,24 +90,25 @@ jobs:
 
       - name: Build frontend
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: pnpm run build:prod
+        run: pnpm run build:${{ matrix.edition.name }}
       - name: Build frontend and upload source maps (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
-          pnpm run build:prod --source-map=true || exit 1
+          pnpm run build:${{ matrix.edition.name }} --source-map=true || exit 1
           pnpm run sentry-upload || exit 1
           rm internal/frontend/dist/ui/browser/*.map || exit 1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ github.ref_name }}${{ matrix.edition.suffix }}
 
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
           CGO_ENABLED: '0'
           LDFLAGS: >-
-            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
+            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}${{ matrix.edition.suffix }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+            -X github.com/glasskube/distr/internal/buildconfig.edition=${{ matrix.edition.name }}
 
       - name: Start Hub and verify migrations
         shell: bash
@@ -115,6 +128,7 @@ jobs:
         with:
           file: pnpm-lock.yaml
           output-file: dist/frontend.spdx.json
+          artifact-name: frontend${{ matrix.edition.suffix }}.spdx.json
           format: spdx-json
           upload-release-assets: false
 
@@ -138,9 +152,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
-          images: |
-            ghcr.io/glasskube/distr
-            registry.distr.sh/glasskube/distr
+          images: ${{ matrix.edition.images }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

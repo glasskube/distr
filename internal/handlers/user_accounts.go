@@ -19,6 +19,7 @@ import (
 	"github.com/glasskube/distr/internal/mailsending"
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -28,9 +29,10 @@ import (
 func UserAccountsRouter(r chi.Router) {
 	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
 		r.Get("/", getUserAccountsHandler)
-		r.Post("/", createUserAccountHandler)
-		r.Route("/{userId}", func(r chi.Router) {
+		r.With(middleware.RequireReadWriteOrAdmin).Post("/", createUserAccountHandler)
+		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
+			r.Patch("/", patchUserAccountHandler())
 			r.Delete("/", deleteUserAccountHandler)
 			r.Patch("/image", patchImageUserAccount)
 			r.With(inviteUserRateLimiter).
@@ -91,21 +93,18 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	userHasExisted := false
 
 	if customerOrgID := auth.CurrentCustomerOrgID(); customerOrgID != nil {
-		if body.UserRole == types.UserRoleVendor {
-			http.Error(w, "insufficient permissions", http.StatusForbidden)
+		if *auth.CurrentUserRole() != types.UserRoleAdmin {
+			http.Error(w, "must be admin to create users", http.StatusForbidden)
 			return
 		}
+
 		body.CustomerOrganizationID = customerOrgID
-	}
-
-	if body.UserRole == types.UserRoleVendor && body.CustomerOrganizationID != nil {
-		http.Error(w, "customer organization not applicable for vendor user", http.StatusBadRequest)
-		return
-	} else if body.UserRole == types.UserRoleCustomer && body.CustomerOrganizationID == nil {
-		http.Error(w, "customer organization is required for customer user", http.StatusBadRequest)
+	} else if *auth.CurrentUserRole() != types.UserRoleAdmin && body.CustomerOrganizationID == nil {
+		http.Error(w, "user must be admin to create non-customer users", http.StatusForbidden)
 		return
 	}
 
+	var customerOrganization *types.CustomerOrganizationWithUsage
 	if body.CustomerOrganizationID != nil {
 		if co, err := db.GetCustomerOrganizationByID(
 			ctx,
@@ -118,6 +117,8 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		} else {
+			customerOrganization = co
 		}
 	}
 
@@ -129,6 +130,34 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		} else {
 			organization = *result
+		}
+
+		var limitReached bool
+		if customerOrganization != nil {
+			limitReached, err = subscription.IsCustomerUserAccountLimitReached(
+				organization.Organization,
+				*customerOrganization,
+			)
+			if err != nil {
+				err = fmt.Errorf("failed to check customer user account limit: %w", err)
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			}
+		} else {
+			limitReached, err = subscription.IsVendorUserAccountLimitReached(ctx, organization.Organization)
+			if err != nil {
+				err = fmt.Errorf("failed to check vendor user account limit: %w", err)
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			}
+		}
+
+		if limitReached {
+			err = errors.New("user limit reached")
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return err
 		}
 
 		if existingUA, err := db.GetUserAccountByEmail(ctx, body.Email); errors.Is(err, apierrors.ErrNotFound) {
@@ -176,7 +205,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			ctx,
 			userAccount,
 			organization,
-			body.UserRole,
+			body.CustomerOrganizationID,
 			inviteURL,
 		); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -194,6 +223,62 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		User:      userAccount.AsUserAccountWithRole(body.UserRole, body.CustomerOrganizationID, time.Now()),
 		InviteURL: inviteURL,
 	})
+}
+
+func patchUserAccountHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		auth := auth.Authentication.Require(ctx)
+		userAccount := internalctx.GetUserAccount(ctx)
+
+		if *auth.CurrentUserRole() != types.UserRoleAdmin {
+			if auth.CurrentCustomerOrgID() != nil {
+				http.Error(w, "admin role needed to patch user", http.StatusForbidden)
+				return
+			}
+
+			if userAccount.CustomerOrganizationID == nil {
+				http.Error(w, "admin role needed to patch non-customer user", http.StatusForbidden)
+				return
+			}
+		}
+
+		body, err := JsonBody[struct {
+			UserRole *types.UserRole `json:"userRole"`
+		}](w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if body.UserRole != nil && *body.UserRole != userAccount.UserRole {
+			if userAccount.ID == auth.CurrentUserID() {
+				http.Error(w, "users cannot change their own role", http.StatusForbidden)
+				return
+			}
+			err = db.UpdateUserAccountOrganizationAssignment(
+				ctx,
+				userAccount.ID,
+				*auth.CurrentOrgID(),
+				*body.UserRole,
+				userAccount.CustomerOrganizationID,
+			)
+			if errors.Is(err, apierrors.ErrNotFound) {
+				http.NotFound(w, r)
+				return
+			} else if err != nil {
+				log.Info("user update failed", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				userAccount.UserRole = *body.UserRole
+			}
+		}
+
+		RespondJSON(w, mapping.UserAccountToAPI(*userAccount))
+	}
 }
 
 func resendUserInviteHandler() http.HandlerFunc {
@@ -240,7 +325,7 @@ func resendUserInviteHandler() http.HandlerFunc {
 			ctx,
 			userAccount.AsUserAccount(),
 			*organization,
-			userAccount.UserRole,
+			userAccount.CustomerOrganizationID,
 			inviteURL,
 		); err != nil {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -257,6 +342,19 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	userAccount := internalctx.GetUserAccount(ctx)
 	auth := auth.Authentication.Require(ctx)
+
+	if *auth.CurrentUserRole() != types.UserRoleAdmin {
+		if auth.CurrentCustomerOrgID() != nil {
+			http.Error(w, "admin role needed to delete user", http.StatusForbidden)
+			return
+		}
+
+		if userAccount.CustomerOrganizationID == nil {
+			http.Error(w, "admin role needed to delete non-customer user", http.StatusForbidden)
+			return
+		}
+	}
+
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.RunTx(ctx, func(ctx context.Context) error {

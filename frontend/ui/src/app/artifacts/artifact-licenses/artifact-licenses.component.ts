@@ -1,82 +1,67 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, inject, OnDestroy, OnInit, TemplateRef} from '@angular/core';
+import {Component, inject, TemplateRef} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
-  faBox,
   faCircleExclamation,
-  faDownload,
   faMagnifyingGlass,
   faPen,
   faPlus,
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  catchError,
-  combineLatest,
-  debounceTime,
-  EMPTY,
-  filter,
-  first,
-  firstValueFrom,
-  map,
-  Observable,
-  shareReplay,
-  startWith,
-  Subject,
-  switchMap,
-  takeUntil,
-} from 'rxjs';
+import {catchError, EMPTY, filter, firstValueFrom, map, Observable, shareReplay, switchMap} from 'rxjs';
+import {isExpired} from '../../../util/dates';
+import {getFormDisplayedError} from '../../../util/errors';
+import {filteredByFormControl} from '../../../util/filter';
+import {drawerFlyInOut} from '../../animations/drawer';
+import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
 import {UuidComponent} from '../../components/uuid';
 import {
   ArtifactLicense,
   ArtifactLicenseSelection,
   ArtifactLicensesService,
 } from '../../services/artifact-licenses.service';
-import {filteredByFormControl} from '../../../util/filter';
-import {ApplicationsService} from '../../services/applications.service';
+import {ArtifactsService} from '../../services/artifacts.service';
+import {AuthService} from '../../services/auth.service';
+import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
-import {getFormDisplayedError} from '../../../util/errors';
-import {isExpired} from '../../../util/dates';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
-import {EditLicenseComponent} from '../../licenses/edit-license.component';
-import {dropdownAnimation} from '../../animations/dropdown';
-import {drawerFlyInOut} from '../../animations/drawer';
-import {modalFlyInOut} from '../../animations/modal';
 import {EditArtifactLicenseComponent} from './edit-artifact-license.component';
-import {UsersService} from '../../services/users.service';
-import {ArtifactsService} from '../../services/artifacts.service';
-import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 
 @Component({
   selector: 'app-artifact-licenses',
-  imports: [
-    ReactiveFormsModule,
-    AsyncPipe,
-    FaIconComponent,
-    UuidComponent,
-    DatePipe,
-    RequireRoleDirective,
-    EditArtifactLicenseComponent,
-  ],
+  imports: [ReactiveFormsModule, AsyncPipe, FaIconComponent, UuidComponent, DatePipe, EditArtifactLicenseComponent],
   templateUrl: './artifact-licenses.component.html',
   animations: [dropdownAnimation, drawerFlyInOut, modalFlyInOut],
 })
-export class ArtifactLicensesComponent implements OnDestroy {
-  private readonly destroyed$ = new Subject<void>();
+export class ArtifactLicensesComponent {
+  protected readonly auth = inject(AuthService);
   private readonly artifactLicensesService = inject(ArtifactLicensesService);
+  private readonly overlay = inject(OverlayService);
+  private readonly toast = inject(ToastService);
+  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
+  private readonly artifactsService = inject(ArtifactsService);
+
+  protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faPen = faPen;
+  protected readonly faPlus = faPlus;
+  protected readonly faTrash = faTrash;
+  protected readonly faXmark = faXmark;
+  protected readonly isExpired = isExpired;
 
   filterForm = new FormGroup({
     search: new FormControl(''),
   });
+
   licenses$: Observable<ArtifactLicense[]> = filteredByFormControl(
     this.artifactLicensesService.list(),
     this.filterForm.controls.search,
     (it: ArtifactLicense, search: string) => !search || (it.name || '').toLowerCase().includes(search.toLowerCase())
-  ).pipe(takeUntil(this.destroyed$));
+  ).pipe(takeUntilDestroyed());
 
   editForm = new FormGroup({
     license: new FormControl<ArtifactLicense | undefined>(undefined, {
@@ -87,15 +72,10 @@ export class ArtifactLicensesComponent implements OnDestroy {
   editFormLoading = false;
 
   private manageLicenseDrawerRef?: DialogRef;
-  protected readonly faMagnifyingGlass = faMagnifyingGlass;
 
-  private readonly overlay = inject(OverlayService);
-  private readonly toast = inject(ToastService);
-  private readonly customerOrganizationService = inject(CustomerOrganizationsService);
   private readonly customerOrganizations$ = this.customerOrganizationService
     .getCustomerOrganizations()
     .pipe(shareReplay(1));
-  private readonly artifactsService = inject(ArtifactsService);
   private readonly artifacts$ = this.artifactsService.list();
 
   openDrawer(templateRef: TemplateRef<unknown>, license?: ArtifactLicense) {
@@ -155,11 +135,6 @@ export class ArtifactLicensesComponent implements OnDestroy {
       .subscribe();
   }
 
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
-  }
-
   getArtifactColumn(selection?: ArtifactLicenseSelection[]): Observable<string | undefined> {
     return selection?.[0]?.artifactId
       ? this.artifacts$.pipe(
@@ -174,11 +149,4 @@ export class ArtifactLicensesComponent implements OnDestroy {
       ? this.customerOrganizations$.pipe(map((users) => users.find((u) => u.id === customerOrganizationId)?.name))
       : EMPTY;
   }
-
-  protected readonly faPlus = faPlus;
-  protected readonly isExpired = isExpired;
-  protected readonly faPen = faPen;
-  protected readonly faTrash = faTrash;
-  protected readonly faXmark = faXmark;
-  protected readonly faCircleExclamation = faCircleExclamation;
 }

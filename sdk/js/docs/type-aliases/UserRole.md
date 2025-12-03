@@ -6,4 +6,4 @@
 
 # Type Alias: UserRole
 
-> **UserRole** = `"vendor"` \| `"customer"`
+> **UserRole** = `"read_only"` \| `"read_write"` \| `"admin"`

@@ -12,6 +12,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/chi/v5"
@@ -22,9 +23,8 @@ import (
 func OrganizationRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganization)
-	r.Group(func(r chi.Router) {
-		r.Use(requireUserRoleVendor)
-		r.Put("/", updateOrganization)
+	r.With(middleware.RequireVendor).Group(func(r chi.Router) {
+		r.With(middleware.RequireAdmin).Put("/", updateOrganization)
 		r.Post("/", createOrganization)
 	})
 	r.Route("/branding", OrganizationBrandingRouter)
@@ -38,7 +38,7 @@ func OrganizationsRouter(r chi.Router) {
 func getOrganization(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	auth := auth.Authentication.Require(ctx)
-	RespondJSON(w, auth.CurrentOrg())
+	RespondJSON(w, mapping.OrganizationToAPI(*auth.CurrentOrg()))
 }
 
 func updateOrganization(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +95,7 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		if err := db.CreateUserAccountOrganizationAssignment(
-			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleVendor, nil); err != nil {
+			ctx, auth.CurrentUserID(), organization.ID, types.UserRoleAdmin, nil); err != nil {
 			return err
 		}
 		return nil
@@ -110,7 +110,7 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 	} else {
 		RespondJSON(w, types.OrganizationWithUserRole{
 			Organization: organization,
-			UserRole:     types.UserRoleVendor,
+			UserRole:     types.UserRoleAdmin,
 			JoinedOrgAt:  time.Now(),
 		})
 	}

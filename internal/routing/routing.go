@@ -58,6 +58,7 @@ func ApiRouter(
 			// public routes go here
 			r.Group(func(r chi.Router) {
 				r.Route("/auth", handlers.AuthRouter)
+				r.Route("/webhook", handlers.WebhookRouter)
 			})
 
 			// authenticated routes go here
@@ -79,6 +80,7 @@ func ApiRouter(
 				r.Route("/artifact-licenses", handlers.ArtifactLicensesRouter)
 				r.Route("/artifact-pulls", handlers.ArtifactPullsRouter)
 				r.Route("/artifacts", handlers.ArtifactsRouter)
+				r.Route("/billing", handlers.BillingRouter)
 				r.Route("/context", handlers.ContextRouter)
 				r.Route("/customer-organizations", handlers.CustomerOrganizationsRouter)
 				r.Route("/dashboard", handlers.DashboardRouter)

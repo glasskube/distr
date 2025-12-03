@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,7 +20,9 @@ import (
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
+	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -28,13 +31,15 @@ import (
 func DeploymentTargetsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getDeploymentTargets)
-	r.Post("/", createDeploymentTarget)
+	r.With(middleware.RequireReadWriteOrAdmin).Post("/", createDeploymentTarget)
 	r.Route("/{deploymentTargetId}", func(r chi.Router) {
 		r.Use(deploymentTargetMiddleware)
 		r.Get("/", getDeploymentTarget)
-		r.Put("/", updateDeploymentTarget)
-		r.Delete("/", deleteDeploymentTarget)
-		r.Post("/access-request", createAccessForDeploymentTarget)
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+			r.Put("/", updateDeploymentTarget)
+			r.Delete("/", deleteDeploymentTarget)
+			r.Post("/access-request", createAccessForDeploymentTarget)
+		})
 	})
 }
 
@@ -74,16 +79,40 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
-		if err = db.CreateDeploymentTarget(
-			ctx,
-			&dt,
-			*auth.CurrentOrgID(),
-			auth.CurrentUserID(),
-			auth.CurrentCustomerOrgID(),
-		); err != nil {
-			log.Warn("could not create DeploymentTarget", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
+		err = db.RunTx(ctx, func(ctx context.Context) error {
+			limitReached, err := subscription.IsDeploymentTargetLimitReached(
+				ctx, *auth.CurrentOrg(),
+				auth.CurrentCustomerOrgID())
+			if err != nil {
+				log.Warn("could not check deployment target limit", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			} else if limitReached {
+				err = errors.New("deployment target limit reached")
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return err
+			}
+
+			if err = db.CreateDeploymentTarget(
+				ctx,
+				&dt,
+				*auth.CurrentOrgID(),
+				auth.CurrentUserID(),
+				auth.CurrentCustomerOrgID(),
+			); err != nil {
+				log.Warn("could not create DeploymentTarget", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		} else {
 			RespondJSON(w, dt)
 		}
@@ -131,14 +160,7 @@ func deleteDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 	if dt.OrganizationID != *auth.CurrentOrgID() {
 		http.NotFound(w, r)
-	} else if currentUser, err := db.GetUserAccountWithRole(
-		ctx,
-		auth.CurrentUserID(),
-		*auth.CurrentOrgID(),
-		auth.CurrentCustomerOrgID(),
-	); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else if currentUser.UserRole != types.UserRoleVendor && dt.CreatedByUserAccountID != currentUser.ID {
+	} else if !isDeploymentTargetVisible(auth, dt.DeploymentTarget) {
 		http.Error(w, "must be vendor or creator", http.StatusForbidden)
 	} else if err := db.DeleteDeploymentTargetWithID(ctx, dt.ID); err != nil {
 		log.Warn("error deleting deployment target", zap.Error(err))
@@ -243,9 +265,5 @@ func deploymentTargetMiddleware(wh http.Handler) http.Handler {
 }
 
 func isDeploymentTargetVisible(auth authinfo.AuthInfo, target types.DeploymentTarget) bool {
-	if *auth.CurrentUserRole() == types.UserRoleCustomer {
-		return target.CustomerOrganizationID != nil && *target.CustomerOrganizationID == *auth.CurrentCustomerOrgID()
-	}
-
-	return true
+	return auth.CurrentCustomerOrgID() == nil || util.PtrEq(auth.CurrentCustomerOrgID(), target.CustomerOrganizationID)
 }
