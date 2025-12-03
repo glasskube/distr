@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/glasskube/distr/internal/util"
-	"github.com/stripe/stripe-go/v83"
-	"github.com/stripe/stripe-go/v83/billingportal/session"
+	"github.com/stripe/stripe-go/v84"
+	"github.com/stripe/stripe-go/v84/billingportal/session"
 )
 
 type BillingPortalSessionParams struct {
