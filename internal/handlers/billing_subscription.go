@@ -159,8 +159,8 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		customerOrgQty, err := billing.GetCustomerOrganizationQty(*updatedSub)
 		if err != nil {
-			log.Error("failed to get customer organization quantity from updated subscription", zap.Error(err))
-			http.Error(w, "failed to get customer organization quantity", http.StatusInternalServerError)
+			log.Error("failed to get customer quantity from updated subscription", zap.Error(err))
+			http.Error(w, "failed to get customer quantity", http.StatusInternalServerError)
 			return err
 		}
 
@@ -212,7 +212,7 @@ func validateSubscriptionQuantities(
 	// Validate that requested quantities meet current usage minimums
 	if customerOrgQty < usage.customerOrganizationCount {
 		return fmt.Errorf(
-			"customer organization quantity (%d) cannot be less than current count (%d)",
+			"customer quantity (%d) cannot be less than current count (%d)",
 			customerOrgQty,
 			usage.customerOrganizationCount,
 		)
@@ -230,7 +230,7 @@ func validateSubscriptionQuantities(
 	customerOrgLimit := subscription.GetCustomersPerOrganizationLimit(subscriptionType)
 	if customerOrgLimit.IsExceeded(customerOrgQty) {
 		return fmt.Errorf(
-			"subscription type %v can have at most %v customer organizations, but %v were requested",
+			"subscription type %v can have at most %v customers, but %v were requested",
 			subscriptionType,
 			customerOrgLimit,
 			customerOrgQty,
@@ -241,7 +241,7 @@ func validateSubscriptionQuantities(
 	usersPerCustomerLimit := subscription.GetUsersPerCustomerOrganizationLimit(subscriptionType)
 	if usersPerCustomerLimit.IsExceeded(usage.maxUsersPerCustomer) {
 		return fmt.Errorf(
-			"subscription type %v allows at most %v users per customer organization, "+
+			"subscription type %v allows at most %v users per customer, "+
 				"but you currently have a customer with %v users",
 			subscriptionType,
 			usersPerCustomerLimit,
@@ -253,7 +253,7 @@ func validateSubscriptionQuantities(
 	deploymentsPerCustomerLimit := subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(subscriptionType)
 	if deploymentsPerCustomerLimit.IsExceeded(usage.maxDeploymentTargetsPerCustomer) {
 		return fmt.Errorf(
-			"subscription type %v allows at most %v deployment targets per customer organization, "+
+			"subscription type %v allows at most %v deployment targets per customer, "+
 				"but you currently have a customer with %v deployment targets",
 			subscriptionType,
 			deploymentsPerCustomerLimit,
@@ -316,7 +316,7 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 	// Get current customer organization count
 	customerOrgs, err := db.GetCustomerOrganizationsByOrganizationID(ctx, orgID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get customer organizations: %w", err)
+		return nil, fmt.Errorf("failed to get customers: %w", err)
 	}
 
 	// Find the maximum user count and deployment target count across all customer organizations

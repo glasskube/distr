@@ -14,7 +14,7 @@
               <input
                 type="text"
                 id="simple-search"
-                placeholder="Filter customer organizations"
+                placeholder="Filter customers"
                 [formControl]="filterForm.controls.search"
                 autotrim
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
@@ -134,9 +134,9 @@
     <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
         @if (createForm.value.id) {
-          Update Customer Organization
+          Update Customer
         } @else {
-          New Customer Organization
+          New Customer
         }
       </h2>
       <button
