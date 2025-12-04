@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject, OnInit, signal, TemplateRef, ViewChild} from '@angular/core';
+import {Component, computed, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -33,7 +33,7 @@ export class SubscriptionComponent implements OnInit {
 
   private modal?: DialogRef;
 
-  @ViewChild('updateModal') protected readonly updateModal!: TemplateRef<unknown>;
+  protected readonly updateModal = viewChild.required<TemplateRef<unknown>>('updateModal');
 
   protected readonly form = this.fb.group({
     subscriptionType: this.fb.control<SubscriptionType>('pro', [Validators.required]),
@@ -162,7 +162,7 @@ export class SubscriptionComponent implements OnInit {
       });
 
       this.hideModal();
-      this.modal = this.overlay.showModal(this.updateModal, {
+      this.modal = this.overlay.showModal(this.updateModal(), {
         hasBackdrop: true,
         backdropStyleOnly: true,
         positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),

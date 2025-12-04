@@ -14,7 +14,7 @@
     </button>
   </div>
   <!-- Modal body -->
-  @if (pendingUpdate) {
+  @if (pendingUpdate(); as subscriptionUpdate) {
     <div class="p-4 md:p-5 space-y-4">
       <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
         You are about to update your subscription quantities:
@@ -22,12 +22,12 @@
       <div class="space-y-2 pb-4 border-b border-dashed border-gray-300 dark:border-gray-600">
         <div class="flex justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Internal Users:</span>
-          <span class="font-semibold text-gray-900 dark:text-white">{{ pendingUpdate.userAccountQuantity }}</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{ subscriptionUpdate.userAccountQuantity }}</span>
         </div>
         <div class="flex justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Customer Organizations:</span>
           <span class="font-semibold text-gray-900 dark:text-white">
-            {{ pendingUpdate.customerOrganizationQuantity }}
+            {{ subscriptionUpdate.customerOrganizationQuantity }}
           </span>
         </div>
       </div>
@@ -35,26 +35,28 @@
         <div class="flex justify-between items-center mb-2">
           <span class="text-sm text-gray-700 dark:text-gray-300">Current Price:</span>
           <span class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ pendingUpdate.oldPrice | currency: 'USD' }} / {{ pendingUpdate.subscriptionPeriode.slice(0, -2) }}
+            {{ subscriptionUpdate.oldPrice | currency: 'USD' }} /
+            {{ subscriptionUpdate.subscriptionPeriode.slice(0, -2) }}
           </span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-sm text-gray-700 dark:text-gray-300">New Price:</span>
           <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
-            {{ pendingUpdate.newPrice | currency: 'USD' }} / {{ pendingUpdate.subscriptionPeriode.slice(0, -2) }}
+            {{ subscriptionUpdate.newPrice | currency: 'USD' }} /
+            {{ subscriptionUpdate.subscriptionPeriode.slice(0, -2) }}
           </span>
         </div>
-        @if (pendingUpdate.newPrice !== pendingUpdate.oldPrice) {
+        @if (subscriptionUpdate.newPrice !== subscriptionUpdate.oldPrice) {
           <div class="mt-2 flex justify-end">
             <span
               class="text-sm font-medium"
-              [class.text-green-600]="pendingUpdate.newPrice < pendingUpdate.oldPrice"
-              [class.dark:text-green-400]="pendingUpdate.newPrice < pendingUpdate.oldPrice"
-              [class.text-red-600]="pendingUpdate.newPrice > pendingUpdate.oldPrice"
-              [class.dark:text-red-400]="pendingUpdate.newPrice > pendingUpdate.oldPrice">
-              {{ pendingUpdate.newPrice > pendingUpdate.oldPrice ? '+' : '' }}
-              {{ pendingUpdate.newPrice - pendingUpdate.oldPrice | currency: 'USD' }} /
-              {{ pendingUpdate.subscriptionPeriode.slice(0, -2) }}
+              [class.text-green-600]="subscriptionUpdate.newPrice < subscriptionUpdate.oldPrice"
+              [class.dark:text-green-400]="subscriptionUpdate.newPrice < subscriptionUpdate.oldPrice"
+              [class.text-red-600]="subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice"
+              [class.dark:text-red-400]="subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice">
+              {{ subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice ? '+' : '' }}
+              {{ subscriptionUpdate.newPrice - subscriptionUpdate.oldPrice | currency: 'USD' }} /
+              {{ subscriptionUpdate.subscriptionPeriode.slice(0, -2) }}
             </span>
           </div>
         }

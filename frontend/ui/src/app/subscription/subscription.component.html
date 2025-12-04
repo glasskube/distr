@@ -354,9 +354,11 @@
   </div>
 
   <ng-template #updateModal>
-    <app-subscription-update-modal
-      [pendingUpdate]="pendingUpdate()"
-      (closed)="hideModal()"
-      (confirmed)="onModalConfirmed($event)"></app-subscription-update-modal>
+    @if (pendingUpdate(); as update) {
+      <app-subscription-update-modal
+        [pendingUpdate]="update"
+        (closed)="hideModal()"
+        (confirmed)="onModalConfirmed($event)"></app-subscription-update-modal>
+    }
   </ng-template>
 </section>

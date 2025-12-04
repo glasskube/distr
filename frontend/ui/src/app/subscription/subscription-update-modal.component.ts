@@ -1,5 +1,5 @@
 import {CurrencyPipe} from '@angular/common';
-import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {Component, inject, input, output} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCheck, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {getFormDisplayedError} from '../../util/errors';
@@ -29,19 +29,20 @@ export class SubscriptionUpdateModalComponent {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
 
-  @Input() pendingUpdate?: PendingSubscriptionUpdate;
-  @Output('closed') readonly closed = new EventEmitter<void>();
-  @Output('confirmed') readonly confirmed = new EventEmitter<SubscriptionInfo>();
+  pendingUpdate = input.required<PendingSubscriptionUpdate>();
+  closed = output<void>();
+  confirmed = output<SubscriptionInfo>();
 
   async confirmUpdate() {
-    if (!this.pendingUpdate) {
+    const pending = this.pendingUpdate();
+    if (!pending) {
       return;
     }
 
     try {
       const body = {
-        subscriptionUserAccountQuantity: this.pendingUpdate.userAccountQuantity,
-        subscriptionCustomerOrganizationQuantity: this.pendingUpdate.customerOrganizationQuantity,
+        subscriptionUserAccountQuantity: pending.userAccountQuantity,
+        subscriptionCustomerOrganizationQuantity: pending.customerOrganizationQuantity,
       };
 
       const updatedInfo = await this.subscriptionService.updateSubscription(body);
