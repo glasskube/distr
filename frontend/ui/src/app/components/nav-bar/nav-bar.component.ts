@@ -1,7 +1,7 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, TitleCasePipe} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, inject, input, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
@@ -114,6 +114,8 @@ export class NavBarComponent implements OnInit {
 
   protected readonly faBarsStaggered = faBarsStaggered;
   protected readonly tutorial = toSignal(this.route.queryParams.pipe(map((params) => params['tutorial'])));
+
+  public readonly isSubscriptionBannerVisible = input<boolean>();
 
   @ViewChild('createOrgModal') private createOrgModal!: TemplateRef<unknown>;
   private modalRef?: DialogRef;
