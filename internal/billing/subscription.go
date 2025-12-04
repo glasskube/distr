@@ -76,25 +76,25 @@ func GetCustomerOrganizationQty(subscription stripe.Subscription) (int64, error)
 	return 0, fmt.Errorf("no unit price for CustomerOrganization found")
 }
 
-func GetSubscriptionPeriode(subscription stripe.Subscription) (types.SubscriptionPeriode, error) {
+func GetSubscriptionPeriod(subscription stripe.Subscription) (types.SubscriptionPeriod, error) {
 	for _, item := range subscription.Items.Data {
 		if item.Price != nil {
 			lookupKey := item.Price.LookupKey
 			if slices.Contains(MonthlyPriceKeys, lookupKey) {
-				return types.SubscriptionPeriodeMonthly, nil
+				return types.SubscriptionPeriodMonthly, nil
 			}
 			if slices.Contains(YearlyPriceKeys, lookupKey) {
-				return types.SubscriptionPeriodeYearly, nil
+				return types.SubscriptionPeriodYearly, nil
 			}
 		}
 	}
-	return types.SubscriptionPeriodeMonthly, fmt.Errorf("no subscription periode found in subscription prices")
+	return types.SubscriptionPeriodMonthly, fmt.Errorf("no subscription period found in subscription prices")
 }
 
 type CheckoutSessionParams struct {
 	OrganizationID          string
 	SubscriptionType        types.SubscriptionType
-	SubscriptionPeriode     types.SubscriptionPeriode
+	SubscriptionPeriod      types.SubscriptionPeriod
 	CustomerOrganizationQty int64
 	UserAccountQty          int64
 	Currency                string
@@ -102,7 +102,7 @@ type CheckoutSessionParams struct {
 }
 
 func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*stripe.CheckoutSession, error) {
-	prices, err := GetStripePrices(ctx, params.SubscriptionType, params.SubscriptionPeriode)
+	prices, err := GetStripePrices(ctx, params.SubscriptionType, params.SubscriptionPeriod)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stripe prices: %w", err)
 	}

@@ -43,7 +43,7 @@ type (
 	Tutorial              string
 	FileScope             string
 	SubscriptionType      string
-	SubscriptionPeriode   string
+	SubscriptionPeriod    string
 )
 
 const (
@@ -76,8 +76,8 @@ const (
 	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
 	SubscriptionTypeTrial      SubscriptionType = "trial"
 
-	SubscriptionPeriodeMonthly SubscriptionPeriode = "monthly"
-	SubscriptionPeriodeYearly  SubscriptionPeriode = "yearly"
+	SubscriptionPeriodMonthly SubscriptionPeriod = "monthly"
+	SubscriptionPeriodYearly  SubscriptionPeriod = "yearly"
 )
 
 type Base struct {

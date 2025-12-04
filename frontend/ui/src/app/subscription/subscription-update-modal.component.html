@@ -36,14 +36,14 @@
           <span class="text-sm text-gray-700 dark:text-gray-300">Current Price:</span>
           <span class="text-lg font-semibold text-gray-900 dark:text-white">
             {{ subscriptionUpdate.oldPrice | currency: 'USD' }} /
-            {{ subscriptionUpdate.subscriptionPeriode.slice(0, -2) }}
+            {{ subscriptionUpdate.subscriptionPeriod.slice(0, -2) }}
           </span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-sm text-gray-700 dark:text-gray-300">New Price:</span>
           <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
             {{ subscriptionUpdate.newPrice | currency: 'USD' }} /
-            {{ subscriptionUpdate.subscriptionPeriode.slice(0, -2) }}
+            {{ subscriptionUpdate.subscriptionPeriod.slice(0, -2) }}
           </span>
         </div>
         @if (subscriptionUpdate.newPrice !== subscriptionUpdate.oldPrice) {
@@ -56,7 +56,7 @@
               [class.dark:text-red-400]="subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice">
               {{ subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice ? '+' : '' }}
               {{ subscriptionUpdate.newPrice - subscriptionUpdate.oldPrice | currency: 'USD' }} /
-              {{ subscriptionUpdate.subscriptionPeriode.slice(0, -2) }}
+              {{ subscriptionUpdate.subscriptionPeriod.slice(0, -2) }}
             </span>
           </div>
         }

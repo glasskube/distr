@@ -6,14 +6,14 @@ import {getFormDisplayedError} from '../../util/errors';
 import {modalFlyInOut} from '../animations/modal';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
-import {SubscriptionInfo, SubscriptionPeriode} from '../types/subscription';
+import {SubscriptionInfo, SubscriptionPeriod} from '../types/subscription';
 
 export interface PendingSubscriptionUpdate {
   userAccountQuantity: number;
   customerOrganizationQuantity: number;
   newPrice: number;
   oldPrice: number;
-  subscriptionPeriode: SubscriptionPeriode;
+  subscriptionPeriod: SubscriptionPeriod;
 }
 
 @Component({

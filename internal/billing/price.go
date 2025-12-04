@@ -67,33 +67,33 @@ type PriceIDs struct {
 func GetStripePrices(
 	ctx context.Context,
 	subscriptionType types.SubscriptionType,
-	subscriptionPeriode types.SubscriptionPeriode,
+	subscriptionPeriod types.SubscriptionPeriod,
 ) (*PriceIDs, error) {
 	var customerPriceLookupKey string
 	var userPriceLookupKey string
 
 	switch subscriptionType {
 	case types.SubscriptionTypeStarter:
-		switch subscriptionPeriode {
-		case types.SubscriptionPeriodeMonthly:
+		switch subscriptionPeriod {
+		case types.SubscriptionPeriodMonthly:
 			customerPriceLookupKey = PriceKeyStarterCustomerMonthly
 			userPriceLookupKey = PriceKeyStarterUserMonthly
-		case types.SubscriptionPeriodeYearly:
+		case types.SubscriptionPeriodYearly:
 			customerPriceLookupKey = PriceKeyStarterCustomerYearly
 			userPriceLookupKey = PriceKeyStarterUserYearly
 		default:
-			return nil, fmt.Errorf("invalid subscription periode: %v", subscriptionPeriode)
+			return nil, fmt.Errorf("invalid subscription period: %v", subscriptionPeriod)
 		}
 	case types.SubscriptionTypePro:
-		switch subscriptionPeriode {
-		case types.SubscriptionPeriodeMonthly:
+		switch subscriptionPeriod {
+		case types.SubscriptionPeriodMonthly:
 			customerPriceLookupKey = PriceKeyProCustomerMonthly
 			userPriceLookupKey = PriceKeyProUserMonthly
-		case types.SubscriptionPeriodeYearly:
+		case types.SubscriptionPeriodYearly:
 			customerPriceLookupKey = PriceKeyProCustomerYearly
 			userPriceLookupKey = PriceKeyProUserYearly
 		default:
-			return nil, fmt.Errorf("invalid subscription periode: %v", subscriptionPeriode)
+			return nil, fmt.Errorf("invalid subscription period: %v", subscriptionPeriod)
 		}
 	default:
 		return nil, fmt.Errorf("invalid subscription type: %v", subscriptionType)

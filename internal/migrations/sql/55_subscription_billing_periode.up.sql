@@ -1,4 +1,4 @@
-CREATE TYPE SubscriptionPeriode AS ENUM ('monthly', 'yearly');
+CREATE TYPE SubscriptionPeriod AS ENUM ('monthly', 'yearly');
 
 ALTER TABLE Organization
-  ADD COLUMN subscription_periode SubscriptionPeriode NOT NULL DEFAULT 'monthly';
+  ADD COLUMN subscription_period SubscriptionPeriod NOT NULL DEFAULT 'monthly';

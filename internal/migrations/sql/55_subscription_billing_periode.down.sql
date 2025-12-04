@@ -1,4 +1,4 @@
 ALTER TABLE Organization
-  DROP COLUMN subscription_periode;
+  DROP COLUMN subscription_period;
 
-DROP TYPE SubscriptionPeriode;
+DROP TYPE SubscriptionPeriod;

@@ -11,7 +11,7 @@ import {never} from '../../util/exhaust';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
-import {SubscriptionInfo, SubscriptionPeriode, SubscriptionType} from '../types/subscription';
+import {SubscriptionInfo, SubscriptionPeriod, SubscriptionType} from '../types/subscription';
 import {PendingSubscriptionUpdate, SubscriptionUpdateModalComponent} from './subscription-update-modal.component';
 
 @Component({
@@ -37,7 +37,7 @@ export class SubscriptionComponent implements OnInit {
 
   protected readonly form = this.fb.group({
     subscriptionType: this.fb.control<SubscriptionType>('pro', [Validators.required]),
-    subscriptionPeriode: this.fb.control<SubscriptionPeriode>('monthly', [Validators.required]),
+    subscriptionPeriod: this.fb.control<SubscriptionPeriod>('monthly', [Validators.required]),
     userAccountQuantity: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
     customerOrganizationQuantity: this.fb.control<number>(1, [Validators.required, Validators.min(0)]),
   });
@@ -66,7 +66,7 @@ export class SubscriptionComponent implements OnInit {
       // Pre-fill form with current subscription values or defaults
       this.form.patchValue({
         subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
-        subscriptionPeriode: info.subscriptionPeriode,
+        subscriptionPeriod: info.subscriptionPeriod,
         userAccountQuantity:
           info.subscriptionUserAccountQuantity != null && info.subscriptionUserAccountQuantity >= 0
             ? info.subscriptionUserAccountQuantity
@@ -86,20 +86,20 @@ export class SubscriptionComponent implements OnInit {
 
   getPreviewPrice(): number {
     const values = this.form.getRawValue();
-    return this.getPreviewPriceFor(values.subscriptionType, values.subscriptionPeriode);
+    return this.getPreviewPriceFor(values.subscriptionType, values.subscriptionPeriod);
   }
 
-  getPreviewPriceFor(subscriptionType: SubscriptionType, subscriptionPeriode: SubscriptionPeriode): number {
+  getPreviewPriceFor(subscriptionType: SubscriptionType, subscriptionPeriod: SubscriptionPeriod): number {
     const values = this.form.getRawValue();
     const userQty = values.userAccountQuantity;
     const customerQty = values.customerOrganizationQuantity;
 
-    return this.calculatePrice(subscriptionType, subscriptionPeriode, userQty, customerQty);
+    return this.calculatePrice(subscriptionType, subscriptionPeriod, userQty, customerQty);
   }
 
   calculatePrice(
     subscriptionType: SubscriptionType,
-    subscriptionPeriode: SubscriptionPeriode,
+    subscriptionPeriod: SubscriptionPeriod,
     userQty: number,
     customerQty: number
   ) {
@@ -107,11 +107,11 @@ export class SubscriptionComponent implements OnInit {
     let customerPrice = 0;
 
     if (subscriptionType === 'starter') {
-      userPrice = subscriptionPeriode === 'monthly' ? 19 : 192;
-      customerPrice = subscriptionPeriode === 'monthly' ? 29 : 288;
+      userPrice = subscriptionPeriod === 'monthly' ? 19 : 192;
+      customerPrice = subscriptionPeriod === 'monthly' ? 29 : 288;
     } else if (subscriptionType === 'pro') {
-      userPrice = subscriptionPeriode === 'monthly' ? 29 : 288;
-      customerPrice = subscriptionPeriode === 'monthly' ? 69 : 672;
+      userPrice = subscriptionPeriod === 'monthly' ? 29 : 288;
+      customerPrice = subscriptionPeriod === 'monthly' ? 69 : 672;
     }
     return userPrice * userQty + customerPrice * customerQty;
   }
@@ -123,7 +123,7 @@ export class SubscriptionComponent implements OnInit {
         const values = this.form.getRawValue();
         const request = {
           subscriptionType: values.subscriptionType,
-          subscriptionPeriode: values.subscriptionPeriode,
+          subscriptionPeriod: values.subscriptionPeriod,
           subscriptionUserAccountQuantity: values.userAccountQuantity,
           subscriptionCustomerOrganizationQuantity: values.customerOrganizationQuantity,
         };
@@ -149,7 +149,7 @@ export class SubscriptionComponent implements OnInit {
 
       // Calculate current and new prices
       const oldPrice = this.calculatePriceFor(info);
-      const newPrice = this.getPreviewPriceFor(info.subscriptionType, info.subscriptionPeriode);
+      const newPrice = this.getPreviewPriceFor(info.subscriptionType, info.subscriptionPeriod);
 
       // Set pending update and show confirmation modal
       const values = this.form.getRawValue();
@@ -158,7 +158,7 @@ export class SubscriptionComponent implements OnInit {
         customerOrganizationQuantity: values.customerOrganizationQuantity,
         newPrice,
         oldPrice,
-        subscriptionPeriode: info.subscriptionPeriode,
+        subscriptionPeriod: info.subscriptionPeriod,
       });
 
       this.hideModal();
@@ -186,7 +186,7 @@ export class SubscriptionComponent implements OnInit {
 
     return this.calculatePrice(
       info.subscriptionType,
-      info.subscriptionPeriode,
+      info.subscriptionPeriod,
       info.subscriptionUserAccountQuantity,
       info.subscriptionCustomerOrganizationQuantity
     );

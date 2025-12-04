@@ -1,6 +1,6 @@
 export type SubscriptionType = 'starter' | 'pro' | 'enterprise' | 'trial';
 
-export type SubscriptionPeriode = 'monthly' | 'yearly';
+export type SubscriptionPeriod = 'monthly' | 'yearly';
 
 export interface SubscriptionLimits {
   maxCustomerOrganizations: number;
@@ -10,7 +10,7 @@ export interface SubscriptionLimits {
 
 export interface SubscriptionInfo {
   subscriptionType: SubscriptionType;
-  subscriptionPeriode: SubscriptionPeriode;
+  subscriptionPeriod: SubscriptionPeriod;
   subscriptionEndsAt: string;
   subscriptionExternalId?: string;
   subscriptionCustomerOrganizationQuantity?: number;
@@ -27,7 +27,7 @@ export interface SubscriptionInfo {
 
 export interface CheckoutRequest {
   subscriptionType: SubscriptionType;
-  subscriptionPeriode: SubscriptionPeriode;
+  subscriptionPeriod: SubscriptionPeriod;
   subscriptionUserAccountQuantity: number;
   subscriptionCustomerOrganizationQuantity: number;
 }
