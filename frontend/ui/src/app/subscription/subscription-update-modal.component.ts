@@ -35,9 +35,6 @@ export class SubscriptionUpdateModalComponent {
 
   async confirmUpdate() {
     const pending = this.pendingUpdate();
-    if (!pending) {
-      return;
-    }
 
     try {
       const body = {
