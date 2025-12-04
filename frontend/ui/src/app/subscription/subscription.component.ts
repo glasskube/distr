@@ -11,7 +11,7 @@ import {never} from '../../util/exhaust';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
-import {SubscriptionInfo, SubscriptionPeriod, SubscriptionType, unlimited} from '../types/subscription';
+import {SubscriptionInfo, SubscriptionPeriod, SubscriptionType, UNLIMITED_QTY} from '../types/subscription';
 import {PendingSubscriptionUpdate, SubscriptionUpdateModalComponent} from './subscription-update-modal.component';
 
 @Component({
@@ -23,7 +23,7 @@ export class SubscriptionComponent implements OnInit {
   protected readonly faShoppingCart = faShoppingCart;
   protected readonly faCreditCard = faCreditCard;
 
-  protected readonly unlimited = unlimited;
+  protected readonly unlimited = UNLIMITED_QTY;
 
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
@@ -69,11 +69,11 @@ export class SubscriptionComponent implements OnInit {
       this.form.patchValue({
         subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
         userAccountQuantity:
-          info.subscriptionUserAccountQuantity !== unlimited
+          info.subscriptionUserAccountQuantity !== UNLIMITED_QTY
             ? info.subscriptionUserAccountQuantity
             : info.currentUserAccountCount,
         customerOrganizationQuantity:
-          info.subscriptionCustomerOrganizationQuantity !== unlimited
+          info.subscriptionCustomerOrganizationQuantity !== UNLIMITED_QTY
             ? info.subscriptionCustomerOrganizationQuantity
             : info.currentCustomerOrganizationCount,
       });
@@ -201,15 +201,15 @@ export class SubscriptionComponent implements OnInit {
 
     return {
       customers:
-        limits.maxCustomerOrganizations === unlimited
+        limits.maxCustomerOrganizations === UNLIMITED_QTY
           ? 'Unlimited customers'
           : `Up to ${limits.maxCustomerOrganizations} customer${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
       users:
-        limits.maxUsersPerCustomerOrganization === unlimited
+        limits.maxUsersPerCustomerOrganization === UNLIMITED_QTY
           ? 'Unlimited users per customer'
           : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer`,
       deployments:
-        limits.maxDeploymentsPerCustomerOrganization === unlimited
+        limits.maxDeploymentsPerCustomerOrganization === UNLIMITED_QTY
           ? 'Unlimited deployments per customer'
           : `${limits.maxDeploymentsPerCustomerOrganization} active deployment${limits.maxDeploymentsPerCustomerOrganization > 1 ? 's' : ''} per customer`,
     };
@@ -246,13 +246,13 @@ export class SubscriptionComponent implements OnInit {
 
     switch (metric) {
       case 'customerOrganizations':
-        return limits.maxCustomerOrganizations === unlimited ? 'unlimited' : limits.maxCustomerOrganizations;
+        return limits.maxCustomerOrganizations === UNLIMITED_QTY ? 'unlimited' : limits.maxCustomerOrganizations;
       case 'usersPerCustomer':
-        return limits.maxUsersPerCustomerOrganization === unlimited
+        return limits.maxUsersPerCustomerOrganization === UNLIMITED_QTY
           ? 'unlimited'
           : limits.maxUsersPerCustomerOrganization;
       case 'deploymentsPerCustomer':
-        return limits.maxDeploymentsPerCustomerOrganization === unlimited
+        return limits.maxDeploymentsPerCustomerOrganization === UNLIMITED_QTY
           ? 'unlimited'
           : limits.maxDeploymentsPerCustomerOrganization;
       default:

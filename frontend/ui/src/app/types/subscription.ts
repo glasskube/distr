@@ -1,4 +1,4 @@
-export const unlimited = -1;
+export const UNLIMITED_QTY = -1;
 export type SubscriptionType = 'starter' | 'pro' | 'enterprise' | 'trial';
 
 export type SubscriptionPeriod = 'monthly' | 'yearly';

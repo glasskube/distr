@@ -1,4 +1,5 @@
 import {Component, computed, input} from '@angular/core';
+import {UNLIMITED_QTY} from '../types/subscription';
 
 @Component({
   selector: 'app-quota-limit',
@@ -30,7 +31,7 @@ export class QuotaLimitComponent {
   protected readonly percentage = computed(() => {
     const u = this.usage();
     const l = this.limit();
-    if (l === undefined || l < 0) {
+    if (l === undefined || l === UNLIMITED_QTY) {
       return 0;
     }
     return Math.min(100, Math.round(((u ?? 0) / l) * 100));
