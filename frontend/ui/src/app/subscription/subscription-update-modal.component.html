@@ -35,13 +35,13 @@
         <div class="flex justify-between items-center mb-2">
           <span class="text-sm text-gray-700 dark:text-gray-300">Current Price:</span>
           <span class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ pendingUpdate.oldPrice | currency: 'USD' }}/{{ pendingUpdate.billingPeriodSuffix }}
+            {{ pendingUpdate.oldPrice | currency: 'USD' }} / {{ pendingUpdate.subscriptionPeriode.slice(0, -2) }}
           </span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-sm text-gray-700 dark:text-gray-300">New Price:</span>
           <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
-            {{ pendingUpdate.newPrice | currency: 'USD' }}/{{ pendingUpdate.billingPeriodSuffix }}
+            {{ pendingUpdate.newPrice | currency: 'USD' }} / {{ pendingUpdate.subscriptionPeriode.slice(0, -2) }}
           </span>
         </div>
         @if (pendingUpdate.newPrice !== pendingUpdate.oldPrice) {
@@ -53,9 +53,8 @@
               [class.text-red-600]="pendingUpdate.newPrice > pendingUpdate.oldPrice"
               [class.dark:text-red-400]="pendingUpdate.newPrice > pendingUpdate.oldPrice">
               {{ pendingUpdate.newPrice > pendingUpdate.oldPrice ? '+' : '' }}
-              {{ pendingUpdate.newPrice - pendingUpdate.oldPrice | currency: 'USD' }}/{{
-                pendingUpdate.billingPeriodSuffix
-              }}
+              {{ pendingUpdate.newPrice - pendingUpdate.oldPrice | currency: 'USD' }} /
+              {{ pendingUpdate.subscriptionPeriode.slice(0, -2) }}
             </span>
           </div>
         }

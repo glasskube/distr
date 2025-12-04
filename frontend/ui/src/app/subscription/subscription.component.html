@@ -15,12 +15,15 @@
                 <h2 class="text-xl font-bold dark:text-white">Current Usage</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div class="flex flex-col p-4 bg-orange-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Internal Users</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Users</p>
                     <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-auto">
                       {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionUserAccountQuantity) {
+                      @if (
+                        subscriptionInfoData.subscriptionUserAccountQuantity &&
+                        subscriptionInfoData.subscriptionUserAccountQuantity >= 0
+                      ) {
                         of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} licenses used
                       } @else {
                         vendor team members
@@ -33,8 +36,13 @@
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity) {
+                      @if (
+                        subscriptionInfoData.subscriptionCustomerOrganizationQuantity &&
+                        subscriptionInfoData.subscriptionCustomerOrganizationQuantity >= 0
+                      ) {
                         of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} licenses used
+                      } @else {
+                        end customers
                       }
                       @if (subscriptionInfoData.subscriptionType === 'starter') {
                         <br />
@@ -69,11 +77,17 @@
               <!-- Current Subscription Info -->
               <div class="space-y-4">
                 <h2 class="text-xl font-bold dark:text-white">Current Subscription</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                   <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Plan</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                      {{ subscriptionInfoData.subscriptionType }}
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                      {{ subscriptionInfoData.subscriptionType | titlecase }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Periode</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                      {{ subscriptionInfoData.subscriptionPeriode | titlecase }}
                     </p>
                   </div>
                   <div>
@@ -109,7 +123,8 @@
                 <div class="space-y-4">
                   <h2 class="text-xl font-bold dark:text-white">Change License Quantities</h2>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Update your license quantities below. Changes will be reflected in your next billing cycle.
+                    Update your license quantities below. Changes will be reflected in your next billing cycle.<br />
+                    This is an estimate, please visite our Billing Portal for final prices.
                   </p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
