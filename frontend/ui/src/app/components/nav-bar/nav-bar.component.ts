@@ -1,7 +1,7 @@
 import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, TitleCasePipe} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, inject, input, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
@@ -115,6 +115,8 @@ export class NavBarComponent implements OnInit {
   protected readonly faBarsStaggered = faBarsStaggered;
   protected readonly tutorial = toSignal(this.route.queryParams.pipe(map((params) => params['tutorial'])));
 
+  public readonly isSubscriptionBannerVisible = input<boolean>();
+
   @ViewChild('createOrgModal') private createOrgModal!: TemplateRef<unknown>;
   private modalRef?: DialogRef;
   protected readonly createOrgForm = new FormGroup({
@@ -180,12 +182,7 @@ export class NavBarComponent implements OnInit {
     this.createOrgForm.markAllAsTouched();
     if (this.createOrgForm.valid) {
       try {
-        const created = await lastValueFrom(
-          this.organizationService.create({
-            name: this.createOrgForm.value.name!,
-            features: [],
-          })
-        );
+        const created = await lastValueFrom(this.organizationService.create(this.createOrgForm.value.name!));
         await this.switchContext(created, '/dashboard?from=new-org');
       } catch (e) {
         const msg = getFormDisplayedError(e);

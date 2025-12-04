@@ -23,8 +23,8 @@ const (
 		co.name
 	`
 	customerOrganizationWithUsageOutputExpr = customerOrganizationOutputExpr + `,
-		count(oua.user_account_id) as user_count,
-    	count(dt.id) as deployment_target_count
+		count(distinct(oua.user_account_id)) as user_count,
+    	count(distinct(dt.id)) as deployment_target_count
 	`
 )
 

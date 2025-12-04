@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"context"
+	"errors"
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
@@ -67,8 +69,10 @@ var ArtifactsAuthentication = authn.New(
 )
 
 func handleUnknownError(w http.ResponseWriter, r *http.Request, err error) {
-	internalctx.GetLogger(r.Context()).Error("error authenticating request", zap.Error(err))
-	sentry.GetHubFromContext(r.Context()).CaptureException(err)
+	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		internalctx.GetLogger(r.Context()).Error("error authenticating request", zap.Error(err))
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+	}
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 

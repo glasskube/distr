@@ -46,7 +46,7 @@
         </form>
 
         @if (auth.hasAnyRole('read_write', 'admin')) {
-          <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 md:mt-0flex-grow">
+          <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 md:mt-0 flex-grow">
             <app-quota-limit class="flex-grow" [usage]="count()" [limit]="limit()" #quota></app-quota-limit>
             <button
               (click)="openWizard()"
@@ -68,10 +68,16 @@
       track customerDeploymentTargets.customerOrganization?.id
     ) {
       @if (customerDeploymentTargets.customerOrganization; as customer) {
-        <h2
-          class="text-xl font-extrabold leading-none tracking-tight text-gray-900 md:text-2xl dark:text-white mb-3 mt-6">
-          {{ customer.name }}
-        </h2>
+        <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 mb-3 mt-6">
+          <h2 class="text-xl font-extrabold leading-none tracking-tight text-gray-900 md:text-2xl dark:text-white">
+            {{ customer.name }}
+          </h2>
+          <app-quota-limit
+            class="flex-grow"
+            [usage]="customerDeploymentTargets.deploymentTargets.length"
+            [limit]="limit()"
+            #quota></app-quota-limit>
+        </div>
       }
 
       <div class="grid gap-4 items-stretch 2xl:grid-cols-2">
@@ -80,6 +86,8 @@
             [deploymentTarget]="deploymentTarget"
             [fullVersion]="true"
             [deploymentTargetMetrics]="deploymentTarget.metrics" />
+        } @empty {
+          <div class="text-gray-500 dark:text-gray-400">No agents found.</div>
         }
       </div>
     } @empty {

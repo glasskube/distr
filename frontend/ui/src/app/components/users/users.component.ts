@@ -98,11 +98,16 @@ export class UsersComponent {
 
   protected readonly limit = computed(() => {
     const org = this.organization();
-    return !(org && org.subscriptionLimits)
+    return !org
       ? undefined
-      : org.customerOrganizationId === undefined
+      : this.auth.isVendor() && this.customerOrganizationId() === undefined
         ? org.subscriptionUserAccountQuantity
         : org.subscriptionLimits.maxUsersPerCustomerOrganization;
+  });
+
+  protected readonly isProSubscription = computed(() => {
+    const subscriptionType = this.organization()?.subscriptionType;
+    return subscriptionType && ['trial', 'pro', 'enterprise'].includes(subscriptionType);
   });
 
   protected readonly editRoleUserId = signal<string | null>(null);

@@ -33,6 +33,19 @@ func ParseUserRole(value string) (UserRole, error) {
 	}
 }
 
+type SubscriptionType string
+
+func (st SubscriptionType) IsPro() bool {
+	return st == SubscriptionTypeTrial || st == SubscriptionTypePro || st == SubscriptionTypeEnterprise
+}
+
+const (
+	SubscriptionTypeStarter    SubscriptionType = "starter"
+	SubscriptionTypePro        SubscriptionType = "pro"
+	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
+	SubscriptionTypeTrial      SubscriptionType = "trial"
+)
+
 type (
 	DeploymentType        string
 	HelmChartType         string
@@ -42,7 +55,7 @@ type (
 	DockerType            string
 	Tutorial              string
 	FileScope             string
-	SubscriptionType      string
+	SubscriptionPeriod    string
 )
 
 const (
@@ -64,17 +77,14 @@ const (
 
 	FeatureLicensing Feature = "licensing"
 
-	TutorialBranding Tutorial = "branding"
-	TutorialAgents   Tutorial = "agents"
-	TutorialRegistry Tutorial = "registry"
-
+	TutorialBranding      Tutorial  = "branding"
+	TutorialAgents        Tutorial  = "agents"
+	TutorialRegistry      Tutorial  = "registry"
 	FileScopePlatform     FileScope = "platform"
 	FileScopeOrganization FileScope = "organization"
 
-	SubscriptionTypeStarter    SubscriptionType = "starter"
-	SubscriptionTypePro        SubscriptionType = "pro"
-	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
-	SubscriptionTypeTrial      SubscriptionType = "trial"
+	SubscriptionPeriodMonthly SubscriptionPeriod = "monthly"
+	SubscriptionPeriodYearly  SubscriptionPeriod = "yearly"
 )
 
 type Base struct {

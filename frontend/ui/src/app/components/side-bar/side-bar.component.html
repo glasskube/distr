@@ -1,8 +1,8 @@
 <aside
   id="logo-sidebar"
   class="fixed left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
-  [class.top-16]="!isTrial()"
-  [class.top-33]="isTrial()"
+  [class.top-16]="!isSubscriptionBannerVisible()"
+  [class.top-33]="isSubscriptionBannerVisible()"
   [class.translate-x-0]="sidebar.showSidebar()"
   [class.-translate-x-full]="!sidebar.showSidebar()"
   aria-label="Sidebar">
@@ -353,7 +353,7 @@
       }
     </ul>
 
-    @if (isTrial() && feedbackAlert) {
+    @if (isSubscriptionBannerVisible() && feedbackAlert) {
       <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert" *appRequireVendor>
         <div class="flex justify-between items-center mb-3">
           <span
@@ -380,7 +380,7 @@
           </button>
         </div>
         <div class="mb-3 text-sm text-gray-700 dark:text-gray-300">
-          We just launched, any feedback helps us building a better product.
+          We just launched Distr v2, any feedback helps us building a better product.
         </div>
         <a
           href="https://cal.glasskube.com/team/founder/30min"

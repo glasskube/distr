@@ -9,13 +9,6 @@ import (
 	"github.com/stripe/stripe-go/v84/price"
 )
 
-type BillingMode string
-
-const (
-	BillingModeMonthly BillingMode = "monthly"
-	BillingModeYearly  BillingMode = "yearly"
-)
-
 const (
 	PriceKeyStarterCustomerMonthly = "distr_starter_customer_monthly"
 	PriceKeyStarterCustomerYearly  = "distr_starter_customer_yearly"
@@ -52,6 +45,18 @@ var (
 		PriceKeyProUserMonthly,
 		PriceKeyProUserYearly,
 	}
+	MonthlyPriceKeys = []string{
+		PriceKeyStarterCustomerMonthly,
+		PriceKeyStarterUserMonthly,
+		PriceKeyProCustomerMonthly,
+		PriceKeyProUserMonthly,
+	}
+	YearlyPriceKeys = []string{
+		PriceKeyStarterCustomerYearly,
+		PriceKeyStarterUserYearly,
+		PriceKeyProCustomerYearly,
+		PriceKeyProUserYearly,
+	}
 )
 
 type PriceIDs struct {
@@ -62,41 +67,42 @@ type PriceIDs struct {
 func GetStripePrices(
 	ctx context.Context,
 	subscriptionType types.SubscriptionType,
-	mode BillingMode,
+	subscriptionPeriod types.SubscriptionPeriod,
 ) (*PriceIDs, error) {
 	var customerPriceLookupKey string
 	var userPriceLookupKey string
 
 	switch subscriptionType {
 	case types.SubscriptionTypeStarter:
-		switch mode {
-		case BillingModeMonthly:
+		switch subscriptionPeriod {
+		case types.SubscriptionPeriodMonthly:
 			customerPriceLookupKey = PriceKeyStarterCustomerMonthly
 			userPriceLookupKey = PriceKeyStarterUserMonthly
-		case BillingModeYearly:
+		case types.SubscriptionPeriodYearly:
 			customerPriceLookupKey = PriceKeyStarterCustomerYearly
 			userPriceLookupKey = PriceKeyStarterUserYearly
 		default:
-			return nil, fmt.Errorf("invalid billing mode: %v", mode)
+			return nil, fmt.Errorf("invalid subscription period: %v", subscriptionPeriod)
 		}
 	case types.SubscriptionTypePro:
-		switch mode {
-		case BillingModeMonthly:
+		switch subscriptionPeriod {
+		case types.SubscriptionPeriodMonthly:
 			customerPriceLookupKey = PriceKeyProCustomerMonthly
 			userPriceLookupKey = PriceKeyProUserMonthly
-		case BillingModeYearly:
+		case types.SubscriptionPeriodYearly:
 			customerPriceLookupKey = PriceKeyProCustomerYearly
 			userPriceLookupKey = PriceKeyProUserYearly
 		default:
-			return nil, fmt.Errorf("invalid billing mode: %v", mode)
+			return nil, fmt.Errorf("invalid subscription period: %v", subscriptionPeriod)
 		}
 	default:
 		return nil, fmt.Errorf("invalid subscription type: %v", subscriptionType)
 	}
 
+	lookupKeys := []string{customerPriceLookupKey, userPriceLookupKey}
 	listPriceResult := price.List(&stripe.PriceListParams{
 		ListParams: stripe.ListParams{Context: ctx},
-		LookupKeys: stripe.StringSlice([]string{customerPriceLookupKey, userPriceLookupKey}),
+		LookupKeys: stripe.StringSlice(lookupKeys),
 	})
 
 	var result PriceIDs
@@ -115,7 +121,7 @@ func GetStripePrices(
 	}
 
 	if result.CustomerPriceID == "" || result.UserPriceID == "" {
-		return nil, fmt.Errorf("failed to find prices")
+		return nil, fmt.Errorf("failed to find prices for lookupKeys:  %v", lookupKeys)
 	}
 
 	return &result, nil

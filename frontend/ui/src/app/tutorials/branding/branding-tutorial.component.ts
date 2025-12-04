@@ -255,7 +255,7 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
         );
         this.inviteFormGroup.controls.customerCreateDone.setValue(true);
         this.inviteFormGroup.markAsPristine();
-        this.toast.success('Customer organization created');
+        this.toast.success('Customer created');
         this.progress = await lastValueFrom(
           this.tutorialsService.save(tutorialId, {
             stepId: customerStep,

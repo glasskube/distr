@@ -1,7 +1,7 @@
 <nav class="sticky top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
   @let organization = organization$ | async;
 
-  @if (organization && (isSubscriptionExpired() || isTrial())) {
+  @if (isSubscriptionBannerVisible() && organization) {
     <app-nav-bar-subscription-banner
       [organization]="organization"
       [isTrial]="isTrial() ?? false"

@@ -1,34 +1,63 @@
+import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
-import {Component, inject, OnInit, signal} from '@angular/core';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Component, computed, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCreditCard, faShoppingCart} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {never} from '../../util/exhaust';
+import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
-import {SubscriptionInfo, SubscriptionType} from '../types/subscription';
+import {SubscriptionInfo, SubscriptionPeriod, SubscriptionType, UNLIMITED_QTY} from '../types/subscription';
+import {PendingSubscriptionUpdate, SubscriptionUpdateModalComponent} from './subscription-update-modal.component';
 
 @Component({
   selector: 'app-subscription',
   templateUrl: './subscription.component.html',
-  imports: [FaIconComponent, ReactiveFormsModule, CommonModule],
+  imports: [FaIconComponent, ReactiveFormsModule, CommonModule, OverlayModule, SubscriptionUpdateModalComponent],
 })
 export class SubscriptionComponent implements OnInit {
   protected readonly faShoppingCart = faShoppingCart;
   protected readonly faCreditCard = faCreditCard;
 
+  protected readonly unlimited = UNLIMITED_QTY;
+
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
+  private readonly overlay = inject(OverlayService);
+  private readonly fb = inject(NonNullableFormBuilder);
 
   protected subscriptionInfo = signal<SubscriptionInfo | undefined>(undefined);
+  protected pendingUpdate = signal<PendingSubscriptionUpdate | undefined>(undefined);
 
-  protected readonly form = new FormGroup({
-    subscriptionType: new FormControl<SubscriptionType>('pro', [Validators.required]),
-    billingMode: new FormControl<'monthly' | 'yearly'>('monthly', [Validators.required]),
-    userAccountQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
-    customerOrganizationQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
+  private modal?: DialogRef;
+
+  protected readonly updateModal = viewChild.required<TemplateRef<unknown>>('updateModal');
+
+  protected readonly form = this.fb.group({
+    subscriptionType: this.fb.control<SubscriptionType>('pro', [Validators.required]),
+    subscriptionPeriod: this.fb.control<SubscriptionPeriod>('monthly', [Validators.required]),
+    userAccountQuantity: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
+    customerOrganizationQuantity: this.fb.control<number>(1, [Validators.required, Validators.min(0)]),
+  });
+
+  protected readonly formValues = toSignal(this.form.valueChanges, {initialValue: this.form.value});
+
+  protected readonly hasQuantitiesChanged = computed(() => {
+    const info = this.subscriptionInfo();
+    const values = this.formValues();
+
+    if (!info) {
+      return false;
+    }
+
+    return (
+      values.userAccountQuantity !== info.subscriptionUserAccountQuantity ||
+      values.customerOrganizationQuantity !== info.subscriptionCustomerOrganizationQuantity
+    );
   });
 
   async ngOnInit() {
@@ -39,9 +68,14 @@ export class SubscriptionComponent implements OnInit {
       // Pre-fill form with current subscription values or defaults
       this.form.patchValue({
         subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
-        userAccountQuantity: info.subscriptionUserAccountQuantity ?? info.currentUserAccountCount,
+        userAccountQuantity:
+          info.subscriptionUserAccountQuantity !== UNLIMITED_QTY
+            ? info.subscriptionUserAccountQuantity
+            : info.currentUserAccountCount,
         customerOrganizationQuantity:
-          info.subscriptionCustomerOrganizationQuantity ?? info.currentCustomerOrganizationCount,
+          info.subscriptionCustomerOrganizationQuantity !== UNLIMITED_QTY
+            ? info.subscriptionCustomerOrganizationQuantity
+            : info.currentCustomerOrganizationCount,
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -52,22 +86,34 @@ export class SubscriptionComponent implements OnInit {
   }
 
   getPreviewPrice(): number {
-    const subscriptionType = this.form.value.subscriptionType;
-    const billingMode = this.form.value.billingMode;
-    const userQty = this.form.value.userAccountQuantity ?? 0;
-    const customerQty = this.form.value.customerOrganizationQuantity ?? 0;
+    const values = this.form.getRawValue();
+    return this.getPreviewPriceFor(values.subscriptionType, values.subscriptionPeriod);
+  }
 
+  getPreviewPriceFor(subscriptionType: SubscriptionType, subscriptionPeriod: SubscriptionPeriod): number {
+    const values = this.form.getRawValue();
+    const userQty = values.userAccountQuantity;
+    const customerQty = values.customerOrganizationQuantity;
+
+    return this.calculatePrice(subscriptionType, subscriptionPeriod, userQty, customerQty);
+  }
+
+  calculatePrice(
+    subscriptionType: SubscriptionType,
+    subscriptionPeriod: SubscriptionPeriod,
+    userQty: number,
+    customerQty: number
+  ) {
     let userPrice = 0;
     let customerPrice = 0;
 
     if (subscriptionType === 'starter') {
-      userPrice = billingMode === 'monthly' ? 19 : 192;
-      customerPrice = billingMode === 'monthly' ? 29 : 288;
+      userPrice = subscriptionPeriod === 'monthly' ? 19 : 192;
+      customerPrice = subscriptionPeriod === 'monthly' ? 29 : 288;
     } else if (subscriptionType === 'pro') {
-      userPrice = billingMode === 'monthly' ? 29 : 288;
-      customerPrice = billingMode === 'monthly' ? 69 : 672;
+      userPrice = subscriptionPeriod === 'monthly' ? 29 : 288;
+      customerPrice = subscriptionPeriod === 'monthly' ? 69 : 672;
     }
-
     return userPrice * userQty + customerPrice * customerQty;
   }
 
@@ -75,15 +121,16 @@ export class SubscriptionComponent implements OnInit {
     this.form.markAllAsTouched();
     if (this.form.valid) {
       try {
-        const body = {
-          subscriptionType: this.form.value.subscriptionType!,
-          billingMode: this.form.value.billingMode!,
-          subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
-          subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
+        const values = this.form.getRawValue();
+        const request = {
+          subscriptionType: values.subscriptionType,
+          subscriptionPeriod: values.subscriptionPeriod,
+          subscriptionUserAccountQuantity: values.userAccountQuantity,
+          subscriptionCustomerOrganizationQuantity: values.customerOrganizationQuantity,
         };
 
         // Call the checkout endpoint which will redirect to Stripe
-        await this.subscriptionService.checkout(body);
+        await this.subscriptionService.checkout(request);
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {
@@ -96,64 +143,73 @@ export class SubscriptionComponent implements OnInit {
   async updateQuantities() {
     this.form.markAllAsTouched();
     if (this.form.valid) {
-      try {
-        const body = {
-          subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
-          subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
-        };
-
-        // Call the update subscription endpoint
-        const updatedInfo = await this.subscriptionService.updateSubscription(body);
-
-        // Update the subscription info signal with the new data
-        this.subscriptionInfo.set(updatedInfo);
-
-        // Show success message
-        this.toast.success('Subscription updated successfully');
-      } catch (e) {
-        const msg = getFormDisplayedError(e);
-        if (msg) {
-          this.toast.error(msg);
-        }
+      const info = this.subscriptionInfo();
+      if (!info) {
+        return;
       }
+
+      // Calculate current and new prices
+      const oldPrice = this.calculatePriceFor(info);
+      const newPrice = this.getPreviewPriceFor(info.subscriptionType, info.subscriptionPeriod);
+
+      // Set pending update and show confirmation modal
+      const values = this.form.getRawValue();
+      this.pendingUpdate.set({
+        userAccountQuantity: values.userAccountQuantity,
+        customerOrganizationQuantity: values.customerOrganizationQuantity,
+        newPrice,
+        oldPrice,
+        subscriptionPeriod: info.subscriptionPeriod,
+      });
+
+      this.hideModal();
+      this.modal = this.overlay.showModal(this.updateModal(), {
+        hasBackdrop: true,
+        backdropStyleOnly: true,
+        positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
+      });
     }
   }
 
-  getPlanLimits(plan: SubscriptionType): {customers: string; users: string; deployments: string} {
-    const info = this.subscriptionInfo();
-    if (!info) {
-      return {customers: '', users: '', deployments: ''};
+  onModalConfirmed(updatedInfo: SubscriptionInfo) {
+    this.subscriptionInfo.set(updatedInfo);
+    this.hideModal();
+  }
+
+  hideModal() {
+    this.modal?.close();
+  }
+
+  private calculatePriceFor(info: SubscriptionInfo): number {
+    if (info.subscriptionUserAccountQuantity == null || info.subscriptionCustomerOrganizationQuantity == null) {
+      return 0;
     }
 
-    let limits;
-    switch (plan) {
-      case 'trial':
-        limits = info.trialLimits;
-        break;
-      case 'starter':
-        limits = info.starterLimits;
-        break;
-      case 'pro':
-        limits = info.proLimits;
-        break;
-      case 'enterprise':
-        limits = info.enterpriseLimits;
-        break;
-      default:
-        return never(plan);
+    return this.calculatePrice(
+      info.subscriptionType,
+      info.subscriptionPeriod,
+      info.subscriptionUserAccountQuantity,
+      info.subscriptionCustomerOrganizationQuantity
+    );
+  }
+
+  getPlanLimits(plan: SubscriptionType): {customers: string; users: string; deployments: string} {
+    const limits = this.getPlanLimitsObject(plan);
+    if (!limits) {
+      return {customers: '', users: '', deployments: ''};
     }
 
     return {
       customers:
-        limits.maxCustomerOrganizations === -1
-          ? 'Unlimited customer organizations'
-          : `Up to ${limits.maxCustomerOrganizations} customer organization${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
+        limits.maxCustomerOrganizations === UNLIMITED_QTY
+          ? 'Unlimited customers'
+          : `Up to ${limits.maxCustomerOrganizations} customer${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
       users:
-        limits.maxUsersPerCustomerOrganization === -1
-          ? 'Unlimited users per customer organization'
-          : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer organization`,
+        limits.maxUsersPerCustomerOrganization === UNLIMITED_QTY
+          ? 'Unlimited users per customer'
+          : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer`,
       deployments:
-        limits.maxDeploymentsPerCustomerOrganization === -1
+        limits.maxDeploymentsPerCustomerOrganization === UNLIMITED_QTY
           ? 'Unlimited deployments per customer'
           : `${limits.maxDeploymentsPerCustomerOrganization} active deployment${limits.maxDeploymentsPerCustomerOrganization > 1 ? 's' : ''} per customer`,
     };
@@ -190,11 +246,13 @@ export class SubscriptionComponent implements OnInit {
 
     switch (metric) {
       case 'customerOrganizations':
-        return limits.maxCustomerOrganizations === -1 ? 'unlimited' : limits.maxCustomerOrganizations;
+        return limits.maxCustomerOrganizations === UNLIMITED_QTY ? 'unlimited' : limits.maxCustomerOrganizations;
       case 'usersPerCustomer':
-        return limits.maxUsersPerCustomerOrganization === -1 ? 'unlimited' : limits.maxUsersPerCustomerOrganization;
+        return limits.maxUsersPerCustomerOrganization === UNLIMITED_QTY
+          ? 'unlimited'
+          : limits.maxUsersPerCustomerOrganization;
       case 'deploymentsPerCustomer':
-        return limits.maxDeploymentsPerCustomerOrganization === -1
+        return limits.maxDeploymentsPerCustomerOrganization === UNLIMITED_QTY
           ? 'unlimited'
           : limits.maxDeploymentsPerCustomerOrganization;
       default:
@@ -229,7 +287,7 @@ export class SubscriptionComponent implements OnInit {
   getPlanDisplayName(subscriptionType: SubscriptionType): string {
     switch (subscriptionType) {
       case 'trial':
-        return 'Trial';
+        return 'Distr Pro Unlimited Trial';
       case 'starter':
         return 'Distr Starter';
       case 'pro':

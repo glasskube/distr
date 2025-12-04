@@ -15,13 +15,13 @@
                 <h2 class="text-xl font-bold dark:text-white">Current Usage</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div class="flex flex-col p-4 bg-orange-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Internal Users</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Users</p>
                     <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-auto">
                       {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionUserAccountQuantity) {
-                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} licenses used
+                      @if (subscriptionInfoData.subscriptionUserAccountQuantity !== unlimited) {
+                        of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} Users used
                       } @else {
                         vendor team members
                       }
@@ -33,16 +33,14 @@
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity) {
-                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} licenses used
+                      @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity !== unlimited) {
+                        of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} Customers used
                       }
-                      @if (subscriptionInfoData.subscriptionType === 'starter') {
-                        <br />
-                        <span class="text-xs text-gray-400">
-                          ({{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} max:
-                          {{ getCurrentPlanLimit('customerOrganizations') }})
-                        </span>
-                      }
+                      <br />
+                      <span class="text-xs text-gray-400">
+                        ({{ getPlanDisplayName(subscriptionInfoData.subscriptionType) }} max:
+                        {{ getCurrentPlanLimit('customerOrganizations') }})
+                      </span>
                     </p>
                   </div>
                   <div class="flex flex-col p-4 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
@@ -69,11 +67,17 @@
               <!-- Current Subscription Info -->
               <div class="space-y-4">
                 <h2 class="text-xl font-bold dark:text-white">Current Subscription</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                   <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Plan</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                      {{ subscriptionInfoData.subscriptionType }}
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                      {{ subscriptionInfoData.subscriptionType | titlecase }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Period</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                      {{ subscriptionInfoData.subscriptionPeriod | titlecase }}
                     </p>
                   </div>
                   <div>
@@ -105,16 +109,17 @@
                   </div>
                 </div>
 
-                <!-- Change License Quantities -->
+                <!-- Change Subscription Quantities -->
                 <div class="space-y-4">
-                  <h2 class="text-xl font-bold dark:text-white">Change License Quantities</h2>
+                  <h2 class="text-xl font-bold dark:text-white">Change Subscription Quantities</h2>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Update your license quantities below. Changes will be reflected in your next billing cycle.
+                    Update your subscription quantities below. Changes will be reflected in your next billing cycle.<br />
+                    This is an estimate, please visit our Billing Portal for final prices.
                   </p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
-                        for="userAccountQuantity"
+                        for="userAccountQuantity-update"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                         Internal Users *
                       </label>
@@ -122,7 +127,7 @@
                         formControlName="userAccountQuantity"
                         type="number"
                         name="userAccountQuantity"
-                        id="userAccountQuantity"
+                        id="userAccountQuantity-update"
                         [min]="subscriptionInfoData.currentUserAccountCount"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         [placeholder]="subscriptionInfoData.currentUserAccountCount.toString()"
@@ -133,22 +138,22 @@
                     </div>
                     <div>
                       <label
-                        for="customerOrganizationQuantity"
+                        for="customerOrganizationQuantity-update"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                        Customer Organizations *
+                        Customers *
                       </label>
                       <input
                         formControlName="customerOrganizationQuantity"
                         type="number"
                         name="customerOrganizationQuantity"
-                        id="customerOrganizationQuantity"
+                        id="customerOrganizationQuantity-update"
                         [min]="subscriptionInfoData.currentCustomerOrganizationCount"
                         [max]="getCurrentPlanLimit('customerOrganizations')"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         [placeholder]="subscriptionInfoData.currentCustomerOrganizationCount.toString()"
                         required />
                       <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                        Number of external customer organizations (min:
+                        Number of external customers (min:
                         {{ subscriptionInfoData.currentCustomerOrganizationCount }}, max:
                         {{ getCurrentPlanLimit('customerOrganizations') }})
                       </p>
@@ -158,10 +163,10 @@
                     <button
                       type="button"
                       (click)="updateQuantities()"
-                      [disabled]="form.invalid"
+                      [disabled]="form.invalid || !hasQuantitiesChanged()"
                       class="text-white inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-6 py-3 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
                       <fa-icon [icon]="faShoppingCart" size="lg" class="h-4 w-4 mr-2"></fa-icon>
-                      Update Quantities
+                      Proceed
                     </button>
                   </div>
                 </div>
@@ -226,14 +231,14 @@
                   </div>
                 </div>
 
-                <!-- Billing Mode (for trial subscriptions) -->
+                <!-- subscription period (for trial subscriptions) -->
                 <div class="space-y-4">
                   <h2 class="text-xl font-bold dark:text-white">Billing Period</h2>
                   <div class="flex gap-4">
                     <label class="flex items-center cursor-pointer">
                       <input
                         type="radio"
-                        formControlName="billingMode"
+                        formControlName="subscriptionPeriod"
                         value="monthly"
                         class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                       <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Monthly</span>
@@ -241,7 +246,7 @@
                     <label class="flex items-center cursor-pointer">
                       <input
                         type="radio"
-                        formControlName="billingMode"
+                        formControlName="subscriptionPeriod"
                         value="yearly"
                         class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                       <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
@@ -254,11 +259,11 @@
 
                 <!-- Quantities -->
                 <div class="space-y-4">
-                  <h2 class="text-xl font-bold dark:text-white">License Quantities</h2>
+                  <h2 class="text-xl font-bold dark:text-white">Subscription Quantities</h2>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
-                        for="userAccountQuantity"
+                        for="userAccountQuantity-checkout"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                         Internal Users *
                       </label>
@@ -266,7 +271,7 @@
                         formControlName="userAccountQuantity"
                         type="number"
                         name="userAccountQuantity"
-                        id="userAccountQuantity"
+                        id="userAccountQuantity-checkout"
                         min="1"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="1"
@@ -277,21 +282,21 @@
                     </div>
                     <div>
                       <label
-                        for="customerOrganizationQuantity"
+                        for="customerOrganizationQuantity-checkout"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                        Customer Organizations *
+                        Customers *
                       </label>
                       <input
                         formControlName="customerOrganizationQuantity"
                         type="number"
                         name="customerOrganizationQuantity"
-                        id="customerOrganizationQuantity"
-                        min="1"
+                        id="customerOrganizationQuantity-checkout"
+                        min="0"
                         class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="1"
                         required />
                       <p class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                        Number of external customer organizations
+                        Number of external customers
                       </p>
                     </div>
                   </div>
@@ -306,7 +311,7 @@
                       <p class="text-3xl font-bold text-gray-900 dark:text-white">
                         {{ getPreviewPrice() | currency: 'USD' }}
                         <span class="text-lg font-normal text-gray-600 dark:text-gray-400">
-                          / {{ form.value.billingMode === 'monthly' ? 'month' : 'year' }}
+                          / {{ form.value.subscriptionPeriod === 'monthly' ? 'month' : 'year' }}
                         </span>
                       </p>
                       <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Currency exchange fees might apply.</p>
@@ -337,4 +342,13 @@
       </div>
     </div>
   </div>
+
+  <ng-template #updateModal>
+    @if (pendingUpdate(); as update) {
+      <app-subscription-update-modal
+        [pendingUpdate]="update"
+        (closed)="hideModal()"
+        (confirmed)="onModalConfirmed($event)"></app-subscription-update-modal>
+    }
+  </ng-template>
 </section>
