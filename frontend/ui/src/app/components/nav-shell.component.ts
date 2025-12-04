@@ -29,11 +29,13 @@ export class NavShellComponent {
   protected readonly organization$ = this.organizationService.get();
 
   protected readonly isSubscriptionExpired = toSignal(
-    this.organization$.pipe(map((org) => dayjs(org.subscriptionEndsAt).isBefore()))
+    this.organization$.pipe(map((org) => dayjs(org.subscriptionEndsAt).isBefore())),
+    {initialValue: false}
   );
 
   private readonly isSubscriptionTrial = toSignal(
-    this.organization$.pipe(map((org) => org.subscriptionType === 'trial'))
+    this.organization$.pipe(map((org) => org.subscriptionType === 'trial')),
+    {initialValue: false}
   );
 
   protected readonly isSubscriptionBannerVisible = computed(() => {
