@@ -79,9 +79,16 @@ run = 'pnpm format'
 run = {tasks=["format:go", "format:frontend"]}
 
 [tasks."run:hub:serve"]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
+description = 'Only starts the hub, it will not serve the frontend on that port. Protip: "mise watch run:hub:serve -r"'
+depends = ["go-tidy"]
+sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
+
+
+[tasks."run:all:serve"]
 alias = "serve"
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
-description = 'Starts the hub server. Protip: auto-reload with "mise watch serve -r"'
+description = 'Builds the frontend and starts the hub server incl. serving the frontend. Protip: auto-reload with "mise watch serve -r"'
 depends = ["go-tidy", "build:frontend:dev"]
 sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
 
