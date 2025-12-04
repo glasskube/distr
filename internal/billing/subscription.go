@@ -77,7 +77,6 @@ func GetCustomerOrganizationQty(subscription stripe.Subscription) (int64, error)
 }
 
 func GetSubscriptionPeriode(subscription stripe.Subscription) (types.SubscriptionPeriode, error) {
-
 	for _, item := range subscription.Items.Data {
 		if item.Price != nil {
 			lookupKey := item.Price.LookupKey
