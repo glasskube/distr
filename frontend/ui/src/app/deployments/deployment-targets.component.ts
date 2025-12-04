@@ -168,7 +168,12 @@ export class DeploymentTargetsComponent implements AfterViewInit {
     combineLatest([this.applications$, this.deploymentTargets$])
       .pipe(first())
       .subscribe(([apps, dts]) => {
-        if (this.auth.isCustomer() && apps.length > 0 && dts.length === 0) {
+        if (
+          this.auth.isCustomer() &&
+          this.auth.hasAnyRole('read_write', 'admin') &&
+          apps.length > 0 &&
+          dts.length === 0
+        ) {
           this.openWizard();
         }
       });

@@ -43,6 +43,7 @@ type (
 	Tutorial              string
 	FileScope             string
 	SubscriptionType      string
+	SubscriptionPeriod    string
 )
 
 const (
@@ -64,10 +65,9 @@ const (
 
 	FeatureLicensing Feature = "licensing"
 
-	TutorialBranding Tutorial = "branding"
-	TutorialAgents   Tutorial = "agents"
-	TutorialRegistry Tutorial = "registry"
-
+	TutorialBranding      Tutorial  = "branding"
+	TutorialAgents        Tutorial  = "agents"
+	TutorialRegistry      Tutorial  = "registry"
 	FileScopePlatform     FileScope = "platform"
 	FileScopeOrganization FileScope = "organization"
 
@@ -75,6 +75,9 @@ const (
 	SubscriptionTypePro        SubscriptionType = "pro"
 	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
 	SubscriptionTypeTrial      SubscriptionType = "trial"
+
+	SubscriptionPeriodMonthly SubscriptionPeriod = "monthly"
+	SubscriptionPeriodYearly  SubscriptionPeriod = "yearly"
 )
 
 type Base struct {

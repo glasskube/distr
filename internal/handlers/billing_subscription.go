@@ -38,10 +38,10 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 
 	var body struct {
-		SubscriptionType        types.SubscriptionType `json:"subscriptionType"`
-		BillingMode             billing.BillingMode    `json:"billingMode"`
-		CustomerOrganizationQty int64                  `json:"subscriptionCustomerOrganizationQuantity"`
-		UserAccountQty          int64                  `json:"subscriptionUserAccountQuantity"`
+		SubscriptionType        types.SubscriptionType   `json:"subscriptionType"`
+		SubscriptionPeriod      types.SubscriptionPeriod `json:"subscriptionPeriod"`
+		CustomerOrganizationQty int64                    `json:"subscriptionCustomerOrganizationQuantity"`
+		UserAccountQty          int64                    `json:"subscriptionUserAccountQuantity"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -72,7 +72,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := billing.CreateCheckoutSession(ctx, billing.CheckoutSessionParams{
 		OrganizationID:          auth.CurrentOrgID().String(),
 		SubscriptionType:        body.SubscriptionType,
-		BillingMode:             body.BillingMode,
+		SubscriptionPeriod:      body.SubscriptionPeriod,
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
 		UserAccountQty:          body.UserAccountQty,
 		Currency:                "usd",
@@ -118,80 +118,88 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get current usage counts
-	usage, err := getCurrentUsageCounts(ctx, org.ID)
-	if err != nil {
-		log.Error("failed to get current usage counts", zap.Error(err))
-		http.Error(w, "failed to get current usage counts", http.StatusInternalServerError)
-		return
-	}
+	var info *api.SubscriptionInfo
+	shouldRespond := false
+	err := db.RunTxRR(ctx, func(ctx context.Context) error {
+		org, err := db.GetOrganizationByID(ctx, org.ID)
+		if err != nil {
+			log.Error("failed to get organization", zap.Error(err))
+			http.Error(w, "failed to get organization", http.StatusInternalServerError)
+			return err
+		}
 
-	// Validate subscription quantities with current subscription type
-	if err := validateSubscriptionQuantities(
-		org.SubscriptionType,
-		body.CustomerOrganizationQty,
-		body.UserAccountQty,
-		usage,
-	); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+		usage, err := getCurrentUsageCounts(ctx, org.ID)
+		if err != nil {
+			log.Error("failed to get current usage counts", zap.Error(err))
+			http.Error(w, "failed to get current usage counts", http.StatusInternalServerError)
+			return err
+		}
 
-	// Update the subscription via Stripe
-	updatedSub, err := billing.UpdateSubscription(ctx, billing.SubscriptionUpdateParams{
-		SubscriptionID:          *org.StripeSubscriptionID,
-		CustomerOrganizationQty: body.CustomerOrganizationQty,
-		UserAccountQty:          body.UserAccountQty,
-		ReturnURL:               fmt.Sprintf("%v/subscription", handlerutil.GetRequestSchemeAndHost(r)),
+		if err := validateSubscriptionQuantities(
+			org.SubscriptionType,
+			body.CustomerOrganizationQty,
+			body.UserAccountQty,
+			usage,
+		); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return err
+		}
+
+		updatedSub, err := billing.UpdateSubscription(ctx, billing.SubscriptionUpdateParams{
+			SubscriptionID:          *org.StripeSubscriptionID,
+			CustomerOrganizationQty: body.CustomerOrganizationQty,
+			UserAccountQty:          body.UserAccountQty,
+			ReturnURL:               fmt.Sprintf("%v/subscription", handlerutil.GetRequestSchemeAndHost(r)),
+		})
+		if err != nil {
+			log.Error("failed to update subscription", zap.Error(err))
+			http.Error(w, "failed to update subscription", http.StatusInternalServerError)
+			return err
+		}
+
+		customerOrgQty, err := billing.GetCustomerOrganizationQty(*updatedSub)
+		if err != nil {
+			log.Error("failed to get customer quantity from updated subscription", zap.Error(err))
+			http.Error(w, "failed to get customer quantity", http.StatusInternalServerError)
+			return err
+		}
+
+		userAccountQty, err := billing.GetUserAccountQty(*updatedSub)
+		if err != nil {
+			log.Error("failed to get user account quantity from updated subscription", zap.Error(err))
+			http.Error(w, "failed to get user account quantity", http.StatusInternalServerError)
+			return err
+		}
+
+		org.SubscriptionCustomerOrganizationQty = customerOrgQty
+		org.SubscriptionUserAccountQty = userAccountQty
+
+		if err := db.UpdateOrganization(ctx, org); err != nil {
+			log.Error("failed to update organization", zap.Error(err))
+			http.Error(w, "failed to update organization", http.StatusInternalServerError)
+			return err
+		}
+
+		info, err = buildSubscriptionInfo(ctx, org)
+		if err != nil {
+			log.Error("failed to build subscription info", zap.Error(err))
+			http.Error(w, "failed to build subscription info", http.StatusInternalServerError)
+			return err
+		}
+
+		shouldRespond = true
+
+		return nil
 	})
+
 	if err != nil {
-		log.Error("failed to update subscription", zap.Error(err))
-		http.Error(w, "failed to update subscription", http.StatusInternalServerError)
-		return
+		log.Error("update subscription failed", zap.Error(err))
+		if shouldRespond {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	} else {
+		RespondJSON(w, info)
 	}
-
-	// Extract quantities from the updated subscription
-	customerOrgQty, err := billing.GetCustomerOrganizationQty(*updatedSub)
-	if err != nil {
-		log.Error("failed to get customer organization quantity from updated subscription", zap.Error(err))
-		http.Error(w, "failed to get customer organization quantity", http.StatusInternalServerError)
-		return
-	}
-
-	userAccountQty, err := billing.GetUserAccountQty(*updatedSub)
-	if err != nil {
-		log.Error("failed to get user account quantity from updated subscription", zap.Error(err))
-		http.Error(w, "failed to get user account quantity", http.StatusInternalServerError)
-		return
-	}
-
-	// Update the organization in the database with new quantities
-	org.SubscriptionCustomerOrganizationQty = customerOrgQty
-	org.SubscriptionUserAccountQty = userAccountQty
-
-	if err := db.UpdateOrganization(ctx, org); err != nil {
-		log.Error("failed to update organization", zap.Error(err))
-		http.Error(w, "failed to update organization", http.StatusInternalServerError)
-		return
-	}
-
-	// Reload the organization to get the latest data
-	updatedOrg, err := db.GetOrganizationByID(ctx, org.ID)
-	if err != nil {
-		log.Error("failed to reload organization", zap.Error(err))
-		http.Error(w, "failed to reload organization", http.StatusInternalServerError)
-		return
-	}
-
-	// Build and return the full subscription info
-	info, err := buildSubscriptionInfo(ctx, updatedOrg)
-	if err != nil {
-		log.Error("failed to build subscription info", zap.Error(err))
-		http.Error(w, "failed to build subscription info", http.StatusInternalServerError)
-		return
-	}
-
-	RespondJSON(w, info)
 }
 
 // validateSubscriptionQuantities validates that the requested quantities meet all requirements
@@ -204,7 +212,7 @@ func validateSubscriptionQuantities(
 	// Validate that requested quantities meet current usage minimums
 	if customerOrgQty < usage.customerOrganizationCount {
 		return fmt.Errorf(
-			"customer organization quantity (%d) cannot be less than current count (%d)",
+			"customer quantity (%d) cannot be less than current count (%d)",
 			customerOrgQty,
 			usage.customerOrganizationCount,
 		)
@@ -222,7 +230,7 @@ func validateSubscriptionQuantities(
 	customerOrgLimit := subscription.GetCustomersPerOrganizationLimit(subscriptionType)
 	if customerOrgLimit.IsExceeded(customerOrgQty) {
 		return fmt.Errorf(
-			"subscription type %v can have at most %v customer organizations, but %v were requested",
+			"subscription type %v can have at most %v customers, but %v were requested",
 			subscriptionType,
 			customerOrgLimit,
 			customerOrgQty,
@@ -233,7 +241,7 @@ func validateSubscriptionQuantities(
 	usersPerCustomerLimit := subscription.GetUsersPerCustomerOrganizationLimit(subscriptionType)
 	if usersPerCustomerLimit.IsExceeded(usage.maxUsersPerCustomer) {
 		return fmt.Errorf(
-			"subscription type %v allows at most %v users per customer organization, "+
+			"subscription type %v allows at most %v users per customer, "+
 				"but you currently have a customer with %v users",
 			subscriptionType,
 			usersPerCustomerLimit,
@@ -245,7 +253,7 @@ func validateSubscriptionQuantities(
 	deploymentsPerCustomerLimit := subscription.GetDeploymentTargetsPerCustomerOrganizationLimit(subscriptionType)
 	if deploymentsPerCustomerLimit.IsExceeded(usage.maxDeploymentTargetsPerCustomer) {
 		return fmt.Errorf(
-			"subscription type %v allows at most %v deployment targets per customer organization, "+
+			"subscription type %v allows at most %v deployment targets per customer, "+
 				"but you currently have a customer with %v deployment targets",
 			subscriptionType,
 			deploymentsPerCustomerLimit,
@@ -273,7 +281,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt,
-		SubscriptionExternalID:                 org.StripeSubscriptionID,
+		SubscriptionPeriod:                     org.SubscriptionPeriod,
 		SubscriptionCustomerOrganizationQty:    org.SubscriptionCustomerOrganizationQty,
 		SubscriptionUserAccountQty:             org.SubscriptionUserAccountQty,
 		CurrentUserAccountCount:                usage.userAccountCount,
@@ -308,7 +316,7 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 	// Get current customer organization count
 	customerOrgs, err := db.GetCustomerOrganizationsByOrganizationID(ctx, orgID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get customer organizations: %w", err)
+		return nil, fmt.Errorf("failed to get customers: %w", err)
 	}
 
 	// Find the maximum user count and deployment target count across all customer organizations

@@ -453,8 +453,13 @@ func deploymentMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if deployment, err := db.GetDeployment(ctx, deploymentId, auth.CurrentUserID(), *auth.CurrentOrgID(),
-			*auth.CurrentUserRole()); errors.Is(err, apierrors.ErrNotFound) {
+		if deployment, err := db.GetDeployment(
+			ctx,
+			deploymentId,
+			auth.CurrentUserID(),
+			*auth.CurrentOrgID(),
+			auth.CurrentCustomerOrgID(),
+		); errors.Is(err, apierrors.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else if err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get deployment", zap.Error(err))

@@ -140,7 +140,7 @@ func deleteCustomerOrganizationHandler() http.HandlerFunc {
 		if err := db.DeleteCustomerOrganizationWithID(ctx, id, *auth.CurrentOrgID()); errors.Is(err, apierrors.ErrNotFound) {
 			http.NotFound(w, r)
 		} else if errors.Is(err, apierrors.ErrConflict) {
-			http.Error(w, "customer organization is not empty", http.StatusConflict)
+			http.Error(w, "customer is not empty", http.StatusConflict)
 		} else if err != nil {
 			log.Error("failed to delete customer org", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)

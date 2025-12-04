@@ -157,11 +157,10 @@
                         [formControl]="inviteFormGroup.controls.customerCreateDone"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
                     </span>
-                    <label for="inviteDone" class="text-lg font-medium leading-tight"
-                      >Create a customer organization</label
-                    >
+                    <label for="inviteDone" class="text-lg font-medium leading-tight">Create a customer</label>
                     <p class="mt-1 text-sm">
-                      Customer organizations are used to group customers together and manage their access to resources.
+                      A customer is a group of users inside your organization who have access to a shared set of
+                      deployments and cannot create applications or artifacts.
                     </p>
                     <div class="mt-2 flex">
                       <input
@@ -184,7 +183,7 @@
                     @if (
                       inviteFormGroup.controls.customerName.touched && inviteFormGroup.controls.customerName.errors
                     ) {
-                      <div class="mt-2 text-sm text-red-500">Please enter name for your customer organization.</div>
+                      <div class="mt-2 text-sm text-red-500">Please enter name for your customer.</div>
                     }
                   </li>
 
