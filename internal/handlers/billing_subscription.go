@@ -38,10 +38,10 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	auth := auth.Authentication.Require(ctx)
 
 	var body struct {
-		SubscriptionType        types.SubscriptionType `json:"subscriptionType"`
-		BillingMode             billing.BillingMode    `json:"billingMode"`
-		CustomerOrganizationQty int64                  `json:"subscriptionCustomerOrganizationQuantity"`
-		UserAccountQty          int64                  `json:"subscriptionUserAccountQuantity"`
+		SubscriptionType        types.SubscriptionType    `json:"subscriptionType"`
+		SubscriptionPeriode     types.SubscriptionPeriode `json:"subscriptionPeriode"`
+		CustomerOrganizationQty int64                     `json:"subscriptionCustomerOrganizationQuantity"`
+		UserAccountQty          int64                     `json:"subscriptionUserAccountQuantity"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -72,7 +72,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := billing.CreateCheckoutSession(ctx, billing.CheckoutSessionParams{
 		OrganizationID:          auth.CurrentOrgID().String(),
 		SubscriptionType:        body.SubscriptionType,
-		BillingMode:             body.BillingMode,
+		SubscriptionPeriode:     body.SubscriptionPeriode,
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
 		UserAccountQty:          body.UserAccountQty,
 		Currency:                "usd",
@@ -273,8 +273,7 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt,
-		SubscriptionExternalID:                 org.StripeSubscriptionID,
-		SubscriptionBillingMode:                org.SubscriptionBillingMode,
+		SubscriptionPeriode:                    org.SubscriptionPeriode,
 		SubscriptionCustomerOrganizationQty:    org.SubscriptionCustomerOrganizationQty,
 		SubscriptionUserAccountQty:             org.SubscriptionUserAccountQty,
 		CurrentUserAccountCount:                usage.userAccountCount,

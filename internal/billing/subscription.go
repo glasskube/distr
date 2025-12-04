@@ -76,40 +76,26 @@ func GetCustomerOrganizationQty(subscription stripe.Subscription) (int64, error)
 	return 0, fmt.Errorf("no unit price for CustomerOrganization found")
 }
 
-func GetBillingMode(subscription stripe.Subscription) (*BillingMode, error) {
-	// Check the price lookup keys to determine if it's monthly or yearly
-	monthlyKeys := []string{
-		PriceKeyStarterCustomerMonthly,
-		PriceKeyStarterUserMonthly,
-		PriceKeyProCustomerMonthly,
-		PriceKeyProUserMonthly,
-	}
-	yearlyKeys := []string{
-		PriceKeyStarterCustomerYearly,
-		PriceKeyStarterUserYearly,
-		PriceKeyProCustomerYearly,
-		PriceKeyProUserYearly,
-	}
+func GetSubscriptionPeriode(subscription stripe.Subscription) (types.SubscriptionPeriode, error) {
 
 	for _, item := range subscription.Items.Data {
 		if item.Price != nil {
 			lookupKey := item.Price.LookupKey
-			if slices.Contains(monthlyKeys, lookupKey) {
-				return util.PtrTo(BillingModeMonthly), nil
+			if slices.Contains(MonthlyPriceKeys, lookupKey) {
+				return types.SubscriptionPeriodeMonthly, nil
 			}
-			if slices.Contains(yearlyKeys, lookupKey) {
-				return util.PtrTo(BillingModeYearly), nil
+			if slices.Contains(YearlyPriceKeys, lookupKey) {
+				return types.SubscriptionPeriodeYearly, nil
 			}
 		}
 	}
-
-	return nil, fmt.Errorf("no billing mode found in subscription items")
+	return types.SubscriptionPeriodeMonthly, fmt.Errorf("no subscription periode found in subscription prices")
 }
 
 type CheckoutSessionParams struct {
 	OrganizationID          string
 	SubscriptionType        types.SubscriptionType
-	BillingMode             BillingMode
+	SubscriptionPeriode     types.SubscriptionPeriode
 	CustomerOrganizationQty int64
 	UserAccountQty          int64
 	Currency                string
@@ -117,7 +103,7 @@ type CheckoutSessionParams struct {
 }
 
 func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*stripe.CheckoutSession, error) {
-	prices, err := GetStripePrices(ctx, params.SubscriptionType, params.BillingMode)
+	prices, err := GetStripePrices(ctx, params.SubscriptionType, params.SubscriptionPeriode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stripe prices: %w", err)
 	}

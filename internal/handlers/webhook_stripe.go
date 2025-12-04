@@ -151,11 +151,10 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 		org.SubscriptionUserAccountQty = &qty
 	}
 
-	if billingMode, err := billing.GetBillingMode(subscription); err != nil {
+	if subscriptionPeriode, err := billing.GetSubscriptionPeriode(subscription); err != nil {
 		return err
 	} else {
-		billingModeStr := string(*billingMode)
-		org.SubscriptionBillingMode = &billingModeStr
+		org.SubscriptionPeriode = subscriptionPeriode
 	}
 
 	if org.SubscriptionType == types.SubscriptionTypeStarter {

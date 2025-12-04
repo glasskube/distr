@@ -11,21 +11,21 @@ import (
 )
 
 type Organization struct {
-	ID                                  uuid.UUID        `db:"id" json:"id"`
-	CreatedAt                           time.Time        `db:"created_at" json:"createdAt"`
-	Name                                string           `db:"name" json:"name"`
-	Slug                                *string          `db:"slug" json:"slug"`
-	Features                            []Feature        `db:"features" json:"features"`
-	AppDomain                           *string          `db:"app_domain" json:"appDomain"`
-	RegistryDomain                      *string          `db:"registry_domain" json:"registryDomain"`
-	EmailFromAddress                    *string          `db:"email_from_address" json:"emailFromAddress"`
-	SubscriptionType                    SubscriptionType `db:"subscription_type" json:"subscriptionType"`
-	SubscriptionEndsAt                  time.Time        `db:"subscription_ends_at" json:"subscriptionEndsAt"`
-	StripeCustomerID                    *string          `db:"stripe_customer_id" json:"stripeCustomerId"`
-	StripeSubscriptionID                *string          `db:"stripe_subscription_id" json:"stripeSubscriptionId"`
-	SubscriptionBillingMode             *string          `db:"subscription_billing_mode" json:"subscriptionBillingMode"`
-	SubscriptionCustomerOrganizationQty *int64           `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
-	SubscriptionUserAccountQty          *int64           `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
+	ID                                  uuid.UUID           `db:"id" json:"id"`
+	CreatedAt                           time.Time           `db:"created_at" json:"createdAt"`
+	Name                                string              `db:"name" json:"name"`
+	Slug                                *string             `db:"slug" json:"slug"`
+	Features                            []Feature           `db:"features" json:"features"`
+	AppDomain                           *string             `db:"app_domain" json:"appDomain"`
+	RegistryDomain                      *string             `db:"registry_domain" json:"registryDomain"`
+	EmailFromAddress                    *string             `db:"email_from_address" json:"emailFromAddress"`
+	SubscriptionType                    SubscriptionType    `db:"subscription_type" json:"subscriptionType"`
+	SubscriptionPeriode                 SubscriptionPeriode `db:"subscription_periode" json:"subscriptionPeriode"`
+	SubscriptionEndsAt                  time.Time           `db:"subscription_ends_at" json:"subscriptionEndsAt"`
+	StripeCustomerID                    *string             `db:"stripe_customer_id" json:"stripeCustomerId"`
+	StripeSubscriptionID                *string             `db:"stripe_subscription_id" json:"stripeSubscriptionId"`
+	SubscriptionCustomerOrganizationQty *int64              `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
+	SubscriptionUserAccountQty          *int64              `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {

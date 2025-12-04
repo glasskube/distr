@@ -10,7 +10,7 @@ export interface SubscriptionInfo {
   subscriptionType: SubscriptionType;
   subscriptionEndsAt: string;
   subscriptionExternalId?: string;
-  subscriptionBillingMode?: 'monthly' | 'yearly';
+  subscriptionSubscriptionPeriode?: 'monthly' | 'yearly';
   subscriptionCustomerOrganizationQuantity?: number;
   subscriptionUserAccountQuantity?: number;
   currentUserAccountCount: number;
@@ -25,7 +25,7 @@ export interface SubscriptionInfo {
 
 export interface CheckoutRequest {
   subscriptionType: SubscriptionType;
-  billingMode: 'monthly' | 'yearly';
+  subscriptionPeriode: 'monthly' | 'yearly';
   subscriptionUserAccountQuantity: number;
   subscriptionCustomerOrganizationQuantity: number;
 }

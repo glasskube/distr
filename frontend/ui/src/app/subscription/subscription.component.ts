@@ -36,7 +36,7 @@ export class SubscriptionComponent implements OnInit {
 
   protected readonly form = new FormGroup({
     subscriptionType: new FormControl<SubscriptionType>('pro', [Validators.required]),
-    billingMode: new FormControl<'monthly' | 'yearly'>('monthly', [Validators.required]),
+    subscriptionPeriode: new FormControl<'monthly' | 'yearly'>('monthly', [Validators.required]),
     userAccountQuantity: new FormControl<number>(1, [Validators.required, Validators.min(1)]),
     customerOrganizationQuantity: new FormControl<number>(1, [Validators.required, Validators.min(0)]),
   });
@@ -79,7 +79,7 @@ export class SubscriptionComponent implements OnInit {
 
   getPreviewPrice(): number {
     const subscriptionType = this.form.value.subscriptionType;
-    const billingMode = this.form.value.billingMode;
+    const subscriptionPeriode = this.form.value.subscriptionPeriode;
     const userQty = this.form.value.userAccountQuantity ?? 0;
     const customerQty = this.form.value.customerOrganizationQuantity ?? 0;
 
@@ -87,11 +87,11 @@ export class SubscriptionComponent implements OnInit {
     let customerPrice = 0;
 
     if (subscriptionType === 'starter') {
-      userPrice = billingMode === 'monthly' ? 19 : 192;
-      customerPrice = billingMode === 'monthly' ? 29 : 288;
+      userPrice = subscriptionPeriode === 'monthly' ? 19 : 192;
+      customerPrice = subscriptionPeriode === 'monthly' ? 29 : 288;
     } else if (subscriptionType === 'pro') {
-      userPrice = billingMode === 'monthly' ? 29 : 288;
-      customerPrice = billingMode === 'monthly' ? 69 : 672;
+      userPrice = subscriptionPeriode === 'monthly' ? 29 : 288;
+      customerPrice = subscriptionPeriode === 'monthly' ? 69 : 672;
     }
 
     return userPrice * userQty + customerPrice * customerQty;
@@ -103,7 +103,7 @@ export class SubscriptionComponent implements OnInit {
       try {
         const body = {
           subscriptionType: this.form.value.subscriptionType!,
-          billingMode: this.form.value.billingMode!,
+          subscriptionPeriode: this.form.value.subscriptionPeriode!,
           subscriptionUserAccountQuantity: this.form.value.userAccountQuantity!,
           subscriptionCustomerOrganizationQuantity: this.form.value.customerOrganizationQuantity!,
         };
@@ -131,9 +131,9 @@ export class SubscriptionComponent implements OnInit {
       const oldPrice = this.calculateCurrentPrice();
       const newPrice = this.getPreviewPrice();
 
-      // Determine billing period suffix based on subscription billing mode
-      const billingMode = info.subscriptionBillingMode || 'monthly';
-      const billingPeriodSuffix = billingMode === 'monthly' ? 'month' : 'year';
+      // Determine billing period suffix based on subscription subscription periode
+      const subscriptionPeriode = info.subscriptionSubscriptionPeriode || 'monthly';
+      const billingPeriodSuffix = subscriptionPeriode === 'monthly' ? 'month' : 'year';
 
       // Set pending update and show confirmation modal
       this.pendingUpdate.set({
@@ -173,7 +173,7 @@ export class SubscriptionComponent implements OnInit {
     }
 
     const subscriptionType = info.subscriptionType;
-    const billingMode = info.subscriptionBillingMode || 'monthly';
+    const subscriptionPeriode = info.subscriptionSubscriptionPeriode || 'monthly';
     const userQty = info.subscriptionUserAccountQuantity;
     const customerQty = info.subscriptionCustomerOrganizationQuantity;
 
@@ -181,11 +181,11 @@ export class SubscriptionComponent implements OnInit {
     let customerPrice = 0;
 
     if (subscriptionType === 'starter') {
-      userPrice = billingMode === 'monthly' ? 19 : 192;
-      customerPrice = billingMode === 'monthly' ? 29 : 288;
+      userPrice = subscriptionPeriode === 'monthly' ? 19 : 192;
+      customerPrice = subscriptionPeriode === 'monthly' ? 29 : 288;
     } else if (subscriptionType === 'pro') {
-      userPrice = billingMode === 'monthly' ? 29 : 288;
-      customerPrice = billingMode === 'monthly' ? 69 : 672;
+      userPrice = subscriptionPeriode === 'monthly' ? 29 : 288;
+      customerPrice = subscriptionPeriode === 'monthly' ? 69 : 672;
     }
 
     return userPrice * userQty + customerPrice * customerQty;

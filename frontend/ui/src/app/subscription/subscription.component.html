@@ -226,14 +226,14 @@
                   </div>
                 </div>
 
-                <!-- Billing Mode (for trial subscriptions) -->
+                <!-- subscription periode (for trial subscriptions) -->
                 <div class="space-y-4">
                   <h2 class="text-xl font-bold dark:text-white">Billing Period</h2>
                   <div class="flex gap-4">
                     <label class="flex items-center cursor-pointer">
                       <input
                         type="radio"
-                        formControlName="billingMode"
+                        formControlName="subscriptionPeriode"
                         value="monthly"
                         class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                       <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Monthly</span>
@@ -241,7 +241,7 @@
                     <label class="flex items-center cursor-pointer">
                       <input
                         type="radio"
-                        formControlName="billingMode"
+                        formControlName="subscriptionPeriode"
                         value="yearly"
                         class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                       <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
@@ -306,7 +306,7 @@
                       <p class="text-3xl font-bold text-gray-900 dark:text-white">
                         {{ getPreviewPrice() | currency: 'USD' }}
                         <span class="text-lg font-normal text-gray-600 dark:text-gray-400">
-                          / {{ form.value.billingMode === 'monthly' ? 'month' : 'year' }}
+                          / {{ form.value.subscriptionPeriode === 'monthly' ? 'month' : 'year' }}
                         </span>
                       </p>
                       <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Currency exchange fees might apply.</p>
