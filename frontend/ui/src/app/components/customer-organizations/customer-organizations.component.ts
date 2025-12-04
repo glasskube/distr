@@ -158,7 +158,7 @@ export class CustomerOrganizationsComponent {
 
   protected delete(target: CustomerOrganization) {
     this.overlay
-      .confirm({message: {message: 'Are you sure you want to delete this customer organization?'}})
+      .confirm({message: {message: 'Are you sure you want to delete this customer?'}})
       .pipe(
         filter((it) => it === true),
         switchMap(() => this.customerOrganizationsService.deleteCustomerOrganization(target.id!))

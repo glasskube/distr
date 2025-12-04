@@ -146,12 +146,12 @@ export class SubscriptionComponent implements OnInit {
     return {
       customers:
         limits.maxCustomerOrganizations === -1
-          ? 'Unlimited customer organizations'
-          : `Up to ${limits.maxCustomerOrganizations} customer organization${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
+          ? 'Unlimited customers'
+          : `Up to ${limits.maxCustomerOrganizations} customer{limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
       users:
         limits.maxUsersPerCustomerOrganization === -1
-          ? 'Unlimited users per customer organization'
-          : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer organization`,
+          ? 'Unlimited users per customer'
+          : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer`,
       deployments:
         limits.maxDeploymentsPerCustomerOrganization === -1
           ? 'Unlimited deployments per customer'
