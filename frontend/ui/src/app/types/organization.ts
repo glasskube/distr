@@ -16,11 +16,11 @@ export interface Organization extends BaseModel, Named {
   appDomain?: string;
   registryDomain?: string;
   emailFromAddress?: string;
-  subscriptionType?: SubscriptionType;
-  subscriptionLimits?: SubscriptionLimits;
+  subscriptionType: SubscriptionType;
+  subscriptionLimits: SubscriptionLimits;
   subscriptionEndsAt?: string;
-  subscriptionCustomerOrganizationQuantity?: number;
-  subscriptionUserAccountQuantity?: number;
+  subscriptionCustomerOrganizationQuantity: number;
+  subscriptionUserAccountQuantity: number;
 }
 
 export interface OrganizationWithUserRole extends Organization {

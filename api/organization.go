@@ -10,6 +10,6 @@ type CreateUpdateOrganizationRequest struct {
 }
 
 type OrganizationResponse struct {
-	Organization       types.Organization
-	SubscriptionLimits SubscriptionLimits
+	types.Organization
+	SubscriptionLimits SubscriptionLimits `json:"subscriptionLimits"`
 }

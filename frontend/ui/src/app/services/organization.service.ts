@@ -27,8 +27,8 @@ export class OrganizationService {
     return this.contextService.getAvailableOrganizations();
   }
 
-  create(organization: Organization): Observable<Organization> {
-    return this.httpClient.post<Organization>(this.baseUrl, organization);
+  create(name: string): Observable<Organization> {
+    return this.httpClient.post<Organization>(this.baseUrl, {name});
   }
 
   update(organization: Organization): Observable<Organization> {

@@ -29,11 +29,14 @@ export class SubscriptionUpdateModalComponent {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
 
+  protected editFormLoading = false;
+
   pendingUpdate = input.required<PendingSubscriptionUpdate>();
   closed = output<void>();
   confirmed = output<SubscriptionInfo>();
 
   async confirmUpdate() {
+    this.editFormLoading = true;
     const pending = this.pendingUpdate();
 
     try {
@@ -45,11 +48,14 @@ export class SubscriptionUpdateModalComponent {
       const updatedInfo = await this.subscriptionService.updateSubscription(body);
       this.toast.success('Subscription updated successfully');
       this.confirmed.emit(updatedInfo);
+      setTimeout(() => location.reload(), 1000);
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg) {
         this.toast.error(msg);
       }
+    } finally {
+      this.editFormLoading = false;
     }
   }
 

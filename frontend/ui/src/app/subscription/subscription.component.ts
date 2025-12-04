@@ -11,7 +11,7 @@ import {never} from '../../util/exhaust';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
-import {SubscriptionInfo, SubscriptionPeriod, SubscriptionType} from '../types/subscription';
+import {SubscriptionInfo, SubscriptionPeriod, SubscriptionType, UNLIMITED_QTY} from '../types/subscription';
 import {PendingSubscriptionUpdate, SubscriptionUpdateModalComponent} from './subscription-update-modal.component';
 
 @Component({
@@ -22,6 +22,8 @@ import {PendingSubscriptionUpdate, SubscriptionUpdateModalComponent} from './sub
 export class SubscriptionComponent implements OnInit {
   protected readonly faShoppingCart = faShoppingCart;
   protected readonly faCreditCard = faCreditCard;
+
+  protected readonly unlimited = UNLIMITED_QTY;
 
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
@@ -66,13 +68,12 @@ export class SubscriptionComponent implements OnInit {
       // Pre-fill form with current subscription values or defaults
       this.form.patchValue({
         subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
-        subscriptionPeriod: info.subscriptionPeriod,
         userAccountQuantity:
-          info.subscriptionUserAccountQuantity != null && info.subscriptionUserAccountQuantity >= 0
+          info.subscriptionUserAccountQuantity !== UNLIMITED_QTY
             ? info.subscriptionUserAccountQuantity
             : info.currentUserAccountCount,
         customerOrganizationQuantity:
-          info.subscriptionCustomerOrganizationQuantity != null && info.subscriptionCustomerOrganizationQuantity >= 0
+          info.subscriptionCustomerOrganizationQuantity !== UNLIMITED_QTY
             ? info.subscriptionCustomerOrganizationQuantity
             : info.currentCustomerOrganizationCount,
       });
@@ -200,15 +201,15 @@ export class SubscriptionComponent implements OnInit {
 
     return {
       customers:
-        limits.maxCustomerOrganizations === -1
+        limits.maxCustomerOrganizations === UNLIMITED_QTY
           ? 'Unlimited customers'
           : `Up to ${limits.maxCustomerOrganizations} customer${limits.maxCustomerOrganizations > 1 ? 's' : ''}`,
       users:
-        limits.maxUsersPerCustomerOrganization === -1
+        limits.maxUsersPerCustomerOrganization === UNLIMITED_QTY
           ? 'Unlimited users per customer'
           : `Up to ${limits.maxUsersPerCustomerOrganization} user account${limits.maxUsersPerCustomerOrganization > 1 ? 's' : ''} per customer`,
       deployments:
-        limits.maxDeploymentsPerCustomerOrganization === -1
+        limits.maxDeploymentsPerCustomerOrganization === UNLIMITED_QTY
           ? 'Unlimited deployments per customer'
           : `${limits.maxDeploymentsPerCustomerOrganization} active deployment${limits.maxDeploymentsPerCustomerOrganization > 1 ? 's' : ''} per customer`,
     };
@@ -245,11 +246,13 @@ export class SubscriptionComponent implements OnInit {
 
     switch (metric) {
       case 'customerOrganizations':
-        return limits.maxCustomerOrganizations === -1 ? 'unlimited' : limits.maxCustomerOrganizations;
+        return limits.maxCustomerOrganizations === UNLIMITED_QTY ? 'unlimited' : limits.maxCustomerOrganizations;
       case 'usersPerCustomer':
-        return limits.maxUsersPerCustomerOrganization === -1 ? 'unlimited' : limits.maxUsersPerCustomerOrganization;
+        return limits.maxUsersPerCustomerOrganization === UNLIMITED_QTY
+          ? 'unlimited'
+          : limits.maxUsersPerCustomerOrganization;
       case 'deploymentsPerCustomer':
-        return limits.maxDeploymentsPerCustomerOrganization === -1
+        return limits.maxDeploymentsPerCustomerOrganization === UNLIMITED_QTY
           ? 'unlimited'
           : limits.maxDeploymentsPerCustomerOrganization;
       default:
@@ -284,7 +287,7 @@ export class SubscriptionComponent implements OnInit {
   getPlanDisplayName(subscriptionType: SubscriptionType): string {
     switch (subscriptionType) {
       case 'trial':
-        return 'Trial';
+        return 'Distr Pro Unlimited Trial';
       case 'starter':
         return 'Distr Starter';
       case 'pro':
