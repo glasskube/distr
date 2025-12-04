@@ -110,10 +110,10 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			ctx,
 			*body.CustomerOrganizationID,
 		); errors.Is(err, apierrors.ErrNotFound) || (err == nil && co.OrganizationID != *auth.CurrentOrgID()) {
-			http.Error(w, "customer organization does not exist", http.StatusBadRequest)
+			http.Error(w, "customer does not exist", http.StatusBadRequest)
 			return
 		} else if err != nil {
-			err = fmt.Errorf("failed to get customer organization: %w", err)
+			err = fmt.Errorf("failed to get customer: %w", err)
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -16,3 +16,13 @@ type Queryable interface {
 	) (int64, error)
 	Begin(ctx context.Context) (pgx.Tx, error)
 }
+
+type Conn interface {
+	Queryable
+	BeginEx(ctx context.Context, txOptions *pgx.TxOptions) (pgx.Tx, error)
+}
+
+type PoolConn interface {
+	Queryable
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+}
