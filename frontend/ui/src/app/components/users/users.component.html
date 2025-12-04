@@ -46,7 +46,9 @@
         <th scope="col" class="p-4">Name</th>
         <th scope="col" class="p-4">E-Mail</th>
         <th scope="col" class="p-4">Join Date</th>
-        <th scope="col" class="p-4">Role</th>
+        @if (isProSubscription()) {
+          <th scope="col" class="p-4">Role</th>
+        }
         <th scope="col" class="p-4"></th>
       </tr>
     </thead>
@@ -83,45 +85,47 @@
           <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
             {{ user.joinedOrgAt | date: 'short' }}
           </td>
-          <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-            @if (editRoleUserId() === user.id) {
-              <form [formGroup]="editRoleForm" class="flex" (ngSubmit)="submitEditUserRoleForm()">
-                <select
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm w-32 rounded-s-lg focus:ring-blue-500 focus:border-blue-500 block px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  id="user-role-select"
-                  formControlName="userRole">
-                  <option value="read_only">Viewer</option>
-                  <option value="read_write">User</option>
-                  <option value="admin">Administrator</option>
-                </select>
-                <button
-                  type="submit"
-                  class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-e-lg text-sm px-3 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                  <fa-icon [icon]="faCheck" />
-                </button>
-              </form>
-            } @else {
-              @switch (user.userRole) {
-                @case ('read_only') {
-                  Viewer
+          @if (isProSubscription()) {
+            <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              @if (editRoleUserId() === user.id) {
+                <form [formGroup]="editRoleForm" class="flex" (ngSubmit)="submitEditUserRoleForm()">
+                  <select
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm w-32 rounded-s-lg focus:ring-blue-500 focus:border-blue-500 block px-2 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    id="user-role-select"
+                    formControlName="userRole">
+                    <option value="read_only">Viewer</option>
+                    <option value="read_write">User</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                  <button
+                    type="submit"
+                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-e-lg text-sm px-3 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                    <fa-icon [icon]="faCheck" />
+                  </button>
+                </form>
+              } @else {
+                @switch (user.userRole) {
+                  @case ('read_only') {
+                    Viewer
+                  }
+                  @case ('read_write') {
+                    User
+                  }
+                  @case ('admin') {
+                    Admin
+                  }
                 }
-                @case ('read_write') {
-                  User
-                }
-                @case ('admin') {
-                  Admin
+                @if (auth.hasRole('admin') || (auth.isVendor() && auth.hasRole('read_write'))) {
+                  <button
+                    aria-label="Edit User Role"
+                    (click)="editUserRole(user)"
+                    class="text-gray-900 dark:text-gray-400 ms-1">
+                    <fa-icon [icon]="faPen"></fa-icon>
+                  </button>
                 }
               }
-              @if (auth.hasRole('admin') || (auth.isVendor() && auth.hasRole('read_write'))) {
-                <button
-                  aria-label="Edit User Role"
-                  (click)="editUserRole(user)"
-                  class="text-gray-900 dark:text-gray-400 ms-1">
-                  <fa-icon [icon]="faPen"></fa-icon>
-                </button>
-              }
-            }
-          </td>
+            </td>
+          }
           <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
             @if ((auth.isVendor() && auth.hasRole('read_write')) || auth.hasRole('admin')) {
               @if (!user.emailVerified) {
@@ -216,42 +220,44 @@
                     </div>
                   }
                 </div>
-                <div class="space-y-2">
-                  <label for="userRole" class="block text-sm font-medium text-gray-900 dark:text-white">
-                    User role <span class="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="userRole"
-                    formControlName="userRole"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option value="read_only">Viewer</option>
-                    <option value="read_write">User</option>
-                    <option value="admin">Administrator</option>
-                  </select>
+                @if (isProSubscription()) {
+                  <div class="space-y-2">
+                    <label for="userRole" class="block text-sm font-medium text-gray-900 dark:text-white">
+                      User role <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="userRole"
+                      formControlName="userRole"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                      <option value="read_only">Viewer</option>
+                      <option value="read_write">User</option>
+                      <option value="admin">Administrator</option>
+                    </select>
 
-                  @if (inviteForm.controls.userRole.invalid && inviteForm.controls.userRole.touched) {
-                    <div class="text-sm text-red-600">This field is required</div>
-                  }
+                    @if (inviteForm.controls.userRole.invalid && inviteForm.controls.userRole.touched) {
+                      <div class="text-sm text-red-600">This field is required</div>
+                    }
 
-                  @switch (inviteForm.controls.userRole.value) {
-                    @case ('read_only') {
-                      <div class="text-sm text-gray-500">
-                        Read-only users can view applications, deployments, artifacts and licenses.
-                      </div>
+                    @switch (inviteForm.controls.userRole.value) {
+                      @case ('read_only') {
+                        <div class="text-sm text-gray-500">
+                          Read-only users can view applications, deployments, artifacts and licenses.
+                        </div>
+                      }
+                      @case ('read_write') {
+                        <div class="text-sm text-gray-500">
+                          Read/Write users can view and modify applications, deployments, artifacts and licenses.
+                        </div>
+                      }
+                      @case ('admin') {
+                        <div class="text-sm text-gray-500">
+                          Administrator users can view, modify, and manage all aspects of the platform, including user
+                          management, organization settings and billing.
+                        </div>
+                      }
                     }
-                    @case ('read_write') {
-                      <div class="text-sm text-gray-500">
-                        Read/Write users can view and modify applications, deployments, artifacts and licenses.
-                      </div>
-                    }
-                    @case ('admin') {
-                      <div class="text-sm text-gray-500">
-                        Administrator users can view, modify, and manage all aspects of the platform, including user
-                        management, organization settings and billing.
-                      </div>
-                    }
-                  }
-                </div>
+                  </div>
+                }
 
                 <button
                   type="submit"

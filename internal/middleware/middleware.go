@@ -89,6 +89,37 @@ var (
 	RequireAdmin            = RequireAnyUserRole(types.UserRoleAdmin)
 )
 
+func RequireAnySubscriptionType(types ...types.SubscriptionType) func(http.Handler) http.Handler {
+	return func(handler http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			if auth, err := auth.Authentication.Get(ctx); err != nil {
+				http.Error(w, err.Error(), http.StatusForbidden)
+			} else if auth.CurrentOrg() == nil {
+				http.Error(w, "inadequate access token", http.StatusForbidden)
+			} else if !slices.Contains(types, auth.CurrentOrg().SubscriptionType) {
+				var typesStr []string
+				for _, t := range types {
+					typesStr = append(typesStr, string(t))
+				}
+				http.Error(w, fmt.Sprintf(
+					"this operation can only be performed on an organization with one of the following subscription types: %v",
+					strings.Join(typesStr, ", "),
+				), http.StatusForbidden)
+			} else {
+				handler.ServeHTTP(w, r)
+			}
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+var ProFeature = RequireAnySubscriptionType(
+	types.SubscriptionTypePro,
+	types.SubscriptionTypeTrial,
+	types.SubscriptionTypeEnterprise,
+)
+
 func RequireVendor(handler http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

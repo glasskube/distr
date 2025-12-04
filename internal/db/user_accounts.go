@@ -239,6 +239,24 @@ func UpdateUserAccountOrganizationAssignment(
 	}
 }
 
+func UpdateAllUserAccountOrganizationAssignments(ctx context.Context, orgID uuid.UUID, role types.UserRole) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(ctx,
+		`UPDATE Organization_UserAccount
+		SET user_role = @role
+		WHERE organization_id = @orgId`,
+		pgx.NamedArgs{
+			"orgId": orgID,
+			"role":  role,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update Organization_UserAccount: %w", err)
+	} else {
+		return nil
+	}
+}
+
 func GetUserAccountsByOrgID(ctx context.Context, orgID uuid.UUID) (
 	[]types.UserAccountWithUserRole,
 	error,
