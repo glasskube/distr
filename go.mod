@@ -35,7 +35,7 @@ require (
 	github.com/mark3labs/mcp-go v0.43.1
 	github.com/onsi/gomega v1.38.2
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.141.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/stripe/stripe-go/v84 v84.0.0
 	github.com/wneessen/go-mail v0.7.2
 	go.opentelemetry.io/collector/component v1.47.0
