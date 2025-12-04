@@ -32,7 +32,8 @@ func UserAccountsRouter(r chi.Router) {
 		r.With(middleware.RequireReadWriteOrAdmin).Post("/", createUserAccountHandler)
 		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chi.Router) {
 			r.Use(userAccountMiddleware)
-			r.Patch("/", patchUserAccountHandler())
+			r.With(middleware.ProFeature).
+				Patch("/", patchUserAccountHandler())
 			r.Delete("/", deleteUserAccountHandler)
 			r.Patch("/image", patchImageUserAccount)
 			r.With(inviteUserRateLimiter).
@@ -84,14 +85,6 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var organization types.OrganizationWithBranding
-	userAccount := types.UserAccount{
-		Email: body.Email,
-		Name:  body.Name,
-	}
-	var inviteURL string
-	userHasExisted := false
-
 	if customerOrgID := auth.CurrentCustomerOrgID(); customerOrgID != nil {
 		if *auth.CurrentUserRole() != types.UserRoleAdmin {
 			http.Error(w, "must be admin to create users", http.StatusForbidden)
@@ -122,14 +115,25 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	userAccount := types.UserAccount{
+		Email: body.Email,
+		Name:  body.Name,
+	}
+	var inviteURL string
+
 	if err := db.RunTx(ctx, func(ctx context.Context) error {
-		if result, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID()); err != nil {
+		organization, err := db.GetOrganizationWithBranding(ctx, *auth.CurrentOrgID())
+		if err != nil {
 			err = fmt.Errorf("failed to get org with branding: %w", err)
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return err
-		} else {
-			organization = *result
+		}
+
+		if body.UserRole != types.UserRoleAdmin && !organization.SubscriptionType.IsPro() {
+			err = errors.New("creating non-admin users requires a pro subscription")
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return err
 		}
 
 		var limitReached bool
@@ -160,6 +164,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
+		userHasExisted := false
 		if existingUA, err := db.GetUserAccountByEmail(ctx, body.Email); errors.Is(err, apierrors.ErrNotFound) {
 			if err := db.CreateUserAccount(ctx, &userAccount); err != nil {
 				err = fmt.Errorf("failed to create user account: %w", err)
@@ -204,7 +209,7 @@ func createUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		if err := mailsending.SendUserInviteMail(
 			ctx,
 			userAccount,
-			organization,
+			*organization,
 			body.CustomerOrganizationID,
 			inviteURL,
 		); err != nil {

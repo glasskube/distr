@@ -105,6 +105,11 @@ export class UsersComponent {
         : org.subscriptionLimits.maxUsersPerCustomerOrganization;
   });
 
+  protected readonly isProSubscription = computed(() => {
+    const subscriptionType = this.organization()?.subscriptionType;
+    return subscriptionType && ['trial', 'pro', 'enterprise'].includes(subscriptionType);
+  });
+
   protected readonly editRoleUserId = signal<string | null>(null);
   protected readonly editRoleForm = new FormGroup({
     userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),

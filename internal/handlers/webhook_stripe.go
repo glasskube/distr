@@ -175,6 +175,12 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 			return err
 		}
 
+		if org.SubscriptionType == types.SubscriptionTypeStarter {
+			if err := db.UpdateAllUserAccountOrganizationAssignments(ctx, org.ID, types.UserRoleAdmin); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 }
