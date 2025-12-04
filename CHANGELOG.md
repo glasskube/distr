@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.0.0-rc.3](https://github.com/glasskube/distr/compare/2.0.0-rc.2...2.0.0-rc.3) (2025-12-04)
+
+
+### Features
+
+* add a subscription update confirmation modal ([#1494](https://github.com/glasskube/distr/issues/1494)) ([aba1e3c](https://github.com/glasskube/distr/commit/aba1e3c1055eda0216deb8fbcf369644ee48f547))
+* only display subscription banner for vendors ([#1511](https://github.com/glasskube/distr/issues/1511)) ([74f1429](https://github.com/glasskube/distr/commit/74f142910de46ba1af142127a987f09964f3d94e))
+
+
+### Bug Fixes
+
+* **backend:** fix visibility issues for deployments endpoints ([#1504](https://github.com/glasskube/distr/issues/1504)) ([5486382](https://github.com/glasskube/distr/commit/5486382649129c770d4f0ed2da9fd1600286f94f))
+* **deps:** update module github.com/mark3labs/mcp-go to v0.43.2 ([#1503](https://github.com/glasskube/distr/issues/1503)) ([b965317](https://github.com/glasskube/distr/commit/b9653178e8946cec3b101f10b13adfa62212e07e))
+* **deps:** update module github.com/spf13/cobra to v1.10.2 ([#1501](https://github.com/glasskube/distr/issues/1501)) ([5ea971a](https://github.com/glasskube/distr/commit/5ea971a2d6e99e5ea5dce0996d977a877ba7a9ae))
+* **registry:** fix access control for write actions ([#1506](https://github.com/glasskube/distr/issues/1506)) ([8c50d0a](https://github.com/glasskube/distr/commit/8c50d0ab28d1a563221140f4ce97fdab1027b6fe))
+* **ui:** do not show install wizard for users with `read_only` role ([#1505](https://github.com/glasskube/distr/issues/1505)) ([d4d7d1e](https://github.com/glasskube/distr/commit/d4d7d1e7ddec48b6e61d51a084ca1cfafca095ce))
+
+
+### Other
+
+* **deps:** update angular-cli monorepo to v20.3.13 ([#1499](https://github.com/glasskube/distr/issues/1499)) ([d60147d](https://github.com/glasskube/distr/commit/d60147dad2ce0678a16160f2ddccbf4b28348655))
+* **deps:** update dependency golangci-lint to v2.7.0 ([#1500](https://github.com/glasskube/distr/issues/1500)) ([847411d](https://github.com/glasskube/distr/commit/847411d37747b0eee78c99ffad9f9f0d7c41a63d))
+* **deps:** update gcr.io/distroless/static-debian12:nonroot docker digest to 2b7c93f ([#1509](https://github.com/glasskube/distr/issues/1509)) ([c414221](https://github.com/glasskube/distr/commit/c41422158115556812d31eb79e3998a9e88e9956))
+* disable user roles in starter plan ([#1510](https://github.com/glasskube/distr/issues/1510)) ([a043d5b](https://github.com/glasskube/distr/commit/a043d5b309ec8d089b5cf22451a22a9c61113024))
+* fix typo ([#1508](https://github.com/glasskube/distr/issues/1508)) ([215a391](https://github.com/glasskube/distr/commit/215a39148936317dfdf2f597e1d025d516debe5c))
+* **ui:** rename customer organization to customer, customer user to user ([#1502](https://github.com/glasskube/distr/issues/1502)) ([5e7bf98](https://github.com/glasskube/distr/commit/5e7bf98c2b0262b0c834f75101eab5f2b425f59c))
+
+
+### Refactoring
+
+* always use -1 for unlimited subscription quantities ([#1490](https://github.com/glasskube/distr/issues/1490)) ([03f8576](https://github.com/glasskube/distr/commit/03f85764b8b86c8fd257cf8f0eb6dabd60815b02))
+
 ## [2.0.0-rc.2](https://github.com/glasskube/distr/compare/2.0.0-rc.1...2.0.0-rc.2) (2025-12-03)
 
 
