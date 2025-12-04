@@ -243,7 +243,7 @@ func UpdateAllUserAccountOrganizationAssignments(ctx context.Context, orgID uuid
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
 		`UPDATE Organization_UserAccount
-		SET role = @role
+		SET user_role = @role
 		WHERE organization_id = @orgId`,
 		pgx.NamedArgs{
 			"orgId": orgID,
