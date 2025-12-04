@@ -46,7 +46,7 @@
         </form>
 
         @if (auth.hasAnyRole('read_write', 'admin')) {
-          <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 md:mt-0flex-grow">
+          <div class="items-center space-y-4 sm:flex sm:space-x-4 sm:space-y-0 md:mt-0 flex-grow">
             <app-quota-limit class="flex-grow" [usage]="count()" [limit]="limit()" #quota></app-quota-limit>
             <button
               (click)="openWizard()"
