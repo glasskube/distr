@@ -272,12 +272,6 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		return nil, fmt.Errorf("failed to get current usage counts: %w", err)
 	}
 
-	// Build limits for all subscription types
-	trialLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)
-	starterLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeStarter)
-	proLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypePro)
-	enterpriseLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)
-
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt,
@@ -288,10 +282,11 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		CurrentCustomerOrganizationCount:       usage.customerOrganizationCount,
 		CurrentMaxUsersPerCustomer:             usage.maxUsersPerCustomer,
 		CurrentMaxDeploymentTargetsPerCustomer: usage.maxDeploymentTargetsPerCustomer,
-		TrialLimits:                            trialLimits,
-		StarterLimits:                          starterLimits,
-		ProLimits:                              proLimits,
-		EnterpriseLimits:                       enterpriseLimits,
+		Limits:                                 map[types.SubscriptionType]api.SubscriptionLimits{},
+	}
+
+	for _, st := range types.AllSubscriptionTypes {
+		info.Limits[st] = subscription.GetSubscriptionLimits(st)
 	}
 
 	return info, nil
