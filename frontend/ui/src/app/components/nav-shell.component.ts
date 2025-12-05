@@ -1,4 +1,4 @@
-import {Component, computed, inject, signal} from '@angular/core';
+import {Component, computed, inject} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterOutlet} from '@angular/router';
 import dayjs from 'dayjs';
@@ -25,7 +25,6 @@ export class NavShellComponent {
   private readonly organizationService = inject(OrganizationService);
   private readonly auth = inject(AuthService);
 
-  private readonly isVendor = signal(this.auth.isVendor());
   protected readonly organization$ = this.organizationService.get();
 
   protected readonly isSubscriptionExpired = toSignal(
@@ -39,7 +38,7 @@ export class NavShellComponent {
   );
 
   protected readonly isSubscriptionBannerVisible = computed(() => {
-    if (!this.isVendor()) {
+    if (!this.auth.isVendor()) {
       return false;
     }
     return this.isSubscriptionExpired() || this.isSubscriptionTrial();
