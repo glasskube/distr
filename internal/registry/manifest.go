@@ -378,17 +378,18 @@ func (handler *manifests) handleGet(resp http.ResponseWriter, req *http.Request,
 		}
 	}
 
+	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
+		log := internalctx.GetLogger(ctx)
+		log.Warn("failed to audit-log pull", zap.Error(err))
+		sentry.GetHubFromContext(ctx)
+	}
+
 	resp.Header().Set("Docker-Content-Digest", m.Digest.String())
 	resp.Header().Set("Content-Type", m.ContentType)
 	resp.Header().Set("Content-Length", strconv.Itoa(len(m.Data)))
 	resp.WriteHeader(http.StatusOK)
 	if _, err := resp.Write(m.Data); err != nil {
 		return regErrInternal(err)
-	}
-	if err := handler.audit.AuditPull(ctx, repo, target); err != nil {
-		log := internalctx.GetLogger(ctx)
-		log.Warn("failed to audit-log pull", zap.Error(err))
-		sentry.GetHubFromContext(ctx)
 	}
 	return nil
 }
