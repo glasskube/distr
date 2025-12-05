@@ -1,5 +1,5 @@
 export const UNLIMITED_QTY = -1;
-export type SubscriptionType = 'starter' | 'pro' | 'enterprise' | 'trial';
+export type SubscriptionType = 'community' | 'starter' | 'pro' | 'enterprise' | 'trial';
 
 export type SubscriptionPeriod = 'monthly' | 'yearly';
 
@@ -19,10 +19,7 @@ export interface SubscriptionInfo {
   currentCustomerOrganizationCount: number;
   currentMaxUsersPerCustomer: number;
   currentMaxDeploymentTargetsPerCustomer: number;
-  trialLimits: SubscriptionLimits;
-  starterLimits: SubscriptionLimits;
-  proLimits: SubscriptionLimits;
-  enterpriseLimits: SubscriptionLimits;
+  limits: {[key in SubscriptionType]: SubscriptionLimits};
 }
 
 export interface CheckoutRequest {

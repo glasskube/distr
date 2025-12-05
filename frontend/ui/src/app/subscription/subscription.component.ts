@@ -218,21 +218,9 @@ export class SubscriptionComponent implements OnInit {
   private getPlanLimitsObject(subscriptionType: SubscriptionType) {
     const info = this.subscriptionInfo();
     if (!info) {
-      return null;
+      return undefined;
     }
-
-    switch (subscriptionType) {
-      case 'trial':
-        return info.trialLimits;
-      case 'starter':
-        return info.starterLimits;
-      case 'pro':
-        return info.proLimits;
-      case 'enterprise':
-        return info.enterpriseLimits;
-      default:
-        return never(subscriptionType);
-    }
+    return info.limits[subscriptionType];
   }
 
   getPlanLimit(
@@ -278,14 +266,16 @@ export class SubscriptionComponent implements OnInit {
 
     // Check if current usage exceeds starter plan limits
     return (
-      info.currentCustomerOrganizationCount <= info.starterLimits.maxCustomerOrganizations &&
-      info.currentMaxUsersPerCustomer <= info.starterLimits.maxUsersPerCustomerOrganization &&
-      info.currentMaxDeploymentTargetsPerCustomer <= info.starterLimits.maxDeploymentsPerCustomerOrganization
+      info.currentCustomerOrganizationCount <= info.limits.starter.maxCustomerOrganizations &&
+      info.currentMaxUsersPerCustomer <= info.limits.starter.maxUsersPerCustomerOrganization &&
+      info.currentMaxDeploymentTargetsPerCustomer <= info.limits.starter.maxDeploymentsPerCustomerOrganization
     );
   }
 
   getPlanDisplayName(subscriptionType: SubscriptionType): string {
     switch (subscriptionType) {
+      case 'community':
+        return 'Distr Community Edition';
       case 'trial':
         return 'Distr Pro Unlimited Trial';
       case 'starter':

@@ -40,11 +40,20 @@ func (st SubscriptionType) IsPro() bool {
 }
 
 const (
+	SubscriptionTypeCommunity  SubscriptionType = "community"
 	SubscriptionTypeStarter    SubscriptionType = "starter"
 	SubscriptionTypePro        SubscriptionType = "pro"
 	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
 	SubscriptionTypeTrial      SubscriptionType = "trial"
 )
+
+var AllSubscriptionTypes = []SubscriptionType{
+	SubscriptionTypeCommunity,
+	SubscriptionTypeStarter,
+	SubscriptionTypePro,
+	SubscriptionTypeEnterprise,
+	SubscriptionTypeTrial,
+}
 
 type (
 	DeploymentType        string

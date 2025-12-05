@@ -104,7 +104,9 @@ export class NavBarComponent implements OnInit {
 
   protected readonly isTrial = toSignal(this.organization$.pipe(map((org) => org.subscriptionType === 'trial')));
   protected readonly isSubscriptionExpired = toSignal(
-    this.organization$.pipe(map((org) => dayjs(org.subscriptionEndsAt).isBefore()))
+    this.organization$.pipe(
+      map((org) => org.subscriptionType !== 'community' && dayjs(org.subscriptionEndsAt).isBefore())
+    )
   );
 
   userOpened = false;
