@@ -1,7 +1,7 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {Component, computed, DestroyRef, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCreditCard, faShoppingCart} from '@fortawesome/free-solid-svg-icons';
@@ -29,6 +29,7 @@ export class SubscriptionComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected subscriptionInfo = signal<SubscriptionInfo | undefined>(undefined);
   protected pendingUpdate = signal<PendingSubscriptionUpdate | undefined>(undefined);
@@ -66,8 +67,10 @@ export class SubscriptionComponent implements OnInit {
       this.subscriptionInfo.set(info);
 
       // Pre-fill form with current subscription values or defaults
+      const defaultType = info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType;
+
       this.form.patchValue({
-        subscriptionType: info.subscriptionType === 'trial' ? 'pro' : info.subscriptionType,
+        subscriptionType: defaultType,
         userAccountQuantity:
           info.subscriptionUserAccountQuantity !== UNLIMITED_QTY
             ? info.subscriptionUserAccountQuantity
@@ -76,6 +79,14 @@ export class SubscriptionComponent implements OnInit {
           info.subscriptionCustomerOrganizationQuantity !== UNLIMITED_QTY
             ? info.subscriptionCustomerOrganizationQuantity
             : info.currentCustomerOrganizationCount,
+      });
+
+      // Subscribe to subscription type changes to prevent invalid starter selection
+      this.form.controls.subscriptionType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((value) => {
+        if (value === 'starter' && !this.canSelectStarterPlan()) {
+          this.form.controls.subscriptionType.setValue('pro', {emitEvent: false});
+          this.toast.error('Starter plan not available. Current usage exceeds starter limits.');
+        }
       });
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -218,21 +229,9 @@ export class SubscriptionComponent implements OnInit {
   private getPlanLimitsObject(subscriptionType: SubscriptionType) {
     const info = this.subscriptionInfo();
     if (!info) {
-      return null;
+      return undefined;
     }
-
-    switch (subscriptionType) {
-      case 'trial':
-        return info.trialLimits;
-      case 'starter':
-        return info.starterLimits;
-      case 'pro':
-        return info.proLimits;
-      case 'enterprise':
-        return info.enterpriseLimits;
-      default:
-        return never(subscriptionType);
-    }
+    return info.limits[subscriptionType];
   }
 
   getPlanLimit(
@@ -278,14 +277,19 @@ export class SubscriptionComponent implements OnInit {
 
     // Check if current usage exceeds starter plan limits
     return (
-      info.currentCustomerOrganizationCount <= info.starterLimits.maxCustomerOrganizations &&
-      info.currentMaxUsersPerCustomer <= info.starterLimits.maxUsersPerCustomerOrganization &&
-      info.currentMaxDeploymentTargetsPerCustomer <= info.starterLimits.maxDeploymentsPerCustomerOrganization
+      info.currentCustomerOrganizationCount <= info.limits.starter.maxCustomerOrganizations &&
+      info.currentMaxUsersPerCustomer <= info.limits.starter.maxUsersPerCustomerOrganization &&
+      info.currentMaxDeploymentTargetsPerCustomer <= info.limits.starter.maxDeploymentsPerCustomerOrganization &&
+      !info.hasApplicationLicenses &&
+      !info.hasArtifactLicenses &&
+      !info.hasNonAdminRoles
     );
   }
 
   getPlanDisplayName(subscriptionType: SubscriptionType): string {
     switch (subscriptionType) {
+      case 'community':
+        return 'Distr Community Edition';
       case 'trial':
         return 'Distr Pro Unlimited Trial';
       case 'starter':

@@ -204,3 +204,48 @@ func DeleteArtifactLicenseWithID(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func DeleteArtifactLicensesWithOrganizationID(ctx context.Context, organizationID uuid.UUID) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM ArtifactLicense WHERE organization_id = @organizationID`,
+		pgx.NamedArgs{"organizationID": organizationID},
+	)
+	if err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+		return 0, err
+	}
+
+	if err != nil {
+		return 0, fmt.Errorf("could not delete ArtifactLicense: %w", err)
+	}
+
+	return cmd.RowsAffected(), nil
+}
+
+func DeleteArtifactLicensesWithOrganizationSubscriptionType(
+	ctx context.Context,
+	subscriptionType []types.SubscriptionType,
+) (int64, error) {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`DELETE FROM ArtifactLicense WHERE organization_id IN (
+			SELECT id FROM Organization WHERE subscription_type = ANY(@subscriptionType)
+		)`,
+		pgx.NamedArgs{"subscriptionType": subscriptionType},
+	)
+	if err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {
+			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
+		}
+		return 0, fmt.Errorf("could not delete ArtifactLicenses: %w", err)
+	}
+
+	return cmd.RowsAffected(), nil
+}

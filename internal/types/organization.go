@@ -33,7 +33,7 @@ func (org *Organization) HasFeature(feature Feature) bool {
 }
 
 func (org *Organization) HasActiveSubscription() bool {
-	return org.SubscriptionEndsAt.After(time.Now())
+	return org.SubscriptionType == SubscriptionTypeCommunity || org.SubscriptionEndsAt.After(time.Now())
 }
 
 func (org *Organization) HasActiveSubscriptionWithType(st SubscriptionType) bool {

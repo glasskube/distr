@@ -42,8 +42,15 @@ const (
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization AS o (name, slug) VALUES (@name, @slug) RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"name": org.Name, "slug": org.Slug},
+		`INSERT INTO Organization AS o (name, slug, subscription_type, features)
+		VALUES (@name, @slug, @subscription_type, @features)
+		RETURNING `+organizationOutputExpr,
+		pgx.NamedArgs{
+			"name":              org.Name,
+			"slug":              org.Slug,
+			"subscription_type": org.SubscriptionType,
+			"features":          org.Features,
+		},
 	)
 	if err != nil {
 		return fmt.Errorf("could not create orgnization: %w", err)
@@ -101,6 +108,39 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 		*org = *result
 		return nil
 	}
+}
+
+func UpdateOrganizationSubscriptionType(ctx context.Context, subscriptionType types.SubscriptionType) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Organization
+		SET subscription_type = @subscription_type`,
+		pgx.NamedArgs{"subscription_type": subscriptionType},
+	)
+	if err != nil {
+		return fmt.Errorf("could no update Organization: %w", err)
+	}
+	return nil
+}
+
+func UpdateOrganizationFeaturesWithSubscriptionType(
+	ctx context.Context,
+	subscriptionType []types.SubscriptionType,
+	features []types.Feature,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Organization
+		SET features = @features
+		WHERE subscription_type = ANY(@subscription_type)`,
+		pgx.NamedArgs{"subscription_type": subscriptionType, "features": features},
+	)
+	if err != nil {
+		return fmt.Errorf("could no update Organization: %w", err)
+	}
+	return nil
 }
 
 func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.OrganizationWithUserRole, error) {

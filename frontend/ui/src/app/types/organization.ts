@@ -1,8 +1,7 @@
 import {BaseModel, Named, UserRole} from '@glasskube/distr-sdk';
+import {SubscriptionType} from './subscription';
 
 export type Feature = 'licensing';
-
-export type SubscriptionType = 'trial' | 'starter' | 'pro' | 'enterprise';
 
 export interface SubscriptionLimits {
   maxCustomerOrganizations: number;

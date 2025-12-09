@@ -224,6 +224,7 @@
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
           routerLinkActive="bg-gray-100 dark:bg-gray-700"
+          (click)="sidebar.hide()"
           routerLink="/customers">
           <fa-icon
             [icon]="faAddressBook"
@@ -238,6 +239,7 @@
           <a
             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
             routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            (click)="sidebar.hide()"
             routerLink="/users">
             <fa-icon
               [icon]="faUsers"
@@ -253,6 +255,7 @@
           <a
             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
             routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            (click)="sidebar.hide()"
             routerLink="/branding">
             <fa-icon
               [icon]="faPalette"
@@ -264,22 +267,26 @@
       }
 
       @if (auth.hasRole('admin')) {
-        <li>
-          <a
-            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-            routerLinkActive="bg-gray-100 dark:bg-gray-700"
-            routerLink="/subscription">
-            <fa-icon
-              [icon]="faCreditCard"
-              size="lg"
-              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-            <span class="ms-3">Subscription</span>
-          </a>
-        </li>
+        @if (edition === 'enterprise') {
+          <li>
+            <a
+              class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+              routerLinkActive="bg-gray-100 dark:bg-gray-700"
+              (click)="sidebar.hide()"
+              routerLink="/subscription">
+              <fa-icon
+                [icon]="faCreditCard"
+                size="lg"
+                class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+              <span class="ms-3">Subscription</span>
+            </a>
+          </li>
+        }
 
         <li>
           <a
             class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            (click)="sidebar.hide()"
             routerLinkActive="bg-gray-100 dark:bg-gray-700"
             routerLink="/settings">
             <fa-icon

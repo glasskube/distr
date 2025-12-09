@@ -71,6 +71,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := billing.CreateCheckoutSession(ctx, billing.CheckoutSessionParams{
 		OrganizationID:          auth.CurrentOrgID().String(),
+		TrialEndsAt:             auth.CurrentOrg().SubscriptionEndsAt,
 		SubscriptionType:        body.SubscriptionType,
 		SubscriptionPeriod:      body.SubscriptionPeriod,
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
@@ -261,6 +262,15 @@ func validateSubscriptionQuantities(
 		)
 	}
 
+	if !subscriptionType.IsPro() {
+		if usage.applicationLicenseCount > 0 {
+			return fmt.Errorf("subscription type %v does not allow application licenses", subscriptionType)
+		}
+		if usage.artifactLicenseCount > 0 {
+			return fmt.Errorf("subscription type %v does not allow artifact licenses", subscriptionType)
+		}
+	}
+
 	return nil
 }
 
@@ -272,11 +282,22 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		return nil, fmt.Errorf("failed to get current usage counts: %w", err)
 	}
 
-	// Build limits for all subscription types
-	trialLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)
-	starterLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeStarter)
-	proLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypePro)
-	enterpriseLimits := subscription.GetSubscriptionLimits(types.SubscriptionTypeEnterprise)
+	// Check for license management usage
+	hasApplicationLicenses, err := checkHasApplicationLicenses(ctx, org.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check application licenses: %w", err)
+	}
+
+	hasArtifactLicenses, err := checkHasArtifactLicenses(ctx, org.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check artifact licenses: %w", err)
+	}
+
+	// Check for RBAC usage (non-admin roles)
+	hasNonAdminRoles, err := checkHasNonAdminRoles(ctx, org.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check non-admin roles: %w", err)
+	}
 
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
@@ -288,10 +309,14 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		CurrentCustomerOrganizationCount:       usage.customerOrganizationCount,
 		CurrentMaxUsersPerCustomer:             usage.maxUsersPerCustomer,
 		CurrentMaxDeploymentTargetsPerCustomer: usage.maxDeploymentTargetsPerCustomer,
-		TrialLimits:                            trialLimits,
-		StarterLimits:                          starterLimits,
-		ProLimits:                              proLimits,
-		EnterpriseLimits:                       enterpriseLimits,
+		HasApplicationLicenses:                 hasApplicationLicenses,
+		HasArtifactLicenses:                    hasArtifactLicenses,
+		HasNonAdminRoles:                       hasNonAdminRoles,
+		Limits:                                 map[types.SubscriptionType]api.SubscriptionLimits{},
+	}
+
+	for _, st := range types.AllSubscriptionTypes {
+		info.Limits[st] = subscription.GetSubscriptionLimits(st)
 	}
 
 	return info, nil
@@ -303,6 +328,8 @@ type currentUsageCounts struct {
 	customerOrganizationCount       int64
 	maxUsersPerCustomer             int64
 	maxDeploymentTargetsPerCustomer int64
+	applicationLicenseCount         int64
+	artifactLicenseCount            int64
 }
 
 // getCurrentUsageCounts retrieves the current usage counts for the given organization
@@ -317,6 +344,16 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 	customerOrgs, err := db.GetCustomerOrganizationsByOrganizationID(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customers: %w", err)
+	}
+
+	appLicenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get application licenses: %w", err)
+	}
+
+	artifactLicenses, err := db.GetArtifactLicenses(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get artifact licenses: %w", err)
 	}
 
 	// Find the maximum user count and deployment target count across all customer organizations
@@ -336,5 +373,40 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 		customerOrganizationCount:       int64(len(customerOrgs)),
 		maxUsersPerCustomer:             maxUsersPerCustomer,
 		maxDeploymentTargetsPerCustomer: maxDeploymentTargetsPerCustomer,
+		applicationLicenseCount:         int64(len(appLicenses)),
+		artifactLicenseCount:            int64(len(artifactLicenses)),
 	}, nil
+}
+
+// checkHasApplicationLicenses checks if the organization has any application licenses
+func checkHasApplicationLicenses(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgID, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to get application licenses: %w", err)
+	}
+	return len(licenses) > 0, nil
+}
+
+// checkHasArtifactLicenses checks if the organization has any artifact licenses
+func checkHasArtifactLicenses(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	licenses, err := db.GetArtifactLicenses(ctx, orgID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get artifact licenses: %w", err)
+	}
+	return len(licenses) > 0, nil
+}
+
+// checkHasNonAdminRoles checks if the organization has any user accounts with non-admin roles
+func checkHasNonAdminRoles(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	userAccounts, err := db.GetUserAccountsByOrgID(ctx, orgID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get user accounts: %w", err)
+	}
+
+	for _, user := range userAccounts {
+		if user.UserRole != types.UserRoleAdmin {
+			return true, nil
+		}
+	}
+	return false, nil
 }

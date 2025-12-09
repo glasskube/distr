@@ -35,6 +35,8 @@ func (l Limit) IsExceeded(other int64) bool {
 
 func GetCustomersPerOrganizationLimit(st types.SubscriptionType) Limit {
 	switch st {
+	case types.SubscriptionTypeCommunity:
+		return MaxCustomersPerOrganizationUnlimited
 	case types.SubscriptionTypeTrial:
 		return MaxCustomersPerOrganizationUnlimited
 	case types.SubscriptionTypeStarter:
@@ -50,6 +52,8 @@ func GetCustomersPerOrganizationLimit(st types.SubscriptionType) Limit {
 
 func GetUsersPerCustomerOrganizationLimit(st types.SubscriptionType) Limit {
 	switch st {
+	case types.SubscriptionTypeCommunity:
+		return MaxUsersPerCustomerOrganizationStarter
 	case types.SubscriptionTypeTrial:
 		return MaxUsersPerCustomerOrganizationUnlimited
 	case types.SubscriptionTypeStarter:
@@ -65,6 +69,8 @@ func GetUsersPerCustomerOrganizationLimit(st types.SubscriptionType) Limit {
 
 func GetDeploymentTargetsPerCustomerOrganizationLimit(st types.SubscriptionType) Limit {
 	switch st {
+	case types.SubscriptionTypeCommunity:
+		return MaxDeploymentTargetsPerCustomerOrganizationStarter
 	case types.SubscriptionTypeTrial:
 		return MaxDeploymentTargetsPerCustomerOrganizationUnlimited
 	case types.SubscriptionTypeStarter:
