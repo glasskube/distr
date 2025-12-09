@@ -14,12 +14,13 @@
               <div class="space-y-4">
                 <h2 class="text-xl font-bold dark:text-white">Current Usage</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div class="flex flex-col p-4 bg-orange-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Users</p>
-                    <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Users</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       @if (subscriptionInfoData.subscriptionUserAccountQuantity !== unlimited) {
                         of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} Users used
                       } @else {
@@ -27,12 +28,13 @@
                       }
                     </p>
                   </div>
-                  <div class="flex flex-col p-4 bg-blue-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Customers</p>
-                    <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Customers</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity !== unlimited) {
                         of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} Customers used
                       }
@@ -43,21 +45,23 @@
                       </span>
                     </p>
                   </div>
-                  <div class="flex flex-col p-4 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Most Users per Customer</p>
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Most Users per Customer</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentMaxUsersPerCustomer }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       of {{ getCurrentPlanLimit('usersPerCustomer') }} allowed
                     </p>
                   </div>
-                  <div class="flex flex-col p-4 bg-purple-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Most Deployments per Customer</p>
-                    <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Most Deployments per Customer</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       of {{ getCurrentPlanLimit('deploymentsPerCustomer') }} allowed
                     </p>
                   </div>
