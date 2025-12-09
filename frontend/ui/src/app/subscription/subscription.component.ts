@@ -1,6 +1,6 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, DestroyRef, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -29,6 +29,7 @@ export class SubscriptionComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected subscriptionInfo = signal<SubscriptionInfo | undefined>(undefined);
   protected pendingUpdate = signal<PendingSubscriptionUpdate | undefined>(undefined);
@@ -81,7 +82,7 @@ export class SubscriptionComponent implements OnInit {
       });
 
       // Subscribe to subscription type changes to prevent invalid starter selection
-      this.form.controls.subscriptionType.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
+      this.form.controls.subscriptionType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((value) => {
         if (value === 'starter' && !this.canSelectStarterPlan()) {
           this.form.controls.subscriptionType.setValue('pro', {emitEvent: false});
           this.toast.error('Starter plan not available. Current usage exceeds starter limits.');
@@ -283,67 +284,6 @@ export class SubscriptionComponent implements OnInit {
       !info.hasArtifactLicenses &&
       !info.hasNonAdminRoles
     );
-  }
-
-  getStarterPlanViolations(): {type: string; message: string; current: string; limit: string}[] {
-    const info = this.subscriptionInfo();
-    if (!info) {
-      return [];
-    }
-
-    const violations: {type: string; message: string; current: string; limit: string}[] = [];
-
-    // Check customer limit
-    if (info.currentCustomerOrganizationCount > info.limits.starter.maxCustomerOrganizations) {
-      violations.push({
-        type: 'customers',
-        message: 'Too many customers',
-        current: info.currentCustomerOrganizationCount.toString(),
-        limit: info.limits.starter.maxCustomerOrganizations.toString(),
-      });
-    }
-
-    // Check users per customer limit
-    if (info.currentMaxUsersPerCustomer > info.limits.starter.maxUsersPerCustomerOrganization) {
-      violations.push({
-        type: 'usersPerCustomer',
-        message: 'Too many users per customer',
-        current: info.currentMaxUsersPerCustomer.toString(),
-        limit: info.limits.starter.maxUsersPerCustomerOrganization.toString(),
-      });
-    }
-
-    // Check deployments per customer limit
-    if (info.currentMaxDeploymentTargetsPerCustomer > info.limits.starter.maxDeploymentsPerCustomerOrganization) {
-      violations.push({
-        type: 'deploymentsPerCustomer',
-        message: 'Too many deployments per customer',
-        current: info.currentMaxDeploymentTargetsPerCustomer.toString(),
-        limit: info.limits.starter.maxDeploymentsPerCustomerOrganization.toString(),
-      });
-    }
-
-    // Check license management
-    if (info.hasApplicationLicenses || info.hasArtifactLicenses) {
-      violations.push({
-        type: 'licenseManagement',
-        message: 'License Management in use',
-        current: 'Active',
-        limit: 'Pro feature',
-      });
-    }
-
-    // Check RBAC
-    if (info.hasNonAdminRoles) {
-      violations.push({
-        type: 'rbac',
-        message: 'RBAC (role-based access) in use',
-        current: 'Active',
-        limit: 'Pro feature',
-      });
-    }
-
-    return violations;
   }
 
   getPlanDisplayName(subscriptionType: SubscriptionType): string {
