@@ -1,8 +1,7 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
 import {Component, computed, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCreditCard, faShoppingCart} from '@fortawesome/free-solid-svg-icons';
