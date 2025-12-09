@@ -367,11 +367,36 @@ func CreateArtifact(ctx context.Context, artifact *types.Artifact) error {
 	}
 }
 
+func HasAnyArtifactLicense(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	var hasLicenses bool
+	err := db.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1
+			FROM ArtifactLicense al
+			WHERE al.organization_id = @orgId
+		)`,
+		pgx.NamedArgs{"orgId": orgID},
+	).Scan(&hasLicenses)
+	if err != nil {
+		return false, fmt.Errorf("could not check for licenses: %w", err)
+	}
+	return hasLicenses, nil
+}
+
 func CheckLicenseForArtifact(
 	ctx context.Context,
 	orgName, name, reference string,
 	customerOrganizationID uuid.UUID,
+	orgID uuid.UUID,
 ) error {
+	hasLicenses, err := HasAnyArtifactLicense(ctx, orgID)
+	if err != nil {
+		return err
+	} else if !hasLicenses {
+		return nil
+	}
+
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
@@ -419,34 +444,19 @@ func CheckLicenseForArtifact(
 	return nil
 }
 
-func CheckOrganizationForArtifactBlob(ctx context.Context, digest string, orgID uuid.UUID) error {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(
-		ctx,
-		`SELECT exists(
-			SELECT *
-				FROM Artifact a
-				JOIN ArtifactVersion av ON a.id = av.artifact_id
-				JOIN ArtifactVersionPart avp ON av.id = avp.artifact_version_id
-				WHERE avp.artifact_blob_digest = @digest
-					AND a.organization_id = @orgId
-		)`,
-		pgx.NamedArgs{"digest": digest, "orgId": orgID},
-	)
+func CheckLicenseForArtifactBlob(ctx context.Context, digest string,
+	customerOrganizationID uuid.UUID,
+	orgID uuid.UUID,
+) error {
+	hasLicenses, err := HasAnyArtifactLicense(ctx, orgID)
 	if err != nil {
-		return fmt.Errorf("could not query ArtifactVersion: %w", err)
+		return err
+	} else if !hasLicenses {
+		return nil
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
-	if err != nil {
-		return fmt.Errorf("could not query ArtifactVersion: %w", err)
-	} else if !result.Exists {
-		return apierrors.ErrForbidden
-	}
-	return nil
-}
 
-func CheckLicenseForArtifactBlob(ctx context.Context, digest string, customerOrganizationID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
+
 	rows, err := db.Query(
 		ctx,
 		`WITH RECURSIVE ArtifactVersionAggregate (id, artifact_id, manifest_blob_digest) AS (
