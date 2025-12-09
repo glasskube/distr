@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.0.0-rc.4](https://github.com/glasskube/distr/compare/2.0.0-rc.3...2.0.0-rc.4) (2025-12-09)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1521](https://github.com/glasskube/distr/issues/1521)) ([89a85fc](https://github.com/glasskube/distr/commit/89a85fc751fde7071abad6b6321be7e7d9eb9ef8))
+* **deps:** update module github.com/onsi/gomega to v1.38.3 ([#1518](https://github.com/glasskube/distr/issues/1518)) ([c1ccadc](https://github.com/glasskube/distr/commit/c1ccadcccc06dee4ff3e08629b064117dd16c10c))
+* **deps:** update module golang.org/x/crypto to v0.46.0 ([#1522](https://github.com/glasskube/distr/issues/1522)) ([3cb5fc1](https://github.com/glasskube/distr/commit/3cb5fc13843d93ba706f5aafea715f76fcf4f506))
+* **deps:** update module golang.org/x/oauth2 to v0.34.0 ([#1517](https://github.com/glasskube/distr/issues/1517)) ([d5c83a3](https://github.com/glasskube/distr/commit/d5c83a37d7aa7c153050d2e0ae5c1d2d2a9bf871))
+* **deps:** update opentelemetry-go monorepo to v1.39.0 ([#1523](https://github.com/glasskube/distr/issues/1523)) ([67b081e](https://github.com/glasskube/distr/commit/67b081e2f9d7ada3307912e8cbb4e44483b37d43))
+* **deps:** update opentelemetry-go-contrib monorepo to v0.64.0 ([#1526](https://github.com/glasskube/distr/issues/1526)) ([1ac9897](https://github.com/glasskube/distr/commit/1ac9897c49e5e2878862637ae63cd25636721671))
+
+
+### Other
+
+* add enforcement of starter features ([#1525](https://github.com/glasskube/distr/issues/1525)) ([fff3c49](https://github.com/glasskube/distr/commit/fff3c498033c85038b0831126db5638fdd1a99de))
+* add subscription type "community" ([#1514](https://github.com/glasskube/distr/issues/1514)) ([c5c850c](https://github.com/glasskube/distr/commit/c5c850c4bbf6652b6f8c6e4ad43a584f02cbb89c))
+* **deps:** update dependency @codemirror/view to v6.39.1 ([#1520](https://github.com/glasskube/distr/issues/1520)) ([57598bf](https://github.com/glasskube/distr/commit/57598bf003929ff96a79ac74ef37e9a38938507c))
+* **deps:** update dependency golangci-lint to v2.7.1 ([#1507](https://github.com/glasskube/distr/issues/1507)) ([d5d084f](https://github.com/glasskube/distr/commit/d5d084f83cd61dc31e915647d6997495f7843bf3))
+* **deps:** update dependency golangci-lint to v2.7.2 ([#1516](https://github.com/glasskube/distr/issues/1516)) ([b22662c](https://github.com/glasskube/distr/commit/b22662c491a38c18103dececa3d106800c8e00f4))
+* **deps:** update dependency pnpm to v10.25.0 ([#1519](https://github.com/glasskube/distr/issues/1519)) ([ae49b93](https://github.com/glasskube/distr/commit/ae49b93dc7bb145b20f3a709c20d0cb2f697c169))
+* improve quota styling ([#1527](https://github.com/glasskube/distr/issues/1527)) ([b81f732](https://github.com/glasskube/distr/commit/b81f732ecfdfaa67e88db629a416e02285e1d6c2))
+* set trial end date in checkout session ([#1515](https://github.com/glasskube/distr/issues/1515)) ([23d8c12](https://github.com/glasskube/distr/commit/23d8c129b7632f7d8cb7ee891e75c848c3de4b51))
+* subscription page improvements ([#1524](https://github.com/glasskube/distr/issues/1524)) ([e2dc393](https://github.com/glasskube/distr/commit/e2dc39351a594eb5f582dc54cf2a0747bdb03a38))
+
+
+### Refactoring
+
+* don't wrap static boolean in signal ([#1513](https://github.com/glasskube/distr/issues/1513)) ([bf7b226](https://github.com/glasskube/distr/commit/bf7b226ab8a665e44537c4d6bcdcdeca48a14e61))
+
 ## [2.0.0-rc.3](https://github.com/glasskube/distr/compare/2.0.0-rc.2...2.0.0-rc.3) (2025-12-04)
 
 
