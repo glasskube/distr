@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/glasskube/distr/compare/2.0.0...2.0.1) (2025-12-09)
+
+
+### Bug Fixes
+
+* allow customer qty 0 ([#1532](https://github.com/glasskube/distr/issues/1532)) ([23082cf](https://github.com/glasskube/distr/commit/23082cf97098a344291b4c655a7eed1014b5f799))
+
 ## [2.0.0](https://github.com/glasskube/distr/compare/1.16.1...2.0.0) (2025-12-09)
 
 
