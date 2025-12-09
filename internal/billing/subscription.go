@@ -122,14 +122,20 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 	if params.CustomerOrganizationQty > 0 {
 		sessionParams.LineItems = append(
 			sessionParams.LineItems,
-			&stripe.CheckoutSessionLineItemParams{Price: &prices.CustomerPriceID, Quantity: util.PtrTo(params.CustomerOrganizationQty)},
+			&stripe.CheckoutSessionLineItemParams{
+				Price:    &prices.CustomerPriceID,
+				Quantity: util.PtrTo(params.CustomerOrganizationQty),
+			},
 		)
 	}
 
 	if params.UserAccountQty > 0 {
 		sessionParams.LineItems = append(
 			sessionParams.LineItems,
-			&stripe.CheckoutSessionLineItemParams{Price: &prices.UserPriceID, Quantity: util.PtrTo(params.UserAccountQty)},
+			&stripe.CheckoutSessionLineItemParams{
+				Price:    &prices.UserPriceID,
+				Quantity: util.PtrTo(params.UserAccountQty),
+			},
 		)
 	}
 
