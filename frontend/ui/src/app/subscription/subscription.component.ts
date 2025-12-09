@@ -1,6 +1,7 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {CommonModule} from '@angular/common';
 import {Component, computed, inject, OnInit, signal, TemplateRef, viewChild} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -81,7 +82,7 @@ export class SubscriptionComponent implements OnInit {
       });
 
       // Subscribe to subscription type changes to prevent invalid starter selection
-      this.form.controls.subscriptionType.valueChanges.subscribe((value) => {
+      this.form.controls.subscriptionType.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
         if (value === 'starter' && !this.canSelectStarterPlan()) {
           this.form.controls.subscriptionType.setValue('pro', {emitEvent: false});
           this.toast.error('Starter plan not available. Current usage exceeds starter limits.');
