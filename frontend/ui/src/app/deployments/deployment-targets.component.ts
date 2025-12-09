@@ -123,19 +123,27 @@ export class DeploymentTargetsComponent implements AfterViewInit {
         metrics: deploymentTargetMetrics.find((x) => x.id === dt.id),
       }))
     ),
-    map((deploymentTargets) => [
-      {deploymentTargets: deploymentTargets.filter((it) => it.customerOrganization === undefined)},
-      ...Object.values(
-        deploymentTargets
-          .map((dt) => dt.customerOrganization)
-          .filter((co) => co !== undefined)
-          .sort(compareBy((co) => co.name))
-          .reduce<Record<string, CustomerOrganization>>((agg, co) => ({...agg, [co.id]: co}), {})
-      ).map<CustomerDeploymentTargets>((customerOrganization) => ({
-        customerOrganization,
-        deploymentTargets: deploymentTargets.filter((dt) => dt.customerOrganization?.id === customerOrganization.id),
-      })),
-    ])
+    map((deploymentTargets) =>
+      // For vendors: group deployment targets by customer organization
+      // For customers: just put all deployment targets into one group
+      this.auth.isVendor()
+        ? [
+            {deploymentTargets: deploymentTargets.filter((it) => it.customerOrganization === undefined)},
+            ...Object.values(
+              deploymentTargets
+                .map((dt) => dt.customerOrganization)
+                .filter((co) => co !== undefined)
+                .sort(compareBy((co) => co.name))
+                .reduce<Record<string, CustomerOrganization>>((agg, co) => ({...agg, [co.id]: co}), {})
+            ).map<CustomerDeploymentTargets>((customerOrganization) => ({
+              customerOrganization,
+              deploymentTargets: deploymentTargets.filter(
+                (dt) => dt.customerOrganization?.id === customerOrganization.id
+              ),
+            })),
+          ]
+        : [{deploymentTargets}]
+    )
   );
 
   private readonly applications$ = this.applications.list();
