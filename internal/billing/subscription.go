@@ -93,6 +93,7 @@ func GetSubscriptionPeriod(subscription stripe.Subscription) (types.Subscription
 
 type CheckoutSessionParams struct {
 	OrganizationID          string
+	TrialEndsAt             time.Time
 	SubscriptionType        types.SubscriptionType
 	SubscriptionPeriod      types.SubscriptionPeriod
 	CustomerOrganizationQty int64
@@ -120,6 +121,11 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 				"organizationId": params.OrganizationID,
 			},
 		},
+	}
+
+	// Stripe only allows setting TrialEnd if it is at least 48 hours in the future
+	if time.Now().Add(48 * time.Hour).Before(params.TrialEndsAt) {
+		sessionParams.SubscriptionData.TrialEnd = util.PtrTo(params.TrialEndsAt.Unix())
 	}
 
 	return checkoutsession.New(sessionParams)

@@ -71,6 +71,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := billing.CreateCheckoutSession(ctx, billing.CheckoutSessionParams{
 		OrganizationID:          auth.CurrentOrgID().String(),
+		TrialEndsAt:             auth.CurrentOrg().SubscriptionEndsAt,
 		SubscriptionType:        body.SubscriptionType,
 		SubscriptionPeriod:      body.SubscriptionPeriod,
 		CustomerOrganizationQty: body.CustomerOrganizationQty,
