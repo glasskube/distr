@@ -189,6 +189,45 @@ func UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
 	}
 }
 
+func UpdateDeploymentUnsetLicenseIDWithOrganizationID(ctx context.Context, organizationID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Deployment
+		SET application_license_id = NULL
+		WHERE deployment_target_id IN (
+			SELECT id FROM DeploymentTarget WHERE organization_id = @organizationID
+		)`,
+		pgx.NamedArgs{"organizationID": organizationID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	return nil
+}
+
+func UpdateDeploymentUnsetLicenseIDWithOrganizationSubscriptionType(
+	ctx context.Context,
+	subscriptionType []types.SubscriptionType,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Deployment
+		SET application_license_id = NULL
+		WHERE deployment_target_id IN (
+			SELECT dt.id FROM DeploymentTarget dt
+				JOIN Organization o ON dt.organization_id = o.id
+			WHERE o.subscription_type = ANY(@subscriptionType)
+		)`,
+		pgx.NamedArgs{"subscriptionType": subscriptionType},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	return nil
+}
+
 func DeleteDeploymentWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	res, err := db.Exec(ctx, "DELETE FROM Deployment WHERE id = @id", pgx.NamedArgs{"id": id})

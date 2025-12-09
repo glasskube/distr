@@ -7,8 +7,8 @@ import {UNLIMITED_QTY} from '../types/subscription';
     @let l = limit();
     @let p = percentage();
     @if (l !== undefined && p >= 50) {
-      <div class="flex text-gray-900 dark:text-white flex-grow items-center justify-end gap-2">
-        <div class="bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 max-w-24 flex-grow">
+      <div class="text-gray-900 dark:text-white flex items-center gap-2 md:w-36">
+        <div class="bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 flex-1">
           <div
             class="h-1.5 rounded-full"
             [class.bg-green-600]="!isLimitDanger()"
