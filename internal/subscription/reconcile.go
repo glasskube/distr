@@ -3,6 +3,7 @@ package subscription
 import (
 	"context"
 
+	"github.com/glasskube/distr/internal/buildconfig"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
@@ -30,6 +31,11 @@ func ReconcileStarterFeaturesForOrganizationID(ctx context.Context, orgID uuid.U
 
 func ReconcileStarterFeatures(ctx context.Context) error {
 	return db.RunTx(ctx, func(ctx context.Context) error {
+		if buildconfig.IsCommunityEdition() {
+			if err := db.UpdateOrganizationSubscriptionType(ctx, types.SubscriptionTypeCommunity); err != nil {
+				return err
+			}
+		}
 		if err := db.UpdateAllUserAccountOrganizationAssignmentsWithOrganizationSuscriptionType(
 			ctx,
 			types.NonProSubscriptionTypes,

@@ -110,6 +110,20 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 	}
 }
 
+func UpdateOrganizationSubscriptionType(ctx context.Context, subscriptionType types.SubscriptionType) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Organization
+		SET subscription_type = @subscription_type`,
+		pgx.NamedArgs{"subscription_type": subscriptionType},
+	)
+	if err != nil {
+		return fmt.Errorf("could no update Organization: %w", err)
+	}
+	return nil
+}
+
 func UpdateOrganizationFeaturesWithSubscriptionType(
 	ctx context.Context,
 	subscriptionType []types.SubscriptionType,
