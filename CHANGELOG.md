@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/glasskube/distr/compare/2.0.1...2.0.2) (2025-12-09)
+
+
+### Bug Fixes
+
+* **registry:** ensure that no artifact license allows read all ([#1534](https://github.com/glasskube/distr/issues/1534)) ([92f89aa](https://github.com/glasskube/distr/commit/92f89aa0c704c5847388027bf4e4a3e9e378bf74))
+
 ## [2.0.1](https://github.com/glasskube/distr/compare/2.0.0...2.0.1) (2025-12-09)
 
 
