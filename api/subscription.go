@@ -27,6 +27,9 @@ type SubscriptionInfo struct {
 	CurrentCustomerOrganizationCount       int64                    `json:"currentCustomerOrganizationCount"`
 	CurrentMaxUsersPerCustomer             int64                    `json:"currentMaxUsersPerCustomer"`
 	CurrentMaxDeploymentTargetsPerCustomer int64                    `json:"currentMaxDeploymentTargetsPerCustomer"`
+	HasApplicationLicenses                 bool                     `json:"hasApplicationLicenses"`
+	HasArtifactLicenses                    bool                     `json:"hasArtifactLicenses"`
+	HasNonAdminRoles                       bool                     `json:"hasNonAdminRoles"`
 
 	Limits map[types.SubscriptionType]SubscriptionLimits `json:"limits"`
 }

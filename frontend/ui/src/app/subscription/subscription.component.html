@@ -14,12 +14,13 @@
               <div class="space-y-4">
                 <h2 class="text-xl font-bold dark:text-white">Current Usage</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div class="flex flex-col p-4 bg-orange-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Users</p>
-                    <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Users</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentUserAccountCount }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       @if (subscriptionInfoData.subscriptionUserAccountQuantity !== unlimited) {
                         of {{ subscriptionInfoData.subscriptionUserAccountQuantity }} Users used
                       } @else {
@@ -27,12 +28,13 @@
                       }
                     </p>
                   </div>
-                  <div class="flex flex-col p-4 bg-blue-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Customers</p>
-                    <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Customers</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentCustomerOrganizationCount }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       @if (subscriptionInfoData.subscriptionCustomerOrganizationQuantity !== unlimited) {
                         of {{ subscriptionInfoData.subscriptionCustomerOrganizationQuantity }} Customers used
                       }
@@ -43,21 +45,23 @@
                       </span>
                     </p>
                   </div>
-                  <div class="flex flex-col p-4 bg-green-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Most Users per Customer</p>
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Most Users per Customer</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentMaxUsersPerCustomer }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       of {{ getCurrentPlanLimit('usersPerCustomer') }} allowed
                     </p>
                   </div>
-                  <div class="flex flex-col p-4 bg-purple-50 dark:bg-gray-700 rounded-lg text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Most Deployments per Customer</p>
-                    <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-auto">
+                  <div
+                    class="grid grid-rows-3 gap-0 py-2 px-4 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 self-center">Most Deployments per Customer</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white self-center">
                       {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 self-center">
                       of {{ getCurrentPlanLimit('deploymentsPerCustomer') }} allowed
                     </p>
                   </div>
@@ -113,8 +117,13 @@
                 <div class="space-y-4">
                   <h2 class="text-xl font-bold dark:text-white">Change Subscription Quantities</h2>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Update your subscription quantities below. Changes will be reflected in your next billing cycle.<br />
-                    This is an estimate, please visit our Billing Portal for final prices.
+                    Prorated adjustments will be reflected on your next invoice (<a
+                      href="https://distr.sh/docs/product/subscription-management/#quantity-updates-during-billing-cycle"
+                      class="underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >read more</a
+                    >).
                   </p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -194,19 +203,86 @@
                         class="sr-only" />
                       <div class="flex justify-between items-start mb-2">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Starter</h3>
+                        @if (!canSelectStarterPlan()) {
+                          <span class="text-sm text-red-600 dark:text-red-400">Limits Exceeded</span>
+                        }
                       </div>
                       <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Perfect for initial market validation</p>
                       <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        <li>✓ {{ getPlanLimits('starter').customers }}</li>
-                        <li>✓ {{ getPlanLimits('starter').users }}</li>
-                        <li>✓ {{ getPlanLimits('starter').deployments }}</li>
-                        <li>✓ Up to 100 GB storage</li>
+                        <li
+                          [class.text-red-600]="
+                            subscriptionInfoData.currentCustomerOrganizationCount >
+                            subscriptionInfoData.limits.starter.maxCustomerOrganizations
+                          "
+                          [class.dark:text-red-300]="
+                            subscriptionInfoData.currentCustomerOrganizationCount >
+                            subscriptionInfoData.limits.starter.maxCustomerOrganizations
+                          ">
+                          ✓
+                          {{ getPlanLimits('starter').customers }}
+                          <span class="text-xs">
+                            (current: {{ subscriptionInfoData.currentCustomerOrganizationCount }})
+                          </span>
+                        </li>
+                        <li
+                          [class.text-red-600]="
+                            subscriptionInfoData.currentMaxUsersPerCustomer >
+                            subscriptionInfoData.limits.starter.maxUsersPerCustomerOrganization
+                          "
+                          [class.dark:text-red-300]="
+                            subscriptionInfoData.currentMaxUsersPerCustomer >
+                            subscriptionInfoData.limits.starter.maxUsersPerCustomerOrganization
+                          ">
+                          ✓
+                          {{ getPlanLimits('starter').users }}
+                          <span class="text-xs">
+                            (current max: {{ subscriptionInfoData.currentMaxUsersPerCustomer }})
+                          </span>
+                        </li>
+                        <li
+                          [class.text-red-600]="
+                            subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer >
+                            subscriptionInfoData.limits.starter.maxDeploymentsPerCustomerOrganization
+                          "
+                          [class.dark:text-red-300]="
+                            subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer >
+                            subscriptionInfoData.limits.starter.maxDeploymentsPerCustomerOrganization
+                          ">
+                          ✓
+                          {{ getPlanLimits('starter').deployments }}
+                          <span class="text-xs">
+                            (current max: {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }})
+                          </span>
+                        </li>
+                        <li
+                          [class.text-red-600]="
+                            subscriptionInfoData.hasApplicationLicenses || subscriptionInfoData.hasArtifactLicenses
+                          "
+                          [class.dark:text-red-300]="
+                            subscriptionInfoData.hasApplicationLicenses || subscriptionInfoData.hasArtifactLicenses
+                          ">
+                          ✗ License Management
+                          <span class="text-xs">
+                            (Pro feature)
+                            @if (
+                              subscriptionInfoData.hasApplicationLicenses || subscriptionInfoData.hasArtifactLicenses
+                            ) {
+                              <span class="font-semibold">- in use</span>
+                            }
+                          </span>
+                        </li>
+                        <li
+                          [class.text-red-600]="subscriptionInfoData.hasNonAdminRoles"
+                          [class.dark:text-red-300]="subscriptionInfoData.hasNonAdminRoles">
+                          ✗ RBAC
+                          <span class="text-xs">
+                            (Pro feature)
+                            @if (subscriptionInfoData.hasNonAdminRoles) {
+                              <span class="font-semibold">- in use</span>
+                            }
+                          </span>
+                        </li>
                       </ul>
-                      @if (!canSelectStarterPlan()) {
-                        <p class="text-xs text-red-600 dark:text-red-400 mt-2">
-                          ⚠️ Your current usage exceeds Starter plan limits
-                        </p>
-                      }
                     </label>
 
                     <!-- Pro Plan -->
@@ -221,11 +297,27 @@
                       </div>
                       <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Production rollouts with governance</p>
                       <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        <li>✓ {{ getPlanLimits('pro').customers }} customers</li>
-                        <li>✓ {{ getPlanLimits('pro').users }}</li>
-                        <li>✓ {{ getPlanLimits('pro').deployments }}</li>
-                        <li>✓ Up to 1 TB storage</li>
-                        <li>✓ SSO + RBAC, License management</li>
+                        <li>
+                          ✓ {{ getPlanLimits('pro').customers }} customers
+                          <span class="text-xs"
+                            >(current: {{ subscriptionInfoData.currentCustomerOrganizationCount }})</span
+                          >
+                        </li>
+                        <li>
+                          ✓ {{ getPlanLimits('pro').users }}
+                          <span class="text-xs"
+                            >(current max: {{ subscriptionInfoData.currentMaxUsersPerCustomer }})</span
+                          >
+                        </li>
+                        <li>
+                          ✓ {{ getPlanLimits('pro').deployments }}
+                          <span class="text-xs"
+                            >(current max: {{ subscriptionInfoData.currentMaxDeploymentTargetsPerCustomer }})</span
+                          >
+                        </li>
+                        <li>✓ License management for applications and artifacts</li>
+                        <li>✓ Role based access control (RBAC)</li>
+                        <li>✓ Single-Sign-On (SSO)</li>
                       </ul>
                     </label>
                   </div>
@@ -314,7 +406,6 @@
                           / {{ form.value.subscriptionPeriod === 'monthly' ? 'month' : 'year' }}
                         </span>
                       </p>
-                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Currency exchange fees might apply.</p>
                     </div>
                     <button
                       type="submit"
