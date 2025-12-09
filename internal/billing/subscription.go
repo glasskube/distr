@@ -112,15 +112,31 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 		Params:     stripe.Params{Context: ctx},
 		Mode:       util.PtrTo(string(stripe.CheckoutSessionModeSubscription)),
 		SuccessURL: util.PtrTo(params.SuccessURL),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{Price: &prices.CustomerPriceID, Quantity: util.PtrTo(params.CustomerOrganizationQty)},
-			{Price: &prices.UserPriceID, Quantity: util.PtrTo(params.UserAccountQty)},
-		},
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
 			Metadata: map[string]string{
 				"organizationId": params.OrganizationID,
 			},
 		},
+	}
+
+	if params.CustomerOrganizationQty > 0 {
+		sessionParams.LineItems = append(
+			sessionParams.LineItems,
+			&stripe.CheckoutSessionLineItemParams{
+				Price:    &prices.CustomerPriceID,
+				Quantity: util.PtrTo(params.CustomerOrganizationQty),
+			},
+		)
+	}
+
+	if params.UserAccountQty > 0 {
+		sessionParams.LineItems = append(
+			sessionParams.LineItems,
+			&stripe.CheckoutSessionLineItemParams{
+				Price:    &prices.UserPriceID,
+				Quantity: util.PtrTo(params.UserAccountQty),
+			},
+		)
 	}
 
 	// Stripe only allows setting TrialEnd if it is at least 48 hours in the future

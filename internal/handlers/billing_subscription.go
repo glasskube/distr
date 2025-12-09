@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/billing"
@@ -80,6 +81,7 @@ func CreateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		SuccessURL:              fmt.Sprintf("%v/subscription/callback", handlerutil.GetRequestSchemeAndHost(r)),
 	})
 	if err != nil {
+		sentry.GetHubFromContext(ctx).CaptureException(err)
 		log.Error("failed to create checkout session", zap.Error(err))
 		http.Error(w, "failed to create checkout session", http.StatusInternalServerError)
 		return
@@ -124,6 +126,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	err := db.RunTxRR(ctx, func(ctx context.Context) error {
 		org, err := db.GetOrganizationByID(ctx, org.ID)
 		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to get organization", zap.Error(err))
 			http.Error(w, "failed to get organization", http.StatusInternalServerError)
 			return err
@@ -131,6 +134,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		usage, err := getCurrentUsageCounts(ctx, org.ID)
 		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to get current usage counts", zap.Error(err))
 			http.Error(w, "failed to get current usage counts", http.StatusInternalServerError)
 			return err
@@ -153,6 +157,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			ReturnURL:               fmt.Sprintf("%v/subscription", handlerutil.GetRequestSchemeAndHost(r)),
 		})
 		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to update subscription", zap.Error(err))
 			http.Error(w, "failed to update subscription", http.StatusInternalServerError)
 			return err
@@ -160,6 +165,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		customerOrgQty, err := billing.GetCustomerOrganizationQty(*updatedSub)
 		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to get customer quantity from updated subscription", zap.Error(err))
 			http.Error(w, "failed to get customer quantity", http.StatusInternalServerError)
 			return err
@@ -167,6 +173,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		userAccountQty, err := billing.GetUserAccountQty(*updatedSub)
 		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to get user account quantity from updated subscription", zap.Error(err))
 			http.Error(w, "failed to get user account quantity", http.StatusInternalServerError)
 			return err
@@ -176,6 +183,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 		org.SubscriptionUserAccountQty = userAccountQty
 
 		if err := db.UpdateOrganization(ctx, org); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to update organization", zap.Error(err))
 			http.Error(w, "failed to update organization", http.StatusInternalServerError)
 			return err
@@ -183,6 +191,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 		info, err = buildSubscriptionInfo(ctx, org)
 		if err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to build subscription info", zap.Error(err))
 			http.Error(w, "failed to build subscription info", http.StatusInternalServerError)
 			return err
@@ -196,6 +205,7 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("update subscription failed", zap.Error(err))
 		if shouldRespond {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	} else {
