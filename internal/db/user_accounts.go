@@ -239,7 +239,11 @@ func UpdateUserAccountOrganizationAssignment(
 	}
 }
 
-func UpdateAllUserAccountOrganizationAssignments(ctx context.Context, orgID uuid.UUID, role types.UserRole) error {
+func UpdateAllUserAccountOrganizationAssignmentsWithOrganizationID(
+	ctx context.Context,
+	orgID uuid.UUID,
+	role types.UserRole,
+) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(ctx,
 		`UPDATE Organization_UserAccount
@@ -248,6 +252,30 @@ func UpdateAllUserAccountOrganizationAssignments(ctx context.Context, orgID uuid
 		pgx.NamedArgs{
 			"orgId": orgID,
 			"role":  role,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update Organization_UserAccount: %w", err)
+	} else {
+		return nil
+	}
+}
+
+func UpdateAllUserAccountOrganizationAssignmentsWithOrganizationSuscriptionType(
+	ctx context.Context,
+	subscriptionType []types.SubscriptionType,
+	role types.UserRole,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(ctx,
+		`UPDATE Organization_UserAccount
+		SET user_role = @role
+		WHERE organization_id IN (
+			SELECT id FROM Organization WHERE subscription_type = ANY(@subscriptionType)
+		)`,
+		pgx.NamedArgs{
+			"subscriptionType": subscriptionType,
+			"role":             role,
 		},
 	)
 	if err != nil {

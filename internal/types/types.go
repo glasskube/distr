@@ -47,6 +47,11 @@ const (
 	SubscriptionTypeTrial      SubscriptionType = "trial"
 )
 
+var NonProSubscriptionTypes = []SubscriptionType{
+	SubscriptionTypeCommunity,
+	SubscriptionTypeStarter,
+}
+
 var AllSubscriptionTypes = []SubscriptionType{
 	SubscriptionTypeCommunity,
 	SubscriptionTypeStarter,

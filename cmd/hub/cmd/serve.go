@@ -11,6 +11,7 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/svc"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/spf13/cobra"
@@ -62,7 +63,9 @@ func runServe(ctx context.Context, opts ServeOptions) {
 	registry := util.Require(svc.New(ctx, svc.ExecDbMigration(opts.Migrate)))
 	defer func() { util.Must(registry.Shutdown(ctx)) }()
 
-	util.Must(db.CreateAgentVersion(internalctx.WithDb(ctx, registry.GetDbPool())))
+	dbCtx := internalctx.WithDb(ctx, registry.GetDbPool())
+	util.Must(db.CreateAgentVersion(dbCtx))
+	util.Must(subscription.ReconcileStarterFeatures(dbCtx))
 
 	server := registry.GetServer()
 	artifactsServer := registry.GetArtifactsServer()

@@ -11,6 +11,7 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v84"
@@ -108,51 +109,51 @@ func stripeWebhookHandler() http.HandlerFunc {
 	}
 }
 
-func handleStripeSubscription(ctx context.Context, subscription stripe.Subscription) error {
+func handleStripeSubscription(ctx context.Context, sub stripe.Subscription) error {
 	log := internalctx.GetLogger(ctx)
 
-	orgId, err := uuid.Parse(subscription.Metadata["organizationId"])
+	orgID, err := uuid.Parse(sub.Metadata["organizationId"])
 	if err != nil {
 		log.Warn("subscription event with missing or invalid organizationId", zap.Error(err))
 		return err
 	}
 
 	return db.RunTxRR(ctx, func(ctx context.Context) error {
-		org, err := db.GetOrganizationByID(ctx, orgId)
+		org, err := db.GetOrganizationByID(ctx, orgID)
 		if err != nil {
 			return err
 		}
 
-		org.StripeSubscriptionID = &subscription.ID
-		org.StripeCustomerID = &subscription.Customer.ID
+		org.StripeSubscriptionID = &sub.ID
+		org.StripeCustomerID = &sub.Customer.ID
 
-		if subscription.Status == stripe.SubscriptionStatusCanceled {
+		if sub.Status == stripe.SubscriptionStatusCanceled {
 			org.SubscriptionEndsAt = time.Now()
-		} else if currentPeriodEnd, err := billing.GetCurrentPeriodEnd(subscription); err != nil {
+		} else if currentPeriodEnd, err := billing.GetCurrentPeriodEnd(sub); err != nil {
 			return err
 		} else {
 			org.SubscriptionEndsAt = *currentPeriodEnd
 		}
 
-		if subscriptionType, err := billing.GetSubscriptionType(subscription); err != nil {
+		if subscriptionType, err := billing.GetSubscriptionType(sub); err != nil {
 			return err
 		} else {
 			org.SubscriptionType = *subscriptionType
 		}
 
-		if qty, err := billing.GetCustomerOrganizationQty(subscription); err != nil {
+		if qty, err := billing.GetCustomerOrganizationQty(sub); err != nil {
 			return err
 		} else {
 			org.SubscriptionCustomerOrganizationQty = qty
 		}
 
-		if qty, err := billing.GetUserAccountQty(subscription); err != nil {
+		if qty, err := billing.GetUserAccountQty(sub); err != nil {
 			return err
 		} else {
 			org.SubscriptionUserAccountQty = qty
 		}
 
-		if subscriptionPeriod, err := billing.GetSubscriptionPeriod(subscription); err != nil {
+		if subscriptionPeriod, err := billing.GetSubscriptionPeriod(sub); err != nil {
 			return err
 		} else {
 			org.SubscriptionPeriod = subscriptionPeriod
@@ -176,7 +177,7 @@ func handleStripeSubscription(ctx context.Context, subscription stripe.Subscript
 		}
 
 		if org.SubscriptionType == types.SubscriptionTypeStarter {
-			if err := db.UpdateAllUserAccountOrganizationAssignments(ctx, org.ID, types.UserRoleAdmin); err != nil {
+			if err := subscription.ReconcileStarterFeaturesForOrganizationID(ctx, orgID); err != nil {
 				return err
 			}
 		}
