@@ -262,6 +262,15 @@ func validateSubscriptionQuantities(
 		)
 	}
 
+	if !subscriptionType.IsPro() {
+		if usage.applicationLicenseCount > 0 {
+			return fmt.Errorf("subscription type %v does not allow application licenses", subscriptionType)
+		}
+		if usage.artifactLicenseCount > 0 {
+			return fmt.Errorf("subscription type %v does not allow artifact licenses", subscriptionType)
+		}
+	}
+
 	return nil
 }
 
@@ -299,6 +308,8 @@ type currentUsageCounts struct {
 	customerOrganizationCount       int64
 	maxUsersPerCustomer             int64
 	maxDeploymentTargetsPerCustomer int64
+	applicationLicenseCount         int64
+	artifactLicenseCount            int64
 }
 
 // getCurrentUsageCounts retrieves the current usage counts for the given organization
@@ -313,6 +324,16 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 	customerOrgs, err := db.GetCustomerOrganizationsByOrganizationID(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customers: %w", err)
+	}
+
+	appLicenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get application licenses: %w", err)
+	}
+
+	artifactLicenses, err := db.GetArtifactLicenses(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get artifact licenses: %w", err)
 	}
 
 	// Find the maximum user count and deployment target count across all customer organizations
@@ -332,5 +353,7 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 		customerOrganizationCount:       int64(len(customerOrgs)),
 		maxUsersPerCustomer:             maxUsersPerCustomer,
 		maxDeploymentTargetsPerCustomer: maxDeploymentTargetsPerCustomer,
+		applicationLicenseCount:         int64(len(appLicenses)),
+		artifactLicenseCount:            int64(len(artifactLicenses)),
 	}, nil
 }
