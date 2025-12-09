@@ -273,6 +273,23 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		return nil, fmt.Errorf("failed to get current usage counts: %w", err)
 	}
 
+	// Check for license management usage
+	hasApplicationLicenses, err := checkHasApplicationLicenses(ctx, org.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check application licenses: %w", err)
+	}
+
+	hasArtifactLicenses, err := checkHasArtifactLicenses(ctx, org.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check artifact licenses: %w", err)
+	}
+
+	// Check for RBAC usage (non-admin roles)
+	hasNonAdminRoles, err := checkHasNonAdminRoles(ctx, org.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check non-admin roles: %w", err)
+	}
+
 	info := &api.SubscriptionInfo{
 		SubscriptionType:                       org.SubscriptionType,
 		SubscriptionEndsAt:                     org.SubscriptionEndsAt,
@@ -283,6 +300,9 @@ func buildSubscriptionInfo(ctx context.Context, org *types.Organization) (*api.S
 		CurrentCustomerOrganizationCount:       usage.customerOrganizationCount,
 		CurrentMaxUsersPerCustomer:             usage.maxUsersPerCustomer,
 		CurrentMaxDeploymentTargetsPerCustomer: usage.maxDeploymentTargetsPerCustomer,
+		HasApplicationLicenses:                 hasApplicationLicenses,
+		HasArtifactLicenses:                    hasArtifactLicenses,
+		HasNonAdminRoles:                       hasNonAdminRoles,
 		Limits:                                 map[types.SubscriptionType]api.SubscriptionLimits{},
 	}
 
@@ -333,4 +353,37 @@ func getCurrentUsageCounts(ctx context.Context, orgID uuid.UUID) (*currentUsageC
 		maxUsersPerCustomer:             maxUsersPerCustomer,
 		maxDeploymentTargetsPerCustomer: maxDeploymentTargetsPerCustomer,
 	}, nil
+}
+
+// checkHasApplicationLicenses checks if the organization has any application licenses
+func checkHasApplicationLicenses(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	licenses, err := db.GetApplicationLicensesWithOrganizationID(ctx, orgID, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to get application licenses: %w", err)
+	}
+	return len(licenses) > 0, nil
+}
+
+// checkHasArtifactLicenses checks if the organization has any artifact licenses
+func checkHasArtifactLicenses(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	licenses, err := db.GetArtifactLicenses(ctx, orgID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get artifact licenses: %w", err)
+	}
+	return len(licenses) > 0, nil
+}
+
+// checkHasNonAdminRoles checks if the organization has any user accounts with non-admin roles
+func checkHasNonAdminRoles(ctx context.Context, orgID uuid.UUID) (bool, error) {
+	userAccounts, err := db.GetUserAccountsByOrgID(ctx, orgID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get user accounts: %w", err)
+	}
+
+	for _, user := range userAccounts {
+		if user.UserRole != types.UserRoleAdmin {
+			return true, nil
+		}
+	}
+	return false, nil
 }
