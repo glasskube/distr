@@ -142,7 +142,8 @@ func handleStripeSubscription(ctx context.Context, sub stripe.Subscription) erro
 		}
 
 		if qty, err := billing.GetCustomerOrganizationQty(sub); err != nil {
-			return err
+			log.Warn("could not get customer organization quantity", zap.Error(err))
+			org.SubscriptionCustomerOrganizationQty = 0
 		} else {
 			org.SubscriptionCustomerOrganizationQty = qty
 		}
