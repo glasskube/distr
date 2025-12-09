@@ -399,11 +399,11 @@ func checkHasApplicationLicenses(ctx context.Context, orgID uuid.UUID) (bool, er
 
 // checkHasArtifactLicenses checks if the organization has any artifact licenses
 func checkHasArtifactLicenses(ctx context.Context, orgID uuid.UUID) (bool, error) {
-	licenses, err := db.GetArtifactLicenses(ctx, orgID)
+	hasLicense, err := db.HasAnyArtifactLicense(ctx, orgID)
 	if err != nil {
-		return false, fmt.Errorf("failed to get artifact licenses: %w", err)
+		return false, fmt.Errorf("failed to check artifact licenses: %w", err)
 	}
-	return len(licenses) > 0, nil
+	return hasLicense, nil
 }
 
 // checkHasNonAdminRoles checks if the organization has any user accounts with non-admin roles
