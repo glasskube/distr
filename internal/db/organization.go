@@ -42,8 +42,15 @@ const (
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"INSERT INTO Organization AS o (name, slug) VALUES (@name, @slug) RETURNING "+organizationOutputExpr,
-		pgx.NamedArgs{"name": org.Name, "slug": org.Slug},
+		`INSERT INTO Organization AS o (name, slug, subscription_type, features)
+		VALUES (@name, @slug, @subscription_type, @features)
+		RETURNING `+organizationOutputExpr,
+		pgx.NamedArgs{
+			"name":              org.Name,
+			"slug":              org.Slug,
+			"subscription_type": org.SubscriptionType,
+			"features":          org.Features,
+		},
 	)
 	if err != nil {
 		return fmt.Errorf("could not create orgnization: %w", err)

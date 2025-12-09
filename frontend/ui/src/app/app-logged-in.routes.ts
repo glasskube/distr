@@ -83,7 +83,13 @@ function subscriptionGuard(): CanActivateFn {
       auth.isCustomer() ||
       organizationService
         .get()
-        .pipe(map((org) => (dayjs(org.subscriptionEndsAt).isBefore() ? router.createUrlTree(['/subscription']) : true)))
+        .pipe(
+          map((org) =>
+            org.subscriptionType !== 'community' && dayjs(org.subscriptionEndsAt).isBefore()
+              ? router.createUrlTree(['/subscription'])
+              : true
+          )
+        )
     );
   };
 }
