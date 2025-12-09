@@ -285,13 +285,13 @@ export class SubscriptionComponent implements OnInit {
     );
   }
 
-  getStarterPlanViolations(): Array<{type: string; message: string; current: string; limit: string}> {
+  getStarterPlanViolations(): {type: string; message: string; current: string; limit: string}[] {
     const info = this.subscriptionInfo();
     if (!info) {
       return [];
     }
 
-    const violations: Array<{type: string; message: string; current: string; limit: string}> = [];
+    const violations: {type: string; message: string; current: string; limit: string}[] = [];
 
     // Check customer limit
     if (info.currentCustomerOrganizationCount > info.limits.starter.maxCustomerOrganizations) {
