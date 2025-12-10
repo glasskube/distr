@@ -475,11 +475,10 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 		err := db.GetDeploymentLogRecordsForExport(
 			ctx, deployment.ID, resource, limit,
 			func(record types.DeploymentLogRecord) error {
-				line := fmt.Sprintf("[%s] [%s] %s\n",
+				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.Timestamp.Format(time.RFC3339),
 					record.Severity,
 					record.Body)
-				_, err := w.Write([]byte(line))
 				return err
 			},
 		)
