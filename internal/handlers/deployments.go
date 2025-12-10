@@ -411,11 +411,10 @@ func exportDeploymentStatusHandler() http.HandlerFunc {
 		err := db.GetDeploymentStatusForExport(
 			ctx, deployment.ID, limit,
 			func(record types.DeploymentRevisionStatus) error {
-				line := fmt.Sprintf("[%s] [%s] %s\n",
+				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.CreatedAt.Format(time.RFC3339),
 					record.Type,
 					record.Message)
-				_, err := w.Write([]byte(line))
 				return err
 			},
 		)
