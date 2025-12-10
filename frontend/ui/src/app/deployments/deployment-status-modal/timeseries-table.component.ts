@@ -1,8 +1,10 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
-import {Component, input} from '@angular/core';
+import {Component, inject, input} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {filter, interval, map, merge, Observable, scan, Subject, switchMap, tap} from 'rxjs';
 import {distinctBy} from '../../../util/arrays';
+import {DeploymentLogsService} from '../../services/deployment-logs.service';
+import {DeploymentStatusService} from '../../services/deployment-status.service';
 
 export interface TimeseriesEntry {
   id?: string;
@@ -20,6 +22,7 @@ export interface TimeseriesSource {
 
 @Component({
   selector: 'app-timeseries-table',
+  standalone: true,
   template: `
     @if (entries$ | async; as entries) {
       <div class="relative overflow-x-auto">
@@ -52,14 +55,29 @@ export interface TimeseriesSource {
         </table>
       </div>
 
-      @if (hasMore) {
-        <div class="flex items-center justify-center mt-2">
-          <button
-            type="button"
-            class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-            (click)="showMore()">
-            Load more
-          </button>
+      @if (hasMore || (deploymentId() && exportType())) {
+        <div class="flex items-center justify-center gap-2 mt-2">
+          @if (hasMore) {
+            <button
+              type="button"
+              class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+              (click)="showMore()">
+              Load more
+            </button>
+          }
+          @if (deploymentId() && exportType()) {
+            <button
+              type="button"
+              class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+              (click)="exportData()"
+              [disabled]="isExporting">
+              @if (isExporting) {
+                Exporting...
+              } @else {
+                Export
+              }
+            </button>
+          }
         </div>
       }
     } @else {
@@ -85,8 +103,14 @@ export interface TimeseriesSource {
 })
 export class TimeseriesTableComponent {
   public readonly source = input.required<TimeseriesSource>();
+  public readonly deploymentId = input<string | undefined>(undefined);
+  public readonly resource = input<string | undefined>(undefined);
+  public readonly exportType = input<'logs' | 'status' | undefined>(undefined);
 
+  private readonly deploymentLogsService = inject(DeploymentLogsService);
+  private readonly deploymentStatusService = inject(DeploymentStatusService);
   protected hasMore = true;
+  protected isExporting = false;
   protected readonly entries$: Observable<TimeseriesEntry[]> = toObservable(this.source).pipe(
     switchMap((source) => {
       let nextBefore: Date | null = null;
@@ -131,6 +155,55 @@ export class TimeseriesTableComponent {
 
   protected showMore() {
     this.showMore$.next();
+  }
+
+  protected exportData() {
+    const deploymentId = this.deploymentId();
+    const exportType = this.exportType();
+
+    if (!deploymentId || !exportType) {
+      return;
+    }
+
+    this.isExporting = true;
+
+    let exportObservable: Observable<Blob>;
+    let filename: string;
+    const today = new Date().toISOString().split('T')[0];
+
+    if (exportType === 'logs') {
+      const resource = this.resource();
+      if (!resource) {
+        this.isExporting = false;
+        return;
+      }
+      exportObservable = this.deploymentLogsService.export(deploymentId, resource);
+      filename = `${today}_${resource}.log`;
+    } else if (exportType === 'status') {
+      exportObservable = this.deploymentStatusService.export(deploymentId);
+      filename = `${today}_deployment_status.log`;
+    } else {
+      this.isExporting = false;
+      return;
+    }
+
+    exportObservable.subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.isExporting = false;
+      },
+      error: (err) => {
+        console.error('Export failed:', err);
+        this.isExporting = false;
+      },
+    });
   }
 }
 

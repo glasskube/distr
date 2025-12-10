@@ -15,6 +15,7 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -27,8 +28,10 @@ func DeploymentsRouter(r chi.Router) {
 	r.With(middleware.RequireReadWriteOrAdmin).Put("/", putDeployment)
 	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chi.Router) {
 		r.Get("/status", getDeploymentStatus)
+		r.Get("/status/export", exportDeploymentStatusHandler())
 		r.Get("/logs", getDeploymentLogsHandler())
 		r.Get("/logs/resources", getDeploymentLogsResourcesHandler())
+		r.Get("/logs/export", exportDeploymentLogsHandler())
 		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
 			r.Patch("/", patchDeploymentHandler())
 			r.Delete("/", deleteDeploymentHandler())
@@ -382,6 +385,49 @@ func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func exportDeploymentStatusHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+
+		// Get deployment from context (via middleware)
+		deployment := internalctx.GetDeployment(ctx)
+
+		// Get organization to determine subscription type
+		authInfo := auth.Authentication.Require(ctx)
+		org := authInfo.CurrentOrg()
+
+		// Determine limit based on subscription type
+		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
+
+		// Generate filename with ISO date
+		filename := fmt.Sprintf("%s_deployment_status.log", time.Now().Format("2006-01-02"))
+
+		// Set headers for file download
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+		// Stream status records directly from database to response
+		err := db.GetDeploymentStatusForExport(
+			ctx, deployment.ID, limit,
+			func(record types.DeploymentRevisionStatus) error {
+				line := fmt.Sprintf("[%s] [%s] %s\n",
+					record.CreatedAt.Format(time.RFC3339),
+					record.Type,
+					record.Message)
+				_, err := w.Write([]byte(line))
+				return err
+			},
+		)
+		if err != nil {
+			log.Error("failed to export status records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			// Note: If headers were already sent, we can't send error response
+			return
+		}
+	}
+}
+
 func getDeploymentLogsResourcesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -392,6 +438,56 @@ func getDeploymentLogsResourcesHandler() http.HandlerFunc {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else {
 			RespondJSON(w, resources)
+		}
+	}
+}
+
+func exportDeploymentLogsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+
+		// Get deployment from context (via middleware)
+		deployment := internalctx.GetDeployment(ctx)
+
+		// Get resource parameter
+		resource := r.FormValue("resource")
+		if resource == "" {
+			http.Error(w, "query parameter resource is required", http.StatusBadRequest)
+			return
+		}
+
+		// Get organization to determine subscription type
+		authInfo := auth.Authentication.Require(ctx)
+		org := authInfo.CurrentOrg()
+
+		// Determine limit based on subscription type
+		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
+
+		// Generate filename with ISO date and resource name
+		filename := fmt.Sprintf("%s_%s.log", time.Now().Format("2006-01-02"), resource)
+
+		// Set headers for file download
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+		// Stream log records directly from database to response
+		err := db.GetDeploymentLogRecordsForExport(
+			ctx, deployment.ID, resource, limit,
+			func(record types.DeploymentLogRecord) error {
+				line := fmt.Sprintf("[%s] [%s] %s\n",
+					record.Timestamp.Format(time.RFC3339),
+					record.Severity,
+					record.Body)
+				_, err := w.Write([]byte(line))
+				return err
+			},
+		)
+		if err != nil {
+			log.Error("failed to export log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			// Note: If headers were already sent, we can't send error response
+			return
 		}
 	}
 }

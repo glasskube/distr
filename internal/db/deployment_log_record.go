@@ -145,6 +145,63 @@ func GetDeploymentLogRecords(
 	return result, nil
 }
 
+// GetDeploymentLogRecordsForExport retrieves deployment log records for export
+// ordered by timestamp DESC with a subscription-based limit.
+// The callback function is called for each row, allowing true streaming without loading all rows into memory.
+func GetDeploymentLogRecordsForExport(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+	resource string,
+	limit int,
+	callback func(types.DeploymentLogRecord) error,
+) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT `+deploymentLogRecordOutputExpr+`
+		FROM DeploymentLogRecord lr
+		WHERE lr.deployment_id = @deploymentId
+			AND lr.resource = @resource
+		ORDER BY lr.timestamp DESC
+		LIMIT @limit`,
+		pgx.NamedArgs{
+			"deploymentId": deploymentID,
+			"resource":     resource,
+			"limit":        limit,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not query DeploymentLogRecord: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var record types.DeploymentLogRecord
+		if err := rows.Scan(
+			&record.ID,
+			&record.CreatedAt,
+			&record.DeploymentID,
+			&record.DeploymentRevisionID,
+			&record.Resource,
+			&record.Timestamp,
+			&record.Severity,
+			&record.Body,
+		); err != nil {
+			return fmt.Errorf("could not scan DeploymentLogRecord: %w", err)
+		}
+
+		if err := callback(record); err != nil {
+			return err
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating DeploymentLogRecord: %w", err)
+	}
+
+	return nil
+}
+
 func BulkCreateDeploymentLogRecordWithCreatedAt(
 	ctx context.Context,
 	deploymentID uuid.UUID,

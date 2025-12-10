@@ -396,3 +396,64 @@ func GetDeploymentStatus(
 		return result, nil
 	}
 }
+
+func GetDeploymentStatusForExport(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+	limit int,
+	callback func(types.DeploymentRevisionStatus) error,
+) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		"SELECT id from DeploymentRevision WHERE deployment_id = @deploymentId",
+		pgx.NamedArgs{"deploymentId": deploymentID},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to query DeploymentRevision for status: %w", err)
+	}
+	deploymentRevisionIDs, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return fmt.Errorf("failed to scan DeploymentRevision for status: %w", err)
+	}
+
+	rows, err = db.Query(
+		ctx,
+		`SELECT id, created_at, deployment_revision_id, type, message
+		FROM DeploymentRevisionStatus
+		WHERE deployment_revision_id = ANY (@deploymentRevisionIds)
+		ORDER BY created_at DESC
+		LIMIT @limit`,
+		pgx.NamedArgs{
+			"deploymentRevisionIds": deploymentRevisionIDs,
+			"limit":                 limit,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var record types.DeploymentRevisionStatus
+		if err := rows.Scan(
+			&record.ID,
+			&record.CreatedAt,
+			&record.DeploymentRevisionID,
+			&record.Type,
+			&record.Message,
+		); err != nil {
+			return fmt.Errorf("could not scan DeploymentRevisionStatus: %w", err)
+		}
+
+		if err := callback(record); err != nil {
+			return err
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating DeploymentRevisionStatus: %w", err)
+	}
+
+	return nil
+}
