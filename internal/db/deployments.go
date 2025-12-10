@@ -432,27 +432,16 @@ func GetDeploymentStatusForExport(
 	if err != nil {
 		return fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var record types.DeploymentRevisionStatus
-		if err := rows.Scan(
-			&record.ID,
-			&record.CreatedAt,
-			&record.DeploymentRevisionID,
-			&record.Type,
-			&record.Message,
-		); err != nil {
-			return fmt.Errorf("could not scan DeploymentRevisionStatus: %w", err)
-		}
-
-		if err := callback(record); err != nil {
+	_, err = pgx.ForEachRow(rows, nil, func() error {
+		record, err := pgx.RowToStructByName[types.DeploymentRevisionStatus](rows)
+		if err != nil {
 			return err
 		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("error iterating DeploymentRevisionStatus: %w", err)
+		return callback(record)
+	})
+	if err != nil {
+		return fmt.Errorf("could not iterate DeploymentRevisionStatus: %w", err)
 	}
 
 	return nil

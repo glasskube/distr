@@ -173,30 +173,16 @@ func GetDeploymentLogRecordsForExport(
 	if err != nil {
 		return fmt.Errorf("could not query DeploymentLogRecord: %w", err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var record types.DeploymentLogRecord
-		if err := rows.Scan(
-			&record.ID,
-			&record.CreatedAt,
-			&record.DeploymentID,
-			&record.DeploymentRevisionID,
-			&record.Resource,
-			&record.Timestamp,
-			&record.Severity,
-			&record.Body,
-		); err != nil {
-			return fmt.Errorf("could not scan DeploymentLogRecord: %w", err)
-		}
-
-		if err := callback(record); err != nil {
+	_, err = pgx.ForEachRow(rows, nil, func() error {
+		record, err := pgx.RowToStructByName[types.DeploymentLogRecord](rows)
+		if err != nil {
 			return err
 		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("error iterating DeploymentLogRecord: %w", err)
+		return callback(record)
+	})
+	if err != nil {
+		return fmt.Errorf("could not iterate DeploymentLogRecord: %w", err)
 	}
 
 	return nil
