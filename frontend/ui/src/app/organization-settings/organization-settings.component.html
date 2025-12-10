@@ -54,6 +54,45 @@
               </div>
             </div>
 
+            @if (isPrePostScriptEnabled()) {
+              <div class="space-y-4">
+                <h2 class="text-xl font-bold dark:text-white">Pre-/post-connect scripts</h2>
+                <div>
+                  <label for="preConnectScript" class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >Pre-connect script</label
+                  >
+                  <div
+                    class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
+                    <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
+                      <textarea
+                        formControlName="preConnectScript"
+                        id="preConnectScript"
+                        rows="8"
+                        class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    for="postConnectScript"
+                    class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >Post-connect script</label
+                  >
+                  <div
+                    class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
+                    <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
+                      <textarea
+                        formControlName="postConnectScript"
+                        id="postConnectScript"
+                        rows="8"
+                        class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
             <div class="space-y-4">
               <h2 class="text-xl font-bold dark:text-white">Custom Domains</h2>
               <div

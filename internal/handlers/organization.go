@@ -85,10 +85,12 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 	}
 
 	organization := types.Organization{
-		Name:             body.Name,
-		Slug:             body.Slug,
-		SubscriptionType: types.SubscriptionTypeTrial,
-		Features:         []types.Feature{types.FeatureLicensing},
+		Name:              body.Name,
+		Slug:              body.Slug,
+		SubscriptionType:  types.SubscriptionTypeTrial,
+		Features:          []types.Feature{types.FeatureLicensing},
+		PreConnectScript:  body.PreConnectScript,
+		PostConnectScript: body.PostConnectScript,
 	}
 
 	if buildconfig.IsCommunityEdition() {
@@ -178,6 +180,16 @@ func handleUpdateOrganization(
 
 		if !util.PtrEq(org.Slug, request.Slug) {
 			org.Slug = request.Slug
+			needsUpdate = true
+		}
+
+		if !util.PtrEq(org.PreConnectScript, request.PreConnectScript) {
+			org.PreConnectScript = request.PreConnectScript
+			needsUpdate = true
+		}
+
+		if !util.PtrEq(org.PostConnectScript, request.PostConnectScript) {
+			org.PostConnectScript = request.PostConnectScript
 			needsUpdate = true
 		}
 

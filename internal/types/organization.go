@@ -26,6 +26,8 @@ type Organization struct {
 	StripeSubscriptionID                *string            `db:"stripe_subscription_id" json:"stripeSubscriptionId"`
 	SubscriptionCustomerOrganizationQty int64              `db:"subscription_customer_organization_quantity" json:"subscriptionCustomerOrganizationQuantity"` //nolint:lll
 	SubscriptionUserAccountQty          int64              `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
+	PreConnectScript                    *string            `db:"pre_connect_script" json:"preConnectScript"`
+	PostConnectScript                   *string            `db:"post_connect_script" json:"postConnectScript"`
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {

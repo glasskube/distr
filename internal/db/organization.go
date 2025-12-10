@@ -30,7 +30,9 @@ const (
 		o.stripe_customer_id,
 		o.stripe_subscription_id,
 		o.subscription_customer_organization_quantity,
-		o.subscription_user_account_quantity
+		o.subscription_user_account_quantity,
+		o.pre_connect_script,
+		o.post_connect_script
 	`
 	organizationWithUserRoleOutputExpr = organizationOutputExpr + `,
 		j.user_role,
@@ -78,7 +80,9 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			stripe_customer_id = @stripe_customer_id,
 			stripe_subscription_id = @stripe_subscription_id,
 			subscription_customer_organization_quantity = @subscription_customer_organization_quantity,
-			subscription_user_account_quantity = @subscription_user_account_quantity
+			subscription_user_account_quantity = @subscription_user_account_quantity,
+			pre_connect_script = @pre_connect_script,
+			post_connect_script = @post_connect_script
 		WHERE id = @id
 		RETURNING `+organizationOutputExpr,
 		pgx.NamedArgs{
@@ -93,6 +97,8 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			"stripe_subscription_id": org.StripeSubscriptionID,
 			"subscription_customer_organization_quantity": org.SubscriptionCustomerOrganizationQty,
 			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
+			"pre_connect_script":                          org.PreConnectScript,
+			"post_connect_script":                         org.PostConnectScript,
 		},
 	)
 	if err != nil {
