@@ -22,7 +22,6 @@ export interface TimeseriesSource {
 
 @Component({
   selector: 'app-timeseries-table',
-  standalone: true,
   template: `
     @if (entries$ | async; as entries) {
       <div class="relative overflow-x-auto">
