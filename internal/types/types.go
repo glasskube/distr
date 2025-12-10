@@ -12,9 +12,56 @@ import (
 	"github.com/opencontainers/go-digest"
 )
 
+type UserRole string
+
+const (
+	UserRoleReadOnly  UserRole = "read_only"
+	UserRoleReadWrite UserRole = "read_write"
+	UserRoleAdmin     UserRole = "admin"
+)
+
+func ParseUserRole(value string) (UserRole, error) {
+	switch value {
+	case string(UserRoleReadOnly):
+		return UserRoleReadOnly, nil
+	case string(UserRoleReadWrite):
+		return UserRoleReadWrite, nil
+	case string(UserRoleAdmin):
+		return UserRoleAdmin, nil
+	default:
+		return "", errors.New("invalid user role")
+	}
+}
+
+type SubscriptionType string
+
+func (st SubscriptionType) IsPro() bool {
+	return st == SubscriptionTypeTrial || st == SubscriptionTypePro || st == SubscriptionTypeEnterprise
+}
+
+const (
+	SubscriptionTypeCommunity  SubscriptionType = "community"
+	SubscriptionTypeStarter    SubscriptionType = "starter"
+	SubscriptionTypePro        SubscriptionType = "pro"
+	SubscriptionTypeEnterprise SubscriptionType = "enterprise"
+	SubscriptionTypeTrial      SubscriptionType = "trial"
+)
+
+var NonProSubscriptionTypes = []SubscriptionType{
+	SubscriptionTypeCommunity,
+	SubscriptionTypeStarter,
+}
+
+var AllSubscriptionTypes = []SubscriptionType{
+	SubscriptionTypeCommunity,
+	SubscriptionTypeStarter,
+	SubscriptionTypePro,
+	SubscriptionTypeEnterprise,
+	SubscriptionTypeTrial,
+}
+
 type (
 	DeploymentType        string
-	UserRole              string
 	HelmChartType         string
 	DeploymentStatusType  string
 	DeploymentTargetScope string
@@ -22,14 +69,12 @@ type (
 	DockerType            string
 	Tutorial              string
 	FileScope             string
+	SubscriptionPeriod    string
 )
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
 	DepolymentTypeKubernetes DeploymentType = "kubernetes"
-
-	UserRoleVendor   UserRole = "vendor"
-	UserRoleCustomer UserRole = "customer"
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
@@ -46,12 +91,14 @@ const (
 
 	FeatureLicensing Feature = "licensing"
 
-	TutorialBranding Tutorial = "branding"
-	TutorialAgents   Tutorial = "agents"
-	TutorialRegistry Tutorial = "registry"
-
+	TutorialBranding      Tutorial  = "branding"
+	TutorialAgents        Tutorial  = "agents"
+	TutorialRegistry      Tutorial  = "registry"
 	FileScopePlatform     FileScope = "platform"
 	FileScopeOrganization FileScope = "organization"
+
+	SubscriptionPeriodMonthly SubscriptionPeriod = "monthly"
+	SubscriptionPeriodYearly  SubscriptionPeriod = "yearly"
 )
 
 type Base struct {

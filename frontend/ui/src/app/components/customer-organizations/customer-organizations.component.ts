@@ -1,18 +1,16 @@
 import {AsyncPipe, DatePipe, DecimalPipe} from '@angular/common';
-import {Component, inject, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
-  faBuilding,
   faBuildingUser,
   faCircleExclamation,
   faEdit,
   faMagnifyingGlass,
   faPlus,
   faTrash,
-  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {CustomerOrganization} from '@glasskube/distr-sdk';
@@ -20,11 +18,14 @@ import {combineLatest, filter, firstValueFrom, map, startWith, Subject, switchMa
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
-import {RequireRoleDirective} from '../../directives/required-role.directive';
+import {RequireVendorDirective} from '../../directives/required-role.directive';
+import {AuthService} from '../../services/auth.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
+import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
 
 @Component({
@@ -34,11 +35,12 @@ import {UuidComponent} from '../uuid';
     FontAwesomeModule,
     UuidComponent,
     DatePipe,
-    RequireRoleDirective,
     SecureImagePipe,
     AsyncPipe,
     DecimalPipe,
     RouterLink,
+    RequireVendorDirective,
+    QuotaLimitComponent,
   ],
   animations: [modalFlyInOut],
 })
@@ -55,7 +57,12 @@ export class CustomerOrganizationsComponent {
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly organizationService = inject(OrganizationService);
   protected readonly featureFlags = inject(FeatureFlagService);
+  protected readonly auth = inject(AuthService);
+
+  private readonly organization = toSignal(this.organizationService.get());
+  protected readonly limit = computed(() => this.organization()?.subscriptionCustomerOrganizationQuantity);
 
   protected readonly filterForm = this.fb.group({
     search: this.fb.control(''),
@@ -151,7 +158,7 @@ export class CustomerOrganizationsComponent {
 
   protected delete(target: CustomerOrganization) {
     this.overlay
-      .confirm({message: {message: 'Are you sure you want to delete this customer organization?'}})
+      .confirm({message: {message: 'Are you sure you want to delete this customer?'}})
       .pipe(
         filter((it) => it === true),
         switchMap(() => this.customerOrganizationsService.deleteCustomerOrganization(target.id!))

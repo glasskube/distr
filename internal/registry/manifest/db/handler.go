@@ -55,7 +55,7 @@ func (h *handler) List(ctx context.Context, n int) ([]string, error) {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 	var artifacts []types.ArtifactWithDownloads
 	var err error
-	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+	if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 		if licenses, err1 := db.GetArtifactLicenses(ctx, *auth.CurrentOrgID()); err1 != nil {
 			err = err1
 		} else if len(licenses) > 0 {
@@ -88,7 +88,7 @@ func (h *handler) ListDigests(ctx context.Context, nameStr string) ([]digest.Dig
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var licenseCustomerOrgID *uuid.UUID
-		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+		if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
@@ -123,7 +123,7 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 	} else {
 		auth := auth.ArtifactsAuthentication.Require(ctx)
 		var licenseCustomerOrgID *uuid.UUID
-		if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+		if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 			licenseCustomerOrgID = auth.CurrentCustomerOrgID()
 		}
 		if artifact, err := db.GetArtifactByName(ctx, name.OrgName, name.ArtifactName); err != nil {
@@ -153,7 +153,7 @@ func (h *handler) ListTags(ctx context.Context, nameStr string, n int, last stri
 func (h *handler) Put(
 	ctx context.Context,
 	nameStr, reference string,
-	manifest manifest.Manifest,
+	manifestData manifest.Manifest,
 	blobs []manifest.Blob,
 ) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
@@ -170,10 +170,10 @@ func (h *handler) Put(
 		version := types.ArtifactVersion{
 			CreatedByUserAccountID: util.PtrTo(auth.CurrentUserID()),
 			Name:                   reference,
-			ManifestBlobDigest:     types.Digest(manifest.Digest),
-			ManifestBlobSize:       manifest.Size,
-			ManifestContentType:    manifest.ContentType,
-			ManifestData:           manifest.Data,
+			ManifestBlobDigest:     types.Digest(manifestData.Digest),
+			ManifestBlobSize:       manifestData.Size,
+			ManifestContentType:    manifestData.ContentType,
+			ManifestData:           manifestData.Data,
 			ArtifactID:             artifact.ID,
 		}
 
@@ -190,7 +190,7 @@ func (h *handler) Put(
 			}
 		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||
 			existingVersion.ManifestContentType != version.ManifestContentType {
-			return fmt.Errorf("reference already exists with different manifest digest")
+			return fmt.Errorf("%w: tag %s already exists with different content", manifest.ErrTagAlreadyExists, reference)
 		} else {
 			version = *existingVersion
 		}

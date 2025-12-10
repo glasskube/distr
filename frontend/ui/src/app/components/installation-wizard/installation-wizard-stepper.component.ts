@@ -1,10 +1,10 @@
-import {Component, EventEmitter, Output} from '@angular/core';
 import {CdkStepper, CdkStepperModule} from '@angular/cdk/stepper';
-import {FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {faNetworkWired, faServer, faShip} from '@fortawesome/free-solid-svg-icons';
-import {faDocker, faServicestack} from '@fortawesome/free-brands-svg-icons';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {NgTemplateOutlet} from '@angular/common';
+import {Component, EventEmitter, Output} from '@angular/core';
+import {FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faDocker, faServicestack} from '@fortawesome/free-brands-svg-icons';
+import {faNetworkWired, faServer, faShip} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-installation-wizard-stepper',

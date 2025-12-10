@@ -1,5 +1,5 @@
 <!-- Start block -->
-<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64">
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased">
   <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
     <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
       <div
@@ -14,7 +14,7 @@
               <input
                 type="text"
                 id="simple-search"
-                placeholder="Filter customer organizations"
+                placeholder="Filter customers"
                 [formControl]="filterForm.controls.search"
                 autotrim
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" />
@@ -22,16 +22,21 @@
           </form>
         </div>
         <div
-          class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-          <button
-            *appRequiredRole="'vendor'"
-            (click)="showCreateDialog()"
-            type="button"
-            id="createApplicationButton"
-            class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-            <fa-icon [icon]="faPlus" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
-            Create Customer
-          </button>
+          class="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center justify-end gap-4 flex-shrink-0 flex-grow">
+          <app-quota-limit [usage]="customerOrganizations()?.length" [limit]="limit()" #quota />
+          @if (auth.hasAnyRole('read_write', 'admin')) {
+            <button
+              *appRequireVendor
+              (click)="showCreateDialog()"
+              [disabled]="quota.isLimitReached()"
+              [title]="quota.isLimitReached() ? 'Customer limit reached' : 'Create Customer'"
+              type="button"
+              id="createApplicationButton"
+              class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              <fa-icon [icon]="faPlus" class="text-gray-500 dark:text-gray-400 mr-2"></fa-icon>
+              Create Customer
+            </button>
+          }
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -43,6 +48,7 @@
               <th scope="col" class="p-4">Name</th>
               <th scope="col" class="p-4">Creation Date</th>
               <th scope="col" class="p-4 text-end"># of Users</th>
+              <th scope="col" class="p-4 text-end"># of Deployments</th>
               <th scope="col" class="p-4"></th>
             </tr>
           </thead>
@@ -81,21 +87,30 @@
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white text-end">
                   {{ customer.userCount | number }}
                 </td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white text-end">
+                  {{ customer.deploymentTargetCount | number }}
+                </td>
                 <td
                   class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white flex justify-end space-x-2">
                   <a
                     [routerLink]="[customer.id]"
                     class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                    Manage users
+                    @if (auth.hasAnyRole('read_write', 'admin')) {
+                      Manage users
+                    } @else {
+                      Show users
+                    }
                   </a>
-                  <button
-                    *appRequiredRole="'vendor'"
-                    type="button"
-                    aria-label="Delete"
-                    (click)="delete(customer)"
-                    class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                    <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
-                  </button>
+                  @if (auth.hasAnyRole('read_write', 'admin')) {
+                    <button
+                      *appRequireVendor
+                      type="button"
+                      aria-label="Delete"
+                      (click)="delete(customer)"
+                      class="py-2 px-3 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                      <fa-icon [icon]="faTrash" class="h-4 w-4"></fa-icon>
+                    </button>
+                  }
                 </td>
               </tr>
             }
@@ -115,9 +130,9 @@
     <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
         @if (createForm.value.id) {
-          Update Customer Organization
+          Update Customer
         } @else {
-          New Customer Organization
+          New Customer
         }
       </h2>
       <button

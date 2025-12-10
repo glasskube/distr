@@ -1,15 +1,15 @@
+import {AsyncPipe} from '@angular/common';
 import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faGithub, faGoogle, faMicrosoft} from '@fortawesome/free-brands-svg-icons';
+import {faArrowRightToBracket} from '@fortawesome/free-solid-svg-icons/faArrowRightToBracket';
 import {distinctUntilChanged, filter, lastValueFrom, map, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {ToastService} from '../services/toast.service';
-import {AsyncPipe} from '@angular/common';
-import {FaIconComponent, IconDefinition} from '@fortawesome/angular-fontawesome';
-import {faGithub, faGoogle, faMicrosoft} from '@fortawesome/free-brands-svg-icons';
-import {faArrowRightToBracket} from '@fortawesome/free-solid-svg-icons/faArrowRightToBracket';
 
 @Component({
   selector: 'app-login',
@@ -87,7 +87,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       const value = this.formGroup.value;
       try {
         await lastValueFrom(this.auth.login(value.email!, value.password!));
-        if (this.auth.hasRole('customer')) {
+        if (this.auth.isCustomer()) {
           await this.router.navigate(['/home']);
         } else {
           await this.router.navigate(['/dashboard'], {queryParams: {from: 'login'}});

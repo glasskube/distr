@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - run: hack/validate-migrations.sh
 
   build:
@@ -42,9 +42,21 @@ jobs:
       contents: read
       id-token: write
       packages: write
+    strategy:
+      matrix:
+        edition:
+          - name: community
+            suffix: '-ce'
+            images: |
+              ghcr.io/glasskube/distr-ce
+          - name: enterprise
+            suffix: -ee
+            images: |
+              ghcr.io/glasskube/distr-ee
+              registry.distr.sh/glasskube/distr-ee
     steps:
       - name: Checkout
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Setup Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
@@ -57,7 +69,7 @@ jobs:
         with:
           version: 10
       - name: Setup node.js
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: '24'
           cache: pnpm
@@ -72,22 +84,23 @@ jobs:
       - name: Lint with prettier
         run: pnpm run lint
       - name: Lint with golangci-lint
-        uses: golangci/golangci-lint-action@e7fa5ac41e1cf5b7d48e45e42232ce7ada589601 # v9.1.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: v2.6.2
 
       - name: Build frontend
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: pnpm run build:prod
+        run: pnpm run build:${{ matrix.edition.name }}
       - name: Build frontend and upload source maps (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
-          pnpm run build:prod --source-map=true || exit 1
+          pnpm run build:${{ matrix.edition.name }} --source-map=true || exit 1
           pnpm run sentry-upload || exit 1
           rm internal/frontend/dist/ui/browser/*.map || exit 1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           VERSION: ${{ github.ref_name }}
+          SENTRY_VERSION: ${{ github.ref_name }}${{ matrix.edition.suffix }}
 
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
@@ -96,6 +109,7 @@ jobs:
           LDFLAGS: >-
             -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+            -X github.com/glasskube/distr/internal/buildconfig.edition=${{ matrix.edition.name }}
 
       - name: Start Hub and verify migrations
         shell: bash
@@ -111,10 +125,11 @@ jobs:
           DISTR_HOST: http://localhost:8080
 
       - name: Generate SBOM for frontend project
-        uses: anchore/sbom-action@fbfd9c6c189226748411491745178e0c2017392d # v0.20.10
+        uses: anchore/sbom-action@43a17d6e7add2b5535efe4dcae9952337c479a93 # v0.20.11
         with:
           file: pnpm-lock.yaml
           output-file: dist/frontend.spdx.json
+          artifact-name: frontend${{ matrix.edition.suffix }}.spdx.json
           format: spdx-json
           upload-release-assets: false
 
@@ -138,9 +153,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
-          images: |
-            ghcr.io/glasskube/distr
-            registry.distr.sh/glasskube/distr
+          images: ${{ matrix.edition.images }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

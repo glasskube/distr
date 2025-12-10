@@ -1,15 +1,16 @@
 [tools]
 node = "24"
-go = "1.25.4"
-golangci-lint = "2.6.2"
+go = "1.25.5"
+golangci-lint = "2.7.2"
 helm-docs = "1.14.2"
 watchexec = "2.3.2"
-pnpm = "10.24.0"
+pnpm = "10.25.0"
+stripe = "1.33.0"
 
 [env]
+_.source = ['hack/current-commit.sh']
 DISTR_ENV = '.env.development.local'
-VERSION = "snapshot"
-COMMIT = "TODO"
+VERSION = 'snapshot'
 CGO_ENABLED = "0"
 
 [vars]
@@ -22,23 +23,26 @@ sources = ["package.json", "pnpm-lock.yaml"]
 [tasks.go-tidy]
 run = 'go mod tidy'
 
-[tasks."build:frontend-dev"]
+[tasks."build:frontend:dev"]
 run = 'pnpm build:dev'
 depends = ["frontend-deps"]
 sources = ["node_modules/**/*", "frontend/ui/**/*"]
-outputs = ["internal/frontend/dist/ui/"]
 
-[tasks."build:frontend-prod"]
-run = 'pnpm build:prod'
+[tasks."build:frontend:community"]
+run = 'pnpm build:community'
 depends = ["frontend-deps"]
-sources = ["node_modules/**/*", "frontend/ui/**/*"]
-outputs = ["internal/frontend/dist/ui/"]
 
-[tasks."build:hub"]
-run = 'go build -ldflags="{{vars.ldflags}}" -o dist/distr ./cmd/hub'
-depends = ["go-tidy", "build:frontend-prod"]
-sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
-outputs = ["dist/distr"]
+[tasks."build:frontend:enterprise"]
+run = 'pnpm build:enterprise'
+depends = ["frontend-deps"]
+
+[tasks."build:hub:community"]
+run = 'go build -ldflags="{{vars.ldflags}} -X github.com/glasskube/distr/internal/buildconfig.edition=community" -o dist/distr ./cmd/hub'
+depends = ["go-tidy", "build:frontend:community"]
+
+[tasks."build:hub:enterprise"]
+run = 'go build -ldflags="{{vars.ldflags}} -X github.com/glasskube/distr/internal/buildconfig.edition=enterprise" -o dist/distr ./cmd/hub'
+depends = ["go-tidy", "build:frontend:enterprise"]
 
 [tasks."build:mcp"]
 run = 'go build -ldflags="{{vars.ldflags}}" -o dist/mcp-server ./cmd/mcp'
@@ -75,10 +79,17 @@ run = 'pnpm format'
 run = {tasks=["format:go", "format:frontend"]}
 
 [tasks."run:hub:serve"]
+run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
+description = 'Only starts the hub, it will not serve the frontend on that port. Protip: "mise watch run:hub:serve -r"'
+depends = ["go-tidy"]
+sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
+
+
+[tasks."run:all:serve"]
 alias = "serve"
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/hub/ serve'
-description = 'Starts the hub server. Protip: auto-reload with "mise watch serve -r"'
-depends = ["go-tidy", "build:frontend-dev"]
+description = 'Builds the frontend and starts the hub server incl. serving the frontend. Protip: auto-reload with "mise watch serve -r"'
+depends = ["go-tidy", "build:frontend:dev"]
 sources = ["api/**/*.go", "cmd/**/*.go", "internal/**/*.go"]
 
 [tasks."run:hub:db-migrate"]

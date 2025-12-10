@@ -1,12 +1,12 @@
-import {Component, input} from '@angular/core';
 import {OverlayModule} from '@angular/cdk/overlay';
+import {PercentPipe} from '@angular/common';
+import {Component, input} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
-import {modalFlyInOut} from '../../animations/modal';
+import {BytesPipe} from '../../../util/units';
 import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
-import {BytesPipe} from '../../../util/units';
-import {PercentPipe} from '@angular/common';
 
 @Component({
   selector: 'app-deployment-target-metrics',

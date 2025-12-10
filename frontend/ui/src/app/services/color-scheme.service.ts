@@ -1,6 +1,6 @@
 import {effect, Injectable, signal, WritableSignal} from '@angular/core';
-import {fromEvent} from 'rxjs';
 import {toSignal} from '@angular/core/rxjs-interop';
+import {fromEvent} from 'rxjs';
 
 @Injectable({
   providedIn: 'root',

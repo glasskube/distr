@@ -2,12 +2,7 @@ import {Component, effect, inject, input, output, signal} from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleExclamation, faShip} from '@fortawesome/free-solid-svg-icons';
-import {
-  ApplicationVersion,
-  DeploymentRequest,
-  DeploymentTarget,
-  DeploymentWithLatestRevision,
-} from '@glasskube/distr-sdk';
+import {DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {
@@ -52,7 +47,7 @@ import {ToastService} from '../services/toast.service';
         </div>
         <!-- Modal body -->
         <form class="p-4 md:p-5" (ngSubmit)="saveDeployment()">
-          @if (deploymentTarget().createdBy?.userRole === 'customer' && auth.hasRole('vendor')) {
+          @if (deploymentTarget().customerOrganization !== undefined && auth.isVendor()) {
             <div
               class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
               role="alert">

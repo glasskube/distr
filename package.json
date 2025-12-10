@@ -1,23 +1,19 @@
 {
   "name": "@glasskube/distr",
-  "version": "1.16.1",
+  "version": "2.0.2",
   "type": "module",
   "license": "Apache-2.0",
   "description": "Distr",
   "homepage": "https://distr.sh",
   "scripts": {
-    "ng": "ng",
     "buildconfig": "node hack/update-frontend-version.js",
     "sentry-upload": "hack/sentry-release.sh",
-    "prestart": "npm run buildconfig",
-    "start": "ng serve",
-    "prebuild": "npm run buildconfig",
-    "build": "ng build",
-    "build:prod": "npm run build -- --configuration=production",
-    "build:dev": "npm run build -- --configuration=development",
-    "watch": "npm run build -- --watch --configuration=development",
-    "pretest": "npm run buildconfig",
-    "test": "ng test",
+    "start": "pnpm buildconfig && ng serve",
+    "build:community": "pnpm buildconfig && ng build --configuration=production-community",
+    "build:enterprise": "pnpm buildconfig && ng build --configuration=production-enterprise",
+    "build:dev": "pnpm buildconfig && ng build --configuration=development",
+    "watch": "pnpm buildconfig && ng build --watch --configuration=development",
+    "test": "pnpm buildconfig && ng test",
     "lint": "prettier --check .",
     "format": "prettier --write ."
   },
@@ -77,6 +73,7 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.5.3",
     "prettier": "^3.3.3",
+    "prettier-plugin-organize-imports": "^4.3.0",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.9.0"
   }

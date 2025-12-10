@@ -38,7 +38,7 @@ func getContextHandler(w http.ResponseWriter, r *http.Request) {
 			User: mapping.UserAccountToAPI(
 				auth.CurrentUser().AsUserAccountWithRole(*auth.CurrentUserRole(), auth.CurrentCustomerOrgID(), joinDate),
 			),
-			Organization:      *auth.CurrentOrg(),
+			Organization:      mapping.OrganizationToAPI(*auth.CurrentOrg()),
 			AvailableContexts: orgs,
 		})
 	}

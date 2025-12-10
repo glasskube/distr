@@ -22,13 +22,14 @@ import (
 func ArtifactsRouter(r chi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getArtifacts)
-	r.Route("/{artifactId}", func(r chi.Router) {
-		r.Use(artifactMiddleware)
+	r.With(artifactMiddleware).Route("/{artifactId}", func(r chi.Router) {
 		r.Get("/", getArtifact)
-		r.With(requireUserRoleVendor).Patch("/image", patchImageArtifactHandler)
-		r.With(requireUserRoleVendor).Delete("/", deleteArtifactHandler)
-		r.Route("/tags/{tagName}", func(r chi.Router) {
-			r.With(requireUserRoleVendor).Delete("/", deleteArtifactTagHandler)
+		r.With(middleware.RequireVendor).Group(func(r chi.Router) {
+			r.Patch("/image", patchImageArtifactHandler)
+			r.With(middleware.RequireReadWriteOrAdmin).Delete("/", deleteArtifactHandler)
+			r.Route("/tags/{tagName}", func(r chi.Router) {
+				r.With(middleware.RequireReadWriteOrAdmin).Delete("/", deleteArtifactTagHandler)
+			})
 		})
 	})
 }
@@ -40,7 +41,7 @@ func getArtifacts(w http.ResponseWriter, r *http.Request) {
 
 	var artifacts []types.ArtifactWithDownloads
 	var err error
-	if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+	if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 		if licenses, err1 := db.GetArtifactLicenses(ctx, *auth.CurrentOrgID()); err1 != nil {
 			log.Error("failed to get artifact licenses", zap.Error(err1))
 			sentry.GetHubFromContext(ctx).CaptureException(err1)
@@ -192,7 +193,7 @@ func artifactMiddleware(h http.Handler) http.Handler {
 		if artifactId, parseErr := uuid.Parse(r.PathValue("artifactId")); parseErr != nil {
 			http.NotFound(w, r)
 			return
-		} else if *auth.CurrentUserRole() == types.UserRoleCustomer && auth.CurrentOrg().HasFeature(types.FeatureLicensing) {
+		} else if auth.CurrentOrg().HasFeature(types.FeatureLicensing) && auth.CurrentCustomerOrgID() != nil {
 			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, auth.CurrentCustomerOrgID())
 		} else {
 			artifact, err = db.GetArtifactByID(ctx, *auth.CurrentOrgID(), artifactId, nil)

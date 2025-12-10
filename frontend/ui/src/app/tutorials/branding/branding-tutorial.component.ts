@@ -1,5 +1,10 @@
+import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Router} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {
   faArrowRight,
   faB,
@@ -11,23 +16,18 @@ import {
   faPalette,
   faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
-import {CdkStep, CdkStepper, CdkStepperPrevious} from '@angular/cdk/stepper';
-import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
-import {OrganizationBrandingService} from '../../services/organization-branding.service';
-import {Router, RouterLink} from '@angular/router';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
-import {firstValueFrom, lastValueFrom, map, Observable, Subject, takeUntil, tap} from 'rxjs';
-import {OrganizationBranding} from '@glasskube/distr-sdk';
-import {base64ToBlob} from '../../../util/blob';
+import {CustomerOrganization, OrganizationBranding} from '@glasskube/distr-sdk';
+import {firstValueFrom, lastValueFrom, Observable, Subject} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
-import {HttpErrorResponse} from '@angular/common/http';
-import {ToastService} from '../../services/toast.service';
-import {UsersService} from '../../services/users.service';
-import {TutorialsService} from '../../services/tutorials.service';
-import {TutorialProgress} from '../../types/tutorials';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {AuthService} from '../../services/auth.service';
+import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
+import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {ToastService} from '../../services/toast.service';
+import {TutorialsService} from '../../services/tutorials.service';
+import {UsersService} from '../../services/users.service';
+import {TutorialProgress} from '../../types/tutorials';
+import {TutorialStepperComponent} from '../stepper/tutorial-stepper.component';
 import {getExistingTask, getLastExistingTask} from '../utils';
 
 const defaultBrandingDescription = `# Welcome
@@ -41,6 +41,7 @@ const welcomeTaskStart = 'start';
 const brandingStep = 'branding';
 const brandingTaskSet = 'set';
 const customerStep = 'customer';
+const customerTaskCreateCustomer = 'create_customer';
 const customerTaskInvite = 'invite';
 const customerTaskLogin = 'login';
 
@@ -65,13 +66,17 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faB = faB;
   protected readonly faLightbulb = faLightbulb;
+
   @ViewChild('stepper') private stepper!: CdkStepper;
+
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   protected readonly toast = inject(ToastService);
   protected readonly brandingService = inject(OrganizationBrandingService);
   protected readonly usersService = inject(UsersService);
   protected readonly tutorialsService = inject(TutorialsService);
+  protected readonly customerOrgService = inject(CustomerOrganizationsService);
+
   protected progress?: TutorialProgress;
   private organizationBranding?: OrganizationBranding;
   protected readonly welcomeFormGroup = new FormGroup({});
@@ -82,6 +87,11 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     description: new FormControl<string>('', {nonNullable: true, validators: Validators.required}),
   });
   protected readonly inviteFormGroup = new FormGroup({
+    customerName: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    customerCreateDone: new FormControl<boolean>(false, Validators.requiredTrue),
     customerEmail: new FormControl<string>('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
@@ -91,6 +101,8 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   });
   protected emailUsername?: string;
   protected emailDomain?: string;
+
+  private customerOrganization?: CustomerOrganization;
 
   async ngOnInit() {
     try {
@@ -203,6 +215,13 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
   }
 
   private prepareCustomerStep() {
+    const customerOrganization = getLastExistingTask(this.progress, customerStep, customerTaskCreateCustomer);
+    if (customerOrganization?.value) {
+      this.customerOrganization = customerOrganization.value;
+      this.inviteFormGroup.controls.customerName.setValue(this.customerOrganization!.name);
+      this.inviteFormGroup.controls.customerCreateDone.setValue(true);
+    }
+
     // prepare the email form
     const email = getLastExistingTask(this.progress, customerStep, customerTaskInvite);
     if (email?.value && typeof email?.value === 'string') {
@@ -225,6 +244,36 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected async createCustomerOrganization() {
+    if (this.inviteFormGroup.controls.customerName.valid && this.inviteFormGroup.controls.customerName.dirty) {
+      this.loading.set(true);
+      try {
+        this.customerOrganization = await firstValueFrom(
+          this.customerOrgService.createCustomerOrganization({
+            name: this.inviteFormGroup.value.customerName!,
+          })
+        );
+        this.inviteFormGroup.controls.customerCreateDone.setValue(true);
+        this.inviteFormGroup.markAsPristine();
+        this.toast.success('Customer created');
+        this.progress = await lastValueFrom(
+          this.tutorialsService.save(tutorialId, {
+            stepId: customerStep,
+            taskId: customerTaskCreateCustomer,
+            value: this.customerOrganization,
+          })
+        );
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.loading.set(false);
+      }
+    }
+  }
+
   protected async sendInviteMail() {
     this.inviteFormGroup.markAllAsTouched();
     if (this.inviteFormGroup.controls.customerEmail.valid && this.inviteFormGroup.controls.customerEmail.dirty) {
@@ -234,7 +283,8 @@ export class BrandingTutorialComponent implements OnInit, OnDestroy {
         await lastValueFrom(
           this.usersService.addUser({
             email,
-            userRole: 'customer',
+            customerOrganizationId: this.customerOrganization?.id,
+            userRole: 'admin',
           })
         );
         this.inviteFormGroup.controls.inviteDone.patchValue(true);

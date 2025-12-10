@@ -29,20 +29,22 @@ func GetDeployment(
 	id uuid.UUID,
 	userID uuid.UUID,
 	orgID uuid.UUID,
-	userRole types.UserRole,
+	customerOrganizationID *uuid.UUID,
 ) (*types.Deployment, error) {
 	db := internalctx.GetDb(ctx)
+	isVendor := customerOrganizationID == nil
 	rows, err := db.Query(ctx,
 		"SELECT"+deploymentOutputExpr+
 			"FROM Deployment d "+
 			"INNER JOIN DeploymentTarget dt ON d.deployment_target_id = dt.id "+
 			"WHERE d.id = @id AND dt.organization_id = @orgId "+
-			"AND (@userRole = 'vendor' OR dt.created_by_user_account_id = @userId)",
+			"AND (@isVendor OR dt.customer_organization_id = @customerOrganizationId)",
 		pgx.NamedArgs{
-			"id":       id,
-			"userId":   userID,
-			"orgId":    orgID,
-			"userRole": userRole,
+			"id":                     id,
+			"userId":                 userID,
+			"orgId":                  orgID,
+			"isVendor":               isVendor,
+			"customerOrganizationId": customerOrganizationID,
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Deployments: %w", err)
@@ -185,6 +187,45 @@ func UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
 		*deployment = result
 		return nil
 	}
+}
+
+func UpdateDeploymentUnsetLicenseIDWithOrganizationID(ctx context.Context, organizationID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Deployment
+		SET application_license_id = NULL
+		WHERE deployment_target_id IN (
+			SELECT id FROM DeploymentTarget WHERE organization_id = @organizationID
+		)`,
+		pgx.NamedArgs{"organizationID": organizationID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	return nil
+}
+
+func UpdateDeploymentUnsetLicenseIDWithOrganizationSubscriptionType(
+	ctx context.Context,
+	subscriptionType []types.SubscriptionType,
+) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		`UPDATE Deployment
+		SET application_license_id = NULL
+		WHERE deployment_target_id IN (
+			SELECT dt.id FROM DeploymentTarget dt
+				JOIN Organization o ON dt.organization_id = o.id
+			WHERE o.subscription_type = ANY(@subscriptionType)
+		)`,
+		pgx.NamedArgs{"subscriptionType": subscriptionType},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	return nil
 }
 
 func DeleteDeploymentWithID(ctx context.Context, id uuid.UUID) error {

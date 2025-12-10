@@ -1,0 +1,87 @@
+<div
+  @modalFlyInOut
+  style="transform-origin: top center"
+  class="p-4 my-auto max-h-full overflow-y-auto w-full max-w-md bg-white rounded-lg shadow-sm dark:bg-gray-900">
+  <!-- Modal header -->
+  <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Confirm Subscription Update</h2>
+    <button
+      type="button"
+      (click)="close()"
+      class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+      <fa-icon [icon]="xmarkIcon"></fa-icon>
+      <span class="sr-only">Close modal</span>
+    </button>
+  </div>
+  <!-- Modal body -->
+  @if (pendingUpdate(); as subscriptionUpdate) {
+    <div class="p-4 md:p-5 space-y-4">
+      <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+        You are about to update your subscription quantities:
+      </p>
+      <div class="space-y-2 pb-4 border-b border-dashed border-gray-300 dark:border-gray-600">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Internal Users:</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{ subscriptionUpdate.userAccountQuantity }}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Customer Organizations:</span>
+          <span class="font-semibold text-gray-900 dark:text-white">
+            {{ subscriptionUpdate.customerOrganizationQuantity }}
+          </span>
+        </div>
+      </div>
+      <div class="pt-4 pb-4 border-b border-dashed border-gray-300 dark:border-gray-600">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm text-gray-700 dark:text-gray-300">Current Price:</span>
+          <span class="text-lg font-semibold text-gray-900 dark:text-white">
+            {{ subscriptionUpdate.oldPrice | currency: 'USD' }} /
+            {{ subscriptionUpdate.subscriptionPeriod.slice(0, -2) }}
+          </span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-700 dark:text-gray-300">New Price:</span>
+          <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
+            {{ subscriptionUpdate.newPrice | currency: 'USD' }} /
+            {{ subscriptionUpdate.subscriptionPeriod.slice(0, -2) }}
+          </span>
+        </div>
+        @if (subscriptionUpdate.newPrice !== subscriptionUpdate.oldPrice) {
+          <div class="mt-2 flex justify-end">
+            <span
+              class="text-sm font-medium"
+              [class.text-green-600]="subscriptionUpdate.newPrice < subscriptionUpdate.oldPrice"
+              [class.dark:text-green-400]="subscriptionUpdate.newPrice < subscriptionUpdate.oldPrice"
+              [class.text-red-600]="subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice"
+              [class.dark:text-red-400]="subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice">
+              {{ subscriptionUpdate.newPrice > subscriptionUpdate.oldPrice ? '+' : '' }}
+              {{ subscriptionUpdate.newPrice - subscriptionUpdate.oldPrice | currency: 'USD' }} /
+              {{ subscriptionUpdate.subscriptionPeriod.slice(0, -2) }}
+            </span>
+          </div>
+        }
+      </div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 pt-4">
+        Prorated adjustments will be reflected on your next invoice (<a
+          href="https://distr.sh/docs/product/subscription-management/#quantity-updates-during-billing-cycle"
+          class="underline"
+          target="_blank"
+          rel="noopener noreferrer"
+          >read more</a
+        >).<br />
+        This is an estimate, please visit our Billing Portal for final prices.
+      </p>
+    </div>
+  }
+  <!-- Modal footer -->
+  <div class="flex items-center justify-end p-4 md:p-5">
+    <button
+      type="button"
+      [disabled]="editFormLoading"
+      (click)="confirmUpdate()"
+      class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60">
+      <fa-icon [icon]="checkIcon" class="mr-2"></fa-icon>
+      Confirm Update
+    </button>
+  </div>
+</div>

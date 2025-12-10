@@ -1,4 +1,4 @@
-<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased sm:ml-64 text-gray-900 dark:text-white">
+<section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased text-gray-900 dark:text-white">
   <div class="mx-auto max-w-screen-lg px-4">
     @if (artifact$ | async; as artifact) {
       <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
@@ -33,7 +33,7 @@
                 </p>
               </div>
 
-              <ng-container *appRequiredRole="'vendor'">
+              @if (auth.isVendor() && auth.hasAnyRole('read_write', 'admin')) {
                 <button
                   type="button"
                   class="text-gray-500 dark:text-gray-400 self-start px-1"
@@ -42,8 +42,6 @@
                   (click)="showDropdown.set(true)">
                   <fa-icon [icon]="faEllipsisVertical" />
                 </button>
-
-                <app-artifacts-download-count class="self-start" [source]="artifact" />
 
                 <ng-template
                   cdkConnectedOverlay
@@ -70,7 +68,9 @@
                     </button>
                   </div>
                 </ng-template>
-              </ng-container>
+              }
+
+              <app-artifacts-download-count class="self-start" [source]="artifact" />
             </div>
 
             @if (getArtifactUsage(artifact); as usage) {
@@ -99,14 +99,15 @@
                           <span
                             class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-md dark:bg-gray-700 dark:text-blue-400 border border-blue-400 flex items-center gap-1">
                             {{ label.name }}
-                            <button
-                              *appRequiredRole="'vendor'"
-                              type="button"
-                              [attr.aria-label]="'Delete tag ' + label.name"
-                              (click)="deleteArtifactTag(artifact, version, label.name)"
-                              class="-mr-1 text-red-400 hover:text-red-600 transition-colors">
-                              <fa-icon [icon]="faXmark"></fa-icon>
-                            </button>
+                            @if (auth.isVendor() && auth.hasAnyRole('read_write', 'admin')) {
+                              <button
+                                type="button"
+                                [attr.aria-label]="'Delete tag ' + label.name"
+                                (click)="deleteArtifactTag(artifact, version, label.name)"
+                                class="-mr-1 text-red-400 hover:text-red-600 transition-colors">
+                                <fa-icon [icon]="faXmark"></fa-icon>
+                              </button>
+                            }
                           </span>
                         }
                       </div>
@@ -120,7 +121,7 @@
                         </li>
                       </ul>
                     </div>
-                    <div class="flex flex-col items-end gap-1" *appRequiredRole="'vendor'">
+                    <div class="flex flex-col items-end gap-1" *appRequireVendor>
                       <app-artifacts-download-count [source]="version"></app-artifacts-download-count>
                       <app-artifacts-downloaded-by [source]="version"></app-artifacts-downloaded-by>
                     </div>

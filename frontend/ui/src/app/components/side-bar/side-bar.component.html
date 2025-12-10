@@ -1,26 +1,31 @@
 <aside
   id="logo-sidebar"
-  class="fixed top-16 left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
-  aria-label="Sidebar"
-  #asideElement>
+  class="fixed left-0 bottom-0 z-40 w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+  [class.top-16]="!isSubscriptionBannerVisible()"
+  [class.top-33]="isSubscriptionBannerVisible()"
+  [class.translate-x-0]="sidebar.showSidebar()"
+  [class.-translate-x-full]="!sidebar.showSidebar()"
+  aria-label="Sidebar">
   <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
-    <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'vendor'">
-      <li>
-        <a
-          (click)="sidebar.hide()"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/tutorials"
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-          <fa-icon
-            [icon]="faLightbulb"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="flex-grow ms-3">Tutorials</span>
-          @if (tutorialsService.notAllStarted$ | async) {
-            <span class="w-2.5 h-2.5 mr-1.5 text-xs font-semibold rounded-full bg-blue-700 dark:bg-blue-600"></span>
-          }
-        </a>
-      </li>
+    <ul class="space-y-2 font-medium flex-1" *appRequireVendor>
+      @if (auth.hasAnyRole('admin')) {
+        <li>
+          <a
+            (click)="sidebar.hide()"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/tutorials"
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <fa-icon
+              [icon]="faLightbulb"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="flex-grow ms-3">Tutorials</span>
+            @if (tutorialsService.notAllStarted$ | async) {
+              <span class="w-2.5 h-2.5 mr-1.5 text-xs font-semibold rounded-full bg-blue-700 dark:bg-blue-600"></span>
+            }
+          </a>
+        </li>
+      }
       <li>
         <a
           (click)="sidebar.hide()"
@@ -169,7 +174,7 @@
             <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Licenses</span>
             <span
               class="ml-2 bg-gray-300 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-500 dark:text-gray-100"
-              >Beta</span
+              >Pro</span
             >
             <ng-template
               cdkConnectedOverlay
@@ -219,6 +224,7 @@
         <a
           class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
           routerLinkActive="bg-gray-100 dark:bg-gray-700"
+          (click)="sidebar.hide()"
           routerLink="/customers">
           <fa-icon
             [icon]="faAddressBook"
@@ -228,47 +234,72 @@
         </a>
       </li>
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/users">
-          <fa-icon
-            [icon]="faUsers"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Users</span>
-        </a>
-      </li>
+      @if (auth.hasRole('admin')) {
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            (click)="sidebar.hide()"
+            routerLink="/users">
+            <fa-icon
+              [icon]="faUsers"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Users</span>
+          </a>
+        </li>
+      }
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/branding">
-          <fa-icon
-            [icon]="faPalette"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Branding</span>
-        </a>
-      </li>
+      @if (auth.hasAnyRole('read_write', 'admin')) {
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            (click)="sidebar.hide()"
+            routerLink="/branding">
+            <fa-icon
+              [icon]="faPalette"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Branding</span>
+          </a>
+        </li>
+      }
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/settings">
-          <fa-icon
-            [icon]="faGear"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Settings</span>
-        </a>
-      </li>
+      @if (auth.hasRole('admin')) {
+        @if (edition === 'enterprise') {
+          <li>
+            <a
+              class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+              routerLinkActive="bg-gray-100 dark:bg-gray-700"
+              (click)="sidebar.hide()"
+              routerLink="/subscription">
+              <fa-icon
+                [icon]="faCreditCard"
+                size="lg"
+                class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+              <span class="ms-3">Subscription</span>
+            </a>
+          </li>
+        }
+
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            (click)="sidebar.hide()"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/settings">
+            <fa-icon
+              [icon]="faGear"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Settings</span>
+          </a>
+        </li>
+      }
     </ul>
 
-    <ul class="space-y-2 font-medium flex-1" *appRequiredRole="'customer'">
+    <ul class="space-y-2 font-medium flex-1" *appRequireCustomer>
       <li>
         <a
           (click)="sidebar.hide()"
@@ -311,28 +342,26 @@
         </a>
       </li>
 
-      <hr class="border-gray-200 dark:border-gray-600" />
+      @if (auth.hasRole('admin')) {
+        <hr class="border-gray-200 dark:border-gray-600" />
 
-      <li>
-        <a
-          class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-          routerLinkActive="bg-gray-100 dark:bg-gray-700"
-          routerLink="/users">
-          <fa-icon
-            [icon]="faUsers"
-            size="lg"
-            class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
-          <span class="ms-3">Users</span>
-        </a>
-      </li>
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            routerLink="/users">
+            <fa-icon
+              [icon]="faUsers"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Users</span>
+          </a>
+        </li>
+      }
     </ul>
 
-    @if (feedbackAlert) {
-      <div
-        id="alert-update"
-        class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700"
-        role="alert"
-        *appRequiredRole="'vendor'">
+    @if (isSubscriptionBannerVisible() && feedbackAlert) {
+      <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert" *appRequireVendor>
         <div class="flex justify-between items-center mb-3">
           <span
             class="bg-gray-100 text-gray-600 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-600 dark:text-gray-200"
@@ -358,7 +387,7 @@
           </button>
         </div>
         <div class="mb-3 text-sm text-gray-700 dark:text-gray-300">
-          We just launched, any feedback helps us building a better product.
+          We just launched Distr v2, any feedback helps us building a better product.
         </div>
         <a
           href="https://cal.glasskube.com/team/founder/30min"
@@ -370,10 +399,15 @@
       </div>
     }
 
-    <div class="text-center text-xs text-gray-300 dark:text-gray-600">
-      {{ buildConfig.version }}
-      (<code>{{ buildConfig.commit }}</code
-      >)
+    <div class="flex flex-col items-center text-xs">
+      @if (edition === 'community') {
+        <div class="text-gray-500 dark:text-gray-400">Community Edition</div>
+      }
+      <div class="text-gray-300 dark:text-gray-600">
+        {{ buildConfig.version }}
+        (<code>{{ buildConfig.commit }}</code
+        >)
+      </div>
     </div>
   </div>
 </aside>

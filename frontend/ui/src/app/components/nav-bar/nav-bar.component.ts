@@ -1,6 +1,9 @@
 import {OverlayModule} from '@angular/cdk/overlay';
+import {AsyncPipe, TitleCasePipe} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, inject, input, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -17,34 +20,24 @@ import {
   faShuffle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  catchError,
-  combineLatestWith,
-  distinctUntilChanged,
-  EMPTY,
-  lastValueFrom,
-  map,
-  Observable,
-  of,
-  Subject,
-  takeUntil,
-} from 'rxjs';
+import dayjs from 'dayjs';
+import {catchError, combineLatestWith, EMPTY, lastValueFrom, map, Observable, of} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
+import {SecureImagePipe} from '../../../util/secureImage';
 import {dropdownAnimation} from '../../animations/dropdown';
+import {modalFlyInOut} from '../../animations/modal';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
 import {OrganizationBrandingService} from '../../services/organization-branding.service';
+import {OrganizationService} from '../../services/organization.service';
+import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {SidebarService} from '../../services/sidebar.service';
 import {ToastService} from '../../services/toast.service';
-import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
 import {UsersService} from '../../services/users.service';
-import {SecureImagePipe} from '../../../util/secureImage';
-import {AsyncPipe, TitleCasePipe} from '@angular/common';
-import {OrganizationService} from '../../services/organization.service';
 import {Organization, OrganizationWithUserRole} from '../../types/organization';
-import {AutotrimDirective} from '../../directives/autotrim.directive';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {DialogRef, OverlayService} from '../../services/overlay.service';
-import {modalFlyInOut} from '../../animations/modal';
+import {ColorSchemeSwitcherComponent} from '../color-scheme-switcher/color-scheme-switcher.component';
+import {NavBarSubscriptionBannerComponent} from './nav-bar-subscription-banner/nav-bar-subscription-banner.component';
 
 type SwitchOptions = {
   currentOrg: Organization;
@@ -58,6 +51,7 @@ type SwitchOptions = {
   templateUrl: './nav-bar.component.html',
   imports: [
     ColorSchemeSwitcherComponent,
+    NavBarSubscriptionBannerComponent,
     OverlayModule,
     FaIconComponent,
     RouterLink,
@@ -66,11 +60,12 @@ type SwitchOptions = {
     TitleCasePipe,
     AutotrimDirective,
     ReactiveFormsModule,
+    RequireVendorDirective,
+    RequireCustomerDirective,
   ],
   animations: [dropdownAnimation, modalFlyInOut],
 })
-export class NavBarComponent implements OnInit, OnDestroy {
-  private destroyed$ = new Subject<void>();
+export class NavBarComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly overlay = inject(OverlayService);
   public readonly sidebar = inject(SidebarService);
@@ -96,15 +91,22 @@ export class NavBarComponent implements OnInit, OnDestroy {
     })
   );
   protected readonly switchOptions$: Observable<SwitchOptions> = this.organizationService.getAll().pipe(
-    takeUntil(this.destroyed$),
+    takeUntilDestroyed(),
     combineLatestWith(this.organization$),
     map(([orgs, currentOrg]) => {
       return {
         currentOrg,
         availableOrgs: orgs.filter((o) => o.id !== currentOrg.id),
-        isVendorSomewhere: orgs.some((o) => o.userRole === 'vendor'),
+        isVendorSomewhere: orgs.some((o) => o.customerOrganizationId === undefined),
       };
     })
+  );
+
+  protected readonly isTrial = toSignal(this.organization$.pipe(map((org) => org.subscriptionType === 'trial')));
+  protected readonly isSubscriptionExpired = toSignal(
+    this.organization$.pipe(
+      map((org) => org.subscriptionType !== 'community' && dayjs(org.subscriptionEndsAt).isBefore())
+    )
   );
 
   userOpened = false;
@@ -113,7 +115,9 @@ export class NavBarComponent implements OnInit, OnDestroy {
   customerSubtitle = 'Customer Portal';
 
   protected readonly faBarsStaggered = faBarsStaggered;
-  protected tutorial?: string;
+  protected readonly tutorial = toSignal(this.route.queryParams.pipe(map((params) => params['tutorial'])));
+
+  public readonly isSubscriptionBannerVisible = input<boolean>();
 
   @ViewChild('createOrgModal') private createOrgModal!: TemplateRef<unknown>;
   private modalRef?: DialogRef;
@@ -121,26 +125,16 @@ export class NavBarComponent implements OnInit, OnDestroy {
     name: new FormControl<string>('', Validators.required),
   });
 
-  public ngOnInit() {
-    this.route.queryParams
-      .pipe(
-        map((params) => params['tutorial']),
-        distinctUntilChanged(),
-        takeUntil(this.destroyed$)
-      )
-      .subscribe((tutorial) => {
-        this.tutorial = tutorial;
-      });
-
+  public async ngOnInit() {
     try {
-      this.initBranding();
+      await this.initBranding();
     } catch (e) {
       console.error(e);
     }
   }
 
   private async initBranding() {
-    if (this.auth.hasRole('customer')) {
+    if (this.auth.isCustomer()) {
       try {
         const branding = await lastValueFrom(this.organizationBranding.get());
         if (branding.logo) {
@@ -190,12 +184,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
     this.createOrgForm.markAllAsTouched();
     if (this.createOrgForm.valid) {
       try {
-        const created = await lastValueFrom(
-          this.organizationService.create({
-            name: this.createOrgForm.value.name!,
-            features: [],
-          })
-        );
+        const created = await lastValueFrom(this.organizationService.create(this.createOrgForm.value.name!));
         await this.switchContext(created, '/dashboard?from=new-org');
       } catch (e) {
         const msg = getFormDisplayedError(e);
@@ -211,11 +200,6 @@ export class NavBarComponent implements OnInit, OnDestroy {
     // This is necessary to flush the caching crud services
     // TODO: implement flushing of services directly and switch to router.navigate(...)
     location.assign('/login');
-  }
-
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
   }
 
   protected readonly faLightbulb = faLightbulb;

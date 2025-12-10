@@ -16,8 +16,8 @@ import {RegisterComponent} from './register/register.component';
 import {AuthService} from './services/auth.service';
 import {SettingsService} from './services/settings.service';
 import {ToastService} from './services/toast.service';
-import {VerifyComponent} from './verify/verify.component';
 import {UsersService} from './services/users.service';
+import {VerifyComponent} from './verify/verify.component';
 
 const emailVerificationGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
@@ -90,13 +90,10 @@ const inviteComponentGuard: CanActivateFn = async () => {
 const baseRouteRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  switch (auth.getClaims()?.role) {
-    case 'customer':
-      return router.createUrlTree(['/home']);
-    case 'vendor':
-      return router.createUrlTree(['/dashboard']);
-    default:
-      return false;
+  if (auth.isVendor()) {
+    return router.createUrlTree(['/dashboard']);
+  } else {
+    return router.createUrlTree(['/home']);
   }
 };
 
