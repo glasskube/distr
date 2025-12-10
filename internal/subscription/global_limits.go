@@ -93,7 +93,7 @@ func GetLogExportRowsLimit(st types.SubscriptionType) Limit {
 	case types.SubscriptionTypeCommunity:
 		return MaxLogExportRowsStarter
 	case types.SubscriptionTypeTrial:
-		return MaxLogExportRowsStarter
+		return MaxLogExportRowsPro
 	case types.SubscriptionTypeStarter:
 		return MaxLogExportRowsStarter
 	case types.SubscriptionTypePro:
