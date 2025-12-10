@@ -390,24 +390,15 @@ func exportDeploymentStatusHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 
-		// Get deployment from context (via middleware)
 		deployment := internalctx.GetDeployment(ctx)
-
-		// Get organization to determine subscription type
 		authInfo := auth.Authentication.Require(ctx)
 		org := authInfo.CurrentOrg()
-
-		// Determine limit based on subscription type
 		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
-
-		// Generate filename with ISO date
 		filename := fmt.Sprintf("%s_deployment_status.log", time.Now().Format("2006-01-02"))
 
-		// Set headers for file download
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
-		// Stream status records directly from database to response
 		err := db.GetDeploymentStatusForExport(
 			ctx, deployment.ID, limit,
 			func(record types.DeploymentRevisionStatus) error {
@@ -446,31 +437,24 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 
-		// Get deployment from context (via middleware)
 		deployment := internalctx.GetDeployment(ctx)
 
-		// Get resource parameter
 		resource := r.FormValue("resource")
 		if resource == "" {
 			http.Error(w, "query parameter resource is required", http.StatusBadRequest)
 			return
 		}
 
-		// Get organization to determine subscription type
 		authInfo := auth.Authentication.Require(ctx)
 		org := authInfo.CurrentOrg()
 
-		// Determine limit based on subscription type
 		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
 
-		// Generate filename with ISO date and resource name
 		filename := fmt.Sprintf("%s_%s.log", time.Now().Format("2006-01-02"), resource)
 
-		// Set headers for file download
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 
-		// Stream log records directly from database to response
 		err := db.GetDeploymentLogRecordsForExport(
 			ctx, deployment.ID, resource, limit,
 			func(record types.DeploymentLogRecord) error {
