@@ -103,9 +103,9 @@ export interface TimeseriesSource {
 })
 export class TimeseriesTableComponent {
   public readonly source = input.required<TimeseriesSource>();
-  public readonly deploymentId = input<string | undefined>(undefined);
-  public readonly resource = input<string | undefined>(undefined);
-  public readonly exportType = input<'logs' | 'status' | undefined>(undefined);
+  public readonly deploymentId = input<string>();
+  public readonly resource = input<string>();
+  public readonly exportType = input<'logs' | 'status'>();
 
   private readonly deploymentLogsService = inject(DeploymentLogsService);
   private readonly deploymentStatusService = inject(DeploymentStatusService);
