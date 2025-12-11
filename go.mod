@@ -17,7 +17,7 @@ require (
 	github.com/docker/cli v28.5.2+incompatible
 	github.com/docker/compose/v2 v2.40.3
 	github.com/docker/docker v28.5.2+incompatible
-	github.com/exaring/otelpgx v0.9.3
+	github.com/exaring/otelpgx v0.9.4
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/getsentry/sentry-go/otel v0.40.0
@@ -53,7 +53,7 @@ require (
 	go.uber.org/zap v1.27.1
 	golang.org/x/crypto v0.46.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.19.2
+	helm.sh/helm/v3 v3.19.3
 	k8s.io/api v0.34.3
 	k8s.io/apimachinery v0.34.3
 	k8s.io/cli-runtime v0.34.3

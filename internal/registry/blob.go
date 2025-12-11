@@ -19,11 +19,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"path"
 	"strings"
 
+	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/registry/authz"
 	"github.com/glasskube/distr/internal/registry/blob"
 	registryerror "github.com/glasskube/distr/internal/registry/error"
@@ -345,7 +345,8 @@ func (b *blobs) handlePost(resp http.ResponseWriter, req *http.Request, repo, ta
 
 		if err = bph.Put(req.Context(), repo, h, "", vrc); err != nil {
 			if errors.As(err, &verify.Error{}) {
-				log.Printf("Digest mismatch: %v", err)
+				log := internalctx.GetLogger(req.Context())
+				log.Warn("Digest mismatch detected", zap.Error(err))
 				return regErrDigestMismatch
 			}
 			return regErrInternal(err)

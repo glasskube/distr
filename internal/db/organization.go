@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glasskube/distr/internal/apierrors"
+	"github.com/glasskube/distr/internal/buildconfig"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
@@ -42,6 +43,14 @@ const (
 )
 
 func CreateOrganization(ctx context.Context, org *types.Organization) error {
+	if buildconfig.IsCommunityEdition() {
+		org.SubscriptionType = types.SubscriptionTypeCommunity
+		org.Features = []types.Feature{}
+	} else {
+		org.SubscriptionType = types.SubscriptionTypeTrial
+		org.Features = []types.Feature{types.FeatureLicensing}
+	}
+
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`INSERT INTO Organization AS o (name, slug, subscription_type, features)
