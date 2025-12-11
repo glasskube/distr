@@ -174,11 +174,17 @@ func GetDeploymentLogRecordsForExport(
 		return fmt.Errorf("could not query DeploymentLogRecord: %w", err)
 	}
 
-	_, err = pgx.ForEachRow(rows, nil, func() error {
-		record, err := pgx.RowToStructByName[types.DeploymentLogRecord](rows)
-		if err != nil {
-			return err
-		}
+	var record types.DeploymentLogRecord
+	_, err = pgx.ForEachRow(rows, []any{
+		&record.ID,
+		&record.CreatedAt,
+		&record.DeploymentID,
+		&record.DeploymentRevisionID,
+		&record.Resource,
+		&record.Timestamp,
+		&record.Severity,
+		&record.Body,
+	}, func() error {
 		return callback(record)
 	})
 	if err != nil {

@@ -394,10 +394,10 @@ func exportDeploymentStatusHandler() http.HandlerFunc {
 		authInfo := auth.Authentication.Require(ctx)
 		org := authInfo.CurrentOrg()
 		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
+
 		filename := fmt.Sprintf("%s_deployment_status.log", time.Now().Format("2006-01-02"))
 
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		SetFileDownloadHeaders(w, filename)
 
 		err := db.GetDeploymentStatusForExport(
 			ctx, deployment.ID, limit,
@@ -445,18 +445,17 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 			return
 		}
 
-		authInfo := auth.Authentication.Require(ctx)
-		org := authInfo.CurrentOrg()
+		// authInfo := auth.Authentication.Require(ctx)
+		// org := authInfo.CurrentOrg()
 
-		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
+		// limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
 
 		filename := fmt.Sprintf("%s_%s.log", time.Now().Format("2006-01-02"), resource)
 
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		SetFileDownloadHeaders(w, filename)
 
 		err := db.GetDeploymentLogRecordsForExport(
-			ctx, deployment.ID, resource, limit,
+			ctx, deployment.ID, resource, 2_000_000,
 			func(record types.DeploymentLogRecord) error {
 				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.Timestamp.Format(time.RFC3339),

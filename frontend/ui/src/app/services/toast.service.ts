@@ -12,7 +12,7 @@ const toastBaseConfig: Partial<IndividualConfig> = {
   positionClass: 'toast-bottom-right',
 };
 
-export type ToastType = 'success' | 'error';
+export type ToastType = 'success' | 'error' | 'info';
 
 @Injectable({providedIn: 'root'})
 export class ToastService {
@@ -30,6 +30,14 @@ export class ToastService {
     this.toastr.show('', message, {
       ...toastBaseConfig,
       payload: 'error',
+    });
+  }
+
+  public info(message: string) {
+    return this.toastr.show<ToastType>('', message, {
+      ...toastBaseConfig,
+      payload: 'info',
+      disableTimeOut: true,
     });
   }
 }

@@ -1,7 +1,7 @@
 import {animate, keyframes, state, style, transition, trigger} from '@angular/animations';
 import {Component} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCheck, faCircleExclamation} from '@fortawesome/free-solid-svg-icons';
+import {faCheck, faCircleExclamation, faCircleInfo} from '@fortawesome/free-solid-svg-icons';
 import {Toast} from 'ngx-toastr';
 
 @Component({
@@ -21,6 +21,8 @@ import {Toast} from 'ngx-toastr';
       [class.dark:border-red-800]="options.payload === 'error'"
       [class.border-green-300]="options.payload === 'success'"
       [class.dark:border-green-800]="options.payload === 'success'"
+      [class.border-blue-300]="options.payload === 'info'"
+      [class.dark:border-blue-800]="options.payload === 'info'"
       class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
       role="alert">
       @switch (options.payload) {
@@ -36,6 +38,13 @@ import {Toast} from 'ngx-toastr';
             [icon]="faCheck"
             size="lg"
             class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg text-green-500 dark:text-green-800">
+          </fa-icon>
+        }
+        @case ('info') {
+          <fa-icon
+            [icon]="faCircleInfo"
+            size="lg"
+            class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg text-blue-500 dark:bg-blue-800 bg-blue-100 dark:text-blue-200">
           </fa-icon>
         }
       }
@@ -118,4 +127,5 @@ import {Toast} from 'ngx-toastr';
 export class ToastComponent extends Toast {
   protected readonly faCheck = faCheck;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faCircleInfo = faCircleInfo;
 }

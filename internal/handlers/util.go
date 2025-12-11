@@ -30,6 +30,11 @@ func RespondJSON(w http.ResponseWriter, data any) {
 	}
 }
 
+func SetFileDownloadHeaders(w http.ResponseWriter, filename string) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+}
+
 func readMultipartFile(w http.ResponseWriter, r *http.Request, formKey string) ([]byte, bool) {
 	log := internalctx.GetLogger(r.Context())
 	if file, head, err := r.FormFile(formKey); err != nil {

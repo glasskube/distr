@@ -433,12 +433,15 @@ func GetDeploymentStatusForExport(
 		return fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
 	}
 
-	_, err = pgx.ForEachRow(rows, nil, func() error {
-		record, err := pgx.RowToStructByName[types.DeploymentRevisionStatus](rows)
-		if err != nil {
-			return err
-		}
-		return callback(record)
+	var status types.DeploymentRevisionStatus
+	_, err = pgx.ForEachRow(rows, []any{
+		&status.ID,
+		&status.CreatedAt,
+		&status.DeploymentRevisionID,
+		&status.Type,
+		&status.Message,
+	}, func() error {
+		return callback(status)
 	})
 	if err != nil {
 		return fmt.Errorf("could not iterate DeploymentRevisionStatus: %w", err)

@@ -5,6 +5,7 @@ import {filter, interval, map, merge, Observable, scan, Subject, switchMap, tap}
 import {distinctBy} from '../../../util/arrays';
 import {DeploymentLogsService} from '../../services/deployment-logs.service';
 import {DeploymentStatusService} from '../../services/deployment-status.service';
+import {ToastService} from '../../services/toast.service';
 
 export interface TimeseriesEntry {
   id?: string;
@@ -108,6 +109,7 @@ export class TimeseriesTableComponent {
 
   private readonly deploymentLogsService = inject(DeploymentLogsService);
   private readonly deploymentStatusService = inject(DeploymentStatusService);
+  private readonly toastService = inject(ToastService);
   protected hasMore = true;
   protected isExporting = false;
   protected readonly entries$: Observable<TimeseriesEntry[]> = toObservable(this.source).pipe(
@@ -156,7 +158,7 @@ export class TimeseriesTableComponent {
     this.showMore$.next();
   }
 
-  protected exportData() {
+  protected async exportData() {
     const deploymentId = this.deploymentId();
     const exportType = this.exportType();
 
@@ -166,7 +168,6 @@ export class TimeseriesTableComponent {
 
     this.isExporting = true;
 
-    let exportObservable: Observable<Blob>;
     let filename: string;
     const today = new Date().toISOString().split('T')[0];
 
@@ -176,33 +177,73 @@ export class TimeseriesTableComponent {
         this.isExporting = false;
         return;
       }
-      exportObservable = this.deploymentLogsService.export(deploymentId, resource);
       filename = `${today}_${resource}.log`;
     } else if (exportType === 'status') {
-      exportObservable = this.deploymentStatusService.export(deploymentId);
       filename = `${today}_deployment_status.log`;
     } else {
       this.isExporting = false;
       return;
     }
 
-    exportObservable.subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        this.isExporting = false;
-      },
-      error: (err) => {
-        console.error('Export failed:', err);
-        this.isExporting = false;
-      },
-    });
+    try {
+      const fileHandle = await (window as any).showSaveFilePicker({
+        suggestedName: filename,
+        types: [
+          {
+            description: 'Log Files',
+            accept: {'text/plain': ['.log']},
+          },
+        ],
+      });
+
+      const toastRef = this.toastService.info('Download started...');
+
+      const writable = await fileHandle.createWritable();
+
+      let exportObservable: Observable<Blob>;
+      if (exportType === 'logs') {
+        const resource = this.resource()!;
+        exportObservable = this.deploymentLogsService.export(deploymentId, resource);
+      } else {
+        exportObservable = this.deploymentStatusService.export(deploymentId);
+      }
+
+      exportObservable.subscribe({
+        next: async (blob) => {
+          try {
+            const stream = blob.stream();
+            const reader = stream.getReader();
+
+            while (true) {
+              const {done, value} = await reader.read();
+              if (done) break;
+              await writable.write(value);
+            }
+
+            await writable.close();
+            this.isExporting = false;
+            toastRef.toastRef.close();
+            this.toastService.success('Download completed successfully');
+          } catch (err) {
+            console.error('Failed to write file:', err);
+            await writable.abort();
+            this.isExporting = false;
+            toastRef.toastRef.close();
+            this.toastService.error('Failed to write file');
+          }
+        },
+        error: (err) => {
+          console.error('Export failed:', err);
+          writable.abort();
+          this.isExporting = false;
+          toastRef.toastRef.close();
+          this.toastService.error('Export failed');
+        },
+      });
+    } catch (err) {
+      console.error('Failed to save file:', err);
+      this.isExporting = false;
+    }
   }
 }
 
