@@ -74,7 +74,7 @@ export interface TimeseriesSource {
               @if (isExporting) {
                 Exporting...
               } @else {
-                Export
+                Export all
               }
             </button>
           }
