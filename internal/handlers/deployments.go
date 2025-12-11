@@ -445,17 +445,16 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 			return
 		}
 
-		// authInfo := auth.Authentication.Require(ctx)
-		// org := authInfo.CurrentOrg()
-
-		// limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
+		authInfo := auth.Authentication.Require(ctx)
+		org := authInfo.CurrentOrg()
+		limit := int(subscription.GetLogExportRowsLimit(org.SubscriptionType))
 
 		filename := fmt.Sprintf("%s_%s.log", time.Now().Format("2006-01-02"), resource)
 
 		SetFileDownloadHeaders(w, filename)
 
 		err := db.GetDeploymentLogRecordsForExport(
-			ctx, deployment.ID, resource, 2_000_000,
+			ctx, deployment.ID, resource, limit,
 			func(record types.DeploymentLogRecord) error {
 				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.Timestamp.Format(time.RFC3339),
