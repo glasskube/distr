@@ -43,8 +43,8 @@ func (m *Manager) NewUpdateDeploymentTargetTool() server.ServerTool {
 				return mcp.NewToolResultError("type is required"), nil
 			} else {
 				switch ts {
-				case string(types.DepolymentTypeKubernetes):
-					deployment.Type = types.DepolymentTypeKubernetes
+				case string(types.DeploymentTypeKubernetes):
+					deployment.Type = types.DeploymentTypeKubernetes
 					if ns := mcp.ParseString(request, "namespace", ""); ns == "" {
 						return mcp.NewToolResultError("namespace is required if type is kubernetes"), nil
 					} else {

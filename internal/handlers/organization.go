@@ -17,6 +17,7 @@ import (
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -88,7 +89,7 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 		Name:              body.Name,
 		Slug:              body.Slug,
 		SubscriptionType:  types.SubscriptionTypeTrial,
-		Features:          []types.Feature{types.FeatureLicensing},
+		Features:          subscription.ProFeatures,
 		PreConnectScript:  body.PreConnectScript,
 		PostConnectScript: body.PostConnectScript,
 	}

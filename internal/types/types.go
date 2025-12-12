@@ -74,7 +74,7 @@ type (
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
-	DepolymentTypeKubernetes DeploymentType = "kubernetes"
+	DeploymentTypeKubernetes DeploymentType = "kubernetes"
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"

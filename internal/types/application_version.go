@@ -66,7 +66,7 @@ func (av ApplicationVersion) Validate(deplType DeploymentType) error {
 			av.ValuesFileData != nil {
 			return errors.New("unexpected kubernetes specifics in docker application")
 		}
-	case DepolymentTypeKubernetes:
+	case DeploymentTypeKubernetes:
 		if av.ChartType == nil || *av.ChartType == "" ||
 			av.ChartUrl == nil || *av.ChartUrl == "" ||
 			av.ChartVersion == nil || *av.ChartVersion == "" {

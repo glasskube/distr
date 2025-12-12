@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func BuildConnectURL(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
+func buildURL(targetID uuid.UUID, org types.Organization, targetSecret string, preConnect bool) (string, error) {
 	u, err := url.Parse(customdomains.AppDomainOrDefault(org))
 	if err != nil {
 		return "", err
@@ -18,22 +18,22 @@ func BuildConnectURL(targetID uuid.UUID, org types.Organization, targetSecret st
 	query := url.Values{}
 	query.Set("targetId", targetID.String())
 	query.Set("targetSecret", targetSecret)
-	u = u.JoinPath("/api/v1/connect")
+
+	endpoint := "/api/v1/connect"
+	if preConnect {
+		endpoint = "/api/v1/pre-connect"
+	}
+	u = u.JoinPath(endpoint)
 	u.RawQuery = query.Encode()
 	return u.String(), nil
 }
 
+func BuildConnectURL(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
+	return buildURL(targetID, org, targetSecret, false)
+}
+
 func BuildPreConnectURL(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
-	u, err := url.Parse(customdomains.AppDomainOrDefault(org))
-	if err != nil {
-		return "", err
-	}
-	query := url.Values{}
-	query.Set("targetId", targetID.String())
-	query.Set("targetSecret", targetSecret)
-	u = u.JoinPath("/api/v1/pre-connect")
-	u.RawQuery = query.Encode()
-	return u.String(), nil
+	return buildURL(targetID, org, targetSecret, true)
 }
 
 func GenerateConnectScript(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
@@ -43,8 +43,7 @@ func GenerateConnectScript(targetID uuid.UUID, org types.Organization, targetSec
 	}
 
 	var script strings.Builder
-	script.WriteString("#!/bin/bash\n")
-	script.WriteString("set -euo pipefail\n\n")
+	script.WriteString("#!/bin/sh\n")
 
 	if org.PreConnectScript != nil && strings.TrimSpace(*org.PreConnectScript) != "" {
 		script.WriteString("# Pre-connect script\n")
@@ -53,7 +52,7 @@ func GenerateConnectScript(targetID uuid.UUID, org types.Organization, targetSec
 	}
 
 	script.WriteString("# Connect to Distr agent\n")
-	script.WriteString(fmt.Sprintf("curl -fsSL '%s'\n", connectURL))
+	script.WriteString(generateDockerConnectCommand(connectURL))
 
 	if org.PostConnectScript != nil && strings.TrimSpace(*org.PostConnectScript) != "" {
 		script.WriteString("\n\n# Post-connect script\n")
@@ -64,20 +63,45 @@ func GenerateConnectScript(targetID uuid.UUID, org types.Organization, targetSec
 	return script.String(), nil
 }
 
+func generateScriptCommand(scriptURL string) string {
+	return fmt.Sprintf("curl -fsSL '%s' | sh", scriptURL)
+}
+
+func generateDockerConnectCommand(connectURL string) string {
+	return fmt.Sprintf("curl  -fsSL '%s' | docker compose -f - up -d", connectURL)
+}
+
+func generateKubernetesConnectCommand(namespace string, connectURL string) string {
+	return fmt.Sprintf("kubectl apply -n %s -f \"%s\"", namespace, connectURL)
+}
+
 func GenerateConnectCommand(
 	deploymentTarget types.DeploymentTarget,
 	org types.Organization,
 	targetSecret string,
 ) (string, error) {
-	preConnectURL, err := BuildPreConnectURL(deploymentTarget.ID, org, targetSecret)
-	if err != nil {
-		return "", fmt.Errorf("failed to build pre-connect URL: %w", err)
+	if deploymentTarget.Type == types.DeploymentTypeDocker && org.HasFeature(types.FeaturePrePostScripts) {
+		preConnectURL, err := BuildPreConnectURL(deploymentTarget.ID, org, targetSecret)
+		if err != nil {
+			return "", fmt.Errorf("failed to build pre-connect URL: %w", err)
+		}
+		return generateScriptCommand(preConnectURL), nil
 	}
 
-	var command strings.Builder
-	command.WriteString("bash <(curl -fsSL '")
-	command.WriteString(preConnectURL)
-	command.WriteString("')")
+	connectURL, err := BuildConnectURL(deploymentTarget.ID, org, targetSecret)
+	if err != nil {
+		return "", fmt.Errorf("failed to build connect URL: %w", err)
+	}
 
-	return command.String(), nil
+	switch deploymentTarget.Type {
+	case types.DeploymentTypeDocker:
+		return generateDockerConnectCommand(connectURL), nil
+	case types.DeploymentTypeKubernetes:
+		if deploymentTarget.Namespace == nil {
+			return "", fmt.Errorf("kubernetes deployment target must have a namespace")
+		}
+		return generateKubernetesConnectCommand(*deploymentTarget.Namespace, connectURL), nil
+	default:
+		return "", fmt.Errorf("unsupported deployment type: %s", deploymentTarget.Type)
+	}
 }
