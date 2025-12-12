@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.1.0](https://github.com/glasskube/distr/compare/2.0.2...2.1.0) (2025-12-12)
+
+
+### Features
+
+* add custom pre/post connect scripts for docker agents ([#1543](https://github.com/glasskube/distr/issues/1543)) ([41d66ef](https://github.com/glasskube/distr/commit/41d66ef7391b7cfb796c25df5562ff2c68f99d0b))
+* add deployment status and resource log export ([#1541](https://github.com/glasskube/distr/issues/1541)) ([c0c1d60](https://github.com/glasskube/distr/commit/c0c1d6038e58cb74bbcf29d40341a5cea21fbf5f))
+
+
+### Bug Fixes
+
+* **backend:** fix registration error ([#1542](https://github.com/glasskube/distr/issues/1542)) ([11e6524](https://github.com/glasskube/distr/commit/11e65245e1fd6df787aaf55b3284c28164d7a7ab))
+* **deps:** update aws-sdk-go-v2 monorepo ([#1537](https://github.com/glasskube/distr/issues/1537)) ([3a20ff1](https://github.com/glasskube/distr/commit/3a20ff149411d33806b6a2e3b1c6d32f711528d6))
+* **deps:** update kubernetes packages to v0.34.3 ([#1539](https://github.com/glasskube/distr/issues/1539)) ([16b3fa8](https://github.com/glasskube/distr/commit/16b3fa87012409f32c1a70ff40aaaaad41ccab80))
+* **deps:** update module github.com/exaring/otelpgx to v0.9.4 ([#1540](https://github.com/glasskube/distr/issues/1540)) ([09ec3f7](https://github.com/glasskube/distr/commit/09ec3f7d0e8524a009cbffed619feacb53197271))
+* **deps:** update module helm.sh/helm/v3 to v3.19.3 ([#1544](https://github.com/glasskube/distr/issues/1544)) ([f9b1100](https://github.com/glasskube/distr/commit/f9b110031edd7fedd1ea949b8e2b70e83f5c415b))
+* **registry:** allow storing in-transit blobs on disk to save memory ([#1478](https://github.com/glasskube/distr/issues/1478)) ([caf6d92](https://github.com/glasskube/distr/commit/caf6d9270a110047b79cb6c0036ce84510ddbc6a))
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.20.11 ([#1536](https://github.com/glasskube/distr/issues/1536)) ([ca43232](https://github.com/glasskube/distr/commit/ca43232c9c44c33b4712cc9a6a4b60ee24d1333e))
+* **deps:** update dependency @codemirror/view to v6.39.3 ([#1545](https://github.com/glasskube/distr/issues/1545)) ([7ea57b0](https://github.com/glasskube/distr/commit/7ea57b0c612d0af8e480cbe23b63f366f82f4655))
+* **deps:** update tailwindcss monorepo to v4.1.18 ([#1547](https://github.com/glasskube/distr/issues/1547)) ([60cc0f3](https://github.com/glasskube/distr/commit/60cc0f34b5a5caba0e8bc39cb8fd9792b1ac5bd9))
+* indicate more clearly that this is only a docker compose preview ([#1548](https://github.com/glasskube/distr/issues/1548)) ([99dc09f](https://github.com/glasskube/distr/commit/99dc09fbf400de11af730cc9e9c04bbfda5d3a04))
+
+
+### Docs
+
+* add CLAUDE.md ([#1546](https://github.com/glasskube/distr/issues/1546)) ([f823c75](https://github.com/glasskube/distr/commit/f823c755a59262c197614e75ab88673345e976da))
+
 ## [2.0.2](https://github.com/glasskube/distr/compare/2.0.1...2.0.2) (2025-12-09)
 
 
