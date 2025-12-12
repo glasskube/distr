@@ -68,7 +68,7 @@ func generateScriptCommand(scriptURL string) string {
 }
 
 func generateDockerConnectCommand(connectURL string) string {
-	return fmt.Sprintf("curl  -fsSL '%s' | docker compose -f - up -d", connectURL)
+	return fmt.Sprintf("curl -fsSL '%s' | docker compose -f - up -d", connectURL)
 }
 
 func generateKubernetesConnectCommand(namespace string, connectURL string) string {
