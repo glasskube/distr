@@ -8,6 +8,12 @@
 
 ## Properties
 
+### connectCommand
+
+> **connectCommand**: `string`
+
+---
+
 ### connectUrl
 
 > **connectUrl**: `string`

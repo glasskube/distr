@@ -18,7 +18,7 @@
 
 #### Inherited from
 
-[`BaseModel`](BaseModel.md).[`createdAt`](BaseModel.md#createdat)
+[`CustomerOrganization`](CustomerOrganization.md).[`createdAt`](CustomerOrganization.md#createdat)
 
 ---
 
@@ -34,7 +34,7 @@
 
 #### Inherited from
 
-[`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
+[`CustomerOrganization`](CustomerOrganization.md).[`id`](CustomerOrganization.md#id)
 
 ---
 

@@ -147,7 +147,7 @@ Creates a new application version for the given Kubernetes application using a H
 
 ### getLatestVersion()
 
-> **getLatestVersion**(`appId`): `Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md) \| `undefined`\>
+> **getLatestVersion**(`appId`): `Promise`\<`undefined` \| [`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
 Returns the latest version of the given application according to the specified strategy.
 
@@ -159,7 +159,7 @@ Returns the latest version of the given application according to the specified s
 
 #### Returns
 
-`Promise`\<[`ApplicationVersion`](../interfaces/ApplicationVersion.md) \| `undefined`\>
+`Promise`\<`undefined` \| [`ApplicationVersion`](../interfaces/ApplicationVersion.md)\>
 
 ---
 
