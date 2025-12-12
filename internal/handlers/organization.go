@@ -12,10 +12,12 @@ import (
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
+	"github.com/glasskube/distr/internal/buildconfig"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
+	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -83,7 +85,19 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	organization := types.Organization{Name: body.Name, Slug: body.Slug}
+	organization := types.Organization{
+		Name:              body.Name,
+		Slug:              body.Slug,
+		SubscriptionType:  types.SubscriptionTypeTrial,
+		Features:          subscription.ProFeatures,
+		PreConnectScript:  body.PreConnectScript,
+		PostConnectScript: body.PostConnectScript,
+	}
+
+	if buildconfig.IsCommunityEdition() {
+		organization.SubscriptionType = types.SubscriptionTypeCommunity
+		organization.Features = []types.Feature{}
+	}
 
 	if err := db.RunTx(ctx, func(ctx context.Context) error {
 		if err := db.CreateOrganization(ctx, &organization); err != nil {
@@ -167,6 +181,16 @@ func handleUpdateOrganization(
 
 		if !util.PtrEq(org.Slug, request.Slug) {
 			org.Slug = request.Slug
+			needsUpdate = true
+		}
+
+		if !util.PtrEq(org.PreConnectScript, request.PreConnectScript) {
+			org.PreConnectScript = request.PreConnectScript
+			needsUpdate = true
+		}
+
+		if !util.PtrEq(org.PostConnectScript, request.PostConnectScript) {
+			org.PostConnectScript = request.PostConnectScript
 			needsUpdate = true
 		}
 

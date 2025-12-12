@@ -14,6 +14,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/agentclient/useragent"
+	"github.com/glasskube/distr/internal/agentconnect"
 	"github.com/glasskube/distr/internal/agentmanifest"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
@@ -36,6 +37,7 @@ func AgentRouter(r chi.Router) {
 	r.With(
 		queryAuthDeploymentTargetCtxMiddleware,
 	).Group(func(r chi.Router) {
+		r.Get("/pre-connect", preConnectHandler())
 		r.Get("/connect", connectHandler())
 	})
 	r.Route("/agent", func(r chi.Router) {
@@ -94,6 +96,49 @@ func connectHandler() http.HandlerFunc {
 			if _, err := io.Copy(w, manifest); err != nil {
 				log.Warn("writing to client failed", zap.Error(err))
 			}
+		}
+	}
+}
+
+// optionally wraps the connect request in a shell script
+func preConnectHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+
+		if deploymentTarget.CurrentStatus != nil &&
+			deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
+			http.Error(
+				w,
+				fmt.Sprintf(
+					"deployment target is already connected and appears to be still running (last status %v)",
+					deploymentTarget.CurrentStatus.CreatedAt),
+				http.StatusBadRequest,
+			)
+			return
+		}
+
+		org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID)
+		if err != nil {
+			log.Error("could not get organization for deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		secret := r.URL.Query().Get("targetSecret")
+		script, err := agentconnect.GenerateConnectScript(deploymentTarget.ID, *org, secret)
+		if err != nil {
+			log.Error("could not generate connect script", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		if _, err := w.Write([]byte(script)); err != nil {
+			log.Warn("writing to client failed", zap.Error(err))
 		}
 	}
 }

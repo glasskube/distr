@@ -1,11 +1,13 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faFloppyDisk, faLightbulb} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {slugMaxLength, slugPattern} from '../../util/slug';
 import {AutotrimDirective} from '../directives/autotrim.directive';
+import {FeatureFlagService} from '../services/feature-flag.service';
 import {OrganizationService} from '../services/organization.service';
 import {ToastService} from '../services/toast.service';
 import {Organization} from '../types/organization';
@@ -20,15 +22,22 @@ export class OrganizationSettingsComponent implements OnInit {
   protected readonly faLightbulb = faLightbulb;
 
   private readonly organizationService = inject(OrganizationService);
-  private organization?: Organization;
-  private toast = inject(ToastService);
+  private readonly toast = inject(ToastService);
+  private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly ff = inject(FeatureFlagService);
 
-  protected readonly form = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    slug: new FormControl('', [Validators.pattern(slugPattern), Validators.maxLength(slugMaxLength)]),
-    appDomain: new FormControl<string | undefined>({value: undefined, disabled: true}),
-    registryDomain: new FormControl<string | undefined>({value: undefined, disabled: true}),
-    emailFromAddress: new FormControl<string | undefined>({value: undefined, disabled: true}),
+  protected readonly isPrePostScriptEnabled = toSignal(this.ff.isPrePostScriptEnabled$);
+
+  private organization?: Organization;
+
+  protected readonly form = this.fb.group({
+    name: this.fb.control('', [Validators.required]),
+    slug: this.fb.control('', [Validators.pattern(slugPattern), Validators.maxLength(slugMaxLength)]),
+    appDomain: this.fb.control<string | undefined>({value: undefined, disabled: true}),
+    registryDomain: this.fb.control<string | undefined>({value: undefined, disabled: true}),
+    emailFromAddress: this.fb.control<string | undefined>({value: undefined, disabled: true}),
+    preConnectScript: this.fb.control<string | undefined>(undefined),
+    postConnectScript: this.fb.control<string | undefined>(undefined),
   });
   formLoading = signal(false);
 
@@ -55,8 +64,10 @@ export class OrganizationSettingsComponent implements OnInit {
         this.organization = await lastValueFrom(
           this.organizationService.update({
             ...this.organization!,
-            name: this.form.value.name?.trim(),
+            name: this.form.value.name?.trim()!,
             slug: this.form.value.slug?.trim(),
+            preConnectScript: this.form.value.preConnectScript?.trim(),
+            postConnectScript: this.form.value.postConnectScript?.trim(),
           })
         );
         this.toast.success('Settings saved successfully');

@@ -23,7 +23,7 @@ type DeploymentTarget struct {
 }
 
 func (dt *DeploymentTarget) Validate() error {
-	if dt.Type == DepolymentTypeKubernetes {
+	if dt.Type == DeploymentTypeKubernetes {
 		if dt.Namespace == nil || *dt.Namespace == "" {
 			return validation.NewValidationFailedError(
 				"DeploymentTarget with type \"kubernetes\" must not have empty namespace",

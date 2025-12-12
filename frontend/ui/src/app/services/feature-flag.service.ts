@@ -7,5 +7,10 @@ import {OrganizationService} from './organization.service';
 })
 export class FeatureFlagService {
   private readonly organizationService = inject(OrganizationService);
-  public isLicensingEnabled$ = this.organizationService.get().pipe(map((o) => o.features.includes('licensing')));
+  public readonly isLicensingEnabled$ = this.organizationService
+    .get()
+    .pipe(map((org) => org.features.includes('licensing')));
+  public readonly isPrePostScriptEnabled$ = this.organizationService
+    .get()
+    .pipe(map((org) => org.features.includes('pre_post_scripts')));
 }

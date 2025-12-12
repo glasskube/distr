@@ -152,7 +152,8 @@ API routes are defined in `internal/routing/`. Routes are grouped by authenticat
 - Agent routes (agent token auth)
 - Registry routes (special OCI auth)
 
-## Tasks
+## General rules
 
+- Don't write any unnecessary comments that just explain the functionality below, if there is nothing special about it.
 - Always ensure this file is up-to-date.
 - If a user requests you to do something differently, add the difference to a new rule / convention in this file

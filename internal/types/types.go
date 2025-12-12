@@ -74,7 +74,7 @@ type (
 
 const (
 	DeploymentTypeDocker     DeploymentType = "docker"
-	DepolymentTypeKubernetes DeploymentType = "kubernetes"
+	DeploymentTypeKubernetes DeploymentType = "kubernetes"
 
 	HelmChartTypeRepository HelmChartType = "repository"
 	HelmChartTypeOCI        HelmChartType = "oci"
@@ -89,7 +89,8 @@ const (
 	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
 
-	FeatureLicensing Feature = "licensing"
+	FeatureLicensing      Feature = "licensing"
+	FeaturePrePostScripts Feature = "pre_post_scripts"
 
 	TutorialBranding      Tutorial  = "branding"
 	TutorialAgents        Tutorial  = "agents"

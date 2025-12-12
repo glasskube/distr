@@ -1,7 +1,7 @@
 import {BaseModel, Named, UserRole} from '@glasskube/distr-sdk';
 import {SubscriptionType} from './subscription';
 
-export type Feature = 'licensing';
+export type Feature = 'licensing' | 'pre_post_scripts';
 
 export interface SubscriptionLimits {
   maxCustomerOrganizations: number;
@@ -10,6 +10,7 @@ export interface SubscriptionLimits {
 }
 
 export interface Organization extends BaseModel, Named {
+  name: string;
   slug?: string;
   features: Feature[];
   appDomain?: string;
@@ -20,6 +21,8 @@ export interface Organization extends BaseModel, Named {
   subscriptionEndsAt?: string;
   subscriptionCustomerOrganizationQuantity: number;
   subscriptionUserAccountQuantity: number;
+  preConnectScript?: string;
+  postConnectScript?: string;
 }
 
 export interface OrganizationWithUserRole extends Organization {

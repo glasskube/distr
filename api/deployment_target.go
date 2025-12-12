@@ -9,9 +9,10 @@ import (
 )
 
 type DeploymentTargetAccessTokenResponse struct {
-	ConnectURL   string    `json:"connectUrl"`
-	TargetID     uuid.UUID `json:"targetId"`
-	TargetSecret string    `json:"targetSecret"`
+	ConnectURL     string    `json:"connectUrl"`
+	TargetID       uuid.UUID `json:"targetId"`
+	TargetSecret   string    `json:"targetSecret"`
+	ConnectCommand string    `json:"connectCommand"`
 }
 
 type DeploymentRequest struct {
