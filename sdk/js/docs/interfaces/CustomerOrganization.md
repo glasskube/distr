@@ -22,7 +22,7 @@
 
 #### Inherited from
 
-`Required.createdAt`
+[`BaseModel`](BaseModel.md).[`createdAt`](BaseModel.md#createdat)
 
 ---
 
@@ -32,7 +32,7 @@
 
 #### Inherited from
 
-`Required.id`
+[`BaseModel`](BaseModel.md).[`id`](BaseModel.md#id)
 
 ---
 
