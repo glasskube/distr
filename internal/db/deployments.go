@@ -396,3 +396,56 @@ func GetDeploymentStatus(
 		return result, nil
 	}
 }
+
+func GetDeploymentStatusForExport(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+	limit int,
+	callback func(types.DeploymentRevisionStatus) error,
+) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		"SELECT id from DeploymentRevision WHERE deployment_id = @deploymentId",
+		pgx.NamedArgs{"deploymentId": deploymentID},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to query DeploymentRevision for status: %w", err)
+	}
+	deploymentRevisionIDs, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return fmt.Errorf("failed to scan DeploymentRevision for status: %w", err)
+	}
+
+	rows, err = db.Query(
+		ctx,
+		`SELECT id, created_at, deployment_revision_id, type, message
+		FROM DeploymentRevisionStatus
+		WHERE deployment_revision_id = ANY (@deploymentRevisionIds)
+		ORDER BY created_at DESC
+		LIMIT @limit`,
+		pgx.NamedArgs{
+			"deploymentRevisionIds": deploymentRevisionIDs,
+			"limit":                 limit,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to query DeploymentRevisionStatus: %w", err)
+	}
+
+	var status types.DeploymentRevisionStatus
+	_, err = pgx.ForEachRow(rows, []any{
+		&status.ID,
+		&status.CreatedAt,
+		&status.DeploymentRevisionID,
+		&status.Type,
+		&status.Message,
+	}, func() error {
+		return callback(status)
+	})
+	if err != nil {
+		return fmt.Errorf("could not iterate DeploymentRevisionStatus: %w", err)
+	}
+
+	return nil
+}

@@ -23,6 +23,10 @@ const (
 	MaxDeploymentTargetsPerCustomerOrganizationStarter   Limit = 1
 	MaxDeploymentTargetsPerCustomerOrganizationPro       Limit = 3
 	MaxDeploymentTargetsPerCustomerOrganizationUnlimited Limit = Unlimited
+
+	MaxLogExportRowsStarter    Limit = 100
+	MaxLogExportRowsPro        Limit = 10_000
+	MaxLogExportRowsEnterprise Limit = 1_000_000
 )
 
 func (l Limit) IsReached(other int64) bool {
@@ -79,6 +83,23 @@ func GetDeploymentTargetsPerCustomerOrganizationLimit(st types.SubscriptionType)
 		return MaxDeploymentTargetsPerCustomerOrganizationPro
 	case types.SubscriptionTypeEnterprise:
 		return MaxDeploymentTargetsPerCustomerOrganizationUnlimited
+	default:
+		panic(fmt.Sprintf("invalid subscription type: %v", st))
+	}
+}
+
+func GetLogExportRowsLimit(st types.SubscriptionType) Limit {
+	switch st {
+	case types.SubscriptionTypeCommunity:
+		return MaxLogExportRowsStarter
+	case types.SubscriptionTypeTrial:
+		return MaxLogExportRowsPro
+	case types.SubscriptionTypeStarter:
+		return MaxLogExportRowsStarter
+	case types.SubscriptionTypePro:
+		return MaxLogExportRowsPro
+	case types.SubscriptionTypeEnterprise:
+		return MaxLogExportRowsEnterprise
 	default:
 		panic(fmt.Sprintf("invalid subscription type: %v", st))
 	}

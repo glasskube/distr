@@ -16,4 +16,9 @@ export class DeploymentLogsService {
     const params = {resource, ...timeseriesOptionsAsParams(options)};
     return this.httpClient.get<DeploymentLogRecord[]>(`/api/v1/deployments/${deploymentId}/logs`, {params});
   }
+
+  public export(deploymentId: string, resource: string): Observable<Blob> {
+    const params = {resource};
+    return this.httpClient.get(`/api/v1/deployments/${deploymentId}/logs/export`, {params, responseType: 'blob'});
+  }
 }

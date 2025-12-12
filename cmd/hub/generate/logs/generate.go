@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -20,8 +21,8 @@ func main() {
 	defer func() { _ = registry.Shutdown(ctx) }()
 	ctx = internalctx.WithDb(ctx, registry.GetDbPool())
 
-	deploymentID := uuid.MustParse("a8bd20ef-f477-4349-80ba-11198632a6fb")
-	revisionID := uuid.MustParse("2109c2a9-cb56-4b12-9bb0-ec3a0e682e4d")
+	deploymentID := uuid.MustParse("98be36e4-aa8a-4596-a5e8-8da0e0974105")
+	revisionID := uuid.MustParse("addb2eac-c1e5-4580-a36e-42c011327dd5")
 	statusCount := 2000000
 	statusInterval := 5 * time.Second
 
@@ -34,9 +35,18 @@ func main() {
 			Resource:  "example-resource",
 			Timestamp: createdAt,
 			Severity:  "error",
-			Body:      "example log record",
+			Body:      randomString(1000),
 		})
 		createdAt = createdAt.Add(statusInterval)
 	}
 	util.Must(db.BulkCreateDeploymentLogRecordWithCreatedAt(ctx, deploymentID, revisionID, ds))
+}
+
+func randomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }

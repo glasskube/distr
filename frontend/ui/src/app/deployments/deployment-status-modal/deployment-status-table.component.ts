@@ -37,7 +37,10 @@ class LogsTimeseriesSource implements TimeseriesSource {
 
 @Component({
   selector: 'app-deployment-status-table',
-  template: `<app-timeseries-table [source]="this.source()" />`,
+  template: `<app-timeseries-table
+    [source]="this.source()"
+    [deploymentId]="this.deploymentId()"
+    [exportType]="'status'" />`,
   imports: [TimeseriesTableComponent],
 })
 export class DeploymentStatusTableComponent {
