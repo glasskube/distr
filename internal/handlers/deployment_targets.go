@@ -6,16 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
+	"github.com/glasskube/distr/internal/agentconnect"
 	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/auth"
 	"github.com/glasskube/distr/internal/authn/authinfo"
 	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/customdomains"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
@@ -213,29 +212,37 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 		log.Warn("could not update DeploymentTarget", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if connectUrl, err := buildConnectUrl(deploymentTarget.ID, *auth.CurrentOrg(), targetSecret); err != nil {
+		return
+	}
+
+	org := auth.CurrentOrg()
+	connectUrl, err := agentconnect.BuildConnectURL(deploymentTarget.ID, *org, targetSecret)
+	if err != nil {
 		log.Error("could not create connecturl", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
-		ConnectURL:   connectUrl,
-		TargetID:     deploymentTarget.ID,
-		TargetSecret: targetSecret,
+		return
+	}
+
+	connectCommand, err := agentconnect.GenerateConnectCommand(
+		deploymentTarget.DeploymentTarget,
+		*org,
+		targetSecret,
+	)
+	if err != nil {
+		log.Error("could not create connect command", zap.Error(err))
+		sentry.GetHubFromContext(ctx).CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err = json.NewEncoder(w).Encode(api.DeploymentTargetAccessTokenResponse{
+		ConnectURL:     connectUrl,
+		TargetID:       deploymentTarget.ID,
+		TargetSecret:   targetSecret,
+		ConnectCommand: connectCommand,
 	}); err != nil {
 		log.Error("failed to encode json", zap.Error(err))
-	}
-}
-
-func buildConnectUrl(targetID uuid.UUID, org types.Organization, targetSecret string) (string, error) {
-	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
-		return "", err
-	} else {
-		query := url.Values{}
-		query.Set("targetId", targetID.String())
-		query.Set("targetSecret", targetSecret)
-		u = u.JoinPath("/api/v1/connect")
-		u.RawQuery = query.Encode()
-		return u.String(), nil
 	}
 }
 

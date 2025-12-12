@@ -183,7 +183,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit, OnDestroy
         const resp = await firstValueFrom(
           this.deploymentTargetService.requestAccess(startTask.value['deploymentTargetId'])
         );
-        this.connectCommand = `curl "${resp.connectUrl}" | docker compose -f - up -d`;
+        this.connectCommand = resp.connectCommand;
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (e instanceof HttpErrorResponse && e.status === 404) {

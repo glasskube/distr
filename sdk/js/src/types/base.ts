@@ -15,4 +15,5 @@ export interface DeploymentTargetAccessResponse {
   connectUrl: string;
   targetId: string;
   targetSecret: string;
+  connectCommand: string;
 }

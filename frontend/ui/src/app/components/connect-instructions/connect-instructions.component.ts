@@ -1,4 +1,4 @@
-import {Component, inject, Input} from '@angular/core';
+import {Component, inject, Input, OnInit} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {faClipboardCheck} from '@fortawesome/free-solid-svg-icons';
@@ -12,7 +12,7 @@ import {ToastService} from '../../services/toast.service';
   templateUrl: './connect-instructions.component.html',
   imports: [FaIconComponent],
 })
-export class ConnectInstructionsComponent {
+export class ConnectInstructionsComponent implements OnInit {
   @Input({required: true}) deploymentTarget!: DeploymentTarget;
 
   private readonly deploymentTargets = inject(DeploymentTargetsService);
@@ -26,10 +26,7 @@ export class ConnectInstructionsComponent {
   ngOnInit() {
     this.deploymentTargets.requestAccess(this.deploymentTarget.id!).subscribe(
       (response) => {
-        this.modalConnectCommand =
-          this.deploymentTarget.type === 'docker'
-            ? `curl "${response.connectUrl}" | docker compose -f - up -d`
-            : `kubectl apply -n ${this.deploymentTarget.namespace} -f "${response.connectUrl}"`;
+        this.modalConnectCommand = response.connectCommand;
         this.modalTargetId = response.targetId;
         this.modalTargetSecret = response.targetSecret;
       },
