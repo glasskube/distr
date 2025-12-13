@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.1](https://github.com/glasskube/distr/compare/2.1.0...2.1.1) (2025-12-13)
+
+
+### Bug Fixes
+
+* **deps:** update module helm.sh/helm/v3 to v3.19.4 ([#1553](https://github.com/glasskube/distr/issues/1553)) ([39146e8](https://github.com/glasskube/distr/commit/39146e8221593ef78ddd2130927442fa7d1e8f06))
+
+
+### Other
+
+* **deps:** update dependency @codemirror/view to v6.39.4 ([#1549](https://github.com/glasskube/distr/issues/1549)) ([5073c1a](https://github.com/glasskube/distr/commit/5073c1a024fe65ff18b00ca9f5d75d68c4bfefab))
+
 ## [2.1.0](https://github.com/glasskube/distr/compare/2.0.2...2.1.0) (2025-12-12)
 
 
