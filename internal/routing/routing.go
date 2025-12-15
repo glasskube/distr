@@ -17,6 +17,7 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/oaswrap/spec-ui/config"
 	"github.com/oaswrap/spec/adapter/chiopenapi"
 	"github.com/oaswrap/spec/openapi"
 	"github.com/oaswrap/spec/option"
@@ -48,10 +49,10 @@ func NewRouter(
 					"Example: `Authorization: AccessToken distr-xxxxxx`",
 			),
 		),
-		option.WithReflectorConfig(
-			option.StripDefNamePrefix("Api", "Authkey", "Db", "Types", "Uuid"),
-		),
-		option.WithDebug(true),
+		option.WithStoplightElements(config.StoplightElements{
+			HideSchemas: true,
+			Logo:        "/distr-logo.svg",
+		}),
 	)
 	openapiRouter.Route("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
 
