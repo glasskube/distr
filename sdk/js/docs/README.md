@@ -48,6 +48,8 @@
 - [DockerType](type-aliases/DockerType.md)
 - [HelmChartType](type-aliases/HelmChartType.md)
 - [IsOutdatedResult](type-aliases/IsOutdatedResult.md)
+- [IsOutdatedResultItem](type-aliases/IsOutdatedResultItem.md)
 - [LatestVersionStrategy](type-aliases/LatestVersionStrategy.md)
+- [UpdateAllDeploymentsResult](type-aliases/UpdateAllDeploymentsResult.md)
 - [UpdateDeploymentParams](type-aliases/UpdateDeploymentParams.md)
 - [UserRole](type-aliases/UserRole.md)

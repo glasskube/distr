@@ -26,8 +26,7 @@ POSTGRES_USER=some-user # REPLACE THIS
 POSTGRES_PASSWORD=some-password # REPLACE THIS
 POSTGRES_DB=some-db # REPLACE THIS`;
 
-const newDockerVersion = await distr.createDockerApplicationVersion(appId, '17.2-alpine3.20+2', {
+await distr.createDockerApplicationVersion(appId, '17.2-alpine3.20+2', {
   composeFile,
   templateFile,
 });
-console.log(`* created new version ${newDockerVersion.name} (id: ${newDockerVersion.id}) for docker app ${appId}`);

@@ -10,24 +10,12 @@
 
 ## Properties
 
-### application
-
-> **application**: [`Application`](../interfaces/Application.md)
-
----
-
 ### deploymentTarget
 
 > **deploymentTarget**: [`DeploymentTarget`](../interfaces/DeploymentTarget.md)
 
 ---
 
-### newerVersions
+### results
 
-> **newerVersions**: [`ApplicationVersion`](../interfaces/ApplicationVersion.md)[]
-
----
-
-### outdated
-
-> **outdated**: `boolean`
+> **results**: [`IsOutdatedResultItem`](IsOutdatedResultItem.md)[]

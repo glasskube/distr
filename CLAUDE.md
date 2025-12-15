@@ -42,6 +42,7 @@ The SDK is a standalone subproject in `sdk/js/` with its own package.json, depen
   - `DistrService`: High-level service with convenience methods (in `src/client/service.ts`)
 
 When working with the SDK:
+
 - Always build the SDK with `pnpm build` after making changes
 - Use pnpm (not npm) for all package management
 - Use `DistrService` for high-level operations (preferred)

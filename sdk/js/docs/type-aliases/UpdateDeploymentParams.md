@@ -10,9 +10,15 @@
 
 ## Properties
 
-### applicationVersionId?
+### applicationId
 
-> `optional` **applicationVersionId**: `string`
+> **applicationId**: `string`
+
+---
+
+### applicationVersionId
+
+> **applicationVersionId**: `string`
 
 ---
 

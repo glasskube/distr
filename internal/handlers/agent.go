@@ -265,12 +265,6 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			agentResource.Deployments = append(agentResource.Deployments, agentDeployment)
-
-			// Set the Deployment property to the first (i.e. oldest) deployment for backwards compatibility
-			//nolint:staticcheck
-			if agentResource.Deployment == nil {
-				agentResource.Deployment = &agentDeployment
-			}
 		}
 
 		if statusMessage == "OK" {

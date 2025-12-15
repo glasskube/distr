@@ -190,8 +190,8 @@ all versions are considered. The versions are ordered ascending according to the
 
 > **isOutdated**(`deploymentTargetId`): `Promise`\<[`IsOutdatedResult`](../type-aliases/IsOutdatedResult.md)\>
 
-Checks if the given deployment target is outdated, i.e. if there is a newer version of the application available.
-The result additionally contains versions that are newer than the currently deployed one, ordered ascending.
+Checks if the deployments on the given deployment target are outdated, i.e. if there is a newer version of the application available.
+Returns results for all deployments on the target. Each result contains versions that are newer than the currently deployed one, ordered ascending.
 
 #### Parameters
 
@@ -205,12 +205,38 @@ The result additionally contains versions that are newer than the currently depl
 
 ---
 
+### updateAllDeployments()
+
+> **updateAllDeployments**(`applicationId`, `applicationVersionId`): `Promise`\<[`UpdateAllDeploymentsResult`](../type-aliases/UpdateAllDeploymentsResult.md)\>
+
+Updates all deployment targets that have the specified application deployed to the specified version.
+Only updates deployments that are not already on the target version.
+
+#### Parameters
+
+##### applicationId
+
+`string`
+
+The application ID to update
+
+##### applicationVersionId
+
+`string`
+
+The target version ID to update to
+
+#### Returns
+
+`Promise`\<[`UpdateAllDeploymentsResult`](../type-aliases/UpdateAllDeploymentsResult.md)\>
+
+---
+
 ### updateDeployment()
 
 > **updateDeployment**(`params`): `Promise`\<`void`\>
 
-Updates the deployment of an existing deployment target. If no application version ID is given, the latest version
-of the already deployed application will be deployed.
+Updates the deployment of an existing deployment target to the specified application version.
 
 #### Parameters
 

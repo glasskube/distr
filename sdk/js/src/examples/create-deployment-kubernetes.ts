@@ -4,7 +4,7 @@ import {clientConfig} from './config';
 const distr = new DistrService(clientConfig);
 
 const appId = '<kubernetes-application-id>';
-const result = await distr.createDeployment({
+await distr.createDeployment({
   target: {
     name: 'test-kubernetes-deployment',
     type: 'kubernetes',
@@ -21,4 +21,3 @@ const result = await distr.createDeployment({
     valuesYaml: 'my-values: true',
   },
 });
-console.log(result);
