@@ -84,6 +84,7 @@ func NewRouter(
 		option.WithStoplightElements(config.StoplightElements{
 			HideSchemas: true,
 			Logo:        "/distr-logo.svg",
+			Layout:      "responsive",
 		}),
 	)
 	openapiRouter.Route("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
