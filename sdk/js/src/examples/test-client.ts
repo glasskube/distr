@@ -1,7 +1,8 @@
-import {Client} from '../index';
+import {Client, DistrService} from '../index';
 import {clientConfig} from './config';
 
 const client = new Client(clientConfig);
+const distr = new DistrService(clientConfig);
 
 try {
   let newDockerApp = await client.createApplication({
@@ -80,6 +81,18 @@ try {
     const deploymentTarget = await client.getDeploymentTarget(dt.id!);
     log(deploymentTarget, 'get deployment target by id');
   }
+
+  const newDockerVersionV2 = await client.createApplicationVersion(
+    newDockerApp.id!,
+    {
+      name: 'v2.0.0',
+    },
+    {composeFile: 'hello: worldv2'}
+  );
+  log(newDockerVersionV2, 'create docker application version v2.0.0');
+
+  const updateAllResult = await distr.updateAllDeployments(newDockerApp.id!, newDockerVersionV2.id!);
+  log(updateAllResult, 'update all deployments result');
 } catch (error) {
   console.error(error);
 }

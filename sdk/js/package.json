@@ -14,7 +14,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc",
-    "docs": "typedoc"
+    "docs": "typedoc",
+    "test:examples": "npx tsx src/examples/test-client.ts"
   },
   "files": [
     "dist/"

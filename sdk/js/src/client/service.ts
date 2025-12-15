@@ -44,17 +44,41 @@ export type CreateDeploymentResult = {
 
 export type UpdateDeploymentParams = {
   deploymentTargetId: string;
-  applicationVersionId?: string;
+  applicationId: string;
+  applicationVersionId: string;
   kubernetesDeployment?: {
     valuesYaml?: string;
   };
 };
 
-export type IsOutdatedResult = {
-  deploymentTarget: DeploymentTarget;
+export type UpdateAllDeploymentsResult = {
+  updatedTargets: Array<{
+    deploymentTargetId: string;
+    deploymentTargetName: string;
+    previousVersionId: string;
+    newVersionId: string;
+  }>;
+  skippedTargets: Array<{
+    deploymentTargetId: string;
+    deploymentTargetName: string;
+    reason: string;
+  }>;
+};
+
+export type IsOutdatedResultItem = {
+  deployment: {
+    id: string;
+    applicationId: string;
+    applicationVersionId: string;
+  };
   application: Application;
   newerVersions: ApplicationVersion[];
   outdated: boolean;
+};
+
+export type IsOutdatedResult = {
+  deploymentTarget: DeploymentTarget;
+  results: IsOutdatedResultItem[];
 };
 
 /**
@@ -181,56 +205,113 @@ export class DistrService {
   }
 
   /**
-   * Updates the deployment of an existing deployment target. If no application version ID is given, the latest version
-   * of the already deployed application will be deployed.
+   * Updates the deployment of an existing deployment target to the specified application version.
    * @param params
    */
   public async updateDeployment(params: UpdateDeploymentParams): Promise<void> {
-    const {deploymentTargetId, applicationVersionId, kubernetesDeployment} = params;
+    const {deploymentTargetId, applicationId, applicationVersionId, kubernetesDeployment} = params;
 
     const existing = await this.client.getDeploymentTarget(deploymentTargetId);
-    if (!existing.deployment && !applicationVersionId) {
-      throw new Error('cannot update deployment, because nothing deployed yet');
-    }
-    let versionId = applicationVersionId;
-    if (!versionId) {
-      const res = await this.isOutdated(existing.id!);
-      if (res.outdated && res.newerVersions.length > 0) {
-        versionId = res.newerVersions[res.newerVersions.length - 1].id!;
-      } else if (existing.deployment) {
-        // version stays the same, other params might have changed
-        versionId = existing.deployment.applicationVersionId;
-      } else {
-        throw new Error('cannot update deployment, because nothing deployed yet');
-      }
+    const existingDeployment = existing.deployments.find((d) => d.applicationId === applicationId);
+    if (!existingDeployment) {
+      throw new Error(`cannot update deployment, no deployment found for application ${applicationId}`);
     }
     await this.client.createOrUpdateDeployment({
       deploymentTargetId,
-      deploymentId: existing.deployment?.id,
-      applicationVersionId: versionId,
+      deploymentId: existingDeployment.id,
+      applicationVersionId,
       valuesYaml: kubernetesDeployment?.valuesYaml ? btoa(kubernetesDeployment?.valuesYaml) : undefined,
     });
   }
 
   /**
-   * Checks if the given deployment target is outdated, i.e. if there is a newer version of the application available.
-   * The result additionally contains versions that are newer than the currently deployed one, ordered ascending.
+   * Updates all deployment targets that have the specified application deployed to the specified version.
+   * Only updates deployments that are not already on the target version.
+   * @param applicationId The application ID to update
+   * @param applicationVersionId The target version ID to update to
+   */
+  public async updateAllDeployments(
+    applicationId: string,
+    applicationVersionId: string
+  ): Promise<UpdateAllDeploymentsResult> {
+    const allTargets = await this.client.getDeploymentTargets();
+    const updatedTargets: UpdateAllDeploymentsResult['updatedTargets'] = [];
+    const skippedTargets: UpdateAllDeploymentsResult['skippedTargets'] = [];
+
+    for (const target of allTargets) {
+      const deployment = target.deployments?.find((d) => d.applicationId === applicationId);
+      if (!deployment) {
+        skippedTargets.push({
+          deploymentTargetId: target.id!,
+          deploymentTargetName: target.name,
+          reason: 'Application not deployed on this target',
+        });
+        continue;
+      }
+
+      if (deployment.applicationVersionId === applicationVersionId) {
+        skippedTargets.push({
+          deploymentTargetId: target.id!,
+          deploymentTargetName: target.name,
+          reason: 'Already on target version',
+        });
+        continue;
+      }
+
+      try {
+        await this.client.createOrUpdateDeployment({
+          deploymentTargetId: target.id!,
+          deploymentId: deployment.id,
+          applicationVersionId,
+        });
+        updatedTargets.push({
+          deploymentTargetId: target.id!,
+          deploymentTargetName: target.name,
+          previousVersionId: deployment.applicationVersionId!,
+          newVersionId: applicationVersionId,
+        });
+      } catch (error) {
+        skippedTargets.push({
+          deploymentTargetId: target.id!,
+          deploymentTargetName: target.name,
+          reason: `Update failed: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
+    }
+
+    return {updatedTargets, skippedTargets};
+  }
+
+  /**
+   * Checks if the deployments on the given deployment target are outdated, i.e. if there is a newer version of the application available.
+   * Returns results for all deployments on the target. Each result contains versions that are newer than the currently deployed one, ordered ascending.
    * @param deploymentTargetId
    */
   public async isOutdated(deploymentTargetId: string): Promise<IsOutdatedResult> {
     const existing = await this.client.getDeploymentTarget(deploymentTargetId);
-    if (!existing.deployment) {
+    if (existing.deployments.length === 0) {
       throw new Error('nothing deployed yet');
     }
-    const {app, newerVersions} = await this.getNewerVersions(
-      existing.deployment.applicationId!,
-      existing.deployment.applicationVersionId!
-    );
+    const results: IsOutdatedResultItem[] = [];
+    for (const deployment of existing.deployments) {
+      const {app, newerVersions} = await this.getNewerVersions(
+        deployment.applicationId!,
+        deployment.applicationVersionId!
+      );
+      results.push({
+        deployment: {
+          id: deployment.id!,
+          applicationId: deployment.applicationId!,
+          applicationVersionId: deployment.applicationVersionId!,
+        },
+        application: app,
+        newerVersions: newerVersions,
+        outdated: newerVersions.length > 0,
+      });
+    }
     return {
       deploymentTarget: existing,
-      application: app,
-      newerVersions: newerVersions,
-      outdated: newerVersions.length > 0,
+      results,
     };
   }
 
