@@ -1,10 +1,10 @@
-import {DistrService} from '../client/service';
+import {DistrService} from '../client';
 import {clientConfig} from './config';
 
-const gc = new DistrService(clientConfig);
+const distr = new DistrService(clientConfig);
 
 const appId = '<kubernetes-application-id>';
-const result = await gc.createDeployment({
+const result = await distr.createDeployment({
   target: {
     name: 'test-kubernetes-deployment',
     type: 'kubernetes',

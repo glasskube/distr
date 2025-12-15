@@ -1,10 +1,10 @@
-import {DistrService} from '../client/service';
+import {DistrService} from '../client';
 import {clientConfig} from './config';
 
-const gc = new DistrService(clientConfig);
+const distr = new DistrService(clientConfig);
 
 const appId = '<docker-application-id>';
-const result = await gc.createDeployment({
+const result = await distr.createDeployment({
   target: {
     name: 'test-docker-deployment',
     type: 'docker',

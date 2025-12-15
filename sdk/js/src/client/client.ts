@@ -141,6 +141,14 @@ export class Client {
     if (response.status < 200 || response.status >= 300) {
       throw new Error(`${method} ${path} failed: ${response.status} ${response.statusText} "${await response.text()}"`);
     }
-    return (await response.json()) as T;
+    const contentLength = response.headers.get('content-length');
+    if (response.status === 204 || contentLength === '0') {
+      return {} as T;
+    }
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+    return JSON.parse(text) as T;
   }
 }

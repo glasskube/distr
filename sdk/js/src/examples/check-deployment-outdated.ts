@@ -1,8 +1,8 @@
-import {DistrService} from '../client/service';
+import {DistrService} from '../client';
 import {clientConfig} from './config';
 
-const gc = new DistrService(clientConfig);
+const distr = new DistrService(clientConfig);
 
 const deploymentTargetId = '<your-deployment-target-id>';
-const outdatedRes = await gc.isOutdated(deploymentTargetId);
+const outdatedRes = await distr.isOutdated(deploymentTargetId);
 console.log(outdatedRes);

@@ -27,6 +27,27 @@ The platform consists of a control plane (Hub) running in the cloud, agents that
 
 4. **SDK** (`sdk/js/`): JavaScript/TypeScript SDK for interacting with Distr API
 
+### SDK Architecture (TypeScript)
+
+The SDK is a standalone subproject in `sdk/js/` with its own package.json, dependencies, and build process.
+
+- **Location**: `sdk/js/`
+- **Package**: `@glasskube/distr-sdk`
+- **Package Manager**: pnpm
+- **Build**: `pnpm build` (compiles TypeScript to `dist/`)
+- **Test**: `pnpm test:examples` (runs example test client)
+- **Examples**: `sdk/js/src/examples/` contains usage examples
+- **Main classes**:
+  - `Client`: Low-level API client (in `src/client/client.ts`)
+  - `DistrService`: High-level service with convenience methods (in `src/client/service.ts`)
+
+When working with the SDK:
+- Always build the SDK with `pnpm build` after making changes
+- Use pnpm (not npm) for all package management
+- Use `DistrService` for high-level operations (preferred)
+- Use `Client` for direct API access when needed
+- Example files use a config from `src/examples/config.ts`
+
 ### Backend Architecture (Go)
 
 - **Database**: PostgreSQL accessed via pgx/v5 with connection pooling

@@ -1,9 +1,9 @@
-import {DistrService} from '../client/service';
+import {DistrService} from '../client';
 import {clientConfig} from './config';
 
-const gc = new DistrService(clientConfig);
+const distr = new DistrService(clientConfig);
 const kubernetesAppId = '<kubernetes-application-id>';
-const newKubernetesVersion = await gc.createKubernetesApplicationVersion(kubernetesAppId, 'v1.0.1', {
+const newKubernetesVersion = await distr.createKubernetesApplicationVersion(kubernetesAppId, 'v1.0.1', {
   chartName: 'my-chart',
   chartVersion: '1.0.1',
   chartType: 'repository',
