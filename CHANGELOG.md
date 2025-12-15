@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.2.0](https://github.com/glasskube/distr/compare/2.1.0...2.2.0) (2025-12-15)
+
+
+### Features
+
+* add OpenAPI specification and documentation ([#1563](https://github.com/glasskube/distr/issues/1563)) ([6c367cf](https://github.com/glasskube/distr/commit/6c367cfbc2a2d9e56400b6df0c08f30b58f4bb31))
+
+
+### Bug Fixes
+
+* also append secret name to pullSecrets in addition to imagePullSecrets ([#1561](https://github.com/glasskube/distr/issues/1561)) ([976f8ca](https://github.com/glasskube/distr/commit/976f8caabda0541a7310f886aea6a6d8bdf89407))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.19.0 ([#1551](https://github.com/glasskube/distr/issues/1551)) ([bfd10ca](https://github.com/glasskube/distr/commit/bfd10ca4ff9e9be7096a41006f270ac3c45780fb))
+* **deps:** update module helm.sh/helm/v3 to v3.19.4 ([#1553](https://github.com/glasskube/distr/issues/1553)) ([39146e8](https://github.com/glasskube/distr/commit/39146e8221593ef78ddd2130927442fa7d1e8f06))
+
+
+### Other
+
+* **deps:** update dependency @codemirror/view to v6.39.4 ([#1549](https://github.com/glasskube/distr/issues/1549)) ([5073c1a](https://github.com/glasskube/distr/commit/5073c1a024fe65ff18b00ca9f5d75d68c4bfefab))
+* **deps:** update dependency @sentry/cli to v2.58.4 ([#1555](https://github.com/glasskube/distr/issues/1555)) ([0851051](https://github.com/glasskube/distr/commit/0851051e1d203f5cac6834e6bf170d4480c6d822))
+* **deps:** update dependency autoprefixer to v10.4.23 ([#1554](https://github.com/glasskube/distr/issues/1554)) ([9d5c950](https://github.com/glasskube/distr/commit/9d5c950634c443f1a2f6cefa945ff7837b1d6d48))
+* **deps:** update dependency pnpm to v10.26.0 ([#1562](https://github.com/glasskube/distr/issues/1562)) ([9694437](https://github.com/glasskube/distr/commit/96944373515d9a7dd500db16a199c15101b313c5))
+* **deps:** update dependency posthog-js to v1.306.1 ([#1556](https://github.com/glasskube/distr/issues/1556)) ([766ef89](https://github.com/glasskube/distr/commit/766ef89da850e18d5ac634a1ea3ddc3e41a92523))
+* **deps:** update ghcr.io/glasskube/hello-distr/backend docker tag to v0.1.12 ([#1558](https://github.com/glasskube/distr/issues/1558)) ([9c25c3a](https://github.com/glasskube/distr/commit/9c25c3aa67885f7aeccacc38279921c7ae94ed14))
+* **deps:** update ghcr.io/glasskube/hello-distr/proxy docker tag to v0.1.12 ([#1559](https://github.com/glasskube/distr/issues/1559)) ([81fd44c](https://github.com/glasskube/distr/commit/81fd44cb67f8a494ecdc2960b1d3270e83706a13))
+* **deps:** update github artifact actions (major) ([#1552](https://github.com/glasskube/distr/issues/1552)) ([897e64a](https://github.com/glasskube/distr/commit/897e64abe2cda4ff0ebd20959b19813f122af530))
+* remove deprecated env ([#1560](https://github.com/glasskube/distr/issues/1560)) ([9a49a06](https://github.com/glasskube/distr/commit/9a49a060cde4d4112d73acf52471ba9f47b5b642))
+* **sdk/js:** remove deprecated deployment item in deployment target ([#1557](https://github.com/glasskube/distr/issues/1557)) ([0c3ca3c](https://github.com/glasskube/distr/commit/0c3ca3caeb6607e941ed8dfaa43681b01b1b9076))
+
 ## [2.1.0](https://github.com/glasskube/distr/compare/2.0.2...2.1.0) (2025-12-12)
 
 
