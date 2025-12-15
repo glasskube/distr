@@ -22,22 +22,47 @@ import (
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func DeploymentTargetsRouter(r chi.Router) {
+func DeploymentTargetsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Agents"))
 	r.Use(middleware.RequireOrgAndRole)
-	r.Get("/", getDeploymentTargets)
-	r.With(middleware.RequireReadWriteOrAdmin).Post("/", createDeploymentTarget)
-	r.Route("/{deploymentTargetId}", func(r chi.Router) {
+	r.Get("/", getDeploymentTargets).
+		With(option.Description("List all deployment targets")).
+		With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
+	r.With(middleware.RequireReadWriteOrAdmin).
+		Post("/", createDeploymentTarget).
+		With(option.Description("Create a new deployment target")).
+		With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
+	r.Route("/{deploymentTargetId}", func(r chiopenapi.Router) {
+		type DeploymentTargetRequest struct {
+			DeploymentTargetID uuid.UUID `path:"deploymentTargetId"`
+		}
+
 		r.Use(deploymentTargetMiddleware)
-		r.Get("/", getDeploymentTarget)
-		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
-			r.Put("/", updateDeploymentTarget)
-			r.Delete("/", deleteDeploymentTarget)
-			r.Post("/access-request", createAccessForDeploymentTarget)
+		r.Get("/", getDeploymentTarget).
+			With(option.Description("Get a deployment target")).
+			With(option.Request(DeploymentTargetRequest{})).
+			With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
+			r.Put("/", updateDeploymentTarget).
+				With(option.Description("Update a deployment target")).
+				With(option.Request(struct {
+					DeploymentTargetRequest
+					types.DeploymentTargetWithCreatedBy
+				}{})).
+				With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
+			r.Delete("/", deleteDeploymentTarget).
+				With(option.Description("Delete a deployment target")).
+				With(option.Request(DeploymentTargetRequest{}))
+			r.Post("/access-request", createAccessForDeploymentTarget).
+				With(option.Description("Create access token for deployment target")).
+				With(option.Request(DeploymentTargetRequest{})).
+				With(option.Response(http.StatusOK, api.DeploymentTargetAccessTokenResponse{}))
 		})
 	})
 }

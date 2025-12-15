@@ -22,19 +22,21 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func AuthRouter(r chi.Router) {
+func AuthRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupHidden(true))
 	r.Use(httprate.Limit(
 		10,
 		1*time.Minute,
 		httprate.WithKeyFuncs(httprate.KeyByRealIP, httprate.KeyByEndpoint),
 	))
-	r.Route("/login", func(r chi.Router) {
+	r.Route("/login", func(r chiopenapi.Router) {
 		r.Post("/", authLoginHandler)
 		r.Get("/config", authLoginConfigHandler())
 	})

@@ -14,21 +14,47 @@ import (
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func ArtifactsRouter(r chi.Router) {
+func ArtifactsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Artifacts"))
 	r.Use(middleware.RequireOrgAndRole)
-	r.Get("/", getArtifacts)
-	r.With(artifactMiddleware).Route("/{artifactId}", func(r chi.Router) {
-		r.Get("/", getArtifact)
-		r.With(middleware.RequireVendor).Group(func(r chi.Router) {
-			r.Patch("/image", patchImageArtifactHandler)
-			r.With(middleware.RequireReadWriteOrAdmin).Delete("/", deleteArtifactHandler)
-			r.Route("/tags/{tagName}", func(r chi.Router) {
-				r.With(middleware.RequireReadWriteOrAdmin).Delete("/", deleteArtifactTagHandler)
+	r.Get("/", getArtifacts).
+		With(option.Description("List all artifacts")).
+		With(option.Response(http.StatusOK, []api.ArtifactsResponse{}))
+	r.With(artifactMiddleware).Route("/{artifactId}", func(r chiopenapi.Router) {
+		type ArtifactRequest struct {
+			ArtifactID uuid.UUID `path:"artifactId"`
+		}
+
+		r.Get("/", getArtifact).
+			With(option.Description("Get an artifact by ID")).
+			With(option.Request(ArtifactRequest{})).
+			With(option.Response(http.StatusOK, []api.ArtifactResponse{}))
+		r.With(middleware.RequireVendor).Group(func(r chiopenapi.Router) {
+			r.Patch("/image", patchImageArtifactHandler).
+				With(option.Description("Update artifact image")).
+				With(option.Request(struct {
+					ArtifactRequest
+					api.PatchImageRequest
+				}{})).
+				With(option.Response(http.StatusOK, []api.ArtifactResponse{}))
+			r.With(middleware.RequireReadWriteOrAdmin).
+				Delete("/", deleteArtifactHandler).
+				With(option.Description("Delete an artifact")).
+				With(option.Request(ArtifactRequest{}))
+			r.Route("/tags/{tagName}", func(r chiopenapi.Router) {
+				r.With(middleware.RequireReadWriteOrAdmin).
+					Delete("/", deleteArtifactTagHandler).
+					With(option.Description("Delete an artifact tag")).
+					With(option.Request(struct {
+						ArtifactRequest
+						TagName string `path:"tagName"`
+					}{}))
 			})
 		})
 	})

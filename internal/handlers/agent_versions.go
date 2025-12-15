@@ -6,12 +6,17 @@ import (
 	"github.com/getsentry/sentry-go"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
-	"github.com/go-chi/chi/v5"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func AgentVersionsRouter(r chi.Router) {
-	r.Get("/", getAgentVersionsHandler())
+func AgentVersionsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Miscellaneous"))
+	r.Get("/", getAgentVersionsHandler()).
+		With(option.Description("List all agent versions")).
+		With(option.Response(http.StatusOK, []types.AgentVersion{}))
 }
 
 func getAgentVersionsHandler() http.HandlerFunc {

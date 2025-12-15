@@ -13,13 +13,15 @@ import (
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func DashboardRouter(r chi.Router) {
-	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+func DashboardRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupHidden(true))
+	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
 		r.Get("/artifacts-by-customer", getArtifactsByCustomer)
 	})
 }

@@ -18,24 +18,43 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func SettingsRouter(r chi.Router) {
-	r.Post("/user", userSettingsUpdateHandler)
-	r.Route("/verify", func(r chi.Router) {
-		r.With(requestVerificationMailRateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
+func SettingsRouter(r chiopenapi.Router) {
+	r.Post("/user", userSettingsUpdateHandler).
+		With(option.Tags("Settings")).
+		With(option.Description("Update user settings")).
+		With(option.Request(api.UpdateUserAccountRequest{})).
+		With(option.Response(http.StatusOK, types.UserAccount{}))
+	r.Route("/verify", func(r chiopenapi.Router) {
+		r.WithOptions(option.GroupHidden(true))
+		r.With(requestVerificationMailRateLimitPerUser).
+			Post("/request", userSettingsVerifyRequestHandler)
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
 	})
-	r.Route("/tokens", func(r chi.Router) {
+	r.Route("/tokens", func(r chiopenapi.Router) {
+		r.WithOptions(option.GroupTags("Access Tokens"))
 		r.Use(middleware.RequireOrgAndRole)
-		r.Get("/", getAccessTokensHandler())
-		r.Post("/", createAccessTokenHandler())
-		r.Route("/{id}", func(r chi.Router) {
-			r.Delete("/", deleteAccessTokenHandler())
+		r.Get("/", getAccessTokensHandler()).
+			With(option.Description("List all access tokens")).
+			With(option.Response(http.StatusOK, []api.AccessToken{}))
+		r.Post("/", createAccessTokenHandler()).
+			With(option.Description("Create a new access token")).
+			With(option.Request(api.CreateAccessTokenRequest{})).
+			With(option.Response(http.StatusCreated, api.AccessTokenWithKey{}))
+		r.Route("/{accessTokenId}", func(r chiopenapi.Router) {
+			type AccessTokenIDRequest struct {
+				AccessTokenID uuid.UUID `path:"accessTokenId"`
+			}
+
+			r.Delete("/", deleteAccessTokenHandler()).
+				With(option.Description("Delete an access token")).
+				With(option.Request(AccessTokenIDRequest{}))
 		})
 	})
 }

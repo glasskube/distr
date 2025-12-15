@@ -16,18 +16,32 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func FileRouter(r chi.Router) {
-	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
-		r.Post("/", createFileHandler)
-		r.Route("/{fileId}", func(r chi.Router) {
+func FileRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Files"))
+	r.With(middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
+		r.Post("/", createFileHandler).
+			With(option.Description("Upload a new file")).
+			With(option.Request(nil, option.ContentType("multipart/formdata"))).
+			With(option.Response(http.StatusOK, uuid.Nil))
+		r.Route("/{fileId}", func(r chiopenapi.Router) {
+			type FileIDRequest struct {
+				FileID uuid.UUID `path:"fileId"`
+			}
+
 			r.Use(fileMiddleware)
-			r.Get("/", getFileHandler)
-			r.Delete("/", deleteFileHandler)
+			r.Get("/", getFileHandler).
+				With(option.Description("Get a file by ID")).
+				With(option.Request(FileIDRequest{})).
+				With(option.Response(http.StatusOK, nil))
+			r.Delete("/", deleteFileHandler).
+				With(option.Description("Delete a file")).
+				With(option.Request(FileIDRequest{}))
 		})
 	})
 }

@@ -38,3 +38,7 @@ func (r UpdateUserAccountRequest) Validate() error {
 	}
 	return nil
 }
+
+type PatchUserAccountRequest struct {
+	UserRole *types.UserRole `json:"userRole"`
+}

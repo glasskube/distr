@@ -11,11 +11,13 @@ import (
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/mapping"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func ContextRouter(r chi.Router) {
+func ContextRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupHidden(true))
 	r.With(middleware.RequireOrgAndRole).Get("/", getContextHandler)
 }
 

@@ -21,26 +21,55 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func UserAccountsRouter(r chi.Router) {
-	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
-		r.Get("/", getUserAccountsHandler)
-		r.With(middleware.RequireReadWriteOrAdmin).Post("/", createUserAccountHandler)
-		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chi.Router) {
+func UserAccountsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Users"))
+	r.With(middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
+		r.Get("/", getUserAccountsHandler).
+			With(option.Description("List all user accounts")).
+			With(option.Response(http.StatusOK, []api.UserAccountResponse{}))
+		r.With(middleware.RequireReadWriteOrAdmin).
+			Post("/", createUserAccountHandler).
+			With(option.Description("Create a new user account")).
+			With(option.Request(api.CreateUserAccountRequest{})).
+			With(option.Response(http.StatusOK, api.CreateUserAccountResponse{}))
+		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chiopenapi.Router) {
+			type UserAccountRequest struct {
+				UserId string `json:"-" path:"userId"`
+			}
+
 			r.Use(userAccountMiddleware)
 			r.With(middleware.ProFeature).
-				Patch("/", patchUserAccountHandler())
-			r.Delete("/", deleteUserAccountHandler)
-			r.Patch("/image", patchImageUserAccount)
+				Patch("/", patchUserAccountHandler()).
+				With(option.Description("Partially update a user account")).
+				With(option.Request(struct {
+					UserAccountRequest
+					api.PatchUserAccountRequest
+				}{})).
+				With(option.Response(http.StatusOK, api.UserAccountResponse{}))
+			r.Delete("/", deleteUserAccountHandler).
+				With(option.Description("Delete a user account")).
+				With(option.Request(UserAccountRequest{}))
+			r.Patch("/image", patchImageUserAccount).
+				With(option.Description("Update user account image")).
+				With(option.Request(struct {
+					UserAccountRequest
+					api.PatchImageRequest
+				}{})).
+				With(option.Response(http.StatusOK, api.UserAccountResponse{}))
 			r.With(inviteUserRateLimiter).
-				Post("/invite", resendUserInviteHandler())
+				Post("/invite", resendUserInviteHandler()).
+				With(option.Description("Resend user invite")).
+				With(option.Request(UserAccountRequest{})).
+				With(option.Response(http.StatusOK, api.CreateUserAccountResponse{}))
 		})
 	})
-	r.Get("/status", getUserAccountStatusHandler)
+	r.Get("/status", getUserAccountStatusHandler).With(option.Hidden(true))
 }
 
 func getUserAccountsHandler(w http.ResponseWriter, r *http.Request) {
@@ -249,9 +278,7 @@ func patchUserAccountHandler() http.HandlerFunc {
 			}
 		}
 
-		body, err := JsonBody[struct {
-			UserRole *types.UserRole `json:"userRole"`
-		}](w, r)
+		body, err := JsonBody[api.PatchUserAccountRequest](w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

@@ -18,23 +18,72 @@ import (
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func DeploymentsRouter(r chi.Router) {
+func DeploymentsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Deployments"))
 	r.Use(middleware.RequireOrgAndRole)
-	r.With(middleware.RequireReadWriteOrAdmin).Put("/", putDeployment)
-	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chi.Router) {
-		r.Get("/status", getDeploymentStatus)
-		r.Get("/status/export", exportDeploymentStatusHandler())
-		r.Get("/logs", getDeploymentLogsHandler())
-		r.Get("/logs/resources", getDeploymentLogsResourcesHandler())
-		r.Get("/logs/export", exportDeploymentLogsHandler())
-		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
-			r.Patch("/", patchDeploymentHandler())
-			r.Delete("/", deleteDeploymentHandler())
+	r.With(middleware.RequireReadWriteOrAdmin).
+		Put("/", putDeployment).
+		With(option.Description("Create or update a deployment")).
+		With(option.Request(api.DeploymentRequest{}))
+	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chiopenapi.Router) {
+		type DeploymentIDRequest struct {
+			DeploymentID uuid.UUID `path:"deploymentId"`
+		}
+
+		type DeploymentTimeseriesRequest struct {
+			DeploymentIDRequest
+			Before *time.Time `query:"before"`
+			After  *time.Time `query:"after"`
+			Limit  *int       `query:"limit"`
+		}
+
+		type ResourceRequest struct {
+			Resource string `query:"resource"`
+		}
+
+		r.Get("/status", getDeploymentStatus).
+			With(option.Description("Get deployment status")).
+			With(option.Request(DeploymentTimeseriesRequest{})).
+			With(option.Response(http.StatusOK, []types.DeploymentRevisionStatus{}))
+		r.Get("/status/export", exportDeploymentStatusHandler()).
+			With(option.Description("Export deployment status")).
+			With(option.Request(DeploymentIDRequest{})).
+			With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
+		r.Get("/logs", getDeploymentLogsHandler()).
+			With(option.Description("Get deployment logs")).
+			With(option.Request(struct {
+				DeploymentTimeseriesRequest
+				ResourceRequest
+			}{})).
+			With(option.Response(http.StatusOK, []api.DeploymentLogRecord{}))
+		r.Get("/logs/resources", getDeploymentLogsResourcesHandler()).
+			With(option.Description("Get deployment log resources")).
+			With(option.Request(DeploymentIDRequest{})).
+			With(option.Response(http.StatusOK, []string{}))
+		r.Get("/logs/export", exportDeploymentLogsHandler()).
+			With(option.Description("Export deployment logs")).
+			With(option.Request(struct {
+				DeploymentIDRequest
+				ResourceRequest
+			}{})).
+			With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
+			r.Patch("/", patchDeploymentHandler()).
+				With(option.Description("Partially update a deployment")).
+				With(option.Request(struct {
+					DeploymentIDRequest
+					api.PatchDeploymentRequest
+				}{})).
+				With(option.Response(http.StatusOK, types.Deployment{}))
+			r.Delete("/", deleteDeploymentHandler()).
+				With(option.Description("Delete a deployment")).
+				With(option.Request(DeploymentIDRequest{}))
 		})
 	})
 }

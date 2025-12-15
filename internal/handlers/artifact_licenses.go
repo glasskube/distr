@@ -12,19 +12,38 @@ import (
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func ArtifactLicensesRouter(r chi.Router) {
+func ArtifactLicensesRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Artifacts", "Licensing"))
 	r.Use(middleware.RequireOrgAndRole, middleware.RequireVendor, middleware.LicensingFeatureFlagEnabledMiddleware)
-	r.Get("/", getArtifactLicenses)
-	r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
-		r.Post("/", createArtifactLicense)
-		r.With(artifactLicenseMiddleware).Route("/{artifactLicenseId}", func(r chi.Router) {
-			r.Put("/", updateArtifactLicense)
-			r.Delete("/", deleteArtifactLicense)
+	r.Get("/", getArtifactLicenses).
+		With(option.Description("List all artifact licenses")).
+		With(option.Response(http.StatusOK, []types.ArtifactLicense{}))
+	r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
+		r.Post("/", createArtifactLicense).
+			With(option.Description("Create a new artifact license")).
+			With(option.Request(types.ArtifactLicense{})).
+			With(option.Response(http.StatusOK, types.ArtifactLicense{}))
+		r.With(artifactLicenseMiddleware).Route("/{artifactLicenseId}", func(r chiopenapi.Router) {
+			type ArtifactLicenseRequest struct {
+				ArtifactLicenseID uuid.UUID `path:"artifactLicenseId"`
+			}
+
+			r.Put("/", updateArtifactLicense).
+				With(option.Description("Update an artifact license")).
+				With(option.Request(struct {
+					ArtifactLicenseRequest
+					types.ArtifactLicense
+				}{})).
+				With(option.Response(http.StatusOK, types.ArtifactLicense{}))
+			r.Delete("/", deleteArtifactLicense).
+				With(option.Description("Delete an artifact license")).
+				With(option.Request(ArtifactLicenseRequest{}))
 		})
 	})
 }

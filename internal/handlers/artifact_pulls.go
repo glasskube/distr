@@ -10,16 +10,25 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/glasskube/distr/internal/types"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func ArtifactPullsRouter(r chi.Router) {
+func ArtifactPullsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Artifacts"))
 	r.Use(
 		middleware.RequireOrgAndRole,
 		middleware.RequireVendor,
 	)
-	r.Get("/", getArtifactPullsHandler())
+	r.Get("/", getArtifactPullsHandler()).
+		With(option.Description("List artifact version pulls")).
+		With(option.Request(struct {
+			Before *time.Time `query:"before"`
+			Count  *int       `query:"count"`
+		}{})).
+		With(option.Response(http.StatusOK, []types.ArtifactVersionPull{}))
 }
 
 func getArtifactPullsHandler() http.HandlerFunc {

@@ -26,21 +26,33 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
-func AgentRouter(r chi.Router) {
-	r.With(
-		queryAuthDeploymentTargetCtxMiddleware,
-	).Group(func(r chi.Router) {
-		r.Get("/pre-connect", preConnectHandler())
-		r.Get("/connect", connectHandler())
+func AgentRouter(r chiopenapi.Router) {
+	r.With(queryAuthDeploymentTargetCtxMiddleware).Group(func(r chiopenapi.Router) {
+		r.WithOptions(option.GroupTags("Agents"))
+
+		type AgentConnectRequest struct {
+			TargetID     uuid.UUID `query:"targetId"`
+			TargetSecret string    `query:"targetSecret"`
+		}
+
+		r.Get("/pre-connect", preConnectHandler()).
+			With(option.Request(AgentConnectRequest{})).
+			With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
+		r.Get("/connect", connectHandler()).
+			With(option.Request(AgentConnectRequest{})).
+			With(option.Response(http.StatusOK, map[string]any{}, option.ContentType("application/yaml")))
 	})
-	r.Route("/agent", func(r chi.Router) {
+
+	r.Route("/agent", func(r chiopenapi.Router) {
+		r.WithOptions(option.GroupHidden(true))
 		// agent login (from basic auth to token)
 		r.Post("/login", agentLoginHandler)
 
@@ -49,7 +61,7 @@ func AgentRouter(r chi.Router) {
 			middleware.AgentSentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
-		).Group(func(r chi.Router) {
+		).Group(func(r chiopenapi.Router) {
 			// agent routes, authenticated via token
 			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)

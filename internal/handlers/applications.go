@@ -18,47 +18,110 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
-func ApplicationsRouter(r chi.Router) {
+func ApplicationsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Applications"))
 	r.Use(middleware.RequireOrgAndRole)
 
-	r.Get("/", getApplications)
+	r.Get("/", getApplications).
+		With(option.Description("List all applications")).
+		With(option.Response(http.StatusOK, []api.ApplicationResponse{}))
 
 	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).
-		Post("/", createApplication)
+		Post("/", createApplication).
+		With(option.Description("Create a new application")).
+		With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 
-	r.Route("/{applicationId}", func(r chi.Router) {
-		r.With(applicationMiddleware).Group(func(r chi.Router) {
-			r.Get("/", getApplication)
-			r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
-				r.Delete("/", deleteApplication)
-				r.Put("/", updateApplication)
-				r.Patch("/", patchApplicationHandler())
-				r.Patch("/image", patchImageApplication)
+	r.Route("/{applicationId}", func(r chiopenapi.Router) {
+		type ApplicationRequest struct {
+			ApplicationID string `path:"applicationId"`
+		}
+
+		r.With(applicationMiddleware).Group(func(r chiopenapi.Router) {
+			r.Get("/", getApplication).
+				With(option.Description("Get an application by ID")).
+				With(option.Request(ApplicationRequest{})).
+				With(option.Response(http.StatusOK, api.ApplicationResponse{}))
+			r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
+				r.Delete("/", deleteApplication).
+					With(option.Description("Delete an application")).
+					With(option.Request(ApplicationRequest{}))
+				r.Put("/", updateApplication).
+					With(option.Description("Update an application")).
+					With((option.Request(struct {
+						ApplicationRequest
+						types.Application
+					}{}))).
+					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
+				r.Patch("/", patchApplicationHandler()).
+					With(option.Description("Partially update an application")).
+					With(option.Request(struct {
+						ApplicationRequest
+						api.PatchApplicationRequest
+					}{})).
+					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
+				r.Patch("/image", patchImageApplication).
+					With(option.Description("Update application image")).
+					With(option.Request(struct {
+						ApplicationRequest
+						api.PatchImageRequest
+					}{})).
+					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 			})
 		})
 
-		r.Route("/versions", func(r chi.Router) {
+		r.Route("/versions", func(r chiopenapi.Router) {
 			// note that it would not be necessary to use the applicationMiddleware for the versions endpoints
 			// it loads the application from the db including all versions, but I guess for now this is easier
 			// when performance becomes more important, we should avoid this and do the request on the database layer
 			r.With(applicationMiddleware).
-				Group(func(r chi.Router) {
+				Group(func(r chiopenapi.Router) {
 					r.With(middleware.RequireVendor).
 						With(middleware.RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)).
-						Post("/", createApplicationVersion)
+						Post("/", createApplicationVersion).
+						With(option.Description("Create a new application version")).
+						With(option.Request(struct {
+							ApplicationRequest
+							types.ApplicationVersion
+						}{})).
+						With(option.Response(http.StatusOK, types.ApplicationVersion{}))
 				})
-			r.Route("/{applicationVersionId}", func(r chi.Router) {
-				r.Get("/", getApplicationVersion)
-				r.With(middleware.RequireVendor, applicationMiddleware).Put("/", updateApplicationVersion)
-				r.Get("/compose-file", getApplicationVersionComposeFile)
-				r.Get("/template-file", getApplicationVersionTemplateFile)
-				r.Get("/values-file", getApplicationVersionValuesFile)
+			r.Route("/{applicationVersionId}", func(r chiopenapi.Router) {
+				type ApplicationVersionRequest struct {
+					ApplicationRequest
+					ApplicationVersionId string `path:"applicationVersionId"`
+				}
+
+				r.Get("/", getApplicationVersion).
+					With(option.Description("Get an application version")).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, types.ApplicationVersion{}))
+				r.With(middleware.RequireVendor, applicationMiddleware).
+					Put("/", updateApplicationVersion).
+					With(option.Description("Update an application version")).
+					With(option.Request(struct {
+						ApplicationVersionRequest
+						types.ApplicationVersion
+					}{})).
+					With(option.Response(http.StatusOK, types.ApplicationVersion{}))
+				r.Get("/compose-file", getApplicationVersionComposeFile).
+					With(option.Description("Get application version compose file")).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, map[string]any{}, option.ContentType("application/yaml")))
+				r.Get("/template-file", getApplicationVersionTemplateFile).
+					With(option.Description("Get application version template file")).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
+				r.Get("/values-file", getApplicationVersionValuesFile).
+					With(option.Description("Get application version values file")).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, map[string]any{}, option.ContentType("application/yaml")))
 			})
 		})
 	})
@@ -185,7 +248,7 @@ func patchApplicationHandler() http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, existing)
+		RespondJSON(w, mapping.ApplicationToAPI(*existing))
 	}
 }
 
