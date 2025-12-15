@@ -10,11 +10,11 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func ArtifactPullsRouter(r chi.Router) {
+func ArtifactPullsRouter(r chiopenapi.Router) {
 	r.Use(
 		middleware.RequireOrgAndRole,
 		middleware.RequireVendor,

@@ -14,18 +14,18 @@ import (
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func ApplicationLicensesRouter(r chi.Router) {
+func ApplicationLicensesRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses)
 	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Post("/", createApplicationLicense)
-	r.With(applicationLicenseMiddleware).Route("/{applicationLicenseId}", func(r chi.Router) {
+	r.With(applicationLicenseMiddleware).Route("/{applicationLicenseId}", func(r chiopenapi.Router) {
 		r.Get("/", getApplicationLicense)
-		r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+		r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Delete("/", deleteApplicationLicense)
 			r.Put("/", updateApplicationLicense)
 		})

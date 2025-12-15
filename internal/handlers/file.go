@@ -16,15 +16,15 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func FileRouter(r chi.Router) {
-	r.With(middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+func FileRouter(r chiopenapi.Router) {
+	r.With(middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
 		r.Post("/", createFileHandler)
-		r.Route("/{fileId}", func(r chi.Router) {
+		r.Route("/{fileId}", func(r chiopenapi.Router) {
 			r.Use(fileMiddleware)
 			r.Get("/", getFileHandler)
 			r.Delete("/", deleteFileHandler)

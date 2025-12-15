@@ -8,11 +8,11 @@ import (
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func DeploymentTargetMetricsRouter(r chi.Router) {
+func DeploymentTargetMetricsRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getLatestDeploymentTargetMetrics)
 }

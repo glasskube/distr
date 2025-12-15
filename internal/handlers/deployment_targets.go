@@ -22,19 +22,19 @@ import (
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func DeploymentTargetsRouter(r chi.Router) {
+func DeploymentTargetsRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getDeploymentTargets)
 	r.With(middleware.RequireReadWriteOrAdmin).Post("/", createDeploymentTarget)
-	r.Route("/{deploymentTargetId}", func(r chi.Router) {
+	r.Route("/{deploymentTargetId}", func(r chiopenapi.Router) {
 		r.Use(deploymentTargetMiddleware)
 		r.Get("/", getDeploymentTarget)
-		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Put("/", updateDeploymentTarget)
 			r.Delete("/", deleteDeploymentTarget)
 			r.Post("/access-request", createAccessForDeploymentTarget)

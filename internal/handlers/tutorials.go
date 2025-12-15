@@ -16,15 +16,15 @@ import (
 	"github.com/glasskube/distr/internal/resources"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func TutorialsRouter(r chi.Router) {
+func TutorialsRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole, middleware.RequireVendor, middleware.RequireAdmin)
 	r.Get("/", getTutorialProgresses)
-	r.Route("/{tutorial}", func(r chi.Router) {
+	r.Route("/{tutorial}", func(r chiopenapi.Router) {
 		r.Get("/", getTutorialProgress)
 		r.Put("/", saveTutorialProgress)
 	})

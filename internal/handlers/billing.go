@@ -2,20 +2,20 @@ package handlers
 
 import (
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 )
 
-func BillingRouter(r chi.Router) {
+func BillingRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole, middleware.RequireVendor)
-	r.Route("/subscription", func(r chi.Router) {
+	r.Route("/subscription", func(r chiopenapi.Router) {
 		r.Get("/", GetSubscriptionHandler)
-		r.Group(func(r chi.Router) {
+		r.Group(func(r chiopenapi.Router) {
 			r.Use(middleware.RequireAdmin)
 			r.Post("/", CreateSubscriptionHandler)
 			r.Put("/", UpdateSubscriptionHandler)
 		})
 	})
-	r.Group(func(r chi.Router) {
+	r.Group(func(r chiopenapi.Router) {
 		r.Use(middleware.RequireAdmin)
 		r.Post("/portal", CreateBillingPortalSessionHandler)
 	})

@@ -33,6 +33,8 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.1.6
 	github.com/mark3labs/mcp-go v0.43.2
+	github.com/oaswrap/spec v0.2.4
+	github.com/oaswrap/spec/adapters/chiopenapi v0.2.4
 	github.com/onsi/gomega v1.38.3
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.141.0
 	github.com/spf13/cobra v1.10.2
@@ -86,6 +88,10 @@ require (
 	github.com/shirou/gopsutil/v4 v4.25.10 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/swaggest/jsonschema-go v0.3.78 // indirect
+	github.com/swaggest/openapi-go v0.2.59 // indirect
+	github.com/swaggest/refl v1.4.0 // indirect
+	github.com/swaggest/swgui v1.8.4 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilinna/clock v1.1.0 // indirect
 	github.com/tilt-dev/fsnotify v1.4.8-0.20220602155310-fff9c274a375 // indirect
@@ -119,6 +125,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/component-helpers v0.34.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 )

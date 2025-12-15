@@ -18,21 +18,21 @@ import (
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func DeploymentsRouter(r chi.Router) {
+func DeploymentsRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.With(middleware.RequireReadWriteOrAdmin).Put("/", putDeployment)
-	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chi.Router) {
+	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chiopenapi.Router) {
 		r.Get("/status", getDeploymentStatus)
 		r.Get("/status/export", exportDeploymentStatusHandler())
 		r.Get("/logs", getDeploymentLogsHandler())
 		r.Get("/logs/resources", getDeploymentLogsResourcesHandler())
 		r.Get("/logs/export", exportDeploymentLogsHandler())
-		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Patch("/", patchDeploymentHandler())
 			r.Delete("/", deleteDeploymentHandler())
 		})

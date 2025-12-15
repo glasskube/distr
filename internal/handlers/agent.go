@@ -26,21 +26,21 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
-func AgentRouter(r chi.Router) {
+func AgentRouter(r chiopenapi.Router) {
 	r.With(
 		queryAuthDeploymentTargetCtxMiddleware,
-	).Group(func(r chi.Router) {
+	).Group(func(r chiopenapi.Router) {
 		r.Get("/pre-connect", preConnectHandler())
 		r.Get("/connect", connectHandler())
 	})
-	r.Route("/agent", func(r chi.Router) {
+	r.Route("/agent", func(r chiopenapi.Router) {
 		// agent login (from basic auth to token)
 		r.Post("/login", agentLoginHandler)
 
@@ -49,7 +49,7 @@ func AgentRouter(r chi.Router) {
 			middleware.AgentSentryUser,
 			agentAuthDeploymentTargetCtxMiddleware,
 			rateLimitPerAgent,
-		).Group(func(r chi.Router) {
+		).Group(func(r chiopenapi.Router) {
 			// agent routes, authenticated via token
 			r.Get("/manifest", agentManifestHandler())
 			r.Get("/resources", agentResourcesHandler)

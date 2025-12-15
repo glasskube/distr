@@ -6,11 +6,11 @@ import (
 	"github.com/getsentry/sentry-go"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
-	"github.com/go-chi/chi/v5"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func AgentVersionsRouter(r chi.Router) {
+func AgentVersionsRouter(r chiopenapi.Router) {
 	r.Get("/", getAgentVersionsHandler())
 }
 

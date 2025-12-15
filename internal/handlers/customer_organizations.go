@@ -15,15 +15,15 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func CustomerOrganizationsRouter(r chi.Router) {
-	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chi.Router) {
+func CustomerOrganizationsRouter(r chiopenapi.Router) {
+	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
 		r.Get("/", getCustomerOrganizationsHandler())
-		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Post("/", createCustomerOrganizationHandler())
 			r.Put("/{id}", updateCustomerOrganizationHandler())
 			r.Delete("/{id}", deleteCustomerOrganizationHandler())

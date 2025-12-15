@@ -18,23 +18,23 @@ import (
 	"github.com/glasskube/distr/internal/security"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func SettingsRouter(r chi.Router) {
+func SettingsRouter(r chiopenapi.Router) {
 	r.Post("/user", userSettingsUpdateHandler)
-	r.Route("/verify", func(r chi.Router) {
+	r.Route("/verify", func(r chiopenapi.Router) {
 		r.With(requestVerificationMailRateLimitPerUser).Post("/request", userSettingsVerifyRequestHandler)
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
 	})
-	r.Route("/tokens", func(r chi.Router) {
+	r.Route("/tokens", func(r chiopenapi.Router) {
 		r.Use(middleware.RequireOrgAndRole)
 		r.Get("/", getAccessTokensHandler())
 		r.Post("/", createAccessTokenHandler())
-		r.Route("/{id}", func(r chi.Router) {
+		r.Route("/{id}", func(r chiopenapi.Router) {
 			r.Delete("/", deleteAccessTokenHandler())
 		})
 	})

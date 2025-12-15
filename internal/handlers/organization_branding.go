@@ -16,14 +16,14 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/go-chi/chi/v5"
+	"github.com/oaswrap/spec/adapters/chiopenapi"
 	"go.uber.org/zap"
 )
 
-func OrganizationBrandingRouter(r chi.Router) {
+func OrganizationBrandingRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganizationBranding)
-	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chi.Router) {
+	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 		r.Post("/", createOrganizationBranding)
 		r.Put("/", updateOrganizationBranding)
 	})
