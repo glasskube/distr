@@ -15,7 +15,7 @@ type ApplicationVersion struct {
 	CreatedAt     time.Time      `db:"created_at" json:"createdAt"`
 	ArchivedAt    *time.Time     `db:"archived_at" json:"archivedAt,omitempty"`
 	Name          string         `db:"name" json:"name"`
-	ApplicationID uuid.UUID      `db:"application_id" json:"applicationId" path:"applicationId"`
+	ApplicationID uuid.UUID      `db:"application_id" json:"applicationId"`
 	ChartType     *HelmChartType `db:"chart_type" json:"chartType,omitempty"`
 	ChartName     *string        `db:"chart_name" json:"chartName,omitempty"`
 	ChartUrl      *string        `db:"chart_url" json:"chartUrl,omitempty"`

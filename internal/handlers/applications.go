@@ -49,15 +49,21 @@ func ApplicationsRouter(r chiopenapi.Router) {
 				r.Delete("/", deleteApplication).
 					With(option.Request(ApplicationRequest{}))
 				r.Put("/", updateApplication).
-					With((option.Request(types.Application{}))).
+					With((option.Request(struct {
+						ApplicationRequest
+						types.Application
+					}{}))).
 					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 				r.Patch("/", patchApplicationHandler()).
-					With(option.Request(api.PatchApplicationRequest{})).
+					With(option.Request(struct {
+						ApplicationRequest
+						api.PatchApplicationRequest
+					}{})).
 					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 				r.Patch("/image", patchImageApplication).
 					With(option.Request(struct {
-						api.PatchImageRequest
 						ApplicationRequest
+						api.PatchImageRequest
 					}{})).
 					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 			})
@@ -72,17 +78,16 @@ func ApplicationsRouter(r chiopenapi.Router) {
 					r.With(middleware.RequireVendor).
 						With(middleware.RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)).
 						Post("/", createApplicationVersion).
-						With(option.Request(types.ApplicationVersion{})).
+						With(option.Request(struct {
+							ApplicationRequest
+							types.ApplicationVersion
+						}{})).
 						With(option.Response(http.StatusOK, types.ApplicationVersion{}))
 				})
 			r.Route("/{applicationVersionId}", func(r chiopenapi.Router) {
-				type ApplicationVersionIDRequest struct {
-					ApplicationVersionId string `path:"applicationVersionId"`
-				}
-
 				type ApplicationVersionRequest struct {
 					ApplicationRequest
-					ApplicationVersionIDRequest
+					ApplicationVersionId string `path:"applicationVersionId"`
 				}
 
 				r.Get("/", getApplicationVersion).
@@ -91,7 +96,7 @@ func ApplicationsRouter(r chiopenapi.Router) {
 				r.With(middleware.RequireVendor, applicationMiddleware).
 					Put("/", updateApplicationVersion).
 					With(option.Request(struct {
-						ApplicationVersionIDRequest
+						ApplicationVersionRequest
 						types.ApplicationVersion
 					}{})).
 					With(option.Response(http.StatusOK, types.ApplicationVersion{}))
