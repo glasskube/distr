@@ -15,19 +15,36 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func ApplicationLicensesRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Applications", "Licensing"))
 	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
-	r.Get("/", getApplicationLicenses)
-	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Post("/", createApplicationLicense)
+	r.Get("/", getApplicationLicenses).
+		With(option.Response(http.StatusOK, []types.ApplicationLicense{}))
+	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).
+		Post("/", createApplicationLicense).
+		With(option.Request(types.ApplicationLicenseWithVersions{}))
 	r.With(applicationLicenseMiddleware).Route("/{applicationLicenseId}", func(r chiopenapi.Router) {
-		r.Get("/", getApplicationLicense)
+		type ApplicationLicenseRequest struct {
+			ApplicationLicenseId string `path:"applicationLicenseId"`
+		}
+
+		r.Get("/", getApplicationLicense).
+			With(option.Request(ApplicationLicenseRequest{})).
+			With(option.Response(http.StatusOK, types.ApplicationLicense{}))
 		r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
-			r.Delete("/", deleteApplicationLicense)
-			r.Put("/", updateApplicationLicense)
+			r.Delete("/", deleteApplicationLicense).
+				With(option.Request(ApplicationLicenseRequest{}))
+			r.Put("/", updateApplicationLicense).
+				With(option.Request(struct {
+					ApplicationLicenseRequest
+					types.ApplicationLicenseWithVersions
+				}{})).
+				With(option.Response(http.StatusOK, types.ApplicationLicense{}))
 		})
 	})
 }

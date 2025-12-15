@@ -16,15 +16,22 @@ import (
 	"github.com/glasskube/distr/internal/oidc"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 const redirectToLoginOIDCFailed = "/login?reason=oidc-failed"
 
 func AuthOIDCRouter(r chiopenapi.Router) {
-	r.Get("/{oidcProvider}", authLoginOidcHandler)
-	r.Get("/{oidcProvider}/callback", authLoginOidcCallbackHandler)
+	type OIDCRequest struct {
+		OIDCProvider string `path:"oidcProvider"`
+	}
+
+	r.Get("/{oidcProvider}", authLoginOidcHandler).
+		With(option.Request(OIDCRequest{}))
+	r.Get("/{oidcProvider}/callback", authLoginOidcCallbackHandler).
+		With(option.Request(OIDCRequest{}))
 }
 
 func authLoginOidcHandler(w http.ResponseWriter, r *http.Request) {

@@ -21,23 +21,26 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func OrganizationRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Organizations"))
 	r.Use(middleware.RequireOrgAndRole)
-	r.Get("/", getOrganization)
+	r.Get("/", getOrganization).
+		With(option.Response(http.StatusOK, api.OrganizationResponse{}))
 	r.With(middleware.RequireVendor).Group(func(r chiopenapi.Router) {
-		r.With(middleware.RequireAdmin).Put("/", updateOrganization)
-		r.Post("/", createOrganization)
+		r.With(middleware.RequireAdmin).
+			Put("/", updateOrganization).
+			With(option.Request(api.CreateUpdateOrganizationRequest{})).
+			With(option.Response(http.StatusOK, types.Organization{}))
+		r.Post("/", createOrganization).
+			With(option.Request(api.CreateUpdateOrganizationRequest{})).
+			With(option.Response(http.StatusOK, types.OrganizationWithUserRole{}))
 	})
 	r.Route("/branding", OrganizationBrandingRouter)
-}
-
-func OrganizationsRouter(r chiopenapi.Router) {
-	r.Use(middleware.RequireOrgAndRole)
-	r.Get("/", getOrganizations)
 }
 
 func getOrganization(w http.ResponseWriter, r *http.Request) {
@@ -205,17 +208,4 @@ func handleUpdateOrganization(
 	}
 
 	return org, nil
-}
-
-func getOrganizations(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	auth := auth.Authentication.Require(ctx)
-
-	if orgs, err := db.GetOrganizationsForUser(ctx, auth.CurrentUserID()); err != nil {
-		internalctx.GetLogger(ctx).Error("failed to get organizations", zap.Error(err))
-		sentry.GetHubFromContext(ctx).CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		RespondJSON(w, orgs)
-	}
 }

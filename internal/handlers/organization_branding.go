@@ -16,16 +16,22 @@ import (
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func OrganizationBrandingRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
-	r.Get("/", getOrganizationBranding)
+	r.Get("/", getOrganizationBranding).
+		With(option.Response(http.StatusOK, types.OrganizationBranding{}))
 	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
-		r.Post("/", createOrganizationBranding)
-		r.Put("/", updateOrganizationBranding)
+		r.Post("/", createOrganizationBranding).
+			With(option.Request(nil, option.ContentType("multipart/formdata"))).
+			With(option.Response(http.StatusOK, types.OrganizationBranding{}))
+		r.Put("/", updateOrganizationBranding).
+			With(option.Request(nil, option.ContentType("multipart/formdata"))).
+			With(option.Response(http.StatusOK, types.OrganizationBranding{}))
 	})
 }
 

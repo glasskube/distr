@@ -23,21 +23,40 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func DeploymentTargetsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Agents"))
 	r.Use(middleware.RequireOrgAndRole)
-	r.Get("/", getDeploymentTargets)
-	r.With(middleware.RequireReadWriteOrAdmin).Post("/", createDeploymentTarget)
+	r.Get("/", getDeploymentTargets).
+		With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
+	r.With(middleware.RequireReadWriteOrAdmin).
+		Post("/", createDeploymentTarget).
+		With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
 	r.Route("/{deploymentTargetId}", func(r chiopenapi.Router) {
+		type DeploymentTargetRequest struct {
+			DeploymentTargetID uuid.UUID `path:"deploymentTargetId"`
+		}
+
 		r.Use(deploymentTargetMiddleware)
-		r.Get("/", getDeploymentTarget)
+		r.Get("/", getDeploymentTarget).
+			With(option.Request(DeploymentTargetRequest{})).
+			With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
 		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
-			r.Put("/", updateDeploymentTarget)
-			r.Delete("/", deleteDeploymentTarget)
-			r.Post("/access-request", createAccessForDeploymentTarget)
+			r.Put("/", updateDeploymentTarget).
+				With(option.Request(struct {
+					DeploymentTargetRequest
+					types.DeploymentTargetWithCreatedBy
+				}{})).
+				With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
+			r.Delete("/", deleteDeploymentTarget).
+				With(option.Request(DeploymentTargetRequest{}))
+			r.Post("/access-request", createAccessForDeploymentTarget).
+				With(option.Request(DeploymentTargetRequest{})).
+				With(option.Response(http.StatusOK, api.DeploymentTargetAccessTokenResponse{}))
 		})
 	})
 }

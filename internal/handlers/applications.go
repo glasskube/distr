@@ -20,26 +20,46 @@ import (
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func ApplicationsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Applications"))
 	r.Use(middleware.RequireOrgAndRole)
 
-	r.Get("/", getApplications)
+	r.Get("/", getApplications).
+		With(option.Response(http.StatusOK, []api.ApplicationResponse{}))
 
 	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).
-		Post("/", createApplication)
+		Post("/", createApplication).
+		With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 
 	r.Route("/{applicationId}", func(r chiopenapi.Router) {
+		type ApplicationRequest struct {
+			ApplicationID string `path:"applicationId"`
+		}
+
 		r.With(applicationMiddleware).Group(func(r chiopenapi.Router) {
-			r.Get("/", getApplication)
+			r.Get("/", getApplication).
+				With(option.Request(ApplicationRequest{})).
+				With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 			r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
-				r.Delete("/", deleteApplication)
-				r.Put("/", updateApplication)
-				r.Patch("/", patchApplicationHandler())
-				r.Patch("/image", patchImageApplication)
+				r.Delete("/", deleteApplication).
+					With(option.Request(ApplicationRequest{}))
+				r.Put("/", updateApplication).
+					With((option.Request(types.Application{}))).
+					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
+				r.Patch("/", patchApplicationHandler()).
+					With(option.Request(api.PatchApplicationRequest{})).
+					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
+				r.Patch("/image", patchImageApplication).
+					With(option.Request(struct {
+						api.PatchImageRequest
+						ApplicationRequest
+					}{})).
+					With(option.Response(http.StatusOK, api.ApplicationResponse{}))
 			})
 		})
 
@@ -51,14 +71,39 @@ func ApplicationsRouter(r chiopenapi.Router) {
 				Group(func(r chiopenapi.Router) {
 					r.With(middleware.RequireVendor).
 						With(middleware.RequireAnyUserRole(types.UserRoleReadWrite, types.UserRoleAdmin)).
-						Post("/", createApplicationVersion)
+						Post("/", createApplicationVersion).
+						With(option.Request(types.ApplicationVersion{})).
+						With(option.Response(http.StatusOK, types.ApplicationVersion{}))
 				})
 			r.Route("/{applicationVersionId}", func(r chiopenapi.Router) {
-				r.Get("/", getApplicationVersion)
-				r.With(middleware.RequireVendor, applicationMiddleware).Put("/", updateApplicationVersion)
-				r.Get("/compose-file", getApplicationVersionComposeFile)
-				r.Get("/template-file", getApplicationVersionTemplateFile)
-				r.Get("/values-file", getApplicationVersionValuesFile)
+				type ApplicationVersionIDRequest struct {
+					ApplicationVersionId string `path:"applicationVersionId"`
+				}
+
+				type ApplicationVersionRequest struct {
+					ApplicationRequest
+					ApplicationVersionIDRequest
+				}
+
+				r.Get("/", getApplicationVersion).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, types.ApplicationVersion{}))
+				r.With(middleware.RequireVendor, applicationMiddleware).
+					Put("/", updateApplicationVersion).
+					With(option.Request(struct {
+						ApplicationVersionIDRequest
+						types.ApplicationVersion
+					}{})).
+					With(option.Response(http.StatusOK, types.ApplicationVersion{}))
+				r.Get("/compose-file", getApplicationVersionComposeFile).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, map[string]any{}, option.ContentType("application/yaml")))
+				r.Get("/template-file", getApplicationVersionTemplateFile).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
+				r.Get("/values-file", getApplicationVersionValuesFile).
+					With(option.Request(ApplicationVersionRequest{})).
+					With(option.Response(http.StatusOK, map[string]any{}, option.ContentType("application/yaml")))
 			})
 		})
 	})
@@ -185,7 +230,7 @@ func patchApplicationHandler() http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, existing)
+		RespondJSON(w, mapping.ApplicationToAPI(*existing))
 	}
 }
 

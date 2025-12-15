@@ -17,17 +17,28 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/glasskube/distr/internal/util"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func FileRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Files"))
 	r.With(middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
-		r.Post("/", createFileHandler)
+		r.Post("/", createFileHandler).
+			With(option.Request(nil, option.ContentType("multipart/formdata"))).
+			With(option.Response(http.StatusOK, uuid.Nil))
 		r.Route("/{fileId}", func(r chiopenapi.Router) {
+			type FileIDRequest struct {
+				FileID uuid.UUID `path:"fileId"`
+			}
+
 			r.Use(fileMiddleware)
-			r.Get("/", getFileHandler)
-			r.Delete("/", deleteFileHandler)
+			r.Get("/", getFileHandler).
+				With(option.Request(FileIDRequest{})).
+				With(option.Response(http.StatusOK, nil))
+			r.Delete("/", deleteFileHandler).
+				With(option.Request(FileIDRequest{}))
 		})
 	})
 }

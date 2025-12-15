@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"github.com/glasskube/distr/internal/middleware"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 )
 
 func BillingRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupHidden(true))
 	r.Use(middleware.RequireOrgAndRole, middleware.RequireVendor)
 	r.Route("/subscription", func(r chiopenapi.Router) {
 		r.Get("/", GetSubscriptionHandler)

@@ -17,7 +17,8 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/openapi"
 	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
@@ -36,7 +37,20 @@ func NewRouter(
 	openapiRouter := chiopenapi.NewRouter(
 		baseRouter,
 		option.WithTitle("Distr"),
+		option.WithDescription("API Documentation for Distr"),
 		option.WithVersion(buildconfig.Version()),
+		option.WithSecurity("bearer", option.SecurityHTTPBearer("Bearer")),
+		option.WithSecurity(
+			"accessToken",
+			option.SecurityAPIKey("Authorization", openapi.SecuritySchemeAPIKeyInHeader),
+			option.SecurityDescription(
+				"Provide a PAT using the Authorization header and adding the AccessToken prefix.\n\n"+
+					"Example: `Authorization: AccessToken distr-xxxxxx`",
+			),
+		),
+		option.WithReflectorConfig(
+			option.StripDefNamePrefix("Api", "Authkey", "Db", "Types", "Uuid"),
+		),
 		option.WithDebug(true),
 	)
 	openapiRouter.Route("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
@@ -79,6 +93,11 @@ func ApiRouter(
 
 				// authenticated routes go here
 				r.Group(func(r chiopenapi.Router) {
+					r.WithOptions(
+						option.GroupSecurity("accessToken"),
+						option.GroupSecurity("bearer"),
+					)
+
 					r.Use(
 						middleware.SentryUser,
 						auth.Authentication.Middleware,

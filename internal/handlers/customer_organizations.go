@@ -16,17 +16,35 @@ import (
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func CustomerOrganizationsRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupTags("Customers"))
 	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
-		r.Get("/", getCustomerOrganizationsHandler())
+		r.Get("/", getCustomerOrganizationsHandler()).
+			With(option.Response(http.StatusOK, []api.CustomerOrganizationWithUsage{}))
+
 		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
-			r.Post("/", createCustomerOrganizationHandler())
-			r.Put("/{id}", updateCustomerOrganizationHandler())
-			r.Delete("/{id}", deleteCustomerOrganizationHandler())
+			r.Post("/", createCustomerOrganizationHandler()).
+				With(option.Request(api.CreateUpdateCustomerOrganizationRequest{})).
+				With(option.Response(http.StatusOK, api.CustomerOrganization{}))
+			r.Route("/{customerOrganizationId}", func(r chiopenapi.Router) {
+				type CustomerOrganizationIDRequest struct {
+					CustomerOrganizationID uuid.UUID `path:"customerOrganizationId"`
+				}
+
+				r.Put("/", updateCustomerOrganizationHandler()).
+					With(option.Request(struct {
+						CustomerOrganizationIDRequest
+						api.CreateUpdateCustomerOrganizationRequest
+					}{})).
+					With(option.Response(http.StatusOK, api.CustomerOrganization{}))
+				r.Delete("/", deleteCustomerOrganizationHandler()).
+					With(option.Request(CustomerOrganizationIDRequest{}))
+			})
 		})
 	})
 }
@@ -94,7 +112,7 @@ func createCustomerOrganizationHandler() http.HandlerFunc {
 
 func updateCustomerOrganizationHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := uuid.Parse(r.PathValue("id"))
+		id, err := uuid.Parse(r.PathValue("customerOrganizationId"))
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -127,7 +145,7 @@ func updateCustomerOrganizationHandler() http.HandlerFunc {
 
 func deleteCustomerOrganizationHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := uuid.Parse(r.PathValue("id"))
+		id, err := uuid.Parse(r.PathValue("customerOrganizationId"))
 		if err != nil {
 			http.NotFound(w, r)
 			return

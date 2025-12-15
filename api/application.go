@@ -13,6 +13,8 @@ type ApplicationResponse struct {
 }
 
 type PatchApplicationRequest struct {
+	// ID is only used for OpenAPI spec generation
+	ID       uuid.UUID                        `json:"-" path:"applicationId"`
 	Name     *string                          `json:"name,omitempty"`
 	Versions []PatchApplicationVersionRequest `json:"versions,omitempty"`
 }

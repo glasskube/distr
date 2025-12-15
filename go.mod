@@ -33,8 +33,8 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.1.6
 	github.com/mark3labs/mcp-go v0.43.2
-	github.com/oaswrap/spec v0.2.4
-	github.com/oaswrap/spec/adapters/chiopenapi v0.2.4
+	github.com/oaswrap/spec v0.3.6
+	github.com/oaswrap/spec/adapter/chiopenapi v0.3.6
 	github.com/onsi/gomega v1.38.3
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.141.0
 	github.com/spf13/cobra v1.10.2
@@ -77,6 +77,7 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
+	github.com/oaswrap/spec-ui v0.1.4 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/gopsutilenv v0.141.0 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
@@ -89,9 +90,8 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/swaggest/jsonschema-go v0.3.78 // indirect
-	github.com/swaggest/openapi-go v0.2.59 // indirect
+	github.com/swaggest/openapi-go v0.2.60 // indirect
 	github.com/swaggest/refl v1.4.0 // indirect
-	github.com/swaggest/swgui v1.8.4 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilinna/clock v1.1.0 // indirect
 	github.com/tilt-dev/fsnotify v1.4.8-0.20220602155310-fff9c274a375 // indirect

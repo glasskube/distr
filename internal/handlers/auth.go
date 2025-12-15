@@ -24,11 +24,13 @@ import (
 	"github.com/glasskube/distr/internal/types"
 	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
-	"github.com/oaswrap/spec/adapters/chiopenapi"
+	"github.com/oaswrap/spec/adapter/chiopenapi"
+	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"
 )
 
 func AuthRouter(r chiopenapi.Router) {
+	r.WithOptions(option.GroupHidden(true))
 	r.Use(httprate.Limit(
 		10,
 		1*time.Minute,
