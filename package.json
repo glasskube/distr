@@ -9,7 +9,6 @@
     "buildconfig": "node hack/update-frontend-version.js",
     "sentry-upload": "hack/sentry-release.sh",
     "start": "pnpm buildconfig && ng serve",
-    "serve:ui": "ng serve ui",
     "build:community": "pnpm buildconfig && ng build --configuration=production-community",
     "build:enterprise": "pnpm buildconfig && ng build --configuration=production-enterprise",
     "build:dev": "pnpm buildconfig && ng build --configuration=development",
