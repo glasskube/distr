@@ -183,6 +183,9 @@ func addImagePullSecretToValues(relaseName string, values map[string]any) {
 	if s, ok := values["imagePullSecrets"].([]any); ok {
 		values["imagePullSecrets"] = append(s, map[string]any{"name": PullSecretName(relaseName)})
 	}
+	if s, ok := values["pullSecrets"].([]any); ok {
+		values["pullSecrets"] = append(s, map[string]any{"name": PullSecretName(relaseName)})
+	}
 	for _, v := range values {
 		if m, ok := v.(map[string]any); ok {
 			addImagePullSecretToValues(relaseName, m)
