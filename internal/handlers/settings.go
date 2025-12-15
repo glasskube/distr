@@ -28,6 +28,7 @@ import (
 func SettingsRouter(r chiopenapi.Router) {
 	r.Post("/user", userSettingsUpdateHandler).
 		With(option.Tags("Settings")).
+		With(option.Description("Update user settings")).
 		With(option.Request(api.UpdateUserAccountRequest{})).
 		With(option.Response(http.StatusOK, types.UserAccount{}))
 	r.Route("/verify", func(r chiopenapi.Router) {
@@ -40,8 +41,10 @@ func SettingsRouter(r chiopenapi.Router) {
 		r.WithOptions(option.GroupTags("Access Tokens"))
 		r.Use(middleware.RequireOrgAndRole)
 		r.Get("/", getAccessTokensHandler()).
+			With(option.Description("List all access tokens")).
 			With(option.Response(http.StatusOK, []api.AccessToken{}))
 		r.Post("/", createAccessTokenHandler()).
+			With(option.Description("Create a new access token")).
 			With(option.Request(api.CreateAccessTokenRequest{})).
 			With(option.Response(http.StatusCreated, api.AccessTokenWithKey{}))
 		r.Route("/{accessTokenId}", func(r chiopenapi.Router) {
@@ -50,6 +53,7 @@ func SettingsRouter(r chiopenapi.Router) {
 			}
 
 			r.Delete("/", deleteAccessTokenHandler()).
+				With(option.Description("Delete an access token")).
 				With(option.Request(AccessTokenIDRequest{}))
 		})
 	})

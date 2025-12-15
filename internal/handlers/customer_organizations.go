@@ -25,10 +25,12 @@ func CustomerOrganizationsRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Customers"))
 	r.With(middleware.RequireVendor, middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
 		r.Get("/", getCustomerOrganizationsHandler()).
+			With(option.Description("List all customer organizations")).
 			With(option.Response(http.StatusOK, []api.CustomerOrganizationWithUsage{}))
 
 		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Post("/", createCustomerOrganizationHandler()).
+				With(option.Description("Create a new customer organization")).
 				With(option.Request(api.CreateUpdateCustomerOrganizationRequest{})).
 				With(option.Response(http.StatusOK, api.CustomerOrganization{}))
 			r.Route("/{customerOrganizationId}", func(r chiopenapi.Router) {
@@ -37,12 +39,14 @@ func CustomerOrganizationsRouter(r chiopenapi.Router) {
 				}
 
 				r.Put("/", updateCustomerOrganizationHandler()).
+					With(option.Description("Update a customer organization")).
 					With(option.Request(struct {
 						CustomerOrganizationIDRequest
 						api.CreateUpdateCustomerOrganizationRequest
 					}{})).
 					With(option.Response(http.StatusOK, api.CustomerOrganization{}))
 				r.Delete("/", deleteCustomerOrganizationHandler()).
+					With(option.Description("Delete a customer organization")).
 					With(option.Request(CustomerOrganizationIDRequest{}))
 			})
 		})

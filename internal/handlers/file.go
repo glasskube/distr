@@ -26,6 +26,7 @@ func FileRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Files"))
 	r.With(middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
 		r.Post("/", createFileHandler).
+			With(option.Description("Upload a new file")).
 			With(option.Request(nil, option.ContentType("multipart/formdata"))).
 			With(option.Response(http.StatusOK, uuid.Nil))
 		r.Route("/{fileId}", func(r chiopenapi.Router) {
@@ -35,9 +36,11 @@ func FileRouter(r chiopenapi.Router) {
 
 			r.Use(fileMiddleware)
 			r.Get("/", getFileHandler).
+				With(option.Description("Get a file by ID")).
 				With(option.Request(FileIDRequest{})).
 				With(option.Response(http.StatusOK, nil))
 			r.Delete("/", deleteFileHandler).
+				With(option.Description("Delete a file")).
 				With(option.Request(FileIDRequest{}))
 		})
 	})

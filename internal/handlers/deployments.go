@@ -29,6 +29,7 @@ func DeploymentsRouter(r chiopenapi.Router) {
 	r.Use(middleware.RequireOrgAndRole)
 	r.With(middleware.RequireReadWriteOrAdmin).
 		Put("/", putDeployment).
+		With(option.Description("Create or update a deployment")).
 		With(option.Request(api.DeploymentRequest{}))
 	r.With(deploymentMiddleware).Route("/{deploymentId}", func(r chiopenapi.Router) {
 		type DeploymentIDRequest struct {
@@ -47,21 +48,26 @@ func DeploymentsRouter(r chiopenapi.Router) {
 		}
 
 		r.Get("/status", getDeploymentStatus).
+			With(option.Description("Get deployment status")).
 			With(option.Request(DeploymentTimeseriesRequest{})).
 			With(option.Response(http.StatusOK, []types.DeploymentRevisionStatus{}))
 		r.Get("/status/export", exportDeploymentStatusHandler()).
+			With(option.Description("Export deployment status")).
 			With(option.Request(DeploymentIDRequest{})).
 			With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
 		r.Get("/logs", getDeploymentLogsHandler()).
+			With(option.Description("Get deployment logs")).
 			With(option.Request(struct {
 				DeploymentTimeseriesRequest
 				ResourceRequest
 			}{})).
 			With(option.Response(http.StatusOK, []api.DeploymentLogRecord{}))
 		r.Get("/logs/resources", getDeploymentLogsResourcesHandler()).
+			With(option.Description("Get deployment log resources")).
 			With(option.Request(DeploymentIDRequest{})).
 			With(option.Response(http.StatusOK, []string{}))
 		r.Get("/logs/export", exportDeploymentLogsHandler()).
+			With(option.Description("Export deployment logs")).
 			With(option.Request(struct {
 				DeploymentIDRequest
 				ResourceRequest
@@ -69,12 +75,14 @@ func DeploymentsRouter(r chiopenapi.Router) {
 			With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
 		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Patch("/", patchDeploymentHandler()).
+				With(option.Description("Partially update a deployment")).
 				With(option.Request(struct {
 					DeploymentIDRequest
 					api.PatchDeploymentRequest
 				}{})).
 				With(option.Response(http.StatusOK, types.Deployment{}))
 			r.Delete("/", deleteDeploymentHandler()).
+				With(option.Description("Delete a deployment")).
 				With(option.Request(DeploymentIDRequest{}))
 		})
 	})

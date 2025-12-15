@@ -15,6 +15,7 @@ import (
 func AgentVersionsRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Miscellaneous"))
 	r.Get("/", getAgentVersionsHandler()).
+		With(option.Description("List all agent versions")).
 		With(option.Response(http.StatusOK, []types.AgentVersion{}))
 }
 

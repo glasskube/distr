@@ -23,6 +23,7 @@ func ArtifactPullsRouter(r chiopenapi.Router) {
 		middleware.RequireVendor,
 	)
 	r.Get("/", getArtifactPullsHandler()).
+		With(option.Description("List artifact version pulls")).
 		With(option.Request(struct {
 			Before *time.Time `query:"before"`
 			Count  *int       `query:"count"`

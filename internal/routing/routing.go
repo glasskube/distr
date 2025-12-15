@@ -24,6 +24,38 @@ import (
 	"go.uber.org/zap"
 )
 
+const apiDescription = `
+Distr enables software and AI companies to distribute applications to self-managed customers with minimal setup.
+
+## Main features
+
+- **Centralized Management:** View & manage all deployments, artifacts, connected agents, self-managed &
+  BYOC customers via the intuitive web UI
+- **Deployment Automation:** Optional prebuilt Helm and Docker agents manage deployments, collect logs and metrics,
+  and allow remote troubleshooting.
+- **White-label customer portal:** Let your customers control their deployments or download your artifacts
+- **License Management:** Distribute specific versions of your application to specific customers
+- **Container registry:** Distribute OCI-compatible artifacts (Docker images, Helm charts, Terraform modules)
+  with built-in granular access control and analytics.
+- Access the API using our [**rich SDK**](https://distr.sh/docs/integrations/sdk/)
+- Fully Open Source and [self-hostable](https://distr.sh/docs/self-hosting/getting-started/)
+
+Check out the hosted version at https://distr.sh/get-started/.
+
+## About
+
+Distr is an Open Source software distribution platform that provides a ready-to-use setup with prebuilt components to
+help software and AI companies distribute applications to customers in complex, self-managed environments.
+
+**Use cases include:**
+
+- On-premises, VPC and self-managed software deployments
+- Bring Your Own Cloud (BYOC) automation
+- Edge & Fleet management
+
+Read more about Distr and our use cases at https://distr.sh/docs/
+`
+
 func NewRouter(
 	logger *zap.Logger, db *pgxpool.Pool, mailer mail.Mailer, tracers *tracers.Tracers, oidcer *oidc.OIDCer,
 ) http.Handler {
@@ -37,8 +69,8 @@ func NewRouter(
 
 	openapiRouter := chiopenapi.NewRouter(
 		baseRouter,
-		option.WithTitle("Distr"),
-		option.WithDescription("API Documentation for Distr"),
+		option.WithTitle("Distr API Reference"),
+		option.WithDescription(apiDescription),
 		option.WithVersion(buildconfig.Version()),
 		option.WithSecurity("bearer", option.SecurityHTTPBearer("Bearer")),
 		option.WithSecurity(

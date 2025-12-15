@@ -30,13 +30,16 @@ func OrganizationRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Organizations"))
 	r.Use(middleware.RequireOrgAndRole)
 	r.Get("/", getOrganization).
+		With(option.Description("Get current organization")).
 		With(option.Response(http.StatusOK, api.OrganizationResponse{}))
 	r.With(middleware.RequireVendor).Group(func(r chiopenapi.Router) {
 		r.With(middleware.RequireAdmin).
 			Put("/", updateOrganization).
+			With(option.Description("Update current organization")).
 			With(option.Request(api.CreateUpdateOrganizationRequest{})).
 			With(option.Response(http.StatusOK, types.Organization{}))
 		r.Post("/", createOrganization).
+			With(option.Description("Create a new organization")).
 			With(option.Request(api.CreateUpdateOrganizationRequest{})).
 			With(option.Response(http.StatusOK, types.OrganizationWithUserRole{}))
 	})

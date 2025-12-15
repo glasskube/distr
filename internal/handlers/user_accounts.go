@@ -31,9 +31,11 @@ func UserAccountsRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Users"))
 	r.With(middleware.RequireOrgAndRole).Group(func(r chiopenapi.Router) {
 		r.Get("/", getUserAccountsHandler).
+			With(option.Description("List all user accounts")).
 			With(option.Response(http.StatusOK, []api.UserAccountResponse{}))
 		r.With(middleware.RequireReadWriteOrAdmin).
 			Post("/", createUserAccountHandler).
+			With(option.Description("Create a new user account")).
 			With(option.Request(api.CreateUserAccountRequest{})).
 			With(option.Response(http.StatusOK, api.CreateUserAccountResponse{}))
 		r.With(middleware.RequireReadWriteOrAdmin).Route("/{userId}", func(r chiopenapi.Router) {
@@ -44,14 +46,17 @@ func UserAccountsRouter(r chiopenapi.Router) {
 			r.Use(userAccountMiddleware)
 			r.With(middleware.ProFeature).
 				Patch("/", patchUserAccountHandler()).
+				With(option.Description("Partially update a user account")).
 				With(option.Request(struct {
 					UserAccountRequest
 					api.PatchUserAccountRequest
 				}{})).
 				With(option.Response(http.StatusOK, api.UserAccountResponse{}))
 			r.Delete("/", deleteUserAccountHandler).
+				With(option.Description("Delete a user account")).
 				With(option.Request(UserAccountRequest{}))
 			r.Patch("/image", patchImageUserAccount).
+				With(option.Description("Update user account image")).
 				With(option.Request(struct {
 					UserAccountRequest
 					api.PatchImageRequest
@@ -59,6 +64,7 @@ func UserAccountsRouter(r chiopenapi.Router) {
 				With(option.Response(http.StatusOK, api.UserAccountResponse{}))
 			r.With(inviteUserRateLimiter).
 				Post("/invite", resendUserInviteHandler()).
+				With(option.Description("Resend user invite")).
 				With(option.Request(UserAccountRequest{})).
 				With(option.Response(http.StatusOK, api.CreateUserAccountResponse{}))
 		})

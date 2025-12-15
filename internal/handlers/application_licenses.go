@@ -24,9 +24,11 @@ func ApplicationLicensesRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Applications", "Licensing"))
 	r.Use(middleware.RequireOrgAndRole, middleware.LicensingFeatureFlagEnabledMiddleware)
 	r.Get("/", getApplicationLicenses).
+		With(option.Description("List all application licenses")).
 		With(option.Response(http.StatusOK, []types.ApplicationLicense{}))
 	r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).
 		Post("/", createApplicationLicense).
+		With(option.Description("Create a new application license")).
 		With(option.Request(types.ApplicationLicenseWithVersions{}))
 	r.With(applicationLicenseMiddleware).Route("/{applicationLicenseId}", func(r chiopenapi.Router) {
 		type ApplicationLicenseRequest struct {
@@ -34,12 +36,15 @@ func ApplicationLicensesRouter(r chiopenapi.Router) {
 		}
 
 		r.Get("/", getApplicationLicense).
+			With(option.Description("Get an application license")).
 			With(option.Request(ApplicationLicenseRequest{})).
 			With(option.Response(http.StatusOK, types.ApplicationLicense{}))
 		r.With(middleware.RequireVendor, middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Delete("/", deleteApplicationLicense).
+				With(option.Description("Delete an application license")).
 				With(option.Request(ApplicationLicenseRequest{}))
 			r.Put("/", updateApplicationLicense).
+				With(option.Description("Update an application license")).
 				With(option.Request(struct {
 					ApplicationLicenseRequest
 					types.ApplicationLicenseWithVersions
