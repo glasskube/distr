@@ -159,6 +159,7 @@ func ApiRouter(
 					r.Route("/files", handlers.FileRouter)
 					r.Route("/organization", handlers.OrganizationRouter)
 					r.Route("/organizations", handlers.OrganizationsRouter)
+					r.Route("/secrets", handlers.SecretsRouter)
 					r.Route("/settings", handlers.SettingsRouter)
 					r.Route("/tutorial-progress", handlers.TutorialsRouter)
 					r.Route("/user-accounts", handlers.UserAccountsRouter)

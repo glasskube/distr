@@ -1,0 +1,116 @@
+import {DatePipe} from '@angular/common';
+import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
+import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {firstValueFrom} from 'rxjs';
+import {getFormDisplayedError} from '../../util/errors';
+import {modalFlyInOut} from '../animations/modal';
+import {AuthService} from '../services/auth.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
+import {SecretsService} from '../services/secrets.service';
+import {ToastService} from '../services/toast.service';
+import {Secret} from '../types/secret';
+
+@Component({
+  selector: 'app-secrets',
+  imports: [FaIconComponent, ReactiveFormsModule, DatePipe],
+  animations: [modalFlyInOut],
+  templateUrl: './secrets.component.html',
+})
+export class SecretsComponent {
+  public readonly secrets = input.required<Secret[]>();
+  public readonly refresh = output();
+
+  protected readonly auth = inject(AuthService);
+  private readonly overlay = inject(OverlayService);
+  private readonly secretsService = inject(SecretsService);
+  private readonly toast = inject(ToastService);
+  private readonly fb = inject(FormBuilder).nonNullable;
+
+  protected readonly faMagnifyingGlass = faMagnifyingGlass;
+  protected readonly faXmark = faXmark;
+  protected readonly faPlus = faPlus;
+  protected readonly faTrash = faTrash;
+  protected readonly faPen = faPen;
+
+  private readonly createUpdateDialog = viewChild.required<TemplateRef<unknown>>('createUpdateDialog');
+  private dialogRef?: DialogRef;
+
+  protected readonly filterForm = this.fb.group({
+    search: '',
+  });
+
+  protected readonly createUpdateForm = this.fb.group({
+    id: '',
+    key: ['', [Validators.required]],
+    value: ['', [Validators.required]],
+  });
+
+  protected closeDialog() {
+    this.createUpdateForm.reset();
+    this.dialogRef?.close();
+  }
+
+  protected showDialog(existingSecret?: Secret) {
+    this.closeDialog();
+
+    if (existingSecret) {
+      this.createUpdateForm.setValue({
+        id: existingSecret.id,
+        key: existingSecret.key,
+        value: '',
+      });
+    }
+
+    this.dialogRef = this.overlay.showModal(this.createUpdateDialog());
+  }
+
+  protected createSecret() {
+    this.createUpdateForm.markAllAsTouched();
+    if (!this.createUpdateForm.valid) return;
+
+    const {key, value} = this.createUpdateForm.value;
+    this.secretsService.put(key!, value!).subscribe({
+      next: () => {
+        if (this.createUpdateForm.value.id) {
+          this.toast.success('Secret value has been updated. Restart workloads manually to apply changes.');
+        } else {
+          this.toast.success('Secret has been created.');
+        }
+        this.refresh.emit();
+        this.closeDialog();
+      },
+      error: (error) => {
+        const msg = getFormDisplayedError(error);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      },
+    });
+  }
+
+  protected async deleteSecret(secret: Secret) {
+    if (
+      await firstValueFrom(
+        this.overlay.confirm({
+          message: {
+            message: 'Do you really want to delete this secret?',
+            warning: {message: 'This action may affect workloads referencing this secret.'},
+          },
+          requiredConfirmInputText: secret.key,
+        })
+      )
+    ) {
+      try {
+        await firstValueFrom(this.secretsService.delete(secret.key));
+        this.refresh.emit();
+      } catch (error) {
+        const msg = getFormDisplayedError(error);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      }
+    }
+  }
+}
