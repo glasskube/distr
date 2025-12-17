@@ -16,11 +16,17 @@ type SecretWithoutValue struct {
 	Key                    string             `json:"key"`
 }
 
-type CreateUpdateSecretRequest struct {
-	Key   string `json:"key" path:"key"`
-	Value string `json:"value"`
+type CreateSecretRequest struct {
+	Key                    string     `json:"key"`
+	Value                  string     `json:"value"`
+	CustomerOrganizationID *uuid.UUID `json:"customerOrganizationId,omitempty"`
+}
+
+type UpdateSecretRequest struct {
+	ID    uuid.UUID `path:"secretId"`
+	Value string    `json:"value"`
 }
 
 type DeleteSecretRequest struct {
-	Key string `json:"key" path:"key"`
+	ID uuid.UUID `path:"secretId"`
 }

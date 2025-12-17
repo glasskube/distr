@@ -13,11 +13,15 @@ export class SecretsService {
     return this.httpClient.get<Secret[]>(baseUrl);
   }
 
-  public put(key: string, value: string): Observable<Secret> {
-    return this.httpClient.put<Secret>(`${baseUrl}/${key}`, {value});
+  public create(key: string, value: string, customerOrganizationId?: string): Observable<Secret> {
+    return this.httpClient.post<Secret>(baseUrl, {key, value, customerOrganizationId});
   }
 
-  public delete(key: string): Observable<void> {
-    return this.httpClient.delete<void>(`${baseUrl}/${key}`);
+  public update(id: string, value: string): Observable<Secret> {
+    return this.httpClient.put<Secret>(`${baseUrl}/${id}`, {value});
+  }
+
+  public delete(id: string): Observable<void> {
+    return this.httpClient.delete<void>(`${baseUrl}/${id}`);
   }
 }

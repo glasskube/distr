@@ -1,6 +1,8 @@
 import {DatePipe} from '@angular/common';
-import {Component, inject, input, output, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, inject, input, output, TemplateRef, viewChild} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom} from 'rxjs';
@@ -27,6 +29,11 @@ export class SecretsComponent {
   private readonly secretsService = inject(SecretsService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder).nonNullable;
+
+  private readonly routeParams = toSignal(inject(ActivatedRoute).params);
+  protected readonly customerOrganizationId = computed(
+    () => this.routeParams()?.['customerOrganizationId'] as string | undefined
+  );
 
   protected readonly faMagnifyingGlass = faMagnifyingGlass;
   protected readonly faXmark = faXmark;
@@ -70,24 +77,37 @@ export class SecretsComponent {
     this.createUpdateForm.markAllAsTouched();
     if (!this.createUpdateForm.valid) return;
 
-    const {key, value} = this.createUpdateForm.value;
-    this.secretsService.put(key!, value!).subscribe({
-      next: () => {
-        if (this.createUpdateForm.value.id) {
-          this.toast.success('Secret value has been updated. Restart workloads manually to apply changes.');
-        } else {
+    const {id, key, value} = this.createUpdateForm.value;
+
+    if (!id) {
+      this.secretsService.create(key!, value!, this.customerOrganizationId()).subscribe({
+        next: () => {
           this.toast.success('Secret has been created.');
-        }
-        this.refresh.emit();
-        this.closeDialog();
-      },
-      error: (error) => {
-        const msg = getFormDisplayedError(error);
-        if (msg) {
-          this.toast.error(msg);
-        }
-      },
-    });
+          this.refresh.emit();
+          this.closeDialog();
+        },
+        error: (error) => {
+          const msg = getFormDisplayedError(error);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
+    } else {
+      this.secretsService.update(id, value!).subscribe({
+        next: () => {
+          this.toast.success('Secret value has been updated. Restart workloads manually to apply changes.');
+          this.refresh.emit();
+          this.closeDialog();
+        },
+        error: (error) => {
+          const msg = getFormDisplayedError(error);
+          if (msg) {
+            this.toast.error(msg);
+          }
+        },
+      });
+    }
   }
 
   protected async deleteSecret(secret: Secret) {
@@ -103,7 +123,7 @@ export class SecretsComponent {
       )
     ) {
       try {
-        await firstValueFrom(this.secretsService.delete(secret.key));
+        await firstValueFrom(this.secretsService.delete(secret.id));
         this.refresh.emit();
       } catch (error) {
         const msg = getFormDisplayedError(error);
