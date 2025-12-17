@@ -18,7 +18,8 @@ import (
 const (
 	applicationOutputExpr        = `a.id, a.created_at, a.organization_id, a.name, a.type, a.image_id`
 	applicationVersionOutputExpr = `av.id, av.created_at, av.archived_at, av.name, av.link, av.application_id,
-		av.chart_type, av.chart_name, av.chart_url, av.chart_version, av.values_file_data, av.template_file_data, av.compose_file_data`
+		av.chart_type, av.chart_name, av.chart_url, av.chart_version, av.values_file_data, av.template_file_data,
+	 av.compose_file_data`
 	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
 			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.link, av.application_id,

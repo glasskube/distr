@@ -29,6 +29,7 @@ export interface DeploymentWithLatestRevision extends Deployment {
   applicationName: string;
   applicationVersionId: string;
   applicationVersionName: string;
+  applicationLink: string;
   applicationLicenseId?: string;
   valuesYaml?: string;
   envFileData?: string;
