@@ -5,7 +5,7 @@ golangci-lint = "2.7.2"
 helm-docs = "1.14.2"
 watchexec = "2.3.2"
 pnpm = "10.26.0"
-stripe = "1.33.2"
+stripe = "1.34.0"
 
 [env]
 _.source = ['hack/current-commit.sh']
