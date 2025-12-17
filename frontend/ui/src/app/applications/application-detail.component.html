@@ -337,13 +337,9 @@
                   } @else if (application.type === 'kubernetes') {
                     <span ngNonBindable
                       >user provided values (<code>{{ .Values.app.ingress.hostname }}</code
-                      >)
-                    </span>
+                      >).</span
+                    >
                   }
-                  <span ngNonBindable>
-                    or secrets (<code>{{ .Secrets.SECRET_KEY }}</code
-                    >).</span
-                  >
                 </div>
 
                 @if (application.type === 'kubernetes') {
