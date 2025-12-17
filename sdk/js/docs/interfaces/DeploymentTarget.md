@@ -46,16 +46,6 @@
 
 ---
 
-### ~~deployment?~~
-
-> `optional` **deployment**: [`DeploymentWithLatestRevision`](DeploymentWithLatestRevision.md)
-
-#### Deprecated
-
-This property will be removed in v2. Please consider using `deployments` instead.
-
----
-
 ### deployments
 
 > **deployments**: [`DeploymentWithLatestRevision`](DeploymentWithLatestRevision.md)[]

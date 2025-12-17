@@ -24,6 +24,12 @@
 
 ---
 
+### applicationLink
+
+> **applicationLink**: `string`
+
+---
+
 ### applicationName
 
 > **applicationName**: `string`
