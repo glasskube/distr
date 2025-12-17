@@ -132,9 +132,7 @@ func GetDeploymentsForDeploymentTarget(
 		return nil, fmt.Errorf("failed to scan Deployments: %w", err)
 	}
 
-	if err := TemplateDeploymentLinks(result); err != nil {
-		return nil, fmt.Errorf("failed to template deployment links: %w", err)
-	}
+	TemplateDeploymentLinks(result)
 
 	return result, nil
 }
