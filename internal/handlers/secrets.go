@@ -74,6 +74,11 @@ func createSecretHandler() http.HandlerFunc {
 			return
 		}
 
+		if body.Key == "" {
+			http.Error(w, "key is required", http.StatusBadRequest)
+			return
+		}
+
 		if customerOrganizationID := auth.CurrentCustomerOrgID(); customerOrganizationID != nil {
 			if body.CustomerOrganizationID != nil && *body.CustomerOrganizationID != *customerOrganizationID {
 				http.Error(w, "customer organization ID mismatch", http.StatusBadRequest)
@@ -92,7 +97,7 @@ func createSecretHandler() http.HandlerFunc {
 		)
 
 		if err != nil {
-			internalctx.GetLogger(ctx).Error("failed to create/update secret", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to create secret", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else {
@@ -138,7 +143,7 @@ func updateSecretHandler() http.HandlerFunc {
 		)
 
 		if err != nil {
-			internalctx.GetLogger(ctx).Error("failed to create/update secret", zap.Error(err))
+			internalctx.GetLogger(ctx).Error("failed to update secret", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else {

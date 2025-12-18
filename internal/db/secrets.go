@@ -42,7 +42,8 @@ func GetSecrets(
 		LEFT JOIN UserAccount u
 			ON s.updated_by_useraccount_id = u.id
 		WHERE s.organization_id = @organization_id
-			AND (@is_vendor OR s.customer_organization_id = @customer_organization_id)`,
+			AND (@is_vendor OR s.customer_organization_id = @customer_organization_id)
+		ORDER BY s.name ASC`,
 		pgx.NamedArgs{
 			"organization_id":          organizationID,
 			"customer_organization_id": customerOrganizationID,

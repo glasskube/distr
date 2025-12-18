@@ -8,6 +8,7 @@ import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/f
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {modalFlyInOut} from '../animations/modal';
+import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SecretsService} from '../services/secrets.service';
@@ -16,7 +17,7 @@ import {Secret} from '../types/secret';
 
 @Component({
   selector: 'app-secrets',
-  imports: [FaIconComponent, ReactiveFormsModule, DatePipe],
+  imports: [FaIconComponent, ReactiveFormsModule, DatePipe, AutotrimDirective],
   animations: [modalFlyInOut],
   templateUrl: './secrets.component.html',
 })
@@ -49,8 +50,8 @@ export class SecretsComponent {
   });
 
   protected readonly createUpdateForm = this.fb.group({
-    id: this.fb.control({value: '', disabled: true}),
-    key: this.fb.control('', [Validators.required]),
+    id: this.fb.control(''),
+    key: this.fb.control('', [Validators.required, Validators.minLength(1)]),
     value: this.fb.control('', [Validators.required]),
   });
 
