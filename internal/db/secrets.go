@@ -155,7 +155,7 @@ func UpdateSecret(ctx context.Context,
 				AND (@is_vendor OR customer_organization_id = @customer_organization_id)
 			RETURNING *
 		)
-		SELECT `+secretWithUpdatedByOutputExpr+` FROM inserted s
+		SELECT `+secretWithUpdatedByOutputExpr+` FROM updated s
 		LEFT JOIN UserAccount u
 			ON s.updated_by_useraccount_id = u.id`,
 		pgx.NamedArgs{
