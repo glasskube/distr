@@ -278,8 +278,6 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
 
       const customerOrgId = this.selectedCustomerOrganization()?.id;
 
-      console.log(customerOrgId);
-
       // Create deployment target
       const created = await firstValueFrom(
         this.deploymentTargets.create({
