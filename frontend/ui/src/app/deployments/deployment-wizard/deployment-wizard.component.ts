@@ -140,20 +140,18 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
     return this.auth.isVendor();
   });
 
-  protected readonly selectedDeploymentType = computed<DeploymentType | undefined>(() => {
+  protected readonly selectedDeploymentType = computed<DeploymentType>(() => {
     const app = this.selectedApplication();
-    return app?.type;
+    return app?.type ?? 'docker';
   });
 
   // Initial data for deployment form
   protected readonly deploymentFormInitialData = computed(() => {
     const app = this.selectedApplication();
-    const deploymentTarget = this.selectedDeploymentTarget();
-    if (!app || !deploymentTarget) {
+    if (!app) {
       return null;
     }
     return {
-      deploymentTargetId: deploymentTarget.id!,
       applicationId: app.id!,
     };
   });
@@ -265,7 +263,15 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
 
   private async continueFromDeploymentTargetStep() {
     this.deploymentTargetForm.markAllAsTouched();
-    if (!this.deploymentTargetForm.valid || this.loading) {
+    if (!this.deploymentTargetForm.valid) {
+      return;
+    }
+    this.nextStep();
+  }
+
+  private async continueFromApplicationConfigStep() {
+    this.applicationConfigForm.markAllAsTouched();
+    if (!this.applicationConfigForm.valid || this.loading) {
       return;
     }
 
@@ -292,6 +298,18 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
       );
 
       this.selectedDeploymentTarget.set(created as DeploymentTarget);
+
+      // Deploy the application
+      const deploymentFormData = this.applicationConfigForm.value.deploymentFormData;
+
+      if (!deploymentFormData) {
+        throw new Error('Missing deployment configuration');
+      }
+
+      const deployment = mapToDeploymentRequest(deploymentFormData, created.id!);
+
+      await firstValueFrom(this.deploymentTargets.deploy(deployment));
+      this.toast.success('Deployment created successfully');
       this.nextStep();
     } catch (e) {
       const msg = getFormDisplayedError(e);
@@ -303,40 +321,8 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async continueFromApplicationConfigStep() {
-    this.applicationConfigForm.markAllAsTouched();
-    if (!this.applicationConfigForm.valid) {
-      return;
-    }
-    this.nextStep();
-  }
-
   private async continueFromConnectStep() {
-    if (this.loading) {
-      return;
-    }
-
-    try {
-      this.loading = true;
-      const deploymentFormData = this.applicationConfigForm.value.deploymentFormData;
-
-      if (!deploymentFormData) {
-        throw new Error('Missing deployment configuration');
-      }
-
-      const deployment = mapToDeploymentRequest(deploymentFormData);
-
-      await firstValueFrom(this.deploymentTargets.deploy(deployment));
-      this.toast.success('Deployment created successfully');
-      this.close();
-    } catch (e) {
-      const msg = getFormDisplayedError(e);
-      if (msg) {
-        this.toast.error(msg);
-      }
-    } finally {
-      this.loading = false;
-    }
+    this.close();
   }
 
   close() {

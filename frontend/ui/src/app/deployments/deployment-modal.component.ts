@@ -59,7 +59,11 @@ import {
               </div>
             </div>
           }
-          <app-deployment-form [formControl]="deployForm"></app-deployment-form>
+          <app-deployment-form
+            [formControl]="deployForm"
+            [deploymentType]="deploymentTarget().type"
+            [customerOrganizationId]="deploymentTarget().customerOrganization?.id ?? ''"
+            [deploymentTargetName]="deploymentTarget().name"></app-deployment-form>
           <button
             type="submit"
             [disabled]="loading()"
@@ -94,7 +98,6 @@ export class DeploymentModalComponent {
       const deployment = this.deployment();
       this.deployForm.reset({
         deploymentId: deployment?.id,
-        deploymentTargetId: this.deploymentTarget().id,
         applicationId: deployment?.applicationId,
         applicationVersionId: this.versionId() ?? deployment?.applicationVersionId,
         applicationLicenseId: deployment?.applicationLicenseId,
@@ -110,7 +113,7 @@ export class DeploymentModalComponent {
     this.deployForm.markAllAsTouched();
     if (this.deployForm.valid) {
       this.loading.set(true);
-      const deployment = mapToDeploymentRequest(this.deployForm.value!);
+      const deployment = mapToDeploymentRequest(this.deployForm.value!, this.deploymentTarget().id!);
       try {
         await firstValueFrom(this.deploymentTargets.deploy(deployment));
         this.toast.success('Deployment saved successfully');

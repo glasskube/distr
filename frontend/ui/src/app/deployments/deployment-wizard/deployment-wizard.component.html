@@ -283,6 +283,9 @@
                 @if (deploymentFormInitialData()) {
                   <app-deployment-form
                     [disableApplicationSelect]="true"
+                    [deploymentType]="selectedDeploymentType()"
+                    [customerOrganizationId]="selectedCustomerOrganization()?.id ?? ''"
+                    [deploymentTargetName]="deploymentTargetForm.value.name ?? ''"
                     [formControl]="applicationConfigForm.controls.deploymentFormData"
                     [ngModel]="deploymentFormInitialData()">
                   </app-deployment-form>
@@ -291,25 +294,14 @@
             </div>
           </cdk-step>
 
-          <!-- Step 5: Connect Instructions -->
+          <!-- Step 5: Success Page -->
           <cdk-step [stepControl]="connectForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
-                <h3 class="font-normal text-gray-900 dark:text-white">
-                  @if (selectedDeploymentTarget()?.type === 'docker') {
-                    Install and Connect Agent
-                  } @else {
-                    Deploy Agent in Cluster
-                  }
-                </h3>
+                <h3 class="font-normal text-gray-900 dark:text-white">Deployment Created Successfully</h3>
                 <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                  @if (selectedDeploymentTarget()?.type === 'docker') {
-                    Connect to your target server (e.g., via SSH) and execute the following command to install the Distr
-                    Agent:
-                  } @else {
-                    With <code>kubectl</code> installed and configured for the
-                    <strong>{{ selectedDeploymentTarget()?.namespace }}</strong> namespace, run the following command:
-                  }
+                  Your deployment has been created successfully. To deploy it, please copy and paste the following
+                  command:
                 </p>
                 @if (selectedDeploymentTarget(); as dt) {
                   <app-connect-instructions [deploymentTarget]="dt"></app-connect-instructions>
