@@ -9,20 +9,20 @@
       type="button"
       (click)="close()"
       class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-      <fa-icon [icon]="xmarkIcon"></fa-icon>
+      <fa-icon [icon]="faXmark"></fa-icon>
       <span class="sr-only">Close modal</span>
     </button>
   </div>
 
   <!-- Modal body -->
-  <div class="p-4 md:p-5 space-y-4 w-full">
+  <div class="p-4 space-y-4 w-full">
     <section class="antialiased">
-      <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
+      <div class="mx-auto">
         <app-deployment-wizard-stepper
           #stepper
           (attemptContinue)="attemptContinue()"
           [showCustomerStep]="showCustomerStep()"
-          class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          class="mx-auto max-w-5xl space-y-6">
           <!-- Step 1: Customer Selection (Conditional - Only for Vendors) -->
           @if (showCustomerStep()) {
             <cdk-step [stepControl]="customerForm">
@@ -33,7 +33,7 @@
                     Create the deployment in your vendor organization or choose a customer.
                   </p>
 
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <div class="grid grid-cols-4 gap-3">
                     <!-- Vendor Only Option -->
                     @if (vendorOrganization$ | async; as vendorOrg) {
                       <button
@@ -66,7 +66,7 @@
                         <!-- Selection Indicator -->
                         @if (!customerForm.value.customerOrganizationId) {
                           <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
-                            <fa-icon [icon]="checkCircleIcon" class="w-6 h-6"></fa-icon>
+                            <fa-icon [icon]="faCheckCircle" class="w-6 h-6"></fa-icon>
                           </div>
                         }
                       </button>
@@ -94,9 +94,7 @@
                         } @else {
                           <div
                             class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                            <fa-icon
-                              [icon]="buildingUserIcon"
-                              class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
+                            <fa-icon [icon]="faBuildingUser" class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
                           </div>
                         }
 
@@ -113,7 +111,7 @@
                         <!-- Selection Indicator -->
                         @if (customerForm.value.customerOrganizationId === customer.id) {
                           <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
-                            <fa-icon [icon]="checkCircleIcon" class="w-6 h-6"></fa-icon>
+                            <fa-icon [icon]="faCheckCircle" class="w-6 h-6"></fa-icon>
                           </div>
                         }
                       </button>
@@ -150,7 +148,7 @@
                       } @else {
                         <div
                           class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                          <fa-icon [icon]="shipIcon" class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
+                          <fa-icon [icon]="faShip" class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
                         </div>
                       }
 
@@ -171,10 +169,10 @@
                         [class.dark:bg-purple-900]="app.type === 'kubernetes'"
                         [class.dark:text-purple-300]="app.type === 'kubernetes'">
                         @if (app.type === 'docker') {
-                          <fa-icon [icon]="dockerIcon" class="mr-1"></fa-icon>
+                          <fa-icon [icon]="faDocker" class="mr-1"></fa-icon>
                           Docker
                         } @else {
-                          <fa-icon [icon]="kubernetesIcon" class="mr-1"></fa-icon>
+                          <fa-icon [icon]="faDharmachakra" class="mr-1"></fa-icon>
                           Kubernetes
                         }
                       </div>
@@ -187,7 +185,7 @@
                       <!-- Selection Indicator -->
                       @if (applicationForm.value.applicationId === app.id) {
                         <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
-                          <fa-icon [icon]="checkCircleIcon" class="w-6 h-6"></fa-icon>
+                          <fa-icon [icon]="faCheckCircle" class="w-6 h-6"></fa-icon>
                         </div>
                       }
                     </button>

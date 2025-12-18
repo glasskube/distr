@@ -3,9 +3,10 @@ import {NgTemplateOutlet} from '@angular/common';
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faDocker, faServicestack} from '@fortawesome/free-brands-svg-icons';
+import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {
   faBuildingUser,
+  faCheckCircle,
   faCog,
   faDharmachakra,
   faNetworkWired,
@@ -20,12 +21,14 @@ import {
   imports: [CdkStepperModule, ReactiveFormsModule, FaIconComponent, NgTemplateOutlet],
 })
 export class DeploymentWizardStepperComponent extends CdkStepper {
-  protected readonly dockerIcon = faDocker;
-  protected readonly kubernetesIcon = faDharmachakra;
-  protected readonly shipIcon = faShip;
-  protected readonly networkIcon = faNetworkWired;
-  protected readonly buildingUserIcon = faBuildingUser;
-  protected readonly cogIcon = faCog;
+  protected readonly faDocker = faDocker;
+  protected readonly faDharmachakra = faDharmachakra;
+  protected readonly faShip = faShip;
+  protected readonly faServer = faServer;
+  protected readonly faNetworkWired = faNetworkWired;
+  protected readonly faBuildingUser = faBuildingUser;
+  protected readonly faCog = faCog;
+  protected readonly faCheckCircle = faCheckCircle;
 
   @Input() showCustomerStep = false;
   @Output('attemptContinue') attemptContinueOutput: EventEmitter<void> = new EventEmitter();

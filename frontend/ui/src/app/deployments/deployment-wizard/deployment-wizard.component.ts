@@ -50,12 +50,12 @@ import {DeploymentWizardStepperComponent} from './deployment-wizard-stepper.comp
   animations: [modalFlyInOut],
 })
 export class DeploymentWizardComponent implements OnInit, OnDestroy {
-  protected readonly xmarkIcon = faXmark;
-  protected readonly shipIcon = faShip;
-  protected readonly dockerIcon = faDocker;
-  protected readonly kubernetesIcon = faDharmachakra;
-  protected readonly buildingUserIcon = faBuildingUser;
-  protected readonly checkCircleIcon = faCheckCircle;
+  protected readonly faXmark = faXmark;
+  protected readonly faShip = faShip;
+  protected readonly faDocker = faDocker;
+  protected readonly faDharmachakra = faDharmachakra;
+  protected readonly faBuildingUser = faBuildingUser;
+  protected readonly faCheckCircle = faCheckCircle;
 
   private readonly toast = inject(ToastService);
   private readonly applications = inject(ApplicationsService);

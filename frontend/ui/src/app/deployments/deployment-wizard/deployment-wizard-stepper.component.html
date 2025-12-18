@@ -1,38 +1,38 @@
-<div class="sm:max-w-180">
-  <div class="space-y-6 sm:space-y-8">
+<div class="sm:max-w-240">
+  <div class="space-y-6">
     <ol
-      class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800 sm:justify-center md:flex-row md:items-center lg:gap-6">
+      class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 px-8 dark:border-gray-700 dark:bg-gray-800 justify-center flex-row items-center">
       <!-- Step 1: Customer (Conditional) -->
       @if (showCustomerStep) {
         <li
-          class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
+          class="flex items-center gap-2 flex-1 flex-col"
           [class.text-gray-500]="!isCustomerStep()"
           [class.dark:text-gray-400]="!isCustomerStep()"
           [class.text-blue-700]="isCustomerStep()"
           [class.dark:text-blue-600]="isCustomerStep()">
-          <fa-icon [icon]="buildingUserIcon"></fa-icon>
+          <fa-icon [icon]="faBuildingUser"></fa-icon>
           <p class="text-sm font-medium leading-tight">Customer</p>
         </li>
 
-        <div class="hidden h-px w-2 shrink-0 bg-gray-200 dark:bg-gray-700 md:block lg:w-8"></div>
+        <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
       }
 
       <!-- Step 2: Application -->
       <li
-        class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
+        class="flex items-center gap-2 flex-1 flex-col"
         [class.text-gray-500]="!isApplicationStep()"
         [class.dark:text-gray-400]="!isApplicationStep()"
         [class.text-blue-700]="isApplicationStep()"
         [class.dark:text-blue-600]="isApplicationStep()">
-        <fa-icon [icon]="shipIcon"></fa-icon>
+        <fa-icon [icon]="faShip"></fa-icon>
         <p class="text-sm font-medium leading-tight">Application</p>
       </li>
 
-      <div class="hidden h-px w-2 shrink-0 bg-gray-200 dark:bg-gray-700 md:block lg:w-8"></div>
+      <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
 
       <!-- Step 3: Deployment Config -->
       <li
-        class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
+        class="flex items-center gap-2 flex-1 flex-col"
         [class.text-gray-500]="!isTargetStep()"
         [class.dark:text-gray-400]="!isTargetStep()"
         [class.text-blue-700]="isTargetStep()"
@@ -41,29 +41,29 @@
         <p class="text-sm font-medium leading-tight whitespace-nowrap">Deployment Config</p>
       </li>
 
-      <div class="hidden h-px w-2 shrink-0 bg-gray-200 dark:bg-gray-700 md:block lg:w-8"></div>
+      <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
 
       <!-- Step 4: App Config -->
       <li
-        class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
+        class="flex items-center gap-2 flex-1 flex-col"
         [class.text-gray-500]="!isConfigurationStep()"
         [class.dark:text-gray-400]="!isConfigurationStep()"
         [class.text-blue-700]="isConfigurationStep()"
         [class.dark:text-blue-600]="isConfigurationStep()">
-        <fa-icon [icon]="cogIcon"></fa-icon>
+        <fa-icon [icon]="faCog"></fa-icon>
         <p class="text-sm font-medium leading-tight whitespace-nowrap">App Config</p>
       </li>
 
-      <div class="hidden h-px w-2 shrink-0 bg-gray-200 dark:bg-gray-700 md:block lg:w-8"></div>
+      <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
 
       <!-- Step 5: Deploy -->
       <li
-        class="flex items-center gap-2 md:flex-1 md:flex-col md:gap-1.5 lg:flex-none"
+        class="flex items-center gap-2 flex-1 flex-col"
         [class.text-gray-500]="!isConnectStep()"
         [class.dark:text-gray-400]="!isConnectStep()"
         [class.text-blue-700]="isConnectStep()"
         [class.dark:text-blue-600]="isConnectStep()">
-        <fa-icon [icon]="networkIcon"></fa-icon>
+        <fa-icon [icon]="faNetworkWired"></fa-icon>
         <p class="text-sm font-medium leading-tight">Deploy</p>
       </li>
     </ol>
