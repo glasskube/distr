@@ -8,7 +8,6 @@ import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {faBuildingUser, faCheckCircle, faDharmachakra, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
   Application,
-  ApplicationVersion,
   CustomerOrganization,
   DeploymentTarget,
   DeploymentTargetScope,
@@ -111,8 +110,6 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   protected selectedApplication = signal<Application | undefined>(undefined);
   protected selectedCustomerOrganization = signal<CustomerOrganization | undefined>(undefined);
   protected selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
-  protected availableVersions = signal<ApplicationVersion[]>([]);
-  protected filteredLicenses = signal<any[]>([]);
 
   // Filter applications based on customer licenses
   protected readonly filteredApplications$ = combineLatest([
@@ -164,11 +161,7 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   private readonly isLicensingEnabled = toSignal(this.featureFlags.isLicensingEnabled$, {initialValue: false});
 
   protected readonly showLicenseControl = computed(() => {
-    return (
-      this.selectedCustomerOrganization() !== undefined &&
-      this.filteredLicenses().length > 0 &&
-      this.isLicensingEnabled()
-    );
+    return this.selectedCustomerOrganization() !== undefined && this.isLicensingEnabled();
   });
 
   protected getVendorLogoUrl(branding: {logo?: string; logoContentType?: string} | null): string {
