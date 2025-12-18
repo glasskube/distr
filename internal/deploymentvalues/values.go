@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/glasskube/distr/internal/types"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type ValuesYAMLAccessor interface {
