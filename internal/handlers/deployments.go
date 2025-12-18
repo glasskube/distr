@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -513,13 +514,26 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 
 		SetFileDownloadHeaders(w, filename)
 
+		var secrets []types.SecretWithUpdatedBy
+		if dt, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if secrets, err = db.GetSecrets(ctx, dt.OrganizationID, dt.CustomerOrganizationID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
 		err := db.GetDeploymentLogRecordsForExport(
 			ctx, deployment.ID, resource, limit,
 			func(record types.DeploymentLogRecord) error {
 				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.Timestamp.Format(time.RFC3339),
 					record.Severity,
-					record.Body)
+					redactSecrets(record.Body, secrets))
 				return err
 			},
 		)
@@ -558,6 +572,20 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
+		var secrets []types.SecretWithUpdatedBy
+		if dt, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if secrets, err = db.GetSecrets(ctx, dt.OrganizationID, dt.CustomerOrganizationID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
 		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before, after); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get log records", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -571,12 +599,19 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 					Resource:             record.Resource,
 					Timestamp:            record.Timestamp,
 					Severity:             record.Severity,
-					Body:                 record.Body,
+					Body:                 redactSecrets(record.Body, secrets),
 				}
 			}
 			RespondJSON(w, response)
 		}
 	}
+}
+
+func redactSecrets(input string, secrets []types.SecretWithUpdatedBy) string {
+	for _, secret := range secrets {
+		input = strings.ReplaceAll(input, secret.Value, "********")
+	}
+	return input
 }
 
 func deploymentMiddleware(next http.Handler) http.Handler {
