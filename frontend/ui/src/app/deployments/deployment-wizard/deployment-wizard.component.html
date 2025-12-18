@@ -4,7 +4,7 @@
   class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow-sm dark:bg-gray-900">
   <!-- Modal header -->
   <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Install a new Agent</h2>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create New Deployment</h2>
     <button
       type="button"
       (click)="close()"
@@ -13,6 +13,7 @@
       <span class="sr-only">Close modal</span>
     </button>
   </div>
+
   <!-- Modal body -->
   <div class="p-4 md:p-5 space-y-4 w-full">
     <section class="antialiased">
@@ -20,102 +21,213 @@
         <app-deployment-wizard-stepper
           #stepper
           (attemptContinue)="attemptContinue()"
+          [showCustomerStep]="showCustomerStep()"
           class="mx-auto max-w-5xl space-y-6 lg:space-y-8">
+          <!-- Step 1: Customer Selection (Conditional - Only for Vendors) -->
+          @if (showCustomerStep()) {
+            <cdk-step [stepControl]="customerForm">
+              <div class="space-y-6 mt-4">
+                <div class="space-y-4 w-full">
+                  <h3 class="font-normal text-gray-900 dark:text-white">Select Customer</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Create the deployment in your vendor organization or choose a customer.
+                  </p>
+
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <!-- Vendor Only Option -->
+                    @if (vendorOrganization$ | async; as vendorOrg) {
+                      <button
+                        type="button"
+                        (click)="selectCustomer(null)"
+                        class="relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:shadow-md"
+                        [class.border-primary-600]="!customerForm.value.customerOrganizationId"
+                        [class.bg-primary-50]="!customerForm.value.customerOrganizationId"
+                        [class.dark:bg-primary-900]="!customerForm.value.customerOrganizationId"
+                        [class.border-gray-200]="customerForm.value.customerOrganizationId"
+                        [class.bg-white]="customerForm.value.customerOrganizationId"
+                        [class.dark:border-gray-700]="customerForm.value.customerOrganizationId"
+                        [class.dark:bg-gray-800]="customerForm.value.customerOrganizationId">
+                        <!-- Vendor Logo -->
+                        @if (vendorBranding$ | async; as branding) {
+                          <img
+                            [src]="getVendorLogoUrl(branding)"
+                            [alt]="vendorOrg.name"
+                            class="w-12 h-12 mb-2 rounded-lg object-cover" />
+                        }
+
+                        <!-- Vendor Name -->
+                        <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
+                          {{ vendorOrg.name }}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">Internal deployment</div>
+
+                        <!-- Selection Indicator -->
+                        @if (!customerForm.value.customerOrganizationId) {
+                          <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
+                            <fa-icon [icon]="checkCircleIcon" class="w-6 h-6"></fa-icon>
+                          </div>
+                        }
+                      </button>
+                    }
+
+                    <!-- Customer Options -->
+                    @for (customer of customerOrganizations$ | async; track customer.id) {
+                      <button
+                        type="button"
+                        (click)="selectCustomer(customer)"
+                        class="relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:shadow-md"
+                        [class.border-primary-600]="customerForm.value.customerOrganizationId === customer.id"
+                        [class.bg-primary-50]="customerForm.value.customerOrganizationId === customer.id"
+                        [class.dark:bg-primary-900]="customerForm.value.customerOrganizationId === customer.id"
+                        [class.border-gray-200]="customerForm.value.customerOrganizationId !== customer.id"
+                        [class.bg-white]="customerForm.value.customerOrganizationId !== customer.id"
+                        [class.dark:border-gray-700]="customerForm.value.customerOrganizationId !== customer.id"
+                        [class.dark:bg-gray-800]="customerForm.value.customerOrganizationId !== customer.id">
+                        <!-- Customer Logo -->
+                        @if (customer.imageId) {
+                          <img
+                            [src]="customer.imageUrl | secureImage | async"
+                            [alt]="customer.name"
+                            class="w-12 h-12 mb-2 rounded-lg object-cover" />
+                        } @else {
+                          <div
+                            class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <fa-icon
+                              [icon]="buildingUserIcon"
+                              class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
+                          </div>
+                        }
+
+                        <!-- Customer Name -->
+                        <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
+                          {{ customer.name }}
+                        </div>
+
+                        <!-- Customer Stats -->
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                          {{ customer.userCount }} users · {{ customer.deploymentTargetCount }} deployments
+                        </div>
+
+                        <!-- Selection Indicator -->
+                        @if (customerForm.value.customerOrganizationId === customer.id) {
+                          <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
+                            <fa-icon [icon]="checkCircleIcon" class="w-6 h-6"></fa-icon>
+                          </div>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </cdk-step>
+          }
+
+          <!-- Step 2: Application Selection -->
+          <cdk-step [stepControl]="applicationForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                <h3 class="font-normal text-gray-900 dark:text-white">Select Application</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Choose the application you want to deploy</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  @for (app of filteredApplications$ | async; track app.id) {
+                    <button
+                      type="button"
+                      (click)="selectApplication(app)"
+                      class="relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:shadow-md"
+                      [class.border-primary-600]="applicationForm.value.applicationId === app.id"
+                      [class.bg-primary-50]="applicationForm.value.applicationId === app.id"
+                      [class.dark:bg-primary-900]="applicationForm.value.applicationId === app.id"
+                      [class.border-gray-200]="applicationForm.value.applicationId !== app.id"
+                      [class.bg-white]="applicationForm.value.applicationId !== app.id"
+                      [class.dark:border-gray-700]="applicationForm.value.applicationId !== app.id"
+                      [class.dark:bg-gray-800]="applicationForm.value.applicationId !== app.id">
+                      <!-- Application Image -->
+                      @if (app.imageUrl) {
+                        <img [src]="app.imageUrl" [alt]="app.name" class="w-12 h-12 mb-2 rounded-lg object-cover" />
+                      } @else {
+                        <div
+                          class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                          <fa-icon [icon]="shipIcon" class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
+                        </div>
+                      }
+
+                      <!-- Application Name -->
+                      <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
+                        {{ app.name }}
+                      </div>
+
+                      <!-- Deployment Type Badge -->
+                      <div
+                        class="px-2 py-1 rounded-md text-xs font-medium mb-1"
+                        [class.bg-blue-100]="app.type === 'docker'"
+                        [class.text-blue-800]="app.type === 'docker'"
+                        [class.dark:bg-blue-900]="app.type === 'docker'"
+                        [class.dark:text-blue-300]="app.type === 'docker'"
+                        [class.bg-purple-100]="app.type === 'kubernetes'"
+                        [class.text-purple-800]="app.type === 'kubernetes'"
+                        [class.dark:bg-purple-900]="app.type === 'kubernetes'"
+                        [class.dark:text-purple-300]="app.type === 'kubernetes'">
+                        @if (app.type === 'docker') {
+                          <fa-icon [icon]="dockerIcon" class="mr-1"></fa-icon>
+                          Docker
+                        } @else {
+                          <fa-icon [icon]="kubernetesIcon" class="mr-1"></fa-icon>
+                          Kubernetes
+                        }
+                      </div>
+
+                      <!-- Version Count -->
+                      <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                        {{ app.versions?.length || 0 }} version{{ (app.versions?.length || 0) !== 1 ? 's' : '' }}
+                      </div>
+
+                      <!-- Selection Indicator -->
+                      @if (applicationForm.value.applicationId === app.id) {
+                        <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
+                          <fa-icon [icon]="checkCircleIcon" class="w-6 h-6"></fa-icon>
+                        </div>
+                      }
+                    </button>
+                  } @empty {
+                    <div class="col-span-2 md:col-span-3 lg:col-span-4 text-center py-8">
+                      <div class="text-gray-500 dark:text-gray-400">
+                        @if (showLicenseControl() && customerForm.value.customerOrganizationId) {
+                          <p class="text-sm font-medium mb-1">No application licenses found</p>
+                          <p class="text-xs">This customer has no licenses for any applications.</p>
+                        } @else {
+                          <p class="text-sm font-medium mb-1">No applications found</p>
+                          <p class="text-xs">There are no applications available to deploy.</p>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                @if (applicationForm.controls.applicationId.invalid && applicationForm.controls.applicationId.touched) {
+                  <p class="mt-1 text-sm text-red-600 dark:text-red-500">Please select an application.</p>
+                }
+              </div>
+            </div>
+          </cdk-step>
+
+          <!-- Step 3: Deployment Target Configuration -->
           <cdk-step [stepControl]="deploymentTargetForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4 w-full">
-                <h3 class="font-normal text-gray-900 dark:text-white">Choose Agent Type</h3>
+                <h3 class="font-normal text-gray-900 dark:text-white">Deployment Configuration</h3>
 
-                <div class="mb-2 grid grid-cols-2 gap-4">
-                  <label
-                    for="dt-type-docker"
-                    class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
-                    <div class="flex items-start">
-                      <div class="flex h-5 items-center">
-                        <input
-                          id="dt-type-docker"
-                          [formControl]="deploymentTargetForm.controls.type"
-                          aria-labelledby="dt-type-docker-label"
-                          aria-describedby="dt-type-docker-description"
-                          type="radio"
-                          name="type"
-                          value="docker"
-                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
-                      </div>
-
-                      <div class="ms-4 text-sm">
-                        <div id="dt-type-docker-label" class="font-bold leading-none text-gray-900 dark:text-white">
-                          Docker via docker-compose
-                        </div>
-                        <p
-                          id="dt-type-docker-description"
-                          class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          I already have a virtual machine running with docker and docker-composed installed.
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-
-                  <label
-                    for="dt-type-kubernetes"
-                    class="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
-                    <div class="flex items-start">
-                      <div class="flex h-5 items-center">
-                        <input
-                          id="dt-type-kubernetes"
-                          [formControl]="deploymentTargetForm.controls.type"
-                          aria-labelledby="dt-type-kubernetes-label"
-                          aria-describedby="dt-type-kubernetes-description"
-                          type="radio"
-                          name="type"
-                          value="kubernetes"
-                          class="size-4 border-gray-300 bg-gray-100 text-primary-700 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600" />
-                      </div>
-
-                      <div class="ms-4 text-sm">
-                        <div id="dt-type-kubernetes-label" class="font-bold leading-none text-gray-900 dark:text-white">
-                          Kubernetes via Helm Chart
-                        </div>
-                        <p
-                          id="dt-type-kubernetes-description"
-                          class="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">
-                          I have access to a fresh namespace in a Kubernetes cluster and have the permissions to install
-                          charts.
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-
-                  <div class="flex px-4">
-                    <div class="flex items-center h-5">
-                      <input
-                        disabled
-                        id="helper-checkbox"
-                        aria-describedby="helper-checkbox-text"
-                        type="checkbox"
-                        value=""
-                        class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    </div>
-                    <div class="ms-4 text-sm">
-                      <label for="helper-checkbox" class="text-sm font-medium text-gray-400 dark:text-gray-500">
-                        My deployment target is air-gapped or has limited internet access
-                      </label>
-                      <p id="helper-checkbox-text" class="text-xs font-normal text-gray-500 dark:text-gray-300">
-                        Air-gapped installations are not yet supported.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
+                <!-- Deployment Name -->
                 <div>
-                  <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                    Agent Name
+                  <label for="agent-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Deployment Name
                   </label>
                   <input
                     [formControl]="deploymentTargetForm.controls.name"
                     type="text"
-                    name="name"
-                    id="name"
+                    id="agent-name"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     required
                     autotrim
@@ -125,23 +237,22 @@
                   }
                 </div>
 
-                @if (deploymentTargetForm.controls.namespace.enabled) {
+                <!-- Kubernetes-specific Settings -->
+                @if (selectedDeploymentType() === 'kubernetes') {
                   <div>
-                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    <label for="namespace" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                       Kubernetes Namespace
                     </label>
                     <input
                       [formControl]="deploymentTargetForm.controls.namespace"
                       type="text"
-                      name="name"
-                      id="name"
+                      id="namespace"
                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       required
                       autotrim
                       autocomplete="off" />
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Please enter the name of the namespace where the agent and application will be deployed inside
-                      your Kubernetes cluster.
+                      The namespace where the agent and application will be deployed
                     </div>
                     @if (
                       deploymentTargetForm.controls.namespace.invalid && deploymentTargetForm.controls.namespace.touched
@@ -151,66 +262,68 @@
                       </p>
                     }
                   </div>
-                }
 
-                @if (deploymentTargetForm.controls.clusterScope.enabled) {
-                  <div class="flex items-center mb-1">
+                  <div class="flex items-center">
                     <input
-                      id="checked-checkbox"
+                      id="cluster-scope"
                       type="checkbox"
                       [formControl]="deploymentTargetForm.controls.clusterScope"
                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    <label for="cluster-scope" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
                       Enable cluster-scoped permissions
                     </label>
                   </div>
                   @if (!deploymentTargetForm.controls.clusterScope.value) {
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                      Note that metrics reporting will not be available for a namespace scoped agent.
+                      Note: Metrics reporting will not be available for namespace-scoped agents.
                     </p>
                   }
                 }
               </div>
             </div>
           </cdk-step>
-          <cdk-step [stepControl]="agentForm">
+
+          <!-- Step 4: Application Configuration -->
+          <cdk-step [stepControl]="applicationConfigForm">
             <div class="space-y-6 mt-4">
-              <div class="space-y-4">
-                <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                  <div>
-                    <h3 class="font-normal text-gray-900 dark:text-white">
-                      @if (selectedDeploymentTarget()?.type === 'docker') {
-                        Download and run installation agent
-                      } @else {
-                        Deploy Distr Agent in cluster
-                      }
-                    </h3>
-                    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                      @if (selectedDeploymentTarget()?.type === 'docker') {
-                        To setup this Deployment, the Distr Agent must be installed on the target server/VM. Simply
-                        connect to the target (e.g. via SSH) and execute the following:
-                      } @else {
-                        To setup this Deployment, the Distr Agent must be installed in the target cluster. With
-                        <code>kubectl</code> installed and a <code>kubeconfig</code> that allows you to deploy
-                        applications in the {{ selectedDeploymentTarget()?.namespace }} namespace, simply run:
-                      }
-                    </p>
-                    @if (selectedDeploymentTarget(); as dt) {
-                      <app-connect-instructions [deploymentTarget]="dt"></app-connect-instructions>
-                    }
-                  </div>
-                </div>
+              <div class="space-y-4 w-full">
+                <h3 class="font-normal text-gray-900 dark:text-white">Application Configuration</h3>
+
+                <!-- Deployment Form -->
+                @if (deploymentFormInitialData()) {
+                  <app-deployment-form
+                    [disableApplicationSelect]="true"
+                    [formControl]="applicationConfigForm.controls.deploymentFormData"
+                    [ngModel]="deploymentFormInitialData()">
+                  </app-deployment-form>
+                }
               </div>
             </div>
           </cdk-step>
-          <cdk-step [stepControl]="deployForm">
+
+          <!-- Step 5: Connect Instructions -->
+          <cdk-step [stepControl]="connectForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
-                <h3 class="font-normal text-gray-900 dark:text-white">Deploy</h3>
-                <app-deployment-form [formControl]="deployForm"></app-deployment-form>
-                <div class="space-y-4 sm:flex sm:space-x-4 sm:space-y-0">
-                  <div class="w-full"></div>
-                </div>
+                <h3 class="font-normal text-gray-900 dark:text-white">
+                  @if (selectedDeploymentTarget()?.type === 'docker') {
+                    Install and Connect Agent
+                  } @else {
+                    Deploy Agent in Cluster
+                  }
+                </h3>
+                <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                  @if (selectedDeploymentTarget()?.type === 'docker') {
+                    Connect to your target server (e.g., via SSH) and execute the following command to install the Distr
+                    Agent:
+                  } @else {
+                    With <code>kubectl</code> installed and configured for the
+                    <strong>{{ selectedDeploymentTarget()?.namespace }}</strong> namespace, run the following command:
+                  }
+                </p>
+                @if (selectedDeploymentTarget(); as dt) {
+                  <app-connect-instructions [deploymentTarget]="dt"></app-connect-instructions>
+                }
               </div>
             </div>
           </cdk-step>

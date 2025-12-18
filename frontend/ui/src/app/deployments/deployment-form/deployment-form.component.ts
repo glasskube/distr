@@ -1,5 +1,5 @@
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, forwardRef, inject, Injector, OnDestroy, OnInit} from '@angular/core';
+import {AfterViewInit, Component, forwardRef, inject, Injector, input, OnDestroy, OnInit} from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -79,6 +79,8 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
   templateUrl: './deployment-form.component.html',
 })
 export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy, ControlValueAccessor {
+  disableApplicationSelect = input(false);
+
   protected readonly featureFlags = inject(FeatureFlagService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
@@ -277,7 +279,9 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         this.deployForm.controls.swarmMode.disable();
         this.deployForm.controls.forceRestart.enable();
       } else {
-        this.deployForm.controls.applicationId.enable();
+        if (!this.disableApplicationSelect()) {
+          this.deployForm.controls.applicationId.enable();
+        }
         this.deployForm.controls.swarmMode.enable();
         this.deployForm.controls.forceRestart.disable();
       }
@@ -360,6 +364,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     // This is needed because the first value could be missed otherwise
     // TODO: Find a better solution for this
     this.applicationLicenseId$.pipe(takeUntil(this.destroyed$)).subscribe();
+
+    // Disable application selector if requested
+    if (this.disableApplicationSelect()) {
+      this.deployForm.controls.applicationId.disable();
+    }
   }
 
   ngAfterViewInit(): void {

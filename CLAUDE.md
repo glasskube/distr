@@ -150,6 +150,9 @@ Go linting uses golangci-lint with config in `.golangci.yml`. Frontend uses Pret
 - Use TypeScript interfaces from `app/types/` for API models
 - Use reactive forms for all form handling
 - Use as little `undefined` types as possible, always use the actual type
+- Don't use any svg path icons, always look for a matching icon in the icon library used
+- Use [Angular Signals](https://angular.dev/guide/signals) for inputs, child views and everywhere where the current Angular version supports signals.
+  If you find usages of non signal usages for inputs, child views etc. change them to signals in the files you would edit anyway.
 
 ### Database Access
 
