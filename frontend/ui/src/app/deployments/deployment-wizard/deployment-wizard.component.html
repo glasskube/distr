@@ -159,15 +159,7 @@
 
                       <!-- Deployment Type Badge -->
                       <div
-                        class="px-2 py-1 rounded-md text-xs font-medium mb-1"
-                        [class.bg-blue-100]="app.type === 'docker'"
-                        [class.text-blue-800]="app.type === 'docker'"
-                        [class.dark:bg-blue-900]="app.type === 'docker'"
-                        [class.dark:text-blue-300]="app.type === 'docker'"
-                        [class.bg-purple-100]="app.type === 'kubernetes'"
-                        [class.text-purple-800]="app.type === 'kubernetes'"
-                        [class.dark:bg-purple-900]="app.type === 'kubernetes'"
-                        [class.dark:text-purple-300]="app.type === 'kubernetes'">
+                        class="px-2 py-1 rounded-md text-xs font-medium mb-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
                         @if (app.type === 'docker') {
                           <fa-icon [icon]="faDocker" class="mr-1"></fa-icon>
                           Docker
