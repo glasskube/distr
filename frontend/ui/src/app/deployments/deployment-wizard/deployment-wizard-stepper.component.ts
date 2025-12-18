@@ -66,8 +66,4 @@ export class DeploymentWizardStepperComponent extends CdkStepper {
   isFinalStep(): boolean {
     return this.selectedIndex === this.steps.length - 1;
   }
-
-  protected readonly faNetworkWired = faNetworkWired;
-  protected readonly faServicestack = faServicestack;
-  protected readonly faServer = faServer;
 }
