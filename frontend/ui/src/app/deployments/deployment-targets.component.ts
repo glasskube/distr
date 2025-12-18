@@ -18,7 +18,6 @@ import {isArchived} from '../../util/dates';
 import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
-import {InstallationWizardComponent} from '../components/installation-wizard/installation-wizard.component';
 import {QuotaLimitComponent} from '../components/quota-limit.component';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
@@ -33,6 +32,7 @@ import {OrganizationService} from '../services/organization.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {DeploymentModalComponent} from './deployment-modal.component';
 import {DeploymentTargetCardComponent} from './deployment-target-card/deployment-target-card.component';
+import {DeploymentWizardComponent} from './deployment-wizard/deployment-wizard.component';
 
 type DeploymentWithNewerVersion = {dt: DeploymentTarget; d: DeploymentWithLatestRevision; version: ApplicationVersion};
 
@@ -52,7 +52,7 @@ export interface CustomerDeploymentTargets {
     FaIconComponent,
     FormsModule,
     ReactiveFormsModule,
-    InstallationWizardComponent,
+    DeploymentWizardComponent,
     OverlayModule,
     DeploymentTargetCardComponent,
     DeploymentModalComponent,

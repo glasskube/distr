@@ -7,12 +7,12 @@ import {faDocker, faServicestack} from '@fortawesome/free-brands-svg-icons';
 import {faNetworkWired, faServer, faShip} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
-  selector: 'app-installation-wizard-stepper',
-  templateUrl: './installation-wizard-stepper.component.html',
-  providers: [{provide: CdkStepper, useExisting: InstallationWizardStepperComponent}],
+  selector: 'app-deployment-wizard-stepper',
+  templateUrl: './deployment-wizard-stepper.component.html',
+  providers: [{provide: CdkStepper, useExisting: DeploymentWizardStepperComponent}],
   imports: [CdkStepperModule, ReactiveFormsModule, FaIconComponent, NgTemplateOutlet],
 })
-export class InstallationWizardStepperComponent extends CdkStepper {
+export class DeploymentWizardStepperComponent extends CdkStepper {
   protected readonly dockerIcon = faDocker;
   protected readonly shipIcon = faShip;
   protected readonly networkIcon = faNetworkWired;

@@ -5,14 +5,14 @@ import {faCircleExclamation, faShip} from '@fortawesome/free-solid-svg-icons';
 import {DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
+import {AuthService} from '../services/auth.service';
+import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {ToastService} from '../services/toast.service';
 import {
   DeploymentFormComponent,
   DeploymentFormValue,
   mapToDeploymentRequest,
-} from '../deployment-form/deployment-form.component';
-import {AuthService} from '../services/auth.service';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {ToastService} from '../services/toast.service';
+} from './deployment-form/deployment-form.component';
 
 @Component({
   selector: 'app-deployment-modal',

@@ -26,14 +26,14 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs';
-import {isArchived} from '../../util/dates';
-import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../util/validation';
-import {EditorComponent} from '../components/editor.component';
-import {AutotrimDirective} from '../directives/autotrim.directive';
-import {ApplicationsService} from '../services/applications.service';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {FeatureFlagService} from '../services/feature-flag.service';
-import {LicensesService} from '../services/licenses.service';
+import {isArchived} from '../../../util/dates';
+import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../../util/validation';
+import {EditorComponent} from '../../components/editor.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {ApplicationsService} from '../../services/applications.service';
+import {DeploymentTargetsService} from '../../services/deployment-targets.service';
+import {FeatureFlagService} from '../../services/feature-flag.service';
+import {LicensesService} from '../../services/licenses.service';
 
 export type DeploymentFormValue = Partial<{
   deploymentId: string;
