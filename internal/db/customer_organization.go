@@ -45,7 +45,7 @@ func ValidateCustomerOrgBelongsToOrg(ctx context.Context, customerOrgID uuid.UUI
 		return fmt.Errorf("could not collect result: %w", err)
 	}
 	if !result.Exists {
-		return fmt.Errorf("CustomerOrganization does not belong to Organization")
+		return fmt.Errorf("customer organization does not belong to organization")
 	}
 	return nil
 }
