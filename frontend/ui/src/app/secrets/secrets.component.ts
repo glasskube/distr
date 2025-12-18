@@ -49,9 +49,9 @@ export class SecretsComponent {
   });
 
   protected readonly createUpdateForm = this.fb.group({
-    id: '',
-    key: ['', [Validators.required]],
-    value: ['', [Validators.required]],
+    id: this.fb.control({value: '', disabled: true}),
+    key: this.fb.control('', [Validators.required]),
+    value: this.fb.control('', [Validators.required]),
   });
 
   protected closeDialog() {
@@ -68,6 +68,9 @@ export class SecretsComponent {
         key: existingSecret.key,
         value: '',
       });
+      this.createUpdateForm.controls.key.disable();
+    } else {
+      this.createUpdateForm.controls.key.enable();
     }
 
     this.dialogRef = this.overlay.showModal(this.createUpdateDialog());
