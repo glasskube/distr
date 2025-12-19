@@ -93,13 +93,13 @@ func stripeWebhookHandler() http.HandlerFunc {
 
 		if err != nil {
 			log.Error("Error handling stripe subscription", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			switch {
 			case errors.Is(err, apierrors.ErrBadRequest):
 				http.Error(w, err.Error(), http.StatusBadRequest)
 			case errors.Is(err, apierrors.ErrNotFound):
 				http.Error(w, err.Error(), http.StatusNotFound)
 			default:
-				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
