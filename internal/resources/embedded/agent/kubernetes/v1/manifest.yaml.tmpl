@@ -127,8 +127,10 @@ spec:
                 name: distr-agent-env
           resources:
             limits:
-              memory: "128Mi"
+              memory: "256Mi"
               cpu: "500m"
+            requests:
+              memory: "256Mi"
           volumeMounts:
             - name: dockerconfig
               mountPath: /opt/config/.docker/
