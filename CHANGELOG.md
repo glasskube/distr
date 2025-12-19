@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.2.1](https://github.com/glasskube/distr/compare/2.2.0...2.2.1) (2025-12-18)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1574](https://github.com/glasskube/distr/issues/1574)) ([46678b7](https://github.com/glasskube/distr/commit/46678b72d9b82ea13979bc691c9c60fc0151fd5b))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.94.0 ([#1565](https://github.com/glasskube/distr/issues/1565)) ([db9814f](https://github.com/glasskube/distr/commit/db9814f75c07ff63e27f59709052170df3561756))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.142.0 ([#1567](https://github.com/glasskube/distr/issues/1567)) ([b3d4078](https://github.com/glasskube/distr/commit/b3d4078cff37ae98a91494dcf856914b934070fb))
+* **kubernetes-agent:** increase memory limit to 256Mi and add memory request ([#1580](https://github.com/glasskube/distr/issues/1580)) ([fde858e](https://github.com/glasskube/distr/commit/fde858ed1b81d4ce6f7a52b21af52e79bc71ccec))
+
+
+### Other
+
+* **deps:** update dependency @codemirror/commands to v6.10.1 ([#1576](https://github.com/glasskube/distr/issues/1576)) ([9e8fafa](https://github.com/glasskube/distr/commit/9e8fafacf1fdf16a9530747e22050322e3435767))
+* **deps:** update dependency stripe to v1.33.2 ([#1564](https://github.com/glasskube/distr/issues/1564)) ([865b6d0](https://github.com/glasskube/distr/commit/865b6d0a426c095ecc9e55a5e235496b40286ed6))
+
 ## [2.2.0](https://github.com/glasskube/distr/compare/2.1.0...2.2.0) (2025-12-15)
 
 
