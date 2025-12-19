@@ -56,6 +56,12 @@
 
 ---
 
+### link
+
+> **link**: `string`
+
+---
+
 ### name
 
 > **name**: `string`

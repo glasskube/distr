@@ -1,0 +1,1 @@
+ALTER TABLE ApplicationVersion ADD COLUMN link TEXT NOT NULL DEFAULT '';

@@ -69,6 +69,14 @@ run = 'hack/validate-migrations.sh'
 [tasks.lint]
 run = {tasks=["lint:go", "lint:frontend", "lint:migrations"]}
 
+[tasks."test:go"]
+run = 'go test ./...'
+depends = ["go-tidy"]
+description = 'Run all Go tests'
+
+[tasks.test]
+run = {tasks=["test:go"]}
+
 [tasks."format:go"]
 run = 'golangci-lint run --fix'
 

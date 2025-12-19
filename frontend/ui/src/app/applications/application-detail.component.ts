@@ -1,6 +1,16 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
-import {Component, ElementRef, inject, OnDestroy, OnInit, signal, TemplateRef, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  TemplateRef,
+  viewChild,
+  ViewChild,
+} from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
@@ -45,6 +55,10 @@ import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
+import {
+  ApplicationVersionDetail,
+  ApplicationVersionDetailModalComponent,
+} from './application-version-detail-modal.component';
 
 @Component({
   selector: 'app-application-detail',
@@ -61,6 +75,7 @@ import {ToastService} from '../services/toast.service';
     EditorComponent,
     SecureImagePipe,
     FormsModule,
+    ApplicationVersionDetailModalComponent,
   ],
   templateUrl: './application-detail.component.html',
   animations: [dropdownAnimation],
@@ -108,6 +123,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
+    link: new FormControl(''),
     kubernetes: new FormGroup(
       {
         chartType: new FormControl<HelmChartType>('repository', {
@@ -141,18 +157,9 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   });
   editFormLoading = signal(false);
 
-  @ViewChild('versionDetailsModal') protected readonly versionDetailsModal!: TemplateRef<unknown>;
-  protected readonly selectedVersionForDetailModal = signal<ApplicationVersion | undefined>(undefined);
-  versionDetailsForm = new FormGroup({
-    kubernetes: new FormGroup({
-      baseValues: new FormControl(''),
-      template: new FormControl(''),
-    }),
-    docker: new FormGroup({
-      compose: new FormControl(''),
-      template: new FormControl(''),
-    }),
-  });
+  protected readonly versionDetail = signal<ApplicationVersionDetail | undefined>(undefined);
+  protected readonly versionDetailsModal = viewChild.required<TemplateRef<unknown>>('versionDetailsModal');
+  private versionDetailsModalRef?: DialogRef;
 
   protected readonly faBoxesStacked = faBoxesStacked;
   protected readonly faChevronDown = faChevronDown;
@@ -170,7 +177,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   breadcrumbDropdownWidth: number = 0;
   @ViewChild('dropdownTriggerButton') dropdownTriggerButton!: ElementRef<HTMLElement>;
   @ViewChild('nameInput') nameInputElem?: ElementRef<HTMLInputElement>;
-  private versionDetailsModalRef?: DialogRef;
 
   ngOnInit() {
     this.route.url.subscribe(() => this.breadcrumbDropdown.set(false));
@@ -184,7 +190,6 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
           this.newVersionForm.controls.kubernetes.controls.chartName.disable();
         }
       });
-    this.versionDetailsForm.disable();
   }
 
   ngOnDestroy() {
@@ -238,7 +243,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       if (application.type === 'docker') {
         res = this.applicationService.createApplicationVersionForDocker(
           application,
-          {name: this.newVersionForm.controls.versionName.value!},
+          {name: this.newVersionForm.controls.versionName.value!, link: this.newVersionForm.controls.link.value!},
           this.newVersionForm.controls.docker.controls.compose.value!,
           this.newVersionForm.controls.docker.controls.template.value
         );
@@ -246,6 +251,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;
         const version = {
           name: this.newVersionForm.controls.versionName.value!,
+          link: this.newVersionForm.controls.link.value!,
           chartType: versionFormVal.chartType!,
           chartName: versionFormVal.chartName ?? undefined,
           chartUrl: versionFormVal.chartUrl!,
@@ -284,18 +290,20 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadVersionDetails(application: Application, version: ApplicationVersion) {
+    const link = version.link;
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
-        const values = await firstValueFrom(this.applicationService.getValuesFile(application.id!, version.id!));
+        const baseValues = await firstValueFrom(this.applicationService.getValuesFile(application.id!, version.id!));
         return {
+          link,
           kubernetes: {
             chartType: version.chartType,
             chartName: version.chartName,
             chartUrl: version.chartUrl,
             chartVersion: version.chartVersion,
-            baseValues: values,
-            template: template,
+            baseValues,
+            template,
           },
         };
       } catch (e) {
@@ -310,9 +318,10 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
         const compose = await firstValueFrom(this.applicationService.getComposeFile(application.id!, version.id!));
         return {
+          link,
           docker: {
             compose,
-            template: template,
+            template,
           },
         };
       } catch (e) {
@@ -413,17 +422,21 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   protected hideVersionDetails(): void {
     this.versionDetailsModalRef?.close();
-    this.versionDetailsForm.reset();
-    this.selectedVersionForDetailModal.set(undefined);
+    this.versionDetail.set(undefined);
   }
 
   async openVersionDetails(application: Application, version: ApplicationVersion) {
     this.hideVersionDetails();
-    this.selectedVersionForDetailModal.set(version);
     const val = await this.loadVersionDetails(application, version);
     if (val) {
-      this.versionDetailsForm.patchValue(val);
-      this.versionDetailsModalRef = this.overlay.showModal(this.versionDetailsModal, {
+      this.versionDetail.set({
+        application,
+        version,
+        link: val.link ?? '',
+        kubernetes: val.kubernetes,
+        docker: val.docker,
+      });
+      this.versionDetailsModalRef = this.overlay.showModal(this.versionDetailsModal(), {
         positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
       });
     }

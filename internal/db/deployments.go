@@ -1,9 +1,12 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/glasskube/distr/api"
@@ -15,6 +18,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -77,6 +81,7 @@ func GetDeploymentsForDeploymentTarget(
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,
+				av.link AS application_link,
 				CASE WHEN drs.id IS NOT NULL THEN (
 					drs.id,
 					drs.created_at,
@@ -125,9 +130,74 @@ func GetDeploymentsForDeploymentTarget(
 	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentWithLatestRevision])
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan Deployments: %w", err)
-	} else {
-		return result, nil
 	}
+
+	if err := TemplateDeploymentLinks(result); err != nil {
+		return nil, fmt.Errorf("failed to template deployment links: %w", err)
+	}
+
+	return result, nil
+}
+
+func TemplateApplicationLink(link string, envFileData []byte, valuesYaml []byte) (string, error) {
+	if link == "" {
+		return "", nil
+	}
+
+	envMap := make(map[string]string)
+	if len(envFileData) > 0 {
+		envStr := string(envFileData)
+		lines := strings.Split(envStr, "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				envMap[parts[0]] = parts[1]
+			}
+		}
+	}
+
+	valuesMap := make(map[string]interface{})
+	if len(valuesYaml) > 0 {
+		if err := yaml.Unmarshal(valuesYaml, &valuesMap); err != nil {
+			return "", fmt.Errorf("failed to parse values YAML: %w", err)
+		}
+	}
+
+	data := map[string]interface{}{
+		"Env":    envMap,
+		"Values": valuesMap,
+	}
+
+	tmpl, err := template.New("link").Parse(link)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse link template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute link template: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
+func TemplateDeploymentLinks(deployments []types.DeploymentWithLatestRevision) error {
+	for i := range deployments {
+		templatedLink, err := TemplateApplicationLink(
+			deployments[i].ApplicationLink,
+			deployments[i].EnvFileData,
+			deployments[i].ValuesYaml,
+		)
+		if err != nil {
+			continue
+		}
+		deployments[i].ApplicationLink = templatedLink
+	}
+	return nil
 }
 
 func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error {
