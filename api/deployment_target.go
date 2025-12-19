@@ -1,11 +1,8 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
 )
 
 type DeploymentTargetAccessTokenResponse struct {
@@ -28,14 +25,12 @@ type DeploymentRequest struct {
 	ForceRestart         bool              `json:"forceRestart"`
 }
 
-func (d DeploymentRequest) ParsedValuesFile() (result map[string]any, err error) {
-	// TODO deduplicate
-	if d.ValuesYaml != nil {
-		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
-			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
-		}
-	}
-	return result, err
+func (d *DeploymentRequest) GetValuesYAML() []byte {
+	return d.ValuesYaml
+}
+
+func (d *DeploymentRequest) GetEnvFileData() []byte {
+	return d.EnvFileData
 }
 
 type PatchDeploymentRequest struct {
