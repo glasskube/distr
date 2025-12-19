@@ -103,13 +103,14 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
 
   // State management
   protected readonly customerOrganizations$ = this.customerOrganizations.getCustomerOrganizations();
+
   protected readonly applications$ = this.applications.list();
   protected readonly allLicenses$ = this.licenses.list();
   protected readonly vendorOrganization$ = this.organization.get();
   protected readonly vendorBranding$ = this.organizationBranding.get();
   protected selectedApplication = signal<Application | undefined>(undefined);
   protected selectedCustomerOrganization = signal<CustomerOrganization | undefined>(undefined);
-  protected selectedDeploymentTarget = signal<DeploymentTarget | null>(null);
+  protected selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
 
   // Filter applications based on customer licenses
   protected readonly filteredApplications$ = combineLatest([
@@ -276,6 +277,8 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
+    let createdDeploymentTarget: DeploymentTarget | null = null;
+
     try {
       const app = this.selectedApplication();
       if (!app) {
@@ -285,19 +288,25 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
       const customerOrgId = this.selectedCustomerOrganization()?.id;
 
       // Create deployment target
-      const created = await firstValueFrom(
-        this.deploymentTargets.create({
-          name: this.deploymentTargetForm.value.name!,
-          type: app.type!,
-          namespace: this.deploymentTargetForm.value.namespace || undefined,
-          scope: this.deploymentTargetForm.value.scope,
-          deployments: [],
-          metricsEnabled: this.deploymentTargetForm.value.scope !== 'namespace',
-          customerOrganization: customerOrgId ? ({id: customerOrgId} as CustomerOrganization) : undefined,
-        })
-      );
+      try {
+        createdDeploymentTarget = (await firstValueFrom(
+          this.deploymentTargets.create({
+            name: this.deploymentTargetForm.value.name!,
+            type: app.type!,
+            namespace: this.deploymentTargetForm.value.namespace || undefined,
+            scope: this.deploymentTargetForm.value.scope,
+            deployments: [],
+            metricsEnabled: this.deploymentTargetForm.value.scope !== 'namespace',
+            customerOrganization: customerOrgId ? ({id: customerOrgId} as CustomerOrganization) : undefined,
+          })
+        )) as DeploymentTarget;
 
-      this.selectedDeploymentTarget.set(created as DeploymentTarget);
+        this.selectedDeploymentTarget.set(createdDeploymentTarget);
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        this.toast.error(msg || 'Failed to create deployment target');
+        return;
+      }
 
       // Deploy the application
       const deploymentFormData = this.applicationConfigForm.value.deploymentFormData;
@@ -306,15 +315,26 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
         throw new Error('Missing deployment configuration');
       }
 
-      const deployment = mapToDeploymentRequest(deploymentFormData, created.id!);
+      const deployment = mapToDeploymentRequest(deploymentFormData, createdDeploymentTarget.id!);
 
-      await firstValueFrom(this.deploymentTargets.deploy(deployment));
-      this.toast.success('Deployment created successfully');
-      this.nextStep();
-    } catch (e) {
-      const msg = getFormDisplayedError(e);
-      if (msg) {
-        this.toast.error(msg);
+      try {
+        await firstValueFrom(this.deploymentTargets.deploy(deployment));
+        this.toast.success('Deployment created successfully');
+        this.nextStep();
+      } catch (e) {
+        // Delete the deployment target if deployment fails
+        const deployErrorMsg = getFormDisplayedError(e);
+        this.toast.error(deployErrorMsg || 'Failed to create deployment target');
+        try {
+          await firstValueFrom(this.deploymentTargets.delete(createdDeploymentTarget));
+          this.selectedDeploymentTarget.set(undefined);
+          this.selectedApplication.set(undefined);
+          this.selectedCustomerOrganization.set(undefined);
+          this.close();
+        } catch (deleteError) {
+          const msg = getFormDisplayedError(deleteError);
+          this.toast.error(msg || 'Failed to delete application');
+        }
       }
     } finally {
       this.loading = false;
