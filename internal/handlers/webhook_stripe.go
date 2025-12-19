@@ -3,10 +3,14 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/glasskube/distr/internal/apierrors"
 	"github.com/glasskube/distr/internal/billing"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
@@ -52,7 +56,7 @@ func stripeWebhookHandler() http.HandlerFunc {
 		switch event.Type {
 		case stripe.EventTypeCustomerSubscriptionCreated:
 			var subscription stripe.Subscription
-			err := json.Unmarshal(event.Data.Raw, &subscription)
+			err = json.Unmarshal(event.Data.Raw, &subscription)
 			if err != nil {
 				log.Info("Error parsing webhook JSON", zap.Error(err))
 				w.WriteHeader(http.StatusBadRequest)
@@ -60,16 +64,10 @@ func stripeWebhookHandler() http.HandlerFunc {
 			}
 
 			log.Info("stripe customer subscription created")
-
-			if err := handleStripeSubscription(ctx, subscription); err != nil {
-				log.Error("Error handling stripe subscription", zap.Error(err))
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
+			err = handleStripeSubscription(ctx, subscription)
 		case stripe.EventTypeCustomerSubscriptionUpdated:
 			var subscription stripe.Subscription
-			err := json.Unmarshal(event.Data.Raw, &subscription)
+			err = json.Unmarshal(event.Data.Raw, &subscription)
 			if err != nil {
 				log.Info("Error parsing webhook JSON", zap.Error(err))
 				w.WriteHeader(http.StatusBadRequest)
@@ -77,16 +75,10 @@ func stripeWebhookHandler() http.HandlerFunc {
 			}
 
 			log.Info("stripe customer subscription updated")
-
-			if err := handleStripeSubscription(ctx, subscription); err != nil {
-				log.Error("Error handling stripe subscription", zap.Error(err))
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
+			err = handleStripeSubscription(ctx, subscription)
 		case stripe.EventTypeCustomerSubscriptionDeleted:
 			var subscription stripe.Subscription
-			err := json.Unmarshal(event.Data.Raw, &subscription)
+			err = json.Unmarshal(event.Data.Raw, &subscription)
 			if err != nil {
 				log.Info("Error parsing webhook JSON", zap.Error(err))
 				w.WriteHeader(http.StatusBadRequest)
@@ -94,18 +86,25 @@ func stripeWebhookHandler() http.HandlerFunc {
 			}
 
 			log.Info("stripe customer subscription deleted", zap.Any("subscription", subscription))
-
-			if err := handleStripeSubscription(ctx, subscription); err != nil {
-				log.Error("Error handling stripe subscription", zap.Error(err))
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
+			err = handleStripeSubscription(ctx, subscription)
 		default:
 			log.Info("unhandled stripe event")
 		}
 
-		w.WriteHeader(http.StatusOK)
+		if err != nil {
+			log.Error("Error handling stripe subscription", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			switch {
+			case errors.Is(err, apierrors.ErrBadRequest):
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			case errors.Is(err, apierrors.ErrNotFound):
+				http.Error(w, err.Error(), http.StatusNotFound)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 	}
 }
 
@@ -115,7 +114,7 @@ func handleStripeSubscription(ctx context.Context, sub stripe.Subscription) erro
 	orgID, err := uuid.Parse(sub.Metadata["organizationId"])
 	if err != nil {
 		log.Warn("subscription event with missing or invalid organizationId", zap.Error(err))
-		return err
+		return fmt.Errorf("%w: %w", apierrors.ErrBadRequest, err)
 	}
 
 	return db.RunTxRR(ctx, func(ctx context.Context) error {
@@ -130,13 +129,13 @@ func handleStripeSubscription(ctx context.Context, sub stripe.Subscription) erro
 		if sub.Status == stripe.SubscriptionStatusCanceled {
 			org.SubscriptionEndsAt = time.Now()
 		} else if currentPeriodEnd, err := billing.GetCurrentPeriodEnd(sub); err != nil {
-			return err
+			return fmt.Errorf("%w: %w", apierrors.ErrBadRequest, err)
 		} else {
 			org.SubscriptionEndsAt = *currentPeriodEnd
 		}
 
 		if subscriptionType, err := billing.GetSubscriptionType(sub); err != nil {
-			return err
+			return fmt.Errorf("%w: %w", apierrors.ErrBadRequest, err)
 		} else {
 			org.SubscriptionType = *subscriptionType
 		}
@@ -149,13 +148,13 @@ func handleStripeSubscription(ctx context.Context, sub stripe.Subscription) erro
 		}
 
 		if qty, err := billing.GetUserAccountQty(sub); err != nil {
-			return err
+			return fmt.Errorf("%w: %w", apierrors.ErrBadRequest, err)
 		} else {
 			org.SubscriptionUserAccountQty = qty
 		}
 
 		if subscriptionPeriod, err := billing.GetSubscriptionPeriod(sub); err != nil {
-			return err
+			return fmt.Errorf("%w: %w", apierrors.ErrBadRequest, err)
 		} else {
 			org.SubscriptionPeriod = subscriptionPeriod
 		}
