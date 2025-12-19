@@ -284,7 +284,7 @@
                   <app-deployment-form
                     [disableApplicationSelect]="true"
                     [deploymentType]="selectedDeploymentType()"
-                    [customerOrganizationId]="selectedCustomerOrganization()?.id ?? ''"
+                    [customerOrganizationId]="selectedCustomerOrganizationId()"
                     [deploymentTargetName]="deploymentTargetForm.value.name ?? ''"
                     [formControl]="applicationConfigForm.controls.deploymentFormData"
                     [ngModel]="deploymentFormInitialData()">

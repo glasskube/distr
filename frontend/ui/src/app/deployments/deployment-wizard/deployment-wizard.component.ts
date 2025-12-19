@@ -13,7 +13,7 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {combineLatest, firstValueFrom, map, startWith, Subject, takeUntil} from 'rxjs';
+import {combineLatest, firstValueFrom, map, of, startWith, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
@@ -102,14 +102,16 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   readonly connectForm = new FormGroup({});
 
   // State management
-  protected readonly customerOrganizations$ = this.customerOrganizations.getCustomerOrganizations();
+  protected readonly customerOrganizations$ = this.auth.isVendor()
+    ? this.customerOrganizations.getCustomerOrganizations()
+    : of([]);
 
   protected readonly applications$ = this.applications.list();
   protected readonly allLicenses$ = this.licenses.list();
   protected readonly vendorOrganization$ = this.organization.get();
   protected readonly vendorBranding$ = this.organizationBranding.get();
   protected selectedApplication = signal<Application | undefined>(undefined);
-  protected selectedCustomerOrganization = signal<CustomerOrganization | undefined>(undefined);
+  protected selectedCustomerOrganizationId = signal<string>('');
   protected selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
 
   // Filter applications based on customer licenses
@@ -160,7 +162,7 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   private readonly isLicensingEnabled = toSignal(this.featureFlags.isLicensingEnabled$, {initialValue: false});
 
   protected readonly showLicenseControl = computed(() => {
-    return this.selectedCustomerOrganization() !== undefined && this.isLicensingEnabled();
+    return this.selectedCustomerOrganizationId() !== '' && this.isLicensingEnabled();
   });
 
   protected getVendorLogoUrl(branding: {logo?: string; logoContentType?: string} | null): string {
@@ -174,18 +176,19 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
 
   ngOnInit() {
+    // If user is a customer, set selectedCustomerOrganizationId from organization
+    if (!this.auth.isVendor()) {
+      firstValueFrom(this.vendorOrganization$).then((org) => {
+        this.customerForm.controls.customerOrganizationId.setValue(org.customerOrganizationId!);
+        this.selectedCustomerOrganizationId.set(org.customerOrganizationId!);
+      });
+    }
+
     // Watch customer selection
     this.customerForm.controls.customerOrganizationId.valueChanges
       .pipe(takeUntil(this.destroyed$))
       .subscribe((customerId) => {
-        if (customerId) {
-          firstValueFrom(this.customerOrganizations$).then((customers) => {
-            const customer = customers.find((c) => c.id === customerId);
-            this.selectedCustomerOrganization.set(customer);
-          });
-        } else {
-          this.selectedCustomerOrganization.set(undefined);
-        }
+        this.selectedCustomerOrganizationId.set(customerId ?? '');
       });
 
     // Watch application selection
@@ -285,7 +288,7 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
         throw new Error('No application selected');
       }
 
-      const customerOrgId = this.selectedCustomerOrganization()?.id;
+      const customerOrgId = this.selectedCustomerOrganizationId();
 
       // Create deployment target
       try {
@@ -324,16 +327,16 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
       } catch (e) {
         // Delete the deployment target if deployment fails
         const deployErrorMsg = getFormDisplayedError(e);
-        this.toast.error(deployErrorMsg || 'Failed to create deployment target');
+        this.toast.error(deployErrorMsg || 'Failed to deploy application');
         try {
           await firstValueFrom(this.deploymentTargets.delete(createdDeploymentTarget));
           this.selectedDeploymentTarget.set(undefined);
           this.selectedApplication.set(undefined);
-          this.selectedCustomerOrganization.set(undefined);
+          this.selectedCustomerOrganizationId.set('');
           this.close();
         } catch (deleteError) {
           const msg = getFormDisplayedError(deleteError);
-          this.toast.error(msg || 'Failed to delete application');
+          this.toast.error(msg || 'Failed to cleanup deployment target');
         }
       }
     } finally {

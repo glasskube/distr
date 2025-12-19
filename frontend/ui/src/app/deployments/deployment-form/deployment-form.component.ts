@@ -31,6 +31,7 @@ import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../../ut
 import {EditorComponent} from '../../components/editor.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {ApplicationsService} from '../../services/applications.service';
+import {AuthService} from '../../services/auth.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {LicensesService} from '../../services/licenses.service';
 
@@ -83,6 +84,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   deploymentTargetName = input<string>('default');
 
   protected readonly featureFlags = inject(FeatureFlagService);
+  private readonly auth = inject(AuthService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly fb = inject(FormBuilder);
@@ -135,7 +137,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   ]).pipe(
     map(
       ([isLicensingEnabled, licenses]) =>
-        isLicensingEnabled && this.customerOrganizationId() !== '' && licenses.length > 0
+        isLicensingEnabled && (!this.auth.isVendor() || this.customerOrganizationId() !== '') && licenses.length > 0
     ),
     distinctUntilChanged()
   );
@@ -166,7 +168,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     switchMap(([applicationId, isLicensingEnabled]) =>
       isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
     ),
-    map((licenses) => licenses.filter((l) => l.customerOrganizationId === this.customerOrganizationId())),
+    map((licenses) =>
+      this.auth.isVendor()
+        ? licenses.filter((l) => l.customerOrganizationId === this.customerOrganizationId())
+        : licenses
+    ),
     shareReplay(1)
   );
 
