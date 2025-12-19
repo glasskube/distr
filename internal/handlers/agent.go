@@ -240,9 +240,13 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			// FIXME: A DeploymentTarget with nil CustomerOrganizationID currently sees all secrets.
-			//   It should only see secrets for its own organization, not for customers.
-			secrets, err := db.GetSecrets(ctx, deploymentTarget.OrganizationID, deploymentTarget.CustomerOrganizationID)
+			var secrets []types.SecretWithUpdatedBy
+			if deploymentTarget.CustomerOrganizationID != nil {
+				secrets, err = db.GetSecretsForCustomer(ctx, *deploymentTarget.CustomerOrganizationID)
+			} else {
+				secrets, err = db.GetSecretsForOrganization(ctx, deploymentTarget.OrganizationID)
+			}
+
 			if err != nil {
 				msg := "failed to get secrets from DB"
 				log.Error(msg, zap.Error(err))

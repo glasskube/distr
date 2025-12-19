@@ -579,11 +579,19 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
-		} else if secrets, err = db.GetSecrets(ctx, dt.OrganizationID, dt.CustomerOrganizationID); err != nil {
-			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
+		} else {
+			if dt.CustomerOrganizationID != nil {
+				secrets, err = db.GetSecretsForCustomer(ctx, *dt.CustomerOrganizationID)
+			} else {
+				secrets, err = db.GetSecretsForOrganization(ctx, dt.OrganizationID)
+			}
+
+			if err != nil {
+				internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before, after); err != nil {

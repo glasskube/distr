@@ -61,6 +61,61 @@ func GetSecrets(
 	}
 }
 
+func GetSecretsForOrganization(
+	ctx context.Context,
+	organizationID uuid.UUID,
+) ([]types.SecretWithUpdatedBy, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT `+secretWithUpdatedByOutputExpr+` FROM Secret s
+		LEFT JOIN UserAccount u
+			ON s.updated_by_useraccount_id = u.id
+		WHERE s.organization_id = @organization_id
+			AND s.customer_organization_id IS NULL
+		ORDER BY s.key ASC`,
+		pgx.NamedArgs{
+			"organization_id": organizationID,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Secret: %w", err)
+	}
+
+	if secrets, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.SecretWithUpdatedBy]); err != nil {
+		return nil, fmt.Errorf("failed to collect Secret: %w", err)
+	} else {
+		return secrets, nil
+	}
+}
+
+func GetSecretsForCustomer(
+	ctx context.Context,
+	customerOrganizationID uuid.UUID,
+) ([]types.SecretWithUpdatedBy, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`SELECT `+secretWithUpdatedByOutputExpr+` FROM Secret s
+		LEFT JOIN UserAccount u
+			ON s.updated_by_useraccount_id = u.id
+		WHERE s.customer_organization_id = @customer_organization_id
+		ORDER BY s.key ASC`,
+		pgx.NamedArgs{
+			"customer_organization_id": customerOrganizationID,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Secret: %w", err)
+	}
+
+	if secrets, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.SecretWithUpdatedBy]); err != nil {
+		return nil, fmt.Errorf("failed to collect Secret: %w", err)
+	} else {
+		return secrets, nil
+	}
+}
+
 func GetSecretByID(
 	ctx context.Context,
 	id uuid.UUID,
