@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.2](https://github.com/glasskube/distr/compare/2.2.1...2.2.2) (2025-12-21)
+
+
+### Other
+
+* **backend:** improve Stripe webhook error handling ([#1582](https://github.com/glasskube/distr/issues/1582)) ([07f9d6d](https://github.com/glasskube/distr/commit/07f9d6d58b9c34f8c5bd810d17ab75963de2d47d))
+* **deps:** update docker/setup-buildx-action action to v3.12.0 ([#1583](https://github.com/glasskube/distr/issues/1583)) ([49dc6c1](https://github.com/glasskube/distr/commit/49dc6c1b745d20b6ca05fd166629aec22da4d079))
+
 ## [2.2.1](https://github.com/glasskube/distr/compare/2.2.0...2.2.1) (2025-12-18)
 
 
