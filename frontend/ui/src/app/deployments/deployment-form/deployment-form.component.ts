@@ -1,5 +1,5 @@
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, forwardRef, inject, Injector, OnDestroy, OnInit} from '@angular/core';
+import {AfterViewInit, Component, forwardRef, inject, Injector, input, OnDestroy, OnInit} from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -26,18 +26,17 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs';
-import {isArchived} from '../../util/dates';
-import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../util/validation';
-import {EditorComponent} from '../components/editor.component';
-import {AutotrimDirective} from '../directives/autotrim.directive';
-import {ApplicationsService} from '../services/applications.service';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {FeatureFlagService} from '../services/feature-flag.service';
-import {LicensesService} from '../services/licenses.service';
+import {isArchived} from '../../../util/dates';
+import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../../util/validation';
+import {EditorComponent} from '../../components/editor.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {ApplicationsService} from '../../services/applications.service';
+import {AuthService} from '../../services/auth.service';
+import {FeatureFlagService} from '../../services/feature-flag.service';
+import {LicensesService} from '../../services/licenses.service';
 
 export type DeploymentFormValue = Partial<{
   deploymentId: string;
-  deploymentTargetId: string;
   applicationId: string;
   applicationVersionId: string;
   applicationLicenseId: string;
@@ -49,9 +48,9 @@ export type DeploymentFormValue = Partial<{
   forceRestart: boolean;
 }>;
 
-export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRequest {
+export function mapToDeploymentRequest(value: DeploymentFormValue, deploymentTargetId: string): DeploymentRequest {
   return {
-    deploymentTargetId: value.deploymentTargetId!,
+    deploymentTargetId: deploymentTargetId,
     applicationVersionId: value.applicationVersionId!,
     applicationLicenseId: value.applicationLicenseId || undefined,
     deploymentId: value.deploymentId || undefined,
@@ -79,16 +78,20 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
   templateUrl: './deployment-form.component.html',
 })
 export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy, ControlValueAccessor {
+  disableApplicationSelect = input(false);
+  deploymentType = input<'docker' | 'kubernetes'>('docker');
+  customerOrganizationId = input<string>('');
+  deploymentTargetName = input<string>('default');
+
   protected readonly featureFlags = inject(FeatureFlagService);
+  private readonly auth = inject(AuthService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly fb = inject(FormBuilder);
-  private readonly deplyomentTargets = inject(DeploymentTargetsService);
   private readonly injector = inject(Injector);
 
   protected readonly deployForm = this.fb.nonNullable.group({
     deploymentId: this.fb.nonNullable.control<string | undefined>(undefined),
-    deploymentTargetId: this.fb.nonNullable.control('', Validators.required),
     applicationId: this.fb.nonNullable.control('', Validators.required),
     applicationVersionId: this.fb.nonNullable.control('', Validators.required),
     applicationLicenseId: this.fb.nonNullable.control('', Validators.required),
@@ -100,15 +103,10 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
     swarmMode: this.fb.nonNullable.control<boolean>(false),
-    logsEnabled: this.fb.nonNullable.control<boolean>(false),
+    logsEnabled: this.fb.nonNullable.control<boolean>(true),
     forceRestart: this.fb.nonNullable.control<boolean>(false),
   });
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
-
-  private readonly deploymentTargetId$ = this.deployForm.controls.deploymentTargetId.valueChanges.pipe(
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
 
   private readonly deploymentId$ = this.deployForm.controls.deploymentId.valueChanges.pipe(
     distinctUntilChanged(),
@@ -130,28 +128,16 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
-  private readonly deploymentTarget$ = this.deploymentTargetId$.pipe(
-    combineLatestWith(this.deplyomentTargets.list()),
-    map(([id, dts]) => dts.find((dt) => dt.id === id)),
-    shareReplay(1)
-  );
-
-  private readonly deployment$ = combineLatest([this.deploymentTarget$, this.deploymentId$]).pipe(
-    map(([dt, id]) => dt?.deployments.find((d) => d.id === id)),
-    shareReplay(1)
-  );
-
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
   protected readonly licenseControlVisible$ = combineLatest([
     this.featureFlags.isLicensingEnabled$,
-    this.deploymentTarget$,
     this.licenses.list(),
   ]).pipe(
     map(
-      ([isLicensingEnabled, deploymentTarget, licenses]) =>
-        isLicensingEnabled && deploymentTarget?.customerOrganization !== undefined && licenses.length > 0
+      ([isLicensingEnabled, licenses]) =>
+        isLicensingEnabled && (!this.auth.isVendor() || this.customerOrganizationId() !== '') && licenses.length > 0
     ),
     distinctUntilChanged()
   );
@@ -161,18 +147,16 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
    * A vendor might be required to choose a license for a customer managed deployment target with no previous
    * deployment but they may only choose a license owned by the same customer.
    */
-  private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deployment$]).pipe(
-    map(([isVisible, deployment]) => isVisible && !deployment),
+  private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deploymentId$]).pipe(
+    map(([isVisible, deploymentId]) => isVisible && !deploymentId),
     distinctUntilChanged()
   );
 
-  protected readonly swarmModeVisible$ = this.deploymentTarget$.pipe(map((dt) => dt?.type === 'docker'));
+  protected readonly swarmModeVisible$ = of(this.deploymentType() === 'docker');
 
-  protected readonly applications$ = this.deploymentTarget$.pipe(
-    map((dt) => dt?.type),
-    combineLatestWith(this.applications.list()),
-    map(([type, apps]) => apps.filter((app) => app.type === type))
-  );
+  protected readonly applications$ = this.applications
+    .list()
+    .pipe(map((apps) => apps.filter((app) => app.type === this.deploymentType())));
 
   private selectedApplication$ = this.applicationId$.pipe(
     combineLatestWith(this.applications$),
@@ -184,14 +168,10 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     switchMap(([applicationId, isLicensingEnabled]) =>
       isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
     ),
-    combineLatestWith(
-      this.deploymentTarget$.pipe(
-        map((dt) => dt?.customerOrganization?.id),
-        distinctUntilChanged()
-      )
-    ),
-    map(([licenses, customerOrganizationId]) =>
-      licenses.filter((l) => l.customerOrganizationId === customerOrganizationId)
+    map((licenses) =>
+      this.auth.isVendor()
+        ? licenses.filter((l) => l.customerOrganizationId === this.customerOrganizationId())
+        : licenses
     ),
     shareReplay(1)
   );
@@ -247,29 +227,24 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
 
-    this.deploymentTarget$
-      .pipe(
-        distinctUntilChanged((a, b) => a?.id === b?.id),
-        takeUntil(this.destroyed$)
-      )
-      .subscribe((deploymentTarget) => {
-        if (deploymentTarget) {
-          if (deploymentTarget.type === 'kubernetes') {
-            this.deployForm.controls.releaseName.enable();
-            this.deployForm.controls.valuesYaml.enable();
-            this.deployForm.controls.envFileData.disable();
-            if (!this.deployForm.value.releaseName) {
-              this.deployForm.patchValue({
-                releaseName: deploymentTarget.name.trim().toLowerCase().replaceAll(/\W+/g, '-'),
-              });
-            }
-          } else {
-            this.deployForm.controls.envFileData.enable();
-            this.deployForm.controls.releaseName.disable();
-            this.deployForm.controls.valuesYaml.disable();
-          }
+    const type = this.deploymentType();
+    if (type) {
+      if (type === 'kubernetes') {
+        this.deployForm.controls.releaseName.enable();
+        this.deployForm.controls.valuesYaml.enable();
+        this.deployForm.controls.envFileData.disable();
+        const targetName = this.deploymentTargetName();
+        if (!this.deployForm.value.releaseName && targetName) {
+          this.deployForm.patchValue({
+            releaseName: targetName.trim().toLowerCase().replaceAll(/\W+/g, '-'),
+          });
         }
-      });
+      } else {
+        this.deployForm.controls.envFileData.enable();
+        this.deployForm.controls.releaseName.disable();
+        this.deployForm.controls.valuesYaml.disable();
+      }
+    }
 
     this.deploymentId$.pipe(takeUntil(this.destroyed$)).subscribe((id) => {
       if (id) {
@@ -277,52 +252,38 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         this.deployForm.controls.swarmMode.disable();
         this.deployForm.controls.forceRestart.enable();
       } else {
-        this.deployForm.controls.applicationId.enable();
+        if (!this.disableApplicationSelect()) {
+          this.deployForm.controls.applicationId.enable();
+        }
         this.deployForm.controls.swarmMode.enable();
         this.deployForm.controls.forceRestart.disable();
       }
     });
 
-    combineLatest([
-      this.applicationId$,
-      this.applicationVersionId$,
-      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
-      this.deployment$.pipe(
-        distinctUntilChanged((a, b) => a?.envFileData === b?.envFileData && a?.valuesYaml === b?.valuesYaml)
-      ),
-    ])
+    combineLatest([this.applicationId$, this.applicationVersionId$, this.deploymentId$])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId, dt, d]) =>
-          combineLatest([
-            of(dt),
-            // Only fill in the template if there is no existing deployment or the existing deployment has no values/env file
-            versionId && applicationId && !(d?.valuesYaml || d?.envFileData)
-              ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
-              : NEVER,
-          ])
+        switchMap(([applicationId, versionId, deploymentId]) =>
+          versionId && applicationId && !deploymentId
+            ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
+            : NEVER
         ),
         takeUntil(this.destroyed$)
       )
-      .subscribe(([deploymentTarget, templateFile]) => {
-        if (deploymentTarget) {
-          if (deploymentTarget.type === 'kubernetes') {
-            this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
-          } else {
-            this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
-          }
+      .subscribe((templateFile) => {
+        const type = this.deploymentType();
+        if (type === 'kubernetes') {
+          this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
+        } else {
+          this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
         }
       });
 
-    combineLatest([
-      this.applicationId$,
-      this.applicationVersionId$,
-      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
-    ])
+    combineLatest([this.applicationId$, this.applicationVersionId$])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId, dt]) =>
-          versionId && applicationId && dt?.type === 'docker'
+        switchMap(([applicationId, versionId]) =>
+          versionId && applicationId && this.deploymentType() === 'docker'
             ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER))
             : NEVER
         ),
@@ -360,6 +321,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     // This is needed because the first value could be missed otherwise
     // TODO: Find a better solution for this
     this.applicationLicenseId$.pipe(takeUntil(this.destroyed$)).subscribe();
+
+    // Disable application selector if requested
+    if (this.disableApplicationSelect()) {
+      this.deployForm.controls.applicationId.disable();
+    }
   }
 
   ngAfterViewInit(): void {
