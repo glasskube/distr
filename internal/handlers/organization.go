@@ -92,12 +92,13 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 	}
 
 	organization := types.Organization{
-		Name:              body.Name,
-		Slug:              body.Slug,
-		SubscriptionType:  types.SubscriptionTypeTrial,
-		Features:          subscription.ProFeatures,
-		PreConnectScript:  body.PreConnectScript,
-		PostConnectScript: body.PostConnectScript,
+		Name:                body.Name,
+		Slug:                body.Slug,
+		SubscriptionType:    types.SubscriptionTypeTrial,
+		Features:            subscription.ProFeatures,
+		PreConnectScript:    body.PreConnectScript,
+		PostConnectScript:   body.PostConnectScript,
+		ConnectScriptIsSudo: body.ConnectScriptIsSudo,
 	}
 
 	if buildconfig.IsCommunityEdition() {
@@ -197,6 +198,11 @@ func handleUpdateOrganization(
 
 		if !util.PtrEq(org.PostConnectScript, request.PostConnectScript) {
 			org.PostConnectScript = request.PostConnectScript
+			needsUpdate = true
+		}
+
+		if request.ConnectScriptIsSudo != org.ConnectScriptIsSudo {
+			org.ConnectScriptIsSudo = request.ConnectScriptIsSudo
 			needsUpdate = true
 		}
 
