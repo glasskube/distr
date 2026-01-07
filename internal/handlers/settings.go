@@ -194,7 +194,7 @@ func deleteAccessTokenHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
-		tokenID, err := uuid.Parse(r.PathValue("id"))
+		tokenID, err := uuid.Parse(r.PathValue("accessTokenId"))
 		if err != nil {
 			http.NotFound(w, r)
 			return
