@@ -29,7 +29,9 @@ import {
   filter,
   map,
   NEVER,
+  of,
   shareReplay,
+  startWith,
   Subject,
   switchMap,
   takeUntil,
@@ -117,30 +119,31 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
   private readonly deploymentId$ = this.deployForm.controls.deploymentId.valueChanges.pipe(
+    startWith(this.deployForm.controls.deploymentId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   private readonly applicationId$ = this.deployForm.controls.applicationId.valueChanges.pipe(
+    startWith(this.deployForm.controls.applicationId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   private readonly applicationVersionId$ = this.deployForm.controls.applicationVersionId.valueChanges.pipe(
+    startWith(this.deployForm.controls.applicationVersionId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   private readonly applicationLicenseId$ = this.deployForm.controls.applicationLicenseId.valueChanges.pipe(
+    startWith(this.deployForm.controls.applicationLicenseId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  private readonly deploymentType$ = toObservable(this.deploymentType, {injector: this.injector}).pipe(
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId, {injector: this.injector}).pipe(
+  private readonly deploymentType$ = toObservable(this.deploymentType).pipe(distinctUntilChanged(), shareReplay(1));
+  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId).pipe(
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -198,7 +201,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
                 this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
               )
             )
-        : NEVER
+        : of([])
     ),
     distinctUntilChanged(),
     shareReplay(1)
@@ -216,8 +219,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   ]).pipe(
     map(([shouldShowLicense, license, application, selectedApplicationVersionId]) => {
       let versions;
-      console.log('hello');
-      console.log(shouldShowLicense, license, application, selectedApplicationVersionId);
 
       if (shouldShowLicense) {
         // if the license has no version associations, assume that the application has all available versions
