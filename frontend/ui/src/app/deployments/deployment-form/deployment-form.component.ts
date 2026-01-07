@@ -24,18 +24,15 @@ import {DeploymentRequest} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
-  combineLatestWith,
   debounceTime,
   distinctUntilChanged,
   filter,
   map,
   NEVER,
-  of,
   shareReplay,
   Subject,
   switchMap,
   takeUntil,
-  withLatestFrom,
 } from 'rxjs';
 import {isArchived} from '../../../util/dates';
 import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../../util/validation';
@@ -139,8 +136,14 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
-  private readonly deploymentType$ = toObservable(this.deploymentType, {injector: this.injector});
-  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId, {injector: this.injector});
+  private readonly deploymentType$ = toObservable(this.deploymentType, {injector: this.injector}).pipe(
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId, {injector: this.injector}).pipe(
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
@@ -152,9 +155,10 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   ]).pipe(
     map(
       ([isLicensingEnabled, licenses, customerOrgId]) =>
-        isLicensingEnabled && (!this.auth.isVendor() || customerOrgId !== undefined) && licenses.length > 0
+        isLicensingEnabled && (!this.auth.isVendor() || customerOrgId !== '') && licenses.length > 0
     ),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   /**
@@ -164,7 +168,8 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
    */
   private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deploymentId$]).pipe(
     map(([isVisible, deploymentId]) => isVisible && !deploymentId),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   protected readonly swarmModeVisible$ = toObservable(computed(() => this.deploymentType() === 'docker'));
@@ -173,13 +178,17 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     switchMap((type) => this.applications.list().pipe(map((apps) => apps.filter((app) => app.type === type))))
   );
 
-  private selectedApplication$ = this.applicationId$.pipe(
-    combineLatestWith(this.applications$),
-    map(([applicationId, applications]) => applications.find((application) => application.id === applicationId))
+  private selectedApplication$ = combineLatest([this.applicationId$, this.applications$]).pipe(
+    map(([applicationId, applications]) => applications.find((application) => application.id === applicationId)),
+    distinctUntilChanged((a, b) => a?.id === b?.id),
+    shareReplay(1)
   );
 
-  protected readonly licenses$ = this.applicationId$.pipe(
-    combineLatestWith(this.licenseControlVisible$, this.customerOrganizationId$),
+  protected readonly licenses$ = combineLatest([
+    this.applicationId$,
+    this.licenseControlVisible$,
+    this.customerOrganizationId$,
+  ]).pipe(
     switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
       isLicensingEnabled && applicationId
         ? this.licenses
@@ -191,36 +200,41 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
             )
         : NEVER
     ),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
-  private readonly selectedLicense$ = this.applicationLicenseId$.pipe(
-    combineLatestWith(this.licenses$),
+  private readonly selectedLicense$ = combineLatest([this.applicationLicenseId$, this.licenses$]).pipe(
     map(([licenseId, licenses]) => licenses.find((license) => license.id === licenseId))
   );
 
-  protected availableApplicationVersions$ = this.licenseControlVisible$.pipe(
-    switchMap((shouldShowLicense) =>
-      shouldShowLicense
-        ? this.selectedLicense$.pipe(
-            switchMap((license) =>
-              // if the license has no version associations, assume that the application has all available versions
-              license?.versions?.length
-                ? of(license.versions)
-                : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
-            )
-          )
-        : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
-    ),
-    withLatestFrom(this.applicationVersionId$),
-    map(([avs, selectedApplicationVersionId]) =>
-      avs.filter((av) => {
+  protected availableApplicationVersions$ = combineLatest([
+    this.licenseControlVisible$,
+    this.selectedLicense$,
+    this.selectedApplication$,
+    this.applicationVersionId$,
+  ]).pipe(
+    map(([shouldShowLicense, license, application, selectedApplicationVersionId]) => {
+      let versions;
+      console.log('hello');
+      console.log(shouldShowLicense, license, application, selectedApplicationVersionId);
+
+      if (shouldShowLicense) {
+        // if the license has no version associations, assume that the application has all available versions
+        versions = license?.versions?.length ? license.versions : (application?.versions ?? []);
+      } else {
+        versions = application?.versions ?? [];
+      }
+
+      return versions.filter((av) => {
         if (av.id === selectedApplicationVersionId) {
           return true;
         }
         return !isArchived(av);
-      })
-    )
+      });
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   private readonly destroyed$ = new Subject<void>();
