@@ -1,176 +1,191 @@
 <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased">
-  <div class="mx-auto max-w-screen-md px-4">
-    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-      <div class="justify-between mx-4 pt-4 dark:border-gray-700">
-        <h1 class="mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 md:text-4xl dark:text-white">
-          Organization Settings
-        </h1>
-        <p class="text-gray-500 dark:text-gray-400">Edit your organizations name and slug.</p>
+  <div class="mx-auto max-w-screen-lg px-4">
+    <div class="bg-white dark:bg-gray-800 relative shadow-md rounded-lg overflow-hidden p-10 mb-20">
+      <h1
+        class="pb-4 mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 md:text-4xl dark:text-white border-b border-gray-200 dark:border-gray-700">
+        Organization Settings
+      </h1>
 
-        <form [formGroup]="form" (ngSubmit)="save()">
-          <div class="grid gap-4 mb-4 sm:mb-6 mt-6">
-            <div class="space-y-4">
-              <h2 class="text-xl font-bold dark:text-white">General</h2>
-              <div>
-                <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name *</label>
-                <input
-                  formControlName="name"
-                  autotrim
-                  type="text"
-                  name="name"
-                  id="name"
-                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                  placeholder="Name"
-                  required />
-                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  The name will be used in invitation mails.
-                </p>
-                @if (form.controls.name.invalid && form.controls.name.touched) {
-                  <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
-                }
-              </div>
-            </div>
-
-            <div class="space-y-4">
-              <h2 class="text-xl font-bold dark:text-white">Artifact registry</h2>
-              <div>
-                <label for="slug" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Slug</label>
-                <input
-                  formControlName="slug"
-                  autotrim
-                  type="text"
-                  name="slug"
-                  id="slug"
-                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                  placeholder="slug" />
-                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  The slug will used as part of the url for artifact registry. It must start with a lower case letter or
-                  digit and consist only of lowercase letters, digits, as well as the following special characters: “.”,
-                  “_”, “__”, “-”.
-                </p>
-                @if (form.controls.slug.invalid && form.controls.slug.touched) {
-                  <p class="mt-1 text-sm text-red-600 dark:text-red-500">Slug must be url safe.</p>
-                }
-              </div>
-            </div>
-
-            @if (isPrePostScriptEnabled()) {
-              <div class="space-y-4">
-                <h2 class="text-xl font-bold dark:text-white">Pre-/post-connect scripts</h2>
-                <div>
-                  <label for="preConnectScript" class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Pre-connect script</label
-                  >
-                  <div
-                    class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
-                    <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
-                      <textarea
-                        formControlName="preConnectScript"
-                        id="preConnectScript"
-                        rows="8"
-                        class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"></textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    for="postConnectScript"
-                    class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >Post-connect script</label
-                  >
-                  <div
-                    class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
-                    <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
-                      <textarea
-                        formControlName="postConnectScript"
-                        id="postConnectScript"
-                        rows="8"
-                        class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"></textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div class="flex items-center">
-                    <input
-                      formControlName="connectScriptIsSudo"
-                      id="connectScriptIsSudo"
-                      type="checkbox"
-                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <label for="connectScriptIsSudo" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                      Script should be run with sudo
-                    </label>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <div class="space-y-4">
-              <h2 class="text-xl font-bold dark:text-white">Custom Domains</h2>
-              <div
-                class="flex items-center p-2 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-                role="alert">
-                <fa-icon [icon]="faLightbulb" class="me-2" />
-                <span class="sr-only">Info</span>
-                Please contact Distr support if you are interested in configuration of the settings below.
-              </div>
-              <div>
-                <label for="appDomain" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  Custom app domain
-                </label>
-                <input
-                  type="text"
-                  id="appDomain"
-                  formControlName="appDomain"
-                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60"
-                  placeholder="not configured" />
-                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  This is where users and customers in your organization are able to access the Distr web application.
-                </p>
-              </div>
-              <div>
-                <label for="registryDomain" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  Custom registry domain
-                </label>
-                <input
-                  type="text"
-                  id="registryDomain"
-                  formControlName="registryDomain"
-                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60"
-                  placeholder="not configured" />
-                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  This is where users and customers in your organization are able to access the Distr artifact registry.
-                </p>
-              </div>
-              <div>
-                <label for="emailFromAddress" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  Custom e-mail sender address
-                </label>
-                <input
-                  type="text"
-                  id="emailFromAddress"
-                  formControlName="emailFromAddress"
-                  class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60"
-                  placeholder="not configured" />
-                <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  This is the address used by Distr to send transactional e-mails to users and customers in your
-                  organization.
-                </p>
-              </div>
-            </div>
-
-            <div class="mt-8 flex justify-center w-full pb-4 space-x-4 sm:mt-0">
-              <button
-                type="submit"
-                [disabled]="formLoading() || form.invalid"
-                class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
-                <fa-icon [icon]="faFloppyDisk" size="lg" class="h-4 w-4 mr-2 -ml-0.5 mb-1"></fa-icon>
-                Save
-              </button>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="grid gap-4 mt-6">
+          <div class="space-y-4">
+            <h2 class="text-xl font-bold dark:text-white">General</h2>
+            <div>
+              <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name *</label>
+              <input
+                formControlName="name"
+                autotrim
+                type="text"
+                name="name"
+                id="name"
+                class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                placeholder="Name"
+                required />
+              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
+                The name will be used in invitation mails.
+              </p>
+              @if (form.controls.name.invalid && form.controls.name.touched) {
+                <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+              }
             </div>
           </div>
-        </form>
+
+          <div class="space-y-4">
+            <h2 class="text-xl font-bold dark:text-white">Artifact registry</h2>
+            <div>
+              <label for="slug" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Slug</label>
+              <input
+                formControlName="slug"
+                autotrim
+                type="text"
+                name="slug"
+                id="slug"
+                class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                placeholder="slug" />
+              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
+                The slug will used as part of the url for artifact registry. It must start with a lower case letter or
+                digit and consist only of lowercase letters, digits, as well as the following special characters: “.”,
+                “_”, “__”, “-”.
+              </p>
+              @if (form.controls.slug.invalid && form.controls.slug.touched) {
+                <p class="mt-1 text-sm text-red-600 dark:text-red-500">Slug must be url safe.</p>
+              }
+            </div>
+          </div>
+
+          @if (isPrePostScriptEnabled()) {
+            <div class="space-y-4">
+              <h2 class="text-xl font-bold dark:text-white">Pre-/post-connect scripts</h2>
+              <div>
+                <label for="preConnectScript" class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >Pre-connect script</label
+                >
+                <div
+                  class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
+                  <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
+                    <textarea
+                      formControlName="preConnectScript"
+                      id="preConnectScript"
+                      rows="8"
+                      class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label for="postConnectScript" class="flex-grow mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >Post-connect script</label
+                >
+                <div
+                  class="mb-4 w-full bg-gray-100 rounded-lg border border-gray-200 dark:bg-gray-600 dark:border-gray-600">
+                  <div class="py-2 px-4 bg-gray-50 rounded-b-lg dark:bg-gray-700">
+                    <textarea
+                      formControlName="postConnectScript"
+                      id="postConnectScript"
+                      rows="8"
+                      class="block px-0 w-full text-sm text-gray-800 bg-gray-50 border-0 dark:bg-gray-700 focus:ring-0 dark:text-white dark:placeholder-gray-400"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center">
+                  <input
+                    formControlName="connectScriptIsSudo"
+                    id="connectScriptIsSudo"
+                    type="checkbox"
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                  <label for="connectScriptIsSudo" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    Script should be run with sudo
+                  </label>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="space-y-4">
+            <h2 class="text-xl font-bold dark:text-white">Custom Domains</h2>
+            <div
+              class="flex items-center p-2 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+              role="alert">
+              <fa-icon [icon]="faLightbulb" class="me-2" />
+              <span class="sr-only">Info</span>
+              Please contact Distr support if you are interested in configuration of the settings below.
+            </div>
+            <div>
+              <label for="appDomain" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Custom app domain
+              </label>
+              <input
+                type="text"
+                id="appDomain"
+                formControlName="appDomain"
+                class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60"
+                placeholder="not configured" />
+              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
+                This is where users and customers in your organization are able to access the Distr web application.
+              </p>
+            </div>
+            <div>
+              <label for="registryDomain" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Custom registry domain
+              </label>
+              <input
+                type="text"
+                id="registryDomain"
+                formControlName="registryDomain"
+                class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60"
+                placeholder="not configured" />
+              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
+                This is where users and customers in your organization are able to access the Distr artifact registry.
+              </p>
+            </div>
+            <div>
+              <label for="emailFromAddress" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Custom e-mail sender address
+              </label>
+              <input
+                type="text"
+                id="emailFromAddress"
+                formControlName="emailFromAddress"
+                class="bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:opacity-60"
+                placeholder="not configured" />
+              <p class="mt-1 mb-3 text-xs font-normal text-gray-500 dark:text-gray-400">
+                This is the address used by Distr to send transactional e-mails to users and customers in your
+                organization.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex justify-center w-full space-x-4 mt-8 sm:mt-0">
+            <button
+              type="submit"
+              [disabled]="formLoading() || form.invalid"
+              class="text-white w-full inline-flex items-center justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-60 disabled:cursor-not-allowed">
+              <fa-icon [icon]="faFloppyDisk" size="lg" class="h-4 w-4 mr-2 -ml-0.5 mb-1"></fa-icon>
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <h2 class="text-xl font-bold dark:text-white mt-8 mb-2">Danger Zone</h2>
+      <div
+        class="flex flex-col rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+        <div class="p-4 flex items-center justify-between dark:text-white">
+          <div>
+            <div>Delete this organization</div>
+            <div class="text-xs font-normal text-gray-500 dark:text-gray-400">
+              Permanently delete this organization and all associated data.
+            </div>
+          </div>
+          <button
+            type="button"
+            class="text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
+            (click)="deleteOrganization()">
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>

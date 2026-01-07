@@ -63,6 +63,8 @@ const (
 			ON u.id = j.user_account_id
 		LEFT JOIN CustomerOrganization co
 			ON dt.customer_organization_id = co.id
+		LEFT JOIN Organization o
+			ON o.id = j.organization_id AND o.deleted_at IS NULL
 	`
 	deploymentTargetFromExpr = `
 		DeploymentTarget dt
