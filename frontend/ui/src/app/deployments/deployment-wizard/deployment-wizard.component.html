@@ -286,8 +286,7 @@
                     [deploymentType]="selectedDeploymentType()"
                     [customerOrganizationId]="selectedCustomerOrganizationId()"
                     [deploymentTargetName]="deploymentTargetForm.value.name ?? ''"
-                    [formControl]="applicationConfigForm.controls.deploymentFormData"
-                    [ngModel]="deploymentFormInitialData()">
+                    [formControl]="applicationConfigForm.controls.deploymentFormData">
                   </app-deployment-form>
                 }
               </div>
@@ -298,7 +297,10 @@
           <cdk-step [stepControl]="connectForm">
             <div class="space-y-6 mt-4">
               <div class="space-y-4">
-                <h3 class="font-normal text-gray-900 dark:text-white">Deployment Created Successfully</h3>
+                <div class="flex items-center gap-3">
+                  <fa-icon [icon]="faCheckCircle" class="text-green-600 dark:text-green-500 text-2xl"></fa-icon>
+                  <h3 class="font-normal text-gray-900 dark:text-white">Deployment Created Successfully</h3>
+                </div>
                 <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
                   Your deployment has been created successfully. To deploy it, please copy and paste the following
                   command:

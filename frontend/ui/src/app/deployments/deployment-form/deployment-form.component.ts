@@ -1,5 +1,16 @@
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, forwardRef, inject, Injector, input, OnDestroy, OnInit} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  computed,
+  forwardRef,
+  inject,
+  Injector,
+  input,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -128,16 +139,20 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
+  private readonly deploymentType$ = toObservable(this.deploymentType, {injector: this.injector});
+  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId, {injector: this.injector});
+
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
   protected readonly licenseControlVisible$ = combineLatest([
     this.featureFlags.isLicensingEnabled$,
     this.licenses.list(),
+    this.customerOrganizationId$,
   ]).pipe(
     map(
-      ([isLicensingEnabled, licenses]) =>
-        isLicensingEnabled && (!this.auth.isVendor() || this.customerOrganizationId() !== '') && licenses.length > 0
+      ([isLicensingEnabled, licenses, customerOrgId]) =>
+        isLicensingEnabled && (!this.auth.isVendor() || customerOrgId !== undefined) && licenses.length > 0
     ),
     distinctUntilChanged()
   );
@@ -152,11 +167,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     distinctUntilChanged()
   );
 
-  protected readonly swarmModeVisible$ = of(this.deploymentType() === 'docker');
+  protected readonly swarmModeVisible$ = toObservable(computed(() => this.deploymentType() === 'docker'));
 
-  protected readonly applications$ = this.applications
-    .list()
-    .pipe(map((apps) => apps.filter((app) => app.type === this.deploymentType())));
+  protected readonly applications$ = this.deploymentType$.pipe(
+    switchMap((type) => this.applications.list().pipe(map((apps) => apps.filter((app) => app.type === type))))
+  );
 
   private selectedApplication$ = this.applicationId$.pipe(
     combineLatestWith(this.applications$),
@@ -164,14 +179,17 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   );
 
   protected readonly licenses$ = this.applicationId$.pipe(
-    combineLatestWith(this.licenseControlVisible$),
-    switchMap(([applicationId, isLicensingEnabled]) =>
-      isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
-    ),
-    map((licenses) =>
-      this.auth.isVendor()
-        ? licenses.filter((l) => l.customerOrganizationId === this.customerOrganizationId())
-        : licenses
+    combineLatestWith(this.licenseControlVisible$, this.customerOrganizationId$),
+    switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
+      isLicensingEnabled && applicationId
+        ? this.licenses
+            .list(applicationId)
+            .pipe(
+              map((licenses) =>
+                this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
+              )
+            )
+        : NEVER
     ),
     shareReplay(1)
   );
@@ -227,24 +245,25 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
 
-    const type = this.deploymentType();
-    if (type) {
-      if (type === 'kubernetes') {
-        this.deployForm.controls.releaseName.enable();
-        this.deployForm.controls.valuesYaml.enable();
-        this.deployForm.controls.envFileData.disable();
-        const targetName = this.deploymentTargetName();
-        if (!this.deployForm.value.releaseName && targetName) {
-          this.deployForm.patchValue({
-            releaseName: targetName.trim().toLowerCase().replaceAll(/\W+/g, '-'),
-          });
+    this.deploymentType$.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
+      if (type) {
+        if (type === 'kubernetes') {
+          this.deployForm.controls.releaseName.enable();
+          this.deployForm.controls.valuesYaml.enable();
+          this.deployForm.controls.envFileData.disable();
+          const targetName = this.deploymentTargetName();
+          if (!this.deployForm.value.releaseName && targetName) {
+            this.deployForm.patchValue({
+              releaseName: targetName.trim().toLowerCase().replaceAll(/\W+/g, '-'),
+            });
+          }
+        } else {
+          this.deployForm.controls.envFileData.enable();
+          this.deployForm.controls.releaseName.disable();
+          this.deployForm.controls.valuesYaml.disable();
         }
-      } else {
-        this.deployForm.controls.envFileData.enable();
-        this.deployForm.controls.releaseName.disable();
-        this.deployForm.controls.valuesYaml.disable();
       }
-    }
+    });
 
     this.deploymentId$.pipe(takeUntil(this.destroyed$)).subscribe((id) => {
       if (id) {
@@ -260,18 +279,20 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
 
-    combineLatest([this.applicationId$, this.applicationVersionId$, this.deploymentId$])
+    combineLatest([this.applicationId$, this.applicationVersionId$, this.deploymentId$, this.deploymentType$])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId, deploymentId]) =>
+        switchMap(([applicationId, versionId, deploymentId, type]) =>
           versionId && applicationId && !deploymentId
-            ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
+            ? this.applications.getTemplateFile(applicationId, versionId).pipe(
+                catchError(() => NEVER),
+                map((templateFile) => ({templateFile, type}))
+              )
             : NEVER
         ),
         takeUntil(this.destroyed$)
       )
-      .subscribe((templateFile) => {
-        const type = this.deploymentType();
+      .subscribe(({templateFile, type}) => {
         if (type === 'kubernetes') {
           this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
         } else {
@@ -279,11 +300,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         }
       });
 
-    combineLatest([this.applicationId$, this.applicationVersionId$])
+    combineLatest([this.applicationId$, this.applicationVersionId$, this.deploymentType$])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId]) =>
-          versionId && applicationId && this.deploymentType() === 'docker'
+        switchMap(([applicationId, versionId, type]) =>
+          versionId && applicationId && type === 'docker'
             ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER))
             : NEVER
         ),

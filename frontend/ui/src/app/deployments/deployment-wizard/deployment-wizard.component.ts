@@ -1,8 +1,8 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {AsyncPipe} from '@angular/common';
-import {Component, computed, EventEmitter, inject, OnDestroy, OnInit, Output, signal, ViewChild} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Component, computed, DestroyRef, effect, inject, OnInit, output, signal, viewChild} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {faBuildingUser, faCheckCircle, faDharmachakra, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -13,7 +13,7 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {combineLatest, firstValueFrom, map, of, startWith, Subject, takeUntil} from 'rxjs';
+import {combineLatest, firstValueFrom, map, of, startWith} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
@@ -38,7 +38,6 @@ import {DeploymentWizardStepperComponent} from './deployment-wizard-stepper.comp
   imports: [
     AsyncPipe,
     ReactiveFormsModule,
-    FormsModule,
     FaIconComponent,
     DeploymentWizardStepperComponent,
     CdkStep,
@@ -49,7 +48,7 @@ import {DeploymentWizardStepperComponent} from './deployment-wizard-stepper.comp
   ],
   animations: [modalFlyInOut],
 })
-export class DeploymentWizardComponent implements OnInit, OnDestroy {
+export class DeploymentWizardComponent implements OnInit {
   protected readonly faXmark = faXmark;
   protected readonly faShip = faShip;
   protected readonly faDocker = faDocker;
@@ -67,9 +66,9 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly featureFlags = inject(FeatureFlagService);
 
-  @ViewChild('stepper') private stepper?: CdkStepper;
+  private readonly stepper = viewChild<CdkStepper>('stepper');
 
-  @Output('closed') readonly closed = new EventEmitter<void>();
+  readonly closed = output<void>();
 
   // Step 1: Customer Selection (optional)
   readonly customerForm = new FormGroup({
@@ -173,7 +172,17 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
   }
 
   private loading = false;
-  private readonly destroyed$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor() {
+    // Initialize deployment form with initial data reactively
+    effect(() => {
+      const initialData = this.deploymentFormInitialData();
+      if (initialData && !this.applicationConfigForm.controls.deploymentFormData.value) {
+        this.applicationConfigForm.controls.deploymentFormData.patchValue(initialData);
+      }
+    });
+  }
 
   ngOnInit() {
     // If user is a customer, set selectedCustomerOrganizationId from organization
@@ -186,31 +195,30 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
 
     // Watch customer selection
     this.customerForm.controls.customerOrganizationId.valueChanges
-      .pipe(takeUntil(this.destroyed$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((customerId) => {
         this.selectedCustomerOrganizationId.set(customerId ?? '');
       });
 
     // Watch application selection
-    this.applicationForm.controls.applicationId.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((appId) => {
-      firstValueFrom(this.applications$).then((apps) => {
-        const app = apps.find((a) => a.id === appId);
-        this.selectedApplication.set(app);
+    this.applicationForm.controls.applicationId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((appId) => {
+        firstValueFrom(this.applications$).then((apps) => {
+          const app = apps.find((a) => a.id === appId);
+          this.selectedApplication.set(app);
 
-        // Enable/disable configuration form controls based on deployment type
-        this.updateConfigurationFormControls(app?.type);
+          // Enable/disable configuration form controls based on deployment type
+          this.updateConfigurationFormControls(app?.type);
+        });
       });
-    });
 
     // Watch cluster scope changes
-    this.deploymentTargetForm.controls.clusterScope.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((value) => {
-      this.deploymentTargetForm.controls.scope.setValue(value ? 'cluster' : 'namespace');
-    });
-  }
-
-  ngOnDestroy() {
-    this.destroyed$.next();
-    this.destroyed$.complete();
+    this.deploymentTargetForm.controls.clusterScope.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.deploymentTargetForm.controls.scope.setValue(value ? 'cluster' : 'namespace');
+      });
   }
 
   private updateConfigurationFormControls(type: DeploymentType | undefined) {
@@ -230,7 +238,7 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const stepIndex = this.stepper?.selectedIndex ?? 0;
+    const stepIndex = this.stepper()?.selectedIndex ?? 0;
     const adjustedIndex = this.showCustomerStep() ? stepIndex : stepIndex + 1;
 
     switch (adjustedIndex) {
@@ -354,7 +362,7 @@ export class DeploymentWizardComponent implements OnInit, OnDestroy {
 
   private nextStep() {
     this.loading = false;
-    this.stepper?.next();
+    this.stepper()?.next();
   }
 
   selectApplication(app: Application) {

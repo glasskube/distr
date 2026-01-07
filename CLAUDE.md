@@ -154,6 +154,7 @@ Go linting uses golangci-lint with config in `.golangci.yml`. Frontend uses Pret
 - Use [Angular Signals](https://angular.dev/guide/signals) for inputs, child views and everywhere where the current Angular version supports signals.
   If you find usages of non signal usages for inputs, child views etc. change them to signals in the files you would edit anyway.
 - Don't use any responsive design classes in modals. They should always be optimized for the none mobile use case.
+- Use Angular's `takeUntilDestroyed` instead of a manual `destroyed$` subject.
 
 ### Database Access
 
