@@ -52,7 +52,7 @@
                           <img
                             [src]="getVendorLogoUrl(branding)"
                             [alt]="vendorOrg.name"
-                            class="w-12 h-12 mb-2 rounded-lg object-cover" />
+                            class="w-12 h-12 mb-2 rounded-lg" />
                         }
 
                         <!-- Vendor Name -->
@@ -90,7 +90,7 @@
                           <img
                             [src]="customer.imageUrl | secureImage | async"
                             [alt]="customer.name"
-                            class="w-12 h-12 mb-2 rounded-lg object-cover" />
+                            class="w-12 h-12 mb-2 rounded-lg" />
                         } @else {
                           <div
                             class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -144,7 +144,7 @@
                       [class.dark:bg-gray-800]="applicationForm.value.applicationId !== app.id">
                       <!-- Application Image -->
                       @if (app.imageUrl) {
-                        <img [src]="app.imageUrl" [alt]="app.name" class="w-12 h-12 mb-2 rounded-lg object-cover" />
+                        <img [src]="app.imageUrl" [alt]="app.name" class="w-12 h-12 mb-2 rounded-lg" />
                       } @else {
                         <div
                           class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
