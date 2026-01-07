@@ -21,7 +21,7 @@ const (
 	MaxUsersPerCustomerOrganizationUnlimited Limit = Unlimited
 
 	MaxDeploymentTargetsPerCustomerOrganizationStarter   Limit = 1
-	MaxDeploymentTargetsPerCustomerOrganizationPro       Limit = 3
+	MaxDeploymentTargetsPerCustomerOrganizationPro       Limit = 8
 	MaxDeploymentTargetsPerCustomerOrganizationUnlimited Limit = Unlimited
 
 	MaxLogExportRowsStarter    Limit = 100

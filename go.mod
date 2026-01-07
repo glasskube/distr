@@ -39,7 +39,7 @@ require (
 	github.com/onsi/gomega v1.38.3
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.142.0
 	github.com/spf13/cobra v1.10.2
-	github.com/stripe/stripe-go/v84 v84.0.0
+	github.com/stripe/stripe-go/v84 v84.1.0
 	github.com/wneessen/go-mail v0.7.2
 	go.opentelemetry.io/collector/component v1.48.0
 	go.opentelemetry.io/collector/confmap v1.48.0
