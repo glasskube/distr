@@ -40,11 +40,11 @@ func ValidateCustomerOrgBelongsToOrg(ctx context.Context, customerOrgID uuid.UUI
 	if err != nil {
 		return fmt.Errorf("could not validate CustomerOrganization belongs to Organization: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
 	if err != nil {
 		return fmt.Errorf("could not collect result: %w", err)
 	}
-	if !result.Exists {
+	if !exists {
 		return fmt.Errorf("customer organization does not belong to organization")
 	}
 	return nil

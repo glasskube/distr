@@ -187,7 +187,7 @@ export class DeploymentWizardComponent implements OnInit {
   ngOnInit() {
     // If user is a customer, set selectedCustomerOrganizationId from organization
     if (!this.auth.isVendor()) {
-      firstValueFrom(this.vendorOrganization$).then((org) => {
+      this.vendorOrganization$.subscribe((org) => {
         this.customerForm.controls.customerOrganizationId.setValue(org.customerOrganizationId!);
         this.selectedCustomerOrganizationId.set(org.customerOrganizationId!);
       });
