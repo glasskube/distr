@@ -33,7 +33,8 @@ const (
 		o.subscription_customer_organization_quantity,
 		o.subscription_user_account_quantity,
 		o.pre_connect_script,
-		o.post_connect_script
+		o.post_connect_script,
+		o.connect_script_is_sudo
 	`
 	organizationWithUserRoleOutputExpr = organizationOutputExpr + `,
 		j.user_role,
@@ -91,7 +92,8 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			subscription_customer_organization_quantity = @subscription_customer_organization_quantity,
 			subscription_user_account_quantity = @subscription_user_account_quantity,
 			pre_connect_script = @pre_connect_script,
-			post_connect_script = @post_connect_script
+			post_connect_script = @post_connect_script,
+			connect_script_is_sudo = @connect_script_is_sudo
 		WHERE id = @id
 		RETURNING `+organizationOutputExpr,
 		pgx.NamedArgs{
@@ -108,6 +110,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
 			"pre_connect_script":                          org.PreConnectScript,
 			"post_connect_script":                         org.PostConnectScript,
+			"connect_script_is_sudo":                      org.ConnectScriptIsSudo,
 		},
 	)
 	if err != nil {
