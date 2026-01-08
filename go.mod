@@ -36,7 +36,7 @@ require (
 	github.com/oaswrap/spec v0.3.6
 	github.com/oaswrap/spec-ui v0.1.4
 	github.com/oaswrap/spec/adapter/chiopenapi v0.3.6
-	github.com/onsi/gomega v1.38.3
+	github.com/onsi/gomega v1.39.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.143.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stripe/stripe-go/v84 v84.1.0
