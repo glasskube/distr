@@ -331,8 +331,8 @@
                   You can use the Go template language to get a dynamic link based on
                   @if (application.type === 'docker') {
                     <span ngNonBindable
-                      >environment variables <code>{{ .Env.HOSTNAME }}</code
-                      >.</span
+                      >environment variables (<code>{{ .Env.HOSTNAME }}</code
+                      >).</span
                     >
                   } @else if (application.type === 'kubernetes') {
                     <span ngNonBindable
