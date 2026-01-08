@@ -38,4 +38,25 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+
+  code:not(a *),
+  strong {
+    @apply text-gray-900;
+    @apply dark:text-gray-200;
+  }
+
+  code {
+    @apply whitespace-pre;
+  }
+
+  code:not(pre *) {
+    @apply rounded-sm;
+    @apply px-1;
+    @apply border border-gray-200 dark:border-gray-600;
+  }
+
+  pre,
+  code {
+    @apply bg-gray-200 dark:bg-gray-800;
+  }
 }
