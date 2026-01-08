@@ -5,10 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"text/template"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/dotenv"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -81,7 +81,7 @@ func GetDeploymentsForDeploymentTarget(
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,
-				av.link AS application_link,
+				av.link_template AS application_link_template,
 				CASE WHEN drs.id IS NOT NULL THEN (
 					drs.id,
 					drs.created_at,
@@ -144,31 +144,20 @@ func TemplateApplicationLink(link string, envFileData []byte, valuesYaml []byte)
 		return "", nil
 	}
 
-	envMap := make(map[string]string)
-	if len(envFileData) > 0 {
-		envStr := string(envFileData)
-		lines := strings.Split(envStr, "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if line == "" || strings.HasPrefix(line, "#") {
-				continue
-			}
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) == 2 {
-				envMap[parts[0]] = parts[1]
-			}
-		}
+	parsedEnv, err := dotenv.UnmarshalBytesWithLookup(envFileData, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse env file: %w", err)
 	}
 
-	valuesMap := make(map[string]interface{})
+	valuesMap := make(map[string]any)
 	if len(valuesYaml) > 0 {
 		if err := yaml.Unmarshal(valuesYaml, &valuesMap); err != nil {
 			return "", fmt.Errorf("failed to parse values YAML: %w", err)
 		}
 	}
 
-	data := map[string]interface{}{
-		"Env":    envMap,
+	data := map[string]any{
+		"Env":    parsedEnv,
 		"Values": valuesMap,
 	}
 
@@ -188,7 +177,7 @@ func TemplateApplicationLink(link string, envFileData []byte, valuesYaml []byte)
 func TemplateDeploymentLinks(deployments []types.DeploymentWithLatestRevision) error {
 	for i := range deployments {
 		templatedLink, err := TemplateApplicationLink(
-			deployments[i].ApplicationLink,
+			deployments[i].ApplicationLinkTemplate,
 			deployments[i].EnvFileData,
 			deployments[i].ValuesYaml,
 		)

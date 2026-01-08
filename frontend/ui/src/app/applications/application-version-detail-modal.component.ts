@@ -6,7 +6,7 @@ import {EditorComponent} from '../components/editor.component';
 export interface ApplicationVersionDetail {
   application: Application;
   version: ApplicationVersion;
-  link: string;
+  linkTemplate: string;
   kubernetes?: {
     baseValues: string | null;
     template: string | null;
@@ -47,7 +47,7 @@ export class ApplicationVersionDetailModalComponent {
     effect(() => {
       const detail = this.versionDetail();
       this.versionDetailsForm.patchValue({
-        link: detail.link,
+        link: detail.linkTemplate,
         kubernetes: detail.kubernetes,
         docker: detail.docker,
       });

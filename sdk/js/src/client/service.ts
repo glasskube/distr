@@ -116,12 +116,12 @@ export class DistrService {
     data: {
       composeFile: string;
       templateFile?: string;
-      link?: string;
+      linkTemplate?: string;
     }
   ): Promise<ApplicationVersion> {
     return this.client.createApplicationVersion(
       applicationId,
-      {name, link: data.link ?? ''},
+      {name, linkTemplate: data.linkTemplate ?? ''},
       {
         composeFile: data.composeFile,
         templateFile: data.templateFile,
@@ -145,14 +145,14 @@ export class DistrService {
       chartUrl: string;
       baseValuesFile?: string;
       templateFile?: string;
-      link?: string;
+      linkTemplate?: string;
     }
   ): Promise<ApplicationVersion> {
     return this.client.createApplicationVersion(
       applicationId,
       {
         name: versionName,
-        link: data.link ?? '',
+        linkTemplate: data.linkTemplate ?? '',
         chartName: data.chartName,
         chartVersion: data.chartVersion,
         chartType: data.chartType,

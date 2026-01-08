@@ -87,7 +87,7 @@ Name of the new version
 
 `string`
 
-###### link?
+###### linkTemplate?
 
 `string`
 
@@ -139,7 +139,7 @@ Creates a new application version for the given Kubernetes application using a H
 
 `string`
 
-###### link?
+###### linkTemplate?
 
 `string`
 

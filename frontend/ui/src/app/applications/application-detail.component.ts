@@ -123,7 +123,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
 
   newVersionForm = new FormGroup({
     versionName: new FormControl('', Validators.required),
-    link: new FormControl(''),
+    linkTemplate: new FormControl(''),
     kubernetes: new FormGroup(
       {
         chartType: new FormControl<HelmChartType>('repository', {
@@ -243,7 +243,10 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       if (application.type === 'docker') {
         res = this.applicationService.createApplicationVersionForDocker(
           application,
-          {name: this.newVersionForm.controls.versionName.value!, link: this.newVersionForm.controls.link.value!},
+          {
+            name: this.newVersionForm.controls.versionName.value!,
+            linkTemplate: this.newVersionForm.controls.linkTemplate.value!,
+          },
           this.newVersionForm.controls.docker.controls.compose.value!,
           this.newVersionForm.controls.docker.controls.template.value
         );
@@ -251,7 +254,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         const versionFormVal = this.newVersionForm.controls.kubernetes.value;
         const version = {
           name: this.newVersionForm.controls.versionName.value!,
-          link: this.newVersionForm.controls.link.value!,
+          linkTemplate: this.newVersionForm.controls.linkTemplate.value!,
           chartType: versionFormVal.chartType!,
           chartName: versionFormVal.chartName ?? undefined,
           chartUrl: versionFormVal.chartUrl!,
@@ -290,13 +293,12 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadVersionDetails(application: Application, version: ApplicationVersion) {
-    const link = version.link;
     if (application.type === 'kubernetes') {
       try {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
         const baseValues = await firstValueFrom(this.applicationService.getValuesFile(application.id!, version.id!));
         return {
-          link,
+          linkTemplate: version.linkTemplate,
           kubernetes: {
             chartType: version.chartType,
             chartName: version.chartName,
@@ -318,7 +320,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
         const template = await firstValueFrom(this.applicationService.getTemplateFile(application.id!, version.id!));
         const compose = await firstValueFrom(this.applicationService.getComposeFile(application.id!, version.id!));
         return {
-          link,
+          linkTemplate: version.linkTemplate,
           docker: {
             compose,
             template,
@@ -432,7 +434,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
       this.versionDetail.set({
         application,
         version,
-        link: val.link ?? '',
+        linkTemplate: val.linkTemplate ?? '',
         kubernetes: val.kubernetes,
         docker: val.docker,
       });

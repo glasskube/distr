@@ -45,6 +45,18 @@ HELLO_DISTR_DB_PASSWORD=distr123`),
 			wantErr:    false,
 		},
 		{
+			name: "template with env variables and comment at the end",
+			link: "https://{{ .Env.HELLO_DISTR_HOST }}",
+			envFileData: []byte(`# mandatory values:
+HELLO_DISTR_HOST=localhost # add localhost
+HELLO_DISTR_DB_NAME=hello-distr
+HELLO_DISTR_DB_USER=distr
+HELLO_DISTR_DB_PASSWORD=distr123`),
+			valuesYaml: nil,
+			want:       "https://localhost",
+			wantErr:    false,
+		},
+		{
 			name: "template with multiple env variables",
 			link: "postgres://{{ .Env.HELLO_DISTR_DB_USER }}:{{ .Env.HELLO_DISTR_DB_PASSWORD }}" +
 				"@{{ .Env.HELLO_DISTR_HOST }}/{{ .Env.HELLO_DISTR_DB_NAME }}",

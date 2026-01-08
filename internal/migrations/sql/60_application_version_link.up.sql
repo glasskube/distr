@@ -1,1 +1,1 @@
-ALTER TABLE ApplicationVersion ADD COLUMN link TEXT NOT NULL DEFAULT '';
+ALTER TABLE ApplicationVersion ADD COLUMN link_template TEXT NOT NULL DEFAULT '';

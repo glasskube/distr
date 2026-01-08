@@ -17,12 +17,12 @@ import (
 
 const (
 	applicationOutputExpr        = `a.id, a.created_at, a.organization_id, a.name, a.type, a.image_id`
-	applicationVersionOutputExpr = `av.id, av.created_at, av.archived_at, av.name, av.link, av.application_id,
+	applicationVersionOutputExpr = `av.id, av.created_at, av.archived_at, av.name, av.link_template, av.application_id,
 		av.chart_type, av.chart_name, av.chart_url, av.chart_version, av.values_file_data, av.template_file_data,
 	 av.compose_file_data`
 	applicationWithVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
-			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.link, av.application_id,
+			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.link_template, av.application_id,
 				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			FROM ApplicationVersion av
 			WHERE av.application_id = a.id
@@ -30,7 +30,7 @@ const (
 
 	applicationWithLicensedVersionsOutputExpr = applicationOutputExpr + `,
 		coalesce((
-			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.link, av.application_id,
+			SELECT array_agg(row(av.id, av.created_at, av.archived_at, av.name, av.link_template, av.application_id,
 				av.chart_type, av.chart_name, av.chart_url, av.chart_version) ORDER BY av.created_at ASC)
 			FROM ApplicationVersion av
 			WHERE av.application_id = a.id and
@@ -216,7 +216,7 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 
 	args := pgx.NamedArgs{
 		"name":          applicationVersion.Name,
-		"link":          applicationVersion.Link,
+		"linkTemplate":  applicationVersion.LinkTemplate,
 		"applicationId": applicationVersion.ApplicationID,
 		"chartType":     applicationVersion.ChartType,
 		"chartName":     applicationVersion.ChartName,
@@ -234,12 +234,13 @@ func CreateApplicationVersion(ctx context.Context, applicationVersion *types.App
 	}
 
 	row, err := db.Query(ctx,
-		`INSERT INTO ApplicationVersion AS av (name, link, application_id, chart_type, chart_name, chart_url, chart_version,
-				compose_file_data, values_file_data, template_file_data)
-			VALUES (@name, @link, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion, @composeFileData::bytea,
-				@valuesFileData::bytea, @templateFileData::bytea)
-			RETURNING av.id, av.created_at, av.archived_at, av.name, av.link, av.chart_type, av.chart_name, av.chart_url,
-				av.chart_version, av.values_file_data, av.template_file_data, av.compose_file_data, av.application_id`,
+		`INSERT INTO ApplicationVersion AS av (name, link_template, application_id, chart_type, chart_name, chart_url,
+				chart_version, compose_file_data, values_file_data, template_file_data)
+		VALUES (@name, @linkTemplate, @applicationId, @chartType, @chartName, @chartUrl, @chartVersion,
+			@composeFileData::bytea, @valuesFileData::bytea, @templateFileData::bytea)
+		RETURNING av.id, av.created_at, av.archived_at, av.name, av.link_template, av.chart_type, av.chart_name,
+			av.chart_url, av.chart_version, av.values_file_data, av.template_file_data, av.compose_file_data,
+			av.application_id`,
 		args)
 	if err != nil {
 		return fmt.Errorf("can not create ApplicationVersion: %w", err)

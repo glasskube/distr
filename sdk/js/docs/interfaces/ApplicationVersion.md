@@ -56,9 +56,9 @@
 
 ---
 
-### link
+### linkTemplate?
 
-> **link**: `string`
+> `optional` **linkTemplate**: `string`
 
 ---
 

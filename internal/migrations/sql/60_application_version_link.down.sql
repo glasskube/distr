@@ -1,1 +1,1 @@
-ALTER TABLE ApplicationVersion DROP COLUMN link;
+ALTER TABLE ApplicationVersion DROP COLUMN link_template;
