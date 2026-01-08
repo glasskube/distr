@@ -233,7 +233,11 @@ func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.O
 
 func SetOrganizationDeletedAtNow(ctx context.Context, orgID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	_, err := db.Exec(ctx, "UPDATE Organization SET deleted_at = now() WHERE id = @id AND deleted_at IS NULL", pgx.NamedArgs{"id": orgID})
+	_, err := db.Exec(
+		ctx,
+		"UPDATE Organization SET deleted_at = now() WHERE id = @id AND deleted_at IS NULL",
+		pgx.NamedArgs{"id": orgID},
+	)
 	if err != nil {
 		return fmt.Errorf("could not update Organization: %w", err)
 	}
