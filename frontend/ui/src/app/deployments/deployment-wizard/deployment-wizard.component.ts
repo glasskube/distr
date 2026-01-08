@@ -164,6 +164,12 @@ export class DeploymentWizardComponent implements OnInit {
     return this.selectedCustomerOrganizationId() !== '' && this.isLicensingEnabled();
   });
 
+  protected readonly isApplicationConfigStep = computed(() => {
+    const stepIndex = this.stepper()?.selectedIndex ?? 0;
+    const adjustedIndex = this.showCustomerStep() ? stepIndex : stepIndex + 1;
+    return adjustedIndex === 3;
+  });
+
   protected getVendorLogoUrl(branding: {logo?: string; logoContentType?: string} | null): string {
     if (branding?.logo && branding?.logoContentType) {
       return `data:${branding.logoContentType};base64,${branding.logo}`;
@@ -178,7 +184,7 @@ export class DeploymentWizardComponent implements OnInit {
     // Initialize deployment form with initial data reactively
     effect(() => {
       const initialData = this.deploymentFormInitialData();
-      if (initialData && !this.applicationConfigForm.controls.deploymentFormData.value) {
+      if (initialData) {
         this.applicationConfigForm.controls.deploymentFormData.patchValue(initialData);
       }
     });
@@ -207,6 +213,9 @@ export class DeploymentWizardComponent implements OnInit {
         firstValueFrom(this.applications$).then((apps) => {
           const app = apps.find((a) => a.id === appId);
           this.selectedApplication.set(app);
+
+          // Reset deployment form data when application changes
+          this.applicationConfigForm.controls.deploymentFormData.reset();
 
           // Enable/disable configuration form controls based on deployment type
           this.updateConfigurationFormControls(app?.type);
@@ -263,6 +272,13 @@ export class DeploymentWizardComponent implements OnInit {
         await this.continueFromConnectStep();
         break;
     }
+  }
+
+  attemptGoBack() {
+    if (this.loading) {
+      return;
+    }
+    this.stepper()?.previous();
   }
 
   private async continueFromApplicationStep() {

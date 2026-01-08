@@ -32,6 +32,7 @@ export class DeploymentWizardStepperComponent extends CdkStepper {
 
   @Input() showCustomerStep = false;
   @Output('attemptContinue') attemptContinueOutput: EventEmitter<void> = new EventEmitter();
+  @Output('attemptGoBack') attemptGoBackOutput: EventEmitter<void> = new EventEmitter();
 
   currentFormGroup() {
     return this.selected!.stepControl as FormGroup;
@@ -68,5 +69,9 @@ export class DeploymentWizardStepperComponent extends CdkStepper {
 
   isFinalStep(): boolean {
     return this.selectedIndex === this.steps.length - 1;
+  }
+
+  shouldShowBackButton(): boolean {
+    return this.selectedIndex > 0 && !this.isFinalStep();
   }
 }

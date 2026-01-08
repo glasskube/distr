@@ -21,6 +21,7 @@
         <app-deployment-wizard-stepper
           #stepper
           (attemptContinue)="attemptContinue()"
+          (attemptGoBack)="attemptGoBack()"
           [showCustomerStep]="showCustomerStep()"
           class="mx-auto max-w-5xl space-y-6">
           <!-- Step 1: Customer Selection (Conditional - Only for Vendors) -->
@@ -280,7 +281,7 @@
                 <h3 class="font-normal text-gray-900 dark:text-white">Application Configuration</h3>
 
                 <!-- Deployment Form -->
-                @if (deploymentFormInitialData()) {
+                @if (isApplicationConfigStep() && deploymentFormInitialData()) {
                   <app-deployment-form
                     [disableApplicationSelect]="true"
                     [deploymentType]="selectedDeploymentType()"
@@ -296,15 +297,15 @@
           <!-- Step 5: Success Page -->
           <cdk-step [stepControl]="connectForm">
             <div class="space-y-6 mt-4">
-              <div class="space-y-4">
-                <div class="flex items-center gap-3">
-                  <fa-icon [icon]="faCheckCircle" class="text-green-600 dark:text-green-500 text-2xl"></fa-icon>
-                  <h3 class="font-normal text-gray-900 dark:text-white">Deployment Created Successfully</h3>
+              <div class="space-y-6">
+                <div class="flex flex-col items-center text-center space-y-4">
+                  <fa-icon [icon]="faCheckCircle" class="text-green-600 dark:text-green-500 text-6xl"></fa-icon>
+                  <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Deployment Created Successfully</h3>
+                  <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400 max-w-2xl">
+                    Your deployment has been created successfully. To deploy it, please copy and paste the following
+                    command:
+                  </p>
                 </div>
-                <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                  Your deployment has been created successfully. To deploy it, please copy and paste the following
-                  command:
-                </p>
                 @if (selectedDeploymentTarget(); as dt) {
                   <app-connect-instructions [deploymentTarget]="dt"></app-connect-instructions>
                 }
