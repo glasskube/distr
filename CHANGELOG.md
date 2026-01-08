@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.2.3](https://github.com/glasskube/distr/compare/2.2.2...2.2.3) (2026-01-07)
+
+
+### Bug Fixes
+
+* **backend:** fix PAT cannot be deleted ([#1593](https://github.com/glasskube/distr/issues/1593)) ([5c66a45](https://github.com/glasskube/distr/commit/5c66a451b6ed7eae1d8a21e5a2aa9bd92c116be8))
+* **deps:** update module github.com/stripe/stripe-go/v84 to v84.1.0 ([#1575](https://github.com/glasskube/distr/issues/1575)) ([fca41cc](https://github.com/glasskube/distr/commit/fca41cc68664b6117910bee83c015ccc496cbe5f))
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.21.0 ([#1592](https://github.com/glasskube/distr/issues/1592)) ([773f3c4](https://github.com/glasskube/distr/commit/773f3c47ca6e8de85737092abf311ee5bd5a9ea7))
+* **deps:** update axllent/mailpit docker tag to v1.28.1 ([#1591](https://github.com/glasskube/distr/issues/1591)) ([2011222](https://github.com/glasskube/distr/commit/20112222dc0e3e6f96374855518e702183b1464b))
+* **deps:** update codemirror ([#1587](https://github.com/glasskube/distr/issues/1587)) ([028f8be](https://github.com/glasskube/distr/commit/028f8be70f51bc6011835bb6b300060ebd88205d))
+* **deps:** update dependency pnpm to v10.27.0 ([#1581](https://github.com/glasskube/distr/issues/1581)) ([378dccf](https://github.com/glasskube/distr/commit/378dccf2dcae6707f2fd28dba75ac85e19437f52))
+* **deps:** update dependency posthog-js to v1.315.0 ([#1585](https://github.com/glasskube/distr/issues/1585)) ([707fe56](https://github.com/glasskube/distr/commit/707fe56c150afe00bbcdaeb59bf194e2dc1b0f6d))
+* **deps:** update dependency stripe to v1.34.0 ([#1577](https://github.com/glasskube/distr/issues/1577)) ([8b0fba1](https://github.com/glasskube/distr/commit/8b0fba1de637419395c0ea01b01d753e36ab968c))
+* **deps:** update sentry-javascript monorepo to v10.32.1 ([#1586](https://github.com/glasskube/distr/issues/1586)) ([d392ee8](https://github.com/glasskube/distr/commit/d392ee8ad9e5255680527495d6cd2aafaa8a57a0))
+
+## [2.2.2](https://github.com/glasskube/distr/compare/2.2.1...2.2.2) (2025-12-30)
+
+
+### Other
+
+* **backend:** improve Stripe webhook error handling ([#1582](https://github.com/glasskube/distr/issues/1582)) ([07f9d6d](https://github.com/glasskube/distr/commit/07f9d6d58b9c34f8c5bd810d17ab75963de2d47d))
+* **deps:** update docker/setup-buildx-action action to v3.12.0 ([#1583](https://github.com/glasskube/distr/issues/1583)) ([49dc6c1](https://github.com/glasskube/distr/commit/49dc6c1b745d20b6ca05fd166629aec22da4d079))
+* increase deployments per customer for pro orgs ([#1589](https://github.com/glasskube/distr/issues/1589)) ([a8309f7](https://github.com/glasskube/distr/commit/a8309f7d4129d799445788333706f5599f57a708))
+
 ## [2.2.1](https://github.com/glasskube/distr/compare/2.2.0...2.2.1) (2025-12-18)
 
 
