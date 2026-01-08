@@ -234,7 +234,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         return !isArchived(av);
       });
     }),
-    distinctUntilChanged(),
     shareReplay(1)
   );
 
