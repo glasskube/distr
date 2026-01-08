@@ -17,7 +17,7 @@ services:
       retries: 6
       start_period: 30s
   hub:
-    image: ghcr.io/glasskube/distr-ce:2.2.4 # x-release-please-version
+    image: ghcr.io/glasskube/distr-ce:2.2.5 # x-release-please-version
     depends_on:
       postgres:
         condition: service_healthy
