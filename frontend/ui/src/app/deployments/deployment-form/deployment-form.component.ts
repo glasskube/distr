@@ -142,7 +142,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
-  private readonly deploymentType$ = toObservable(this.deploymentType).pipe(distinctUntilChanged(), shareReplay(1));
+  private readonly deploymentType$ = toObservable(this.deploymentType);
   private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId).pipe(
     distinctUntilChanged(),
     shareReplay(1)
