@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.5](https://github.com/glasskube/distr/compare/2.2.4...2.2.5) (2026-01-08)
+
+
+### Other
+
+* **deps:** update @lezer/common to 1.5.0 ([#1608](https://github.com/glasskube/distr/issues/1608)) ([9ddad9b](https://github.com/glasskube/distr/commit/9ddad9b872176209b73abc771def1d78f9c2cf98))
+
 ## [2.2.4](https://github.com/glasskube/distr/compare/2.2.3...2.2.4) (2026-01-08)
 
 
