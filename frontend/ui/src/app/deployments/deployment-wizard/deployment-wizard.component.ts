@@ -356,7 +356,6 @@ export class DeploymentWizardComponent implements OnInit {
           await firstValueFrom(this.deploymentTargets.delete(createdDeploymentTarget));
           this.selectedDeploymentTarget.set(undefined);
           this.selectedApplication.set(undefined);
-          this.selectedCustomerOrganizationId.set('');
           this.close();
         } catch (deleteError) {
           const msg = getFormDisplayedError(deleteError);
