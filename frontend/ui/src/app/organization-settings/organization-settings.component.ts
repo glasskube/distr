@@ -38,6 +38,7 @@ export class OrganizationSettingsComponent implements OnInit {
     emailFromAddress: this.fb.control<string | undefined>({value: undefined, disabled: true}),
     preConnectScript: this.fb.control<string | undefined>(undefined),
     postConnectScript: this.fb.control<string | undefined>(undefined),
+    connectScriptIsSudo: this.fb.control<boolean>(false),
   });
   formLoading = signal(false);
 
@@ -68,6 +69,7 @@ export class OrganizationSettingsComponent implements OnInit {
             slug: this.form.value.slug?.trim(),
             preConnectScript: this.form.value.preConnectScript?.trim(),
             postConnectScript: this.form.value.postConnectScript?.trim(),
+            connectScriptIsSudo: this.form.value.connectScriptIsSudo ?? false,
           })
         );
         this.toast.success('Settings saved successfully');
