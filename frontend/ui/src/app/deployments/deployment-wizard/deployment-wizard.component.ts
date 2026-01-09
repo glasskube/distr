@@ -63,7 +63,8 @@ export class DeploymentWizardComponent implements OnInit {
   private readonly licenses = inject(LicensesService);
   private readonly organization = inject(OrganizationService);
   private readonly organizationBranding = inject(OrganizationBrandingService);
-  private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly fb = inject(FormBuilder);
+  private readonly fbnn = this.fb.nonNullable;
   protected readonly auth = inject(AuthService);
   protected readonly featureFlags = inject(FeatureFlagService);
 
@@ -72,13 +73,14 @@ export class DeploymentWizardComponent implements OnInit {
   readonly closed = output<void>();
 
   // Step 1: Customer Selection (optional)
-  readonly customerForm = this.fb.group({
-    customerOrganizationId: this.fb.control<string | undefined>(undefined),
+  readonly customerForm = this.fbnn.group({
+    internal: this.fbnn.control<boolean>(false),
+    customerOrganizationId: this.fbnn.control<string | undefined>(undefined),
   });
 
   // Step 2: Application Selection
-  readonly applicationForm = this.fb.group({
-    applicationId: this.fb.control<string | undefined>(undefined, Validators.required),
+  readonly applicationForm = this.fbnn.group({
+    applicationId: this.fbnn.control<string | undefined>(undefined, Validators.required),
   });
 
   // Step 3: Deployment Target Configuration
@@ -117,6 +119,12 @@ export class DeploymentWizardComponent implements OnInit {
     this.customerForm.controls.customerOrganizationId.valueChanges
   );
   protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
+  protected readonly internalDeploymentCount = toSignal(
+    this.deploymentTargets
+      .list()
+      .pipe(map((targets) => targets.filter((it) => it.customerOrganization === undefined).length)),
+    {initialValue: 0}
+  );
 
   // Filter applications based on customer licenses
   protected readonly filteredApplications$ = combineLatest([
@@ -260,15 +268,15 @@ export class DeploymentWizardComponent implements OnInit {
     switch (adjustedIndex) {
       case 0:
         // Step 1: Customer Selection
-        this.nextStep();
+        this.continueFromCustomerStep();
         break;
       case 1:
         // Step 2: Application Selection
-        await this.continueFromApplicationStep();
+        this.continueFromApplicationStep();
         break;
       case 2:
         // Step 3: Deployment Target Configuration
-        await this.continueFromDeploymentTargetStep();
+        this.continueFromDeploymentTargetStep();
         break;
       case 3:
         // Step 4: Application Configuration
@@ -288,7 +296,15 @@ export class DeploymentWizardComponent implements OnInit {
     this.stepper()?.previous();
   }
 
-  private async continueFromApplicationStep() {
+  private continueFromCustomerStep() {
+    this.customerForm.markAllAsTouched();
+    if (!this.customerForm.value.customerOrganizationId && !this.customerForm.value.internal) {
+      return;
+    }
+    this.nextStep();
+  }
+
+  private continueFromApplicationStep() {
     this.applicationForm.markAllAsTouched();
     if (!this.applicationForm.valid) {
       return;
@@ -296,7 +312,7 @@ export class DeploymentWizardComponent implements OnInit {
     this.nextStep();
   }
 
-  private async continueFromDeploymentTargetStep() {
+  private continueFromDeploymentTargetStep() {
     this.deploymentTargetForm.markAllAsTouched();
     if (!this.deploymentTargetForm.valid) {
       return;
@@ -393,5 +409,6 @@ export class DeploymentWizardComponent implements OnInit {
 
   selectCustomer(customer: CustomerOrganization | null) {
     this.customerForm.controls.customerOrganizationId.setValue(customer?.id);
+    this.customerForm.controls.internal.setValue(!customer?.id);
   }
 }
