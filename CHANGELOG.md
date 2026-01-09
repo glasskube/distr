@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.3.0](https://github.com/glasskube/distr/compare/2.2.5...2.3.0) (2026-01-09)
+
+
+### Features
+
+* add organization deletion ([#1603](https://github.com/glasskube/distr/issues/1603)) ([342ef6f](https://github.com/glasskube/distr/commit/342ef6f5ebf3c5c540ae6ab2d5c58ccefb57be51))
+* application link ([#1573](https://github.com/glasskube/distr/issues/1573)) ([e4cc953](https://github.com/glasskube/distr/commit/e4cc953d4cb4cfdd1801446049a4996db6d18796))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/onsi/gomega to v1.39.0 ([#1610](https://github.com/glasskube/distr/issues/1610)) ([69383c5](https://github.com/glasskube/distr/commit/69383c51760845aa3221de1009ca96627ac19507))
+
+
+### Other
+
+* enable promo codes for stripe checkout sessions ([#1613](https://github.com/glasskube/distr/issues/1613)) ([2252aa0](https://github.com/glasskube/distr/commit/2252aa0a78cb05e98157ae8ca98739a688674bc8))
+
 ## [2.2.5](https://github.com/glasskube/distr/compare/2.2.4...2.2.5) (2026-01-08)
 
 
