@@ -1,11 +1,9 @@
 package types
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
 )
 
 type Deployment struct {
@@ -33,11 +31,10 @@ type DeploymentWithLatestRevision struct {
 	ForceRestart                bool                      `db:"force_restart" json:"forceRestart"`
 }
 
-func (d DeploymentWithLatestRevision) ParsedValuesFile() (result map[string]any, err error) {
-	if d.ValuesYaml != nil {
-		if err = yaml.Unmarshal(d.ValuesYaml, &result); err != nil {
-			err = fmt.Errorf("cannot parse Deployment values file: %w", err)
-		}
-	}
-	return result, err
+func (d *DeploymentWithLatestRevision) GetValuesYAML() []byte {
+	return d.ValuesYaml
+}
+
+func (d *DeploymentWithLatestRevision) GetEnvFileData() []byte {
+	return d.EnvFileData
 }
