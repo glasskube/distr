@@ -148,18 +148,31 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
+  protected readonly licenses$ = combineLatest([
+    this.applicationId$,
+    this.featureFlags.isLicensingEnabled$,
+    this.customerOrganizationId$,
+  ]).pipe(
+    switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
+      isLicensingEnabled && applicationId && customerOrgId
+        ? this.licenses
+            .list(applicationId)
+            .pipe(
+              map((licenses) =>
+                this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
+              )
+            )
+        : of([])
+    ),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
-  protected readonly licenseControlVisible$ = combineLatest([
-    this.featureFlags.isLicensingEnabled$,
-    this.licenses.list(),
-    this.customerOrganizationId$,
-  ]).pipe(
-    map(
-      ([isLicensingEnabled, licenses, customerOrgId]) =>
-        isLicensingEnabled && (!this.auth.isVendor() || customerOrgId !== '') && licenses.length > 0
-    ),
+  protected readonly licenseControlVisible$ = this.licenses$.pipe(
+    map((licenses) => !this.auth.isVendor() && licenses.length > 0),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -184,26 +197,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   private selectedApplication$ = combineLatest([this.applicationId$, this.applications$]).pipe(
     map(([applicationId, applications]) => applications.find((application) => application.id === applicationId)),
     distinctUntilChanged((a, b) => a?.id === b?.id),
-    shareReplay(1)
-  );
-
-  protected readonly licenses$ = combineLatest([
-    this.applicationId$,
-    this.licenseControlVisible$,
-    this.customerOrganizationId$,
-  ]).pipe(
-    switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
-      isLicensingEnabled && applicationId
-        ? this.licenses
-            .list(applicationId)
-            .pipe(
-              map((licenses) =>
-                this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
-              )
-            )
-        : of([])
-    ),
-    distinctUntilChanged(),
     shareReplay(1)
   );
 

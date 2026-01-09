@@ -13,7 +13,7 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, startWith, tap} from 'rxjs';
+import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, startWith, switchMap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
@@ -106,7 +106,9 @@ export class DeploymentWizardComponent implements OnInit {
     : of([]);
 
   protected readonly applications$ = this.applications.list();
-  protected readonly allLicenses$ = this.licenses.list();
+  protected readonly allLicenses$ = this.featureFlags.isLicensingEnabled$.pipe(
+    switchMap((enabled) => (enabled ? this.licenses.list() : of([])))
+  );
   protected readonly vendorOrganization$ = this.organization.get();
   protected readonly vendorBranding$ = this.organizationBranding.get();
   protected selectedApplication = signal<Application | undefined>(undefined);
@@ -121,11 +123,10 @@ export class DeploymentWizardComponent implements OnInit {
       startWith(this.customerForm.controls.customerOrganizationId.value),
       map((id) => id ?? undefined)
     ),
-    this.featureFlags.isLicensingEnabled$,
   ]).pipe(
-    map(([applications, licenses, customerOrgId, isLicensingEnabled]) => {
-      // If licensing is not enabled or no customer is selected or no licenses, show all applications
-      if (!isLicensingEnabled || !customerOrgId || licenses.length === 0) {
+    map(([applications, licenses, customerOrgId]) => {
+      // If no customer is selected or no licenses, show all applications
+      if (!customerOrgId || licenses.length === 0) {
         return applications;
       }
 
@@ -159,7 +160,6 @@ export class DeploymentWizardComponent implements OnInit {
   });
 
   private readonly licenseControlVisible$ = combineLatest([
-    this.featureFlags.isLicensingEnabled$,
     this.allLicenses$.pipe(
       map((licenses) => licenses.length > 0),
       distinctUntilChanged()
@@ -168,15 +168,7 @@ export class DeploymentWizardComponent implements OnInit {
       map((id) => id !== ''),
       distinctUntilChanged()
     ),
-  ]).pipe(
-    tap(([isLicensingEnabled, hasLicenses, isCustomerOrganizationIdSet]) =>
-      console.log('License Control Visible:', {isLicensingEnabled, hasLicenses, isCustomerOrganizationIdSet})
-    ),
-    map(
-      ([isLicensingEnabled, hasLicenses, isCustomerOrganizationIdSet]) =>
-        isLicensingEnabled && hasLicenses && isCustomerOrganizationIdSet
-    )
-  );
+  ]).pipe(map(([hasLicenses, isCustomerOrganizationIdSet]) => hasLicenses && isCustomerOrganizationIdSet));
 
   protected readonly licenseControlVisible = toSignal(this.licenseControlVisible$, {initialValue: false});
 
