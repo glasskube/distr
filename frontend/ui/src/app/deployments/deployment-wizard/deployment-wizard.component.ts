@@ -355,11 +355,11 @@ export class DeploymentWizardComponent implements OnInit {
         try {
           await firstValueFrom(this.deploymentTargets.delete(createdDeploymentTarget));
           this.selectedDeploymentTarget.set(undefined);
-          this.selectedApplication.set(undefined);
-          this.close();
         } catch (deleteError) {
           const msg = getFormDisplayedError(deleteError);
-          this.toast.error(msg || 'Failed to cleanup deployment target');
+          this.toast.error(
+            `The following error occurred trying to clean up a failed deployment: '${msg}'. Please close this dialog and clean up the deployment target manually.`
+          );
         }
       }
     } finally {
