@@ -366,10 +366,6 @@ func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return err
 	} else {
 		dt.Deployments = d
-		// Set the Deployment property to the first (i.e. oldest) deployment for backwards compatibility
-		if len(d) > 0 {
-			dt.Deployment = &d[0] //nolint:staticcheck
-		}
 		return nil
 	}
 }

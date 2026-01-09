@@ -118,6 +118,7 @@ export class NavBarComponent implements OnInit {
   protected readonly tutorial = toSignal(this.route.queryParams.pipe(map((params) => params['tutorial'])));
 
   public readonly isSubscriptionBannerVisible = input<boolean>();
+  public readonly isSidebarVisible = input<boolean>();
 
   @ViewChild('createOrgModal') private createOrgModal!: TemplateRef<unknown>;
   private modalRef?: DialogRef;

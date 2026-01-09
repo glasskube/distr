@@ -14,6 +14,7 @@ import {
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
+  faArrowUpRightFromSquare,
   faCircleExclamation,
   faEllipsisVertical,
   faHeartPulse,
@@ -105,6 +106,7 @@ export class DeploymentTargetCardComponent {
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faRotate = faRotate;
+  protected readonly faArrowUpRightFromSquare = faArrowUpRightFromSquare;
 
   protected readonly showDeploymentTargetDropdown = signal(false);
   protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
