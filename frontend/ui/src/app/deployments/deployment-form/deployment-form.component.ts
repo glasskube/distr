@@ -20,7 +20,7 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
-import {DeploymentRequest} from '@glasskube/distr-sdk';
+import {DeploymentRequest, DeploymentType} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
@@ -89,8 +89,8 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 })
 export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy, ControlValueAccessor {
   disableApplicationSelect = input(false);
-  deploymentType = input<'docker' | 'kubernetes'>('docker');
-  customerOrganizationId = input<string>('');
+  deploymentType = input<DeploymentType>('docker');
+  customerOrganizationId = input<string>();
   deploymentTargetName = input<string>('default');
 
   protected readonly featureFlags = inject(FeatureFlagService);
@@ -143,7 +143,24 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   );
 
   private readonly deploymentType$ = toObservable(this.deploymentType);
-  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId).pipe(
+  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId);
+
+  protected readonly licenses$ = combineLatest([
+    this.applicationId$,
+    this.featureFlags.isLicensingEnabled$,
+    this.customerOrganizationId$,
+  ]).pipe(
+    switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
+      isLicensingEnabled && applicationId && customerOrgId
+        ? this.licenses
+            .list(applicationId)
+            .pipe(
+              map((licenses) =>
+                this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
+              )
+            )
+        : of([])
+    ),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -151,15 +168,8 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
-  protected readonly licenseControlVisible$ = combineLatest([
-    this.featureFlags.isLicensingEnabled$,
-    this.licenses.list(),
-    this.customerOrganizationId$,
-  ]).pipe(
-    map(
-      ([isLicensingEnabled, licenses, customerOrgId]) =>
-        isLicensingEnabled && (!this.auth.isVendor() || customerOrgId !== '') && licenses.length > 0
-    ),
+  protected readonly licenseControlVisible$ = this.licenses$.pipe(
+    map((licenses) => !this.auth.isVendor() && licenses.length > 0),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -184,26 +194,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   private selectedApplication$ = combineLatest([this.applicationId$, this.applications$]).pipe(
     map(([applicationId, applications]) => applications.find((application) => application.id === applicationId)),
     distinctUntilChanged((a, b) => a?.id === b?.id),
-    shareReplay(1)
-  );
-
-  protected readonly licenses$ = combineLatest([
-    this.applicationId$,
-    this.licenseControlVisible$,
-    this.customerOrganizationId$,
-  ]).pipe(
-    switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
-      isLicensingEnabled && applicationId
-        ? this.licenses
-            .list(applicationId)
-            .pipe(
-              map((licenses) =>
-                this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
-              )
-            )
-        : of([])
-    ),
-    distinctUntilChanged(),
     shareReplay(1)
   );
 

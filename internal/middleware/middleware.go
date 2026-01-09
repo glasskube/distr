@@ -98,7 +98,7 @@ func RequireAnySubscriptionType(types ...types.SubscriptionType) func(http.Handl
 			} else if auth.CurrentOrg() == nil {
 				http.Error(w, "inadequate access token", http.StatusForbidden)
 			} else if !slices.Contains(types, auth.CurrentOrg().SubscriptionType) {
-				var typesStr []string
+				typesStr := make([]string, 0, len(types))
 				for _, t := range types {
 					typesStr = append(typesStr, string(t))
 				}

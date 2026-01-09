@@ -13,8 +13,12 @@ export interface Message {
   message: string;
 }
 
+export interface Alert extends Message {
+  type: 'warning' | 'danger';
+}
+
 export interface ConfirmMessage extends Message {
-  warning?: Message;
+  alert?: Alert;
 }
 
 export interface ConfirmConfig {
@@ -34,6 +38,15 @@ export class ConfirmDialogComponent implements OnInit {
   public readonly data = inject(OverlayData) as ConfirmConfig;
   private readonly animationComplete$ = new Subject<void>();
   readonly confirmInput = new FormControl<string>('');
+
+  protected readonly alertClass = [
+    'p-4',
+    'text-sm',
+    'rounded-lg',
+    ...(this.data.message?.alert?.type === 'warning'
+      ? ['text-yellow-800', 'dark:text-yellow-300', 'bg-yellow-50', 'dark:bg-gray-800']
+      : ['text-red-800', 'dark:text-red-400', 'bg-red-50', 'dark:bg-gray-800']),
+  ];
 
   @HostBinding('@modalFlyInOut') public animationState = 'visible';
 

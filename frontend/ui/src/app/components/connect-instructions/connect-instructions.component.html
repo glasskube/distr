@@ -1,14 +1,14 @@
-@if (modalConnectCommand && modalTargetId && modalTargetSecret) {
+@if (modalConnectCommand() && modalTargetId() && modalTargetSecret()) {
   <div class="w-full">
     <div class="relative rounded-lg">
       <div class="max-h-full overflow-auto">
         <pre>
           <code id="code-block" class="text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line" data-ph-mask-text="true">
-            {{ modalConnectCommand }}
+            {{ modalConnectCommand() }}
           </code>
         </pre>
       </div>
-      <div class="absolute top-2 end-2 bg-gray-50 dark:bg-gray-700">
+      <div class="absolute top-2 end-2">
         <button
           (click)="copyConnectCommand()"
           type="button"

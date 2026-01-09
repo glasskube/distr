@@ -47,4 +47,8 @@ export class OrganizationService {
       })
     );
   }
+
+  delete(): Observable<void> {
+    return this.httpClient.delete<void>(this.baseUrl);
+  }
 }

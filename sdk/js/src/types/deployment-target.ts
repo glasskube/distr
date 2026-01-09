@@ -12,10 +12,6 @@ export interface DeploymentTarget extends BaseModel, Named {
   createdBy?: UserAccountWithRole;
   customerOrganization?: CustomerOrganization;
   currentStatus?: DeploymentTargetStatus;
-  /**
-   * @deprecated This property will be removed in v2. Please consider using `deployments` instead.
-   */
-  deployment?: DeploymentWithLatestRevision;
   deployments: DeploymentWithLatestRevision[];
   agentVersion?: AgentVersion;
   reportedAgentVersionId?: string;

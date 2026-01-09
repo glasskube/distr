@@ -56,6 +56,12 @@
 
 ---
 
+### linkTemplate?
+
+> `optional` **linkTemplate**: `string`
+
+---
+
 ### name
 
 > **name**: `string`

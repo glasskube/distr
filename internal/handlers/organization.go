@@ -29,20 +29,28 @@ import (
 func OrganizationRouter(r chiopenapi.Router) {
 	r.WithOptions(option.GroupTags("Organizations"))
 	r.Use(middleware.RequireOrgAndRole)
+
 	r.Get("/", getOrganization).
 		With(option.Description("Get current organization")).
 		With(option.Response(http.StatusOK, api.OrganizationResponse{}))
+
 	r.With(middleware.RequireVendor).Group(func(r chiopenapi.Router) {
-		r.With(middleware.RequireAdmin).
-			Put("/", updateOrganization).
-			With(option.Description("Update current organization")).
-			With(option.Request(api.CreateUpdateOrganizationRequest{})).
-			With(option.Response(http.StatusOK, types.Organization{}))
 		r.Post("/", createOrganization).
 			With(option.Description("Create a new organization")).
 			With(option.Request(api.CreateUpdateOrganizationRequest{})).
 			With(option.Response(http.StatusOK, types.OrganizationWithUserRole{}))
+
+		r.With(middleware.RequireAdmin).Group(func(r chiopenapi.Router) {
+			r.Put("/", updateOrganization).
+				With(option.Description("Update current organization")).
+				With(option.Request(api.CreateUpdateOrganizationRequest{})).
+				With(option.Response(http.StatusOK, types.Organization{}))
+
+			r.Delete("/", deleteOrganizationHandler()).
+				With(option.Description("Delete current organization"))
+		})
 	})
+
 	r.Route("/branding", OrganizationBrandingRouter)
 }
 
@@ -92,12 +100,13 @@ func createOrganization(w http.ResponseWriter, r *http.Request) {
 	}
 
 	organization := types.Organization{
-		Name:              body.Name,
-		Slug:              body.Slug,
-		SubscriptionType:  types.SubscriptionTypeTrial,
-		Features:          subscription.ProFeatures,
-		PreConnectScript:  body.PreConnectScript,
-		PostConnectScript: body.PostConnectScript,
+		Name:                body.Name,
+		Slug:                body.Slug,
+		SubscriptionType:    types.SubscriptionTypeTrial,
+		Features:            subscription.ProFeatures,
+		PreConnectScript:    body.PreConnectScript,
+		PostConnectScript:   body.PostConnectScript,
+		ConnectScriptIsSudo: body.ConnectScriptIsSudo,
 	}
 
 	if buildconfig.IsCommunityEdition() {
@@ -200,6 +209,11 @@ func handleUpdateOrganization(
 			needsUpdate = true
 		}
 
+		if request.ConnectScriptIsSudo != org.ConnectScriptIsSudo {
+			org.ConnectScriptIsSudo = request.ConnectScriptIsSudo
+			needsUpdate = true
+		}
+
 		if needsUpdate {
 			return db.UpdateOrganization(ctx, org)
 		}
@@ -211,4 +225,21 @@ func handleUpdateOrganization(
 	}
 
 	return org, nil
+}
+
+func deleteOrganizationHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		auth := auth.Authentication.Require(ctx)
+		log := internalctx.GetLogger(ctx)
+
+		if err := db.SetOrganizationDeletedAtNow(ctx, *auth.CurrentOrgID()); err != nil {
+			log.Error("could not soft-delete organization", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
 }

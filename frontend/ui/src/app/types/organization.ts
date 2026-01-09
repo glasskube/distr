@@ -23,6 +23,7 @@ export interface Organization extends BaseModel, Named {
   subscriptionUserAccountQuantity: number;
   preConnectScript?: string;
   postConnectScript?: string;
+  connectScriptIsSudo: boolean;
 }
 
 export interface OrganizationWithUserRole extends Organization {
