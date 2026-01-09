@@ -7,8 +7,10 @@ import {firstValueFrom, lastValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {slugMaxLength, slugPattern} from '../../util/slug';
 import {AutotrimDirective} from '../directives/autotrim.directive';
+import {AuthService} from '../services/auth.service';
 import {FeatureFlagService} from '../services/feature-flag.service';
 import {OrganizationService} from '../services/organization.service';
+import {OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {Organization} from '../types/organization';
 
@@ -25,6 +27,8 @@ export class OrganizationSettingsComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly ff = inject(FeatureFlagService);
+  private readonly overlayService = inject(OverlayService);
+  private readonly auth = inject(AuthService);
 
   protected readonly isPrePostScriptEnabled = toSignal(this.ff.isPrePostScriptEnabled$);
 
@@ -80,6 +84,38 @@ export class OrganizationSettingsComponent implements OnInit {
         }
       } finally {
         this.formLoading.set(false);
+      }
+    }
+  }
+
+  async deleteOrganization() {
+    try {
+      if (
+        await firstValueFrom(
+          this.overlayService.confirm({
+            message: {
+              message:
+                'Are you sure you want to delete this organization? ' +
+                'Afterwards, all user sessions (including the current one) will be invalidated ' +
+                'and users will be redirected to the login page.',
+              alert: {
+                type: 'danger',
+                message: 'This is a destructive action and cannot be undone!',
+              },
+            },
+            requiredConfirmInputText: `DELETE ${this.organization!.name.toUpperCase()}`,
+          })
+        )
+      ) {
+        const email = this.auth.getClaims()?.email;
+        await firstValueFrom(this.organizationService.delete());
+        await firstValueFrom(this.auth.logout());
+        location.assign(`/login?email=${encodeURIComponent(email ?? '')}`);
+      }
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
       }
     }
   }

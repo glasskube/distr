@@ -14,12 +14,19 @@
     </div>
     <!-- Modal body -->
     <div class="p-4 md:p-5 space-y-4">
-      @if (data.message?.warning) {
-        <div
-          class="p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
-          role="alert">
-          <span class="font-semibold me-1">WARNING!</span>
-          {{ data.message?.warning?.message }}
+      @if (data.message?.alert; as alert) {
+        <div [class]="alertClass" role="alert">
+          <span class="font-semibold me-1">
+            @switch (alert.type) {
+              @case ('warning') {
+                WARNING!
+              }
+              @case ('danger') {
+                DANGER!
+              }
+            }
+          </span>
+          {{ alert.message }}
         </div>
       }
 
@@ -42,7 +49,8 @@
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
             value="" />
           <p class="mt-1 text-sm text-red-600 dark:text-red-500">
-            Type {{ data.requiredConfirmInputText }} to confirm this action.
+            Type "<span class="whitespace-pre-wrap">{{ data.requiredConfirmInputText }}</span
+            >" to confirm this action.
           </p>
         </div>
       }
