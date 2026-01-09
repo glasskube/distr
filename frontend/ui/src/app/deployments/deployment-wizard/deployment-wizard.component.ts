@@ -112,9 +112,11 @@ export class DeploymentWizardComponent implements OnInit {
   );
   protected readonly currentOrganization$ = this.organization.get();
   protected readonly vendorBranding$ = this.organizationBranding.get();
-  protected selectedApplication = signal<Application | undefined>(undefined);
-  protected selectedCustomerOrganizationId = toSignal(this.customerForm.controls.customerOrganizationId.valueChanges);
-  protected selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
+  protected readonly selectedApplication = signal<Application | undefined>(undefined);
+  protected readonly selectedCustomerOrganizationId = toSignal(
+    this.customerForm.controls.customerOrganizationId.valueChanges
+  );
+  protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
 
   // Filter applications based on customer licenses
   protected readonly filteredApplications$ = combineLatest([
@@ -193,6 +195,13 @@ export class DeploymentWizardComponent implements OnInit {
       if (initialData) {
         this.applicationConfigForm.controls.deploymentFormData.patchValue(initialData);
       }
+    });
+
+    // Reset application form when customer organization changes
+    // This prevents a vendor from accidentally creating a deployment with an application that a customer should have no access to
+    effect(() => {
+      this.selectedCustomerOrganizationId();
+      this.applicationForm.reset();
     });
   }
 
