@@ -10,6 +10,7 @@ export interface Application extends BaseModel, Named {
 export interface ApplicationVersion {
   id?: string;
   name: string;
+  linkTemplate?: string;
   createdAt?: string;
   archivedAt?: string;
   applicationId?: string;

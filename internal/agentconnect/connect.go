@@ -63,8 +63,12 @@ func GenerateConnectScript(targetID uuid.UUID, org types.Organization, targetSec
 	return script.String(), nil
 }
 
-func generateScriptCommand(scriptURL string) string {
-	return fmt.Sprintf("curl -fsSL '%s' | sh", scriptURL)
+func generateScriptCommand(scriptURL string, isSudo bool) string {
+	shCmd := "sh"
+	if isSudo {
+		shCmd = "sudo " + shCmd
+	}
+	return fmt.Sprintf("curl -fsSL '%s' | %s", scriptURL, shCmd)
 }
 
 func generateDockerConnectCommand(connectURL string) string {
@@ -85,7 +89,7 @@ func GenerateConnectCommand(
 		if err != nil {
 			return "", fmt.Errorf("failed to build pre-connect URL: %w", err)
 		}
-		return generateScriptCommand(preConnectURL), nil
+		return generateScriptCommand(preConnectURL, org.ConnectScriptIsSudo), nil
 	}
 
 	connectURL, err := BuildConnectURL(deploymentTarget.ID, org, targetSecret)

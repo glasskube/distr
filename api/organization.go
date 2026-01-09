@@ -5,10 +5,11 @@ import (
 )
 
 type CreateUpdateOrganizationRequest struct {
-	Name              string  `json:"name"`
-	Slug              *string `json:"slug"`
-	PreConnectScript  *string `json:"preConnectScript"`
-	PostConnectScript *string `json:"postConnectScript"`
+	Name                string  `json:"name"`
+	Slug                *string `json:"slug"`
+	PreConnectScript    *string `json:"preConnectScript"`
+	PostConnectScript   *string `json:"postConnectScript"`
+	ConnectScriptIsSudo bool    `json:"connectScriptIsSudo"`
 }
 
 type OrganizationResponse struct {

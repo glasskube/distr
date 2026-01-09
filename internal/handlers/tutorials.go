@@ -136,6 +136,7 @@ func createHelloDistrApp(ctx context.Context) (*types.Application, error) {
 
 	version := types.ApplicationVersion{
 		Name:             "0.1.10",
+		LinkTemplate:     "http://{{ .Env.HELLO_DISTR_HOST }}",
 		ComposeFileData:  composeFileData,
 		TemplateFileData: templateFileData,
 	}

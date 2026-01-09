@@ -33,7 +33,8 @@ const (
 		o.subscription_customer_organization_quantity,
 		o.subscription_user_account_quantity,
 		o.pre_connect_script,
-		o.post_connect_script
+		o.post_connect_script,
+		o.connect_script_is_sudo
 	`
 	organizationWithUserRoleOutputExpr = organizationOutputExpr + `,
 		j.user_role,
@@ -91,7 +92,8 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			subscription_customer_organization_quantity = @subscription_customer_organization_quantity,
 			subscription_user_account_quantity = @subscription_user_account_quantity,
 			pre_connect_script = @pre_connect_script,
-			post_connect_script = @post_connect_script
+			post_connect_script = @post_connect_script,
+			connect_script_is_sudo = @connect_script_is_sudo
 		WHERE id = @id
 		RETURNING `+organizationOutputExpr,
 		pgx.NamedArgs{
@@ -108,6 +110,7 @@ func UpdateOrganization(ctx context.Context, org *types.Organization) error {
 			"subscription_user_account_quantity":          org.SubscriptionUserAccountQty,
 			"pre_connect_script":                          org.PreConnectScript,
 			"post_connect_script":                         org.PostConnectScript,
+			"connect_script_is_sudo":                      org.ConnectScriptIsSudo,
 		},
 	)
 	if err != nil {
@@ -167,6 +170,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.Org
 			INNER JOIN Organization o ON o.id = j.organization_id
 			LEFT JOIN CustomerOrganization cu ON cu.id = j.customer_organization_id
 			WHERE u.id = @id
+				AND o.deleted_at IS NULL
 			ORDER BY o.created_at
 	`, pgx.NamedArgs{"id": userID})
 	if err != nil {
@@ -183,7 +187,7 @@ func GetOrganizationsForUser(ctx context.Context, userID uuid.UUID) ([]types.Org
 func GetOrganizationByID(ctx context.Context, orgID uuid.UUID) (*types.Organization, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE id = @id",
+		"SELECT "+organizationOutputExpr+" FROM Organization o WHERE id = @id AND o.deleted_at IS NULL",
 		pgx.NamedArgs{"id": orgID},
 	)
 	if err != nil {
@@ -207,7 +211,8 @@ func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.O
 				CASE WHEN b.id IS NOT NULL THEN (%v) END AS branding
 			FROM Organization o
 			LEFT JOIN OrganizationBranding b ON b.organization_id = o.id
-			WHERE o.id = @id`,
+			WHERE o.id = @id
+				AND o.deleted_at IS NULL`,
 			organizationBrandingOutputExpr,
 		),
 		pgx.NamedArgs{"id": orgID},
@@ -224,4 +229,17 @@ func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.O
 	} else {
 		return result, nil
 	}
+}
+
+func SetOrganizationDeletedAtNow(ctx context.Context, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	_, err := db.Exec(
+		ctx,
+		"UPDATE Organization SET deleted_at = now() WHERE id = @id AND deleted_at IS NULL",
+		pgx.NamedArgs{"id": orgID},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Organization: %w", err)
+	}
+	return nil
 }

@@ -1,59 +1,59 @@
 @if (isSubscriptionExpired()) {
   <div
-    class="flex flex-col justify-between items-start h-17 px-4 w-full md:gap-8 md:items-center md:flex-row bg-gray-50 dark:bg-gray-900 text-red-700 dark:text-red-400 border-b border-gray-200 dark:border-gray-700">
-    <div class="sm:flex xl:items-center">
-      <fa-icon
-        size="lg"
-        [icon]="faExclamationTriangle"
-        class="hidden mr-3 mt-1 w-6 h-6 lg:flex sm:mb-0 shrink-0"></fa-icon>
-      <p class="mb-4 text-sm md:mb-0">
+    class="flex flex-col justify-between items-start h-17 px-4 w-full sm:gap-8 sm:items-center sm:flex-row bg-gray-50 dark:bg-gray-900 text-red-700 dark:text-red-400 border-b border-gray-200 dark:border-gray-700">
+    <div class="sm:flex items-center">
+      <fa-icon size="lg" [icon]="faExclamationTriangle" class="hidden mr-3 mt-1 w-6 h-6 lg:flex"></fa-icon>
+      <p class="text-sm">
         Your <span class="font-semibold uppercase">{{ organization().subscriptionType }}</span> subscription has expired
         on <span class="font-semibold">{{ organization().subscriptionEndsAt | date: 'longDate' }}</span
         >.
-        @if (isTrial()) {
-          <br />Please choose a plan to continue using Distr.
-        } @else {
-          <br />Please review your payment information in the Stripe customer portal.
-        }
+        <span class="hidden md:inline">
+          @if (isTrial()) {
+            <br />Please choose a plan to continue using Distr.
+          } @else {
+            <br />Please review your payment information in the <strong>Manage Subscription</strong> section.
+          }
+        </span>
       </p>
     </div>
-    @if (isVendorAdmin()) {
-      <div class="flex items-center space-x-4 lg:pl-10 shrink-0">
-        <a
-          href="https://distr.sh/contact/"
-          target="_blank"
-          class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline"
-          >Contact Sales</a
-        >
-      </div>
-    }
-    @if (isVendorNonAdmin()) {
-      <p class="text-sm text-gray-600 dark:text-gray-400 lg:pl-10">Please contact your administrator to upgrade.</p>
-    }
+    <div class="hidden md:flex">
+      @if (isVendorAdmin()) {
+        <div class="flex items-center space-x-4 lg:pl-10 shrink-0">
+          <a
+            href="https://distr.sh/contact/"
+            target="_blank"
+            class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline"
+            >Contact Sales</a
+          >
+        </div>
+      }
+      @if (isVendorNonAdmin()) {
+        <p class="text-sm text-gray-600 dark:text-gray-400 lg:pl-10">Please contact your administrator to upgrade.</p>
+      }
+    </div>
   </div>
 } @else if (isTrial()) {
   <div
-    class="flex flex-col justify-between items-start h-17 px-4 w-full bg-gray-50 border border-b border-gray-200 md:gap-8 md:items-center md:flex-row dark:border-gray-700 dark:bg-gray-900">
-    <div class="sm:flex xl:items-center">
-      <fa-icon
-        size="lg"
-        [icon]="faCircleInfo"
-        class="hidden mr-3 mt-1 w-6 h-6 lg:flex sm:mb-0 text-gray-400 shrink-0"></fa-icon>
+    class="flex flex-col justify-between items-start h-17 px-4 w-full bg-gray-50 border border-b border-gray-200 sm:gap-8 sm:items-center sm:flex-row dark:border-gray-700 dark:bg-gray-900">
+    <div class="sm:flex items-center">
+      <fa-icon size="lg" [icon]="faCircleInfo" class="hidden mr-3 mt-1 w-6 h-6 lg:flex text-gray-400"></fa-icon>
       <div>
-        <p class="mb-4 text-sm text-gray-500 dark:text-gray-300 md:mb-0">
+        <p class="text-sm text-gray-500 dark:text-gray-300">
           You are currently on the Distr Pro Unlimited trial. Your trial will expire on
           <span class="font-semibold text-gray-900 dark:text-white">{{
             organization().subscriptionEndsAt | date: 'longDate'
           }}</span
           >.
-          @if (isVendorNonAdmin()) {
-            <br />Please contact your administrator to upgrade.
-          }
+          <span class="hidden md:inline">
+            @if (isVendorNonAdmin()) {
+              <br />Please contact your administrator to upgrade.
+            }
+          </span>
         </p>
       </div>
     </div>
     @if (isVendorAdmin()) {
-      <div class="flex items-center space-x-4 lg:pl-10 shrink-0">
+      <div class="hidden md:flex items-center space-x-4 lg:pl-10 shrink-0">
         <a
           href="https://distr.sh/contact/"
           target="_blank"

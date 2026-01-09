@@ -8,6 +8,7 @@ import {faCreditCard, faShoppingCart} from '@fortawesome/free-solid-svg-icons';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {never} from '../../util/exhaust';
+import {AuthService} from '../services/auth.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {SubscriptionService} from '../services/subscription.service';
 import {ToastService} from '../services/toast.service';
@@ -25,6 +26,7 @@ export class SubscriptionComponent implements OnInit {
 
   protected readonly unlimited = UNLIMITED_QTY;
 
+  protected readonly auth = inject(AuthService);
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);

@@ -11,11 +11,13 @@ import {SideBarComponent} from './side-bar/side-bar.component';
 @Component({
   selector: 'app-nav-shell',
   template: `
-    <app-nav-bar [isSubscriptionBannerVisible]="isSubscriptionBannerVisible()"></app-nav-bar>
-    @if (!isSubscriptionExpired()) {
-      <app-side-bar [isSubscriptionBannerVisible]="isSubscriptionBannerVisible()"></app-side-bar>
-    }
-    <div [class.sm:ml-64]="!isSubscriptionExpired()">
+    <app-nav-bar
+      [isSubscriptionBannerVisible]="isSubscriptionBannerVisible()"
+      [isSidebarVisible]="isSidebarVisible()"></app-nav-bar>
+    <app-side-bar
+      [isSubscriptionBannerVisible]="isSubscriptionBannerVisible()"
+      [isSidebarVisible]="isSidebarVisible()"></app-side-bar>
+    <div [class.sm:ml-64]="isSidebarVisible()">
       <router-outlet></router-outlet>
     </div>
   `,
@@ -38,6 +40,10 @@ export class NavShellComponent {
     this.organization$.pipe(map((org) => org.subscriptionType === 'trial')),
     {initialValue: false}
   );
+
+  protected readonly isSidebarVisible = computed(() => {
+    return !this.isSubscriptionExpired() || this.auth.isCustomer();
+  });
 
   protected readonly isSubscriptionBannerVisible = computed(() => {
     if (!this.auth.isVendor()) {

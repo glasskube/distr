@@ -72,6 +72,7 @@ export class SideBarComponent {
   protected readonly licenseOverlayOpen = signal(false);
 
   public readonly isSubscriptionBannerVisible = input<boolean>();
+  public readonly isSidebarVisible = input<boolean>();
 
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);
