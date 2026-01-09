@@ -1,7 +1,7 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {AsyncPipe} from '@angular/common';
 import {Component, computed, DestroyRef, effect, inject, OnInit, output, signal, viewChild} from '@angular/core';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
@@ -13,7 +13,7 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {combineLatest, firstValueFrom, map, of, startWith} from 'rxjs';
+import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, startWith, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
@@ -124,8 +124,8 @@ export class DeploymentWizardComponent implements OnInit {
     this.featureFlags.isLicensingEnabled$,
   ]).pipe(
     map(([applications, licenses, customerOrgId, isLicensingEnabled]) => {
-      // If licensing is not enabled or no customer is selected, show all applications
-      if (!isLicensingEnabled || !customerOrgId) {
+      // If licensing is not enabled or no customer is selected or no licenses, show all applications
+      if (!isLicensingEnabled || !customerOrgId || licenses.length === 0) {
         return applications;
       }
 
@@ -158,11 +158,27 @@ export class DeploymentWizardComponent implements OnInit {
     };
   });
 
-  private readonly isLicensingEnabled = toSignal(this.featureFlags.isLicensingEnabled$, {initialValue: false});
+  private readonly licenseControlVisible$ = combineLatest([
+    this.featureFlags.isLicensingEnabled$,
+    this.allLicenses$.pipe(
+      map((licenses) => licenses.length > 0),
+      distinctUntilChanged()
+    ),
+    toObservable(this.selectedCustomerOrganizationId).pipe(
+      map((id) => id !== ''),
+      distinctUntilChanged()
+    ),
+  ]).pipe(
+    tap(([isLicensingEnabled, hasLicenses, isCustomerOrganizationIdSet]) =>
+      console.log('License Control Visible:', {isLicensingEnabled, hasLicenses, isCustomerOrganizationIdSet})
+    ),
+    map(
+      ([isLicensingEnabled, hasLicenses, isCustomerOrganizationIdSet]) =>
+        isLicensingEnabled && hasLicenses && isCustomerOrganizationIdSet
+    )
+  );
 
-  protected readonly showLicenseControl = computed(() => {
-    return this.selectedCustomerOrganizationId() !== '' && this.isLicensingEnabled();
-  });
+  protected readonly licenseControlVisible = toSignal(this.licenseControlVisible$, {initialValue: false});
 
   protected readonly isApplicationConfigStep = computed(() => {
     const stepIndex = this.stepper()?.selectedIndex ?? 0;
