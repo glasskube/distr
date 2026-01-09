@@ -28,16 +28,14 @@ export class ApplicationVersionDetailModalComponent {
 
   versionDetailsForm = new FormGroup({
     name: new FormControl(''),
-    link: new FormControl(''),
+    linkTemplate: new FormControl(''),
     kubernetes: new FormGroup({
       baseValues: new FormControl(''),
       template: new FormControl(''),
-      linkTemplate: new FormControl(''),
     }),
     docker: new FormGroup({
       compose: new FormControl(''),
       template: new FormControl(''),
-      linkTemplate: new FormControl(''),
     }),
   });
 
@@ -47,7 +45,7 @@ export class ApplicationVersionDetailModalComponent {
     effect(() => {
       const detail = this.versionDetail();
       this.versionDetailsForm.patchValue({
-        link: detail.linkTemplate,
+        linkTemplate: detail.linkTemplate,
         kubernetes: detail.kubernetes,
         docker: detail.docker,
       });

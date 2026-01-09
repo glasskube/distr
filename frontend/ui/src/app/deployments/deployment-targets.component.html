@@ -11,7 +11,7 @@
             <ul class="mt-1.5 list-disc list-inside">
               @for (u of updates; track u.dt.id) {
                 <li>
-                  {{ u.dt.name }}: {{ u.dt.deployments[0].applicationName }} &rarr; {{ u.version.name }} (
+                  {{ u.dt.name }}: {{ u.d.applicationName }} &rarr; {{ u.version.name }} (
                   <button
                     type="button"
                     class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
