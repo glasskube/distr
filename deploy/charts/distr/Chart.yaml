@@ -14,8 +14,8 @@ icon: >-
   https://github.com/glasskube/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg
 home: https://distr.sh/docs/
 type: application
-version: 2.2.1
-appVersion: 2.2.1
+version: 2.2.5
+appVersion: 2.2.5
 dependencies:
   - name: postgresql
     repository: oci://registry-1.docker.io/bitnamicharts

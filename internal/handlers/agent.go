@@ -460,7 +460,7 @@ func agentAuthDeploymentTargetCtxMiddleware(next http.Handler) http.Handler {
 		targetId := auth.CurrentDeploymentTargetID()
 
 		if deploymentTarget, err := db.GetDeploymentTarget(ctx, targetId, &orgId); errors.Is(err, apierrors.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusUnauthorized)
 		} else if err != nil {
 			log.Error("failed to get DeploymentTarget", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)

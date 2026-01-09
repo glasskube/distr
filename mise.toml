@@ -1,11 +1,11 @@
 [tools]
 node = "24"
 go = "1.25.5"
-golangci-lint = "2.7.2"
+golangci-lint = "2.8.0"
 helm-docs = "1.14.2"
 watchexec = "2.3.2"
-pnpm = "10.26.0"
-stripe = "1.33.2"
+pnpm = "10.27.0"
+stripe = "1.34.0"
 
 [env]
 _.source = ['hack/current-commit.sh']
@@ -68,6 +68,14 @@ run = 'hack/validate-migrations.sh'
 
 [tasks.lint]
 run = {tasks=["lint:go", "lint:frontend", "lint:migrations"]}
+
+[tasks."test:go"]
+run = 'go test ./...'
+depends = ["go-tidy"]
+description = 'Run all Go tests'
+
+[tasks.test]
+run = {tasks=["test:go"]}
 
 [tasks."format:go"]
 run = 'golangci-lint run --fix'

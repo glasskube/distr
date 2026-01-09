@@ -87,6 +87,10 @@ Name of the new version
 
 `string`
 
+###### linkTemplate?
+
+`string`
+
 ###### templateFile?
 
 `string`
@@ -132,6 +136,10 @@ Creates a new application version for the given Kubernetes application using a H
 `string`
 
 ###### chartVersion
+
+`string`
+
+###### linkTemplate?
 
 `string`
 

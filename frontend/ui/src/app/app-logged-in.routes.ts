@@ -227,7 +227,7 @@ export const routes: Routes = [
   },
   {
     path: 'subscription',
-    canActivate: [requireVendor, requiredRoleGuard('admin')],
+    canActivate: [requireVendor],
     children: [
       {
         path: '',

@@ -1,5 +1,60 @@
 # Changelog
 
+## [2.2.5](https://github.com/glasskube/distr/compare/2.2.4...2.2.5) (2026-01-08)
+
+
+### Other
+
+* **deps:** update @lezer/common to 1.5.0 ([#1608](https://github.com/glasskube/distr/issues/1608)) ([9ddad9b](https://github.com/glasskube/distr/commit/9ddad9b872176209b73abc771def1d78f9c2cf98))
+
+## [2.2.4](https://github.com/glasskube/distr/compare/2.2.3...2.2.4) (2026-01-08)
+
+
+### Bug Fixes
+
+* **deps:** update kubernetes packages to v0.35.0 ([#1578](https://github.com/glasskube/distr/issues/1578)) ([dfcbd64](https://github.com/glasskube/distr/commit/dfcbd6476070eaedaaeff9f3a492f52b33f6c2fa))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.95.0 ([#1594](https://github.com/glasskube/distr/issues/1594)) ([d8ce8e6](https://github.com/glasskube/distr/commit/d8ce8e6d694088861f0aaf6d74ec8e8774838d16))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.8.0 ([#1595](https://github.com/glasskube/distr/issues/1595)) ([fed6c89](https://github.com/glasskube/distr/commit/fed6c8975c26ff1bb569d39ff2450c5e4f0b4498))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.143.0 ([#1597](https://github.com/glasskube/distr/issues/1597)) ([68f036f](https://github.com/glasskube/distr/commit/68f036f383f974eaf5540290fc6b12287074564f))
+
+
+### Other
+
+* add option to run connect script as root ([#1596](https://github.com/glasskube/distr/issues/1596)) ([0b4f99d](https://github.com/glasskube/distr/commit/0b4f99d4d450a2073f7e5d6123aafebfb66fa0f5))
+* **deps:** update anchore/sbom-action action to v0.21.1 ([#1607](https://github.com/glasskube/distr/issues/1607)) ([501dd1a](https://github.com/glasskube/distr/commit/501dd1ae2df70837e637f7bcdccd9c803828eca8))
+* **deps:** update angular monorepo to v20.3.16 ([#1604](https://github.com/glasskube/distr/issues/1604)) ([c5d772c](https://github.com/glasskube/distr/commit/c5d772c5f56a5962ab225272527f421ab9082cbb))
+* **deps:** update angular-cli monorepo to v20.3.14 ([#1605](https://github.com/glasskube/distr/issues/1605)) ([613b5db](https://github.com/glasskube/distr/commit/613b5db411ff8fdd7e0e252a493ab51535dda6ca))
+* **deps:** update dependency golangci-lint to v2.8.0 ([#1606](https://github.com/glasskube/distr/issues/1606)) ([1bd389a](https://github.com/glasskube/distr/commit/1bd389aaa1ddb40eb3632252418f216a215eaebe))
+* **frontend:** add read-only subscription view for non-admin users ([#1599](https://github.com/glasskube/distr/issues/1599)) ([dbe1501](https://github.com/glasskube/distr/commit/dbe15013acea7d6428dd29467f4da5c2b8d46266))
+
+## [2.2.3](https://github.com/glasskube/distr/compare/2.2.2...2.2.3) (2026-01-07)
+
+
+### Bug Fixes
+
+* **backend:** fix PAT cannot be deleted ([#1593](https://github.com/glasskube/distr/issues/1593)) ([5c66a45](https://github.com/glasskube/distr/commit/5c66a451b6ed7eae1d8a21e5a2aa9bd92c116be8))
+* **deps:** update module github.com/stripe/stripe-go/v84 to v84.1.0 ([#1575](https://github.com/glasskube/distr/issues/1575)) ([fca41cc](https://github.com/glasskube/distr/commit/fca41cc68664b6117910bee83c015ccc496cbe5f))
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.21.0 ([#1592](https://github.com/glasskube/distr/issues/1592)) ([773f3c4](https://github.com/glasskube/distr/commit/773f3c47ca6e8de85737092abf311ee5bd5a9ea7))
+* **deps:** update axllent/mailpit docker tag to v1.28.1 ([#1591](https://github.com/glasskube/distr/issues/1591)) ([2011222](https://github.com/glasskube/distr/commit/20112222dc0e3e6f96374855518e702183b1464b))
+* **deps:** update codemirror ([#1587](https://github.com/glasskube/distr/issues/1587)) ([028f8be](https://github.com/glasskube/distr/commit/028f8be70f51bc6011835bb6b300060ebd88205d))
+* **deps:** update dependency pnpm to v10.27.0 ([#1581](https://github.com/glasskube/distr/issues/1581)) ([378dccf](https://github.com/glasskube/distr/commit/378dccf2dcae6707f2fd28dba75ac85e19437f52))
+* **deps:** update dependency posthog-js to v1.315.0 ([#1585](https://github.com/glasskube/distr/issues/1585)) ([707fe56](https://github.com/glasskube/distr/commit/707fe56c150afe00bbcdaeb59bf194e2dc1b0f6d))
+* **deps:** update dependency stripe to v1.34.0 ([#1577](https://github.com/glasskube/distr/issues/1577)) ([8b0fba1](https://github.com/glasskube/distr/commit/8b0fba1de637419395c0ea01b01d753e36ab968c))
+* **deps:** update sentry-javascript monorepo to v10.32.1 ([#1586](https://github.com/glasskube/distr/issues/1586)) ([d392ee8](https://github.com/glasskube/distr/commit/d392ee8ad9e5255680527495d6cd2aafaa8a57a0))
+
+## [2.2.2](https://github.com/glasskube/distr/compare/2.2.1...2.2.2) (2025-12-30)
+
+
+### Other
+
+* **backend:** improve Stripe webhook error handling ([#1582](https://github.com/glasskube/distr/issues/1582)) ([07f9d6d](https://github.com/glasskube/distr/commit/07f9d6d58b9c34f8c5bd810d17ab75963de2d47d))
+* **deps:** update docker/setup-buildx-action action to v3.12.0 ([#1583](https://github.com/glasskube/distr/issues/1583)) ([49dc6c1](https://github.com/glasskube/distr/commit/49dc6c1b745d20b6ca05fd166629aec22da4d079))
+* increase deployments per customer for pro orgs ([#1589](https://github.com/glasskube/distr/issues/1589)) ([a8309f7](https://github.com/glasskube/distr/commit/a8309f7d4129d799445788333706f5599f57a708))
+
 ## [2.2.1](https://github.com/glasskube/distr/compare/2.2.0...2.2.1) (2025-12-18)
 
 

@@ -63,6 +63,8 @@ const (
 			ON u.id = j.user_account_id
 		LEFT JOIN CustomerOrganization co
 			ON dt.customer_organization_id = co.id
+		LEFT JOIN Organization o
+			ON o.id = j.organization_id AND o.deleted_at IS NULL
 	`
 	deploymentTargetFromExpr = `
 		DeploymentTarget dt
@@ -364,10 +366,6 @@ func addDeploymentsToTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		return err
 	} else {
 		dt.Deployments = d
-		// Set the Deployment property to the first (i.e. oldest) deployment for backwards compatibility
-		if len(d) > 0 {
-			dt.Deployment = &d[0] //nolint:staticcheck
-		}
 		return nil
 	}
 }
