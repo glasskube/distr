@@ -197,6 +197,7 @@ export class DeploymentWizardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
+    this.applications.refresh();
     // Initialize deployment form with initial data reactively
     effect(() => {
       const initialData = this.deploymentFormInitialData();
@@ -317,6 +318,7 @@ export class DeploymentWizardComponent implements OnInit {
     if (!this.deploymentTargetForm.valid) {
       return;
     }
+    this.applications.refresh();
     this.nextStep();
   }
 
@@ -350,8 +352,6 @@ export class DeploymentWizardComponent implements OnInit {
             customerOrganization: customerOrgId ? ({id: customerOrgId} as CustomerOrganization) : undefined,
           })
         )) as DeploymentTarget;
-
-        this.selectedDeploymentTarget.set(createdDeploymentTarget);
       } catch (e) {
         const msg = getFormDisplayedError(e);
         this.toast.error(msg || 'Failed to create deployment target');
@@ -369,6 +369,7 @@ export class DeploymentWizardComponent implements OnInit {
 
       try {
         await firstValueFrom(this.deploymentTargets.deploy(deployment));
+        this.selectedDeploymentTarget.set(createdDeploymentTarget);
         this.toast.success('Deployment created successfully');
         this.nextStep();
       } catch (e) {
