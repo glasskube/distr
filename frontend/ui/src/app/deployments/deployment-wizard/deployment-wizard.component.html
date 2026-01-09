@@ -36,7 +36,7 @@
 
                   <div class="grid grid-cols-4 gap-3">
                     <!-- Vendor Only Option -->
-                    @if (vendorOrganization$ | async; as vendorOrg) {
+                    @if (currentOrganization$ | async; as org) {
                       <button
                         type="button"
                         (click)="selectCustomer(null)"
@@ -52,13 +52,13 @@
                         @if (vendorBranding$ | async; as branding) {
                           <img
                             [src]="getVendorLogoUrl(branding)"
-                            [alt]="vendorOrg.name"
+                            [alt]="org.name"
                             class="w-12 h-12 mb-2 rounded-lg" />
                         }
 
                         <!-- Vendor Name -->
                         <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
-                          {{ vendorOrg.name }}
+                          {{ org.name }}
                         </div>
 
                         <!-- Description -->

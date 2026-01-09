@@ -20,7 +20,7 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
-import {DeploymentRequest} from '@glasskube/distr-sdk';
+import {DeploymentRequest, DeploymentType} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
@@ -89,8 +89,8 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 })
 export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy, ControlValueAccessor {
   disableApplicationSelect = input(false);
-  deploymentType = input<'docker' | 'kubernetes'>('docker');
-  customerOrganizationId = input<string>('');
+  deploymentType = input<DeploymentType>('docker');
+  customerOrganizationId = input<string>();
   deploymentTargetName = input<string>('default');
 
   protected readonly featureFlags = inject(FeatureFlagService);
@@ -143,10 +143,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   );
 
   private readonly deploymentType$ = toObservable(this.deploymentType);
-  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId).pipe(
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId);
 
   protected readonly licenses$ = combineLatest([
     this.applicationId$,

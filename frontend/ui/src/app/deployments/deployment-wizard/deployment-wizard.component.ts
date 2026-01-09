@@ -2,7 +2,7 @@ import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {AsyncPipe} from '@angular/common';
 import {Component, computed, DestroyRef, effect, inject, OnInit, output, signal, viewChild} from '@angular/core';
 import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {faBuildingUser, faCheckCircle, faDharmachakra, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -13,7 +13,7 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, startWith, switchMap} from 'rxjs';
+import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, switchMap, take} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
@@ -63,6 +63,7 @@ export class DeploymentWizardComponent implements OnInit {
   private readonly licenses = inject(LicensesService);
   private readonly organization = inject(OrganizationService);
   private readonly organizationBranding = inject(OrganizationBrandingService);
+  private readonly fb = inject(FormBuilder).nonNullable;
   protected readonly auth = inject(AuthService);
   protected readonly featureFlags = inject(FeatureFlagService);
 
@@ -71,13 +72,13 @@ export class DeploymentWizardComponent implements OnInit {
   readonly closed = output<void>();
 
   // Step 1: Customer Selection (optional)
-  readonly customerForm = new FormGroup({
-    customerOrganizationId: new FormControl<string | null>(null),
+  readonly customerForm = this.fb.group({
+    customerOrganizationId: this.fb.control<string | undefined>(undefined),
   });
 
   // Step 2: Application Selection
-  readonly applicationForm = new FormGroup({
-    applicationId: new FormControl<string>('', Validators.required),
+  readonly applicationForm = this.fb.group({
+    applicationId: this.fb.control<string | undefined>(undefined, Validators.required),
   });
 
   // Step 3: Deployment Target Configuration
@@ -109,20 +110,17 @@ export class DeploymentWizardComponent implements OnInit {
   protected readonly allLicenses$ = this.featureFlags.isLicensingEnabled$.pipe(
     switchMap((enabled) => (enabled ? this.licenses.list() : of([])))
   );
-  protected readonly vendorOrganization$ = this.organization.get();
+  protected readonly currentOrganization$ = this.organization.get();
   protected readonly vendorBranding$ = this.organizationBranding.get();
   protected selectedApplication = signal<Application | undefined>(undefined);
-  protected selectedCustomerOrganizationId = signal<string>('');
+  protected selectedCustomerOrganizationId = toSignal(this.customerForm.controls.customerOrganizationId.valueChanges);
   protected selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
 
   // Filter applications based on customer licenses
   protected readonly filteredApplications$ = combineLatest([
     this.applications$,
     this.allLicenses$,
-    this.customerForm.controls.customerOrganizationId.valueChanges.pipe(
-      startWith(this.customerForm.controls.customerOrganizationId.value),
-      map((id) => id ?? undefined)
-    ),
+    toObservable(this.selectedCustomerOrganizationId),
   ]).pipe(
     map(([applications, licenses, customerOrgId]) => {
       // If no customer is selected or no licenses, show all applications
@@ -201,18 +199,10 @@ export class DeploymentWizardComponent implements OnInit {
   ngOnInit() {
     // If user is a customer, set selectedCustomerOrganizationId from organization
     if (!this.auth.isVendor()) {
-      this.vendorOrganization$.subscribe((org) => {
-        this.customerForm.controls.customerOrganizationId.setValue(org.customerOrganizationId!);
-        this.selectedCustomerOrganizationId.set(org.customerOrganizationId!);
-      });
+      this.currentOrganization$
+        .pipe(take(1))
+        .subscribe((org) => this.customerForm.controls.customerOrganizationId.setValue(org.customerOrganizationId!));
     }
-
-    // Watch customer selection
-    this.customerForm.controls.customerOrganizationId.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((customerId) => {
-        this.selectedCustomerOrganizationId.set(customerId ?? '');
-      });
 
     // Watch application selection
     this.applicationForm.controls.applicationId.valueChanges
@@ -393,6 +383,6 @@ export class DeploymentWizardComponent implements OnInit {
   }
 
   selectCustomer(customer: CustomerOrganization | null) {
-    this.customerForm.controls.customerOrganizationId.setValue(customer?.id ?? null);
+    this.customerForm.controls.customerOrganizationId.setValue(customer?.id);
   }
 }
