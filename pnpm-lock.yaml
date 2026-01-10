@@ -134,7 +134,7 @@ importers:
         version: 4.1.18
       '@types/jasmine':
         specifier: ~5.1.0
-        version: 5.1.13
+        version: 5.1.14
       '@types/semver':
         specifier: ^7.5.8
         version: 7.7.1
@@ -1690,8 +1690,8 @@ packages:
   '@types/geojson@7946.0.16':
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
-  '@types/jasmine@5.1.13':
-    resolution: {integrity: sha512-MYCcDkruFc92LeYZux5BC0dmqo2jk+M5UIZ4/oFnAPCXN9mCcQhLyj7F3/Za7rocVyt5YRr1MmqJqFlvQ9LVcg==}
+  '@types/jasmine@5.1.14':
+    resolution: {integrity: sha512-16bJdpgUPNKXuaelVxuLZUeDd02+PnF0aQd5HY4xLWoUOMoRE+CyNkRpjRMIcPBCR1dscSb52pmFNILAN1uzkw==}
 
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
@@ -5475,7 +5475,7 @@ snapshots:
   '@types/geojson@7946.0.16':
     optional: true
 
-  '@types/jasmine@5.1.13': {}
+  '@types/jasmine@5.1.14': {}
 
   '@types/node@24.10.1':
     dependencies:
