@@ -1,0 +1,112 @@
+<div class="sm:max-w-240">
+  <div class="space-y-6">
+    <ol
+      class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 px-8 dark:border-gray-700 dark:bg-gray-800 justify-center flex-row items-center">
+      <!-- Step 1: Customer (Conditional) -->
+      @if (showCustomerStep) {
+        <li
+          class="flex items-center gap-2 flex-1 flex-col"
+          [class.text-gray-500]="!isCustomerStep()"
+          [class.dark:text-gray-400]="!isCustomerStep()"
+          [class.text-blue-700]="isCustomerStep()"
+          [class.dark:text-blue-600]="isCustomerStep()">
+          <fa-icon [icon]="faBuildingUser"></fa-icon>
+          <p class="text-sm font-medium leading-tight">Customer</p>
+        </li>
+
+        <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
+      }
+
+      <!-- Step 2: Application -->
+      <li
+        class="flex items-center gap-2 flex-1 flex-col"
+        [class.text-gray-500]="!isApplicationStep()"
+        [class.dark:text-gray-400]="!isApplicationStep()"
+        [class.text-blue-700]="isApplicationStep()"
+        [class.dark:text-blue-600]="isApplicationStep()">
+        <fa-icon [icon]="faShip"></fa-icon>
+        <p class="text-sm font-medium leading-tight">Application</p>
+      </li>
+
+      <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
+
+      <!-- Step 3: Deployment Config -->
+      <li
+        class="flex items-center gap-2 flex-1 flex-col"
+        [class.text-gray-500]="!isTargetStep()"
+        [class.dark:text-gray-400]="!isTargetStep()"
+        [class.text-blue-700]="isTargetStep()"
+        [class.dark:text-blue-600]="isTargetStep()">
+        <fa-icon [icon]="faServer"></fa-icon>
+        <p class="text-sm font-medium leading-tight whitespace-nowrap">Deployment Config</p>
+      </li>
+
+      <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
+
+      <!-- Step 4: App Config -->
+      <li
+        class="flex items-center gap-2 flex-1 flex-col"
+        [class.text-gray-500]="!isConfigurationStep()"
+        [class.dark:text-gray-400]="!isConfigurationStep()"
+        [class.text-blue-700]="isConfigurationStep()"
+        [class.dark:text-blue-600]="isConfigurationStep()">
+        <fa-icon [icon]="faCog"></fa-icon>
+        <p class="text-sm font-medium leading-tight whitespace-nowrap">App Config</p>
+      </li>
+
+      <div class="hidden h-px shrink-0 bg-gray-200 dark:bg-gray-700 md:block w-8"></div>
+
+      <!-- Step 5: Deploy -->
+      <li
+        class="flex items-center gap-2 flex-1 flex-col"
+        [class.text-gray-500]="!isConnectStep()"
+        [class.dark:text-gray-400]="!isConnectStep()"
+        [class.text-green-600]="isConnectStep()"
+        [class.dark:text-green-500]="isConnectStep()">
+        @if (isConnectStep()) {
+          <fa-icon [icon]="faCheckCircle"></fa-icon>
+        } @else {
+          <fa-icon [icon]="faNetworkWired"></fa-icon>
+        }
+        <p class="text-sm font-medium leading-tight">Deploy</p>
+      </li>
+    </ol>
+  </div>
+
+  @if (!isFinalStep()) {
+    <form [formGroup]="currentFormGroup()" (ngSubmit)="this.attemptContinueOutput.emit()">
+      <ng-container *ngTemplateOutlet="selected ? selected.content : null"></ng-container>
+
+      <div class="gap-4 flex justify-stretch sm:justify-end mt-4">
+        @if (shouldShowBackButton()) {
+          <button
+            type="button"
+            (click)="this.attemptGoBackOutput.emit()"
+            class="flex-1 sm:flex-none text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+            Back
+          </button>
+        }
+        <button
+          type="submit"
+          class="flex-1 sm:flex-none text-white inline-flex items-center justify-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+          @if (isConfigurationStep()) {
+            Create Deployment
+          } @else {
+            Continue
+          }
+        </button>
+      </div>
+    </form>
+  } @else {
+    <ng-container *ngTemplateOutlet="selected ? selected.content : null"></ng-container>
+
+    <div class="gap-4 flex justify-stretch sm:justify-end mt-4">
+      <button
+        type="button"
+        (click)="this.attemptContinueOutput.emit()"
+        class="flex-1 sm:flex-none text-white inline-flex items-center justify-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        Done
+      </button>
+    </div>
+  }
+</div>

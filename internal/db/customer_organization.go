@@ -28,6 +28,28 @@ const (
 	`
 )
 
+func ValidateCustomerOrgBelongsToOrg(ctx context.Context, customerOrgID uuid.UUID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		"SELECT EXISTS(SELECT 1 FROM CustomerOrganization WHERE id = @customerOrgID AND organization_id = @orgID)",
+		pgx.NamedArgs{
+			"customerOrgID": customerOrgID,
+			"orgID":         orgID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not validate CustomerOrganization belongs to Organization: %w", err)
+	}
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
+	if err != nil {
+		return fmt.Errorf("could not collect result: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("customer organization does not belong to organization")
+	}
+	return nil
+}
+
 func CreateCustomerOrganization(ctx context.Context, customerOrg *types.CustomerOrganization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,

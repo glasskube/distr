@@ -104,9 +104,20 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	} else {
 		dt.AgentVersionID = &agentVersion.ID
 		err = db.RunTx(ctx, func(ctx context.Context) error {
+			customerOrgID := auth.CurrentCustomerOrgID()
+
+			if dt.CustomerOrganization != nil && dt.CustomerOrganization.ID != uuid.Nil {
+				if err := db.ValidateCustomerOrgBelongsToOrg(ctx, dt.CustomerOrganization.ID, *auth.CurrentOrgID()); err != nil {
+					err = errors.New("customer organization does not belong to organization")
+					http.Error(w, err.Error(), http.StatusForbidden)
+					return err
+				}
+				customerOrgID = &dt.CustomerOrganization.ID
+			}
+
 			limitReached, err := subscription.IsDeploymentTargetLimitReached(
 				ctx, *auth.CurrentOrg(),
-				auth.CurrentCustomerOrgID())
+				customerOrgID)
 			if err != nil {
 				log.Warn("could not check deployment target limit", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
@@ -123,7 +134,7 @@ func createDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 				&dt,
 				*auth.CurrentOrgID(),
 				auth.CurrentUserID(),
-				auth.CurrentCustomerOrgID(),
+				customerOrgID,
 			); err != nil {
 				log.Warn("could not create DeploymentTarget", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
