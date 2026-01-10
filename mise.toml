@@ -4,7 +4,7 @@ go = "1.25.5"
 golangci-lint = "2.8.0"
 helm-docs = "1.14.2"
 watchexec = "2.3.2"
-pnpm = "10.27.0"
+pnpm = "10.28.0"
 stripe = "1.34.0"
 
 [env]
