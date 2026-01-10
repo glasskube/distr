@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.1](https://github.com/glasskube/distr/compare/2.3.0...2.3.1) (2026-01-10)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1614](https://github.com/glasskube/distr/issues/1614)) ([a5a7832](https://github.com/glasskube/distr/commit/a5a78325031fa5f8edb3e6b2bef8b12cf9b7bd90))
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.28.2 ([#1617](https://github.com/glasskube/distr/issues/1617)) ([de7f1cd](https://github.com/glasskube/distr/commit/de7f1cd149ba9e15a9947bcc33a4570c123276c0))
+* **deps:** update dependency @types/jasmine to v5.1.14 ([#1618](https://github.com/glasskube/distr/issues/1618)) ([b4bc1ca](https://github.com/glasskube/distr/commit/b4bc1cab4b5474629c06d745457af882a825da84))
+
 ## [2.3.0](https://github.com/glasskube/distr/compare/2.2.5...2.3.0) (2026-01-09)
 
 
