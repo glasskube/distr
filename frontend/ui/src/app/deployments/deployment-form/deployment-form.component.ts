@@ -1,5 +1,16 @@
 import {AsyncPipe} from '@angular/common';
-import {AfterViewInit, Component, forwardRef, inject, Injector, OnDestroy, OnInit} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  computed,
+  forwardRef,
+  inject,
+  Injector,
+  input,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -9,11 +20,10 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
-import {DeploymentRequest} from '@glasskube/distr-sdk';
+import {DeploymentRequest, DeploymentType} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatest,
-  combineLatestWith,
   debounceTime,
   distinctUntilChanged,
   filter,
@@ -21,23 +31,22 @@ import {
   NEVER,
   of,
   shareReplay,
+  startWith,
   Subject,
   switchMap,
   takeUntil,
-  withLatestFrom,
 } from 'rxjs';
-import {isArchived} from '../../util/dates';
-import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../util/validation';
-import {EditorComponent} from '../components/editor.component';
-import {AutotrimDirective} from '../directives/autotrim.directive';
-import {ApplicationsService} from '../services/applications.service';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {FeatureFlagService} from '../services/feature-flag.service';
-import {LicensesService} from '../services/licenses.service';
+import {isArchived} from '../../../util/dates';
+import {HELM_RELEASE_NAME_MAX_LENGTH, HELM_RELEASE_NAME_REGEX} from '../../../util/validation';
+import {EditorComponent} from '../../components/editor.component';
+import {AutotrimDirective} from '../../directives/autotrim.directive';
+import {ApplicationsService} from '../../services/applications.service';
+import {AuthService} from '../../services/auth.service';
+import {FeatureFlagService} from '../../services/feature-flag.service';
+import {LicensesService} from '../../services/licenses.service';
 
 export type DeploymentFormValue = Partial<{
   deploymentId: string;
-  deploymentTargetId: string;
   applicationId: string;
   applicationVersionId: string;
   applicationLicenseId: string;
@@ -49,9 +58,9 @@ export type DeploymentFormValue = Partial<{
   forceRestart: boolean;
 }>;
 
-export function mapToDeploymentRequest(value: DeploymentFormValue): DeploymentRequest {
+export function mapToDeploymentRequest(value: DeploymentFormValue, deploymentTargetId: string): DeploymentRequest {
   return {
-    deploymentTargetId: value.deploymentTargetId!,
+    deploymentTargetId: deploymentTargetId,
     applicationVersionId: value.applicationVersionId!,
     applicationLicenseId: value.applicationLicenseId || undefined,
     deploymentId: value.deploymentId || undefined,
@@ -79,16 +88,20 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
   templateUrl: './deployment-form.component.html',
 })
 export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy, ControlValueAccessor {
+  disableApplicationSelect = input(false);
+  deploymentType = input<DeploymentType>('docker');
+  customerOrganizationId = input<string>();
+  deploymentTargetName = input<string>('default');
+
   protected readonly featureFlags = inject(FeatureFlagService);
+  private readonly auth = inject(AuthService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly fb = inject(FormBuilder);
-  private readonly deplyomentTargets = inject(DeploymentTargetsService);
   private readonly injector = inject(Injector);
 
   protected readonly deployForm = this.fb.nonNullable.group({
     deploymentId: this.fb.nonNullable.control<string | undefined>(undefined),
-    deploymentTargetId: this.fb.nonNullable.control('', Validators.required),
     applicationId: this.fb.nonNullable.control('', Validators.required),
     applicationVersionId: this.fb.nonNullable.control('', Validators.required),
     applicationLicenseId: this.fb.nonNullable.control('', Validators.required),
@@ -100,60 +113,69 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     valuesYaml: this.fb.nonNullable.control(''),
     envFileData: this.fb.nonNullable.control(''),
     swarmMode: this.fb.nonNullable.control<boolean>(false),
-    logsEnabled: this.fb.nonNullable.control<boolean>(false),
+    logsEnabled: this.fb.nonNullable.control<boolean>(true),
     forceRestart: this.fb.nonNullable.control<boolean>(false),
   });
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
-  private readonly deploymentTargetId$ = this.deployForm.controls.deploymentTargetId.valueChanges.pipe(
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
   private readonly deploymentId$ = this.deployForm.controls.deploymentId.valueChanges.pipe(
+    startWith(this.deployForm.controls.deploymentId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   private readonly applicationId$ = this.deployForm.controls.applicationId.valueChanges.pipe(
+    startWith(this.deployForm.controls.applicationId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   private readonly applicationVersionId$ = this.deployForm.controls.applicationVersionId.valueChanges.pipe(
+    startWith(this.deployForm.controls.applicationVersionId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   private readonly applicationLicenseId$ = this.deployForm.controls.applicationLicenseId.valueChanges.pipe(
+    startWith(this.deployForm.controls.applicationLicenseId.value),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  private readonly deploymentTarget$ = this.deploymentTargetId$.pipe(
-    combineLatestWith(this.deplyomentTargets.list()),
-    map(([id, dts]) => dts.find((dt) => dt.id === id)),
-    shareReplay(1)
+  private readonly deploymentType$ = toObservable(this.deploymentType);
+  private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId);
+
+  protected readonly allLicenses$ = this.featureFlags.isLicensingEnabled$.pipe(
+    switchMap((enabled) => (enabled ? this.licenses.list() : of([])))
   );
 
-  private readonly deployment$ = combineLatest([this.deploymentTarget$, this.deploymentId$]).pipe(
-    map(([dt, id]) => dt?.deployments.find((d) => d.id === id)),
+  protected readonly licenses$ = combineLatest([
+    this.applicationId$,
+    this.featureFlags.isLicensingEnabled$,
+    this.customerOrganizationId$,
+  ]).pipe(
+    switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
+      isLicensingEnabled && applicationId && (this.auth.isCustomer() || customerOrgId)
+        ? this.licenses
+            .list(applicationId)
+            .pipe(
+              map((licenses) =>
+                this.auth.isVendor() ? licenses.filter((l) => l.customerOrganizationId === customerOrgId) : licenses
+              )
+            )
+        : of([])
+    ),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
-  protected readonly licenseControlVisible$ = combineLatest([
-    this.featureFlags.isLicensingEnabled$,
-    this.deploymentTarget$,
-    this.licenses.list(),
-  ]).pipe(
-    map(
-      ([isLicensingEnabled, deploymentTarget, licenses]) =>
-        isLicensingEnabled && deploymentTarget?.customerOrganization !== undefined && licenses.length > 0
-    ),
-    distinctUntilChanged()
+  protected readonly licenseControlVisible$ = combineLatest([this.allLicenses$, this.customerOrganizationId$]).pipe(
+    map(([licenses, customerOrgId]) => (this.auth.isCustomer() || !!customerOrgId) && licenses.length > 0),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   /**
@@ -161,68 +183,67 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
    * A vendor might be required to choose a license for a customer managed deployment target with no previous
    * deployment but they may only choose a license owned by the same customer.
    */
-  private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deployment$]).pipe(
-    map(([isVisible, deployment]) => isVisible && !deployment),
-    distinctUntilChanged()
-  );
-
-  protected readonly swarmModeVisible$ = this.deploymentTarget$.pipe(map((dt) => dt?.type === 'docker'));
-
-  protected readonly applications$ = this.deploymentTarget$.pipe(
-    map((dt) => dt?.type),
-    combineLatestWith(this.applications.list()),
-    map(([type, apps]) => apps.filter((app) => app.type === type))
-  );
-
-  private selectedApplication$ = this.applicationId$.pipe(
-    combineLatestWith(this.applications$),
-    map(([applicationId, applications]) => applications.find((application) => application.id === applicationId))
-  );
-
-  protected readonly licenses$ = this.applicationId$.pipe(
-    combineLatestWith(this.licenseControlVisible$),
-    switchMap(([applicationId, isLicensingEnabled]) =>
-      isLicensingEnabled && applicationId ? this.licenses.list(applicationId) : NEVER
-    ),
-    combineLatestWith(
-      this.deploymentTarget$.pipe(
-        map((dt) => dt?.customerOrganization?.id),
-        distinctUntilChanged()
-      )
-    ),
-    map(([licenses, customerOrganizationId]) =>
-      licenses.filter((l) => l.customerOrganizationId === customerOrganizationId)
-    ),
+  private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deploymentId$]).pipe(
+    map(([isVisible, deploymentId]) => isVisible && !deploymentId),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
-  private readonly selectedLicense$ = this.applicationLicenseId$.pipe(
-    combineLatestWith(this.licenses$),
+  protected readonly swarmModeVisible$ = toObservable(computed(() => this.deploymentType() === 'docker'));
+
+  protected readonly applications$ = combineLatest([
+    this.applications.list(),
+    this.deploymentType$,
+    this.customerOrganizationId$,
+    this.allLicenses$,
+  ]).pipe(
+    map(([applications, applicationType, customerOrganizationId, licenses]) =>
+      applications.filter(
+        (application) =>
+          application.type === applicationType &&
+          (!customerOrganizationId ||
+            licenses.some(
+              (license) =>
+                license.applicationId === application.id && license.customerOrganizationId === customerOrganizationId
+            ))
+      )
+    )
+  );
+
+  private selectedApplication$ = combineLatest([this.applicationId$, this.applications$]).pipe(
+    map(([applicationId, applications]) => applications.find((application) => application.id === applicationId)),
+    distinctUntilChanged((a, b) => a?.id === b?.id),
+    shareReplay(1)
+  );
+
+  private readonly selectedLicense$ = combineLatest([this.applicationLicenseId$, this.licenses$]).pipe(
     map(([licenseId, licenses]) => licenses.find((license) => license.id === licenseId))
   );
 
-  protected availableApplicationVersions$ = this.licenseControlVisible$.pipe(
-    switchMap((shouldShowLicense) =>
-      shouldShowLicense
-        ? this.selectedLicense$.pipe(
-            switchMap((license) =>
-              // if the license has no version associations, assume that the application has all available versions
-              license?.versions?.length
-                ? of(license.versions)
-                : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
-            )
-          )
-        : this.selectedApplication$.pipe(map((application) => application?.versions ?? []))
-    ),
-    withLatestFrom(this.applicationVersionId$),
-    map(([avs, selectedApplicationVersionId]) =>
-      avs.filter((av) => {
+  protected availableApplicationVersions$ = combineLatest([
+    this.licenseControlVisible$,
+    this.selectedLicense$,
+    this.selectedApplication$,
+    this.applicationVersionId$,
+  ]).pipe(
+    map(([shouldShowLicense, license, application, selectedApplicationVersionId]) => {
+      let versions;
+
+      if (shouldShowLicense) {
+        // if the license has no version associations, assume that the application has all available versions
+        versions = license?.versions?.length ? license.versions : (application?.versions ?? []);
+      } else {
+        versions = application?.versions ?? [];
+      }
+
+      return versions.filter((av) => {
         if (av.id === selectedApplicationVersionId) {
           return true;
         }
         return !isArchived(av);
-      })
-    )
+      });
+    }),
+    shareReplay(1)
   );
 
   private readonly destroyed$ = new Subject<void>();
@@ -247,29 +268,25 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
 
-    this.deploymentTarget$
-      .pipe(
-        distinctUntilChanged((a, b) => a?.id === b?.id),
-        takeUntil(this.destroyed$)
-      )
-      .subscribe((deploymentTarget) => {
-        if (deploymentTarget) {
-          if (deploymentTarget.type === 'kubernetes') {
-            this.deployForm.controls.releaseName.enable();
-            this.deployForm.controls.valuesYaml.enable();
-            this.deployForm.controls.envFileData.disable();
-            if (!this.deployForm.value.releaseName) {
-              this.deployForm.patchValue({
-                releaseName: deploymentTarget.name.trim().toLowerCase().replaceAll(/\W+/g, '-'),
-              });
-            }
-          } else {
-            this.deployForm.controls.envFileData.enable();
-            this.deployForm.controls.releaseName.disable();
-            this.deployForm.controls.valuesYaml.disable();
+    this.deploymentType$.pipe(takeUntil(this.destroyed$)).subscribe((type) => {
+      if (type) {
+        if (type === 'kubernetes') {
+          this.deployForm.controls.releaseName.enable();
+          this.deployForm.controls.valuesYaml.enable();
+          this.deployForm.controls.envFileData.disable();
+          const targetName = this.deploymentTargetName();
+          if (!this.deployForm.value.releaseName && targetName) {
+            this.deployForm.patchValue({
+              releaseName: targetName.trim().toLowerCase().replaceAll(/\W+/g, '-'),
+            });
           }
+        } else {
+          this.deployForm.controls.envFileData.enable();
+          this.deployForm.controls.releaseName.disable();
+          this.deployForm.controls.valuesYaml.disable();
         }
-      });
+      }
+    });
 
     this.deploymentId$.pipe(takeUntil(this.destroyed$)).subscribe((id) => {
       if (id) {
@@ -277,52 +294,40 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         this.deployForm.controls.swarmMode.disable();
         this.deployForm.controls.forceRestart.enable();
       } else {
-        this.deployForm.controls.applicationId.enable();
+        if (!this.disableApplicationSelect()) {
+          this.deployForm.controls.applicationId.enable();
+        }
         this.deployForm.controls.swarmMode.enable();
         this.deployForm.controls.forceRestart.disable();
       }
     });
 
-    combineLatest([
-      this.applicationId$,
-      this.applicationVersionId$,
-      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
-      this.deployment$.pipe(
-        distinctUntilChanged((a, b) => a?.envFileData === b?.envFileData && a?.valuesYaml === b?.valuesYaml)
-      ),
-    ])
+    combineLatest([this.applicationId$, this.applicationVersionId$, this.deploymentId$, this.deploymentType$])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId, dt, d]) =>
-          combineLatest([
-            of(dt),
-            // Only fill in the template if there is no existing deployment or the existing deployment has no values/env file
-            versionId && applicationId && !(d?.valuesYaml || d?.envFileData)
-              ? this.applications.getTemplateFile(applicationId, versionId).pipe(catchError(() => NEVER))
-              : NEVER,
-          ])
+        switchMap(([applicationId, versionId, deploymentId, type]) =>
+          versionId && applicationId && !deploymentId
+            ? this.applications.getTemplateFile(applicationId, versionId).pipe(
+                catchError(() => NEVER),
+                map((templateFile) => ({templateFile, type}))
+              )
+            : NEVER
         ),
         takeUntil(this.destroyed$)
       )
-      .subscribe(([deploymentTarget, templateFile]) => {
-        if (deploymentTarget) {
-          if (deploymentTarget.type === 'kubernetes') {
-            this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
-          } else {
-            this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
-          }
+      .subscribe(({templateFile, type}) => {
+        if (type === 'kubernetes') {
+          this.deployForm.controls.valuesYaml.patchValue(templateFile ?? '');
+        } else {
+          this.deployForm.controls.envFileData.patchValue(templateFile ?? '');
         }
       });
 
-    combineLatest([
-      this.applicationId$,
-      this.applicationVersionId$,
-      this.deploymentTarget$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
-    ])
+    combineLatest([this.applicationId$, this.applicationVersionId$, this.deploymentType$])
       .pipe(
         debounceTime(5),
-        switchMap(([applicationId, versionId, dt]) =>
-          versionId && applicationId && dt?.type === 'docker'
+        switchMap(([applicationId, versionId, type]) =>
+          versionId && applicationId && type === 'docker'
             ? this.applications.getComposeFile(applicationId, versionId).pipe(catchError(() => NEVER))
             : NEVER
         ),
@@ -360,6 +365,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     // This is needed because the first value could be missed otherwise
     // TODO: Find a better solution for this
     this.applicationLicenseId$.pipe(takeUntil(this.destroyed$)).subscribe();
+
+    // Disable application selector if requested
+    if (this.disableApplicationSelect()) {
+      this.deployForm.controls.applicationId.disable();
+    }
   }
 
   ngAfterViewInit(): void {

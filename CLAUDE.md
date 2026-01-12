@@ -150,6 +150,11 @@ Go linting uses golangci-lint with config in `.golangci.yml`. Frontend uses Pret
 - Use TypeScript interfaces from `app/types/` for API models
 - Use reactive forms for all form handling
 - Use as little `undefined` types as possible, always use the actual type
+- Don't use any svg path icons, always look for a matching icon in the icon library used. These icons should always be the same in the import, the component and template e.g. `faServer` and not `serverIcon`.
+- Use [Angular Signals](https://angular.dev/guide/signals) for inputs, child views and everywhere where the current Angular version supports signals.
+  If you find usages of non signal usages for inputs, child views etc. change them to signals in the files you would edit anyway.
+- Don't use any responsive design classes in modals. They should always be optimized for the none mobile use case.
+- Use Angular's `takeUntilDestroyed` instead of a manual `destroyed$` subject.
 
 ### Database Access
 
@@ -176,6 +181,8 @@ API routes are defined in `internal/routing/`. Routes are grouped by authenticat
 
 ## General rules
 
-- Don't write any unnecessary comments that just explain the functionality below, if there is nothing special about it.
 - Always ensure this file is up-to-date.
+- Don't write any unnecessary comments that just explain the functionality below, if there is nothing special about it.
 - If a user requests you to do something differently, add the difference to a new rule / convention in this file
+- If you read code that doesn't follow these rules, please fix it.
+- If you see any typos, or spelling mistakes, please fix them.

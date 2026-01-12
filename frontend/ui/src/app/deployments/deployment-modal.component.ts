@@ -5,14 +5,14 @@ import {faCircleExclamation, faShip} from '@fortawesome/free-solid-svg-icons';
 import {DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
+import {AuthService} from '../services/auth.service';
+import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {ToastService} from '../services/toast.service';
 import {
   DeploymentFormComponent,
   DeploymentFormValue,
   mapToDeploymentRequest,
-} from '../deployment-form/deployment-form.component';
-import {AuthService} from '../services/auth.service';
-import {DeploymentTargetsService} from '../services/deployment-targets.service';
-import {ToastService} from '../services/toast.service';
+} from './deployment-form/deployment-form.component';
 
 @Component({
   selector: 'app-deployment-modal',
@@ -59,7 +59,11 @@ import {ToastService} from '../services/toast.service';
               </div>
             </div>
           }
-          <app-deployment-form [formControl]="deployForm"></app-deployment-form>
+          <app-deployment-form
+            [formControl]="deployForm"
+            [deploymentType]="deploymentTarget().type"
+            [customerOrganizationId]="deploymentTarget().customerOrganization?.id"
+            [deploymentTargetName]="deploymentTarget().name"></app-deployment-form>
           <button
             type="submit"
             [disabled]="loading()"
@@ -94,7 +98,6 @@ export class DeploymentModalComponent {
       const deployment = this.deployment();
       this.deployForm.reset({
         deploymentId: deployment?.id,
-        deploymentTargetId: this.deploymentTarget().id,
         applicationId: deployment?.applicationId,
         applicationVersionId: this.versionId() ?? deployment?.applicationVersionId,
         applicationLicenseId: deployment?.applicationLicenseId,
@@ -110,7 +113,7 @@ export class DeploymentModalComponent {
     this.deployForm.markAllAsTouched();
     if (this.deployForm.valid) {
       this.loading.set(true);
-      const deployment = mapToDeploymentRequest(this.deployForm.value!);
+      const deployment = mapToDeploymentRequest(this.deployForm.value!, this.deploymentTarget().id!);
       try {
         await firstValueFrom(this.deploymentTargets.deploy(deployment));
         this.toast.success('Deployment saved successfully');

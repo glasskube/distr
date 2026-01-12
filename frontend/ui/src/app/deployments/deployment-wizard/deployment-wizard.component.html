@@ -1,0 +1,326 @@
+<div
+  @modalFlyInOut
+  style="transform-origin: top center"
+  class="p-4 my-auto max-h-full overflow-y-auto w-200 bg-white rounded-lg shadow-sm dark:bg-gray-900">
+  <!-- Modal header -->
+  <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create New Deployment</h2>
+    <button
+      type="button"
+      (click)="close()"
+      class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+      <fa-icon [icon]="faXmark"></fa-icon>
+      <span class="sr-only">Close modal</span>
+    </button>
+  </div>
+
+  <!-- Modal body -->
+  <div class="p-4 space-y-4 w-full">
+    <section class="antialiased">
+      <div class="mx-auto">
+        <app-deployment-wizard-stepper
+          #stepper
+          (attemptContinue)="attemptContinue()"
+          (attemptGoBack)="attemptGoBack()"
+          [showCustomerStep]="showCustomerStep()"
+          class="mx-auto max-w-5xl space-y-6">
+          <!-- Step 1: Customer Selection (Conditional - Only for Vendors) -->
+          @if (showCustomerStep()) {
+            <cdk-step [stepControl]="customerForm">
+              <div class="space-y-6 mt-4">
+                <div class="space-y-4 w-full">
+                  <h3 class="font-normal text-gray-900 dark:text-white">Select Customer</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Create the deployment in your vendor organization or choose a customer.
+                  </p>
+
+                  <div class="grid grid-cols-4 gap-3">
+                    <!-- Vendor Only Option -->
+                    @let org = currentOrganization$ | async;
+                    @let deploymentLimit = org?.subscriptionLimits?.maxDeploymentsPerCustomerOrganization ?? -1;
+                    @if (org) {
+                      @let limitReached = deploymentLimit >= 0 && internalDeploymentCount() >= deploymentLimit;
+                      @let isSelected = customerForm.value.internal;
+                      <button
+                        type="button"
+                        [disabled]="limitReached"
+                        [title]="limitReached ? 'Maximum deployments reached' : ''"
+                        (click)="selectCustomer(null)"
+                        class="relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        [class.border-primary-600]="isSelected"
+                        [class.bg-primary-50]="isSelected"
+                        [class.dark:bg-primary-900]="isSelected"
+                        [class.border-gray-200]="!isSelected"
+                        [class.bg-white]="!isSelected"
+                        [class.dark:border-gray-700]="!isSelected"
+                        [class.dark:bg-gray-800]="!isSelected">
+                        <!-- Vendor Logo -->
+                        @if (vendorBranding$ | async; as branding) {
+                          <img [src]="getVendorLogoUrl(branding)" [alt]="org.name" class="w-12 h-12 mb-2 rounded-lg" />
+                        }
+
+                        <!-- Vendor Name -->
+                        <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
+                          {{ org.name }}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">Internal deployment</div>
+
+                        <!-- Selection Indicator -->
+                        @if (isSelected) {
+                          <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
+                            <fa-icon [icon]="faCheckCircle" class="w-6 h-6"></fa-icon>
+                          </div>
+                        }
+                      </button>
+                    }
+
+                    <!-- Customer Options -->
+                    @for (customer of customerOrganizations$ | async; track customer.id) {
+                      @let deploymentLimitReached =
+                        deploymentLimit >= 0 && customer.deploymentTargetCount >= deploymentLimit;
+                      <button
+                        type="button"
+                        (click)="selectCustomer(customer)"
+                        [disabled]="deploymentLimitReached"
+                        [title]="deploymentLimitReached ? 'Maximum deployments reached' : ''"
+                        class="relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        [class.border-primary-600]="customerForm.value.customerOrganizationId === customer.id"
+                        [class.bg-primary-50]="customerForm.value.customerOrganizationId === customer.id"
+                        [class.dark:bg-primary-900]="customerForm.value.customerOrganizationId === customer.id"
+                        [class.border-gray-200]="customerForm.value.customerOrganizationId !== customer.id"
+                        [class.bg-white]="customerForm.value.customerOrganizationId !== customer.id"
+                        [class.dark:border-gray-700]="customerForm.value.customerOrganizationId !== customer.id"
+                        [class.dark:bg-gray-800]="customerForm.value.customerOrganizationId !== customer.id">
+                        <!-- Customer Logo -->
+                        @if (customer.imageId) {
+                          <img
+                            [src]="customer.imageUrl | secureImage | async"
+                            [alt]="customer.name"
+                            class="w-12 h-12 mb-2 rounded-lg" />
+                        } @else {
+                          <div
+                            class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <fa-icon [icon]="faBuildingUser" class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
+                          </div>
+                        }
+
+                        <!-- Customer Name -->
+                        <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
+                          {{ customer.name }}
+                        </div>
+
+                        <!-- Customer Stats -->
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                          {{ customer.userCount }} users · {{ customer.deploymentTargetCount }} deployments
+                        </div>
+
+                        <!-- Selection Indicator -->
+                        @if (customerForm.value.customerOrganizationId === customer.id) {
+                          <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
+                            <fa-icon [icon]="faCheckCircle" class="w-6 h-6"></fa-icon>
+                          </div>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </cdk-step>
+          }
+
+          <!-- Step 2: Application Selection -->
+          <cdk-step [stepControl]="applicationForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                <h3 class="font-normal text-gray-900 dark:text-white">Select Application</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Choose the application you want to deploy</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  @for (app of filteredApplications$ | async; track app.id) {
+                    <button
+                      type="button"
+                      (click)="selectApplication(app)"
+                      class="relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:shadow-md"
+                      [class.border-primary-600]="applicationForm.value.applicationId === app.id"
+                      [class.bg-primary-50]="applicationForm.value.applicationId === app.id"
+                      [class.dark:bg-primary-900]="applicationForm.value.applicationId === app.id"
+                      [class.border-gray-200]="applicationForm.value.applicationId !== app.id"
+                      [class.bg-white]="applicationForm.value.applicationId !== app.id"
+                      [class.dark:border-gray-700]="applicationForm.value.applicationId !== app.id"
+                      [class.dark:bg-gray-800]="applicationForm.value.applicationId !== app.id">
+                      <!-- Application Image -->
+                      @if (app.imageUrl) {
+                        <img [src]="app.imageUrl" [alt]="app.name" class="w-12 h-12 mb-2 rounded-lg" />
+                      } @else {
+                        <div
+                          class="w-12 h-12 mb-2 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                          <fa-icon [icon]="faShip" class="text-xl text-gray-400 dark:text-gray-500"></fa-icon>
+                        </div>
+                      }
+
+                      <!-- Application Name -->
+                      <div class="text-sm font-medium text-gray-900 dark:text-white text-center mb-1">
+                        {{ app.name }}
+                      </div>
+
+                      <!-- Deployment Type Badge -->
+                      <div
+                        class="px-2 py-1 rounded-md text-xs font-medium mb-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        @if (app.type === 'docker') {
+                          <fa-icon [icon]="faDocker" class="mr-1"></fa-icon>
+                          Docker
+                        } @else {
+                          <fa-icon [icon]="faDharmachakra" class="mr-1"></fa-icon>
+                          Kubernetes
+                        }
+                      </div>
+
+                      <!-- Version Count -->
+                      <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                        {{ app.versions?.length || 0 }} version{{ (app.versions?.length || 0) !== 1 ? 's' : '' }}
+                      </div>
+
+                      <!-- Selection Indicator -->
+                      @if (applicationForm.value.applicationId === app.id) {
+                        <div class="absolute top-2 left-2 text-primary-600 dark:text-primary-400">
+                          <fa-icon [icon]="faCheckCircle" class="w-6 h-6"></fa-icon>
+                        </div>
+                      }
+                    </button>
+                  } @empty {
+                    <div class="col-span-2 md:col-span-3 lg:col-span-4 text-center py-8">
+                      <div class="text-gray-500 dark:text-gray-400">
+                        @if (licenseControlVisible()) {
+                          <p class="text-sm font-medium mb-1">No application licenses found</p>
+                          <p class="text-xs">This customer has no licenses for any applications.</p>
+                        } @else {
+                          <p class="text-sm font-medium mb-1">No applications found</p>
+                          <p class="text-xs">There are no applications available to deploy.</p>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                @if (applicationForm.controls.applicationId.invalid && applicationForm.controls.applicationId.touched) {
+                  <p class="mt-1 text-sm text-red-600 dark:text-red-500">Please select an application.</p>
+                }
+              </div>
+            </div>
+          </cdk-step>
+
+          <!-- Step 3: Deployment Target Configuration -->
+          <cdk-step [stepControl]="deploymentTargetForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                <h3 class="font-normal text-gray-900 dark:text-white">Deployment Configuration</h3>
+
+                <!-- Deployment Name -->
+                <div>
+                  <label for="agent-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Deployment Name
+                  </label>
+                  <input
+                    [formControl]="deploymentTargetForm.controls.name"
+                    type="text"
+                    id="agent-name"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    required
+                    autotrim
+                    autocomplete="off" />
+                  @if (deploymentTargetForm.controls.name.invalid && deploymentTargetForm.controls.name.touched) {
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-500">Field is required.</p>
+                  }
+                </div>
+
+                <!-- Kubernetes-specific Settings -->
+                @if (selectedDeploymentType() === 'kubernetes') {
+                  <div>
+                    <label for="namespace" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Kubernetes Namespace
+                    </label>
+                    <input
+                      [formControl]="deploymentTargetForm.controls.namespace"
+                      type="text"
+                      id="namespace"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      required
+                      autotrim
+                      autocomplete="off" />
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      The namespace where the agent and application will be deployed
+                    </div>
+                    @if (
+                      deploymentTargetForm.controls.namespace.invalid && deploymentTargetForm.controls.namespace.touched
+                    ) {
+                      <p class="mt-1 text-sm text-red-600 dark:text-red-500">
+                        Field is required and must be a valid Kubernetes resource name.
+                      </p>
+                    }
+                  </div>
+
+                  <div class="flex items-center">
+                    <input
+                      id="cluster-scope"
+                      type="checkbox"
+                      [formControl]="deploymentTargetForm.controls.clusterScope"
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                    <label for="cluster-scope" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                      Enable cluster-scoped permissions
+                    </label>
+                  </div>
+                  @if (!deploymentTargetForm.controls.clusterScope.value) {
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Note: Metrics reporting will not be available for namespace-scoped agents.
+                    </p>
+                  }
+                }
+              </div>
+            </div>
+          </cdk-step>
+
+          <!-- Step 4: Application Configuration -->
+          <cdk-step [stepControl]="applicationConfigForm">
+            <div class="space-y-6 mt-4">
+              <div class="space-y-4 w-full">
+                <h3 class="font-normal text-gray-900 dark:text-white">Application Configuration</h3>
+
+                <!-- Deployment Form -->
+                @if (isApplicationConfigStep() && deploymentFormInitialData()) {
+                  <app-deployment-form
+                    [disableApplicationSelect]="true"
+                    [deploymentType]="selectedDeploymentType()"
+                    [customerOrganizationId]="selectedCustomerOrganizationId()"
+                    [deploymentTargetName]="deploymentTargetForm.value.name ?? ''"
+                    [formControl]="applicationConfigForm.controls.deploymentFormData">
+                  </app-deployment-form>
+                }
+              </div>
+            </div>
+          </cdk-step>
+
+          <!-- Step 5: Success Page -->
+          <cdk-step [stepControl]="connectForm">
+            <div class="space-y-6 mt-12">
+              <div class="space-y-6">
+                <div class="flex flex-col items-center text-center space-y-4">
+                  <fa-icon [icon]="faCheckCircle" class="text-green-600 dark:text-green-500 text-6xl mt-4"></fa-icon>
+                  <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Deployment Created Successfully</h3>
+                  <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400 max-w-2xl">
+                    Your deployment has been created successfully. To deploy it, please copy and paste the following
+                    command:
+                  </p>
+                </div>
+                @if (selectedDeploymentTarget(); as dt) {
+                  <app-connect-instructions [deploymentTarget]="dt"></app-connect-instructions>
+                }
+              </div>
+            </div>
+          </cdk-step>
+        </app-deployment-wizard-stepper>
+      </div>
+    </section>
+  </div>
+</div>
