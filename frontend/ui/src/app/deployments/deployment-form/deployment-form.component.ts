@@ -20,6 +20,7 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
+import {RouterLink} from '@angular/router';
 import {DeploymentRequest, DeploymentType} from '@glasskube/distr-sdk';
 import {
   catchError,
@@ -77,7 +78,7 @@ type DeploymentFormValueCallback = (v: DeploymentFormValue | undefined) => void;
 
 @Component({
   selector: 'app-deployment-form',
-  imports: [ReactiveFormsModule, AsyncPipe, EditorComponent, AutotrimDirective],
+  imports: [ReactiveFormsModule, AsyncPipe, EditorComponent, AutotrimDirective, RouterLink],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -93,8 +94,13 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   customerOrganizationId = input<string>();
   deploymentTargetName = input<string>('default');
 
+  protected readonly secretsUrl = computed(() => {
+    const customerOrgId = this.customerOrganizationId();
+    return customerOrgId ? `/customers/${customerOrgId}/secrets` : '/secrets';
+  });
+
   protected readonly featureFlags = inject(FeatureFlagService);
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
   private readonly applications = inject(ApplicationsService);
   private readonly licenses = inject(LicensesService);
   private readonly fb = inject(FormBuilder);
