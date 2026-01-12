@@ -436,7 +436,9 @@ func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID) (
 			FROM UserAccount u
 			INNER JOIN Organization_UserAccount j ON u.id = j.user_account_id
 			INNER JOIN Organization o ON o.id = j.organization_id
-			WHERE u.id = @id AND j.organization_id = @orgId`,
+			WHERE u.id = @id
+				AND j.organization_id = @orgId
+				AND o.deleted_at IS NULL`,
 		pgx.NamedArgs{
 			"id":    userID,
 			"orgId": orgID,

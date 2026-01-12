@@ -1,11 +1,14 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"text/template"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/dotenv"
 	"github.com/glasskube/distr/api"
 	"github.com/glasskube/distr/internal/apierrors"
 	internalctx "github.com/glasskube/distr/internal/context"
@@ -15,6 +18,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -77,6 +81,7 @@ func GetDeploymentsForDeploymentTarget(
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,
+				av.link_template AS application_link_template,
 				CASE WHEN drs.id IS NOT NULL THEN (
 					drs.id,
 					drs.created_at,
@@ -125,9 +130,63 @@ func GetDeploymentsForDeploymentTarget(
 	result, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.DeploymentWithLatestRevision])
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan Deployments: %w", err)
-	} else {
-		return result, nil
 	}
+
+	if err := TemplateDeploymentLinks(result); err != nil {
+		return nil, fmt.Errorf("failed to template deployment links: %w", err)
+	}
+
+	return result, nil
+}
+
+func TemplateApplicationLink(link string, envFileData []byte, valuesYaml []byte) (string, error) {
+	if link == "" {
+		return "", nil
+	}
+
+	parsedEnv, err := dotenv.UnmarshalBytesWithLookup(envFileData, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse env file: %w", err)
+	}
+
+	valuesMap := make(map[string]any)
+	if len(valuesYaml) > 0 {
+		if err := yaml.Unmarshal(valuesYaml, &valuesMap); err != nil {
+			return "", fmt.Errorf("failed to parse values YAML: %w", err)
+		}
+	}
+
+	data := map[string]any{
+		"Env":    parsedEnv,
+		"Values": valuesMap,
+	}
+
+	tmpl, err := template.New("link").Parse(link)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse link template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute link template: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
+func TemplateDeploymentLinks(deployments []types.DeploymentWithLatestRevision) error {
+	for i := range deployments {
+		templatedLink, err := TemplateApplicationLink(
+			deployments[i].ApplicationLinkTemplate,
+			deployments[i].EnvFileData,
+			deployments[i].ValuesYaml,
+		)
+		if err != nil {
+			continue
+		}
+		deployments[i].ApplicationLink = templatedLink
+	}
+	return nil
 }
 
 func CreateDeployment(ctx context.Context, request *api.DeploymentRequest) error {

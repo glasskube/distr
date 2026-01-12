@@ -14,6 +14,7 @@ import {
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
+  faArrowUpRightFromSquare,
   faCircleExclamation,
   faEllipsisVertical,
   faHeartPulse,
@@ -105,6 +106,7 @@ export class DeploymentTargetCardComponent {
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faRotate = faRotate;
+  protected readonly faArrowUpRightFromSquare = faArrowUpRightFromSquare;
 
   protected readonly showDeploymentTargetDropdown = signal(false);
   protected readonly showDeploymentDropdownForId = signal<string | undefined>(undefined);
@@ -200,11 +202,11 @@ export class DeploymentTargetCardComponent {
     const dt = this.deploymentTarget();
     if (dt.currentStatus !== undefined) {
       const message = `If you continue, the previous authentication secret for ${dt.name} becomes invalid. Continue?`;
-      const warning =
+      const alert =
         dt.customerOrganization !== undefined && this.auth.isVendor()
-          ? {message: this.customerManagedWarning}
+          ? ({type: 'warning', message: this.customerManagedWarning} as const)
           : undefined;
-      if (!(await firstValueFrom(this.overlay.confirm({message: {message, warning}})))) {
+      if (!(await firstValueFrom(this.overlay.confirm({message: {message, alert}})))) {
         return;
       }
     }
@@ -238,7 +240,8 @@ export class DeploymentTargetCardComponent {
         .confirm({
           message: {
             message: 'Are you sure you want to force restart this deployment?',
-            warning: {
+            alert: {
+              type: 'warning',
               message: 'Depending on the deployment, this may cause downtime.',
             },
           },
@@ -273,16 +276,16 @@ export class DeploymentTargetCardComponent {
 
   protected deleteDeploymentTarget() {
     const dt = this.deploymentTarget();
-    const warning =
+    const alert =
       dt.customerOrganization !== undefined && this.auth.isVendor()
-        ? {message: this.customerManagedWarning}
+        ? ({type: 'warning', message: this.customerManagedWarning} as const)
         : undefined;
     this.overlay
       .confirm({
         customTemplate: this.deleteConfirmModal,
         requiredConfirmInputText: 'DELETE',
         message: {
-          warning,
+          alert,
           message: '',
         },
       })
@@ -302,9 +305,9 @@ export class DeploymentTargetCardComponent {
 
   protected async deleteDeployment(d: DeploymentWithLatestRevision, confirmTemplate: TemplateRef<any>) {
     const dt = this.deploymentTarget();
-    const warning =
+    const alert =
       dt.customerOrganization !== undefined && this.auth.isVendor()
-        ? {message: this.customerManagedWarning}
+        ? ({type: 'warning', message: this.customerManagedWarning} as const)
         : undefined;
     if (d.id) {
       if (
@@ -313,7 +316,7 @@ export class DeploymentTargetCardComponent {
             customTemplate: confirmTemplate,
             requiredConfirmInputText: 'UNDEPLOY',
             message: {
-              warning,
+              alert,
               message: '',
             },
           })
