@@ -151,7 +151,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     this.customerOrganizationId$,
   ]).pipe(
     switchMap(([applicationId, isLicensingEnabled, customerOrgId]) =>
-      isLicensingEnabled && applicationId && customerOrgId
+      isLicensingEnabled && applicationId && (this.auth.isCustomer() || customerOrgId)
         ? this.licenses
             .list(applicationId)
             .pipe(
@@ -169,7 +169,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
   protected readonly licenseControlVisible$ = this.licenses$.pipe(
-    map((licenses) => !this.auth.isVendor() && licenses.length > 0),
+    map((licenses) => licenses.length > 0),
     distinctUntilChanged(),
     shareReplay(1)
   );

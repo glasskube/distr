@@ -62,7 +62,7 @@ import {
           <app-deployment-form
             [formControl]="deployForm"
             [deploymentType]="deploymentTarget().type"
-            [customerOrganizationId]="deploymentTarget().customerOrganization?.id ?? ''"
+            [customerOrganizationId]="deploymentTarget().customerOrganization?.id"
             [deploymentTargetName]="deploymentTarget().name"></app-deployment-form>
           <button
             type="submit"
