@@ -6,6 +6,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faAddressBook,
   faArrowRightLong,
+  faAsterisk,
   faBox,
   faBoxesStacked,
   faChevronDown,
@@ -64,6 +65,7 @@ export class SideBarComponent {
   protected readonly faArrowRightLong = faArrowRightLong;
   protected readonly faHome = faHome;
   protected readonly faChevronDown = faChevronDown;
+  protected readonly faAsterisk = faAsterisk;
 
   protected feedbackAlert = true;
   protected readonly agentsSubMenuOpen = signal(true);

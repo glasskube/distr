@@ -21,6 +21,7 @@ import (
 	"github.com/glasskube/distr/internal/authjwt"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/deploymentvalues"
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/security"
@@ -239,6 +240,15 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			var secrets []types.SecretWithUpdatedBy
+			if secrets, err = db.GetSecretsForDeploymentTarget(ctx, deploymentTarget.DeploymentTarget); err != nil {
+				msg := "failed to get secrets from DB"
+				log.Error(msg, zap.Error(err))
+				statusMessage = fmt.Sprintf("%v: %v", msg, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				break
+			}
+
 			if deploymentTarget.Type == types.DeploymentTypeDocker {
 				if composeYaml, err := appVersion.ParsedComposeFile(); err != nil {
 					log.Warn("parse error", zap.Error(err))
@@ -248,9 +258,13 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 					log.Warn("failed to patch project name", zap.Error(err))
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
+				} else if envFile, err := deploymentvalues.EnvFileReplaceSecrets(&deployment, secrets); err != nil {
+					log.Warn("failed to replace secrets", zap.Error(err))
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
 				} else {
 					agentDeployment.ComposeFile = patchedComposeFile
-					agentDeployment.EnvFile = deployment.EnvFileData
+					agentDeployment.EnvFile = envFile
 					agentDeployment.DockerType = util.PtrCopy(deployment.DockerType)
 				}
 			} else {
@@ -261,7 +275,10 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 					log.Warn("parse error", zap.Error(err))
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
-				} else if deploymentValues, err := deployment.ParsedValuesFile(); err != nil {
+				} else if deploymentValues, err := deploymentvalues.ParsedValuesFileReplaceSecrets(
+					&deployment,
+					secrets,
+				); err != nil {
 					log.Warn("parse error", zap.Error(err))
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return

@@ -76,6 +76,15 @@
         class="block p-2.5 w-full font-mono text-sm text-gray-900 caret-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:caret-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         formControlName="valuesYaml">
       </app-editor>
+      @if (auth.hasAnyRole('read_write', 'admin')) {
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          You can
+          <a [routerLink]="secretsUrl()" target="_blank" class="text-primary-600 underline"
+            >configure and reference secrets</a
+          >
+          in your Helm values.
+        </div>
+      }
     </div>
   }
   @if (deployForm.controls.envFileData.enabled && deployForm.controls.applicationVersionId.valid) {
@@ -101,6 +110,12 @@
             href="https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/#env-file-syntax">
             Env File Syntax</a
           >.
+          @if (auth.hasAnyRole('read_write', 'admin')) {
+            You can also
+            <a [routerLink]="secretsUrl()" target="_blank" class="text-primary-600 underline"
+              >configure and reference secrets</a
+            >.
+          }
         </div>
       </div>
 

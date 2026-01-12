@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -14,6 +15,7 @@ import (
 	"github.com/glasskube/distr/internal/auth"
 	internalctx "github.com/glasskube/distr/internal/context"
 	"github.com/glasskube/distr/internal/db"
+	"github.com/glasskube/distr/internal/deploymentvalues"
 	"github.com/glasskube/distr/internal/middleware"
 	"github.com/glasskube/distr/internal/subscription"
 	"github.com/glasskube/distr/internal/types"
@@ -202,6 +204,7 @@ func validateDeploymentRequest(
 	var app *types.Application
 	var version *types.ApplicationVersion
 	var target *types.DeploymentTargetWithCreatedBy
+	var secrets []types.SecretWithUpdatedBy
 
 	org := auth.CurrentOrg()
 	var err error
@@ -234,6 +237,12 @@ func validateDeploymentRequest(
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return err
 		}
+	}
+
+	if secrets, err = db.GetSecretsForDeploymentTarget(ctx, target.DeploymentTarget); err != nil {
+		log.Warn("could not get Secrets", zap.Error(err))
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return err
 	}
 
 	var existingDeployment *types.DeploymentWithLatestRevision
@@ -297,7 +306,7 @@ func validateDeploymentRequest(
 		return err
 	} else if err = validateDeploymentRequestDeploymentTarget(ctx, w, request, target); err != nil {
 		return err
-	} else if err = validateDeploymentRequestValues(w, request, version); err != nil {
+	} else if err = validateDeploymentRequestValues(w, request, version, secrets); err != nil {
 		return err
 	} else {
 		return nil
@@ -393,14 +402,17 @@ func validateDeploymentRequestValues(
 	w http.ResponseWriter,
 	deploymentRequest api.DeploymentRequest,
 	appVersion *types.ApplicationVersion,
+	secrets []types.SecretWithUpdatedBy,
 ) error {
-	if deploymentValues, err := deploymentRequest.ParsedValuesFile(); err != nil {
+	if deploymentValues, err := deploymentvalues.ParsedValuesFileReplaceSecrets(&deploymentRequest, secrets); err != nil {
 		return badRequestError(w, fmt.Sprintf("invalid values: %v", err.Error()))
 	} else if appVersionValues, err := appVersion.ParsedValuesFile(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	} else if _, err := util.MergeAllRecursive(appVersionValues, deploymentValues); err != nil {
 		return badRequestError(w, fmt.Sprintf("values cannot be merged with base: %v", err))
+	} else if _, err := deploymentvalues.EnvFileReplaceSecrets(&deploymentRequest, secrets); err != nil {
+		return badRequestError(w, fmt.Sprintf("invalid env file: %v", err.Error()))
 	}
 	return nil
 }
@@ -502,13 +514,28 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 
 		SetFileDownloadHeaders(w, filename)
 
+		var secrets []types.SecretWithUpdatedBy
+		if dt, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if secrets, err = db.GetSecretsForDeploymentTarget(ctx, dt.DeploymentTarget); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		replacer := secretReplacer(secrets)
+
 		err := db.GetDeploymentLogRecordsForExport(
 			ctx, deployment.ID, resource, limit,
 			func(record types.DeploymentLogRecord) error {
 				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.Timestamp.Format(time.RFC3339),
 					record.Severity,
-					record.Body)
+					replacer.Replace(record.Body))
 				return err
 			},
 		)
@@ -547,11 +574,26 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
+		var secrets []types.SecretWithUpdatedBy
+		if dt, err := db.GetDeploymentTargetForDeploymentID(ctx, deployment.ID); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get deployment target", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		} else if secrets, err = db.GetSecretsForDeploymentTarget(ctx, dt.DeploymentTarget); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
 		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before, after); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get log records", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else {
+			replacer := secretReplacer(secrets)
 			response := make([]api.DeploymentLogRecord, len(records))
 			for i, record := range records {
 				response[i] = api.DeploymentLogRecord{
@@ -560,12 +602,26 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 					Resource:             record.Resource,
 					Timestamp:            record.Timestamp,
 					Severity:             record.Severity,
-					Body:                 record.Body,
+					Body:                 replacer.Replace(record.Body),
 				}
 			}
 			RespondJSON(w, response)
 		}
 	}
+}
+
+func secretReplacer(secrets []types.SecretWithUpdatedBy) *strings.Replacer {
+	pairs := make([]string, 0, 2*len(secrets))
+	for _, secret := range secrets {
+		if secret.Value == "" {
+			continue
+		}
+		pairs = append(pairs, secret.Value, "********")
+	}
+	if len(pairs) == 0 {
+		return strings.NewReplacer()
+	}
+	return strings.NewReplacer(pairs...)
 }
 
 func deploymentMiddleware(next http.Handler) http.Handler {

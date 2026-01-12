@@ -1,0 +1,32 @@
+package api
+
+import (
+	"time"
+
+	"github.com/glasskube/distr/internal/types"
+	"github.com/google/uuid"
+)
+
+type SecretWithoutValue struct {
+	ID                     uuid.UUID          `json:"id"`
+	CreatedAt              time.Time          `json:"createdAt"`
+	UpdatedAt              time.Time          `json:"updatedAt"`
+	UpdatedBy              *types.UserAccount `json:"updatedBy,omitempty"`
+	CustomerOrganizationID *uuid.UUID         `json:"customerOrganizationId,omitempty"`
+	Key                    string             `json:"key"`
+}
+
+type CreateSecretRequest struct {
+	Key                    string     `json:"key"`
+	Value                  string     `json:"value"`
+	CustomerOrganizationID *uuid.UUID `json:"customerOrganizationId,omitempty"`
+}
+
+type UpdateSecretRequest struct {
+	ID    uuid.UUID `path:"secretId"`
+	Value string    `json:"value"`
+}
+
+type DeleteSecretRequest struct {
+	ID uuid.UUID `path:"secretId"`
+}

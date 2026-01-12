@@ -19,7 +19,6 @@ export class VendorUsersComponent {
   private readonly usersService = inject(UsersService);
   private readonly auth = inject(AuthService);
   protected readonly refresh$ = new Subject<void>();
-  protected readonly userRole = this.auth.getClaims()!.role;
   protected readonly users = toSignal(
     this.refresh$.pipe(
       startWith(undefined),

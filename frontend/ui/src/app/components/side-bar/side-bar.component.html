@@ -251,6 +251,20 @@
           </li>
         }
 
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            (click)="sidebar.hide()"
+            routerLink="/secrets">
+            <fa-icon
+              [icon]="faAsterisk"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Secrets</span>
+          </a>
+        </li>
+
         @if (auth.hasAnyRole('read_write', 'admin')) {
           <li>
             <a
@@ -343,9 +357,9 @@
           </a>
         </li>
 
-        @if (auth.hasRole('admin')) {
-          <hr class="border-gray-200 dark:border-gray-600" />
+        <hr class="border-gray-200 dark:border-gray-600" />
 
+        @if (auth.hasRole('admin')) {
           <li>
             <a
               class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
@@ -359,6 +373,20 @@
             </a>
           </li>
         }
+
+        <li>
+          <a
+            class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            routerLinkActive="bg-gray-100 dark:bg-gray-700"
+            (click)="sidebar.hide()"
+            routerLink="/secrets">
+            <fa-icon
+              [icon]="faAsterisk"
+              size="lg"
+              class="pl-0.5 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"></fa-icon>
+            <span class="ms-3">Secrets</span>
+          </a>
+        </li>
       </ul>
 
       @if (isSubscriptionBannerVisible() && feedbackAlert) {

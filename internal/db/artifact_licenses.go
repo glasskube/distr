@@ -217,10 +217,6 @@ func DeleteArtifactLicensesWithOrganizationID(ctx context.Context, organizationI
 		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {
 			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
 		}
-		return 0, err
-	}
-
-	if err != nil {
 		return 0, fmt.Errorf("could not delete ArtifactLicense: %w", err)
 	}
 

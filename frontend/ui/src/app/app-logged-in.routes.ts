@@ -20,6 +20,8 @@ import {DeploymentTargetsComponent} from './deployments/deployment-targets.compo
 import {LicensesComponent} from './licenses/licenses.component';
 import {OrganizationBrandingComponent} from './organization-branding/organization-branding.component';
 import {OrganizationSettingsComponent} from './organization-settings/organization-settings.component';
+import {CustomerSecretsPageComponent} from './secrets/customer-secrets-page.component';
+import {SecretsPage} from './secrets/secrets-page.component';
 import {AuthService} from './services/auth.service';
 import {FeatureFlagService} from './services/feature-flag.service';
 import {OrganizationService} from './services/organization.service';
@@ -144,13 +146,21 @@ export const routes: Routes = [
       },
       {
         path: 'customers/:customerOrganizationId',
-        component: CustomerUsersComponent,
         canActivate: [requireVendor],
+        children: [
+          {path: 'users', component: CustomerUsersComponent},
+          {path: 'secrets', component: CustomerSecretsPageComponent},
+          {path: '', pathMatch: 'full', redirectTo: 'users'},
+        ],
       },
       {
         path: 'users',
         component: VendorUsersComponent,
         canActivate: [requiredRoleGuard('admin')],
+      },
+      {
+        path: 'secrets',
+        component: SecretsPage,
       },
       {
         path: 'branding',
