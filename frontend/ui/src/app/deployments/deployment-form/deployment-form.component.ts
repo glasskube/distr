@@ -145,6 +145,10 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   private readonly deploymentType$ = toObservable(this.deploymentType);
   private readonly customerOrganizationId$ = toObservable(this.customerOrganizationId);
 
+  protected readonly allLicenses$ = this.featureFlags.isLicensingEnabled$.pipe(
+    switchMap((enabled) => (enabled ? this.licenses.list() : of([])))
+  );
+
   protected readonly licenses$ = combineLatest([
     this.applicationId$,
     this.featureFlags.isLicensingEnabled$,
@@ -168,8 +172,8 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
-  protected readonly licenseControlVisible$ = this.licenses$.pipe(
-    map((licenses) => licenses.length > 0),
+  protected readonly licenseControlVisible$ = combineLatest([this.allLicenses$, this.customerOrganizationId$]).pipe(
+    map(([licenses, customerOrgId]) => (this.auth.isCustomer() || !!customerOrgId) && licenses.length > 0),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -187,8 +191,23 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
 
   protected readonly swarmModeVisible$ = toObservable(computed(() => this.deploymentType() === 'docker'));
 
-  protected readonly applications$ = this.deploymentType$.pipe(
-    switchMap((type) => this.applications.list().pipe(map((apps) => apps.filter((app) => app.type === type))))
+  protected readonly applications$ = combineLatest([
+    this.applications.list(),
+    this.deploymentType$,
+    this.customerOrganizationId$,
+    this.allLicenses$,
+  ]).pipe(
+    map(([applications, applicationType, customerOrganizationId, licenses]) =>
+      applications.filter(
+        (application) =>
+          application.type === applicationType &&
+          (!customerOrganizationId ||
+            licenses.some(
+              (license) =>
+                license.applicationId === application.id && license.customerOrganizationId === customerOrganizationId
+            ))
+      )
+    )
   );
 
   private selectedApplication$ = combineLatest([this.applicationId$, this.applications$]).pipe(
