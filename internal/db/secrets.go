@@ -61,6 +61,14 @@ func GetSecrets(
 	}
 }
 
+func GetSecretsForDeploymentTarget(ctx context.Context, dt types.DeploymentTarget) ([]types.SecretWithUpdatedBy, error) {
+	if dt.CustomerOrganizationID != nil {
+		return GetSecretsForCustomer(ctx, *dt.CustomerOrganizationID)
+	} else {
+		return GetSecretsForOrganization(ctx, dt.OrganizationID)
+	}
+}
+
 func GetSecretsForOrganization(
 	ctx context.Context,
 	organizationID uuid.UUID,

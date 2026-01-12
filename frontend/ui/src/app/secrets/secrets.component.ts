@@ -49,6 +49,14 @@ export class SecretsComponent {
     search: '',
   });
 
+  private readonly filterValue = toSignal(this.filterForm.controls.search.valueChanges);
+
+  protected readonly filteredSecrets = computed(() => {
+    const value = this.filterValue()?.toLowerCase();
+    const secrets = this.secrets();
+    return !value ? secrets : secrets.filter((secret) => secret.key.toLowerCase().includes(value));
+  });
+
   protected readonly createUpdateForm = this.fb.group({
     id: this.fb.control(''),
     key: this.fb.control('', [Validators.required, Validators.minLength(1), Validators.pattern('^[a-zA-Z][\\w_]*$')]),

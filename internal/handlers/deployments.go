@@ -239,7 +239,7 @@ func validateDeploymentRequest(
 		}
 	}
 
-	if secrets, err = db.GetSecrets(ctx, target.OrganizationID, target.CustomerOrganizationID); err != nil {
+	if secrets, err = db.GetSecretsForDeploymentTarget(ctx, target.DeploymentTarget); err != nil {
 		log.Warn("could not get Secrets", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return err
@@ -520,12 +520,14 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
-		} else if secrets, err = db.GetSecrets(ctx, dt.OrganizationID, dt.CustomerOrganizationID); err != nil {
+		} else if secrets, err = db.GetSecretsForDeploymentTarget(ctx, dt.DeploymentTarget); err != nil {
 			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
+		replacer := secretReplacer(secrets)
 
 		err := db.GetDeploymentLogRecordsForExport(
 			ctx, deployment.ID, resource, limit,
@@ -533,7 +535,7 @@ func exportDeploymentLogsHandler() http.HandlerFunc {
 				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
 					record.Timestamp.Format(time.RFC3339),
 					record.Severity,
-					redactSecrets(record.Body, secrets))
+					replacer.Replace(record.Body))
 				return err
 			},
 		)
@@ -579,19 +581,11 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
-		} else {
-			if dt.CustomerOrganizationID != nil {
-				secrets, err = db.GetSecretsForCustomer(ctx, *dt.CustomerOrganizationID)
-			} else {
-				secrets, err = db.GetSecretsForOrganization(ctx, dt.OrganizationID)
-			}
-
-			if err != nil {
-				internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
-				sentry.GetHubFromContext(ctx).CaptureException(err)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
+		} else if secrets, err = db.GetSecretsForDeploymentTarget(ctx, dt.DeploymentTarget); err != nil {
+			internalctx.GetLogger(ctx).Error("failed to get secrets", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
 		}
 
 		if records, err := db.GetDeploymentLogRecords(ctx, deployment.ID, resource, limit, before, after); err != nil {
@@ -599,6 +593,7 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else {
+			replacer := secretReplacer(secrets)
 			response := make([]api.DeploymentLogRecord, len(records))
 			for i, record := range records {
 				response[i] = api.DeploymentLogRecord{
@@ -607,7 +602,7 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 					Resource:             record.Resource,
 					Timestamp:            record.Timestamp,
 					Severity:             record.Severity,
-					Body:                 redactSecrets(record.Body, secrets),
+					Body:                 replacer.Replace(record.Body),
 				}
 			}
 			RespondJSON(w, response)
@@ -615,11 +610,13 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 	}
 }
 
-func redactSecrets(input string, secrets []types.SecretWithUpdatedBy) string {
-	for _, secret := range secrets {
-		input = strings.ReplaceAll(input, secret.Value, "********")
+func secretReplacer(secrets []types.SecretWithUpdatedBy) *strings.Replacer {
+	pairs := make([]string, 2*len(secrets))
+	for i, secret := range secrets {
+		pairs[i*2] = secret.Value
+		pairs[i*2+1] = "********"
 	}
-	return input
+	return strings.NewReplacer(pairs...)
 }
 
 func deploymentMiddleware(next http.Handler) http.Handler {

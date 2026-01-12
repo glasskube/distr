@@ -241,13 +241,7 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			var secrets []types.SecretWithUpdatedBy
-			if deploymentTarget.CustomerOrganizationID != nil {
-				secrets, err = db.GetSecretsForCustomer(ctx, *deploymentTarget.CustomerOrganizationID)
-			} else {
-				secrets, err = db.GetSecretsForOrganization(ctx, deploymentTarget.OrganizationID)
-			}
-
-			if err != nil {
+			if secrets, err = db.GetSecretsForDeploymentTarget(ctx, deploymentTarget.DeploymentTarget); err != nil {
 				msg := "failed to get secrets from DB"
 				log.Error(msg, zap.Error(err))
 				statusMessage = fmt.Sprintf("%v: %v", msg, err)

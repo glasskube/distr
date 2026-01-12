@@ -23,7 +23,9 @@ export class SecretsPage {
     this.refresh$.pipe(
       startWith(undefined),
       switchMap(() => this.secretsService.list()),
-      map((users) => (this.auth.isVendor() ? users.filter((user) => user.customerOrganizationId === undefined) : users))
+      map((secrets) =>
+        this.auth.isVendor() ? secrets.filter((user) => user.customerOrganizationId === undefined) : secrets
+      )
     )
   );
 }
