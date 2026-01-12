@@ -25,6 +25,8 @@ type DeploymentWithLatestRevision struct {
 	ApplicationName             string                    `db:"application_name" json:"applicationName"`
 	ApplicationVersionID        uuid.UUID                 `db:"application_version_id" json:"applicationVersionId"`
 	ApplicationVersionName      string                    `db:"application_version_name" json:"applicationVersionName"`
+	ApplicationLinkTemplate     string                    `db:"application_link_template" json:"-"`
+	ApplicationLink             string                    `db:"-" json:"applicationLink"`
 	ValuesYaml                  []byte                    `db:"values_yaml" json:"valuesYaml,omitempty"`
 	EnvFileData                 []byte                    `db:"env_file_data" json:"envFileData,omitempty"`
 	LatestStatus                *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`

@@ -109,9 +109,10 @@ func CreateCheckoutSession(ctx context.Context, params CheckoutSessionParams) (*
 	}
 
 	sessionParams := &stripe.CheckoutSessionParams{
-		Params:     stripe.Params{Context: ctx},
-		Mode:       util.PtrTo(string(stripe.CheckoutSessionModeSubscription)),
-		SuccessURL: util.PtrTo(params.SuccessURL),
+		Params:              stripe.Params{Context: ctx},
+		Mode:                util.PtrTo(string(stripe.CheckoutSessionModeSubscription)),
+		SuccessURL:          util.PtrTo(params.SuccessURL),
+		AllowPromotionCodes: util.PtrTo(true),
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
 			Metadata: map[string]string{
 				"organizationId": params.OrganizationID,

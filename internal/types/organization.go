@@ -28,6 +28,7 @@ type Organization struct {
 	SubscriptionUserAccountQty          int64              `db:"subscription_user_account_quantity" json:"subscriptionUserAccountQuantity"`                   //nolint:lll
 	PreConnectScript                    *string            `db:"pre_connect_script" json:"preConnectScript"`
 	PostConnectScript                   *string            `db:"post_connect_script" json:"postConnectScript"`
+	ConnectScriptIsSudo                 bool               `db:"connect_script_is_sudo" json:"connectScriptIsSudo"`
 }
 
 func (org *Organization) HasFeature(feature Feature) bool {
