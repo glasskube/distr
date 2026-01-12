@@ -217,6 +217,7 @@ func UpdateSecret(ctx context.Context,
 		`WITH updated AS (
 			UPDATE Secret SET
 				updated_by_useraccount_id = @updated_by_useraccount_id,
+				updated_at = NOW(),
 				value = @value
 			WHERE id = @id
 				AND (@is_vendor OR customer_organization_id = @customer_organization_id)
