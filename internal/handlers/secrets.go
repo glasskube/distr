@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"regexp"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/glasskube/distr/api"
@@ -66,6 +67,7 @@ func getSecretsHandler() http.HandlerFunc {
 }
 
 func createSecretHandler() http.HandlerFunc {
+	secretKeyPattern := regexp.MustCompile(`^[a-zA-Z][\w_]*$`)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		auth := auth.Authentication.Require(ctx)
@@ -76,6 +78,11 @@ func createSecretHandler() http.HandlerFunc {
 
 		if body.Key == "" {
 			http.Error(w, "key is required", http.StatusBadRequest)
+			return
+		}
+
+		if !secretKeyPattern.MatchString(body.Key) {
+			http.Error(w, "invalid key format", http.StatusBadRequest)
 			return
 		}
 

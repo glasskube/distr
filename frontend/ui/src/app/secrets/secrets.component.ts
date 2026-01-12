@@ -51,7 +51,7 @@ export class SecretsComponent {
 
   protected readonly createUpdateForm = this.fb.group({
     id: this.fb.control(''),
-    key: this.fb.control('', [Validators.required, Validators.minLength(1)]),
+    key: this.fb.control('', [Validators.required, Validators.minLength(1), Validators.pattern('^[a-zA-Z][\\w_]*$')]),
     value: this.fb.control('', [Validators.required]),
   });
 
