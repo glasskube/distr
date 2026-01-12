@@ -165,7 +165,7 @@ func deleteSecretHandler() http.HandlerFunc {
 		err = db.DeleteSecret(ctx, id, *auth.CurrentOrgID(), auth.CurrentCustomerOrgID())
 		if err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
-				http.Error(w, "Secret not found", http.StatusNotFound)
+				http.Error(w, "secret not found", http.StatusNotFound)
 			} else {
 				internalctx.GetLogger(ctx).Error("failed to delete secret", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
