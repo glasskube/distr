@@ -24,7 +24,7 @@ export class SecretsPage {
       startWith(undefined),
       switchMap(() => this.secretsService.list()),
       map((secrets) =>
-        this.auth.isVendor() ? secrets.filter((user) => user.customerOrganizationId === undefined) : secrets
+        this.auth.isVendor() ? secrets.filter((secret) => secret.customerOrganizationId === undefined) : secrets
       )
     )
   );
