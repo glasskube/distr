@@ -8,6 +8,7 @@ import {faMagnifyingGlass, faPen, faPlus, faTrash, faXmark} from '@fortawesome/f
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {modalFlyInOut} from '../animations/modal';
+import {ClipComponent} from '../components/clip.component';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {AuthService} from '../services/auth.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
@@ -17,7 +18,7 @@ import {Secret} from '../types/secret';
 
 @Component({
   selector: 'app-secrets',
-  imports: [FaIconComponent, ReactiveFormsModule, DatePipe, AutotrimDirective],
+  imports: [FaIconComponent, ReactiveFormsModule, DatePipe, AutotrimDirective, ClipComponent],
   animations: [modalFlyInOut],
   templateUrl: './secrets.component.html',
 })
@@ -120,6 +121,10 @@ export class SecretsComponent {
         },
       });
     }
+  }
+
+  protected getSecretReference(key: string): string {
+    return `{{ .Secrets.${key} }}`;
   }
 
   protected async deleteSecret(secret: Secret) {
