@@ -171,11 +171,11 @@ func UserManagesDeploymentTargetInOrganization(ctx context.Context, userID, orgI
 	if err != nil {
 		return false, err
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
 	if err != nil {
 		return false, err
 	}
-	return result.Exists, nil
+	return exists, nil
 }
 
 func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.UUID) error {

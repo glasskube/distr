@@ -468,13 +468,14 @@ func getApplicationVersionFileHandler(fileAccessor func(types.ApplicationVersion
 		} else if err != nil {
 			log.Error("failed to get ApplicationVersion from DB", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else if data := fileAccessor(*v); data == nil {
-			http.NotFound(w, r)
 		} else {
+			data := fileAccessor(*v)
 			w.Header().Add("Content-Type", "application/yaml")
 			w.Header().Add("Cache-Control", "max-age=300, private")
-			if _, err := w.Write(data); err != nil {
-				log.Warn("failed to write file to response", zap.Error(err))
+			if data != nil {
+				if _, err := w.Write(data); err != nil {
+					log.Warn("failed to write file to response", zap.Error(err))
+				}
 			}
 		}
 	}

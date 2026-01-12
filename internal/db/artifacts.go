@@ -435,10 +435,10 @@ func CheckLicenseForArtifact(
 	if err != nil {
 		return fmt.Errorf("could not query ArtifactVersion: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
 	if err != nil {
 		return fmt.Errorf("could not query ArtifactVersion: %w", err)
-	} else if !result.Exists {
+	} else if !exists {
 		return apierrors.ErrForbidden
 	}
 	return nil
@@ -485,10 +485,10 @@ func CheckLicenseForArtifactBlob(ctx context.Context, digest string,
 	if err != nil {
 		return fmt.Errorf("could not query ArtifactVersion: %w", err)
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
 	if err != nil {
 		return fmt.Errorf("could not query ArtifactVersion: %w", err)
-	} else if !result.Exists {
+	} else if !exists {
 		return apierrors.ErrForbidden
 	}
 	return nil
@@ -701,11 +701,11 @@ func ArtifactIsReferencedInLicenses(ctx context.Context, artifactID uuid.UUID) (
 	if err != nil {
 		return false, err
 	}
-	result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByPos[struct{ Exists bool }])
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
 	if err != nil {
 		return false, err
 	}
-	return result.Exists, nil
+	return exists, nil
 }
 
 // GetArtifactVersionByTag retrieves an artifact version by its tag name
