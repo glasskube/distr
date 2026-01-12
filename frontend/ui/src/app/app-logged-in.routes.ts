@@ -161,7 +161,6 @@ export const routes: Routes = [
       {
         path: 'secrets',
         component: SecretsPage,
-        canActivate: [requiredRoleGuard('read_write', 'admin')],
       },
       {
         path: 'branding',
