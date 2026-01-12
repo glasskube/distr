@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.4.0](https://github.com/glasskube/distr/compare/2.3.0...2.4.0) (2026-01-12)
+
+
+### Features
+
+* improve deployment flow ([#1579](https://github.com/glasskube/distr/issues/1579)) ([251e6c6](https://github.com/glasskube/distr/commit/251e6c68a9e8d6310d8acb008a239319c98f3817))
+* secret management ([#1572](https://github.com/glasskube/distr/issues/1572)) ([4e88059](https://github.com/glasskube/distr/commit/4e88059e13f4394c6af3a6b809235417ae787a48))
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#1614](https://github.com/glasskube/distr/issues/1614)) ([a5a7832](https://github.com/glasskube/distr/commit/a5a78325031fa5f8edb3e6b2bef8b12cf9b7bd90))
+
+
+### Other
+
+* **deps:** update axllent/mailpit docker tag to v1.28.2 ([#1617](https://github.com/glasskube/distr/issues/1617)) ([de7f1cd](https://github.com/glasskube/distr/commit/de7f1cd149ba9e15a9947bcc33a4570c123276c0))
+* **deps:** update dependency @sentry/cli to v3 ([#1622](https://github.com/glasskube/distr/issues/1622)) ([cbea931](https://github.com/glasskube/distr/commit/cbea93140df20c9679b4a209d82eac84ba9a021b))
+* **deps:** update dependency @types/jasmine to v5.1.14 ([#1618](https://github.com/glasskube/distr/issues/1618)) ([b4bc1ca](https://github.com/glasskube/distr/commit/b4bc1cab4b5474629c06d745457af882a825da84))
+* **deps:** update dependency pnpm to v10.28.0 ([#1616](https://github.com/glasskube/distr/issues/1616)) ([d489783](https://github.com/glasskube/distr/commit/d489783400cc53e0db44cb95a9142b3c4dc2e5e8))
+* **deps:** update dependency posthog-js to v1.318.1 ([#1621](https://github.com/glasskube/distr/issues/1621)) ([b0ca9b0](https://github.com/glasskube/distr/commit/b0ca9b038d4ed5ef96b93e286955f065b1111826))
+* **deps:** update dependency typedoc to v0.28.16 ([#1620](https://github.com/glasskube/distr/issues/1620)) ([31375c0](https://github.com/glasskube/distr/commit/31375c04ade2807cf787e61a60f3859eeea6d2c6))
+* **deps:** update gcr.io/distroless/static-debian12:nonroot docker digest to cba10d7 ([#1619](https://github.com/glasskube/distr/issues/1619)) ([7dffde2](https://github.com/glasskube/distr/commit/7dffde2739d58c9f1658a9c83364d14eaefff0e3))
+
 ## [2.3.0](https://github.com/glasskube/distr/compare/2.2.5...2.3.0) (2026-01-09)
 
 
