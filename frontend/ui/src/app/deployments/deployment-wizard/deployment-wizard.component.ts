@@ -1,8 +1,8 @@
 import {CdkStep, CdkStepper} from '@angular/cdk/stepper';
 import {AsyncPipe} from '@angular/common';
 import {Component, computed, DestroyRef, effect, inject, OnInit, output, signal, viewChild} from '@angular/core';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faDocker} from '@fortawesome/free-brands-svg-icons';
 import {faBuildingUser, faCheckCircle, faDharmachakra, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
@@ -13,7 +13,7 @@ import {
   DeploymentTargetScope,
   DeploymentType,
 } from '@glasskube/distr-sdk';
-import {combineLatest, firstValueFrom, map, of, startWith} from 'rxjs';
+import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, switchMap, take} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
@@ -63,6 +63,8 @@ export class DeploymentWizardComponent implements OnInit {
   private readonly licenses = inject(LicensesService);
   private readonly organization = inject(OrganizationService);
   private readonly organizationBranding = inject(OrganizationBrandingService);
+  private readonly fb = inject(FormBuilder);
+  private readonly fbnn = this.fb.nonNullable;
   protected readonly auth = inject(AuthService);
   protected readonly featureFlags = inject(FeatureFlagService);
 
@@ -71,13 +73,14 @@ export class DeploymentWizardComponent implements OnInit {
   readonly closed = output<void>();
 
   // Step 1: Customer Selection (optional)
-  readonly customerForm = new FormGroup({
-    customerOrganizationId: new FormControl<string | null>(null),
+  readonly customerForm = this.fbnn.group({
+    internal: this.fbnn.control<boolean>(false),
+    customerOrganizationId: this.fbnn.control<string | undefined>(undefined),
   });
 
   // Step 2: Application Selection
-  readonly applicationForm = new FormGroup({
-    applicationId: new FormControl<string>('', Validators.required),
+  readonly applicationForm = this.fbnn.group({
+    applicationId: this.fbnn.control<string | undefined>(undefined, Validators.required),
   });
 
   // Step 3: Deployment Target Configuration
@@ -106,26 +109,32 @@ export class DeploymentWizardComponent implements OnInit {
     : of([]);
 
   protected readonly applications$ = this.applications.list();
-  protected readonly allLicenses$ = this.licenses.list();
-  protected readonly vendorOrganization$ = this.organization.get();
+  protected readonly allLicenses$ = this.featureFlags.isLicensingEnabled$.pipe(
+    switchMap((enabled) => (enabled ? this.licenses.list() : of([])))
+  );
+  protected readonly currentOrganization$ = this.organization.get();
   protected readonly vendorBranding$ = this.organizationBranding.get();
-  protected selectedApplication = signal<Application | undefined>(undefined);
-  protected selectedCustomerOrganizationId = signal<string>('');
-  protected selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
+  protected readonly selectedApplication = signal<Application | undefined>(undefined);
+  protected readonly selectedCustomerOrganizationId = toSignal(
+    this.customerForm.controls.customerOrganizationId.valueChanges
+  );
+  protected readonly selectedDeploymentTarget = signal<DeploymentTarget | undefined>(undefined);
+  protected readonly internalDeploymentCount = toSignal(
+    this.deploymentTargets
+      .list()
+      .pipe(map((targets) => targets.filter((it) => it.customerOrganization === undefined).length)),
+    {initialValue: 0}
+  );
 
   // Filter applications based on customer licenses
   protected readonly filteredApplications$ = combineLatest([
     this.applications$,
     this.allLicenses$,
-    this.customerForm.controls.customerOrganizationId.valueChanges.pipe(
-      startWith(this.customerForm.controls.customerOrganizationId.value),
-      map((id) => id ?? undefined)
-    ),
-    this.featureFlags.isLicensingEnabled$,
+    toObservable(this.selectedCustomerOrganizationId),
   ]).pipe(
-    map(([applications, licenses, customerOrgId, isLicensingEnabled]) => {
-      // If licensing is not enabled or no customer is selected, show all applications
-      if (!isLicensingEnabled || !customerOrgId) {
+    map(([applications, licenses, customerOrgId]) => {
+      // If no customer is selected or no licenses, show all applications
+      if (!customerOrgId || licenses.length === 0) {
         return applications;
       }
 
@@ -158,11 +167,18 @@ export class DeploymentWizardComponent implements OnInit {
     };
   });
 
-  private readonly isLicensingEnabled = toSignal(this.featureFlags.isLicensingEnabled$, {initialValue: false});
+  private readonly licenseControlVisible$ = combineLatest([
+    this.allLicenses$.pipe(
+      map((licenses) => licenses.length > 0),
+      distinctUntilChanged()
+    ),
+    toObservable(this.selectedCustomerOrganizationId).pipe(
+      map((id) => id !== ''),
+      distinctUntilChanged()
+    ),
+  ]).pipe(map(([hasLicenses, isCustomerOrganizationIdSet]) => hasLicenses && isCustomerOrganizationIdSet));
 
-  protected readonly showLicenseControl = computed(() => {
-    return this.selectedCustomerOrganizationId() !== '' && this.isLicensingEnabled();
-  });
+  protected readonly licenseControlVisible = toSignal(this.licenseControlVisible$, {initialValue: false});
 
   protected readonly isApplicationConfigStep = computed(() => {
     const stepIndex = this.stepper()?.selectedIndex ?? 0;
@@ -181,6 +197,7 @@ export class DeploymentWizardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
+    this.applications.refresh();
     // Initialize deployment form with initial data reactively
     effect(() => {
       const initialData = this.deploymentFormInitialData();
@@ -188,23 +205,22 @@ export class DeploymentWizardComponent implements OnInit {
         this.applicationConfigForm.controls.deploymentFormData.patchValue(initialData);
       }
     });
+
+    // Reset application form when customer organization changes
+    // This prevents a vendor from accidentally creating a deployment with an application that a customer should have no access to
+    effect(() => {
+      this.selectedCustomerOrganizationId();
+      this.applicationForm.reset();
+    });
   }
 
   ngOnInit() {
     // If user is a customer, set selectedCustomerOrganizationId from organization
     if (!this.auth.isVendor()) {
-      this.vendorOrganization$.subscribe((org) => {
-        this.customerForm.controls.customerOrganizationId.setValue(org.customerOrganizationId!);
-        this.selectedCustomerOrganizationId.set(org.customerOrganizationId!);
-      });
+      this.currentOrganization$
+        .pipe(take(1))
+        .subscribe((org) => this.customerForm.controls.customerOrganizationId.setValue(org.customerOrganizationId!));
     }
-
-    // Watch customer selection
-    this.customerForm.controls.customerOrganizationId.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((customerId) => {
-        this.selectedCustomerOrganizationId.set(customerId ?? '');
-      });
 
     // Watch application selection
     this.applicationForm.controls.applicationId.valueChanges
@@ -253,15 +269,15 @@ export class DeploymentWizardComponent implements OnInit {
     switch (adjustedIndex) {
       case 0:
         // Step 1: Customer Selection
-        this.nextStep();
+        this.continueFromCustomerStep();
         break;
       case 1:
         // Step 2: Application Selection
-        await this.continueFromApplicationStep();
+        this.continueFromApplicationStep();
         break;
       case 2:
         // Step 3: Deployment Target Configuration
-        await this.continueFromDeploymentTargetStep();
+        this.continueFromDeploymentTargetStep();
         break;
       case 3:
         // Step 4: Application Configuration
@@ -281,7 +297,15 @@ export class DeploymentWizardComponent implements OnInit {
     this.stepper()?.previous();
   }
 
-  private async continueFromApplicationStep() {
+  private continueFromCustomerStep() {
+    this.customerForm.markAllAsTouched();
+    if (!this.customerForm.value.customerOrganizationId && !this.customerForm.value.internal) {
+      return;
+    }
+    this.nextStep();
+  }
+
+  private continueFromApplicationStep() {
     this.applicationForm.markAllAsTouched();
     if (!this.applicationForm.valid) {
       return;
@@ -289,11 +313,12 @@ export class DeploymentWizardComponent implements OnInit {
     this.nextStep();
   }
 
-  private async continueFromDeploymentTargetStep() {
+  private continueFromDeploymentTargetStep() {
     this.deploymentTargetForm.markAllAsTouched();
     if (!this.deploymentTargetForm.valid) {
       return;
     }
+    this.applications.refresh();
     this.nextStep();
   }
 
@@ -327,8 +352,6 @@ export class DeploymentWizardComponent implements OnInit {
             customerOrganization: customerOrgId ? ({id: customerOrgId} as CustomerOrganization) : undefined,
           })
         )) as DeploymentTarget;
-
-        this.selectedDeploymentTarget.set(createdDeploymentTarget);
       } catch (e) {
         const msg = getFormDisplayedError(e);
         this.toast.error(msg || 'Failed to create deployment target');
@@ -346,6 +369,7 @@ export class DeploymentWizardComponent implements OnInit {
 
       try {
         await firstValueFrom(this.deploymentTargets.deploy(deployment));
+        this.selectedDeploymentTarget.set(createdDeploymentTarget);
         this.toast.success('Deployment created successfully');
         this.nextStep();
       } catch (e) {
@@ -355,11 +379,11 @@ export class DeploymentWizardComponent implements OnInit {
         try {
           await firstValueFrom(this.deploymentTargets.delete(createdDeploymentTarget));
           this.selectedDeploymentTarget.set(undefined);
-          this.selectedApplication.set(undefined);
-          this.close();
         } catch (deleteError) {
           const msg = getFormDisplayedError(deleteError);
-          this.toast.error(msg || 'Failed to cleanup deployment target');
+          this.toast.error(
+            `The following error occurred trying to clean up a failed deployment: '${msg}'. Please close this dialog and clean up the deployment target manually.`
+          );
         }
       }
     } finally {
@@ -385,6 +409,7 @@ export class DeploymentWizardComponent implements OnInit {
   }
 
   selectCustomer(customer: CustomerOrganization | null) {
-    this.customerForm.controls.customerOrganizationId.setValue(customer?.id ?? null);
+    this.customerForm.controls.customerOrganizationId.setValue(customer?.id);
+    this.customerForm.controls.internal.setValue(!customer?.id);
   }
 }
