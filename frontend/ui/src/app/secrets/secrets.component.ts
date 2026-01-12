@@ -120,7 +120,7 @@ export class SecretsComponent {
         this.overlay.confirm({
           message: {
             message: 'Do you really want to delete this secret?',
-            warning: {message: 'This action may affect workloads referencing this secret.'},
+            alert: {type: 'warning', message: 'This action may affect workloads referencing this secret.'},
           },
           requiredConfirmInputText: secret.key,
         })
