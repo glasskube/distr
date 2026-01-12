@@ -86,6 +86,10 @@ func createSecretHandler() http.HandlerFunc {
 			return
 		}
 
+		if body.Value == "" {
+			http.Error(w, "value is required", http.StatusBadRequest)
+			return
+		}
 		if customerOrganizationID := auth.CurrentCustomerOrgID(); customerOrganizationID != nil {
 			if body.CustomerOrganizationID != nil && *body.CustomerOrganizationID != *customerOrganizationID {
 				http.Error(w, "customer organization ID mismatch", http.StatusBadRequest)
@@ -104,10 +108,15 @@ func createSecretHandler() http.HandlerFunc {
 		)
 
 		if err != nil {
-			internalctx.GetLogger(ctx).Error("failed to create secret", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			if errors.Is(err, apierrors.ErrConflict) {
+				http.Error(w, "secret with this key already exists", http.StatusConflict)
+			} else {
+				internalctx.GetLogger(ctx).Error("failed to create secret", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
 		} else {
+			w.WriteHeader(http.StatusCreated)
 			RespondJSON(w, mapping.SecretToAPI(*secret))
 		}
 	}

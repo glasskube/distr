@@ -611,10 +611,15 @@ func getDeploymentLogsHandler() http.HandlerFunc {
 }
 
 func secretReplacer(secrets []types.SecretWithUpdatedBy) *strings.Replacer {
-	pairs := make([]string, 2*len(secrets))
-	for i, secret := range secrets {
-		pairs[i*2] = secret.Value
-		pairs[i*2+1] = "********"
+	pairs := make([]string, 0, 2*len(secrets))
+	for _, secret := range secrets {
+		if secret.Value == "" {
+			continue
+		}
+		pairs = append(pairs, secret.Value, "********")
+	}
+	if len(pairs) == 0 {
+		return strings.NewReplacer()
 	}
 	return strings.NewReplacer(pairs...)
 }
