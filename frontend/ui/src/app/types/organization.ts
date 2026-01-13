@@ -1,12 +1,21 @@
 import {BaseModel, Named, UserRole} from '@glasskube/distr-sdk';
 import {SubscriptionType} from './subscription';
 
-export type Feature = 'licensing' | 'pre_post_scripts';
+export type Feature = 'licensing' | 'pre_post_scripts' | 'artifact_version_mutable';
 
 export interface SubscriptionLimits {
   maxCustomerOrganizations: number;
   maxUsersPerCustomerOrganization: number;
   maxDeploymentsPerCustomerOrganization: number;
+}
+
+export interface CreateUpdateOrganizationRequest {
+  name: string;
+  slug?: string;
+  preConnectScript?: string;
+  postConnectScript?: string;
+  connectScriptIsSudo: boolean;
+  artifactVersionMutable: boolean;
 }
 
 export interface Organization extends BaseModel, Named {
