@@ -23,6 +23,7 @@ type DeploymentRequest struct {
 	EnvFileData          []byte            `json:"envFileData"`
 	LogsEnabled          bool              `json:"logsEnabled"`
 	ForceRestart         bool              `json:"forceRestart"`
+	IgnoreRevisionSkew   bool              `json:"ignoreRevisionSkew"`
 }
 
 func (d *DeploymentRequest) GetValuesYAML() []byte {

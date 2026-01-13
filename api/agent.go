@@ -32,11 +32,12 @@ type AgentDeployment struct {
 
 	// Kubernetes specific data
 
-	ReleaseName  string         `json:"releaseName"`
-	ChartUrl     string         `json:"chartUrl"`
-	ChartName    string         `json:"chartName"`
-	ChartVersion string         `json:"chartVersion"`
-	Values       map[string]any `json:"values"`
+	ReleaseName        string         `json:"releaseName"`
+	ChartUrl           string         `json:"chartUrl"`
+	ChartName          string         `json:"chartName"`
+	ChartVersion       string         `json:"chartVersion"`
+	Values             map[string]any `json:"values"`
+	IgnoreRevisionSkew bool           `json:"ignoreRevisionSkew"`
 }
 
 type AgentDeploymentStatus struct {
