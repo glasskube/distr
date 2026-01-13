@@ -17,7 +17,7 @@ require (
 	github.com/docker/cli v28.5.2+incompatible
 	github.com/docker/compose/v2 v2.40.3
 	github.com/docker/docker v28.5.2+incompatible
-	github.com/exaring/otelpgx v0.9.4
+	github.com/exaring/otelpgx v0.10.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/getsentry/sentry-go/otel v0.40.0
