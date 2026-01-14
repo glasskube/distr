@@ -52,7 +52,7 @@ services:
       - app_network
 
   proxy:
-    image: ghcr.io/glasskube/hello-distr/proxy:0.1.12 # x-release-please-version
+    image: ghcr.io/glasskube/hello-distr/proxy:0.2.1 # x-release-please-version
     environment:
       <<: *shared-env
       HOST: ${HELLO_DISTR_HOST:?error}
