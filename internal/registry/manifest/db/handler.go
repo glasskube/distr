@@ -185,6 +185,9 @@ func (h *handler) Put(
 			} else if !quotaOk {
 				return apierrors.ErrQuotaExceeded
 			}
+		} else if existingVersion.ManifestBlobDigest == types.Digest(reference) {
+			// Tag already exists with the same content: nothing to do
+			return nil
 		} else if !auth.CurrentOrg().HasFeature(types.FeatureArtifactVersionMutable) {
 			return fmt.Errorf("%w: tag %s already exists with different content", manifest.ErrTagAlreadyExists, reference)
 		} else if err := db.DeleteArtifactVersion(ctx, existingVersion.ArtifactID, existingVersion.Name); err != nil {
