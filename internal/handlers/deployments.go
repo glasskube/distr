@@ -284,8 +284,7 @@ func validateDeploymentRequest(
 				request.ApplicationLicenseID = existingDeployment.ApplicationLicenseID
 			}
 		} else if existingDeployment.ApplicationLicenseID == nil {
-			// initially setting a license after a first license required license configuration and can be set once
-			// continue
+			// Allow setting a license once when the existing deployment has no license but the request provides one.
 		} else if *request.ApplicationLicenseID != *existingDeployment.ApplicationLicenseID {
 			return badRequestError(w, "can not update license")
 		}
