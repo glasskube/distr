@@ -16,6 +16,14 @@ export interface DeploymentTarget extends BaseModel, Named {
   agentVersion?: AgentVersion;
   reportedAgentVersionId?: string;
   metricsEnabled: boolean;
+  resources?: DeploymentTargetResources;
+}
+
+export interface DeploymentTargetResources {
+  cpuRequest: string;
+  memoryRequest: string;
+  cpuLimit: string;
+  memoryLimit: string;
 }
 
 export interface DeploymentTargetStatus extends BaseModel {
