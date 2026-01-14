@@ -35,6 +35,26 @@ func (org *Organization) HasFeature(feature Feature) bool {
 	return slices.Contains(org.Features, feature)
 }
 
+func (org *Organization) AddFeatures(features ...Feature) {
+	for _, feature := range features {
+		if !org.HasFeature(feature) {
+			org.Features = append(org.Features, feature)
+		}
+	}
+}
+
+func (org *Organization) RemoveFeatures(features ...Feature) {
+	org.Features = slices.DeleteFunc(org.Features, func(f Feature) bool { return slices.Contains(features, f) })
+}
+
+func (org *Organization) SetFeature(feature Feature, enabled bool) {
+	if enabled {
+		org.AddFeatures(feature)
+	} else {
+		org.RemoveFeatures(feature)
+	}
+}
+
 func (org *Organization) HasActiveSubscription() bool {
 	return org.SubscriptionType == SubscriptionTypeCommunity || org.SubscriptionEndsAt.After(time.Now())
 }

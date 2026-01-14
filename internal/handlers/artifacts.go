@@ -183,7 +183,7 @@ func deleteArtifactTagHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Step 5: Delete the tag
-		return db.DeleteArtifactTag(ctx, artifact.ID, tagName)
+		return db.DeleteArtifactVersion(ctx, artifact.ID, tagName)
 	})
 	if err != nil {
 		if errors.Is(err, apierrors.ErrNotFound) {
