@@ -43,6 +43,7 @@ export class OrganizationSettingsComponent implements OnInit {
     preConnectScript: this.fb.control<string | undefined>(undefined),
     postConnectScript: this.fb.control<string | undefined>(undefined),
     connectScriptIsSudo: this.fb.control<boolean>(false),
+    artifactVersionMutable: this.fb.control<boolean>(false),
   });
   formLoading = signal(false);
 
@@ -52,7 +53,10 @@ export class OrganizationSettingsComponent implements OnInit {
       if (this.organization.slug) {
         this.form.controls.slug.addValidators([Validators.required]);
       }
-      this.form.patchValue(this.organization);
+      this.form.patchValue({
+        ...this.organization,
+        artifactVersionMutable: this.organization.features?.includes('artifact_version_mutable') ?? false,
+      });
     } catch (e) {
       const msg = getFormDisplayedError(e);
       if (msg) {
@@ -74,6 +78,7 @@ export class OrganizationSettingsComponent implements OnInit {
             preConnectScript: this.form.value.preConnectScript?.trim(),
             postConnectScript: this.form.value.postConnectScript?.trim(),
             connectScriptIsSudo: this.form.value.connectScriptIsSudo ?? false,
+            artifactVersionMutable: this.form.value.artifactVersionMutable ?? false,
           })
         );
         this.toast.success('Settings saved successfully');

@@ -231,6 +231,7 @@ export class RegistryTutorialComponent implements OnInit, AfterViewInit, OnDestr
           this.organization = await lastValueFrom(
             this.organizationService.update({
               ...this.organization!,
+              artifactVersionMutable: this.organization?.features.includes('artifact_version_mutable') ?? false,
               slug: formVal.slug!,
             })
           );

@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {combineLatestWith, map, merge, Observable, shareReplay, Subject, tap} from 'rxjs';
-import {Organization, OrganizationWithUserRole} from '../types/organization';
+import {CreateUpdateOrganizationRequest, Organization, OrganizationWithUserRole} from '../types/organization';
 import {ContextService} from './context.service';
 
 @Injectable({
@@ -31,7 +31,7 @@ export class OrganizationService {
     return this.httpClient.post<Organization>(this.baseUrl, {name});
   }
 
-  update(organization: Organization): Observable<Organization> {
+  update(organization: CreateUpdateOrganizationRequest): Observable<Organization> {
     return this.httpClient.put<Organization>(this.baseUrl, organization).pipe(
       combineLatestWith(this.getAll()),
       map(([it, allOrgs]) => {
