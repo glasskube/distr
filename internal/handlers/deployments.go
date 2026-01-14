@@ -114,6 +114,25 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
 			}
+		} else {
+			authInfo := auth.Authentication.Require(ctx)
+			deployment, err := db.GetDeployment(
+				ctx,
+				*deploymentRequest.DeploymentID,
+				authInfo.CurrentUserID(),
+				*authInfo.CurrentOrgID(),
+				authInfo.CurrentCustomerOrgID(),
+			)
+			if err == nil && deployment != nil && deployment.ApplicationLicenseID == nil {
+				deployment.ApplicationLicenseID = deploymentRequest.ApplicationLicenseID
+
+				if err := db.UpdateDeployment(ctx, deployment); err != nil {
+					log.Warn("could not set initial license for deployment", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return err
+				}
+			}
 		}
 
 		if _, err := db.CreateDeploymentRevision(ctx, &deploymentRequest); err != nil {
@@ -264,10 +283,12 @@ func validateDeploymentRequest(
 				request.ApplicationLicenseID = existingDeployment.ApplicationLicenseID
 			}
 		} else if existingDeployment.ApplicationLicenseID == nil {
-			return badRequestError(w, "can not update license")
+			// initially setting a license after a first license required license configuration and can be set once
+			// continue
 		} else if *request.ApplicationLicenseID != *existingDeployment.ApplicationLicenseID {
 			return badRequestError(w, "can not update license")
 		}
+
 		if existingDeployment.ApplicationID != app.ID {
 			return badRequestError(w, "can not change application of existing deployment")
 		}

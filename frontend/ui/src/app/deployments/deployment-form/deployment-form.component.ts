@@ -60,6 +60,7 @@ export type DeploymentFormValue = Partial<{
 }>;
 
 export function mapToDeploymentRequest(value: DeploymentFormValue, deploymentTargetId: string): DeploymentRequest {
+  console.log('Mapping deployment request:', value);
   return {
     deploymentTargetId: deploymentTargetId,
     applicationVersionId: value.applicationVersionId!,
@@ -190,7 +191,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
    * deployment but they may only choose a license owned by the same customer.
    */
   private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deploymentId$]).pipe(
-    map(([isVisible, deploymentId]) => isVisible && !deploymentId),
+    map(([isVisible, deploymentId]) => isVisible && (!deploymentId || !this.deployForm.value.applicationId)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -351,6 +352,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         licenses[0].id &&
         licenses.every((l) => l.id !== this.deployForm.controls.applicationLicenseId.value)
       ) {
+        console.log('Setting application license ID:', licenses[0].id);
         this.deployForm.controls.applicationLicenseId.setValue(licenses[0].id);
       }
     });
