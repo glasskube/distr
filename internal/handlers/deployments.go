@@ -123,7 +123,8 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 				*authInfo.CurrentOrgID(),
 				authInfo.CurrentCustomerOrgID(),
 			)
-			if err == nil && deployment != nil && deployment.ApplicationLicenseID == nil {
+			if err == nil && deployment != nil && deployment.ApplicationLicenseID == nil &&
+				deploymentRequest.ApplicationLicenseID != nil {
 				deployment.ApplicationLicenseID = deploymentRequest.ApplicationLicenseID
 
 				if err := db.UpdateDeployment(ctx, deployment); err != nil {

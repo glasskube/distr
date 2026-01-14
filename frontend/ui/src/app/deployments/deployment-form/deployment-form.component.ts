@@ -23,6 +23,7 @@ import {
 import {RouterLink} from '@angular/router';
 import {DeploymentRequest, DeploymentType} from '@glasskube/distr-sdk';
 import {
+  BehaviorSubject,
   catchError,
   combineLatest,
   debounceTime,
@@ -60,7 +61,6 @@ export type DeploymentFormValue = Partial<{
 }>;
 
 export function mapToDeploymentRequest(value: DeploymentFormValue, deploymentTargetId: string): DeploymentRequest {
-  console.log('Mapping deployment request:', value);
   return {
     deploymentTargetId: deploymentTargetId,
     applicationVersionId: value.applicationVersionId!,
@@ -177,6 +177,11 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   );
 
   /**
+   * If the license is not initially set, this update must be sent to the server.
+   */
+  protected readonly licenseUpdateRequired$ = new BehaviorSubject<boolean>(false);
+
+  /**
    * The license control is VISIBLE for users editing a customer managed deployment.
    */
   protected readonly licenseControlVisible$ = combineLatest([this.allLicenses$, this.customerOrganizationId$]).pipe(
@@ -186,12 +191,17 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
   );
 
   /**
-   * The license control is ENABLED when deploying to a customer managed target and there is no deployment yet.
+   * The license control is ENABLED when deploying to a customer managed target and there is no deployment yet,
+   * or the deployment was created without an initial license, and license managemend was later acitvated.
    * A vendor might be required to choose a license for a customer managed deployment target with no previous
    * deployment but they may only choose a license owned by the same customer.
    */
-  private readonly licenseControlEnabled$ = combineLatest([this.licenseControlVisible$, this.deploymentId$]).pipe(
-    map(([isVisible, deploymentId]) => isVisible && (!deploymentId || !this.deployForm.value.applicationId)),
+  private readonly licenseControlEnabled$ = combineLatest([
+    this.licenseControlVisible$,
+    this.deploymentId$,
+    this.licenseUpdateRequired$,
+  ]).pipe(
+    map(([isVisible, deploymentId, licenseUpdateRequired]) => isVisible && (!deploymentId || licenseUpdateRequired)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -352,7 +362,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         licenses[0].id &&
         licenses.every((l) => l.id !== this.deployForm.controls.applicationLicenseId.value)
       ) {
-        console.log('Setting application license ID:', licenses[0].id);
+        this.licenseUpdateRequired$.next(true);
         this.deployForm.controls.applicationLicenseId.setValue(licenses[0].id);
       }
     });
