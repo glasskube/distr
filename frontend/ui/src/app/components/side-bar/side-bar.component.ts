@@ -1,6 +1,7 @@
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {Component, inject, input, signal, WritableSignal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -19,11 +20,13 @@ import {
   faPalette,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
+import {map} from 'rxjs';
 import {buildConfig} from '../../../buildconfig';
 import {environment} from '../../../env/env';
 import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {OrganizationService} from '../../services/organization.service';
 import {SidebarService} from '../../services/sidebar.service';
 import {TutorialsService} from '../../services/tutorials.service';
 
@@ -48,6 +51,7 @@ export class SideBarComponent {
   protected readonly sidebar = inject(SidebarService);
   protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly tutorialsService = inject(TutorialsService);
+  protected readonly organizationService = inject(OrganizationService);
 
   protected readonly buildConfig = buildConfig;
   protected readonly edition = environment.edition;
@@ -75,6 +79,22 @@ export class SideBarComponent {
 
   public readonly isSubscriptionBannerVisible = input<boolean>();
   public readonly isSidebarVisible = input<boolean>();
+
+  protected readonly isTutorialVisible = toSignal(
+    this.organizationService
+      .get()
+      .pipe(
+        map(
+          (org) =>
+            !(
+              org.subscriptionType === 'starter' ||
+              org.subscriptionType === 'pro' ||
+              org.subscriptionType === 'enterprise'
+            )
+        )
+      ),
+    {initialValue: false}
+  );
 
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);
