@@ -98,7 +98,7 @@ jobs:
 
       - name: Build frontend
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: pnpm run build:${{ matrix.edition.name }}
+        run: pnpm run build:${{ matrix.edition.name }} --source-map=true
 
       - name: Build frontend and upload source maps (tag only)
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
