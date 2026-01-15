@@ -3,11 +3,11 @@ package mailsending
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/authjwt"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/mail"
-	"github.com/glasskube/distr/internal/mailtemplates"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/authjwt"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/mail"
+	"github.com/distr-sh/distr/internal/mailtemplates"
+	"github.com/distr-sh/distr/internal/types"
 	"go.uber.org/zap"
 )
 

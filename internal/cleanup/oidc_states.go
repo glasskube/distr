@@ -3,8 +3,8 @@ package cleanup
 import (
 	"context"
 
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/db"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/db"
 	"go.uber.org/zap"
 )
 

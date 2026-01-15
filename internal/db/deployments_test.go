@@ -3,7 +3,7 @@ package db_test
 import (
 	"testing"
 
-	"github.com/glasskube/distr/internal/db"
+	"github.com/distr-sh/distr/internal/db"
 	. "github.com/onsi/gomega"
 )
 

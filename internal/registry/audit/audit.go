@@ -3,10 +3,10 @@ package audit
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/auth"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/registry/name"
+	"github.com/distr-sh/distr/internal/auth"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/registry/name"
 )
 
 type ArtifactAuditor interface {

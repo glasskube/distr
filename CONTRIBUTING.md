@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to Distr!
 
-Distr is open-source software licensed under the [Apache 2.0 license](https://github.com/glasskube/distr/blob/main/LICENSE) and accepts contributions via GitHub pull requests.
+Distr is open-source software licensed under the [Apache 2.0 license](https://github.com/distr-sh/distr/blob/main/LICENSE) and accepts contributions via GitHub pull requests.
 
 ## Communications
 

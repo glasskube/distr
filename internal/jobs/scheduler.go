@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"github.com/glasskube/distr/internal/db/queryable"
+	"github.com/distr-sh/distr/internal/db/queryable"
 	"github.com/go-co-op/gocron/v2"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"

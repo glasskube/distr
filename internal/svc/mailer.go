@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/glasskube/distr/internal/auth"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/mail"
-	"github.com/glasskube/distr/internal/mail/noop"
-	"github.com/glasskube/distr/internal/mail/ses"
-	"github.com/glasskube/distr/internal/mail/smtp"
+	"github.com/distr-sh/distr/internal/auth"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/mail"
+	"github.com/distr-sh/distr/internal/mail/noop"
+	"github.com/distr-sh/distr/internal/mail/ses"
+	"github.com/distr-sh/distr/internal/mail/smtp"
 	gomail "github.com/wneessen/go-mail"
 )
 

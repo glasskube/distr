@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/distr-sh/distr/internal/env"
 	"github.com/exaring/otelpgx"
-	"github.com/glasskube/distr/internal/env"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"

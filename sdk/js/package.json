@@ -7,7 +7,7 @@
   "homepage": "https://distr.sh",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/glasskube/distr.git",
+    "url": "git+https://github.com/distr-sh/distr.git",
     "directory": "sdk/js"
   },
   "main": "dist/index.js",

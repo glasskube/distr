@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 )
 

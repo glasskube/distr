@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 
-	"github.com/glasskube/distr/cmd/mcp/client"
+	"github.com/distr-sh/distr/cmd/mcp/client"
 	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"

@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"

@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/glasskube/distr/internal/validation"
+	"github.com/distr-sh/distr/internal/validation"
 	"github.com/google/uuid"
 )
 

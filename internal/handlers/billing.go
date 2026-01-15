@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/glasskube/distr/internal/middleware"
+	"github.com/distr-sh/distr/internal/middleware"
 	"github.com/oaswrap/spec/adapter/chiopenapi"
 	"github.com/oaswrap/spec/option"
 )

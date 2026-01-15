@@ -111,7 +111,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: distr-agent
-          image: "ghcr.io/glasskube/distr/kubernetes-agent:{{ .agentVersion }}"
+          image: "ghcr.io/distr-sh/distr/kubernetes-agent:{{ .agentVersion }}"
           imagePullPolicy: IfNotPresent
           env:
             - name: DOCKER_CONFIG

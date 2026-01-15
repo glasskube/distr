@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/distr-sh/distr/internal/contenttype"
+	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/distr/internal/contenttype"
-	internalctx "github.com/glasskube/distr/internal/context"
 	"go.uber.org/zap"
 )
 

@@ -6,8 +6,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/glasskube/distr/internal/registry/and"
-	"github.com/glasskube/distr/internal/registry/blob"
+	"github.com/distr-sh/distr/internal/registry/and"
+	"github.com/distr-sh/distr/internal/registry/blob"
 	"github.com/opencontainers/go-digest"
 )
 

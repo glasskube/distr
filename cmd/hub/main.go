@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/glasskube/distr/cmd/hub/cmd"
+	"github.com/distr-sh/distr/cmd/hub/cmd"
 )
 
 func main() {

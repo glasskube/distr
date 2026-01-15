@@ -1,7 +1,7 @@
 package svc
 
 import (
-	"github.com/glasskube/distr/internal/buildconfig"
+	"github.com/distr-sh/distr/internal/buildconfig"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

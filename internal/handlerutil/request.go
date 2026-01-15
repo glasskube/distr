@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/glasskube/distr/internal/env"
+	"github.com/distr-sh/distr/internal/env"
 )
 
 func GetRequestSchemeAndHost(r *http.Request) string {

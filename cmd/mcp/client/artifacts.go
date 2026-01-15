@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/glasskube/distr/api"
+	"github.com/distr-sh/distr/api"
 	"github.com/google/uuid"
 )
 

@@ -7,6 +7,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/distr-sh/distr/internal/agentlogs"
+	"github.com/distr-sh/distr/internal/types"
 	dockercommand "github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/compose/convert"
 	composeapi "github.com/docker/compose/v2/pkg/api"
@@ -15,8 +17,6 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/glasskube/distr/internal/agentlogs"
-	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )

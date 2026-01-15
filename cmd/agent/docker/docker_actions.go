@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/dotenv"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/internal/agentauth"
+	"github.com/distr-sh/distr/internal/agentenv"
+	"github.com/distr-sh/distr/internal/types"
 	dockerconfig "github.com/docker/cli/cli/config"
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/agentauth"
-	"github.com/glasskube/distr/internal/agentenv"
-	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )

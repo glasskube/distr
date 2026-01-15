@@ -3,8 +3,8 @@ package subscription
 import (
 	"fmt"
 
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 type Limit int64

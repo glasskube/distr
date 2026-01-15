@@ -3,10 +3,10 @@ package cmd
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/migrations"
-	"github.com/glasskube/distr/internal/svc"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/migrations"
+	"github.com/distr-sh/distr/internal/svc"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/spf13/cobra"
 )
 

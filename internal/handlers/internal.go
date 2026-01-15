@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 

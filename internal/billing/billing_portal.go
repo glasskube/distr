@@ -3,7 +3,7 @@ package billing
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/stripe/stripe-go/v84"
 	"github.com/stripe/stripe-go/v84/billingportal/session"
 )

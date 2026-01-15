@@ -3,8 +3,8 @@ package tools
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )

@@ -9,12 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/glasskube/distr/internal/buildconfig"
-	"github.com/glasskube/distr/internal/cleanup"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/svc"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/buildconfig"
+	"github.com/distr-sh/distr/internal/cleanup"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/svc"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -100,7 +100,7 @@ func runCleanup(ctx context.Context, opts CleanupOptions) error {
 	ctx = internalctx.WithLogger(ctx, log)
 
 	ctx, span := registry.GetTracers().Always().
-		Tracer("github.com/glasskube/distr/cmd/hub/cmd", trace.WithInstrumentationVersion(buildconfig.Version())).
+		Tracer("github.com/distr-sh/distr/cmd/hub/cmd", trace.WithInstrumentationVersion(buildconfig.Version())).
 		Start(ctx, fmt.Sprintf("cleanup_%v", opts.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 

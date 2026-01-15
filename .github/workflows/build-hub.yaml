@@ -48,11 +48,11 @@ jobs:
           - name: community
             suffix: '-ce'
             images: |
-              ghcr.io/glasskube/distr-ce
+              ghcr.io/distr-sh/distr-ce
           - name: enterprise
             suffix: -ee
             images: |
-              ghcr.io/glasskube/distr-ee
+              ghcr.io/distr-sh/distr-ee
               registry.distr.sh/glasskube/distr-ee
     steps:
       - name: Checkout
@@ -116,9 +116,9 @@ jobs:
         env:
           CGO_ENABLED: '0'
           LDFLAGS: >-
-            -X github.com/glasskube/distr/internal/buildconfig.version=${{ github.ref_name }}
-            -X github.com/glasskube/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
-            -X github.com/glasskube/distr/internal/buildconfig.edition=${{ matrix.edition.name }}
+            -X github.com/distr-sh/distr/internal/buildconfig.version=${{ github.ref_name }}
+            -X github.com/distr-sh/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
+            -X github.com/distr-sh/distr/internal/buildconfig.edition=${{ matrix.edition.name }}
 
       - name: Start Hub and verify migrations
         shell: bash

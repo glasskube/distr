@@ -15,7 +15,7 @@ VERSION = 'snapshot'
 CGO_ENABLED = "0"
 
 [vars]
-ldflags = "-s -w -X github.com/glasskube/distr/internal/buildconfig.version=$VERSION -X github.com/glasskube/distr/internal/buildconfig.commit=$COMMIT"
+ldflags = "-s -w -X github.com/distr-sh/distr/internal/buildconfig.version=$VERSION -X github.com/distr-sh/distr/internal/buildconfig.commit=$COMMIT"
 
 [tasks.frontend-deps]
 run = 'pnpm install'
@@ -38,11 +38,11 @@ run = 'pnpm build:enterprise'
 depends = ["frontend-deps"]
 
 [tasks."build:hub:community"]
-run = 'go build -ldflags="{{vars.ldflags}} -X github.com/glasskube/distr/internal/buildconfig.edition=community" -o dist/distr ./cmd/hub'
+run = 'go build -ldflags="{{vars.ldflags}} -X github.com/distr-sh/distr/internal/buildconfig.edition=community" -o dist/distr ./cmd/hub'
 depends = ["go-tidy", "build:frontend:community"]
 
 [tasks."build:hub:enterprise"]
-run = 'go build -ldflags="{{vars.ldflags}} -X github.com/glasskube/distr/internal/buildconfig.edition=enterprise" -o dist/distr ./cmd/hub'
+run = 'go build -ldflags="{{vars.ldflags}} -X github.com/distr-sh/distr/internal/buildconfig.edition=enterprise" -o dist/distr ./cmd/hub'
 depends = ["go-tidy", "build:frontend:enterprise"]
 
 [tasks."build:mcp"]
@@ -115,10 +115,10 @@ run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/agent/docker/ run'
 run = 'go run -ldflags="{{vars.ldflags}}" ./cmd/agent/kubernetes/ run'
 
 [tasks."docker-build:hub"]
-run = 'docker build -f Dockerfile.hub --tag ghcr.io/glasskube/distr:$VERSION .'
+run = 'docker build -f Dockerfile.hub --tag ghcr.io/distr-sh/distr:$VERSION .'
 
 [tasks."docker-build:agent:docker"]
-run = 'docker build -f Dockerfile.docker-agent --tag ghcr.io/glasskube/distr/docker-agent:$VERSION --build-arg VERSION=$VERSION --build-arg COMMIT=$COMMIT --network host .'
+run = 'docker build -f Dockerfile.docker-agent --tag ghcr.io/distr-sh/distr/docker-agent:$VERSION --build-arg VERSION=$VERSION --build-arg COMMIT=$COMMIT --network host .'
 
 [tasks."docker-build:agent:kubernetes"]
-run = 'docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/glasskube/distr/kubernetes-agent:$VERSION --build-arg VERSION=$VERSION --build-arg COMMIT=$COMMIT --network host .'
+run = 'docker build -f Dockerfile.kubernetes-agent --tag ghcr.io/distr-sh/distr/kubernetes-agent:$VERSION --build-arg VERSION=$VERSION --build-arg COMMIT=$COMMIT --network host .'

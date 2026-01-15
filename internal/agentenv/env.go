@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/glasskube/distr/internal/envparse"
-	"github.com/glasskube/distr/internal/envutil"
+	"github.com/distr-sh/distr/internal/envparse"
+	"github.com/distr-sh/distr/internal/envutil"
 )
 
 var (

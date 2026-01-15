@@ -6,7 +6,7 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/glasskube/distr/internal/registry/manifest"
+	"github.com/distr-sh/distr/internal/registry/manifest"
 	"github.com/opencontainers/go-digest"
 )
 

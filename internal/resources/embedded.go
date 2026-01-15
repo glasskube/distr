@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"text/template"
 
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/util"
 )
 
 var (

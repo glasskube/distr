@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/auth"
-	"github.com/glasskube/distr/internal/billing"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/handlerutil"
+	"github.com/distr-sh/distr/internal/auth"
+	"github.com/distr-sh/distr/internal/billing"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/handlerutil"
 	"go.uber.org/zap"
 )
 

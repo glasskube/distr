@@ -1,6 +1,6 @@
 package api
 
-import "github.com/glasskube/distr/internal/types"
+import "github.com/distr-sh/distr/internal/types"
 
 type TutorialProgressRequest struct {
 	types.TutorialProgressEvent

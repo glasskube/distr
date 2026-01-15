@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/glasskube/distr/internal/customdomains"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/customdomains"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 var (

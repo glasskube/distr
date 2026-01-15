@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/httpstatus"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/httpstatus"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 )
 

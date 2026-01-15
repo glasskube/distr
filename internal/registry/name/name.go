@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	registryerror "github.com/glasskube/distr/internal/registry/error"
+	registryerror "github.com/distr-sh/distr/internal/registry/error"
 )
 
 type Name struct {

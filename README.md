@@ -1,7 +1,7 @@
 <br>
 <div align="center">
   <a href="https://glasskube.dev?utm_source=github">
-    <img src="https://github.com/glasskube/distr/blob/main/frontend/ui/public/distr-logo.svg" alt="Distr Logo" height="160">
+    <img src="https://github.com/distr-sh/distr/blob/main/frontend/ui/public/distr-logo.svg" alt="Distr Logo" height="160">
   </a>
 <h1 align="center">Distr</h1>
 <br>
@@ -13,7 +13,7 @@ Distr enables software and AI companies to distribute applications to self-manag
 
 <hr>
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/glasskube/distr?style=flat)](https://github.com/glasskube/distr)
+[![GitHub Repo stars](https://img.shields.io/github/stars/glasskube/distr?style=flat)](https://github.com/distr-sh/distr)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/distr)](https://artifacthub.io/packages/helm/distr/distr)
 
@@ -88,7 +88,7 @@ Check out [`deploy/docker`](deploy/docker) for our example deployment using Dock
 To get started quickly, do the following:
 
 ```shell
-mkdir distr && cd distr && curl -fsSL https://github.com/glasskube/distr/releases/latest/download/deploy-docker.tar.bz2 | tar -jx
+mkdir distr && cd distr && curl -fsSL https://github.com/distr-sh/distr/releases/latest/download/deploy-docker.tar.bz2 | tar -jx
 # make necessary changes to the .env file
 docker-compose up -d
 ```
@@ -101,7 +101,7 @@ To install Distr in Kubernetes, simply run:
 
 ```shell
 helm upgrade --install --wait --namespace distr --create-namespace \
-  distr oci://ghcr.io/glasskube/charts/distr \
+  distr oci://ghcr.io/distr-sh/charts/distr \
   --set postgresql.enabled=true --set minio.enabled=true
 ```
 

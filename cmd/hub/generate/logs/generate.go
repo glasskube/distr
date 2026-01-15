@@ -5,12 +5,12 @@ import (
 	"math/rand"
 	"time"
 
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/svc"
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/svc"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/google/uuid"
 )
 

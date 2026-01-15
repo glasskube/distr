@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/glasskube/distr/api"
+	"github.com/distr-sh/distr/api"
 	hmr "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"

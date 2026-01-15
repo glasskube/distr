@@ -3,10 +3,10 @@ package handlers
 import (
 	"net/http"
 
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/getsentry/sentry-go"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/types"
 	"github.com/oaswrap/spec/adapter/chiopenapi"
 	"github.com/oaswrap/spec/option"
 	"go.uber.org/zap"

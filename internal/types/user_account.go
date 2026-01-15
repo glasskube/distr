@@ -4,7 +4,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/google/uuid"
 )
 

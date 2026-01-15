@@ -3,7 +3,7 @@ package noop
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/mail"
+	"github.com/distr-sh/distr/internal/mail"
 )
 
 type mailer struct{}

@@ -6,8 +6,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/stripe/stripe-go/v84"
 	checkoutsession "github.com/stripe/stripe-go/v84/checkout/session"
 	"github.com/stripe/stripe-go/v84/subscription"

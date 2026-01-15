@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/glasskube/distr/internal/authkey"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/authkey"
+	"github.com/distr-sh/distr/internal/util"
 	"go.uber.org/zap"
 )
 

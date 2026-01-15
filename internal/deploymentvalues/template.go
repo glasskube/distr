@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 type templateData struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/glasskube/distr/internal/apierrors"
-	internalctx "github.com/glasskube/distr/internal/context"
+	"github.com/distr-sh/distr/internal/apierrors"
+	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )

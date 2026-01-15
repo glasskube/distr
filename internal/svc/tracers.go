@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/tracers"
 	sentryotel "github.com/getsentry/sentry-go/otel"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/tracers"
 	"github.com/go-logr/zapr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"

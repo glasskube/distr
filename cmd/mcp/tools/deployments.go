@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/cmd/mcp/client"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/cmd/mcp/client"
 	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"

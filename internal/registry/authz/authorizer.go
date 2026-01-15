@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/glasskube/distr/internal/apierrors"
-	"github.com/glasskube/distr/internal/auth"
-	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/registry/name"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/apierrors"
+	"github.com/distr-sh/distr/internal/auth"
+	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/registry/name"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/opencontainers/go-digest"
 )
 
