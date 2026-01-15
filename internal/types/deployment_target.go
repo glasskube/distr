@@ -27,10 +27,10 @@ type DeploymentTarget struct {
 }
 
 type DeploymentTargetResources struct {
-	CPURequest    string `json:"cpuRequest,omitempty"`
-	MemoryRequest string `json:"memoryRequest,omitempty"`
-	CPULimit      string `json:"cpuLimit,omitempty"`
-	MemoryLimit   string `json:"memoryLimit,omitempty"`
+	CPURequest    string `json:"cpuRequest"`
+	MemoryRequest string `json:"memoryRequest"`
+	CPULimit      string `json:"cpuLimit"`
+	MemoryLimit   string `json:"memoryLimit"`
 }
 
 func (dt *DeploymentTarget) Validate() error {
