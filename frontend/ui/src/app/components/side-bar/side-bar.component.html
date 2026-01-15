@@ -389,7 +389,7 @@
         </li>
       </ul>
 
-      @if (isSubscriptionBannerVisible() && feedbackAlert) {
+      @if (hasNoSubscription() && feedbackAlert) {
         <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert" *appRequireVendor>
           <div class="flex justify-between items-center mb-3">
             <span
