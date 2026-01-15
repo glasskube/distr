@@ -1,4 +1,4 @@
-import {BaseModel} from '@glasskube/distr-sdk';
+import {BaseModel} from '@distr-sh/distr-sdk';
 
 export interface DeploymentLogRecord extends BaseModel {
   deploymentId: string;

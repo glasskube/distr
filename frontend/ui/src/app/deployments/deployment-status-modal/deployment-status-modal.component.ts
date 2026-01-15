@@ -1,7 +1,7 @@
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, input, output, signal} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
+import {DeploymentTarget, DeploymentWithLatestRevision} from '@distr-sh/distr-sdk';
 import {catchError, distinctUntilChanged, EMPTY, filter, map, switchMap, timer} from 'rxjs';
 import {DeploymentLogsService} from '../../services/deployment-logs.service';
 import {DeploymentLogsTableComponent} from './deployment-logs-table.component';

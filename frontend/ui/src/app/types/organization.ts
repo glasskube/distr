@@ -1,4 +1,4 @@
-import {BaseModel, Named, UserRole} from '@glasskube/distr-sdk';
+import {BaseModel, Named, UserRole} from '@distr-sh/distr-sdk';
 import {SubscriptionType} from './subscription';
 
 export type Feature = 'licensing' | 'pre_post_scripts' | 'artifact_version_mutable';

@@ -1,8 +1,8 @@
-[**@glasskube/distr-sdk**](../README.md)
+[**@distr-sh/distr-sdk**](../README.md)
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / DeploymentWithLatestRevision
+[@distr-sh/distr-sdk](../README.md) / DeploymentWithLatestRevision
 
 # Interface: DeploymentWithLatestRevision
 

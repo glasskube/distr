@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {CustomerOrganization} from '@glasskube/distr-sdk';
+import {CustomerOrganization} from '@distr-sh/distr-sdk';
 import {Observable} from 'rxjs';
 import {ArtifactWithTags} from './artifacts.service';
 

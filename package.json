@@ -1,5 +1,5 @@
 {
-  "name": "@glasskube/distr",
+  "name": "@distr-sh/distr",
   "version": "2.5.1",
   "type": "module",
   "license": "Apache-2.0",
@@ -39,7 +39,7 @@
     "@fortawesome/free-brands-svg-icons": "^7.0.0",
     "@fortawesome/free-regular-svg-icons": "^7.0.0",
     "@fortawesome/free-solid-svg-icons": "^7.0.0",
-    "@glasskube/distr-sdk": "file:./sdk/js/src",
+    "@distr-sh/distr-sdk": "file:./sdk/js/src",
     "@lezer/highlight": "^1.2.3",
     "@pandatix/js-cvss": "^0.4.4",
     "@sentry/angular": "^10.25.0",

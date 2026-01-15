@@ -3,6 +3,7 @@ import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
+import {CustomerOrganization} from '@distr-sh/distr-sdk';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
   faBuildingUser,
@@ -13,7 +14,6 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {CustomerOrganization} from '@glasskube/distr-sdk';
 import {combineLatest, filter, firstValueFrom, map, startWith, Subject, switchMap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';

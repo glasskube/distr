@@ -1,8 +1,8 @@
 import {Component, effect, inject, input, output, signal} from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {DeploymentTarget, DeploymentWithLatestRevision} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleExclamation, faShip} from '@fortawesome/free-solid-svg-icons';
-import {DeploymentTarget, DeploymentWithLatestRevision} from '@glasskube/distr-sdk';
 import {firstValueFrom} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {AuthService} from '../services/auth.service';

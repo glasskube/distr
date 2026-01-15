@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {Application, ApplicationVersion, HelmChartType} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArchive,
@@ -26,7 +27,6 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {Application, ApplicationVersion, HelmChartType} from '@glasskube/distr-sdk';
 import {
   catchError,
   combineLatestWith,

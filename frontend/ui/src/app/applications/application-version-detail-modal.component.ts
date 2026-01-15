@@ -1,6 +1,6 @@
 import {Component, effect, input, output} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion} from '@distr-sh/distr-sdk';
 import {EditorComponent} from '../components/editor.component';
 
 export interface ApplicationVersionDetail {

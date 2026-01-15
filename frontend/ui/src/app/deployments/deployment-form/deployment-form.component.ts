@@ -21,7 +21,7 @@ import {
   Validators,
 } from '@angular/forms';
 import {RouterLink} from '@angular/router';
-import {DeploymentRequest, DeploymentType} from '@glasskube/distr-sdk';
+import {DeploymentRequest, DeploymentType} from '@distr-sh/distr-sdk';
 import {
   BehaviorSubject,
   catchError,

@@ -23,6 +23,7 @@ import {
   TouchedChangeEvent,
   Validators,
 } from '@angular/forms';
+import {Application, ApplicationVersion} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faChevronDown,
@@ -33,7 +34,6 @@ import {
   faPlus,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {Application, ApplicationVersion} from '@glasskube/distr-sdk';
 import dayjs from 'dayjs';
 import {combineLatestWith, filter, first, firstValueFrom, Subject, switchMap, takeUntil} from 'rxjs';
 import {isArchived} from '../../util/dates';

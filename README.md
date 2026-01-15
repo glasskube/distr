@@ -149,7 +149,7 @@ Let us know what you would like to see!
 You can install the Distr SDK for JavaScript from [npmjs.org](https://npmjs.org/):
 
 ```shell
-npm install --save @glasskube/distr-sdk
+npm install --save @distr-sh/distr-sdk
 ```
 
 The full SDK documentation is at https://distr.sh/docs/integrations/sdk/

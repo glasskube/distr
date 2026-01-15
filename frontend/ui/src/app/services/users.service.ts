@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
+import {UserAccountWithRole, UserRole} from '@distr-sh/distr-sdk';
 import {filter, map, merge, Observable, of, shareReplay, Subject, switchMap, tap} from 'rxjs';
 import {ReactiveList} from './cache';
 import {ContextService} from './context.service';

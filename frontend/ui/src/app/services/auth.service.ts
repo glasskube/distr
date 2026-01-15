@@ -1,6 +1,6 @@
 import {HttpClient, HttpErrorResponse, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {TokenResponse, UserRole} from '@glasskube/distr-sdk';
+import {TokenResponse, UserRole} from '@distr-sh/distr-sdk';
 import dayjs from 'dayjs';
 import {jwtDecode} from 'jwt-decode';
 import {catchError, map, Observable, of, tap, throwError} from 'rxjs';

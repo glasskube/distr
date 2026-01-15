@@ -3,16 +3,16 @@ import {AsyncPipe} from '@angular/common';
 import {Component, computed, DestroyRef, effect, inject, OnInit, output, signal, viewChild} from '@angular/core';
 import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faDocker} from '@fortawesome/free-brands-svg-icons';
-import {faBuildingUser, faCheckCircle, faDharmachakra, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {
   Application,
   CustomerOrganization,
   DeploymentTarget,
   DeploymentTargetScope,
   DeploymentType,
-} from '@glasskube/distr-sdk';
+} from '@distr-sh/distr-sdk';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faDocker} from '@fortawesome/free-brands-svg-icons';
+import {faBuildingUser, faCheckCircle, faDharmachakra, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, switchMap, take} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';

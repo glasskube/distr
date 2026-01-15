@@ -50,6 +50,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.36.2
         version: 6.39.11
+      '@distr-sh/distr-sdk':
+        specifier: file:./sdk/js/src
+        version: src@file:sdk/js/src
       '@fontsource/inter':
         specifier: ^5.1.0
         version: 5.2.8
@@ -68,9 +71,6 @@ importers:
       '@fortawesome/free-solid-svg-icons':
         specifier: ^7.0.0
         version: 7.1.0
-      '@glasskube/distr-sdk':
-        specifier: file:./sdk/js/src
-        version: src@file:sdk/js/src
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3

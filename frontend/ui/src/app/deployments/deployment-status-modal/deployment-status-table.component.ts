@@ -1,5 +1,5 @@
 import {Component, computed, inject, input} from '@angular/core';
-import {DeploymentRevisionStatus} from '@glasskube/distr-sdk';
+import {DeploymentRevisionStatus} from '@distr-sh/distr-sdk';
 import {map, Observable} from 'rxjs';
 import {DeploymentStatusService} from '../../services/deployment-status.service';
 import {TimeseriesEntry, TimeseriesSource, TimeseriesTableComponent} from './timeseries-table.component';

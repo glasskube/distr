@@ -1,6 +1,6 @@
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Application, ApplicationVersion, PatchApplicationRequest} from '@glasskube/distr-sdk';
+import {Application, ApplicationVersion, PatchApplicationRequest} from '@distr-sh/distr-sdk';
 import {catchError, Observable, of, Subject, switchMap, tap, throwError} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';

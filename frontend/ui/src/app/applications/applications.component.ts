@@ -3,6 +3,7 @@ import {AsyncPipe, DatePipe, NgOptimizedImage} from '@angular/common';
 import {Component, inject, Input, OnDestroy, TemplateRef} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
+import {Application, DeploymentType} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
@@ -13,7 +14,6 @@ import {
   faTrash,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {Application, DeploymentType} from '@glasskube/distr-sdk';
 import {lastValueFrom, Observable, Subject, takeUntil} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {filteredByFormControl} from '../../util/filter';

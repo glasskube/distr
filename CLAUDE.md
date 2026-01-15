@@ -32,7 +32,7 @@ The platform consists of a control plane (Hub) running in the cloud, agents that
 The SDK is a standalone subproject in `sdk/js/` with its own package.json, dependencies, and build process.
 
 - **Location**: `sdk/js/`
-- **Package**: `@glasskube/distr-sdk`
+- **Package**: `@distr-sh/distr-sdk`
 - **Package Manager**: pnpm
 - **Build**: `pnpm build` (compiles TypeScript to `dist/`)
 - **Test**: `pnpm test:examples` (runs example test client)

@@ -1,8 +1,8 @@
-[**@glasskube/distr-sdk**](../README.md)
+[**@distr-sh/distr-sdk**](../README.md)
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / CreateDeploymentParams
+[@distr-sh/distr-sdk](../README.md) / CreateDeploymentParams
 
 # Type Alias: CreateDeploymentParams
 

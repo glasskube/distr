@@ -3,6 +3,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
+import {CustomerOrganization, OrganizationBranding} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {
@@ -16,7 +17,6 @@ import {
   faPalette,
   faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
-import {CustomerOrganization, OrganizationBranding} from '@glasskube/distr-sdk';
 import {firstValueFrom, lastValueFrom, Observable, Subject} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {AutotrimDirective} from '../../directives/autotrim.directive';

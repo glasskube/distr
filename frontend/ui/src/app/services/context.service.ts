@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {UserAccountWithRole} from '@glasskube/distr-sdk';
+import {UserAccountWithRole} from '@distr-sh/distr-sdk';
 import posthog from 'posthog-js';
 import {map, Observable, shareReplay, tap} from 'rxjs';
 import {Organization, OrganizationWithUserRole} from '../types/organization';
