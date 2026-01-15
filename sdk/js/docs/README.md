@@ -26,6 +26,7 @@
 - [DeploymentRevisionStatus](interfaces/DeploymentRevisionStatus.md)
 - [DeploymentTarget](interfaces/DeploymentTarget.md)
 - [DeploymentTargetAccessResponse](interfaces/DeploymentTargetAccessResponse.md)
+- [DeploymentTargetResources](interfaces/DeploymentTargetResources.md)
 - [DeploymentTargetStatus](interfaces/DeploymentTargetStatus.md)
 - [DeploymentWithLatestRevision](interfaces/DeploymentWithLatestRevision.md)
 - [Named](interfaces/Named.md)

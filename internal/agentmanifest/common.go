@@ -81,6 +81,9 @@ func getTemplateData(
 	if deploymentTarget.Scope != nil {
 		result["targetScope"] = *deploymentTarget.Scope
 	}
+	if deploymentTarget.Resources != nil {
+		result["targetResources"] = deploymentTarget.Resources
+	}
 	return result, nil
 }
 
