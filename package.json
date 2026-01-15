@@ -66,15 +66,12 @@
     "@types/semver": "^7.5.8",
     "autoprefixer": "^10.4.20",
     "jasmine-core": "~5.13.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
+    "jsdom": "^27.4.0",
     "postcss": "^8.5.3",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.3.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.0",
+    "vitest": "^4.0.17"
   }
 }
