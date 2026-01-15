@@ -21,7 +21,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/getsentry/sentry-go/otel v0.40.0
-	github.com/go-chi/chi/v5 v5.2.3
+	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/httprate v0.15.0
 	github.com/go-chi/jwtauth/v5 v5.3.3
 	github.com/go-co-op/gocron/v2 v2.19.0
@@ -56,7 +56,7 @@ require (
 	go.uber.org/zap v1.27.1
 	golang.org/x/crypto v0.47.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.19.4
+	helm.sh/helm/v3 v3.19.5
 	k8s.io/api v0.35.0
 	k8s.io/apimachinery v0.35.0
 	k8s.io/cli-runtime v0.35.0

@@ -9,4 +9,5 @@ type DeploymentRevision struct {
 	ValuesYaml           []byte    `db:"-" json:"valuesYaml,omitempty"`
 	EnvFileData          []byte    `db:"-" json:"-"`
 	ForceRestart         bool      `db:"force_restart" json:"forceRestart"`
+	IgnoreRevisionSkew   bool      `db:"ignore_revision_skew" json:"ignoreRevisionSkew"`
 }

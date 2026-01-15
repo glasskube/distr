@@ -78,6 +78,7 @@ func GetDeploymentsForDeploymentTarget(
 				dr.id AS deployment_revision_id,
 				dr.created_at AS deployment_revision_created_at,
 				dr.force_restart AS force_restart,
+				dr.ignore_revision_skew AS ignore_revision_skew,
 				a.id AS application_id,
 				a.name AS application_name,
 				av.name AS application_version_name,
@@ -304,15 +305,16 @@ func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentReques
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO DeploymentRevision AS d
-			(deployment_id, application_version_id, values_yaml, env_file_data, force_restart)
-			VALUES (@deploymentId, @applicationVersionId, @valuesYaml, @envFileData, @forceRestart)
-			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id, d.force_restart`,
+			(deployment_id, application_version_id, values_yaml, env_file_data, force_restart, ignore_revision_skew)
+			VALUES (@deploymentId, @applicationVersionId, @valuesYaml, @envFileData, @forceRestart, @ignoreRevisionSkew)
+			RETURNING d.id, d.created_at, d.deployment_id, d.application_version_id, d.force_restart, d.ignore_revision_skew`,
 		pgx.NamedArgs{
 			"deploymentId":         request.DeploymentID,
 			"applicationVersionId": request.ApplicationVersionID,
 			"valuesYaml":           request.ValuesYaml,
 			"envFileData":          request.EnvFileData,
 			"forceRestart":         request.ForceRestart,
+			"ignoreRevisionSkew":   request.IgnoreRevisionSkew,
 		},
 	)
 	if err != nil {
