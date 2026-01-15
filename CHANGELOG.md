@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.5.0](https://github.com/glasskube/distr/compare/2.4.0...2.5.0) (2026-01-15)
+
+
+### Features
+
+* add configuring resource requirements for Kubernetes agent deployment ([#1640](https://github.com/glasskube/distr/issues/1640)) ([017ca77](https://github.com/glasskube/distr/commit/017ca773d958fb13ded17a91887c2fbfee5a7448))
+* add option to allow mutating artifact versions ([#1630](https://github.com/glasskube/distr/issues/1630)) ([79c786e](https://github.com/glasskube/distr/commit/79c786ebf2a0f1f21275b830a6a04c9d986ae4e0))
+* add option to force the kubernetes agent to overwrite a newer helm release ([#1633](https://github.com/glasskube/distr/issues/1633)) ([012c11c](https://github.com/glasskube/distr/commit/012c11c585c3f588f3fc18e4dcb4bcf4f1da25cc))
+
+
+### Bug Fixes
+
+* **backend:** send 400 response to agent pushing logs when deployment doesn't exist ([#1637](https://github.com/glasskube/distr/issues/1637)) ([b09112b](https://github.com/glasskube/distr/commit/b09112b31a10fcb792dec12a937f3bbe9bf28970))
+* **deps:** update module github.com/exaring/otelpgx to v0.10.0 ([#1623](https://github.com/glasskube/distr/issues/1623)) ([8dec87a](https://github.com/glasskube/distr/commit/8dec87a2bf05e8fe9a0dc77a5a7427d2eab150fd))
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.4 ([#1642](https://github.com/glasskube/distr/issues/1642)) ([8cea56e](https://github.com/glasskube/distr/commit/8cea56e0c54eda66b903fc5fb851b1040cc5798d))
+* **deps:** update module golang.org/x/crypto to v0.47.0 ([#1624](https://github.com/glasskube/distr/issues/1624)) ([05b35e1](https://github.com/glasskube/distr/commit/05b35e15bcd818afcb0c928a3f0477b80093a1bf))
+* **deps:** update module helm.sh/helm/v3 to v3.19.5 ([#1643](https://github.com/glasskube/distr/issues/1643)) ([b8b9580](https://github.com/glasskube/distr/commit/b8b95805c4e1bc87e528d35fd80ff085e41ba501))
+* handle delayed initial license use case  ([#1638](https://github.com/glasskube/distr/issues/1638)) ([7bfe05d](https://github.com/glasskube/distr/commit/7bfe05d47336c730c2cce4f25758db58123408b6))
+* **ui:** fix no applications shown in deployment form ([#1636](https://github.com/glasskube/distr/issues/1636)) ([cd50e83](https://github.com/glasskube/distr/commit/cd50e839e511246a18b1d60b0235ed16ab540795))
+* **ui:** prevent text overflow in deployment wizard ([#1628](https://github.com/glasskube/distr/issues/1628)) ([5f14b90](https://github.com/glasskube/distr/commit/5f14b9090902220c76deb7eba722b8ab11b75292))
+
+
+### Other
+
+* add dlv to mise for debugging ([#1639](https://github.com/glasskube/distr/issues/1639)) ([9a5bb22](https://github.com/glasskube/distr/commit/9a5bb225fb43edcc36d2d0f93559a087cea33b59))
+* **deps:** bump qs from 6.13.0 to 6.14.1 in the npm_and_yarn group across 1 directory ([#1648](https://github.com/glasskube/distr/issues/1648)) ([b6f0724](https://github.com/glasskube/distr/commit/b6f0724f9d7614c2035162f91834a3fdc5523d89))
+* **deps:** update actions/setup-go action to v6.2.0 ([#1627](https://github.com/glasskube/distr/issues/1627)) ([f7395e6](https://github.com/glasskube/distr/commit/f7395e6bffad7997d59a948c4a8e9ab389cacd69))
+* **deps:** update actions/setup-node action to v6.2.0 ([#1645](https://github.com/glasskube/distr/issues/1645)) ([40c1259](https://github.com/glasskube/distr/commit/40c125987944b17ab9d1dbb031f53be59062dd5d))
+* **deps:** update codemirror ([#1635](https://github.com/glasskube/distr/issues/1635)) ([b94898c](https://github.com/glasskube/distr/commit/b94898cf38cb252245abf98fa818a772ac56090d))
+* **deps:** update dependency @codemirror/view to v6.39.10 ([#1629](https://github.com/glasskube/distr/issues/1629)) ([47bafc9](https://github.com/glasskube/distr/commit/47bafc9608abab14e46a1f4353ef8445163334a4))
+* **deps:** update dependency @types/jasmine to v5.1.15 ([#1625](https://github.com/glasskube/distr/issues/1625)) ([b8d08fc](https://github.com/glasskube/distr/commit/b8d08fcf71d5e8e6d62ff76a4f80767f1f41860b))
+* **deps:** update dependency prettier to v3.8.0 ([#1644](https://github.com/glasskube/distr/issues/1644)) ([0d82fcf](https://github.com/glasskube/distr/commit/0d82fcfd8ef80f488f7d172c5d1f7e4914cc4952))
+* **deps:** update ghcr.io/glasskube/hello-distr/backend docker tag to v0.2.1 ([#1631](https://github.com/glasskube/distr/issues/1631)) ([56b8870](https://github.com/glasskube/distr/commit/56b8870b6ace508d594781814b49babde98ad518))
+* **deps:** update ghcr.io/glasskube/hello-distr/frontend docker tag to v0.2.1 ([#1632](https://github.com/glasskube/distr/issues/1632)) ([391d85b](https://github.com/glasskube/distr/commit/391d85b0e6f7a65a9d24a631265a3f44de8bd64f))
+* **deps:** update ghcr.io/glasskube/hello-distr/proxy docker tag to v0.2.1 ([#1634](https://github.com/glasskube/distr/issues/1634)) ([29d5144](https://github.com/glasskube/distr/commit/29d5144d4c640d9299a2a25e7b20bf371dbc44f7))
+* **deps:** upgrade to Angular 21 ([#1647](https://github.com/glasskube/distr/issues/1647)) ([8374e08](https://github.com/glasskube/distr/commit/8374e08e6e275fef84916c8128d1650dc99f5e70))
+* show contact founder dialog to community users ([#1646](https://github.com/glasskube/distr/issues/1646)) ([cd666ca](https://github.com/glasskube/distr/commit/cd666ca4d2c7d4b8fde03f770e3205d650f0b433))
+* **ui:** hide tutorial navlink if org has subscription ([#1641](https://github.com/glasskube/distr/issues/1641)) ([ed12315](https://github.com/glasskube/distr/commit/ed123154a2fd5ed62750d073fe3572e4d0aab77f))
+
 ## [2.4.0](https://github.com/glasskube/distr/compare/2.3.0...2.4.0) (2026-01-12)
 
 
