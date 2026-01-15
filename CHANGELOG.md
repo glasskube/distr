@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.2](https://github.com/distr-sh/distr/compare/2.5.1...2.5.2) (2026-01-15)
+
+
+### Other
+
+* change module name to github.com/distr-sh/distr ([#1651](https://github.com/distr-sh/distr/issues/1651)) ([4645d9a](https://github.com/distr-sh/distr/commit/4645d9aee5e451dee3a94fd4915ff0f25f18bb9f))
+* rename ghcr.io/glasskube to ghcr.io/distr-sh ([#1653](https://github.com/distr-sh/distr/issues/1653)) ([b4fac20](https://github.com/distr-sh/distr/commit/b4fac204b49aa293606c155bb4499f97be9c7a18))
+
 ## [2.5.1](https://github.com/glasskube/distr/compare/2.5.0...2.5.1) (2026-01-15)
 
 
