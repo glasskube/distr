@@ -1,7 +1,7 @@
 <br>
 <div align="center">
-  <a href="https://glasskube.dev?utm_source=github">
-    <img src="https://github.com/distr-sh/distr/blob/main/frontend/ui/public/distr-logo.svg" alt="Distr Logo" height="160">
+  <a href="https://distr.sh?utm_source=github">
+    <img src="https://distr.sh/_astro/distr.BLLQO2pM.svg" alt="Distr Logo" height="160">
   </a>
 <h1 align="center">Distr</h1>
 <br>
@@ -9,7 +9,7 @@
 
 Distr enables software and AI companies to distribute applications to self-managed customers with minimal setup.
 
-### **[Website](https://glasskube.dev/?utm_source=github)** • **[Quickstart](https://distr.sh/docs/getting-started/quickstart/?utm_source=github)** • **[Documentation](https://distr.sh/docs/getting-started/about/?utm_source=github)** • **[Blog](https://glasskube.dev/blog/)** • **[Twitter](https://x.com/glasskube)** • **[Discord](https://discord.gg/6qqBSAWZfW)**
+### **[Website](https://distr.sh/?utm_source=github)** • **[Quickstart](https://distr.sh/docs/quickstart/?utm_source=github)** • **[Documentation](https://distr.sh/docs/?utm_source=github)** • **[Blog](https://distr.sh/blog/)** • **[Discord](https://discord.gg/6qqBSAWZfW)**
 
 <hr>
 
