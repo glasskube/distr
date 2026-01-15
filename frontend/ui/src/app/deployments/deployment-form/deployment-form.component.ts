@@ -211,6 +211,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
         (application) =>
           application.type === applicationType &&
           (!customerOrganizationId ||
+            licenses.length === 0 ||
             licenses.some(
               (license) =>
                 license.applicationId === application.id && license.customerOrganizationId === customerOrganizationId
