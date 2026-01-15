@@ -1,4 +1,3 @@
-import {CommonModule} from '@angular/common';
 import {Component, effect, inject} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterLink} from '@angular/router';
@@ -10,7 +9,7 @@ import {OrganizationService} from '../services/organization.service';
 @Component({
   selector: 'app-subscription-callback',
   templateUrl: './subscription-callback.component.html',
-  imports: [CommonModule, FaIconComponent, RouterLink],
+  imports: [FaIconComponent, RouterLink],
 })
 export class SubscriptionCallbackComponent {
   private readonly organizationService = inject(OrganizationService);
