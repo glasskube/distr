@@ -3,7 +3,7 @@ package svc
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/oidc"
+	"github.com/distr-sh/distr/internal/oidc"
 	"go.uber.org/zap"
 )
 

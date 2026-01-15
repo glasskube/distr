@@ -6,7 +6,7 @@ import (
 	"maps"
 	"time"
 
-	"github.com/glasskube/distr/internal/agentlogs"
+	"github.com/distr-sh/distr/internal/agentlogs"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"

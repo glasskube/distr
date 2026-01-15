@@ -2,6 +2,7 @@ import {OverlayModule} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
 import {Component, inject, input} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
+import {CustomerOrganization} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
@@ -13,7 +14,6 @@ import {
   faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {CustomerOrganization} from '@glasskube/distr-sdk';
 import {SemVer} from 'semver';
 import {maxBy} from '../../../util/arrays';
 import {SecureImagePipe} from '../../../util/secureImage';

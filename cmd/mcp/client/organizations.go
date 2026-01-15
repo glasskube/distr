@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 func (c *Client) Organizations() *Organizations {

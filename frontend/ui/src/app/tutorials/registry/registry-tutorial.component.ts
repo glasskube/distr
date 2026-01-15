@@ -3,6 +3,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {AfterViewInit, Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {AccessTokenWithKey} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleCheck} from '@fortawesome/free-regular-svg-icons';
 import {
@@ -16,7 +17,6 @@ import {
   faPalette,
   faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
-import {AccessTokenWithKey} from '@glasskube/distr-sdk';
 import {combineLatest, firstValueFrom, lastValueFrom, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {fromPromise} from 'rxjs/internal/observable/innerFrom';
 import {getRemoteEnvironment} from '../../../env/remote';

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/authkey"
-	"github.com/glasskube/distr/internal/authn"
+	"github.com/distr-sh/distr/internal/authkey"
+	"github.com/distr-sh/distr/internal/authn"
 )
 
 func Authenticator() authn.Authenticator[string, authkey.Key] {

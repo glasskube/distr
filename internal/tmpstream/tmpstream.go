@@ -3,7 +3,7 @@ package tmpstream
 import (
 	"io"
 
-	"github.com/glasskube/distr/internal/env"
+	"github.com/distr-sh/distr/internal/env"
 )
 
 // TmpStream represents a resource that can be accessed via io interfaces and destroyed if no longer needed.

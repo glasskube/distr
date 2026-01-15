@@ -5,14 +5,14 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/distr-sh/distr/internal/authjwt"
+	"github.com/distr-sh/distr/internal/authn"
+	"github.com/distr-sh/distr/internal/authn/authinfo"
+	"github.com/distr-sh/distr/internal/authn/authkey"
+	"github.com/distr-sh/distr/internal/authn/jwt"
+	"github.com/distr-sh/distr/internal/authn/token"
+	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/getsentry/sentry-go"
-	"github.com/glasskube/distr/internal/authjwt"
-	"github.com/glasskube/distr/internal/authn"
-	"github.com/glasskube/distr/internal/authn/authinfo"
-	"github.com/glasskube/distr/internal/authn/authkey"
-	"github.com/glasskube/distr/internal/authn/jwt"
-	"github.com/glasskube/distr/internal/authn/token"
-	internalctx "github.com/glasskube/distr/internal/context"
 	"go.uber.org/zap"
 )
 

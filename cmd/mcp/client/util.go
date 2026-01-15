@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/httpstatus"
+	"github.com/distr-sh/distr/internal/httpstatus"
 )
 
 func JsonResponse[T any](resp *http.Response, err error) (T, error) {

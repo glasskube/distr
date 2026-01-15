@@ -1,7 +1,7 @@
 package subscription
 
 import (
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 var ProFeatures = []types.Feature{

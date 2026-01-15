@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://distr.sh/" target="_blank">
-    <img alt="" src="https://github.com/glasskube/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg" style="height: 5em;">
+    <img alt="" src="https://github.com/distr-sh/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg" style="height: 5em;">
   </a>
   <br>
   Distr
@@ -31,7 +31,7 @@ To install Distr in Kubernetes, simply run:
 
 ```shell
 helm upgrade --install --wait --namespace distr --create-namespace \
-  distr oci://ghcr.io/glasskube/charts/distr --version 1.11.0 \
+  distr oci://ghcr.io/distr-sh/charts/distr --version 1.11.0 \
   --set postgresql.enabled=true --set minio.enabled=true
 ```
 
@@ -111,7 +111,7 @@ helm upgrade --install --wait --namespace distr --create-namespace \
 | hub.env[9].name                            | string | `"REGISTRY_S3_ALLOW_REDIRECT"`                   |             |
 | hub.env[9].value                           | string | `"false"`                                        |             |
 | image.pullPolicy                           | string | `"IfNotPresent"`                                 |             |
-| image.repository                           | string | `"ghcr.io/glasskube/distr"`                      |             |
+| image.repository                           | string | `"ghcr.io/distr-sh/distr"`                       |             |
 | image.tag                                  | string | `""`                                             |             |
 | imagePullSecrets                           | list   | `[]`                                             |             |
 | ingress.annotations                        | object | `{}`                                             |             |

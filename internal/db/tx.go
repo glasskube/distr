@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/db/queryable"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/db/queryable"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/multierr"
 )

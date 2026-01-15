@@ -1,9 +1,9 @@
 package mapping
 
 import (
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 )
 
 func CustomerOrganizationToAPI(customerOrganization types.CustomerOrganization) api.CustomerOrganization {

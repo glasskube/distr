@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/util"
 	. "github.com/onsi/gomega"
 )
 

@@ -1,8 +1,8 @@
-**@glasskube/distr-sdk**
+**@distr-sh/distr-sdk**
 
 ---
 
-# @glasskube/distr-sdk
+# @distr-sh/distr-sdk
 
 ## Classes
 

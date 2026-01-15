@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/glasskube/distr/internal/envparse"
-	"github.com/glasskube/distr/internal/envutil"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/envparse"
+	"github.com/distr-sh/distr/internal/envutil"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/joho/godotenv"
 )
 

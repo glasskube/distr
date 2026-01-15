@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {AgentVersion} from '@glasskube/distr-sdk';
+import {AgentVersion} from '@distr-sh/distr-sdk';
 import {Observable, shareReplay} from 'rxjs';
 
 const baseUrl = '/api/v1/agent-versions';

@@ -1,7 +1,7 @@
 package agentlogs
 
 import (
-	"github.com/glasskube/distr/api"
+	"github.com/distr-sh/distr/api"
 	"github.com/google/uuid"
 )
 

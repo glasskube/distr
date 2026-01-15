@@ -4,7 +4,7 @@ import {
   CreateUpdateCustomerOrganizationRequest,
   CustomerOrganization,
   CustomerOrganizationWithUsage,
-} from '@glasskube/distr-sdk';
+} from '@distr-sh/distr-sdk';
 import {Observable} from 'rxjs';
 
 const baseUrl = '/api/v1/customer-organizations';

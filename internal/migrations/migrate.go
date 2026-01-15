@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/glasskube/distr/internal/env"
+	"github.com/distr-sh/distr/internal/env"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"

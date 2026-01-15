@@ -3,7 +3,7 @@ package context
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 func GetApplication(ctx context.Context) *types.Application {

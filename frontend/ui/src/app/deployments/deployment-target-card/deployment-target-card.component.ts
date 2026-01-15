@@ -13,6 +13,12 @@ import {
 } from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  DeploymentTarget,
+  DeploymentTargetScope,
+  DeploymentType,
+  DeploymentWithLatestRevision,
+} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArrowUpRightFromSquare,
@@ -28,12 +34,6 @@ import {
   faTriangleExclamation,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  DeploymentTarget,
-  DeploymentTargetScope,
-  DeploymentType,
-  DeploymentWithLatestRevision,
-} from '@glasskube/distr-sdk';
 import {filter, firstValueFrom, lastValueFrom, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';

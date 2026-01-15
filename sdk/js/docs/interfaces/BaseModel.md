@@ -1,8 +1,8 @@
-[**@glasskube/distr-sdk**](../README.md)
+[**@distr-sh/distr-sdk**](../README.md)
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / BaseModel
+[@distr-sh/distr-sdk](../README.md) / BaseModel
 
 # Interface: BaseModel
 

@@ -16,7 +16,7 @@ COPY cmd/agent/docker/ cmd/agent/docker/
 COPY internal/ internal/
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
   go build -a -o agent \
-  -ldflags="-s -w -X github.com/glasskube/distr/internal/buildconfig.version=${VERSION:-snapshot} -X github.com/glasskube/distr/internal/buildconfig.commit=${COMMIT}" \
+  -ldflags="-s -w -X github.com/distr-sh/distr/internal/buildconfig.version=${VERSION:-snapshot} -X github.com/distr-sh/distr/internal/buildconfig.commit=${COMMIT}" \
   ./cmd/agent/docker/
 
 FROM docker:27.3.1-alpine3.20

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/opencontainers/go-digest"

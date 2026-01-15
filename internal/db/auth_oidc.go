@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	internalctx "github.com/glasskube/distr/internal/context"
+	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/oauth2"

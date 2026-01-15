@@ -9,11 +9,11 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/glasskube/distr/internal/buildconfig"
-	"github.com/glasskube/distr/internal/customdomains"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/resources"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/buildconfig"
+	"github.com/distr-sh/distr/internal/customdomains"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/resources"
+	"github.com/distr-sh/distr/internal/types"
 )
 
 func Get(

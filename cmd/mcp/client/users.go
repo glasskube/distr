@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/httpstatus"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/internal/httpstatus"
 	"github.com/google/uuid"
 )
 

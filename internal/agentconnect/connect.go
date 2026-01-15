@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/glasskube/distr/internal/customdomains"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/customdomains"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 )
 

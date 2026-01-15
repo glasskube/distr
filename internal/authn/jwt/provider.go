@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/authn"
+	"github.com/distr-sh/distr/internal/authn"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )

@@ -1,7 +1,7 @@
 package tools
 
 import (
-	"github.com/glasskube/distr/cmd/mcp/client"
+	"github.com/distr-sh/distr/cmd/mcp/client"
 	"github.com/mark3labs/mcp-go/server"
 )
 

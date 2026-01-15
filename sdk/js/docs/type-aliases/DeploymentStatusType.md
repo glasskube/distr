@@ -1,8 +1,8 @@
-[**@glasskube/distr-sdk**](../README.md)
+[**@distr-sh/distr-sdk**](../README.md)
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / DeploymentStatusType
+[@distr-sh/distr-sdk](../README.md) / DeploymentStatusType
 
 # Type Alias: DeploymentStatusType
 

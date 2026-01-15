@@ -4,7 +4,7 @@ import (
 	"context"
 	"slices"
 
-	"github.com/glasskube/distr/api"
+	"github.com/distr-sh/distr/api"
 	"go.uber.org/multierr"
 )
 

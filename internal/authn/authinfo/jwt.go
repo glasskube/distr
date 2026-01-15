@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/authjwt"
-	"github.com/glasskube/distr/internal/authn"
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/authjwt"
+	"github.com/distr-sh/distr/internal/authn"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )

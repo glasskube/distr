@@ -2,6 +2,7 @@ import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, computed, inject, input, output, signal, TemplateRef, viewChild} from '@angular/core';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {UserAccountWithRole, UserRole} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
@@ -16,7 +17,6 @@ import {
   faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {UserAccountWithRole, UserRole} from '@glasskube/distr-sdk';
 import {catchError, filter, firstValueFrom, NEVER, switchMap, tap} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {filteredByFormControl} from '../../../util/filter';

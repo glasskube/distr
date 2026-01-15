@@ -1,4 +1,4 @@
-import {BaseModel, UserAccount} from '@glasskube/distr-sdk';
+import {BaseModel, UserAccount} from '@distr-sh/distr-sdk';
 
 export interface Secret extends BaseModel {
   id: string;

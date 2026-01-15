@@ -1,4 +1,4 @@
-# this is a copy of https://github.com/glasskube/hello-distr/blob/0.1.10/deploy/docker-compose.yaml
+# this is a copy of https://github.com/distr-sh/hello-distr/blob/0.1.10/deploy/docker-compose.yaml
 # note: the compose project name will be overridden by the distr agent, to create a unique name
 name: hello-distr
 

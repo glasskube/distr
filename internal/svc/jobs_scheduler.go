@@ -1,9 +1,9 @@
 package svc
 
 import (
-	"github.com/glasskube/distr/internal/cleanup"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/jobs"
+	"github.com/distr-sh/distr/internal/cleanup"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/jobs"
 )
 
 func (r *Registry) GetJobsScheduler() *jobs.Scheduler {

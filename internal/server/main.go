@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/glasskube/distr/internal/env"
+	"github.com/distr-sh/distr/internal/env"
 	"go.uber.org/zap"
 )
 

@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/glasskube/distr/internal/buildconfig"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/db/queryable"
+	"github.com/distr-sh/distr/internal/buildconfig"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/db/queryable"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
 const (
-	tracerScope = "github.com/glasskube/distr/internal/jobs"
+	tracerScope = "github.com/distr-sh/distr/internal/jobs"
 )
 
 type runner struct {

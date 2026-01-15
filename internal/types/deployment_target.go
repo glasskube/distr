@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/glasskube/distr/internal/validation"
+	"github.com/distr-sh/distr/internal/validation"
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/api/resource"
 )

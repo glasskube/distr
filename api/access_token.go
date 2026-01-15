@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/glasskube/distr/internal/authkey"
+	"github.com/distr-sh/distr/internal/authkey"
 	"github.com/google/uuid"
 )
 

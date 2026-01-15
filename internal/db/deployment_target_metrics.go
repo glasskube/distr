@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/distr/api"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/env"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/api"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )

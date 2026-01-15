@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/glasskube/distr/internal/apierrors"
-	"github.com/glasskube/distr/internal/authn"
-	"github.com/glasskube/distr/internal/db"
-	"github.com/glasskube/distr/internal/types"
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/apierrors"
+	"github.com/distr-sh/distr/internal/authn"
+	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/types"
+	"github.com/distr-sh/distr/internal/util"
 )
 
 type DbAuthInfo struct {

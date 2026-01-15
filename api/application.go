@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/glasskube/distr/api"
+	"github.com/distr-sh/distr/api"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

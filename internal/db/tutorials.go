@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/apierrors"
-	internalctx "github.com/glasskube/distr/internal/context"
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/internal/apierrors"
+	internalctx "github.com/distr-sh/distr/internal/context"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )

@@ -1,4 +1,4 @@
-module github.com/glasskube/distr
+module github.com/distr-sh/distr
 
 go 1.25.0
 

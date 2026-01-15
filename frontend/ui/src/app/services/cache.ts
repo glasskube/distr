@@ -1,4 +1,4 @@
-import {BaseModel, Named} from '@glasskube/distr-sdk';
+import {BaseModel, Named} from '@distr-sh/distr-sdk';
 import {concat, map, Observable, scan, shareReplay, Subject} from 'rxjs';
 import {compareBy, distinctBy, Predicate} from '../../util/arrays';
 

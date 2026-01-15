@@ -1,5 +1,5 @@
 import {Directive, effect, EmbeddedViewRef, inject, input, OnInit, TemplateRef, ViewContainerRef} from '@angular/core';
-import {UserRole} from '@glasskube/distr-sdk';
+import {UserRole} from '@distr-sh/distr-sdk';
 import {AuthService} from '../services/auth.service';
 
 abstract class EmbeddedViewToggler {

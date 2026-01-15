@@ -6,7 +6,7 @@ import {
   DeploymentTarget,
   DeploymentTargetAccessResponse,
   PatchDeploymentRequest,
-} from '@glasskube/distr-sdk';
+} from '@distr-sh/distr-sdk';
 import {EMPTY, merge, Observable, retry, shareReplay, Subject, switchMap, tap, timer} from 'rxjs';
 import {ReactiveList} from './cache';
 import {CrudService} from './interfaces';

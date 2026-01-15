@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/compose/convert"
 	composeapi "github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/swarm"
-	"github.com/glasskube/distr/internal/types"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 )

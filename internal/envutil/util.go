@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/glasskube/distr/internal/util"
+	"github.com/distr-sh/distr/internal/util"
 )
 
 type GetEnvOpts struct {

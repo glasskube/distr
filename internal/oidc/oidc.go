@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/glasskube/distr/internal/env"
+	"github.com/distr-sh/distr/internal/env"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"

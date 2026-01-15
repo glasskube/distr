@@ -8,9 +8,9 @@ import (
 	"path"
 
 	containerdlog "github.com/containerd/log"
+	"github.com/distr-sh/distr/api"
+	"github.com/distr-sh/distr/internal/agentenv"
 	dockerconfig "github.com/docker/cli/cli/config"
-	"github.com/glasskube/distr/api"
-	"github.com/glasskube/distr/internal/agentenv"
 	"github.com/google/uuid"
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"

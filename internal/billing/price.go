@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 	"github.com/stripe/stripe-go/v84"
 	"github.com/stripe/stripe-go/v84/price"
 )

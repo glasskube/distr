@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/glasskube/distr/internal/apierrors"
-	"github.com/glasskube/distr/internal/authkey"
-	"github.com/glasskube/distr/internal/authn"
-	"github.com/glasskube/distr/internal/db"
+	"github.com/distr-sh/distr/internal/apierrors"
+	"github.com/distr-sh/distr/internal/authkey"
+	"github.com/distr-sh/distr/internal/authn"
+	"github.com/distr-sh/distr/internal/db"
 )
 
 func FromAuthKey(ctx context.Context, token authkey.Key) (AuthInfo, error) {

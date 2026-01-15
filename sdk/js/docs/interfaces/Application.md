@@ -1,8 +1,8 @@
-[**@glasskube/distr-sdk**](../README.md)
+[**@distr-sh/distr-sdk**](../README.md)
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / Application
+[@distr-sh/distr-sdk](../README.md) / Application
 
 # Interface: Application
 

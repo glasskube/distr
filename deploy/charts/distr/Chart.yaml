@@ -11,7 +11,7 @@ maintainers:
   - name: Glasskube
     url: https://github.com/glasskube
 icon: >-
-  https://github.com/glasskube/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg
+  https://github.com/distr-sh/distr/raw/refs/heads/main/frontend/ui/public/distr-logo.svg
 home: https://distr.sh/docs/
 type: application
 version: 2.5.1

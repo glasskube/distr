@@ -1,8 +1,8 @@
-[**@glasskube/distr-sdk**](../README.md)
+[**@distr-sh/distr-sdk**](../README.md)
 
 ---
 
-[@glasskube/distr-sdk](../README.md) / IsOutdatedResultItem
+[@distr-sh/distr-sdk](../README.md) / IsOutdatedResultItem
 
 # Type Alias: IsOutdatedResultItem
 

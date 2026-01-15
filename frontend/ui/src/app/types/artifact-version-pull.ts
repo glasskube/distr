@@ -1,4 +1,4 @@
-import {UserAccount} from '@glasskube/distr-sdk';
+import {UserAccount} from '@distr-sh/distr-sdk';
 import {BaseArtifact, BaseArtifactVersion} from '../services/artifacts.service';
 
 export interface ArtifactVersionPull {

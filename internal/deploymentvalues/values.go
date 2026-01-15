@@ -3,7 +3,7 @@ package deploymentvalues
 import (
 	"fmt"
 
-	"github.com/glasskube/distr/internal/types"
+	"github.com/distr-sh/distr/internal/types"
 	"gopkg.in/yaml.v3"
 )
 

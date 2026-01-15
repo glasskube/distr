@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/glasskube/distr/internal/handlerutil"
+	"github.com/distr-sh/distr/internal/handlerutil"
 )
 
 func getRedirectURL(r *http.Request, provider Provider) string {

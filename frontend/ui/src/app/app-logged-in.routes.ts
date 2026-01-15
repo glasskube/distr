@@ -1,6 +1,6 @@
 import {inject} from '@angular/core';
 import {CanActivateFn, Router, Routes} from '@angular/router';
-import {UserRole} from '@glasskube/distr-sdk';
+import {UserRole} from '@distr-sh/distr-sdk';
 import dayjs from 'dayjs';
 import {firstValueFrom, map} from 'rxjs';
 import {getRemoteEnvironment} from '../env/remote';

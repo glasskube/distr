@@ -1,5 +1,5 @@
 import {Pipe, PipeTransform} from '@angular/core';
-import {BaseModel} from '@glasskube/distr-sdk';
+import {BaseModel} from '@distr-sh/distr-sdk';
 import dayjs from 'dayjs';
 import {Duration} from 'dayjs/plugin/duration';
 import {isOlderThan} from './dates';

@@ -3,14 +3,14 @@ import {AsyncPipe} from '@angular/common';
 import {AfterViewInit, Component, computed, inject, signal, TemplateRef, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
 import {
   ApplicationVersion,
   CustomerOrganization,
   DeploymentTarget,
   DeploymentWithLatestRevision,
-} from '@glasskube/distr-sdk';
+} from '@distr-sh/distr-sdk';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
 import {catchError, combineLatest, combineLatestWith, first, map, Observable, of, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {compareBy, maxBy} from '../../util/arrays';

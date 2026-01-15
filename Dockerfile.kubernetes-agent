@@ -16,7 +16,7 @@ COPY cmd/agent/kubernetes/ cmd/agent/kubernetes/
 COPY internal/ internal/
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
   go build -a -o agent \
-  -ldflags="-s -w -X github.com/glasskube/distr/internal/buildconfig.version=${VERSION:-snapshot} -X github.com/glasskube/distr/internal/buildconfig.commit=${COMMIT}" \
+  -ldflags="-s -w -X github.com/distr-sh/distr/internal/buildconfig.version=${VERSION:-snapshot} -X github.com/distr-sh/distr/internal/buildconfig.commit=${COMMIT}" \
   ./cmd/agent/kubernetes/
 
 FROM gcr.io/distroless/static-debian12:nonroot@sha256:cba10d7abd3e203428e86f5b2d7fd5eb7d8987c387864ae4996cf97191b33764

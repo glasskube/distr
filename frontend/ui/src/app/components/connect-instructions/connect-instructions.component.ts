@@ -1,9 +1,9 @@
 import {Component, computed, inject, input} from '@angular/core';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {DeploymentTarget} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faClipboard} from '@fortawesome/free-regular-svg-icons';
 import {faClipboardCheck} from '@fortawesome/free-solid-svg-icons';
-import {DeploymentTarget} from '@glasskube/distr-sdk';
 import {catchError, EMPTY, switchMap} from 'rxjs';
 import {displayedInToast, getFormDisplayedError} from '../../../util/errors';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';

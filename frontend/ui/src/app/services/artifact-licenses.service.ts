@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {BaseModel, Named} from '@glasskube/distr-sdk';
+import {BaseModel, Named} from '@distr-sh/distr-sdk';
 import {Observable, tap} from 'rxjs';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';

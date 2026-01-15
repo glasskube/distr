@@ -3,9 +3,9 @@ package context
 import (
 	"context"
 
-	"github.com/glasskube/distr/internal/db/queryable"
-	"github.com/glasskube/distr/internal/mail"
-	"github.com/glasskube/distr/internal/oidc"
+	"github.com/distr-sh/distr/internal/db/queryable"
+	"github.com/distr-sh/distr/internal/mail"
+	"github.com/distr-sh/distr/internal/oidc"
 	"go.uber.org/zap"
 )
 
