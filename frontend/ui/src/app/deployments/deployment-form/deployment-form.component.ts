@@ -179,9 +179,6 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     shareReplay(1)
   );
 
-  /**
-   * If the license is not initially set, this update must be sent to the server.
-   */
   protected readonly licenseUpdateRequired$ = new BehaviorSubject<boolean>(false);
 
   /**

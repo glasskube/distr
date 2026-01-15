@@ -123,10 +123,16 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 				*authInfo.CurrentOrgID(),
 				authInfo.CurrentCustomerOrgID(),
 			)
-			if err == nil && deployment != nil && deployment.ApplicationLicenseID == nil &&
-				deploymentRequest.ApplicationLicenseID != nil {
-				// Persist the initial license assignment using the dedicated license update function.
-				if err := db.UpdateDeploymentLicense(ctx, *deploymentRequest.DeploymentID, deploymentRequest.ApplicationLicenseID); err != nil {
+			if err != nil {
+				log.Warn("could not get deployment", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+
+			if deployment.ApplicationLicenseID == nil && deploymentRequest.ApplicationLicenseID != nil {
+				deployment.ApplicationLicenseID = deploymentRequest.ApplicationLicenseID
+				if err := db.UpdateDeploymentLicense(ctx, deployment); err != nil {
 					log.Warn("could not set license for deployment", zap.Error(err))
 					sentry.GetHubFromContext(ctx).CaptureException(err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
