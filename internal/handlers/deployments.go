@@ -114,6 +114,31 @@ func putDeployment(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return err
 			}
+		} else {
+			authInfo := auth.Authentication.Require(ctx)
+			deployment, err := db.GetDeployment(
+				ctx,
+				*deploymentRequest.DeploymentID,
+				authInfo.CurrentUserID(),
+				*authInfo.CurrentOrgID(),
+				authInfo.CurrentCustomerOrgID(),
+			)
+			if err != nil {
+				log.Warn("could not get deployment", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
+			}
+
+			if deployment.ApplicationLicenseID == nil && deploymentRequest.ApplicationLicenseID != nil {
+				deployment.ApplicationLicenseID = deploymentRequest.ApplicationLicenseID
+				if err := db.UpdateDeploymentLicense(ctx, deployment); err != nil {
+					log.Warn("could not set license for deployment", zap.Error(err))
+					sentry.GetHubFromContext(ctx).CaptureException(err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return err
+				}
+			}
 		}
 
 		if _, err := db.CreateDeploymentRevision(ctx, &deploymentRequest); err != nil {
@@ -264,10 +289,11 @@ func validateDeploymentRequest(
 				request.ApplicationLicenseID = existingDeployment.ApplicationLicenseID
 			}
 		} else if existingDeployment.ApplicationLicenseID == nil {
-			return badRequestError(w, "can not update license")
+			// Allow setting a license once when the existing deployment has no license but the request provides one.
 		} else if *request.ApplicationLicenseID != *existingDeployment.ApplicationLicenseID {
 			return badRequestError(w, "can not update license")
 		}
+
 		if existingDeployment.ApplicationID != app.ID {
 			return badRequestError(w, "can not change application of existing deployment")
 		}

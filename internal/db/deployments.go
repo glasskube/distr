@@ -249,6 +249,33 @@ func UpdateDeployment(ctx context.Context, deployment *types.Deployment) error {
 	}
 }
 
+func UpdateDeploymentLicense(ctx context.Context, deployment *types.Deployment) error {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(
+		ctx,
+		`UPDATE Deployment AS d
+		SET application_license_id = @applicationLicenseID
+		WHERE id = @id
+		RETURNING`+deploymentOutputExpr,
+		pgx.NamedArgs{
+			"id":                   deployment.ID,
+			"applicationLicenseID": deployment.ApplicationLicenseID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("could not update Deployment: %w", err)
+	}
+	if result, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[types.Deployment]); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = apierrors.ErrNotFound
+		}
+		return fmt.Errorf("could not update Deployment: %w", err)
+	} else {
+		*deployment = result
+		return nil
+	}
+}
+
 func UpdateDeploymentUnsetLicenseIDWithOrganizationID(ctx context.Context, organizationID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.Exec(
