@@ -3,7 +3,7 @@ services:
   agent:
     network_mode: host
     restart: unless-stopped
-    image: 'ghcr.io/glasskube/distr/docker-agent:{{ .agentVersion }}'
+    image: 'ghcr.io/distr-sh/distr/docker-agent:{{ .agentVersion }}'
     environment:
       DISTR_TARGET_ID: '{{ .targetId }}'
       DISTR_TARGET_SECRET: '{{ .targetSecret }}'

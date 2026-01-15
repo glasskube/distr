@@ -28,7 +28,7 @@ jobs:
           - arch: linux/arm64
             runner: ubuntu-24.04-arm
     env:
-      REGISTRY_IMAGE: ghcr.io/glasskube/distr/${{ matrix.agent }}
+      REGISTRY_IMAGE: ghcr.io/distr-sh/distr/${{ matrix.agent }}
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -97,7 +97,7 @@ jobs:
           - docker-agent
           - kubernetes-agent
     env:
-      REGISTRY_IMAGE: ghcr.io/glasskube/distr/${{ matrix.agent }}
+      REGISTRY_IMAGE: ghcr.io/distr-sh/distr/${{ matrix.agent }}
     steps:
       - name: Download digests
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0

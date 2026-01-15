@@ -52,6 +52,6 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.publish }}
         run: |
           for chart in distr-*.tgz; do
-              helm push "$chart" oci://ghcr.io/glasskube/charts
+              helm push "$chart" oci://ghcr.io/distr-sh/charts
               helm push "$chart" oci://registry.distr.sh/glasskube/charts
           done

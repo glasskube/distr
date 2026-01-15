@@ -255,9 +255,9 @@
                       >. Pull them from the Github Container Registry to your machine's docker environment, with:
                     </p>
                     @let pullCmd =
-                      `docker pull ghcr.io/glasskube/hello-distr/proxy:${helloDistrTag}
-                      docker pull ghcr.io/glasskube/hello-distr/frontend:${helloDistrTag}
-                      docker pull ghcr.io/glasskube/hello-distr/backend:${helloDistrTag}`;
+                      `docker pull ghcr.io/distr-sh/hello-distr/proxy:${helloDistrTag}
+                      docker pull ghcr.io/distr-sh/hello-distr/frontend:${helloDistrTag}
+                      docker pull ghcr.io/distr-sh/hello-distr/backend:${helloDistrTag}`;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ pullCmd }}
                     </code>
@@ -282,9 +282,9 @@
                     >
                     <p class="my-1 text-sm">This step will make the sample images "yours":</p>
                     @let tagCmd =
-                      `docker tag ghcr.io/glasskube/hello-distr/proxy:${helloDistrTag} ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
-                      docker tag ghcr.io/glasskube/hello-distr/frontend:${helloDistrTag} ${host}/${slug}/hello-distr/frontend:${helloDistrTag}
-                      docker tag ghcr.io/glasskube/hello-distr/backend:${helloDistrTag} ${host}/${slug}/hello-distr/backend:${helloDistrTag}`;
+                      `docker tag ghcr.io/distr-sh/hello-distr/proxy:${helloDistrTag} ${host}/${slug}/hello-distr/proxy:${helloDistrTag}
+                      docker tag ghcr.io/distr-sh/hello-distr/frontend:${helloDistrTag} ${host}/${slug}/hello-distr/frontend:${helloDistrTag}
+                      docker tag ghcr.io/distr-sh/hello-distr/backend:${helloDistrTag} ${host}/${slug}/hello-distr/backend:${helloDistrTag}`;
                     <code class="mt-2 select-all text-sm text-gray-900 dark:text-gray-200 whitespace-pre-line">
                       {{ tagCmd }}
                     </code>
