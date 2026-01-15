@@ -50,6 +50,12 @@
 
 ---
 
+### ignoreRevisionSkew?
+
+> `optional` **ignoreRevisionSkew**: `boolean`
+
+---
+
 ### logsEnabled?
 
 > `optional` **logsEnabled**: `boolean`

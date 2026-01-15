@@ -18,6 +18,7 @@ export interface DeploymentRequest {
   envFileData?: string;
   logsEnabled?: boolean;
   forceRestart?: boolean;
+  ignoreRevisionSkew?: boolean;
 }
 
 export interface PatchDeploymentRequest {
