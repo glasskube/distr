@@ -177,22 +177,25 @@ func (h *handler) Put(
 			ArtifactID:             artifact.ID,
 		}
 
-		existingVersion, err := db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference)
-		if err != nil {
+		if existingVersion, err := db.GetArtifactVersion(ctx, name.OrgName, name.ArtifactName, reference); err != nil {
 			if !errors.Is(err, apierrors.ErrNotFound) {
 				return err
 			} else if quotaOk, err := db.EnsureArtifactTagLimitForInsert(ctx, *auth.CurrentOrgID()); err != nil {
 				return err
 			} else if !quotaOk {
 				return apierrors.ErrQuotaExceeded
-			} else if err := db.CreateArtifactVersion(ctx, &version); err != nil {
-				return err
 			}
-		} else if existingVersion.ManifestBlobDigest != version.ManifestBlobDigest ||
-			existingVersion.ManifestContentType != version.ManifestContentType {
+		} else if existingVersion.ManifestBlobDigest == types.Digest(reference) {
+			// Tag already exists with the same content: nothing to do
+			return nil
+		} else if !auth.CurrentOrg().HasFeature(types.FeatureArtifactVersionMutable) {
 			return fmt.Errorf("%w: tag %s already exists with different content", manifest.ErrTagAlreadyExists, reference)
-		} else {
-			version = *existingVersion
+		} else if err := db.DeleteArtifactVersion(ctx, existingVersion.ArtifactID, existingVersion.Name); err != nil {
+			return err
+		}
+
+		if err := db.CreateArtifactVersion(ctx, &version); err != nil {
+			return err
 		}
 
 		for _, blob := range blobs {

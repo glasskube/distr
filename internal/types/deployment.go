@@ -29,6 +29,7 @@ type DeploymentWithLatestRevision struct {
 	EnvFileData                 []byte                    `db:"env_file_data" json:"envFileData,omitempty"`
 	LatestStatus                *DeploymentRevisionStatus `db:"latest_status" json:"latestStatus,omitempty"`
 	ForceRestart                bool                      `db:"force_restart" json:"forceRestart"`
+	IgnoreRevisionSkew          bool                      `db:"ignore_revision_skew" json:"ignoreRevisionSkew"`
 }
 
 func (d *DeploymentWithLatestRevision) GetValuesYAML() []byte {

@@ -214,6 +214,11 @@ func handleUpdateOrganization(
 			needsUpdate = true
 		}
 
+		if request.ArtifactVersionMutable != org.HasFeature(types.FeatureArtifactVersionMutable) {
+			org.SetFeature(types.FeatureArtifactVersionMutable, request.ArtifactVersionMutable)
+			needsUpdate = true
+		}
+
 		if needsUpdate {
 			return db.UpdateOrganization(ctx, org)
 		}

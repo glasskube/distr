@@ -902,7 +902,7 @@ func IsLastTagOfArtifact(ctx context.Context, artifactID uuid.UUID, tagName stri
 	return tagCount == 1, nil
 }
 
-func DeleteArtifactTag(ctx context.Context, artifactID uuid.UUID, tagName string) error {
+func DeleteArtifactVersion(ctx context.Context, artifactID uuid.UUID, tagName string) error {
 	db := internalctx.GetDb(ctx)
 
 	// Delete only the tag, not the version SHA

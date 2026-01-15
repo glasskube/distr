@@ -217,10 +217,11 @@ func agentResourcesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			agentDeployment := api.AgentDeployment{
-				ID:           deployment.ID,
-				RevisionID:   deployment.DeploymentRevisionID,
-				LogsEnabled:  deployment.LogsEnabled,
-				ForceRestart: deployment.ForceRestart,
+				ID:                 deployment.ID,
+				RevisionID:         deployment.DeploymentRevisionID,
+				LogsEnabled:        deployment.LogsEnabled,
+				ForceRestart:       deployment.ForceRestart,
+				IgnoreRevisionSkew: deployment.IgnoreRevisionSkew,
 			}
 
 			if deployment.ApplicationLicenseID != nil {
@@ -330,7 +331,9 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 			return
 		}
 
-		if err := db.SaveDeploymentLogRecords(ctx, records); err != nil {
+		if err := db.SaveDeploymentLogRecords(ctx, records); errors.Is(err, apierrors.ErrBadRequest) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else if err != nil {
 			log.Error("error saving log records", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
