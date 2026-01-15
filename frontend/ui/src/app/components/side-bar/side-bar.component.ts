@@ -80,7 +80,7 @@ export class SideBarComponent {
   public readonly isSubscriptionBannerVisible = input<boolean>();
   public readonly isSidebarVisible = input<boolean>();
 
-  protected readonly isTutorialVisible = toSignal(
+  protected readonly hasNoSubscription = toSignal(
     this.organizationService
       .get()
       .pipe(
