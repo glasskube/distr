@@ -98,4 +98,12 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
   undeploy(id: string): Observable<void> {
     return this.httpClient.delete<void>(`${this.deploymentsBaseUrl}/${id}`).pipe(tap(() => this.pollRefresh$.next()));
   }
+
+  public getNotes(deploymentTargetId: string) {
+    return this.httpClient.get<{notes: string}>(`${this.deploymentTargetsBaseUrl}/${deploymentTargetId}/notes`);
+  }
+
+  public saveNotes(deploymentTargetId: string, notes: string) {
+    return this.httpClient.put<void>(`${this.deploymentTargetsBaseUrl}/${deploymentTargetId}/notes`, {notes});
+  }
 }
