@@ -126,11 +126,20 @@ spec:
             - configMapRef:
                 name: distr-agent-env
           resources:
+            {{- if .targetResources }}
+            limits:
+              memory: "{{ .targetResources.MemoryLimit }}"
+              cpu: "{{ .targetResources.CPULimit }}"
+            requests:
+              memory: "{{ .targetResources.MemoryRequest }}"
+              cpu: "{{ .targetResources.CPURequest }}"
+            {{- else }}
             limits:
               memory: "256Mi"
               cpu: "500m"
             requests:
               memory: "256Mi"
+            {{- end }}
           volumeMounts:
             - name: dockerconfig
               mountPath: /opt/config/.docker/

@@ -11,6 +11,7 @@ import {
   ViewChild,
   WritableSignal,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -37,6 +38,7 @@ import {filter, firstValueFrom, lastValueFrom, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
+import {RESOURCE_QUANTITY_REGEX} from '../../../util/validation';
 import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {modalFlyInOut} from '../../animations/modal';
@@ -145,11 +147,40 @@ export class DeploymentTargetCardComponent {
     namespace: new FormControl<string | undefined>({value: undefined, disabled: true}),
     scope: new FormControl<DeploymentTargetScope>({value: 'namespace', disabled: true}),
     metricsEnabled: new FormControl<boolean>(true),
+    customResources: new FormControl<boolean>(false, {nonNullable: true}),
+    resources: new FormGroup({
+      cpuRequest: new FormControl<string>('100m', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+      memoryRequest: new FormControl<string>('256Mi', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+      cpuLimit: new FormControl<string>('1', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+      memoryLimit: new FormControl<string>('256Mi', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+    }),
   });
   protected editFormLoading = false;
 
   private modal?: DialogRef;
   private manageDeploymentTargetRef?: DialogRef;
+
+  constructor() {
+    this.editForm.controls.customResources.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
+      if (value) {
+        this.editForm.controls.resources.enable();
+      } else {
+        this.editForm.controls.resources.disable();
+      }
+    });
+  }
 
   protected async showDeploymentModal(deployment?: DeploymentWithLatestRevision) {
     this.selectedDeploymentTarget.set(this.deploymentTarget());
@@ -168,6 +199,12 @@ export class DeploymentTargetCardComponent {
         type: val.type!,
         deployments: [],
         metricsEnabled: val.metricsEnabled ?? false,
+        resources: val.resources && {
+          cpuRequest: val.resources.cpuRequest!,
+          cpuLimit: val.resources.cpuLimit!,
+          memoryRequest: val.resources.memoryRequest!,
+          memoryLimit: val.resources.memoryLimit!,
+        },
       };
 
       try {
@@ -190,11 +227,18 @@ export class DeploymentTargetCardComponent {
   private loadDeploymentTarget(dt: DeploymentTarget) {
     this.editForm.patchValue({
       ...dt,
+      customResources: !!dt.resources,
     });
     if (dt.scope === 'namespace') {
       this.editForm.controls.metricsEnabled.disable();
     } else {
       this.editForm.controls.metricsEnabled.enable();
+    }
+    if (dt.type === 'kubernetes') {
+      this.editForm.controls.customResources.enable();
+    } else {
+      this.editForm.controls.customResources.setValue(false);
+      this.editForm.controls.customResources.disable();
     }
   }
 

@@ -158,10 +158,8 @@ func updateDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := internalctx.GetLogger(ctx)
 	auth := auth.Authentication.Require(ctx)
-	var dt types.DeploymentTargetWithCreatedBy
-	if err := json.NewDecoder(r.Body).Decode(&dt); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, err)
+	dt, err := JsonBody[types.DeploymentTargetWithCreatedBy](w, r)
+	if err != nil {
 		return
 	}
 

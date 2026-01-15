@@ -9,7 +9,7 @@
     aria-label="Sidebar">
     <div class="h-full flex flex-col px-3 py-2 gap-2 overflow-y-auto bg-white dark:bg-gray-800">
       <ul class="space-y-2 font-medium flex-1" *appRequireVendor>
-        @if (auth.hasAnyRole('admin')) {
+        @if (auth.hasAnyRole('admin') && hasNoSubscription()) {
           <li>
             <a
               (click)="sidebar.hide()"
@@ -389,7 +389,7 @@
         </li>
       </ul>
 
-      @if (isSubscriptionBannerVisible() && feedbackAlert) {
+      @if (hasNoSubscription() && feedbackAlert) {
         <div id="alert-update" class="p-4 bg-gray-50 rounded-lg dark:bg-gray-700" role="alert" *appRequireVendor>
           <div class="flex justify-between items-center mb-3">
             <span

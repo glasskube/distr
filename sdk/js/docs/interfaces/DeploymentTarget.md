@@ -90,6 +90,12 @@
 
 ---
 
+### resources?
+
+> `optional` **resources**: [`DeploymentTargetResources`](DeploymentTargetResources.md)
+
+---
+
 ### scope?
 
 > `optional` **scope**: [`DeploymentTargetScope`](../type-aliases/DeploymentTargetScope.md)

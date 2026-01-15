@@ -16,7 +16,11 @@ import {
 import {combineLatest, distinctUntilChanged, firstValueFrom, map, of, switchMap, take} from 'rxjs';
 import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
-import {KUBERNETES_RESOURCE_MAX_LENGTH, KUBERNETES_RESOURCE_NAME_REGEX} from '../../../util/validation';
+import {
+  KUBERNETES_RESOURCE_MAX_LENGTH,
+  KUBERNETES_RESOURCE_NAME_REGEX,
+  RESOURCE_QUANTITY_REGEX,
+} from '../../../util/validation';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
@@ -92,6 +96,25 @@ export class DeploymentWizardComponent implements OnInit {
       Validators.pattern(KUBERNETES_RESOURCE_NAME_REGEX),
     ]),
     clusterScope: new FormControl<boolean>(true, {nonNullable: true}),
+    customResources: new FormControl<boolean>(false, {nonNullable: true}),
+    resources: new FormGroup({
+      cpuRequest: new FormControl<string>('100m', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+      memoryRequest: new FormControl<string>('256Mi', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+      cpuLimit: new FormControl<string>('1', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+      memoryLimit: new FormControl<string>('256Mi', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(RESOURCE_QUANTITY_REGEX)],
+      }),
+    }),
     scope: new FormControl<DeploymentTargetScope>('cluster', {nonNullable: true}),
   });
 
@@ -244,6 +267,16 @@ export class DeploymentWizardComponent implements OnInit {
       .subscribe((value) => {
         this.deploymentTargetForm.controls.scope.setValue(value ? 'cluster' : 'namespace');
       });
+
+    this.deploymentTargetForm.controls.customResources.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        if (value) {
+          this.deploymentTargetForm.controls.resources.enable();
+        } else {
+          this.deploymentTargetForm.controls.resources.disable();
+        }
+      });
   }
 
   private updateConfigurationFormControls(type: DeploymentType | undefined) {
@@ -251,10 +284,18 @@ export class DeploymentWizardComponent implements OnInit {
       this.deploymentTargetForm.controls.namespace.enable();
       this.deploymentTargetForm.controls.clusterScope.enable();
       this.deploymentTargetForm.controls.scope.enable();
+      this.deploymentTargetForm.controls.customResources.enable();
+      if (this.deploymentTargetForm.controls.customResources.value) {
+        this.deploymentTargetForm.controls.resources.enable();
+      } else {
+        this.deploymentTargetForm.controls.resources.disable();
+      }
     } else if (type === 'docker') {
       this.deploymentTargetForm.controls.namespace.disable();
       this.deploymentTargetForm.controls.clusterScope.disable();
       this.deploymentTargetForm.controls.scope.disable();
+      this.deploymentTargetForm.controls.customResources.disable();
+      this.deploymentTargetForm.controls.resources.disable();
     }
   }
 
@@ -350,6 +391,14 @@ export class DeploymentWizardComponent implements OnInit {
             deployments: [],
             metricsEnabled: this.deploymentTargetForm.value.scope !== 'namespace',
             customerOrganization: customerOrgId ? ({id: customerOrgId} as CustomerOrganization) : undefined,
+            resources: this.deploymentTargetForm.value.customResources
+              ? {
+                  cpuLimit: this.deploymentTargetForm.value.resources?.cpuLimit!,
+                  memoryLimit: this.deploymentTargetForm.value.resources?.memoryLimit!,
+                  cpuRequest: this.deploymentTargetForm.value.resources?.cpuRequest!,
+                  memoryRequest: this.deploymentTargetForm.value.resources?.memoryRequest!,
+                }
+              : undefined,
           })
         )) as DeploymentTarget;
       } catch (e) {

@@ -28,7 +28,13 @@ const (
 		dt.customer_organization_id,
 		dt.agent_version_id,
 		dt.reported_agent_version_id,
-		dt.metrics_enabled
+		dt.metrics_enabled,
+		CASE WHEN dt.resources_cpu_request IS NOT NULL THEN (
+			dt.resources_cpu_request,
+			dt.resources_memory_request,
+			dt.resources_cpu_limit,
+			dt.resources_memory_limit
+		) END AS resources
 	`
 	deploymentTargetOutputExpr = deploymentTargetOutputExprBase +
 		", (" + userAccountWithRoleOutputExpr + ") as created_by" +
@@ -202,13 +208,23 @@ func CreateDeploymentTarget(
 		"metricsEnabled": dt.MetricsEnabled,
 		"customerOrgId":  customerOrgID,
 	}
+
+	if dt.Resources != nil {
+		args["resourcesCpuRequest"] = dt.Resources.CPURequest
+		args["resourcesMemoryRequest"] = dt.Resources.MemoryRequest
+		args["resourcesCpuLimit"] = dt.Resources.CPULimit
+		args["resourcesMemoryLimit"] = dt.Resources.MemoryLimit
+	}
+
 	rows, err := db.Query(
 		ctx,
 		`WITH inserted AS (
 			INSERT INTO DeploymentTarget
 			(name, type, organization_id, created_by_user_account_id, namespace, scope, agent_version_id, metrics_enabled,
-				customer_organization_id)
-			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @agentVersionId, @metricsEnabled, @customerOrgId)
+				customer_organization_id, resources_cpu_request, resources_memory_request, resources_cpu_limit,
+				resources_memory_limit)
+			VALUES (@name, @type, @orgId, @userId, @namespace, @scope, @agentVersionId, @metricsEnabled, @customerOrgId,
+				@resourcesCpuRequest, @resourcesMemoryRequest, @resourcesCpuLimit, @resourcesMemoryLimit)
 			RETURNING *
 		)
 		SELECT `+deploymentTargetOutputExpr+` FROM inserted dt`+deploymentTargetJoinExpr+
@@ -240,10 +256,21 @@ func UpdateDeploymentTarget(ctx context.Context, dt *types.DeploymentTargetWithC
 		args["agentVersionId"] = dt.AgentVersionID
 		agentUpdateStr = ", agent_version_id = @agentVersionId "
 	}
+	if dt.Resources != nil {
+		args["cpuRequest"] = dt.Resources.CPURequest
+		args["cpuLimit"] = dt.Resources.CPULimit
+		args["memoryRequest"] = dt.Resources.MemoryRequest
+		args["memoryLimit"] = dt.Resources.MemoryLimit
+	}
 	rows, err := db.Query(ctx,
 		`WITH updated AS (
 			UPDATE DeploymentTarget AS dt SET
-				name = @name, metrics_enabled = @metricsEnabled `+agentUpdateStr+`
+				name = @name,
+				metrics_enabled = @metricsEnabled,
+				resources_cpu_request = @cpuRequest,
+				resources_cpu_limit = @cpuLimit,
+				resources_memory_request = @memoryRequest,
+				resources_memory_limit = @memoryLimit `+agentUpdateStr+`
 			WHERE id = @id AND organization_id = @orgId RETURNING *
 		)
 		SELECT `+deploymentTargetWithStatusOutputExpr+` FROM updated dt`+deploymentTargetJoinExpr+
