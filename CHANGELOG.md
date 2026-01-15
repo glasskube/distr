@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1](https://github.com/glasskube/distr/compare/2.5.0...2.5.1) (2026-01-15)
+
+
+### Other
+
+* **build:** fix build ([#1649](https://github.com/glasskube/distr/issues/1649)) ([b8e8362](https://github.com/glasskube/distr/commit/b8e8362ada14e161d9b7a0ce2000d384a9254bc7))
+
 ## [2.5.0](https://github.com/glasskube/distr/compare/2.4.0...2.5.0) (2026-01-15)
 
 
