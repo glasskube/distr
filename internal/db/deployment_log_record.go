@@ -13,7 +13,9 @@ import (
 	"github.com/glasskube/distr/internal/env"
 	"github.com/glasskube/distr/internal/types"
 	"github.com/google/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 )
 
@@ -34,6 +36,12 @@ func SaveDeploymentLogRecords(ctx context.Context, records []api.DeploymentLogRe
 			return []any{r.DeploymentID, r.DeploymentRevisionID, r.Resource, r.Timestamp, r.Severity, r.Body}, nil
 		}),
 	)
+	var pgerr *pgconn.PgError
+	if errors.As(err, &pgerr) {
+		if pgerr.Code == pgerrcode.ForeignKeyViolation {
+			return apierrors.NewBadRequest("deployment does not exist")
+		}
+	}
 	return err
 }
 

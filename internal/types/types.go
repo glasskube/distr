@@ -60,12 +60,19 @@ var AllSubscriptionTypes = []SubscriptionType{
 	SubscriptionTypeTrial,
 }
 
+type Feature string
+
+const (
+	FeatureLicensing              Feature = "licensing"
+	FeaturePrePostScripts         Feature = "pre_post_scripts"
+	FeatureArtifactVersionMutable Feature = "artifact_version_mutable"
+)
+
 type (
 	DeploymentType        string
 	HelmChartType         string
 	DeploymentStatusType  string
 	DeploymentTargetScope string
-	Feature               string
 	DockerType            string
 	Tutorial              string
 	FileScope             string
@@ -88,9 +95,6 @@ const (
 
 	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"
-
-	FeatureLicensing      Feature = "licensing"
-	FeaturePrePostScripts Feature = "pre_post_scripts"
 
 	TutorialBranding      Tutorial  = "branding"
 	TutorialAgents        Tutorial  = "agents"

@@ -415,6 +415,10 @@ func validateDeploymentRequestDeploymentTarget(
 		}
 	}
 
+	if request.IgnoreRevisionSkew && target.Type != types.DeploymentTypeKubernetes {
+		return badRequestError(w, "IgnoreRevisionSkew is only supported for Kubernetes deployments")
+	}
+
 	return nil
 }
 

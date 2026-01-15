@@ -58,6 +58,7 @@ export type DeploymentFormValue = Partial<{
   swarmMode: boolean;
   logsEnabled: boolean;
   forceRestart: boolean;
+  ignoreRevisionSkew: boolean;
 }>;
 
 export function mapToDeploymentRequest(value: DeploymentFormValue, deploymentTargetId: string): DeploymentRequest {
@@ -72,6 +73,7 @@ export function mapToDeploymentRequest(value: DeploymentFormValue, deploymentTar
     envFileData: value.envFileData ? btoa(value.envFileData) : undefined,
     logsEnabled: value.logsEnabled ?? false,
     forceRestart: value.forceRestart ?? false,
+    ignoreRevisionSkew: value.ignoreRevisionSkew ?? false,
   };
 }
 
@@ -122,6 +124,7 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
     swarmMode: this.fb.nonNullable.control<boolean>(false),
     logsEnabled: this.fb.nonNullable.control<boolean>(true),
     forceRestart: this.fb.nonNullable.control<boolean>(false),
+    ignoreRevisionSkew: this.fb.nonNullable.control<boolean>(false),
   });
   protected readonly composeFile = this.fb.nonNullable.control({disabled: true, value: ''});
 
@@ -303,6 +306,14 @@ export class DeploymentFormComponent implements OnInit, AfterViewInit, OnDestroy
           this.deployForm.controls.releaseName.disable();
           this.deployForm.controls.valuesYaml.disable();
         }
+      }
+    });
+
+    combineLatest([this.deploymentId$, this.deploymentType$]).subscribe(([deploymentId, deploymentType]) => {
+      if (deploymentType === 'kubernetes' && deploymentId) {
+        this.deployForm.controls.ignoreRevisionSkew.enable();
+      } else {
+        this.deployForm.controls.ignoreRevisionSkew.disable();
       }
     });
 
