@@ -80,6 +80,11 @@ func authSwitchContextHandler() func(writer http.ResponseWriter, request *http.R
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to generate token", zap.Error(err))
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else if err := db.UpdateUserAccountLastUsedOrganizationID(ctx, user.ID, request.OrganizationID); err != nil {
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			log.Error("failed to update last used organization ID", zap.Error(err))
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
 		} else {
 			RespondJSON(w, api.AuthLoginResponse{Token: tokenString})
 		}
@@ -111,7 +116,7 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 		orgs, err := db.GetOrganizationsForUser(ctx, user.ID)
 		if err != nil {
 			return err
-		} else if len(orgs) < 1 {
+		} else if len(orgs) == 0 {
 			org.Name = user.Email
 			org.UserRole = types.UserRoleAdmin
 			if err := db.CreateOrganization(ctx, &org.Organization); err != nil {
@@ -122,6 +127,14 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			org = orgs[0]
+			if user.LastUsedOrganizationID != nil {
+				for _, o := range orgs {
+					if o.ID == *user.LastUsedOrganizationID {
+						org = o
+						break
+					}
+				}
+			}
 		}
 
 		if _, tokenString, err := authjwt.GenerateDefaultToken(*user, org); err != nil {

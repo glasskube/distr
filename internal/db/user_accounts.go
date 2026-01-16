@@ -24,7 +24,8 @@ const (
 		u.password_hash,
 		u.password_salt,
 		u.name,
-		u.image_id`
+		u.image_id,
+		u.last_used_organization_id`
 	userAccountWithRoleOutputExpr = userAccountOutputExpr +
 		", j.user_role, j.created_at, j.customer_organization_id "
 	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
@@ -140,6 +141,21 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 		*userAccount = created
 		return nil
 	}
+}
+
+func UpdateUserAccountLastUsedOrganizationID(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(ctx, `UPDATE UserAccount SET last_used_organization_id = @orgId WHERE id = @userId`, pgx.NamedArgs{"orgId": orgID, "userId": userID})
+	if err != nil {
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not update UserAccount: %w", err)
+	}
+
+	return nil
 }
 
 func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
