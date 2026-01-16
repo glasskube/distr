@@ -19,6 +19,7 @@ jobs:
         working-directory: ./sdk/js
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -53,5 +54,3 @@ jobs:
       - name: Publish to npmjs
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
