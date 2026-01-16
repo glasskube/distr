@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.5.3](https://github.com/distr-sh/distr/compare/2.5.2...2.5.3) (2026-01-16)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.41.0 ([#1660](https://github.com/distr-sh/distr/issues/1660)) ([7d9e462](https://github.com/distr-sh/distr/commit/7d9e462fca612b93100759114ce6c8cdabe086d6))
+* **ui:** prevent text overflow in toast component ([#1654](https://github.com/distr-sh/distr/issues/1654)) ([fc02207](https://github.com/distr-sh/distr/commit/fc02207942e79488d5fd91d7ebcf92b301210cbe))
+
+
+### Other
+
+* **deps:** update dependency go to v1.25.6 ([#1657](https://github.com/distr-sh/distr/issues/1657)) ([97da58d](https://github.com/distr-sh/distr/commit/97da58d4b208146685356e22f17c07c89926bafb))
+
 ## [2.5.2](https://github.com/distr-sh/distr/compare/2.5.1...2.5.2) (2026-01-15)
 
 
