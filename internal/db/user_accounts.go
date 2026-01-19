@@ -145,7 +145,11 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 
 func UpdateUserAccountLastUsedOrganizationID(ctx context.Context, userID, orgID uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
-	cmd, err := db.Exec(ctx, `UPDATE UserAccount SET last_used_organization_id = @orgId WHERE id = @userId`, pgx.NamedArgs{"orgId": orgID, "userId": userID})
+	cmd, err := db.Exec(
+		ctx,
+		`UPDATE UserAccount SET last_used_organization_id = @orgId WHERE id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
 	if err != nil {
 	} else if cmd.RowsAffected() == 0 {
 		err = apierrors.ErrNotFound
