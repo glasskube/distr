@@ -1,4 +1,5 @@
 import {GlobalPositionStrategy, OverlayModule} from '@angular/cdk/overlay';
+import {TextFieldModule} from '@angular/cdk/text-field';
 import {DatePipe, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {
   Component,
@@ -8,7 +9,7 @@ import {
   resource,
   signal,
   TemplateRef,
-  ViewChild,
+  viewChild,
   WritableSignal,
 } from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
@@ -24,6 +25,7 @@ import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArrowUpRightFromSquare,
   faCircleExclamation,
+  faComment,
   faEllipsisVertical,
   faHeartPulse,
   faLink,
@@ -79,6 +81,7 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
     DeploymentTargetMetricsComponent,
     NgTemplateOutlet,
     DeploymentStatusModalComponent,
+    TextFieldModule,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -100,15 +103,21 @@ export class DeploymentTargetCardComponent {
   public readonly fullVersion = input(true);
   public readonly deploymentTargetMetrics = input<DeploymentTargetLatestMetrics | undefined>(undefined);
 
-  @ViewChild('deploymentModal') protected readonly deploymentModal!: TemplateRef<unknown>;
-  @ViewChild('deploymentStatusModal') protected readonly deploymentStatusModal!: TemplateRef<unknown>;
-  @ViewChild('instructionsModal') protected readonly instructionsModal!: TemplateRef<unknown>;
-  @ViewChild('deleteConfirmModal') protected readonly deleteConfirmModal!: TemplateRef<unknown>;
-  @ViewChild('manageDeploymentTargetDrawer') protected readonly manageDeploymentTargetDrawer!: TemplateRef<unknown>;
-  @ViewChild('deleteDeploymentProgressModal') protected readonly deleteDeploymentProgressModal!: TemplateRef<unknown>;
+  protected readonly deploymentModal = viewChild.required<TemplateRef<unknown>>('deploymentModal');
+  protected readonly deploymentStatusModal = viewChild.required<TemplateRef<unknown>>('deploymentStatusModal');
+  protected readonly instructionsModal = viewChild.required<TemplateRef<unknown>>('instructionsModal');
+  protected readonly deleteConfirmModal = viewChild.required<TemplateRef<unknown>>('deleteConfirmModal');
+  protected readonly manageDeploymentTargetDrawer =
+    viewChild.required<TemplateRef<unknown>>('manageDeploymentTargetDrawer');
+  protected readonly deploymentTargetNotesDrawer =
+    viewChild.required<TemplateRef<unknown>>('deploymentTargetNotesDrawer');
+  protected readonly deleteDeploymentProgressModal = viewChild.required<TemplateRef<unknown>>(
+    'deleteDeploymentProgressModal'
+  );
 
   protected readonly faArrowUpRightFromSquare = faArrowUpRightFromSquare;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faComment = faComment;
   protected readonly faEllipsisVertical = faEllipsisVertical;
   protected readonly faHeartPulse = faHeartPulse;
   protected readonly faLink = faLink;
@@ -207,8 +216,13 @@ export class DeploymentTargetCardComponent {
   });
   protected editFormLoading = false;
 
+  protected readonly notesForm = new FormGroup({
+    notes: new FormControl<string>({value: '', disabled: this.auth.hasAnyRole('read_only')}, {nonNullable: true}),
+  });
+  protected notesFormLoading = false;
+
   private modal?: DialogRef;
-  private manageDeploymentTargetRef?: DialogRef;
+  private drawerRef?: DialogRef;
 
   constructor() {
     this.editForm.controls.customResources.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
@@ -223,7 +237,7 @@ export class DeploymentTargetCardComponent {
   protected async showDeploymentModal(deployment?: DeploymentWithLatestRevision) {
     this.selectedDeploymentTarget.set(this.deploymentTarget());
     this.selectedDeployment.set(deployment);
-    this.showModal(this.deploymentModal);
+    this.showModal(this.deploymentModal());
   }
 
   protected async saveDeploymentTarget() {
@@ -262,6 +276,27 @@ export class DeploymentTargetCardComponent {
     }
   }
 
+  protected saveDeploymentTargetNotes() {
+    const id = this.deploymentTarget().id;
+    const notes = this.notesForm.value.notes ?? '';
+
+    if (!id) {
+      return;
+    }
+
+    this.notesFormLoading = true;
+    this.deploymentTargets.saveNotes(id, notes).subscribe({
+      next: () => {
+        this.toast.success('Notes saved successfully');
+        this.notesFormLoading = false;
+      },
+      error: () => {
+        this.toast.error('Failed to save notes');
+        this.notesFormLoading = false;
+      },
+    });
+  }
+
   private loadDeploymentTarget(dt: DeploymentTarget) {
     this.editForm.patchValue({
       ...dt,
@@ -292,13 +327,13 @@ export class DeploymentTargetCardComponent {
         return;
       }
     }
-    this.showModal(this.instructionsModal);
+    this.showModal(this.instructionsModal());
   }
 
   protected openStatusModal(deployment: DeploymentWithLatestRevision) {
     if (deployment?.id) {
       this.selectedDeployment.set(deployment);
-      this.showModal(this.deploymentStatusModal);
+      this.showModal(this.deploymentStatusModal());
     }
   }
 
@@ -364,7 +399,7 @@ export class DeploymentTargetCardComponent {
         : undefined;
     this.overlay
       .confirm({
-        customTemplate: this.deleteConfirmModal,
+        customTemplate: this.deleteConfirmModal(),
         requiredConfirmInputText: 'DELETE',
         message: {
           alert,
@@ -404,7 +439,7 @@ export class DeploymentTargetCardComponent {
           })
         )
       ) {
-        const modalRef = this.overlay.showModal(this.deleteDeploymentProgressModal, {
+        const modalRef = this.overlay.showModal(this.deleteDeploymentProgressModal(), {
           positionStrategy: new GlobalPositionStrategy().centerHorizontally().centerVertically(),
           backdropStyleOnly: true,
         });
@@ -452,15 +487,34 @@ export class DeploymentTargetCardComponent {
     this.modal?.close();
   }
 
-  protected openDrawer() {
+  protected openEditDrawer() {
     this.hideDrawer();
     this.loadDeploymentTarget(this.deploymentTarget());
-    this.manageDeploymentTargetRef = this.overlay.showDrawer(this.manageDeploymentTargetDrawer);
+    this.drawerRef = this.overlay.showDrawer(this.manageDeploymentTargetDrawer());
+  }
+
+  protected openNotesDrawer() {
+    const id = this.deploymentTarget().id;
+    if (!id) return;
+    this.hideDrawer();
+    this.drawerRef = this.overlay.showDrawer(this.deploymentTargetNotesDrawer());
+    this.notesFormLoading = true;
+    this.deploymentTargets.getNotes(id).subscribe({
+      next: (notes) => {
+        this.notesForm.patchValue(notes);
+        this.notesFormLoading = false;
+      },
+      error: () => {
+        this.toast.error('Failed to load notes');
+        this.notesFormLoading = false;
+      },
+    });
   }
 
   protected hideDrawer() {
-    this.manageDeploymentTargetRef?.close();
+    this.drawerRef?.close();
     this.resetEditForm();
+    this.notesForm.reset();
   }
 
   private resetEditForm() {

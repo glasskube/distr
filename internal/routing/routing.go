@@ -90,6 +90,8 @@ func NewRouter(
 	openapiRouter.Route("/api", ApiRouter(logger, db, mailer, tracers, oidcer))
 
 	baseRouter.Mount("/internal", InternalRouter())
+	baseRouter.Mount("/status", StatusRouter())
+	baseRouter.Mount("/ready", ReadyRouter(db))
 	baseRouter.Mount("/.well-known", WellKnownRouter())
 	baseRouter.Mount("/", FrontendRouter())
 
@@ -181,6 +183,32 @@ func ApiRouter(
 func InternalRouter() http.Handler {
 	router := chi.NewRouter()
 	router.Route("/", handlers.InternalRouter)
+	return router
+}
+
+func StatusRouter() http.Handler {
+	router := chi.NewRouter()
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+	return router
+}
+
+func ReadyRouter(db *pgxpool.Pool) http.Handler {
+	router := chi.NewRouter()
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		var result int
+		err := db.QueryRow(r.Context(), "SELECT 1").Scan(&result)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"ready":false}`))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ready":true}`))
+	})
 	return router
 }
 
