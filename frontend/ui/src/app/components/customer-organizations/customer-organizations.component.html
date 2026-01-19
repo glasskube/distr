@@ -64,7 +64,7 @@
                     (click)="uploadImage(customer)"
                     aria-label="Upload customer avatar"
                     class="size-8 rounded-full bg-gray-900 dark:bg-gray-400 text-white dark:text-gray-800">
-                    @if (customer.imageId) {
+                    @if (customer.imageUrl) {
                       <img
                         [src]="customer.imageUrl | secureImage | async"
                         alt="customer avatar"

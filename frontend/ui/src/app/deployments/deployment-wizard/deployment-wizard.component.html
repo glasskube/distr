@@ -95,7 +95,7 @@
                         [class.dark:border-gray-700]="customerForm.value.customerOrganizationId !== customer.id"
                         [class.dark:bg-gray-800]="customerForm.value.customerOrganizationId !== customer.id">
                         <!-- Customer Logo -->
-                        @if (customer.imageId) {
+                        @if (customer.imageUrl) {
                           <img
                             [src]="customer.imageUrl | secureImage | async"
                             [alt]="customer.name"
