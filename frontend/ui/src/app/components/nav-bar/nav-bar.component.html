@@ -150,7 +150,7 @@
             <div class="ml-1">
               <button
                 type="button"
-                class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                class="flex rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
                 aria-expanded="false"
                 cdkOverlayOrigin
                 #dropdownTrigger="cdkOverlayOrigin"
@@ -159,8 +159,8 @@
                 @if (user.imageUrl) {
                   <img class="size-8 rounded-full" [attr.src]="user.imageUrl | secureImage | async" alt="user photo" />
                 } @else {
-                  <div class="shrink-0 text-gray-900 dark:text-gray-400">
-                    <fa-icon [icon]="faUserCircle" size="xl" class="text-xl cursor-pointer"></fa-icon>
+                  <div class="shrink-0 text-gray-400 -m-1">
+                    <fa-icon [icon]="faUserCircle" class="text-3xl cursor-pointer"></fa-icon>
                   </div>
                 }
               </button>
