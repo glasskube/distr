@@ -62,6 +62,20 @@ func DeploymentTargetsRouter(r chiopenapi.Router) {
 				With(option.Request(DeploymentTargetRequest{})).
 				With(option.Response(http.StatusOK, api.DeploymentTargetAccessTokenResponse{}))
 		})
+		r.Route("/notes", func(r chiopenapi.Router) {
+			r.Get("/", getDeploymentTargetNotesHandler()).
+				With(option.Description("Get notes for this deployment target")).
+				With(option.Request(DeploymentTargetRequest{})).
+				With(option.Response(http.StatusOK, api.DeploymentTargetNotes{}))
+			r.With(middleware.RequireReadWriteOrAdmin).
+				Put("/", putDeploymentTargetNotesHandler()).
+				With(option.Description("Set notes for this deployment target")).
+				With(option.Request(struct {
+					DeploymentTargetRequest
+					api.DeploymentTargetNotesRequest
+				}{})).
+				With(option.Response(http.StatusOK, api.DeploymentTargetNotes{}))
+		})
 	})
 }
 

@@ -9,16 +9,17 @@ import (
 )
 
 type UserAccount struct {
-	ID              uuid.UUID  `db:"id" json:"id"`
-	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
-	Email           string     `db:"email" json:"email"`
-	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
-	EmailVerified   bool       `db:"email_verified" json:"emailVerified"`
-	PasswordHash    []byte     `db:"password_hash" json:"-"`
-	PasswordSalt    []byte     `db:"password_salt" json:"-"`
-	Name            string     `db:"name" json:"name,omitempty"`
-	ImageID         *uuid.UUID `db:"image_id" json:"-"`
-	Password        string     `db:"-" json:"-"`
+	ID                     uuid.UUID  `db:"id" json:"id"`
+	CreatedAt              time.Time  `db:"created_at" json:"createdAt"`
+	Email                  string     `db:"email" json:"email"`
+	EmailVerifiedAt        *time.Time `db:"email_verified_at" json:"-"`
+	EmailVerified          bool       `db:"email_verified" json:"emailVerified"`
+	PasswordHash           []byte     `db:"password_hash" json:"-"`
+	PasswordSalt           []byte     `db:"password_salt" json:"-"`
+	Name                   string     `db:"name" json:"name,omitempty"`
+	ImageID                *uuid.UUID `db:"image_id" json:"-"`
+	LastUsedOrganizationID *uuid.UUID `db:"last_used_organization_id" json:"-"`
+	Password               string     `db:"-" json:"-"`
 	// Remember to update AsUserAccountWithRole when adding fields!
 }
 
@@ -40,20 +41,22 @@ func (u *UserAccount) AsUserAccountWithRole(
 		UserRole:               role,
 		JoinedOrgAt:            joinedOrgAt,
 		CustomerOrganizationID: customerOrganizationID,
+		LastUsedOrganizationID: u.LastUsedOrganizationID,
 	}
 }
 
 type UserAccountWithUserRole struct {
 	// copy+pasted from UserAccount because pgx does not like embedded structs
-	ID              uuid.UUID  `db:"id" json:"id"`
-	CreatedAt       time.Time  `db:"created_at" json:"createdAt"`
-	Email           string     `db:"email" json:"email"`
-	EmailVerifiedAt *time.Time `db:"email_verified_at" json:"-"`
-	EmailVerified   bool       `db:"email_verified" json:"emailVerified"`
-	PasswordHash    []byte     `db:"password_hash" json:"-"`
-	PasswordSalt    []byte     `db:"password_salt" json:"-"`
-	Name            string     `db:"name" json:"name,omitempty"`
-	ImageID         *uuid.UUID `db:"image_id" json:"-"`
+	ID                     uuid.UUID  `db:"id" json:"id"`
+	CreatedAt              time.Time  `db:"created_at" json:"createdAt"`
+	Email                  string     `db:"email" json:"email"`
+	EmailVerifiedAt        *time.Time `db:"email_verified_at" json:"-"`
+	EmailVerified          bool       `db:"email_verified" json:"emailVerified"`
+	PasswordHash           []byte     `db:"password_hash" json:"-"`
+	PasswordSalt           []byte     `db:"password_salt" json:"-"`
+	Name                   string     `db:"name" json:"name,omitempty"`
+	ImageID                *uuid.UUID `db:"image_id" json:"-"`
+	LastUsedOrganizationID *uuid.UUID `db:"last_used_organization_id" json:"-"`
 	// not copy+pasted
 	UserRole UserRole `db:"user_role" json:"userRole"`
 	// not copy+pasted
@@ -66,14 +69,15 @@ type UserAccountWithUserRole struct {
 
 func (u *UserAccountWithUserRole) AsUserAccount() UserAccount {
 	return UserAccount{
-		ID:              u.ID,
-		CreatedAt:       u.CreatedAt,
-		Email:           u.Email,
-		EmailVerifiedAt: util.PtrCopy(u.EmailVerifiedAt),
-		PasswordHash:    slices.Clone(u.PasswordHash),
-		PasswordSalt:    slices.Clone(u.PasswordSalt),
-		Name:            u.Name,
-		ImageID:         u.ImageID,
-		Password:        u.Password,
+		ID:                     u.ID,
+		CreatedAt:              u.CreatedAt,
+		Email:                  u.Email,
+		EmailVerifiedAt:        util.PtrCopy(u.EmailVerifiedAt),
+		PasswordHash:           slices.Clone(u.PasswordHash),
+		PasswordSalt:           slices.Clone(u.PasswordSalt),
+		Name:                   u.Name,
+		ImageID:                u.ImageID,
+		LastUsedOrganizationID: u.LastUsedOrganizationID,
+		Password:               u.Password,
 	}
 }
