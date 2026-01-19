@@ -200,12 +200,13 @@ func ReadyRouter(db *pgxpool.Pool) http.Handler {
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		var result int
 		err := db.QueryRow(r.Context(), "SELECT 1").Scan(&result)
-		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"ready":false}`))
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"ready":true}`))
 	})
 	return router
