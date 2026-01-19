@@ -18,6 +18,7 @@ import {
   faLightbulb,
   faPlus,
   faShuffle,
+  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
@@ -214,4 +215,5 @@ export class NavBarComponent implements OnInit {
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faXmark = faXmark;
   protected readonly faClipboard = faClipboard;
+  protected readonly faUserCircle = faUserCircle;
 }

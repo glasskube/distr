@@ -11,8 +11,7 @@
             <app-deployment-target-card
               [deploymentTarget]="deploymentTarget"
               [fullVersion]="false"
-              [deploymentTargetMetrics]="deploymentTarget.metrics">
-            </app-deployment-target-card>
+              [deploymentTargetMetrics]="deploymentTarget.metrics" />
           } @empty {
             <div class="text-gray-500 dark:text-gray-400">Nothing to show yet.</div>
           }
@@ -28,8 +27,7 @@
         <div
           class="grid gap-4 items-stretch 5xl:grid-cols-6 4xl:grid-cols-5 3xl:grid-cols-4 xl:grid-cols-3 lg:grid-cols-2">
           @for (item of artifactsByCustomer$ | async; track item.customer.id) {
-            <app-artifacts-by-customer-card [customer]="item.customer" [artifacts]="item.artifacts ?? []">
-            </app-artifacts-by-customer-card>
+            <app-artifacts-by-customer-card [customer]="item.customer" [artifacts]="item.artifacts ?? []" />
           } @empty {
             <div class="text-gray-500 dark:text-gray-400">Nothing to show yet.</div>
           }

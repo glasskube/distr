@@ -156,7 +156,13 @@
                 #dropdownTrigger="cdkOverlayOrigin"
                 (click)="userOpened = !userOpened">
                 <span class="sr-only">Open user menu</span>
-                <img class="w-8 h-8 rounded-full" [attr.src]="user.imageUrl | secureImage | async" alt="user photo" />
+                @if (user.imageUrl) {
+                  <img class="size-8 rounded-full" [attr.src]="user.imageUrl | secureImage | async" alt="user photo" />
+                } @else {
+                  <div class="shrink-0 text-gray-900 dark:text-gray-400">
+                    <fa-icon [icon]="faUserCircle" size="xl" class="text-xl cursor-pointer"></fa-icon>
+                  </div>
+                }
               </button>
             </div>
             <ng-template

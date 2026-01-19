@@ -6,12 +6,12 @@ import {CustomerOrganization} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faBox,
+  faBuildingUser,
   faCircleExclamation,
   faHeartPulse,
   faPen,
   faShip,
   faTrash,
-  faUserCircle,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {SemVer} from 'semver';
@@ -78,6 +78,6 @@ export class ArtifactsByCustomerCardComponent {
   protected readonly faHeartPulse = faHeartPulse;
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
-  protected readonly faUserCircle = faUserCircle;
   protected readonly faBox = faBox;
+  protected readonly faBuildingUser = faBuildingUser;
 }
