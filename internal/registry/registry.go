@@ -25,12 +25,14 @@ package registry
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"slices"
 
 	"github.com/distr-sh/distr/internal/auth"
+	"github.com/distr-sh/distr/internal/authn/authinfo"
 	"github.com/distr-sh/distr/internal/mail"
 	"github.com/distr-sh/distr/internal/middleware"
 	"github.com/distr-sh/distr/internal/registry/audit"
@@ -146,7 +148,12 @@ func NewDefault(
 			middleware.LoggingMiddleware,
 			middleware.ContextInjectorMiddleware(pool, mailer, nil),
 			auth.ArtifactsAuthentication.Middleware,
-			middleware.RequireOrgAndRole,
+			auth.ArtifactsAuthentication.ValidatorMiddleware(func(value authinfo.AuthInfoWithOrganization) error {
+				if value.CurrentOrg() == nil {
+					return errors.New("org is required")
+				}
+				return nil
+			}),
 		),
 	)
 }

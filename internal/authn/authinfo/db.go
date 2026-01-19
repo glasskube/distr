@@ -25,8 +25,8 @@ func (a DbAuthInfo) CurrentOrg() *types.Organization {
 	return a.org
 }
 
-func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
-	return authn.AuthenticatorFunc[AuthInfo, *DbAuthInfo](func(ctx context.Context, a AuthInfo) (*DbAuthInfo, error) {
+func DbAuthenticator() authn.Authenticator[AuthInfo, AuthInfoWithUserAndOrganization] {
+	fn := func(ctx context.Context, a AuthInfo) (AuthInfoWithUserAndOrganization, error) {
 		if a.CurrentOrgID() != nil && a.CurrentUserRole() != nil {
 			if u, o, err := db.GetUserAccountAndOrg(
 				ctx,
@@ -63,30 +63,42 @@ func DbAuthenticator() authn.Authenticator[AuthInfo, *DbAuthInfo] {
 				return &DbAuthInfo{AuthInfo: a, user: u}, nil
 			}
 		}
-	})
+	}
+	return authn.AuthenticatorFunc[AuthInfo, AuthInfoWithUserAndOrganization](fn)
 }
 
-func AgentDbAuthenticator() authn.Authenticator[AgentAuthInfo, *DbAuthInfo] {
-	fn := func(ctx context.Context, a AgentAuthInfo) (*DbAuthInfo, error) {
-		userWithRole, org, err := db.GetUserAccountAndOrgForDeploymentTarget(ctx, a.CurrentDeploymentTargetID())
+type agentDBAuthInfo struct {
+	AuthInfo
+	org *types.Organization
+}
+
+func (a agentDBAuthInfo) CurrentOrg() *types.Organization {
+	return a.org
+}
+
+func AgentDbAuthenticator() authn.Authenticator[AgentAuthInfo, AuthInfoWithOrganization] {
+	fn := func(ctx context.Context, a AgentAuthInfo) (AuthInfoWithOrganization, error) {
+		customer, org, err := db.GetCustomerAndOrgForDeploymentTarget(ctx, a.CurrentDeploymentTargetID())
 		if errors.Is(err, apierrors.ErrNotFound) {
 			return nil, authn.ErrBadAuthentication
 		} else if err != nil {
 			return nil, err
 		}
-		return &DbAuthInfo{
-			AuthInfo: &SimpleAuthInfo{
-				organizationID:         &org.ID,
-				customerOrganizationID: userWithRole.CustomerOrganizationID,
-				userID:                 userWithRole.ID,
-				userEmail:              userWithRole.Email,
-				emailVerified:          userWithRole.EmailVerifiedAt != nil,
-				userRole:               util.PtrTo(userWithRole.UserRole),
-				rawToken:               a.Token(),
-			},
-			user: util.PtrTo(userWithRole.AsUserAccount()),
-			org:  org,
-		}, nil
+		info := &SimpleAuthInfo{
+			organizationID: &org.ID,
+			rawToken:       a.Token(),
+		}
+		if customer != nil {
+			info.customerOrganizationID = &customer.ID
+		}
+		return &agentDBAuthInfo{AuthInfo: info, org: org}, nil
 	}
-	return authn.AuthenticatorFunc[AgentAuthInfo, *DbAuthInfo](fn)
+	return authn.AuthenticatorFunc[AgentAuthInfo, AuthInfoWithOrganization](fn)
+}
+
+func DropUser() authn.Authenticator[AuthInfoWithUserAndOrganization, AuthInfoWithOrganization] {
+	fn := func(ctx context.Context, a AuthInfoWithUserAndOrganization) (AuthInfoWithOrganization, error) {
+		return a, nil
+	}
+	return authn.AuthenticatorFunc[AuthInfoWithUserAndOrganization, AuthInfoWithOrganization](fn)
 }

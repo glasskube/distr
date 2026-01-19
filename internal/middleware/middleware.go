@@ -200,13 +200,15 @@ func getTokenIdKey(token any, id uuid.UUID) string {
 	return fmt.Sprintf("%v-%v", prefix, id)
 }
 
-var RequireOrgAndRole = auth.Authentication.ValidatorMiddleware(func(value *authinfo.DbAuthInfo) error {
-	if value.CurrentOrgID() == nil || value.CurrentOrg() == nil || value.CurrentUserRole() == nil {
-		return authn.ErrBadAuthentication
-	} else {
-		return nil
-	}
-})
+var RequireOrgAndRole = auth.Authentication.ValidatorMiddleware(
+	func(value authinfo.AuthInfoWithUserAndOrganization) error {
+		if value.CurrentOrgID() == nil || value.CurrentOrg() == nil || value.CurrentUserRole() == nil {
+			return authn.ErrBadAuthentication
+		} else {
+			return nil
+		}
+	},
+)
 
 func FeatureFlagMiddleware(feature types.Feature) func(handler http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {

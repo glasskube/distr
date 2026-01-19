@@ -18,7 +18,6 @@ type DeploymentTarget struct {
 	Namespace              *string                    `db:"namespace" json:"namespace,omitempty"`
 	Scope                  *DeploymentTargetScope     `db:"scope" json:"scope,omitempty"`
 	OrganizationID         uuid.UUID                  `db:"organization_id" json:"-"`
-	CreatedByUserAccountID uuid.UUID                  `db:"created_by_user_account_id" json:"-"`
 	CustomerOrganizationID *uuid.UUID                 `db:"customer_organization_id" json:"customerOrganizationId,omitempty"` //nolint:lll
 	AgentVersionID         *uuid.UUID                 `db:"agent_version_id" json:"-"`
 	ReportedAgentVersionID *uuid.UUID                 `db:"reported_agent_version_id" json:"reportedAgentVersionId,omitempty"` //nolint:lll
@@ -70,7 +69,6 @@ func (dt *DeploymentTarget) Validate() error {
 
 type DeploymentTargetWithCreatedBy struct {
 	DeploymentTarget
-	CreatedBy            *UserAccountWithUserRole       `db:"created_by" json:"createdBy"`
 	CustomerOrganization *CustomerOrganization          `db:"customer_organization" json:"customerOrganization,omitempty"`
 	Deployments          []DeploymentWithLatestRevision `db:"-" json:"deployments"`
 	AgentVersion         AgentVersion                   `db:"agent_version" json:"agentVersion"`

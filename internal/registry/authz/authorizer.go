@@ -37,7 +37,9 @@ func (a *authorizer) Authorize(ctx context.Context, nameStr string, action Actio
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
 	if action == ActionWrite &&
-		(auth.CurrentCustomerOrgID() != nil || *auth.CurrentUserRole() == types.UserRoleReadOnly) {
+		(auth.CurrentCustomerOrgID() != nil ||
+			auth.CurrentUserRole() == nil ||
+			*auth.CurrentUserRole() == types.UserRoleReadOnly) {
 		return ErrAccessDenied
 	}
 
@@ -56,7 +58,9 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
 	if action == ActionWrite &&
-		(auth.CurrentCustomerOrgID() != nil || *auth.CurrentUserRole() == types.UserRoleReadOnly) {
+		(auth.CurrentCustomerOrgID() != nil ||
+			auth.CurrentUserRole() == nil ||
+			*auth.CurrentUserRole() == types.UserRoleReadOnly) {
 		return ErrAccessDenied
 	}
 
@@ -90,7 +94,9 @@ func (a *authorizer) AuthorizeBlob(ctx context.Context, digest digest.Digest, ac
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
 	if action == ActionWrite &&
-		(auth.CurrentCustomerOrgID() != nil || *auth.CurrentUserRole() == types.UserRoleReadOnly) {
+		(auth.CurrentCustomerOrgID() != nil ||
+			auth.CurrentUserRole() == nil ||
+			*auth.CurrentUserRole() == types.UserRoleReadOnly) {
 		return ErrAccessDenied
 	}
 
