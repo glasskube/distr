@@ -1,3 +1,4 @@
+import {OVERLAY_DEFAULT_CONFIG} from '@angular/cdk/overlay';
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
 import {
   ApplicationConfig,
@@ -34,5 +35,6 @@ export const appConfig: ApplicationConfig = {
       },
     }),
     provideAppInitializer(async () => inject(Sentry.TraceService)),
+    {provide: OVERLAY_DEFAULT_CONFIG, useValue: {usePopover: false}},
   ],
 };
