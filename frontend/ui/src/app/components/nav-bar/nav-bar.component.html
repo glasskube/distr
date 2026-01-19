@@ -186,6 +186,15 @@
                   <li>
                     <a
                       (click)="userOpened = false"
+                      routerLink="/settings/profile"
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                      role="menuitem">
+                      Edit Your Profile
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      (click)="userOpened = false"
                       routerLink="/settings/access-tokens"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                       role="menuitem">
@@ -200,7 +209,7 @@
                       (click)="logout()"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                       role="menuitem">
-                      Sign out
+                      Sign Out
                     </button>
                   </li>
                 </ul>

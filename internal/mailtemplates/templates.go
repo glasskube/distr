@@ -104,3 +104,11 @@ func PasswordReset(
 		"Token":        token,
 	}
 }
+
+func UpdateEmail(userAccount types.UserAccount, org types.Organization, token string) (*template.Template, any) {
+	return templates.Lookup("update-email.html"), map[string]any{
+		"UserAccount": userAccount,
+		"Host":        customdomains.AppDomainOrDefault(org),
+		"Token":       token,
+	}
+}

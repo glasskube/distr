@@ -4,10 +4,10 @@ import "github.com/distr-sh/distr/internal/types"
 
 type ArtifactResponse struct {
 	types.ArtifactWithTaggedVersion
-	ImageUrl string `json:"imageUrl,omitempty"`
+	ImageUrl *string `json:"imageUrl,omitempty"`
 }
 
 type ArtifactsResponse struct {
 	types.ArtifactWithDownloads
-	ImageUrl string `json:"imageUrl,omitempty"`
+	ImageUrl *string `json:"imageUrl,omitempty"`
 }

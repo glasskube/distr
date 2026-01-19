@@ -20,12 +20,13 @@ type CreateUserAccountResponse struct {
 
 type UserAccountResponse struct {
 	types.UserAccountWithUserRole
-	ImageUrl string `json:"imageUrl"`
+	ImageUrl *string `json:"imageUrl,omitempty"`
 }
 
 type UpdateUserAccountRequest struct {
-	Name     string  `json:"name"`
-	Password *string `json:"password"`
+	Name     *string    `json:"name"`
+	Password *string    `json:"password"`
+	ImageID  *uuid.UUID `json:"imageId"`
 }
 
 func (r UpdateUserAccountRequest) Validate() error {
@@ -33,6 +34,17 @@ func (r UpdateUserAccountRequest) Validate() error {
 		if err := validation.ValidatePassword(*r.Password); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+type UpdateUserAccountEmailRequest struct {
+	Email string `json:"email"`
+}
+
+func (r UpdateUserAccountEmailRequest) Validate() error {
+	if err := validation.ValidateEmail(r.Email); err != nil {
+		return err
 	}
 	return nil
 }

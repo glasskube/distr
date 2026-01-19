@@ -3,7 +3,6 @@ package mapping
 import (
 	"github.com/distr-sh/distr/api"
 	"github.com/distr-sh/distr/internal/types"
-	"github.com/distr-sh/distr/internal/util"
 )
 
 func CustomerOrganizationToAPI(customerOrganization types.CustomerOrganization) api.CustomerOrganization {
@@ -12,7 +11,7 @@ func CustomerOrganizationToAPI(customerOrganization types.CustomerOrganization) 
 		CreatedAt: customerOrganization.CreatedAt,
 		Name:      customerOrganization.Name,
 		ImageID:   customerOrganization.ImageID,
-		ImageURL:  util.CreateImageURL(customerOrganization.ImageID),
+		ImageURL:  CreateImageURL(customerOrganization.ImageID),
 	}
 }
 

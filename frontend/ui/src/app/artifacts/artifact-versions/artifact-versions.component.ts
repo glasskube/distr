@@ -21,6 +21,7 @@ import {
   TaggedArtifactVersion,
 } from '../../services/artifacts.service';
 import {AuthService} from '../../services/auth.service';
+import {ImageUploadService} from '../../services/image-upload.service';
 import {OrganizationService} from '../../services/organization.service';
 import {OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
@@ -52,6 +53,7 @@ export class ArtifactVersionsComponent {
   private readonly router = inject(Router);
   private readonly organization = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
+  private readonly imageUploadService = inject(ImageUploadService);
   private readonly toast = inject(ToastService);
 
   protected readonly faBox = faBox;
@@ -123,7 +125,7 @@ export class ArtifactVersionsComponent {
   }
 
   public async uploadImage(data: ArtifactWithTags) {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    const fileId = await firstValueFrom(this.imageUploadService.showDialog({imageUrl: data.imageUrl}));
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }

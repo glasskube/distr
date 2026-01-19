@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {UserAccountWithRole} from '@distr-sh/distr-sdk';
 import posthog from 'posthog-js';
-import {map, Observable, shareReplay, tap} from 'rxjs';
+import {map, Observable, shareReplay, startWith, Subject, switchMap, tap} from 'rxjs';
 import {Organization, OrganizationWithUserRole} from '../types/organization';
 
 interface ContextResponse {
@@ -19,7 +19,10 @@ interface ContextResponse {
 export class ContextService {
   private readonly baseUrl = '/api/v1/context';
   private readonly httpClient = inject(HttpClient);
-  private readonly cache = this.httpClient.get<ContextResponse>(this.baseUrl).pipe(
+  private readonly reload$ = new Subject<void>();
+  private readonly cache = this.reload$.pipe(
+    startWith(undefined),
+    switchMap(() => this.httpClient.get<ContextResponse>(this.baseUrl)),
     tap((ctx) => posthog.group('organization', ctx.organization.id!, {name: ctx.organization.name})),
     shareReplay(1)
   );
@@ -40,5 +43,9 @@ export class ContextService {
 
   public getAvailableOrganizations(): Observable<OrganizationWithUserRole[]> {
     return this.cache.pipe(map((ctx) => ctx.availableContexts ?? []));
+  }
+
+  public reload() {
+    this.reload$.next();
   }
 }

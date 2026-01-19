@@ -6,6 +6,7 @@ export interface UserAccount extends BaseModel {
   email: string;
   emailVerified: boolean;
   name?: string;
+  imageId?: string;
   imageUrl?: string;
 }
 

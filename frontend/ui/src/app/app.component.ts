@@ -6,13 +6,14 @@ import posthog from 'posthog-js';
 import {filter, Observable} from 'rxjs';
 import {AuthService} from './services/auth.service';
 import {ColorSchemeService} from './services/color-scheme.service';
+import {ImageUploadService} from './services/image-upload.service';
 import {OverlayService} from './services/overlay.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, FontAwesomeModule],
-  providers: [OverlayService],
+  providers: [OverlayService, ImageUploadService],
   template: `<router-outlet></router-outlet>`,
 })
 export class AppComponent implements OnInit {

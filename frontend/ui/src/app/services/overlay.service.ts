@@ -3,7 +3,6 @@ import {ComponentPortal, ComponentType, TemplatePortal} from '@angular/cdk/porta
 import {inject, Injectable, InjectionToken, Injector, TemplateRef, ViewContainerRef} from '@angular/core';
 import {filter, fromEvent, map, merge, Observable, Subject, take, takeUntil} from 'rxjs';
 import {ConfirmConfig, ConfirmDialogComponent} from '../components/confirm-dialog/confirm-dialog.component';
-import {ImageUploadContext, ImageUploadDialogComponent} from '../components/image-upload/image-upload-dialog.component';
 
 type OnClosedHook<T> = (result: T | null) => Promise<void> | void;
 
@@ -56,10 +55,6 @@ export class OverlayService {
   public confirm(messageOrConfig: ConfirmConfig | string) {
     const config = typeof messageOrConfig === 'string' ? {message: {message: messageOrConfig}} : messageOrConfig;
     return this.showModal<boolean>(ConfirmDialogComponent, {data: config}).result();
-  }
-
-  public uploadImage(context: ImageUploadContext) {
-    return this.showModal<string>(ImageUploadDialogComponent, {data: context}).result();
   }
 
   /**

@@ -14,6 +14,7 @@ import {ToastService} from '../../services/toast.service';
 export interface ImageUploadContext {
   scope?: FileScope;
   imageUrl?: string;
+  showSuccessNotification?: boolean;
 }
 
 @Component({
@@ -79,7 +80,9 @@ export class ImageUploadDialogComponent implements OnInit, OnDestroy {
       try {
         let uploadResult = this.files.uploadFile(formData, this.data.scope);
         await this.dialogRef.close(await lastValueFrom(uploadResult));
-        this.toast.success('Image saved successfully');
+        if (this.data.showSuccessNotification !== false) {
+          this.toast.success('Image saved successfully');
+        }
       } catch (e) {
         const msg = getFormDisplayedError(e);
         if (msg) {

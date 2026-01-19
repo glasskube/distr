@@ -9,7 +9,7 @@ import (
 
 type ApplicationResponse struct {
 	types.Application
-	ImageUrl string `json:"imageUrl"`
+	ImageUrl *string `json:"imageUrl,omitempty"`
 }
 
 type PatchApplicationRequest struct {

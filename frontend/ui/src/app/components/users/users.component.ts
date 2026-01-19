@@ -25,6 +25,7 @@ import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
+import {ImageUploadService} from '../../services/image-upload.service';
 import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
@@ -57,6 +58,7 @@ export class UsersComponent {
   private readonly usersService = inject(UsersService);
   private readonly organizationService = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
+  private readonly imageUploadService = inject(ImageUploadService);
   protected readonly auth = inject(AuthService);
 
   protected readonly faBox = faBox;
@@ -190,7 +192,9 @@ export class UsersComponent {
   }
 
   public async uploadImage(data: UserAccountWithRole) {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl, scope: 'platform'}));
+    const fileId = await firstValueFrom(
+      this.imageUploadService.showDialog({imageUrl: data.imageUrl, scope: 'platform'})
+    );
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }
