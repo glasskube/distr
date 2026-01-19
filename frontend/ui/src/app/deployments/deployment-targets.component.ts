@@ -11,10 +11,8 @@ import {
 } from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faLightbulb, faMagnifyingGlass, faPlus} from '@fortawesome/free-solid-svg-icons';
-import {catchError, combineLatest, combineLatestWith, first, map, Observable, of, switchMap} from 'rxjs';
-import {SemVer} from 'semver';
-import {compareBy, maxBy} from '../../util/arrays';
-import {isArchived} from '../../util/dates';
+import {catchError, combineLatest, combineLatestWith, first, map, Observable, of} from 'rxjs';
+import {compareBy} from '../../util/arrays';
 import {filteredByFormControl} from '../../util/filter';
 import {drawerFlyInOut} from '../animations/drawer';
 import {modalFlyInOut} from '../animations/modal';
@@ -148,43 +146,16 @@ export class DeploymentTargetsComponent implements AfterViewInit {
 
   private readonly applications$ = this.applications.list();
 
-  protected deploymentTargetsWithUpdate$: Observable<DeploymentWithNewerVersion[]> = this.deploymentTargets$.pipe(
-    switchMap((deploymentTargets) =>
-      combineLatest(
-        deploymentTargets
-          .map((dt) =>
-            dt.deployments.map((d) =>
-              this.getAvailableVersions(d).pipe(
-                map((versions) => {
-                  const version = this.findMaxVersion(versions);
-                  if (version) {
-                    return {dt, d, version};
-                  }
-                  return undefined;
-                })
-              )
-            )
-          )
-          .flat()
-      )
-    ),
-    map((dts) => dts.filter((dt) => dt !== undefined)),
-    map((result) => result.filter((it) => it.version.id !== it.d.applicationVersionId))
-  );
-
   ngAfterViewInit() {
-    combineLatest([this.applications$, this.deploymentTargets$])
-      .pipe(first())
-      .subscribe(([apps, dts]) => {
-        if (
-          this.auth.isCustomer() &&
-          this.auth.hasAnyRole('read_write', 'admin') &&
-          apps.length > 0 &&
-          dts.length === 0
-        ) {
-          this.openWizard();
-        }
-      });
+    if (this.auth.isCustomer() && this.auth.hasAnyRole('read_write', 'admin')) {
+      combineLatest([this.applications$, this.deploymentTargets$])
+        .pipe(first())
+        .subscribe(([apps, dts]) => {
+          if (apps.length > 0 && dts.length === 0) {
+            this.openWizard();
+          }
+        });
+    }
   }
 
   protected showDeploymentModal(
@@ -212,39 +183,5 @@ export class DeploymentTargetsComponent implements AfterViewInit {
 
   protected hideModal(): void {
     this.modal?.close();
-  }
-
-  private getAvailableVersions(deployment: DeploymentWithLatestRevision): Observable<ApplicationVersion[]> {
-    return (
-      deployment.applicationLicenseId
-        ? this.licenses
-            .list()
-            .pipe(
-              map((licenses) => licenses.find((license) => license.id === deployment.applicationLicenseId)?.versions)
-            )
-        : of(undefined)
-    ).pipe(
-      switchMap((versions) =>
-        versions?.length
-          ? of(versions)
-          : this.applications$.pipe(
-              map((apps) => apps.find((app) => app.id === deployment.applicationId)?.versions ?? [])
-            )
-      ),
-      map((versions) => versions.filter((version) => !isArchived(version)))
-    );
-  }
-
-  private findMaxVersion(versions: ApplicationVersion[]): ApplicationVersion | undefined {
-    try {
-      return maxBy(
-        versions,
-        (version) => new SemVer(version.name),
-        (a, b) => a.compare(b) > 0
-      );
-    } catch (e) {
-      console.warn('semver compare failed, falling back to creation date', e);
-      return maxBy(versions, (version) => new Date(version.createdAt!));
-    }
   }
 }

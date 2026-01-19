@@ -12,9 +12,10 @@ import {
   viewChild,
   WritableSignal,
 } from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {
+  ApplicationVersion,
   DeploymentTarget,
   DeploymentTargetScope,
   DeploymentType,
@@ -36,8 +37,10 @@ import {
   faTriangleExclamation,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import {filter, firstValueFrom, lastValueFrom, switchMap} from 'rxjs';
+import {EMPTY, filter, firstValueFrom, lastValueFrom, switchMap} from 'rxjs';
 import {SemVer} from 'semver';
+import {maxBy} from '../../../util/arrays';
+import {isArchived} from '../../../util/dates';
 import {getFormDisplayedError} from '../../../util/errors';
 import {IsStalePipe} from '../../../util/model';
 import {RESOURCE_QUANTITY_REGEX} from '../../../util/validation';
@@ -48,9 +51,12 @@ import {ConnectInstructionsComponent} from '../../components/connect-instruction
 import {DeploymentStatusDot, StatusDotComponent} from '../../components/status-dot';
 import {UuidComponent} from '../../components/uuid';
 import {AgentVersionService} from '../../services/agent-version.service';
+import {ApplicationsService} from '../../services/applications.service';
 import {AuthService} from '../../services/auth.service';
 import {DeploymentTargetLatestMetrics} from '../../services/deployment-target-metrics.service';
 import {DeploymentTargetsService} from '../../services/deployment-targets.service';
+import {FeatureFlagService} from '../../services/feature-flag.service';
+import {LicensesService} from '../../services/licenses.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
@@ -85,6 +91,9 @@ export class DeploymentTargetCardComponent {
   protected readonly auth = inject(AuthService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
   private readonly toast = inject(ToastService);
+  private readonly licensesService = inject(LicensesService);
+  private readonly applicationsService = inject(ApplicationsService);
+  private readonly featureFlags = inject(FeatureFlagService);
 
   protected readonly customerManagedWarning = `
     You are about to make changes to a customer-managed deployment.
@@ -113,6 +122,7 @@ export class DeploymentTargetCardComponent {
   protected readonly faHeartPulse = faHeartPulse;
   protected readonly faLink = faLink;
   protected readonly faPen = faPen;
+  protected readonly faPlus = faPlus;
   protected readonly faRotate = faRotate;
   protected readonly faShip = faShip;
   protected readonly faTrash = faTrash;
@@ -140,6 +150,34 @@ export class DeploymentTargetCardComponent {
     return (
       agentVersions.length > 0 &&
       this.deploymentTarget().agentVersion?.id !== agentVersions[agentVersions.length - 1].id
+    );
+  });
+
+  private readonly licenses = toSignal(
+    this.featureFlags.isLicensingEnabled$.pipe(switchMap((enabled) => (enabled ? this.licensesService.list() : EMPTY))),
+    {initialValue: []}
+  );
+
+  private readonly applications = toSignal(this.applicationsService.list(), {initialValue: []});
+
+  protected readonly deploymentIdsWithUpdate = computed(() => {
+    const deploymentTarget = this.deploymentTarget();
+    const applications = this.applications();
+    const licenses = this.licenses();
+
+    return new Set(
+      deploymentTarget.deployments
+        .map((deployment) => {
+          const applicationVersions =
+            (deployment.applicationLicenseId
+              ? licenses.find((license) => license.id === deployment.applicationLicenseId)?.application?.versions
+              : undefined) ?? applications.find((app) => app.id === deployment.applicationId)?.versions;
+
+          const maxVersion = this.findMaxVersion(applicationVersions?.filter((version) => !isArchived(version)) ?? []);
+
+          return maxVersion && deployment.applicationVersionId !== maxVersion.id ? deployment.id : undefined;
+        })
+        .filter((id) => id !== undefined)
     );
   });
 
@@ -510,5 +548,16 @@ export class DeploymentTargetCardComponent {
     signal.update((val) => !val);
   }
 
-  protected readonly faPlus = faPlus;
+  private findMaxVersion(versions: ApplicationVersion[]): ApplicationVersion | undefined {
+    try {
+      return maxBy(
+        versions,
+        (version) => new SemVer(version.name),
+        (a, b) => a.compare(b) > 0
+      );
+    } catch (e) {
+      console.warn('semver compare failed, falling back to creation date', e);
+      return maxBy(versions, (version) => new Date(version.createdAt!));
+    }
+  }
 }

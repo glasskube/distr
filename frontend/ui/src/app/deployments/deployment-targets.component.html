@@ -1,32 +1,5 @@
 <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5 antialiased">
   <div class="mx-auto max-w-screen-2xl px-4 lg:px-12">
-    @if (auth.hasAnyRole('read_write', 'admin') && (deploymentTargetsWithUpdate$ | async); as updates) {
-      @if (updates.length > 0) {
-        <div
-          class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-          role="alert">
-          <fa-icon [icon]="faLightbulb" class="me-4"></fa-icon>
-          <div>
-            <span class="font-medium">Some deployments can be updated:</span>
-            <ul class="mt-1.5 list-disc list-inside">
-              @for (u of updates; track u.dt.id) {
-                <li>
-                  {{ u.dt.name }}: {{ u.d.applicationName }} &rarr; {{ u.version.name }} (
-                  <button
-                    type="button"
-                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                    (click)="showDeploymentModal(u.dt, u.d, u.version)">
-                    update now
-                  </button>
-                  )
-                </li>
-              }
-            </ul>
-          </div>
-        </div>
-      }
-    }
-
     <div class="w-full mb-4">
       <div class="items-center justify-between flex flex-col md:flex-row gap-2 md:gap-4">
         <form class="w-full flex-1 md:mr-4 md:max-w-md" [formGroup]="filterForm">
