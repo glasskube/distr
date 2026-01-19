@@ -29,18 +29,6 @@
                 </dd>
               </dl>
             }
-            <dl class="inline-flex gap-1 text-sm">
-              <dt class="text-gray-500 dark:text-gray-400">
-                @if (fullVersion()) {
-                  By:
-                } @else {
-                  Managed by:
-                }
-              </dt>
-              <dd class="break-all">
-                {{ deploymentTarget().createdBy?.name ?? deploymentTarget().createdBy?.email }}
-              </dd>
-            </dl>
           </div>
         </div>
       </div>

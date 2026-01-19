@@ -20,3 +20,13 @@ type AgentAuthInfo interface {
 	CurrentOrgID() uuid.UUID
 	Token() any
 }
+
+type AuthInfoWithOrganization interface {
+	AuthInfo
+	CurrentOrg() *types.Organization
+}
+
+type AuthInfoWithUserAndOrganization interface {
+	AuthInfoWithOrganization
+	CurrentUser() *types.UserAccount
+}

@@ -13,7 +13,7 @@ import {CrudService} from './interfaces';
 
 class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   protected override identify = (dt: DeploymentTarget) => dt.id;
-  protected override sortAttr = (dt: DeploymentTarget) => dt.createdBy?.name ?? dt.createdBy?.email ?? dt.name;
+  protected override sortAttr = (dt: DeploymentTarget) => dt.customerOrganization?.name ?? dt.name;
 }
 
 @Injectable({

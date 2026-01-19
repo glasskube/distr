@@ -28,10 +28,8 @@ func GetLatestDeploymentTargetMetrics(
 	if rows, err := db.Query(ctx,
 		`SELECT dt.id, dtm.cpu_cores_millis, dtm.cpu_usage, dtm.memory_bytes, dtm.memory_usage FROM
 			DeploymentTarget dt
-			LEFT JOIN UserAccount u
-				ON dt.created_by_user_account_id = u.id
-			LEFT JOIN Organization_UserAccount j
-				ON u.id = j.user_account_id
+			LEFT JOIN CustomerOrganization co
+				ON dt.customer_organization_id = co.id
 			LEFT JOIN (
 				-- copied from getting deployment target latest status:
 				-- find the creation date of the latest status entry for each deployment target
@@ -49,7 +47,7 @@ func GetLatestDeploymentTargetMetrics(
 			WHERE dt.organization_id = @orgId
 			AND (@isVendorUser OR dt.customer_organization_id = @customerOrganizationId)
 			AND dt.metrics_enabled = true
-			ORDER BY u.name, u.email, dt.name`,
+			ORDER BY co.name, dt.name`,
 		pgx.NamedArgs{"orgId": orgID, "customerOrganizationId": customerOrganizationID, "isVendorUser": isVendorUser},
 	); err != nil {
 		return nil, fmt.Errorf("failed to query DeploymentTargets: %w", err)
