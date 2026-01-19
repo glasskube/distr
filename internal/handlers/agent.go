@@ -79,18 +79,6 @@ func connectHandler() http.HandlerFunc {
 		log := internalctx.GetLogger(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 
-		if deploymentTarget.CurrentStatus != nil &&
-			deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
-			http.Error(
-				w,
-				fmt.Sprintf(
-					"deployment target is already connected and appears to be still running (last status %v)",
-					deploymentTarget.CurrentStatus.CreatedAt),
-				http.StatusBadRequest,
-			)
-			return
-		}
-
 		org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID)
 		if err != nil {
 			log.Error("could not get organization for deployment target", zap.Error(err))
@@ -119,18 +107,6 @@ func preConnectHandler() http.HandlerFunc {
 		ctx := r.Context()
 		log := internalctx.GetLogger(ctx)
 		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
-
-		if deploymentTarget.CurrentStatus != nil &&
-			deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
-			http.Error(
-				w,
-				fmt.Sprintf(
-					"deployment target is already connected and appears to be still running (last status %v)",
-					deploymentTarget.CurrentStatus.CreatedAt),
-				http.StatusBadRequest,
-			)
-			return
-		}
 
 		org, err := db.GetOrganizationByID(ctx, deploymentTarget.OrganizationID)
 		if err != nil {

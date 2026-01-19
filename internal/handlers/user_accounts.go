@@ -390,13 +390,7 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 	if userAccount.ID == auth.CurrentUserID() {
 		http.Error(w, "UserAccount deleting themselves is not allowed", http.StatusForbidden)
 	} else if err := db.RunTx(ctx, func(ctx context.Context) error {
-		if ok, err := userCanBeRemovedFromOrg(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
-			return err
-		} else if !ok {
-			http.Error(w, "Please ensure there are no deployment targets and licenses owned by this user and try again",
-				http.StatusBadRequest)
-			return nil
-		} else if err := db.DeleteUserAccountFromOrganization(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
+		if err := db.DeleteUserAccountFromOrganization(ctx, userAccount.ID, *auth.CurrentOrgID()); err != nil {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				w.WriteHeader(http.StatusNoContent)
 				return nil
@@ -415,14 +409,6 @@ func deleteUserAccountHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error("error removing user from org", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
-}
-
-func userCanBeRemovedFromOrg(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
-	if managesDts, err := db.UserManagesDeploymentTargetInOrganization(ctx, userID, orgID); err != nil {
-		return false, err
-	} else {
-		return !managesDts, nil
 	}
 }
 

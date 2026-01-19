@@ -24,7 +24,8 @@ const (
 		u.password_hash,
 		u.password_salt,
 		u.name,
-		u.image_id`
+		u.image_id,
+		u.last_used_organization_id`
 	userAccountWithRoleOutputExpr = userAccountOutputExpr +
 		", j.user_role, j.created_at, j.customer_organization_id "
 	userAccountWithRoleOutputExprWithAlias = userAccountWithRoleOutputExpr + " as joined_org_at "
@@ -142,6 +143,25 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 	}
 }
 
+func UpdateUserAccountLastUsedOrganizationID(ctx context.Context, userID, orgID uuid.UUID) error {
+	db := internalctx.GetDb(ctx)
+	cmd, err := db.Exec(
+		ctx,
+		`UPDATE UserAccount SET last_used_organization_id = @orgId WHERE id = @userId`,
+		pgx.NamedArgs{"orgId": orgID, "userId": userID},
+	)
+	if err != nil {
+	} else if cmd.RowsAffected() == 0 {
+		err = apierrors.ErrNotFound
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not update UserAccount: %w", err)
+	}
+
+	return nil
+}
+
 func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
 	db := internalctx.GetDb(ctx)
 	cmd, err := db.Exec(ctx, `DELETE FROM UserAccount WHERE id = @id`, pgx.NamedArgs{"id": id})
@@ -158,24 +178,6 @@ func DeleteUserAccountWithID(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
-}
-
-func UserManagesDeploymentTargetInOrganization(ctx context.Context, userID, orgID uuid.UUID) (bool, error) {
-	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, `
-		SELECT count(dt.id) > 0
-		FROM DeploymentTarget dt
-		WHERE dt.organization_id = @orgId AND dt.created_by_user_account_id = @userId`,
-		pgx.NamedArgs{"orgId": orgID, "userId": userID},
-	)
-	if err != nil {
-		return false, err
-	}
-	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
 }
 
 func DeleteUserAccountFromOrganization(ctx context.Context, userID, orgID uuid.UUID) error {
@@ -462,19 +464,18 @@ func GetUserAccountAndOrg(ctx context.Context, userID, orgID uuid.UUID) (
 	}
 }
 
-func GetUserAccountAndOrgForDeploymentTarget(
+func GetCustomerAndOrgForDeploymentTarget(
 	ctx context.Context,
 	id uuid.UUID,
-) (*types.UserAccountWithUserRole, *types.Organization, error) {
+) (*types.CustomerOrganization, *types.Organization, error) {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"SELECT ("+userAccountWithRoleOutputExpr+`),
-					(`+organizationOutputExpr+`)
+		`SELECT
+			CASE WHEN co.id IS NOT NULL THEN (`+customerOrganizationOutputExpr+`) END AS customer_organization,
+				(`+organizationOutputExpr+`) AS organization
 			FROM DeploymentTarget dt
 			JOIN Organization o ON o.id = dt.organization_id
-			JOIN UserAccount u ON u.id = dt.created_by_user_account_id
-			JOIN Organization_UserAccount j ON u.id = j.user_account_id
-				AND o.id = j.organization_id
+			LEFT JOIN CustomerOrganization co ON co.id = dt.customer_organization_id
 			WHERE dt.id = @id`,
 		pgx.NamedArgs{"id": id},
 	)
@@ -482,17 +483,17 @@ func GetUserAccountAndOrgForDeploymentTarget(
 		return nil, nil, err
 	}
 	res, err := pgx.CollectExactlyOneRow[struct {
-		User types.UserAccountWithUserRole
-		Org  types.Organization
+		CustomerOrganization *types.CustomerOrganization
+		Org                  types.Organization
 	}](rows, pgx.RowToStructByPos)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil, apierrors.ErrNotFound
 		} else {
-			return nil, nil, fmt.Errorf("could not map user or org: %w", err)
+			return nil, nil, fmt.Errorf("could not map customer or org: %w", err)
 		}
 	} else {
-		return &res.User, &res.Org, nil
+		return res.CustomerOrganization, &res.Org, nil
 	}
 }
 

@@ -51,12 +51,13 @@ var ArtifactsAuthentication = authn.New(
 			token.WithExtractorFuncs(token.FromBasicAuth()),
 			token.WithErrorHeaders(http.Header{"WWW-Authenticate": []string{"Basic realm=\"Distr\""}}),
 		),
-		authn.Alternative(
+		authn.Alternative[string, authinfo.AuthInfoWithOrganization](
 			// Authenticate UserAccount with PAT
-			authn.Chain3(
+			authn.Chain4(
 				authkey.Authenticator(),
 				authinfo.AuthKeyAuthenticator(),
 				authinfo.DbAuthenticator(),
+				authinfo.DropUser(),
 			),
 			// Authenticate with Agent JWT
 			authn.Chain3(

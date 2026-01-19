@@ -28,12 +28,6 @@
 
 ---
 
-### createdBy?
-
-> `optional` **createdBy**: [`UserAccountWithRole`](UserAccountWithRole.md)
-
----
-
 ### currentStatus?
 
 > `optional` **currentStatus**: [`DeploymentTargetStatus`](DeploymentTargetStatus.md)

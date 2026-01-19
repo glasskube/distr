@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/distr-sh/distr/api"
 	"github.com/distr-sh/distr/internal/agentconnect"
@@ -15,7 +14,6 @@ import (
 	"github.com/distr-sh/distr/internal/authn/authinfo"
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/distr-sh/distr/internal/db"
-	"github.com/distr-sh/distr/internal/env"
 	"github.com/distr-sh/distr/internal/middleware"
 	"github.com/distr-sh/distr/internal/security"
 	"github.com/distr-sh/distr/internal/subscription"
@@ -63,6 +61,20 @@ func DeploymentTargetsRouter(r chiopenapi.Router) {
 				With(option.Description("Create access token for deployment target")).
 				With(option.Request(DeploymentTargetRequest{})).
 				With(option.Response(http.StatusOK, api.DeploymentTargetAccessTokenResponse{}))
+		})
+		r.Route("/notes", func(r chiopenapi.Router) {
+			r.Get("/", getDeploymentTargetNotesHandler()).
+				With(option.Description("Get notes for this deployment target")).
+				With(option.Request(DeploymentTargetRequest{})).
+				With(option.Response(http.StatusOK, api.DeploymentTargetNotes{}))
+			r.With(middleware.RequireReadWriteOrAdmin).
+				Put("/", putDeploymentTargetNotesHandler()).
+				With(option.Description("Set notes for this deployment target")).
+				With(option.Request(struct {
+					DeploymentTargetRequest
+					api.DeploymentTargetNotesRequest
+				}{})).
+				With(option.Response(http.StatusOK, api.DeploymentTargetNotes{}))
 		})
 	})
 }
@@ -209,20 +221,6 @@ func createAccessForDeploymentTarget(w http.ResponseWriter, r *http.Request) {
 	log := internalctx.GetLogger(ctx)
 	deploymentTarget := internalctx.GetDeploymentTarget(ctx)
 	auth := auth.Authentication.Require(ctx)
-
-	if deploymentTarget.CurrentStatus != nil &&
-		deploymentTarget.CurrentStatus.CreatedAt.Add(2*env.AgentInterval()).After(time.Now()) {
-		http.Error(
-			w,
-			fmt.Sprintf(
-				"access key cannot be regenerated because deployment target is already connected "+
-					"and seems to be still running (last connection at %v)",
-				deploymentTarget.CurrentStatus.CreatedAt,
-			),
-			http.StatusBadRequest,
-		)
-		return
-	}
 
 	var targetSecret string
 	var err error

@@ -13,7 +13,7 @@ import {CrudService} from './interfaces';
 
 class DeploymentTargetsReactiveList extends ReactiveList<DeploymentTarget> {
   protected override identify = (dt: DeploymentTarget) => dt.id;
-  protected override sortAttr = (dt: DeploymentTarget) => dt.createdBy?.name ?? dt.createdBy?.email ?? dt.name;
+  protected override sortAttr = (dt: DeploymentTarget) => dt.customerOrganization?.name ?? dt.name;
 }
 
 @Injectable({
@@ -97,5 +97,13 @@ export class DeploymentTargetsService implements CrudService<DeploymentTarget> {
 
   undeploy(id: string): Observable<void> {
     return this.httpClient.delete<void>(`${this.deploymentsBaseUrl}/${id}`).pipe(tap(() => this.pollRefresh$.next()));
+  }
+
+  public getNotes(deploymentTargetId: string) {
+    return this.httpClient.get<{notes: string}>(`${this.deploymentTargetsBaseUrl}/${deploymentTargetId}/notes`);
+  }
+
+  public saveNotes(deploymentTargetId: string, notes: string) {
+    return this.httpClient.put<void>(`${this.deploymentTargetsBaseUrl}/${deploymentTargetId}/notes`, {notes});
   }
 }
