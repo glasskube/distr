@@ -5,9 +5,9 @@ name: Build Hub
 on:
   push:
     branches:
-      - "main"
+      - 'main'
     tags:
-      - "*"
+      - '*'
   pull_request:
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version-file: "go.mod"
+          go-version-file: 'go.mod'
           check-latest: true
           cache-dependency-path: |
             go.sum
@@ -55,9 +55,9 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: "24"
+          node-version: '24'
           cache: pnpm
-          registry-url: "https://registry.npmjs.org"
+          registry-url: 'https://registry.npmjs.org'
       - name: Install frontend dependencies with pnpm
         run: pnpm install --frozen-lockfile
       - name: Lint with prettier
@@ -91,7 +91,7 @@ jobs:
       matrix:
         edition:
           - name: community
-            suffix: "-ce"
+            suffix: '-ce'
             images: |
               ghcr.io/distr-sh/distr-ce
           - name: enterprise
@@ -106,7 +106,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version-file: "go.mod"
+          go-version-file: 'go.mod'
           check-latest: true
           cache-dependency-path: |
             go.sum
@@ -119,9 +119,9 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: "24"
+          node-version: '24'
           cache: pnpm
-          registry-url: "https://registry.npmjs.org"
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Generate commit hash
         id: hash
@@ -148,7 +148,7 @@ jobs:
       - name: Build application
         run: go build -ldflags="$LDFLAGS" -o dist/distr ./cmd/hub/
         env:
-          CGO_ENABLED: "0"
+          CGO_ENABLED: '0'
           LDFLAGS: >-
             -X github.com/distr-sh/distr/internal/buildconfig.version=${{ github.ref_name }}
             -X github.com/distr-sh/distr/internal/buildconfig.commit=${{ steps.hash.outputs.sha_short }}
