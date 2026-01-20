@@ -90,7 +90,7 @@ export class UserSettingsComponent {
   protected async saveEmail(): Promise<void> {
     const email = this.emailForm.value.email;
     if (this.emailForm.invalid || !email) {
-      this.emailForm.markAsTouched();
+      this.emailForm.markAllAsTouched();
       return;
     }
 
