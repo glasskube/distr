@@ -72,8 +72,8 @@ func generateUserToken(
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
 	}
-	if user.ImageID != nil {
-		claims[UserImageURLKey] = mapping.CreateImageURL(user.ImageID)
+	if url := mapping.CreateImageURL(user.ImageID); url != nil {
+		claims[UserImageURLKey] = *url
 	}
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole
