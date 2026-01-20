@@ -99,7 +99,7 @@
                 Verify
               </button>
             </div>
-            @if (emailForm.controls.email.errors?.['email'] && emailForm.touched) {
+            @if (emailForm.controls.email.errors?.['email'] && emailForm.controls.email.touched) {
               <div class="text-red-500 text-sm">Invalid E-Mail Address</div>
             }
             <div class="text-gray-500 text-sm">Your e-mail address will be updated after successful verification.</div>
