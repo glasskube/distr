@@ -143,7 +143,7 @@ importers:
         version: 10.4.23(postcss@8.5.6)
       jasmine-core:
         specifier: ~6.0.0
-        version: 6.0.0
+        version: 6.0.1
       jsdom:
         specifier: ^27.4.0
         version: 27.4.0
@@ -2935,8 +2935,8 @@ packages:
     resolution: {integrity: sha512-Vtgk7L/R2JHyyGW07spoFlB8/lpjiOLTjMdms6AFMraYt3BaJauod/NGrfnVG/y4Ix1JEuMRPDPEj2ua+zz1/Q==}
     engines: {node: '>=10'}
 
-  jasmine-core@6.0.0:
-    resolution: {integrity: sha512-fmBb8aruz2mEIDBUGWOGNmxhXwFJs44SSzwbMcBDqQnNChavPTq3Ra9A6WAn6WdxvxWEdakKTcEb3NzeR3yD1A==}
+  jasmine-core@6.0.1:
+    resolution: {integrity: sha512-gUtzV5ASR0MLBwDNqri4kBsgKNCcRQd9qOlNw/w/deavD0cl3JmWXXfH8JhKM4LTg6LPTt2IOQ4px3YYfgh2Xg==}
 
   jiti@2.6.1:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
@@ -7137,7 +7137,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  jasmine-core@6.0.0: {}
+  jasmine-core@6.0.1: {}
 
   jiti@2.6.1: {}
 
