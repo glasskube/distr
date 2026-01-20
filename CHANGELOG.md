@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.6.0](https://github.com/distr-sh/distr/compare/2.5.2...2.6.0) (2026-01-20)
+
+
+### Features
+
+* add deployment target notes ([#1664](https://github.com/distr-sh/distr/issues/1664)) ([226d0c1](https://github.com/distr-sh/distr/commit/226d0c103523819309fd1d8767f67f5c49a737d3))
+* add edit profile page ([#1682](https://github.com/distr-sh/distr/issues/1682)) ([3cf1c26](https://github.com/distr-sh/distr/commit/3cf1c26dbd0b00d43c3dc83efe7bd8d92cb6604c))
+* **backend:** remember last logged in organization ([#1665](https://github.com/distr-sh/distr/issues/1665)) ([8ea14ea](https://github.com/distr-sh/distr/commit/8ea14ea2889d8b8301b2ad54eef027b1a429092a))
+* implement status & ready endpoint ([#1673](https://github.com/distr-sh/distr/issues/1673)) ([d73703b](https://github.com/distr-sh/distr/commit/d73703b1fae594aa80c923923439154109c3a2b8))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.41.0 ([#1660](https://github.com/distr-sh/distr/issues/1660)) ([7d9e462](https://github.com/distr-sh/distr/commit/7d9e462fca612b93100759114ce6c8cdabe086d6))
+* **deps:** update module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver to v0.144.0 ([#1689](https://github.com/distr-sh/distr/issues/1689)) ([82f5b12](https://github.com/distr-sh/distr/commit/82f5b121ce1b1beefea24d66c2319fb1de6eef49))
+* **deps:** update module github.com/stripe/stripe-go/v84 to v84.2.0 ([#1667](https://github.com/distr-sh/distr/issues/1667)) ([52a41f5](https://github.com/distr-sh/distr/commit/52a41f5aad35acb3d1b6af1f1ea11028095eb7c3))
+* **ui:** disable @angular/cdk overlay using popover API ([#1675](https://github.com/distr-sh/distr/issues/1675)) ([99e3c49](https://github.com/distr-sh/distr/commit/99e3c492d9570b475357e02dae9de386b0baf6d4))
+* **ui:** prevent text overflow in toast component ([#1654](https://github.com/distr-sh/distr/issues/1654)) ([fc02207](https://github.com/distr-sh/distr/commit/fc02207942e79488d5fd91d7ebcf92b301210cbe))
+
+
+### Other
+
+* **deps:** bump tar from 7.5.2 to 7.5.3 in the npm_and_yarn group across 1 directory ([#1668](https://github.com/distr-sh/distr/issues/1668)) ([337d955](https://github.com/distr-sh/distr/commit/337d955e7dea84ca42ed9c36eafe1e682ce89c56))
+* **deps:** update axllent/mailpit docker tag to v1.28.3 ([#1670](https://github.com/distr-sh/distr/issues/1670)) ([da764e0](https://github.com/distr-sh/distr/commit/da764e0bab2bd247c40f817c64ebdbcee5610f12))
+* **deps:** update dependency @sentry/cli to v3.1.0 ([#1671](https://github.com/distr-sh/distr/issues/1671)) ([12ddbdb](https://github.com/distr-sh/distr/commit/12ddbdbbd8eef8648c0e92280ee2feba9959f11d))
+* **deps:** update dependency go to v1.25.6 ([#1657](https://github.com/distr-sh/distr/issues/1657)) ([97da58d](https://github.com/distr-sh/distr/commit/97da58d4b208146685356e22f17c07c89926bafb))
+* **deps:** update dependency jasmine-core to v6 ([#1669](https://github.com/distr-sh/distr/issues/1669)) ([ad0eb0f](https://github.com/distr-sh/distr/commit/ad0eb0fae9c6cb2c69bf5d1822ac06c8dd59a673))
+* **deps:** update dependency jasmine-core to v6.0.1 ([#1680](https://github.com/distr-sh/distr/issues/1680)) ([4e2e79c](https://github.com/distr-sh/distr/commit/4e2e79ca9d3c7bea9fcef946b2b5b97f8f29ec6a))
+* **deps:** update dependency pnpm to v10.28.1 ([#1677](https://github.com/distr-sh/distr/issues/1677)) ([2982714](https://github.com/distr-sh/distr/commit/29827144de70e2d992299fd4858faa2e5ba391f1))
+* **deps:** update dependency posthog-js to v1.328.0 ([#1672](https://github.com/distr-sh/distr/issues/1672)) ([4f157a2](https://github.com/distr-sh/distr/commit/4f157a2bd111c9a6b3b765a8f39652004f4dbf24))
+* **deps:** update distr-sh/hello-distr to v0.2.2 ([#1666](https://github.com/distr-sh/distr/issues/1666)) ([483caba](https://github.com/distr-sh/distr/commit/483caba59522c17759d7f03f84dc10f413dcccd9))
+* **frontend:** remove update banner, replace with notification bubble per deployment ([#1674](https://github.com/distr-sh/distr/issues/1674)) ([0ba9dda](https://github.com/distr-sh/distr/commit/0ba9ddac90b77270314c463e3c829e20c289d614))
+* remove DeploymentTarget created_by ([#1676](https://github.com/distr-sh/distr/issues/1676)) ([120812b](https://github.com/distr-sh/distr/commit/120812b876f66b45157b39c46928160a5bd12ce5))
+* **ui:** use generic icon as default user avatar ([#1679](https://github.com/distr-sh/distr/issues/1679)) ([a31ec23](https://github.com/distr-sh/distr/commit/a31ec2313dbfa236d58f5819fc9f196660eae817))
+
 ## [2.5.2](https://github.com/distr-sh/distr/compare/2.5.1...2.5.2) (2026-01-15)
 
 
