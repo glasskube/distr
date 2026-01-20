@@ -206,22 +206,22 @@ func BulkCreateDeploymentLogRecordWithCreatedAt(
 	ctx context.Context,
 	deploymentID uuid.UUID,
 	deploymentRevisionID uuid.UUID,
-	statuses []types.DeploymentLogRecord,
+	records []types.DeploymentLogRecord,
 ) error {
 	db := internalctx.GetDb(ctx)
 	_, err := db.CopyFrom(
 		ctx,
 		pgx.Identifier{"deploymentlogrecord"},
 		[]string{"deployment_id", "deployment_revision_id", "resource", "created_at", "timestamp", "severity", "body"},
-		pgx.CopyFromSlice(len(statuses), func(i int) ([]any, error) {
+		pgx.CopyFromSlice(len(records), func(i int) ([]any, error) {
 			return []any{
 				deploymentID,
 				deploymentRevisionID,
-				statuses[i].Resource,
-				statuses[i].CreatedAt,
-				statuses[i].Timestamp,
-				statuses[i].Severity,
-				statuses[i].Body,
+				records[i].Resource,
+				records[i].CreatedAt,
+				records[i].Timestamp,
+				records[i].Severity,
+				records[i].Body,
 			}, nil
 		}),
 	)

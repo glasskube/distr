@@ -240,6 +240,10 @@ cronJobs:
     labels:
       distr.sh/job: deployment-log-record-cleanup
     args: [cleanup, DeploymentLogRecord, --timeout, 10m]
+  - name: deployment-target-log-record-cleanup
+    labels:
+      distr.sh/job: deployment-target-log-record-cleanup
+    args: [cleanup, DeploymentTargetLogRecord, --timeout, 10m]
   - name: deployment-revision-status-cleanup
     labels:
       distr.sh/job: deployment-revision-status-cleanup

@@ -22,11 +22,12 @@ import (
 )
 
 const (
-	deploymentTargetStatus   = "DeploymentTargetStatus"
-	deploymentTargetMetrics  = "DeploymentTargetMetrics"
-	deploymentRevisionStatus = "DeploymentRevisionStatus"
-	deploymentLogRecord      = "DeploymentLogRecord"
-	oidcState                = "OIDCState"
+	deploymentTargetStatus    = "DeploymentTargetStatus"
+	deploymentTargetMetrics   = "DeploymentTargetMetrics"
+	deploymentRevisionStatus  = "DeploymentRevisionStatus"
+	deploymentLogRecord       = "DeploymentLogRecord"
+	deploymentTargetLogRecord = "DeploymentTargetLogRecord"
+	oidcState                 = "OIDCState"
 )
 
 type CleanupOptions struct {
@@ -39,11 +40,12 @@ func NewCleanupCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use: "cleanup <type>",
 		Long: fmt.Sprintf(
-			"type must be one of: %v, %v, %v, %v, %v",
+			"type must be one of: %v, %v, %v, %v, %v, %v",
 			deploymentTargetStatus,
 			deploymentRevisionStatus,
 			deploymentTargetMetrics,
 			deploymentLogRecord,
+			deploymentTargetLogRecord,
 			oidcState,
 		),
 		Short: "delete old data",
@@ -53,6 +55,7 @@ func NewCleanupCommand() *cobra.Command {
 			deploymentRevisionStatus,
 			deploymentTargetMetrics,
 			deploymentLogRecord,
+			deploymentTargetLogRecord,
 			oidcState,
 		},
 		PreRun: func(cmd *cobra.Command, args []string) { env.Initialize() },
@@ -88,6 +91,8 @@ func runCleanup(ctx context.Context, opts CleanupOptions) error {
 		cleanupFunc = cleanup.RunDeploymentTargetMetricsCleanup
 	case deploymentLogRecord:
 		cleanupFunc = cleanup.RunDeploymentLogRecordCleanup
+	case deploymentTargetLogRecord:
+		cleanupFunc = cleanup.RunDeploymentTargetLogRecordCleanup
 	case oidcState:
 		cleanupFunc = cleanup.RunOIDCStateCleanup
 	default:

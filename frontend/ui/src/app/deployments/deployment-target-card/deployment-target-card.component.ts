@@ -24,6 +24,7 @@ import {
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faArrowUpRightFromSquare,
+  faBinoculars,
   faCircleExclamation,
   faComment,
   faEllipsisVertical,
@@ -61,6 +62,7 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {DeploymentModalComponent} from '../deployment-modal.component';
 import {DeploymentStatusModalComponent} from '../deployment-status-modal/deployment-status-modal.component';
+import {DeploymentTargetStatusModalComponent} from '../deployment-target-status-modal/deployment-target-status-modal.component';
 import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.component';
 
 @Component({
@@ -82,6 +84,7 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
     NgTemplateOutlet,
     DeploymentStatusModalComponent,
     TextFieldModule,
+    DeploymentTargetStatusModalComponent,
   ],
   animations: [modalFlyInOut, drawerFlyInOut, dropdownAnimation],
 })
@@ -105,6 +108,8 @@ export class DeploymentTargetCardComponent {
 
   protected readonly deploymentModal = viewChild.required<TemplateRef<unknown>>('deploymentModal');
   protected readonly deploymentStatusModal = viewChild.required<TemplateRef<unknown>>('deploymentStatusModal');
+  protected readonly deploymentTargetStatusModal =
+    viewChild.required<TemplateRef<unknown>>('deploymentTargetStatusModal');
   protected readonly instructionsModal = viewChild.required<TemplateRef<unknown>>('instructionsModal');
   protected readonly deleteConfirmModal = viewChild.required<TemplateRef<unknown>>('deleteConfirmModal');
   protected readonly manageDeploymentTargetDrawer =
@@ -116,6 +121,7 @@ export class DeploymentTargetCardComponent {
   );
 
   protected readonly faArrowUpRightFromSquare = faArrowUpRightFromSquare;
+  protected readonly faBinoculars = faBinoculars;
   protected readonly faCircleExclamation = faCircleExclamation;
   protected readonly faComment = faComment;
   protected readonly faEllipsisVertical = faEllipsisVertical;
@@ -335,6 +341,9 @@ export class DeploymentTargetCardComponent {
       this.selectedDeployment.set(deployment);
       this.showModal(this.deploymentStatusModal());
     }
+  }
+  protected openDeploymentTargetStatusModal() {
+    this.showModal(this.deploymentTargetStatusModal());
   }
 
   protected setLogsEnabled(deplyoment: DeploymentWithLatestRevision, logsEnabled: boolean) {

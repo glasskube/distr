@@ -1,11 +1,16 @@
 import {Component, computed, inject, input} from '@angular/core';
 import {map, Observable} from 'rxjs';
+import {
+  TimeseriesEntry,
+  TimeseriesExporter,
+  TimeseriesSource,
+  TimeseriesTableComponent,
+} from '../../components/timeseries-table.component';
 import {DeploymentLogsService} from '../../services/deployment-logs.service';
 import {DeploymentLogRecord} from '../../types/deployment-log-record';
-import {TimeseriesEntry, TimeseriesSource, TimeseriesTableComponent} from './timeseries-table.component';
 
 function logRecordToTimeseriesEntry(record: DeploymentLogRecord): TimeseriesEntry {
-  return {date: record.timestamp, status: record.severity, detail: record.body};
+  return {date: record.timestamp, status: record.severity, detail: record.body.trim()};
 }
 
 class LogsTimeseriesSource implements TimeseriesSource {
@@ -38,11 +43,7 @@ class LogsTimeseriesSource implements TimeseriesSource {
 
 @Component({
   selector: 'app-deployment-logs-table',
-  template: `<app-timeseries-table
-    [source]="this.source()"
-    [deploymentId]="this.deploymentId()"
-    [resource]="this.resource()"
-    [exportType]="'logs'" />`,
+  template: `<app-timeseries-table [source]="source()" [exporter]="exporter" />`,
   imports: [TimeseriesTableComponent],
 })
 export class DeploymentLogsTableComponent {
@@ -52,4 +53,8 @@ export class DeploymentLogsTableComponent {
   protected readonly source = computed<TimeseriesSource>(
     () => new LogsTimeseriesSource(this.svc, this.deploymentId(), this.resource())
   );
+  protected readonly exporter: TimeseriesExporter = {
+    export: () => this.svc.export(this.deploymentId(), this.resource()),
+    getFileName: () => `${this.resource()}.log`,
+  };
 }

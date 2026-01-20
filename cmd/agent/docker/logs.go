@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/distr-sh/distr/internal/agentlogs"
+	"github.com/distr-sh/distr/internal/deploymentlogs"
 	"github.com/distr-sh/distr/internal/types"
 	dockercommand "github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/compose/convert"
@@ -24,7 +24,7 @@ import (
 type logsWatcher struct {
 	dockerCli      dockercommand.Cli
 	composeService composeapi.Compose
-	logsExporter   agentlogs.Exporter
+	logsExporter   deploymentlogs.Exporter
 	last           map[uuid.UUID]time.Time
 }
 
@@ -32,7 +32,7 @@ func NewLogsWatcher() *logsWatcher {
 	return &logsWatcher{
 		dockerCli:      dockerCli,
 		composeService: compose.NewComposeService(dockerCli),
-		logsExporter:   agentlogs.ChunkExporter(client, 100),
+		logsExporter:   deploymentlogs.ChunkExporter(client, 100),
 		last:           make(map[uuid.UUID]time.Time),
 	}
 }
@@ -56,7 +56,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		return
 	}
 
-	collector := agentlogs.NewCollector()
+	collector := deploymentlogs.NewCollector()
 
 	for _, d := range deployments {
 		if !d.LogsEnabled {
@@ -123,13 +123,13 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		}
 	}
 
-	if err := lw.logsExporter.Logs(ctx, collector.LogRecords()); err != nil {
+	if err := lw.logsExporter.ExportDeploymentLogs(ctx, collector.LogRecords()); err != nil {
 		logger.Warn("error exporting logs", zap.Error(err))
 	}
 }
 
 type composeCollector struct {
-	agentlogs.DeploymentCollector
+	deploymentlogs.DeploymentCollector
 }
 
 // Err implements api.LogConsumer.
@@ -152,7 +152,7 @@ func (*composeCollector) Register(containerName string) {}
 // Noop for now
 func (*composeCollector) Status(containerName string, message string) {}
 
-func decodeServiceLogs(resource string, r io.Reader, consumer agentlogs.DeploymentCollector) error {
+func decodeServiceLogs(resource string, r io.Reader, consumer deploymentlogs.DeploymentCollector) error {
 	// The docker api provides a multipexed stream for logs which must be demuxed. StdCopy does that.
 	var outBuf bytes.Buffer
 	var errBuf bytes.Buffer

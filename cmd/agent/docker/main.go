@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os/signal"
 	"slices"
 	"syscall"
@@ -12,6 +14,7 @@ import (
 	"github.com/distr-sh/distr/internal/agentclient"
 	"github.com/distr-sh/distr/internal/agentenv"
 	"github.com/distr-sh/distr/internal/buildconfig"
+	"github.com/distr-sh/distr/internal/deploymenttargetlogs"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/distr-sh/distr/internal/util"
 	dockercommand "github.com/docker/cli/cli/command"
@@ -19,15 +22,29 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
-	logger    = util.Require(zap.NewDevelopment())
+	platformLoggingCore = &deploymenttargetlogs.Core{Encoder: zapcore.NewConsoleEncoder(func() zapcore.EncoderConfig {
+		cfg := zap.NewDevelopmentEncoderConfig()
+		cfg.TimeKey = ""
+		cfg.LevelKey = ""
+		return cfg
+	}())}
+	logger = util.Require(zap.NewDevelopment(
+		zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+			// Platform logging should use the same logging level as the base core
+			platformLoggingCore.LevelEnabler = c
+			return zapcore.NewTee(c, platformLoggingCore)
+		}),
+	))
 	client    = util.Require(agentclient.NewFromEnv(logger))
 	dockerCli = util.Require(dockercommand.NewDockerCli())
 )
 
 func init() {
+	platformLoggingCore.Collector = &deploymenttargetlogs.BufferedCollector{Delegate: client}
 	if agentenv.AgentVersionID == "" {
 		logger.Warn("AgentVersionID is not set. self updates will be disabled")
 	}
@@ -35,7 +52,21 @@ func init() {
 }
 
 func main() {
+	defer func() {
+		if err := logger.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
+			fmt.Println(err)
+		}
+	}()
+
+	defer func() {
+		if reason := recover(); reason != nil {
+			logger.Panic("agent panic", zap.Any("reason", reason))
+		}
+	}()
+
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	context.AfterFunc(ctx, func() { logger.Info("shutdown signal received") })
 
 	logger.Info("docker agent is starting",
 		zap.String("version", buildconfig.Version()),
@@ -44,6 +75,12 @@ func main() {
 
 	go NewLogsWatcher().Watch(ctx, 30*time.Second)
 
+	mainLoop(ctx)
+
+	logger.Info("shutting down")
+}
+
+func mainLoop(ctx context.Context) {
 	tick := time.Tick(agentenv.Interval)
 
 loop:
@@ -152,7 +189,6 @@ loop:
 			}
 		}
 	}
-	logger.Info("shutting down")
 }
 
 func sendProgressInterval(ctx context.Context, revisionID uuid.UUID) {
