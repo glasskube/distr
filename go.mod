@@ -41,11 +41,11 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stripe/stripe-go/v84 v84.2.0
 	github.com/wneessen/go-mail v0.7.2
-	go.opentelemetry.io/collector/component v1.49.0
+	go.opentelemetry.io/collector/component v1.50.0
 	go.opentelemetry.io/collector/confmap v1.49.0
-	go.opentelemetry.io/collector/consumer v1.49.0
-	go.opentelemetry.io/collector/pdata v1.49.0
-	go.opentelemetry.io/collector/receiver v1.49.0
+	go.opentelemetry.io/collector/consumer v1.50.0
+	go.opentelemetry.io/collector/pdata v1.50.0
+	go.opentelemetry.io/collector/receiver v1.50.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.64.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0
 	go.opentelemetry.io/otel v1.39.0
@@ -108,10 +108,11 @@ require (
 	github.com/zclconf/go-cty v1.17.0 // indirect
 	go.opentelemetry.io/collector/confmap/xconfmap v0.143.0 // indirect
 	go.opentelemetry.io/collector/consumer/consumererror v0.143.0 // indirect
-	go.opentelemetry.io/collector/featuregate v1.49.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.50.0 // indirect
 	go.opentelemetry.io/collector/filter v0.143.0 // indirect
-	go.opentelemetry.io/collector/pdata/pprofile v0.143.0 // indirect
-	go.opentelemetry.io/collector/pipeline v1.49.0 // indirect
+	go.opentelemetry.io/collector/internal/componentalias v0.144.0 // indirect
+	go.opentelemetry.io/collector/pdata/pprofile v0.144.0 // indirect
+	go.opentelemetry.io/collector/pipeline v1.50.0 // indirect
 	go.opentelemetry.io/collector/receiver/receiverhelper v0.143.0 // indirect
 	go.opentelemetry.io/collector/scraper v0.143.0 // indirect
 	go.opentelemetry.io/collector/scraper/scraperhelper v0.143.0 // indirect
@@ -328,7 +329,7 @@ require (
 	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
 	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
