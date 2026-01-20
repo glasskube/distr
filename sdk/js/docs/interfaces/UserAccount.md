@@ -48,6 +48,12 @@
 
 ---
 
+### imageId?
+
+> `optional` **imageId**: `string`
+
+---
+
 ### imageUrl?
 
 > `optional` **imageUrl**: `string`
