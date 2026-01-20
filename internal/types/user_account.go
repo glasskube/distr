@@ -55,7 +55,7 @@ type UserAccountWithUserRole struct {
 	PasswordHash           []byte     `db:"password_hash" json:"-"`
 	PasswordSalt           []byte     `db:"password_salt" json:"-"`
 	Name                   string     `db:"name" json:"name,omitempty"`
-	ImageID                *uuid.UUID `db:"image_id" json:"-"`
+	ImageID                *uuid.UUID `db:"image_id" json:"imageId,omitempty"`
 	LastUsedOrganizationID *uuid.UUID `db:"last_used_organization_id" json:"-"`
 	// not copy+pasted
 	UserRole UserRole `db:"user_role" json:"userRole"`

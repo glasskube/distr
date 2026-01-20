@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {{ template "fragments/style.html" }}
+  </head>
+  <body>
+    <div class="message-container">
+      {{ template "fragments/header.html" . }}
+      <main>
+        {{if .UserAccount.Name}}
+        <p>Hi {{.UserAccount.Name}}</p>
+        {{else}}
+        <p>Hi,</p>
+        {{end}}
+
+        <p>We received a request to update your email address from {{.UserAccount.Email}} to this one.</p>
+
+        <p>
+          <a href="{{.Host}}/verify?jwt={{.Token | QueryEscape}}">Click this link</a> to verify that this is your email
+          address.
+        </p>
+
+        <p>Alternatively, you can copy and paste the following URL into your browser:</p>
+
+        <div style="overflow-wrap: break-word; word-break: break-all">
+          <code>{{.Host}}/verify?jwt={{.Token | QueryEscape}}</code>
+        </div>
+
+        <p>{{template "fragments/signature.html" . }}</p>
+      </main>
+      {{template "fragments/footer.html" . }}
+    </div>
+  </body>
+</html>

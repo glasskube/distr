@@ -22,6 +22,7 @@ import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
+import {ImageUploadService} from '../../services/image-upload.service';
 import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
@@ -55,6 +56,7 @@ export class CustomerOrganizationsComponent {
 
   private readonly customerOrganizationsService = inject(CustomerOrganizationsService);
   private readonly toast = inject(ToastService);
+  private readonly imageUploadService = inject(ImageUploadService);
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly organizationService = inject(OrganizationService);
@@ -146,7 +148,7 @@ export class CustomerOrganizationsComponent {
   }
 
   protected async uploadImage(value: CustomerOrganization): Promise<void> {
-    const imageId = await firstValueFrom(this.overlay.uploadImage({scope: 'platform'}));
+    const imageId = await firstValueFrom(this.imageUploadService.showDialog({scope: 'platform'}));
     if (!imageId || imageId === value.imageId) {
       return;
     }

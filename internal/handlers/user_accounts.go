@@ -284,6 +284,13 @@ func patchUserAccountHandler() http.HandlerFunc {
 			return
 		}
 
+		isUpdateNeeded := false
+
+		if body.Name != nil && *body.Name != userAccount.Name {
+			userAccount.Name = *body.Name
+			isUpdateNeeded = true
+		}
+
 		if body.UserRole != nil && *body.UserRole != userAccount.UserRole {
 			if userAccount.ID == auth.CurrentUserID() {
 				http.Error(w, "users cannot change their own role", http.StatusForbidden)
@@ -307,6 +314,21 @@ func patchUserAccountHandler() http.HandlerFunc {
 			} else {
 				userAccount.UserRole = *body.UserRole
 			}
+		}
+
+		if isUpdateNeeded {
+			user := userAccount.AsUserAccount()
+			if err := db.UpdateUserAccount(ctx, &user); err != nil {
+				log.Info("user update failed", zap.Error(err))
+				sentry.GetHubFromContext(ctx).CaptureException(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			*userAccount = user.AsUserAccountWithRole(
+				userAccount.UserRole,
+				userAccount.CustomerOrganizationID,
+				userAccount.JoinedOrgAt,
+			)
 		}
 
 		RespondJSON(w, mapping.UserAccountToAPI(*userAccount))

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/distr-sh/distr/internal/env"
+	"github.com/distr-sh/distr/internal/mapping"
 	"github.com/distr-sh/distr/internal/types"
-	"github.com/distr-sh/distr/internal/util"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -72,8 +72,8 @@ func generateUserToken(
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
 	}
-	if user.ImageID != nil {
-		claims[UserImageURLKey] = util.CreateImageURL(user.ImageID)
+	if url := mapping.CreateImageURL(user.ImageID); url != nil {
+		claims[UserImageURLKey] = *url
 	}
 	if org != nil {
 		claims[UserRoleKey] = org.UserRole

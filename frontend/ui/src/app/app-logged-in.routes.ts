@@ -32,6 +32,7 @@ import {AgentsTutorialComponent} from './tutorials/agents/agents-tutorial.compon
 import {BrandingTutorialComponent} from './tutorials/branding/branding-tutorial.component';
 import {RegistryTutorialComponent} from './tutorials/registry/registry-tutorial.component';
 import {TutorialsComponent} from './tutorials/tutorials.component';
+import {UserSettingsComponent} from './user-settings/user-settings.component';
 
 function requiredRoleGuard(...userRole: UserRole[]): CanActivateFn {
   return () => {
@@ -169,12 +170,6 @@ export const routes: Routes = [
         canActivate: [requireVendor, requiredRoleGuard('read_write', 'admin')],
       },
       {
-        path: 'settings',
-        component: OrganizationSettingsComponent,
-        data: {userRole: 'vendor'},
-        canActivate: [requireVendor, requiredRoleGuard('admin')],
-      },
-      {
         path: 'licenses',
         canActivate: [requireVendor, licensingEnabledGuard()],
         data: {userRole: 'vendor'},
@@ -192,6 +187,21 @@ export const routes: Routes = [
       {
         path: 'settings',
         children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            redirectTo: 'organization',
+          },
+          {
+            path: 'organization',
+            component: OrganizationSettingsComponent,
+            data: {userRole: 'vendor'},
+            canActivate: [requireVendor, requiredRoleGuard('admin')],
+          },
+          {
+            path: 'profile',
+            component: UserSettingsComponent,
+          },
           {
             path: 'access-tokens',
             component: AccessTokensComponent,

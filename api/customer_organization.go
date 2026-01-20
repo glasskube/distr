@@ -16,7 +16,7 @@ type CustomerOrganization struct {
 	CreatedAt time.Time  `json:"createdAt"`
 	Name      string     `json:"name"`
 	ImageID   *uuid.UUID `json:"imageId,omitempty"`
-	ImageURL  string     `json:"imageUrl,omitempty"`
+	ImageURL  *string    `json:"imageUrl,omitempty"`
 }
 
 type CustomerOrganizationWithUsage struct {

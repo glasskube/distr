@@ -90,7 +90,8 @@ func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 			name = @name,
 			password_hash = @password_hash,
 			password_salt = @password_salt,
-			email_verified_at = @email_verified_at
+			email_verified_at = @email_verified_at,
+			image_id = @image_id
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
@@ -100,6 +101,7 @@ func UpdateUserAccount(ctx context.Context, userAccount *types.UserAccount) erro
 			"password_salt":     userAccount.PasswordSalt,
 			"name":              userAccount.Name,
 			"email_verified_at": userAccount.EmailVerifiedAt,
+			"image_id":          userAccount.ImageID,
 		},
 	)
 	if err != nil {
@@ -121,11 +123,12 @@ func UpdateUserAccountEmailVerified(ctx context.Context, userAccount *types.User
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`UPDATE UserAccount AS u
-		SET email_verified_at = CURRENT_TIMESTAMP
+		SET email = @email, email_verified_at = now()
 		WHERE id = @id
 		RETURNING `+userAccountOutputExpr,
 		pgx.NamedArgs{
-			"id": userAccount.ID,
+			"id":    userAccount.ID,
+			"email": userAccount.Email,
 		},
 	)
 	if err != nil {
@@ -523,4 +526,20 @@ func UpdateUserAccountImage(ctx context.Context, userAccount *types.UserAccountW
 		return fmt.Errorf("could not save image id to user account: %w", err)
 	}
 	return nil
+}
+
+func ExistsUserAccountWithEmail(ctx context.Context, email string) (bool, error) {
+	db := internalctx.GetDb(ctx)
+	rows, err := db.Query(ctx,
+		`SELECT EXISTS(SELECT 1 FROM UserAccount WHERE email = @email)`,
+		pgx.NamedArgs{"email": email},
+	)
+	if err != nil {
+		return false, err
+	}
+	exists, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[bool])
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

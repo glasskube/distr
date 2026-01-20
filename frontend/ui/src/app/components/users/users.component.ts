@@ -1,7 +1,7 @@
 import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, computed, inject, input, output, signal, TemplateRef, viewChild} from '@angular/core';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {UserAccountWithRole, UserRole} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
@@ -25,6 +25,7 @@ import {modalFlyInOut} from '../../animations/modal';
 import {AutotrimDirective} from '../../directives/autotrim.directive';
 import {RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
+import {ImageUploadService} from '../../services/image-upload.service';
 import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
@@ -57,7 +58,9 @@ export class UsersComponent {
   private readonly usersService = inject(UsersService);
   private readonly organizationService = inject(OrganizationService);
   private readonly overlay = inject(OverlayService);
+  private readonly imageUploadService = inject(ImageUploadService);
   protected readonly auth = inject(AuthService);
+  private readonly fb = inject(FormBuilder).nonNullable;
 
   protected readonly faBox = faBox;
   protected readonly faCheck = faCheck;
@@ -71,8 +74,8 @@ export class UsersComponent {
   protected readonly faUserCircle = faUserCircle;
   protected readonly faXmark = faXmark;
 
-  protected readonly filterForm = new FormGroup({
-    search: new FormControl(''),
+  protected readonly filterForm = this.fb.group({
+    search: this.fb.control(''),
   });
 
   protected readonly users$ = filteredByFormControl(
@@ -86,12 +89,12 @@ export class UsersComponent {
 
   private readonly inviteUserDialog = viewChild.required<TemplateRef<unknown>>('inviteUserDialog');
   private modalRef?: DialogRef;
-  protected readonly inviteForm = new FormGroup({
-    email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
-    name: new FormControl<string | undefined>(undefined, {nonNullable: true}),
-    userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),
+  protected readonly inviteFormLoading = signal(false);
+  protected readonly inviteForm = this.fb.group({
+    email: this.fb.control('', [Validators.required, Validators.email]),
+    name: this.fb.control<string | undefined>(undefined),
+    userRole: this.fb.control<UserRole>('admin', Validators.required),
   });
-  protected inviteFormLoading = false;
   protected inviteUrl: string | null = null;
 
   protected readonly organization = toSignal(this.organizationService.get());
@@ -110,23 +113,67 @@ export class UsersComponent {
     return subscriptionType && ['trial', 'pro', 'enterprise'].includes(subscriptionType);
   });
 
-  protected readonly editRoleUserId = signal<string | null>(null);
-  protected readonly editRoleForm = new FormGroup({
-    userRole: new FormControl<UserRole>('admin', {nonNullable: true, validators: [Validators.required]}),
+  protected readonly editNameUserId = signal<string | null>(null);
+  protected readonly editNameFormLoading = signal(false);
+  protected readonly editNameForm = this.fb.group({
+    name: this.fb.control(''),
   });
-  protected editRoleFormLoading = false;
+
+  protected readonly editRoleUserId = signal<string | null>(null);
+  protected readonly editRoleFormLoading = signal(false);
+  protected readonly editRoleForm = this.fb.group({
+    userRole: this.fb.control<UserRole>('admin', Validators.required),
+  });
 
   public showInviteDialog(reset?: boolean): void {
     this.closeInviteDialog(reset);
     this.modalRef = this.overlay.showModal(this.inviteUserDialog());
   }
 
+  protected editUserName(user: UserAccountWithRole): void {
+    if (!user.id) {
+      return;
+    }
+    this.editNameFormLoading.set(false);
+    this.editNameUserId.set(user.id);
+    this.editRoleUserId.set(null);
+    this.editNameForm.reset(user);
+  }
+
+  protected async submitEditUserNameForm(): Promise<void> {
+    this.editNameForm.markAllAsTouched();
+
+    const userId = this.editNameUserId();
+    const name = this.editNameForm.value.name;
+    if (!userId || !name) {
+      return;
+    }
+
+    if (this.editNameForm.valid) {
+      this.editNameFormLoading.set(true);
+      try {
+        await firstValueFrom(this.usersService.patchUserAccount(userId, {name}));
+        this.editNameUserId.set(null);
+        this.editNameForm.reset();
+        this.toast.success('User has been updated');
+      } catch (e) {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+      } finally {
+        this.editNameFormLoading.set(false);
+      }
+    }
+  }
+
   protected editUserRole(user: UserAccountWithRole): void {
     if (!user.id) {
       return;
     }
-    this.editRoleFormLoading = false;
+    this.editRoleFormLoading.set(false);
     this.editRoleUserId.set(user.id);
+    this.editNameUserId.set(null);
     this.editRoleForm.reset(user);
   }
 
@@ -140,7 +187,7 @@ export class UsersComponent {
     }
 
     if (this.editRoleForm.valid) {
-      this.editRoleFormLoading = true;
+      this.editRoleFormLoading.set(true);
       try {
         await firstValueFrom(this.usersService.patchUserAccount(userId, {userRole}));
         this.editRoleUserId.set(null);
@@ -152,7 +199,7 @@ export class UsersComponent {
           this.toast.error(msg);
         }
       } finally {
-        this.editRoleFormLoading = false;
+        this.editRoleFormLoading.set(false);
       }
     }
   }
@@ -160,7 +207,7 @@ export class UsersComponent {
   public async submitInviteForm(): Promise<void> {
     this.inviteForm.markAllAsTouched();
     if (this.inviteForm.valid) {
-      this.inviteFormLoading = true;
+      this.inviteFormLoading.set(true);
       try {
         const result = await firstValueFrom(
           this.usersService.addUser({
@@ -184,13 +231,15 @@ export class UsersComponent {
           this.toast.error(msg);
         }
       } finally {
-        this.inviteFormLoading = false;
+        this.inviteFormLoading.set(false);
       }
     }
   }
 
   public async uploadImage(data: UserAccountWithRole) {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl, scope: 'platform'}));
+    const fileId = await firstValueFrom(
+      this.imageUploadService.showDialog({imageUrl: data.imageUrl, scope: 'platform'})
+    );
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }

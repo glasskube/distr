@@ -1,23 +1,32 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {UserAccount} from '@distr-sh/distr-sdk';
-import {Observable} from 'rxjs';
+import {Observable, tap} from 'rxjs';
+import {ContextService} from './context.service';
+
+export interface UpdateUserAccountRequest {
+  name?: string;
+  password?: string;
+  emailVerified?: boolean;
+  imageId?: string;
+}
 
 @Injectable({providedIn: 'root'})
 export class SettingsService {
   private readonly httpClient = inject(HttpClient);
+  private readonly ctx = inject(ContextService);
   private readonly baseUrl = '/api/v1/settings';
 
-  public updateUserSettings(request: {
-    name?: string;
-    password?: string;
-    emailVerified?: boolean;
-  }): Observable<UserAccount> {
-    return this.httpClient.post<UserAccount>(`${this.baseUrl}/user`, request);
+  public updateUserSettings(request: UpdateUserAccountRequest): Observable<UserAccount> {
+    return this.httpClient.post<UserAccount>(`${this.baseUrl}/user`, request).pipe(tap(() => this.ctx.reload()));
   }
 
-  public requestEmailVerification() {
-    return this.httpClient.post<void>(`${this.baseUrl}/verify/request`, undefined);
+  public requestEmailVerification(email?: string) {
+    if (email) {
+      return this.httpClient.post<void>(`${this.baseUrl}/user/email`, {email});
+    } else {
+      return this.httpClient.post<void>(`${this.baseUrl}/verify/request`, undefined);
+    }
   }
 
   public confirmEmailVerification() {

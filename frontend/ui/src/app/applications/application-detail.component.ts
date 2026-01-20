@@ -53,6 +53,7 @@ import {UuidComponent} from '../components/uuid';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
+import {ImageUploadService} from '../services/image-upload.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 import {
@@ -84,6 +85,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   private readonly toast = inject(ToastService);
   private readonly overlay = inject(OverlayService);
+  private readonly imageUploadService = inject(ImageUploadService);
   private readonly applicationService = inject(ApplicationsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -455,7 +457,7 @@ export class ApplicationDetailComponent implements OnInit, OnDestroy {
   }
 
   public async uploadImage(data: Application) {
-    const fileId = await firstValueFrom(this.overlay.uploadImage({imageUrl: data.imageUrl}));
+    const fileId = await firstValueFrom(this.imageUploadService.showDialog({imageUrl: data.imageUrl}));
     if (!fileId || data.imageUrl?.includes(fileId)) {
       return;
     }

@@ -13,6 +13,7 @@ export interface CreateUserAccountRequest {
 }
 
 export interface PatchUserAccountRequest {
+  name?: string;
   userRole?: UserRole;
 }
 
