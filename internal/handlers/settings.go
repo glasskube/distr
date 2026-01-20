@@ -106,6 +106,7 @@ func userSettingsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to hash password", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		isUpdateNeeded = true
 	}
