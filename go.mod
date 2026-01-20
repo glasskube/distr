@@ -42,7 +42,7 @@ require (
 	github.com/stripe/stripe-go/v84 v84.2.0
 	github.com/wneessen/go-mail v0.7.2
 	go.opentelemetry.io/collector/component v1.49.0
-	go.opentelemetry.io/collector/confmap v1.49.0
+	go.opentelemetry.io/collector/confmap v1.50.0
 	go.opentelemetry.io/collector/consumer v1.49.0
 	go.opentelemetry.io/collector/pdata v1.49.0
 	go.opentelemetry.io/collector/receiver v1.49.0
@@ -108,7 +108,7 @@ require (
 	github.com/zclconf/go-cty v1.17.0 // indirect
 	go.opentelemetry.io/collector/confmap/xconfmap v0.143.0 // indirect
 	go.opentelemetry.io/collector/consumer/consumererror v0.143.0 // indirect
-	go.opentelemetry.io/collector/featuregate v1.49.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.50.0 // indirect
 	go.opentelemetry.io/collector/filter v0.143.0 // indirect
 	go.opentelemetry.io/collector/pdata/pprofile v0.143.0 // indirect
 	go.opentelemetry.io/collector/pipeline v1.49.0 // indirect
@@ -212,7 +212,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.21.1 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
-	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gofrs/flock v0.13.0 // indirect
