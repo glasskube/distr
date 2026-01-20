@@ -50,5 +50,6 @@ func (r UpdateUserAccountEmailRequest) Validate() error {
 }
 
 type PatchUserAccountRequest struct {
+	Name     *string         `json:"name"`
 	UserRole *types.UserRole `json:"userRole"`
 }
