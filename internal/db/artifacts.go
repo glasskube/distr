@@ -604,16 +604,16 @@ func CreateArtifactPullLogEntry(
 	_, err := db.Exec(
 		ctx,
 		`INSERT INTO ArtifactVersionPull (
-		  artifact_version_id,
+			artifact_version_id,
 			useraccount_id,
 			remote_address,
 			customer_organization_id
 		)
 		VALUES (
 			@versionId,
-		  @userId,
-		  @remoteAddress,
-		  @customerOrgId
+			@userId,
+			@remoteAddress,
+			@customerOrgId
 		)`,
 		pgx.NamedArgs{
 			"versionId":     versionID,
