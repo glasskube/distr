@@ -43,6 +43,7 @@
 - [ClientConfig](type-aliases/ClientConfig.md)
 - [CreateDeploymentParams](type-aliases/CreateDeploymentParams.md)
 - [CreateDeploymentResult](type-aliases/CreateDeploymentResult.md)
+- [CustomerOrganizationFeature](type-aliases/CustomerOrganizationFeature.md)
 - [DeploymentStatusType](type-aliases/DeploymentStatusType.md)
 - [DeploymentTargetScope](type-aliases/DeploymentTargetScope.md)
 - [DeploymentType](type-aliases/DeploymentType.md)
