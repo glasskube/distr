@@ -589,7 +589,13 @@ func CreateArtifactVersionPart(ctx context.Context, avp *types.ArtifactVersionPa
 	}
 }
 
-func CreateArtifactPullLogEntry(ctx context.Context, versionID, userID uuid.UUID, remoteAddress string) error {
+func CreateArtifactPullLogEntry(
+	ctx context.Context,
+	versionID,
+	userID uuid.UUID,
+	remoteAddress string,
+	customerOrgID *uuid.UUID,
+) error {
 	db := internalctx.GetDb(ctx)
 	remoteAddressPtr := &remoteAddress
 	if remoteAddress == "" {
@@ -597,9 +603,24 @@ func CreateArtifactPullLogEntry(ctx context.Context, versionID, userID uuid.UUID
 	}
 	_, err := db.Exec(
 		ctx,
-		`INSERT INTO ArtifactVersionPull (artifact_version_id, useraccount_id, remote_address)
-		VALUES (@versionId, @userId, @remoteAddress)`,
-		pgx.NamedArgs{"versionId": versionID, "userId": userID, "remoteAddress": remoteAddressPtr},
+		`INSERT INTO ArtifactVersionPull (
+		  artifact_version_id,
+			useraccount_id,
+			remote_address,
+			customer_organization_id
+		)
+		VALUES (
+			@versionId,
+		  @userId,
+		  @remoteAddress,
+		  @customerOrgId
+		)`,
+		pgx.NamedArgs{
+			"versionId":     versionID,
+			"userId":        userID,
+			"remoteAddress": remoteAddressPtr,
+			"customerOrgId": customerOrgID,
+		},
 	)
 	if err != nil {
 		return fmt.Errorf("could not create artifact pull log entry: %w", err)
@@ -652,10 +673,12 @@ func GetArtifactVersionPulls(
 			p.created_at,
 			p.remote_address,
 			CASE WHEN u.id IS NOT NULL THEN (`+userAccountOutputExpr+`) ELSE NULL END,
+			CASE WHEN co.id IS NOT NULL THEN (`+customerOrganizationOutputExpr+`) ELSE NULL END,
 			(`+artifactOutputExpr+`),
 			(`+artifactVersionOutputExpr+`)
 		FROM ArtifactVersionPull p
 			LEFT JOIN UserAccount u ON u.id = p.useraccount_id
+			LEFT JOIN CustomerOrganization co ON co.id = p.customer_organization_id
 			JOIN ArtifactVersion v ON v.id = p.artifact_version_id
 			JOIN Artifact A on a.id = v.artifact_id
 		WHERE a.organization_id = @orgId

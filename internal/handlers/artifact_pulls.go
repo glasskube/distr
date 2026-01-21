@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/distr-sh/distr/api"
 	"github.com/distr-sh/distr/internal/auth"
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/distr-sh/distr/internal/db"
 	"github.com/distr-sh/distr/internal/middleware"
-	"github.com/distr-sh/distr/internal/types"
 	"github.com/getsentry/sentry-go"
 	"github.com/oaswrap/spec/adapter/chiopenapi"
 	"github.com/oaswrap/spec/option"
@@ -28,7 +28,7 @@ func ArtifactPullsRouter(r chiopenapi.Router) {
 			Before *time.Time `query:"before"`
 			Count  *int       `query:"count"`
 		}{})).
-		With(option.Response(http.StatusOK, []types.ArtifactVersionPull{}))
+		With(option.Response(http.StatusOK, []api.ArtifactVersionPullResponse{}))
 }
 
 func getArtifactPullsHandler() http.HandlerFunc {
@@ -61,6 +61,28 @@ func getArtifactPullsHandler() http.HandlerFunc {
 			log.Warn("could not get pulls", zap.Error(err))
 			return
 		}
-		RespondJSON(w, pulls)
+
+		response := make([]api.ArtifactVersionPullResponse, len(pulls))
+		for i, pull := range pulls {
+			response[i] = api.ArtifactVersionPullResponse{
+				CreatedAt:       pull.CreatedAt,
+				RemoteAddress:   pull.RemoteAddress,
+				Artifact:        pull.Artifact,
+				ArtifactVersion: pull.ArtifactVersion,
+			}
+
+			if pull.UserAccount != nil {
+				if pull.UserAccount.Name != "" {
+					response[i].UserAccountName = &pull.UserAccount.Name
+				}
+				response[i].UserAccountEmail = &pull.UserAccount.Email
+			}
+
+			if pull.CustomerOrganization != nil {
+				response[i].CustomerOrganizationName = &pull.CustomerOrganization.Name
+			}
+		}
+
+		RespondJSON(w, response)
 	}
 }
