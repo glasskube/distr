@@ -44,7 +44,7 @@ func (pc *Core) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.Chec
 func (pc *Core) With(fields []zapcore.Field) zapcore.Core {
 	clone := pc.clone()
 	for i := range fields {
-		fields[i].AddTo(pc.Encoder)
+		fields[i].AddTo(clone.Encoder)
 	}
 	return clone
 }
