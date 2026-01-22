@@ -58,11 +58,13 @@ func main() {
 		}
 	}()
 
-	defer func() {
-		if reason := recover(); reason != nil {
-			logger.Panic("agent panic", zap.Any("reason", reason))
-		}
-	}()
+	/*
+		defer func() {
+			if reason := recover(); reason != nil {
+				logger.Panic("agent panic", zap.Any("reason", reason))
+			}
+		}()
+	*/
 
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 
@@ -158,28 +160,30 @@ loop:
 						continue
 					}
 
-					var isUpgrade, skipApply bool
 					if existing, ok := deployments[deployment.ID]; ok {
-						isUpgrade = existing.RevisionID != deployment.RevisionID
-						skipApply = !isUpgrade && *deployment.DockerType == types.DockerTypeSwarm
+						agentDeployment = &existing
 					}
 
-					if skipApply {
-						logger.Info("skip apply in swarm mode")
-						status = "status checks are not yet supported in swarm mode"
+					if agentDeployment == nil || agentDeployment.RevisionID != deployment.RevisionID {
+						func() {
+							progressCtx, progressCancel := context.WithCancel(ctx)
+							defer progressCancel()
+							go sendProgressInterval(progressCtx, deployment.RevisionID)
+
+							if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
+								multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+							}
+
+							if err == nil && deployment.ForceRestart {
+								multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
+							}
+						}()
 					} else {
-						progressCtx, progressCancel := context.WithCancel(ctx)
-						go sendProgressInterval(progressCtx, deployment.RevisionID)
-
-						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
-							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+						if err1 := CheckStatus(ctx, *agentDeployment); err1 != nil {
+							multierr.AppendInto(&err, err1)
+						} else {
+							status = "health checks passed"
 						}
-
-						if err == nil && isUpgrade && deployment.ForceRestart {
-							multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
-						}
-
-						progressCancel()
 					}
 				}
 
