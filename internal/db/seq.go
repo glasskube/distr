@@ -12,7 +12,9 @@ func CollectSeq[T any](rows pgx.Rows, fn pgx.RowToFunc[T]) SeqE[T] {
 	return func(yield func(T, error) bool) {
 		defer rows.Close()
 		for rows.Next() {
-			yield(fn(rows))
+			if !yield(fn(rows)) {
+				return
+			}
 		}
 	}
 }
