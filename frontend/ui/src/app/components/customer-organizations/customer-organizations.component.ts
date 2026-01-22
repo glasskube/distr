@@ -3,7 +3,7 @@ import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
-import {CustomerOrganization} from '@distr-sh/distr-sdk';
+import {CustomerOrganization, CustomerOrganizationWithUsage} from '@distr-sh/distr-sdk';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
   faBuildingUser,
@@ -158,9 +158,21 @@ export class CustomerOrganizationsComponent {
     this.refresh$.next();
   }
 
-  protected delete(target: CustomerOrganization) {
+  protected delete(target: CustomerOrganizationWithUsage): void {
     this.overlay
-      .confirm({message: {message: 'Are you sure you want to delete this customer?'}})
+      .confirm({
+        message: {
+          message: 'Are you sure you want to delete this customer?',
+          alert:
+            target.userCount > 0 || target.deploymentTargetCount > 0
+              ? {
+                  type: 'warning',
+                  message: `Deleting this customer will also delete its associated users (${target.userCount}) and deployment targets (${target.deploymentTargetCount}) from your organization.`,
+                }
+              : undefined,
+        },
+        requiredConfirmInputText: target.name,
+      })
       .pipe(
         filter((it) => it === true),
         switchMap(() => this.customerOrganizationsService.deleteCustomerOrganization(target.id!))

@@ -172,20 +172,30 @@ func UpdateCustomerOrganization(ctx context.Context, customerOrg *types.Customer
 }
 
 func DeleteCustomerOrganizationWithID(ctx context.Context, id uuid.UUID, organizationID uuid.UUID) error {
-	db := internalctx.GetDb(ctx)
-	cmd, err := db.Exec(
-		ctx,
-		`DELETE FROM CustomerOrganization WHERE id = @id AND organization_id = @organizationId`,
-		pgx.NamedArgs{"id": id, "organizationId": organizationID},
-	)
+	err := RunTx(ctx, func(ctx context.Context) error {
+		db := internalctx.GetDb(ctx)
+		if _, err := db.Exec(ctx, "SET CONSTRAINTS deployment_application_license_id_fkey DEFERRED"); err != nil {
+			return err
+		}
+
+		cmd, err := db.Exec(
+			ctx,
+			`DELETE FROM CustomerOrganization WHERE id = @id AND organization_id = @organizationId`,
+			pgx.NamedArgs{"id": id, "organizationId": organizationID},
+		)
+		if err != nil {
+			return fmt.Errorf("could not delete CustomerOrganization: %w", err)
+		}
+		if cmd.RowsAffected() == 0 {
+			return apierrors.ErrNotFound
+		}
+		return nil
+	})
 	if err != nil {
 		var pgError *pgconn.PgError
 		if errors.As(err, &pgError) && pgError.Code == pgerrcode.ForeignKeyViolation {
 			err = fmt.Errorf("%w: %w", apierrors.ErrConflict, err)
 		}
-		return err
-	} else if cmd.RowsAffected() == 0 {
-		return apierrors.ErrNotFound
 	}
-	return nil
+	return err
 }
