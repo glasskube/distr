@@ -69,6 +69,7 @@ func AgentRouter(r chiopenapi.Router) {
 			r.Post("/status", angentPostStatusHandler)
 			r.Post("/metrics", agentPostMetricsHander)
 			r.Put("/logs", agentPutDeploymentLogsHandler())
+			r.Put("/deployment-target-logs", agentPutDeploymentTargetLogsHandler())
 		})
 	})
 }
@@ -300,7 +301,7 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 			if errors.Is(err, apierrors.ErrNotFound) {
 				http.Error(w, fmt.Sprintf("bad request: %v", err), http.StatusBadRequest)
 			} else {
-				log.Error("error saving log records", zap.Error(err))
+				log.Error("error saving deployment log records", zap.Error(err))
 				sentry.GetHubFromContext(ctx).CaptureException(err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
@@ -310,7 +311,28 @@ func agentPutDeploymentLogsHandler() http.HandlerFunc {
 		if err := db.SaveDeploymentLogRecords(ctx, records); errors.Is(err, apierrors.ErrBadRequest) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else if err != nil {
-			log.Error("error saving log records", zap.Error(err))
+			log.Error("error saving deployment log records", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func agentPutDeploymentTargetLogsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := internalctx.GetLogger(ctx)
+		deploymentTarget := internalctx.GetDeploymentTarget(ctx)
+		records, err := JsonBody[[]api.DeploymentTargetLogRecordRequest](w, r)
+		if err != nil {
+			return
+		}
+
+		if err := db.SaveDeploymentTargetLogRecords(ctx, deploymentTarget.ID, records); err != nil {
+			log.Error("error saving deployment target log records", zap.Error(err))
 			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return

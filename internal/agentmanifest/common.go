@@ -44,6 +44,7 @@ func getTemplateData(
 		statusEndpoint    string
 		metricsEndpoint   string
 		logsEndpoint      string
+		agentLogsEndpoint string
 	)
 
 	if u, err := url.Parse(customdomains.AppDomainOrDefault(org)); err != nil {
@@ -56,6 +57,7 @@ func getTemplateData(
 		statusEndpoint = u.JoinPath("status").String()
 		metricsEndpoint = u.JoinPath("metrics").String()
 		logsEndpoint = u.JoinPath("logs").String()
+		agentLogsEndpoint = u.JoinPath("deployment-target-logs").String()
 	}
 
 	result := map[string]any{
@@ -74,6 +76,7 @@ func getTemplateData(
 		"targetId":          deploymentTarget.ID,
 		"targetSecret":      secret,
 		"logsEndpoint":      logsEndpoint,
+		"agentLogsEndpoint": agentLogsEndpoint,
 	}
 	if deploymentTarget.Namespace != nil {
 		result["targetNamespace"] = *deploymentTarget.Namespace

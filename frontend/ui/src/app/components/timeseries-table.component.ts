@@ -2,10 +2,8 @@ import {AsyncPipe, DatePipe} from '@angular/common';
 import {Component, inject, input} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {filter, interval, map, merge, Observable, scan, Subject, switchMap, tap} from 'rxjs';
-import {distinctBy} from '../../../util/arrays';
-import {DeploymentLogsService} from '../../services/deployment-logs.service';
-import {DeploymentStatusService} from '../../services/deployment-status.service';
-import {ToastService} from '../../services/toast.service';
+import {distinctBy} from '../../util/arrays';
+import {ToastService} from '../services/toast.service';
 
 export interface TimeseriesEntry {
   id?: string;
@@ -19,6 +17,11 @@ export interface TimeseriesSource {
   load(): Observable<TimeseriesEntry[]>;
   loadBefore(before: Date): Observable<TimeseriesEntry[]>;
   loadAfter(after: Date): Observable<TimeseriesEntry[]>;
+}
+
+export interface TimeseriesExporter {
+  getFileName(): string;
+  export(): Observable<Blob>;
 }
 
 @Component({
@@ -35,7 +38,7 @@ export interface TimeseriesSource {
             </tr>
           </thead>
           <tbody>
-            @for (entry of entries; track entry.id && entry.date) {
+            @for (entry of entries; track entry.id ?? entry.date) {
               <tr
                 class="not-last:border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
                 <th class="px-4 md:px-5 font-medium whitespace-nowrap">
@@ -45,7 +48,7 @@ export interface TimeseriesSource {
                   {{ entry.status }}
                 </td>
                 <td
-                  class="px-4 md:px-5 whitespace-pre-line font-mono text-gray-900 dark:text-white"
+                  class="px-4 md:px-5 whitespace-pre-wrap font-mono text-gray-900 dark:text-white"
                   data-ph-mask-text="true">
                   {{ entry.detail }}
                 </td>
@@ -55,7 +58,7 @@ export interface TimeseriesSource {
         </table>
       </div>
 
-      @if (hasMore || (deploymentId() && exportType())) {
+      @if (hasMore || exporter()) {
         <div class="flex items-center justify-center gap-2 mt-2">
           @if (hasMore) {
             <button
@@ -65,7 +68,7 @@ export interface TimeseriesSource {
               Load more
             </button>
           }
-          @if (deploymentId() && exportType()) {
+          @if (exporter()) {
             <button
               type="button"
               class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
@@ -103,15 +106,13 @@ export interface TimeseriesSource {
 })
 export class TimeseriesTableComponent {
   public readonly source = input.required<TimeseriesSource>();
-  public readonly deploymentId = input<string>();
-  public readonly resource = input<string>();
-  public readonly exportType = input<'logs' | 'status'>();
+  public readonly exporter = input<TimeseriesExporter>();
 
-  private readonly deploymentLogsService = inject(DeploymentLogsService);
-  private readonly deploymentStatusService = inject(DeploymentStatusService);
   private readonly toastService = inject(ToastService);
+
   protected hasMore = true;
   protected isExporting = false;
+
   protected readonly entries$: Observable<TimeseriesEntry[]> = toObservable(this.source).pipe(
     switchMap((source) => {
       let nextBefore: Date | null = null;
@@ -131,6 +132,7 @@ export class TimeseriesTableComponent {
           switchMap((after) => source.loadAfter(after))
         )
       ).pipe(
+        tap((entries) => console.log({entries})),
         tap((entries) =>
           entries
             .map((entry) => new Date(entry.date))
@@ -159,38 +161,18 @@ export class TimeseriesTableComponent {
   }
 
   protected exportData() {
-    const deploymentId = this.deploymentId();
-    const exportType = this.exportType();
-
-    if (!deploymentId || !exportType) {
+    const exporter = this.exporter();
+    if (!exporter) {
       return;
     }
 
     this.isExporting = true;
 
-    let exportObservable: Observable<Blob>;
-    let filename: string;
     const today = new Date().toISOString().split('T')[0];
-
-    if (exportType === 'logs') {
-      const resource = this.resource();
-      if (!resource) {
-        this.isExporting = false;
-        return;
-      }
-      exportObservable = this.deploymentLogsService.export(deploymentId, resource);
-      filename = `${today}_${resource}.log`;
-    } else if (exportType === 'status') {
-      exportObservable = this.deploymentStatusService.export(deploymentId);
-      filename = `${today}_deployment_status.log`;
-    } else {
-      this.isExporting = false;
-      return;
-    }
-
+    const filename = `${today}_${exporter.getFileName()}`;
     const toastRef = this.toastService.info('Download started...');
 
-    exportObservable.subscribe({
+    exporter.export().subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

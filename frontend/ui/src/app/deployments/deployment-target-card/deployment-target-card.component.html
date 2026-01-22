@@ -168,6 +168,17 @@
                   </button>
                 </li>
 
+                <li>
+                  <button
+                    type="button"
+                    (click)="showDeploymentTargetDropdown.set(false); openDeploymentTargetStatusModal()"
+                    aria-controls="manage-deployment-target-drawer"
+                    class="text-start block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                    <fa-icon [icon]="faBinoculars" class="inline-block w-4 mr-2 text-gray-500 dark:text-gray-400" />
+                    Agent Logs
+                  </button>
+                </li>
+
                 @let status = deploymentTarget().currentStatus;
                 @if (status) {
                   <li
@@ -480,6 +491,14 @@
     [deployment]="selectedDeployment()"
     (closed)="hideModal()">
   </app-deployment-modal>
+</ng-template>
+
+<ng-template #deploymentTargetStatusModal>
+  <app-deployment-target-status-modal
+    @modalFlyInOut
+    class="w-full m-4"
+    [deploymentTarget]="deploymentTarget()"
+    (closed)="hideModal()" />
 </ng-template>
 
 <ng-template #deploymentStatusModal>
