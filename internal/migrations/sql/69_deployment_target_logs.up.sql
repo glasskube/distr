@@ -7,4 +7,4 @@ CREATE TABLE DeploymentTargetLogRecord (
   body TEXT NOT NULL
 );
 
-CREATE INDEX deploymenttargetlogrecord_deployment_target_id_timestamp ON DeploymentTargetLogRecord(deployment_target_id, timestamp DESC);
+CREATE INDEX DeploymentTargetLogRecord_deployment_target_id_timestamp ON DeploymentTargetLogRecord(deployment_target_id, timestamp DESC);
