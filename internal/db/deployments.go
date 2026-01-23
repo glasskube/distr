@@ -390,7 +390,7 @@ func BulkCreateDeploymentRevisionStatusWithCreatedAt(
 		pgx.CopyFromSlice(len(statuses), func(i int) ([]any, error) {
 			return []any{
 				deploymentRevisionID,
-				types.DeploymentStatusTypeOK,
+				types.DeploymentStatusTypeHealthy,
 				statuses[i].Message,
 				statuses[i].CreatedAt,
 			}, nil

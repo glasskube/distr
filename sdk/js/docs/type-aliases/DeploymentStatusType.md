@@ -6,4 +6,4 @@
 
 # Type Alias: DeploymentStatusType
 
-> **DeploymentStatusType** = `"ok"` \| `"progressing"` \| `"error"`
+> **DeploymentStatusType** = `"healthy"` \| `"running"` \| `"progressing"` \| `"error"`

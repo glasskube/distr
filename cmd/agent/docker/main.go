@@ -58,13 +58,11 @@ func main() {
 		}
 	}()
 
-	/*
-		defer func() {
-			if reason := recover(); reason != nil {
-				logger.Panic("agent panic", zap.Any("reason", reason))
-			}
-		}()
-	*/
+	defer func() {
+		if reason := recover(); reason != nil {
+			logger.Panic("agent panic", zap.Any("reason", reason))
+		}
+	}()
 
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 
@@ -103,7 +101,7 @@ loop:
 						logger.Error("self update failed", zap.Error(err))
 						// TODO: Support status without revision ID?
 						if len(resource.Deployments) > 0 {
-							if err := client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
+							if err := client.StatusWithError(ctx, resource.Deployments[0].RevisionID, err); err != nil {
 								logger.Error("failed to send status", zap.Error(err))
 							}
 						}
@@ -150,6 +148,7 @@ loop:
 			for _, deployment := range resource.Deployments {
 				var agentDeployment *AgentDeployment
 				var status string
+				var statusType types.DeploymentStatusType
 				_, err = agentauth.EnsureAuth(ctx, client.RawToken(), deployment)
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
@@ -179,16 +178,23 @@ loop:
 							}
 						}()
 					} else {
-						if err1 := CheckStatus(ctx, *agentDeployment); err1 != nil {
+						if s, err1 := CheckStatus(ctx, *agentDeployment); err1 != nil {
 							multierr.AppendInto(&err, err1)
 						} else {
 							status = "health checks passed"
+							statusType = s
 						}
 					}
 				}
 
-				if statusErr := client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
-					logger.Error("failed to send status", zap.Error(statusErr))
+				if err != nil {
+					err = client.StatusWithError(ctx, deployment.RevisionID, err)
+				} else {
+					err = client.Status(ctx, deployment.RevisionID, statusType, status)
+				}
+
+				if err != nil {
+					logger.Error("failed to send status", zap.Error(err))
 				}
 			}
 		}

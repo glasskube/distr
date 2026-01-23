@@ -73,13 +73,8 @@ func (c *Client) Manifest(ctx context.Context) ([]byte, error) {
 	}
 }
 
-func (c *Client) StatusWithError(ctx context.Context, revisionID uuid.UUID, message string, err error) error {
-	statusType := types.DeploymentStatusTypeOK
-	if err != nil {
-		statusType = types.DeploymentStatusTypeError
-		message = err.Error()
-	}
-	return c.Status(ctx, revisionID, statusType, message)
+func (c *Client) StatusWithError(ctx context.Context, revisionID uuid.UUID, err error) error {
+	return c.Status(ctx, revisionID, types.DeploymentStatusTypeError, err.Error())
 }
 
 func (c *Client) Status(
