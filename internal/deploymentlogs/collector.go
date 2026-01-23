@@ -1,4 +1,4 @@
-package agentlogs
+package deploymentlogs
 
 import (
 	"github.com/distr-sh/distr/api"

@@ -14,6 +14,8 @@ import (
 	"github.com/distr-sh/distr/api"
 	"github.com/distr-sh/distr/internal/agentclient/useragent"
 	"github.com/distr-sh/distr/internal/buildconfig"
+	"github.com/distr-sh/distr/internal/deploymentlogs"
+	"github.com/distr-sh/distr/internal/deploymenttargetlogs"
 	"github.com/distr-sh/distr/internal/httpstatus"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
@@ -23,14 +25,15 @@ import (
 )
 
 type clientData struct {
-	authTarget       string
-	authSecret       string
-	loginEndpoint    string
-	manifestEndpoint string
-	resourceEndpoint string
-	statusEndpoint   string
-	metricsEndpoint  string
-	logsEndpoint     string
+	authTarget                   string
+	authSecret                   string
+	loginEndpoint                string
+	manifestEndpoint             string
+	resourceEndpoint             string
+	statusEndpoint               string
+	metricsEndpoint              string
+	deploymentLogsEndpoint       string
+	deploymentTargetLogsEndpoint string
 }
 
 type Client struct {
@@ -48,7 +51,7 @@ func (c *Client) Resource(ctx context.Context) (*api.AgentResource, error) {
 		return nil, err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
-		if resp, err := c.doAuthenticated(ctx, req); err != nil {
+		if resp, err := c.doAuthenticated(ctx, req, true); err != nil {
 			return nil, err
 		} else if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			return nil, err
@@ -61,7 +64,7 @@ func (c *Client) Resource(ctx context.Context) (*api.AgentResource, error) {
 func (c *Client) Manifest(ctx context.Context) ([]byte, error) {
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.manifestEndpoint, nil); err != nil {
 		return nil, err
-	} else if resp, err := c.doAuthenticated(ctx, req); err != nil {
+	} else if resp, err := c.doAuthenticated(ctx, req, true); err != nil {
 		return nil, err
 	} else if data, err := io.ReadAll(resp.Body); err != nil {
 		return nil, err
@@ -97,7 +100,7 @@ func (c *Client) Status(
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
-		if _, err := c.doAuthenticated(ctx, req); err != nil {
+		if _, err := c.doAuthenticated(ctx, req, true); err != nil {
 			return err
 		} else {
 			return nil
@@ -105,15 +108,28 @@ func (c *Client) Status(
 	}
 }
 
-func (c *Client) Logs(ctx context.Context, logs []api.DeploymentLogRecord) error {
+func (c *Client) ExportDeploymentLogs(ctx context.Context, records []api.DeploymentLogRecord) error {
 	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(logs); err != nil {
+	if err := json.NewEncoder(&buf).Encode(records); err != nil {
 		return err
-	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.logsEndpoint, &buf); err != nil {
+	} else if req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.deploymentLogsEndpoint, &buf); err != nil {
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
-		_, err := c.doAuthenticated(ctx, req)
+		_, err := c.doAuthenticated(ctx, req, true)
+		return err
+	}
+}
+
+func (c *Client) ExportDeploymentTargetLogs(records ...api.DeploymentTargetLogRecord) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(records); err != nil {
+		return err
+	} else if req, err := http.NewRequest(http.MethodPut, c.deploymentTargetLogsEndpoint, &buf); err != nil {
+		return err
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		_, err := c.doAuthenticated(context.TODO(), req, false)
 		return err
 	}
 }
@@ -141,18 +157,20 @@ func (c *Client) Login(ctx context.Context) error {
 	}
 }
 
-func (c *Client) EnsureToken(ctx context.Context) error {
+func (c *Client) EnsureToken(ctx context.Context, loggingEnabled bool) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if c.HasTokenExpiredAfter(time.Now().Add(30 * time.Second)) {
-		c.logger.Info("token has expired or is about to expire")
+		if loggingEnabled {
+			c.logger.Info("token has expired or is about to expire")
+		}
 		if err := c.Login(ctx); err != nil {
 			if c.HasTokenExpired() {
 				return err
-			} else {
+			} else if loggingEnabled {
 				c.logger.Warn("token refresh failed but previous token is still valid", zap.Error(err))
 			}
-		} else {
+		} else if loggingEnabled {
 			c.logger.Info("token refreshed")
 		}
 	}
@@ -184,7 +202,7 @@ func (c *Client) ReportMetrics(ctx context.Context, metrics api.AgentDeploymentT
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
-		if _, err := c.doAuthenticated(ctx, req); err != nil {
+		if _, err := c.doAuthenticated(ctx, req, true); err != nil {
 			return err
 		} else {
 			return nil
@@ -192,13 +210,15 @@ func (c *Client) ReportMetrics(ctx context.Context, metrics api.AgentDeploymentT
 	}
 }
 
-func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Response, error) {
-	if resp, err := c.doAuthenticatedNoRetry(ctx, r); resp == nil || resp.StatusCode != 401 {
+func (c *Client) doAuthenticated(ctx context.Context, r *http.Request, loggingEnabled bool) (*http.Response, error) {
+	if resp, err := c.doAuthenticatedNoRetry(ctx, r, loggingEnabled); resp == nil || resp.StatusCode != 401 {
 		return resp, err
 	} else {
-		c.logger.Warn("got 401 response, try to regenerate token")
+		if loggingEnabled {
+			c.logger.Warn("got 401 response, try to regenerate token")
+		}
 		c.ClearToken()
-		resp, err1 := c.doAuthenticatedNoRetry(ctx, r)
+		resp, err1 := c.doAuthenticatedNoRetry(ctx, r, loggingEnabled)
 		if err1 != nil {
 			return resp, multierr.Append(err, err1)
 		} else {
@@ -207,8 +227,12 @@ func (c *Client) doAuthenticated(ctx context.Context, r *http.Request) (*http.Re
 	}
 }
 
-func (c *Client) doAuthenticatedNoRetry(ctx context.Context, r *http.Request) (*http.Response, error) {
-	if err := c.EnsureToken(ctx); err != nil {
+func (c *Client) doAuthenticatedNoRetry(
+	ctx context.Context,
+	r *http.Request,
+	loggingEnabled bool,
+) (*http.Response, error) {
+	if err := c.EnsureToken(ctx, loggingEnabled); err != nil {
 		return nil, err
 	} else {
 		r.Header.Set("Authorization", "Bearer "+c.rawToken)
@@ -237,7 +261,9 @@ func (c *Client) ReloadFromEnv() (changed bool, err error) {
 		return changed, err
 	} else if d.metricsEndpoint, err = readEnvVar("DISTR_METRICS_ENDPOINT"); err != nil {
 		return changed, err
-	} else if d.logsEndpoint, err = readEnvVar("DISTR_LOGS_ENDPOINT"); err != nil {
+	} else if d.deploymentLogsEndpoint, err = readEnvVar("DISTR_LOGS_ENDPOINT"); err != nil {
+		return changed, err
+	} else if d.deploymentTargetLogsEndpoint, err = readEnvVar("DISTR_AGENT_LOGS_ENDPOINT"); err != nil {
 		return changed, err
 	} else {
 		changed = c.clientData != d
@@ -267,3 +293,8 @@ func readEnvVar(key string) (string, error) {
 		return "", fmt.Errorf("missing environment variable: %v", key)
 	}
 }
+
+var (
+	_ deploymenttargetlogs.Exporter = (*Client)(nil)
+	_ deploymentlogs.Exporter       = (*Client)(nil)
+)

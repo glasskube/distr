@@ -1,4 +1,4 @@
-package agentlogs
+package deploymentlogs
 
 import (
 	"strings"

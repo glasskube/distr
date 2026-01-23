@@ -1,4 +1,4 @@
-package agentlogs
+package deploymentlogs
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 type Exporter interface {
-	Logs(ctx context.Context, logs []api.DeploymentLogRecord) error
+	ExportDeploymentLogs(ctx context.Context, records []api.DeploymentLogRecord) error
 }
 
 type chunkExporter struct {
@@ -23,12 +23,12 @@ func ChunkExporter(exporter Exporter, chunkSize int) Exporter {
 	return &chunkExporter{chunkSize: chunkSize, delegate: exporter}
 }
 
-func (be *chunkExporter) Logs(ctx context.Context, logs []api.DeploymentLogRecord) (err error) {
+func (be *chunkExporter) ExportDeploymentLogs(ctx context.Context, logs []api.DeploymentLogRecord) (err error) {
 	if len(logs) == 0 {
 		return err
 	}
 	for logs := range slices.Chunk(logs, be.chunkSize) {
-		multierr.AppendInto(&err, be.delegate.Logs(ctx, logs))
+		multierr.AppendInto(&err, be.delegate.ExportDeploymentLogs(ctx, logs))
 	}
 	return err
 }
