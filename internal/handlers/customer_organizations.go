@@ -130,12 +130,14 @@ func updateCustomerOrganizationHandler() http.HandlerFunc {
 			return
 		}
 
-		features := request.Features
-		if features == nil {
+		var features []types.CustomerOrganizationFeature
+		if request.Features == nil {
 			features = []types.CustomerOrganizationFeature{
 				types.CustomerOrganizationFeatureDeploymentTargets,
 				types.CustomerOrganizationFeatureArtifacts,
 			}
+		} else {
+			features = request.Features
 		}
 
 		customerOrganization := types.CustomerOrganization{
