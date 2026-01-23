@@ -17,11 +17,13 @@ import (
 	"github.com/distr-sh/distr/internal/agentclient"
 	"github.com/distr-sh/distr/internal/agentenv"
 	"github.com/distr-sh/distr/internal/buildconfig"
+	"github.com/distr-sh/distr/internal/deploymenttargetlogs"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/distr-sh/distr/internal/util"
 	"github.com/fsnotify/fsnotify"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -32,7 +34,19 @@ import (
 )
 
 var (
-	logger           = util.Require(zap.NewDevelopment())
+	platformLoggingCore = &deploymenttargetlogs.Core{Encoder: zapcore.NewConsoleEncoder(func() zapcore.EncoderConfig {
+		cfg := zap.NewDevelopmentEncoderConfig()
+		cfg.TimeKey = ""
+		cfg.LevelKey = ""
+		return cfg
+	}())}
+	logger = util.Require(zap.NewDevelopment(
+		zap.WrapCore(func(c zapcore.Core) zapcore.Core {
+			// Platform logging should use the same logging level as the base core
+			platformLoggingCore.LevelEnabler = c
+			return zapcore.NewTee(c, platformLoggingCore)
+		}),
+	))
 	agentClient      = util.Require(agentclient.NewFromEnv(logger))
 	k8sConfigFlags   = genericclioptions.NewConfigFlags(true)
 	k8sClient        = util.Require(kubernetes.NewForConfig(util.Require(k8sConfigFlags.ToRESTConfig())))
@@ -43,6 +57,7 @@ var (
 )
 
 func init() {
+	platformLoggingCore.Collector = &deploymenttargetlogs.BufferedCollector{Delegate: agentClient}
 	if agentenv.AgentVersionID == "" {
 		logger.Warn("AgentVersionID is not set. self updates will be disabled")
 	}
@@ -55,7 +70,21 @@ func init() {
 }
 
 func main() {
+	defer func() {
+		if err := logger.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
+			fmt.Println(err)
+		}
+	}()
+
+	defer func() {
+		if reason := recover(); reason != nil {
+			logger.Panic("agent panic", zap.Any("reason", reason))
+		}
+	}()
+
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	context.AfterFunc(ctx, func() { logger.Info("shutdown signal received") })
 
 	logger.Info("kubernetes agent is starting",
 		zap.String("version", buildconfig.Version()),

@@ -58,6 +58,20 @@ func (r *Registry) createJobsScheduler() (*jobs.Scheduler, error) {
 		}
 	}
 
+	if cron := env.CleanupDeploymentTargetLogRecordCron(); cron != nil {
+		err = scheduler.RegisterCronJob(
+			*cron,
+			jobs.NewJob(
+				"DeploymentTargetLogRecordCleanup",
+				cleanup.RunDeploymentTargetLogRecordCleanup,
+				env.CleanupDeploymentTargetLogRecordTimeout(),
+			),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if cron := env.CleanupDeploymentLogRecordCron(); cron != nil {
 		err = scheduler.RegisterCronJob(
 			*cron,

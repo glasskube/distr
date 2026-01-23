@@ -7,12 +7,19 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/distr-sh/distr/internal/contenttype"
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/getsentry/sentry-go"
 	"go.uber.org/zap"
 )
+
+type TimeseriesRequest struct {
+	Before *time.Time `query:"before"`
+	After  *time.Time `query:"after"`
+	Limit  *int       `query:"limit"`
+}
 
 func JsonBody[T any](w http.ResponseWriter, r *http.Request) (T, error) {
 	var t T

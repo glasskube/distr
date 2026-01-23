@@ -6,7 +6,7 @@ import (
 	"maps"
 	"time"
 
-	"github.com/distr-sh/distr/internal/agentlogs"
+	"github.com/distr-sh/distr/internal/deploymentlogs"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -18,14 +18,14 @@ import (
 )
 
 type logsWatcher struct {
-	logsExporter agentlogs.Exporter
+	logsExporter deploymentlogs.Exporter
 	last         map[uuid.UUID]metav1.Time
 	namespace    string
 }
 
 func NewLogsWatcher(namespace string) *logsWatcher {
 	return &logsWatcher{
-		logsExporter: agentlogs.ChunkExporter(agentClient, 100),
+		logsExporter: deploymentlogs.ChunkExporter(agentClient, 100),
 		last:         make(map[uuid.UUID]metav1.Time),
 		namespace:    namespace,
 	}
@@ -54,7 +54,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		return
 	}
 
-	collector := agentlogs.NewCollector()
+	collector := deploymentlogs.NewCollector()
 
 	for _, d := range existingDeployments {
 		logger := logger.With(zap.Any("deploymentId", d.ID))
@@ -142,7 +142,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 	}
 
 	logger.Sugar().Debugf("exporting %v log records", len(collector.LogRecords()))
-	if err := lw.logsExporter.Logs(ctx, collector.LogRecords()); err != nil {
+	if err := lw.logsExporter.ExportDeploymentLogs(ctx, collector.LogRecords()); err != nil {
 		logger.Warn("error exporting logs", zap.Error(err))
 	}
 }

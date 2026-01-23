@@ -37,45 +37,58 @@ func DeploymentTargetsRouter(r chiopenapi.Router) {
 		With(option.Description("Create a new deployment target")).
 		With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
 	r.Route("/{deploymentTargetId}", func(r chiopenapi.Router) {
-		type DeploymentTargetRequest struct {
+		type DeploymentTargetIDRequest struct {
 			DeploymentTargetID uuid.UUID `path:"deploymentTargetId"`
+		}
+
+		type DeploymentTargetTimeseriesRequest struct {
+			DeploymentTargetIDRequest
+			TimeseriesRequest
 		}
 
 		r.Use(deploymentTargetMiddleware)
 		r.Get("/", getDeploymentTarget).
 			With(option.Description("Get a deployment target")).
-			With(option.Request(DeploymentTargetRequest{})).
+			With(option.Request(DeploymentTargetIDRequest{})).
 			With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
 		r.With(middleware.RequireReadWriteOrAdmin).Group(func(r chiopenapi.Router) {
 			r.Put("/", updateDeploymentTarget).
 				With(option.Description("Update a deployment target")).
 				With(option.Request(struct {
-					DeploymentTargetRequest
+					DeploymentTargetIDRequest
 					types.DeploymentTargetWithCreatedBy
 				}{})).
 				With(option.Response(http.StatusOK, []types.DeploymentTargetWithCreatedBy{}))
 			r.Delete("/", deleteDeploymentTarget).
 				With(option.Description("Delete a deployment target")).
-				With(option.Request(DeploymentTargetRequest{}))
+				With(option.Request(DeploymentTargetIDRequest{}))
 			r.Post("/access-request", createAccessForDeploymentTarget).
 				With(option.Description("Create access token for deployment target")).
-				With(option.Request(DeploymentTargetRequest{})).
+				With(option.Request(DeploymentTargetIDRequest{})).
 				With(option.Response(http.StatusOK, api.DeploymentTargetAccessTokenResponse{}))
 		})
 		r.Route("/notes", func(r chiopenapi.Router) {
 			r.Get("/", getDeploymentTargetNotesHandler()).
 				With(option.Description("Get notes for this deployment target")).
-				With(option.Request(DeploymentTargetRequest{})).
+				With(option.Request(DeploymentTargetIDRequest{})).
 				With(option.Response(http.StatusOK, api.DeploymentTargetNotes{}))
 			r.With(middleware.RequireReadWriteOrAdmin).
 				Put("/", putDeploymentTargetNotesHandler()).
 				With(option.Description("Set notes for this deployment target")).
 				With(option.Request(struct {
-					DeploymentTargetRequest
+					DeploymentTargetIDRequest
 					api.DeploymentTargetNotesRequest
 				}{})).
 				With(option.Response(http.StatusOK, api.DeploymentTargetNotes{}))
 		})
+		r.Get("/logs", getDeploymentTargetLogRecordsHandler()).
+			With(option.Description("Get logs for this deployment target")).
+			With(option.Request(DeploymentTargetTimeseriesRequest{})).
+			With(option.Response(http.StatusOK, []api.DeploymentTargetLogRecord{}))
+		r.Get("/logs/export", exportDeploymentTargetLogRecordsHandler()).
+			With(option.Description("Get logs for this deployment target")).
+			With(option.Request(DeploymentTargetIDRequest{})).
+			With(option.Response(http.StatusOK, nil, option.ContentType("text/plain")))
 	})
 }
 
