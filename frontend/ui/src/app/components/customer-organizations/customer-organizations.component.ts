@@ -3,7 +3,7 @@ import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
-import {CustomerOrganization} from '@distr-sh/distr-sdk';
+import {ALL_CUSTOMER_FEATURES, CustomerOrganization} from '@distr-sh/distr-sdk';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
   faBuildingUser,
@@ -204,7 +204,7 @@ export class CustomerOrganizationsComponent {
         this.customerOrganizationsService.updateCustomerOrganization(customer.id, {
           name: customer.name,
           imageId: customer.imageId,
-          features: ['deployment_targets', 'artifacts'],
+          features: ALL_CUSTOMER_FEATURES,
         })
       );
       this.toast.success('All features restored successfully');
@@ -215,6 +215,10 @@ export class CustomerOrganizationsComponent {
         this.toast.error(msg);
       }
     }
+  }
+
+  protected hasAllFeatures(customer: CustomerOrganization): boolean {
+    return customer.features.length === ALL_CUSTOMER_FEATURES.length;
   }
 
   protected getFeatureLabel(feature: string): string {

@@ -103,7 +103,7 @@
                         }
                       </span>
                     }
-                    @if (auth.hasAnyRole('read_write', 'admin') && customer.features.length !== 2) {
+                    @if (auth.hasAnyRole('read_write', 'admin') && !hasAllFeatures(customer)) {
                       <button
                         type="button"
                         aria-label="Restore all features"

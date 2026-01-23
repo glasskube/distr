@@ -71,7 +71,7 @@ Key internal packages:
 
 ### Frontend Architecture (Angular)
 
-- **Framework**: Angular 20 with standalone components
+- **Framework**: Angular 21 with standalone components
 - **Styling**: TailwindCSS 4, SCSS, Flowbite components
 - **Routing**: Angular Router with lazy-loaded routes
 - **State**: Service-based state management
@@ -145,7 +145,6 @@ Go linting uses golangci-lint with config in `.golangci.yml`. Frontend uses Pret
 - Use standalone components (no NgModules) - This is the default so `standalone: true` is not needed
 - Services are singleton by default (`providedIn: 'root'`)
 - Use Angular's HttpClient for API calls, injected via constructor
-- Use `AsyncPipe` in templates for observable subscriptions
 - Component file structure: `component-name.component.ts`, `component-name.component.html` (no need for scss files)
 - Use TypeScript interfaces from `app/types/` for API models
 - Use reactive forms for all form handling
@@ -186,3 +185,4 @@ API routes are defined in `internal/routing/`. Routes are grouped by authenticat
 - If a user requests you to do something differently, add the difference to a new rule / convention in this file
 - If you read code that doesn't follow these rules, please fix it.
 - If you see any typos, or spelling mistakes, please fix them.
+- If you fetch data from GitHub always use the GitHub cli (`gh`) instead of the web interface.
