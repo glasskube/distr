@@ -1,9 +1,14 @@
 import {BaseModel} from './base';
 
+export type CustomerOrganizationFeature = 'deployment_targets' | 'artifacts';
+
+export const ALL_CUSTOMER_FEATURES: CustomerOrganizationFeature[] = ['deployment_targets', 'artifacts'];
+
 export interface CustomerOrganization extends Required<BaseModel> {
   name: string;
   imageId?: string;
   imageUrl?: string;
+  features: CustomerOrganizationFeature[];
 }
 
 export interface CustomerOrganizationWithUsage extends CustomerOrganization {
@@ -14,4 +19,5 @@ export interface CustomerOrganizationWithUsage extends CustomerOrganization {
 export interface CreateUpdateCustomerOrganizationRequest {
   name: string;
   imageId?: string;
+  features?: CustomerOrganizationFeature[];
 }
