@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {map, Observable, of, switchMap, tap} from 'rxjs';
-import {DefaultReactiveList, ReactiveList} from './cache';
+import {ReactiveList} from './cache';
 
 export interface HasDownloads {
   downloadsTotal?: number;
@@ -59,14 +59,17 @@ export interface ArtifactWithTags extends Artifact {
   versions?: TaggedArtifactVersion[];
 }
 
+class ArtifactsReactiveList extends ReactiveList<ArtifactWithTags> {
+  protected override identify = (a: ArtifactWithTags) => a.id;
+  protected override sortAttr = (a: ArtifactWithTags) => a.versions?.[0]?.createdAt ?? '';
+  protected override sortInverted = true;
+}
+
 @Injectable({providedIn: 'root'})
 export class ArtifactsService {
-  private readonly cache: ReactiveList<ArtifactWithTags>;
   private readonly artifactsUrl = '/api/v1/artifacts';
-
-  constructor(private readonly http: HttpClient) {
-    this.cache = new DefaultReactiveList(this.http.get<ArtifactWithTags[]>(this.artifactsUrl));
-  }
+  private readonly http = inject(HttpClient);
+  private readonly cache = new ArtifactsReactiveList(this.http.get<ArtifactWithTags[]>(this.artifactsUrl));
 
   public list(): Observable<ArtifactWithTags[]> {
     return this.cache.get();
