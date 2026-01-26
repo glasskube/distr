@@ -119,7 +119,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 				}
 			} else {
 				maps.Copy(responseMap, resourceResponseMap)
-				for resource := range responseMap {
+				for resource := range resourceResponseMap {
 					resourceNameMap[resource.Name] = resourceName
 				}
 			}
