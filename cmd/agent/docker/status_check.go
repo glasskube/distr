@@ -108,5 +108,5 @@ func CheckDockerSwarmStatus(
 			}
 		}
 	}
-	return types.DeploymentStatusTypeHealthy, "", nil
+	return types.DeploymentStatusTypeHealthy, "status check passed", nil
 }
