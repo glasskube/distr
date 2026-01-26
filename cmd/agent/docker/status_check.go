@@ -40,7 +40,7 @@ func CheckDockerComposeStatus(ctx context.Context, deployment AgentDeployment) (
 		if summary.Health != "" {
 			if summary.Health != container.Healthy {
 				return types.DeploymentStatusTypeError,
-					fmt.Errorf("service %v is not healthy: helath=%v, status=%v, exitCode=%v",
+					fmt.Errorf("service %v is not healthy: health=%v, status=%v, exitCode=%v",
 						summary.Name, summary.Health, summary.Status, summary.ExitCode)
 			}
 		} else {
