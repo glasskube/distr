@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	"github.com/stripe/stripe-go/v84"
 	"go.uber.org/zap"
 )
 
@@ -157,8 +159,21 @@ func UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 			ReturnURL:               fmt.Sprintf("%v/subscription", handlerutil.GetRequestSchemeAndHost(r)),
 		})
 		if err != nil {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to update subscription", zap.Error(err))
+
+			if stripeErr := new(stripe.Error); errors.As(err, &stripeErr) {
+				if stripeErr.Type == stripe.ErrorTypeInvalidRequest {
+					if stripeErr.Code == stripe.ErrorCodeResourceMissing {
+						http.Error(w, "stripe error: subscription not found", http.StatusBadRequest)
+						return err
+					} else {
+						http.Error(w, "stripe error: invalid request (has the subscription been canceled?)", http.StatusBadRequest)
+						return err
+					}
+				}
+			}
+
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, "failed to update subscription", http.StatusInternalServerError)
 			return err
 		}
