@@ -5,9 +5,10 @@
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
             <tr>
+              <th scope="col" class="p-4">Date</th>
+              <th scope="col" class="p-4">Customer</th>
               <th scope="col" class="p-4">User</th>
               <th scope="col" class="p-4">Address</th>
-              <th scope="col" class="p-4">Date</th>
               <th scope="col" class="p-4">Artifact</th>
             </tr>
           </thead>
@@ -15,10 +16,20 @@
             @for (pull of pulls$ | async; track pull.createdAt) {
               <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  @if (pull.userAccount) {
-                    {{ pull.userAccount.name ?? pull.userAccount.email }}
+                  {{ pull.createdAt | date: 'short' }}
+                </td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  @if (pull.customerOrganizationName) {
+                    {{ pull.customerOrganizationName }}
                   } @else {
-                    <span class="text-gray-500 dark:text-gray-400">unknown</span>
+                    <span class="text-gray-500 dark:text-gray-400">-</span>
+                  }
+                </td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  @if (pull.userAccountName || pull.userAccountEmail) {
+                    {{ pull.userAccountName ?? pull.userAccountEmail }}
+                  } @else {
+                    <span class="text-gray-500 dark:text-gray-400 italic">User deleted</span>
                   }
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -27,9 +38,6 @@
                   } @else {
                     <span class="text-gray-500 dark:text-gray-400">unknown</span>
                   }
-                </td>
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  {{ pull.createdAt | date: 'short' }}
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                   {{ pull.artifact.name + '@' + pull.artifactVersion.name }}
