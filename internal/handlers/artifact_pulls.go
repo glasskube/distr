@@ -9,6 +9,7 @@ import (
 	"github.com/distr-sh/distr/internal/auth"
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/mapping"
 	"github.com/distr-sh/distr/internal/middleware"
 	"github.com/getsentry/sentry-go"
 	"github.com/oaswrap/spec/adapter/chiopenapi"
@@ -62,27 +63,6 @@ func getArtifactPullsHandler() http.HandlerFunc {
 			return
 		}
 
-		response := make([]api.ArtifactVersionPullResponse, len(pulls))
-		for i, pull := range pulls {
-			response[i] = api.ArtifactVersionPullResponse{
-				CreatedAt:       pull.CreatedAt,
-				RemoteAddress:   pull.RemoteAddress,
-				Artifact:        pull.Artifact,
-				ArtifactVersion: pull.ArtifactVersion,
-			}
-
-			if pull.UserAccount != nil {
-				if pull.UserAccount.Name != "" {
-					response[i].UserAccountName = &pull.UserAccount.Name
-				}
-				response[i].UserAccountEmail = &pull.UserAccount.Email
-			}
-
-			if pull.CustomerOrganization != nil {
-				response[i].CustomerOrganizationName = &pull.CustomerOrganization.Name
-			}
-		}
-
-		RespondJSON(w, response)
+		RespondJSON(w, mapping.List(pulls, mapping.ArtifactVersionPullToAPI))
 	}
 }
