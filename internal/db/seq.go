@@ -16,5 +16,9 @@ func CollectSeq[T any](rows pgx.Rows, fn pgx.RowToFunc[T]) SeqE[T] {
 				return
 			}
 		}
+		if err := rows.Err(); err != nil {
+			var zero T
+			_ = yield(zero, err)
+		}
 	}
 }
