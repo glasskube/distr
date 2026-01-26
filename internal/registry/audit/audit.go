@@ -32,6 +32,7 @@ func (a *auditor) AuditPull(ctx context.Context, nameStr string, reference strin
 			digestVersion.ID,
 			auth.CurrentUserID(),
 			internalctx.GetRequestIPAddress(ctx),
+			auth.CurrentCustomerOrgID(),
 		)
 	}
 }
