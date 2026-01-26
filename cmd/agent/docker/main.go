@@ -148,7 +148,7 @@ loop:
 			for _, deployment := range resource.Deployments {
 				var agentDeployment *AgentDeployment
 				var status string
-				var statusType types.DeploymentStatusType
+				statusType := types.DeploymentStatusTypeProgressing
 				_, err = agentauth.EnsureAuth(ctx, client.RawToken(), deployment)
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
@@ -178,11 +178,11 @@ loop:
 							}
 						}()
 					} else {
-						if s, err1 := CheckStatus(ctx, *agentDeployment); err1 != nil {
+						if statusType1, statusMessage, err1 := CheckStatus(ctx, *agentDeployment); err1 != nil {
 							multierr.AppendInto(&err, err1)
 						} else {
-							status = "health checks passed"
-							statusType = s
+							status = statusMessage
+							statusType = statusType1
 						}
 					}
 				}
