@@ -20,7 +20,8 @@ const (
 		co.created_at,
 		co.organization_id,
 		co.image_id,
-		co.name
+		co.name,
+		co.features
 	`
 	customerOrganizationWithUsageOutputExpr = customerOrganizationOutputExpr + `,
 		count(distinct(oua.user_account_id)) as user_count,
@@ -148,13 +149,14 @@ func CountCustomerOrganizationsByOrganizationID(ctx context.Context, organizatio
 func UpdateCustomerOrganization(ctx context.Context, customerOrg *types.CustomerOrganization) error {
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
-		"UPDATE CustomerOrganization AS co SET name = @name, image_id = @imageId "+
+		"UPDATE CustomerOrganization AS co SET name = @name, image_id = @imageId, features = @features "+
 			"WHERE co.id = @id AND co.organization_id = @organizationId RETURNING "+customerOrganizationOutputExpr,
 		pgx.NamedArgs{
 			"id":             customerOrg.ID,
 			"organizationId": customerOrg.OrganizationID,
 			"name":           customerOrg.Name,
 			"imageId":        customerOrg.ImageID,
+			"features":       customerOrg.Features,
 		},
 	)
 	if err != nil {

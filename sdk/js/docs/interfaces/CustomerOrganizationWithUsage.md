@@ -28,6 +28,16 @@
 
 ---
 
+### features
+
+> **features**: [`CustomerOrganizationFeature`](../type-aliases/CustomerOrganizationFeature.md)[]
+
+#### Inherited from
+
+[`CustomerOrganization`](CustomerOrganization.md).[`features`](CustomerOrganization.md#features)
+
+---
+
 ### id
 
 > **id**: `string`

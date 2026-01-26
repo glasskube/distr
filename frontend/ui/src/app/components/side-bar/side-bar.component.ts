@@ -3,6 +3,7 @@ import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {Component, inject, input, signal, WritableSignal} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterLink, RouterLinkActive} from '@angular/router';
+import {CustomerOrganization} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {
   faAddressBook,
@@ -25,6 +26,7 @@ import {buildConfig} from '../../../buildconfig';
 import {environment} from '../../../env/env';
 import {RequireCustomerDirective, RequireVendorDirective} from '../../directives/required-role.directive';
 import {AuthService} from '../../services/auth.service';
+import {ContextService} from '../../services/context.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {OrganizationService} from '../../services/organization.service';
 import {SidebarService} from '../../services/sidebar.service';
@@ -52,6 +54,7 @@ export class SideBarComponent {
   protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly tutorialsService = inject(TutorialsService);
   protected readonly organizationService = inject(OrganizationService);
+  private readonly contextService = inject(ContextService);
 
   protected readonly buildConfig = buildConfig;
   protected readonly edition = environment.edition;
@@ -95,6 +98,20 @@ export class SideBarComponent {
       ),
     {initialValue: false}
   );
+
+  protected readonly customerOrgFeatures = toSignal(
+    this.contextService.getCustomerOrganization().pipe(
+      map((customerOrg: CustomerOrganization | undefined): string[] => {
+        return customerOrg?.features || [];
+      })
+    ),
+    {initialValue: [] as string[]}
+  );
+
+  protected hasCustomerOrganizationFeature(feature: string): boolean {
+    const features = this.customerOrgFeatures();
+    return Array.isArray(features) && features.includes(feature);
+  }
 
   protected toggle(signal: WritableSignal<boolean>) {
     signal.update((val) => !val);

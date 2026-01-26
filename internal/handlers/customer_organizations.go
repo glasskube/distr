@@ -130,11 +130,22 @@ func updateCustomerOrganizationHandler() http.HandlerFunc {
 			return
 		}
 
+		var features []types.CustomerOrganizationFeature
+		if request.Features == nil {
+			features = []types.CustomerOrganizationFeature{
+				types.CustomerOrganizationFeatureDeploymentTargets,
+				types.CustomerOrganizationFeatureArtifacts,
+			}
+		} else {
+			features = request.Features
+		}
+
 		customerOrganization := types.CustomerOrganization{
 			ID:             id,
 			OrganizationID: *auth.CurrentOrgID(),
 			Name:           request.Name,
 			ImageID:        request.ImageID,
+			Features:       features,
 		}
 
 		if err := db.UpdateCustomerOrganization(ctx, &customerOrganization); err != nil {
