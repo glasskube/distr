@@ -3,7 +3,7 @@ import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
-import {ALL_CUSTOMER_FEATURES, CustomerOrganization, CustomerOrganizationWithUsage} from '@distr-sh/distr-sdk';
+import {CustomerOrganization, CustomerOrganizationFeature, CustomerOrganizationWithUsage} from '@distr-sh/distr-sdk';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
   faBuildingUser,
@@ -29,6 +29,8 @@ import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
 import {QuotaLimitComponent} from '../quota-limit.component';
 import {UuidComponent} from '../uuid';
+
+export const ALL_CUSTOMER_FEATURES: CustomerOrganizationFeature[] = ['deployment_targets', 'artifacts'];
 
 @Component({
   templateUrl: './customer-organizations.component.html',
