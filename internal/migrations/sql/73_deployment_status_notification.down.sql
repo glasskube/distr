@@ -1,0 +1,3 @@
+DROP TABLE DeploymentStatusNotificationConfiguration_Organization_UserAccount;
+DROP TABLE DeploymentStatusNotificationConfiguration_DeploymentTarget;
+DROP TABLE DeploymentStatusNotificationConfiguration;
