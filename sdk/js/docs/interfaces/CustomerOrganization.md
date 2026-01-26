@@ -26,6 +26,12 @@
 
 ---
 
+### features
+
+> **features**: [`CustomerOrganizationFeature`](../type-aliases/CustomerOrganizationFeature.md)[]
+
+---
+
 ### id
 
 > **id**: `string`
