@@ -79,8 +79,10 @@ func CheckDockerComposeStatus(
 
 	if startingCount > 0 {
 		return types.DeploymentStatusTypeProgressing, msg, nil
-	} else {
+	} else if runningCount > 0 {
 		return types.DeploymentStatusTypeRunning, msg, nil
+	} else {
+		return types.DeploymentStatusTypeHealthy, msg, nil
 	}
 }
 
