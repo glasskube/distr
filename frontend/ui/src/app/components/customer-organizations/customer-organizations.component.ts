@@ -3,7 +3,7 @@ import {Component, computed, inject, TemplateRef, viewChild} from '@angular/core
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterLink} from '@angular/router';
-import {CustomerOrganization, CustomerOrganizationFeature} from '@distr-sh/distr-sdk';
+import {CustomerOrganization, CustomerOrganizationFeature, CustomerOrganizationWithUsage} from '@distr-sh/distr-sdk';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {
   faBuildingUser,
@@ -20,10 +20,12 @@ import {getFormDisplayedError} from '../../../util/errors';
 import {SecureImagePipe} from '../../../util/secureImage';
 import {modalFlyInOut} from '../../animations/modal';
 import {RequireVendorDirective} from '../../directives/required-role.directive';
+import {ArtifactLicensesService} from '../../services/artifact-licenses.service';
 import {AuthService} from '../../services/auth.service';
 import {CustomerOrganizationsService} from '../../services/customer-organizations.service';
 import {FeatureFlagService} from '../../services/feature-flag.service';
 import {ImageUploadService} from '../../services/image-upload.service';
+import {LicensesService} from '../../services/licenses.service';
 import {OrganizationService} from '../../services/organization.service';
 import {DialogRef, OverlayService} from '../../services/overlay.service';
 import {ToastService} from '../../services/toast.service';
@@ -64,6 +66,8 @@ export class CustomerOrganizationsComponent {
   private readonly overlay = inject(OverlayService);
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly organizationService = inject(OrganizationService);
+  private readonly artifactLicensesService = inject(ArtifactLicensesService);
+  private readonly licensesService = inject(LicensesService);
   protected readonly featureFlags = inject(FeatureFlagService);
   protected readonly auth = inject(AuthService);
 
@@ -162,15 +166,31 @@ export class CustomerOrganizationsComponent {
     this.refresh$.next();
   }
 
-  protected delete(target: CustomerOrganization) {
+  protected delete(target: CustomerOrganizationWithUsage): void {
     this.overlay
-      .confirm({message: {message: 'Are you sure you want to delete this customer?'}})
+      .confirm({
+        message: {
+          message: 'Are you sure you want to delete this customer?',
+          alert:
+            target.userCount > 0 || target.deploymentTargetCount > 0
+              ? {
+                  type: 'warning',
+                  message: `Deleting this customer will also delete its associated users (${target.userCount}) and deployment targets (${target.deploymentTargetCount}) from your organization.`,
+                }
+              : undefined,
+        },
+        requiredConfirmInputText: target.name,
+      })
       .pipe(
         filter((it) => it === true),
         switchMap(() => this.customerOrganizationsService.deleteCustomerOrganization(target.id!))
       )
       .subscribe({
-        next: () => this.refresh$.next(),
+        next: () => {
+          this.refresh$.next();
+          this.artifactLicensesService.refresh();
+          this.licensesService.refresh();
+        },
         error: (e) => {
           const msg = getFormDisplayedError(e);
           if (msg) {

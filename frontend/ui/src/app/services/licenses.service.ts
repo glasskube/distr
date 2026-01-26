@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Observable, tap} from 'rxjs';
+import {Observable, Subject, switchMap, tap} from 'rxjs';
 import {ApplicationLicense} from '../types/application-license';
 import {DefaultReactiveList, ReactiveList} from './cache';
 import {CrudService} from './interfaces';
@@ -11,9 +11,16 @@ import {CrudService} from './interfaces';
 export class LicensesService implements CrudService<ApplicationLicense> {
   private readonly licensesUrl = '/api/v1/application-licenses';
   private readonly cache: ReactiveList<ApplicationLicense>;
+  private readonly refresh$ = new Subject<void>();
 
   constructor(private readonly httpClient: HttpClient) {
     this.cache = new DefaultReactiveList(this.httpClient.get<ApplicationLicense[]>(this.licensesUrl));
+    this.refresh$
+      .pipe(
+        switchMap(() => this.httpClient.get<ApplicationLicense[]>(this.licensesUrl)),
+        tap((licenses) => this.cache.reset(licenses))
+      )
+      .subscribe();
   }
 
   list(applicationId?: string): Observable<ApplicationLicense[]> {
@@ -22,6 +29,10 @@ export class LicensesService implements CrudService<ApplicationLicense> {
     } else {
       return this.cache.get();
     }
+  }
+
+  refresh() {
+    this.refresh$.next();
   }
 
   create(license: ApplicationLicense): Observable<ApplicationLicense> {
