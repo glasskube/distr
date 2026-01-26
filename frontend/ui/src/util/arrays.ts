@@ -7,8 +7,9 @@ export function distinctBy<T>(predicate: Predicate<T, unknown>): (input: T[]) =>
     });
 }
 
-export function compareBy<T>(predicate: Predicate<T, string>): (a: T, b: T) => number {
-  return (a, b) => predicate(a).localeCompare(predicate(b));
+export function compareBy<T>(predicate: Predicate<T, string>, inverted: boolean = false): (a: T, b: T) => number {
+  const mod = inverted ? -1 : 1;
+  return (a, b) => mod * predicate(a).localeCompare(predicate(b));
 }
 
 export function maxBy<T, E>(
