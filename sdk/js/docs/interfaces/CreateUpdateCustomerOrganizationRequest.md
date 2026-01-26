@@ -8,6 +8,12 @@
 
 ## Properties
 
+### features?
+
+> `optional` **features**: [`CustomerOrganizationFeature`](../type-aliases/CustomerOrganizationFeature.md)[]
+
+---
+
 ### imageId?
 
 > `optional` **imageId**: `string`

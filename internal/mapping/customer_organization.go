@@ -12,6 +12,7 @@ func CustomerOrganizationToAPI(customerOrganization types.CustomerOrganization) 
 		Name:      customerOrganization.Name,
 		ImageID:   customerOrganization.ImageID,
 		ImageURL:  CreateImageURL(customerOrganization.ImageID),
+		Features:  customerOrganization.Features,
 	}
 }
 
