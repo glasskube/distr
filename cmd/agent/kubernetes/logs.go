@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"maps"
 	"time"
 
@@ -76,13 +77,22 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 		var toplevelErr error
 
 		responseMap := map[corev1.ObjectReference]rest.ResponseWrapper{}
+		resourceNameMap := map[string]string{}
 		for _, obj := range resources {
-			if co, ok := obj.(metav1.Object); ok {
-				co.SetNamespace(lw.namespace)
-			}
 			logger := logger.With(zap.String("resourceKind", obj.GetObjectKind().GroupVersionKind().Kind))
+
+			var resourceName string
 			if metaObj, ok := obj.(metav1.Object); ok {
+				metaObj.SetNamespace(lw.namespace)
 				logger = logger.With(zap.String("resourceName", metaObj.GetName()))
+
+				if restMapping, err := k8sRestMapper.RESTMapping(obj.GetObjectKind().GroupVersionKind().GroupKind()); err != nil {
+					logger.Warn("could not get REST mapping for resource", zap.Error(err))
+					toplevelErr = err
+					break
+				} else {
+					resourceName = fmt.Sprintf("%v/%v", restMapping.Resource.Resource, metaObj.GetName())
+				}
 			}
 
 			logOptions := corev1.PodLogOptions{Timestamps: true}
@@ -109,10 +119,19 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 				}
 			} else {
 				maps.Copy(responseMap, resourceResponseMap)
+				for resource := range responseMap {
+					resourceNameMap[resource.Name] = resourceName
+				}
 			}
 		}
 
 		for ref, resp := range responseMap {
+			resourceName := resourceNameMap[ref.Name]
+			if resourceName == "" {
+				// fall back to pod name if no parent resource is available
+				resourceName = ref.Name
+			}
+
 			err := func() error {
 				rc, err := resp.Stream(ctx)
 				if err != nil {
@@ -122,7 +141,7 @@ func (lw *logsWatcher) collect(ctx context.Context) {
 				defer rc.Close()
 				sc := bufio.NewScanner(rc)
 				for sc.Scan() {
-					deploymentCollector.AppendMessage(ref.Name, "Log", sc.Text())
+					deploymentCollector.AppendMessage(resourceName, "Log", sc.Text())
 				}
 				if err := sc.Err(); err != nil {
 					logger.Warn("error streaming logs", zap.Error(err))
