@@ -68,6 +68,7 @@ Key internal packages:
 - `internal/registry/`: OCI registry implementation
 - `internal/middleware/`: HTTP middleware (logging, auth, Sentry, etc.)
 - `internal/svc/`: Business logic services
+- `internal/mapping/`: Mapping logic for data transformations between DTOs and domain models
 
 ### Frontend Architecture (Angular)
 
@@ -139,6 +140,7 @@ Go linting uses golangci-lint with config in `.golangci.yml`. Frontend uses Pret
 - Use `internal/context` helpers to retrieve logger, database, user from context
 - Use structured logging with zap: `logger.Info("message", zap.String("key", value))`
 - Send exceptions to sentry with: `sentry.GetHubFromContext(ctx).CaptureException(err)`
+- When performing data transformations between DTOs and domain models, use `mapping.List(...)` inside the `internal/mapping` package
 
 ### Frontend Code
 
