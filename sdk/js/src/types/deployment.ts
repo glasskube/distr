@@ -50,6 +50,6 @@ export type HelmChartType = 'repository' | 'oci';
 
 export type DockerType = 'compose' | 'swarm';
 
-export type DeploymentStatusType = 'ok' | 'progressing' | 'error';
+export type DeploymentStatusType = 'healthy' | 'running' | 'progressing' | 'error';
 
 export type DeploymentTargetScope = 'cluster' | 'namespace';

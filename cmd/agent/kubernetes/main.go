@@ -277,7 +277,7 @@ func runInstallOrUpgrade(
 			pushErrorStatus(ctx, deployment, fmt.Errorf("install error: %w", err))
 		} else {
 			logger.Info("helm install succeeded")
-			pushStatus(ctx, deployment, "helm install succeeded")
+			pushRunningStatus(ctx, deployment, "helm install succeeded")
 		}
 	} else if currentDeployment.RevisionID != deployment.RevisionID {
 		successMessage := "helm upgrade succeeded"
@@ -300,7 +300,7 @@ func runInstallOrUpgrade(
 			pushErrorStatus(ctx, deployment, fmt.Errorf("upgrade error: %w", err))
 		} else {
 			logger.Info(successMessage)
-			pushStatus(ctx, deployment, successMessage)
+			pushRunningStatus(ctx, deployment, successMessage)
 		}
 	} else {
 		logger.Info("no action required. running status check")
@@ -327,7 +327,7 @@ func runInstallOrUpgrade(
 				pushErrorStatus(ctx, deployment, fmt.Errorf("resource status error: %w", err))
 			} else {
 				logger.Info("status check passed")
-				pushStatus(ctx, deployment, fmt.Sprintf("status check passed. %v resources", len(resources)))
+				pushHealthyStatus(ctx, deployment, fmt.Sprintf("status check passed. %v resources healthy", len(resources)))
 			}
 		}
 	}
@@ -362,8 +362,14 @@ func (psr *progressStatusRunner) Run(ctx context.Context, f func() error) error 
 	return f()
 }
 
-func pushStatus(ctx context.Context, deployment api.AgentDeployment, status string) {
-	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeOK, status); err != nil {
+func pushHealthyStatus(ctx context.Context, deployment api.AgentDeployment, status string) {
+	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeHealthy, status); err != nil {
+		logger.Warn("status push failed", zap.Error(err))
+	}
+}
+
+func pushRunningStatus(ctx context.Context, deployment api.AgentDeployment, status string) {
+	if err := agentClient.Status(ctx, deployment.RevisionID, types.DeploymentStatusTypeRunning, status); err != nil {
 		logger.Warn("status push failed", zap.Error(err))
 	}
 }

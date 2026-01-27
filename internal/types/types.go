@@ -89,7 +89,8 @@ const (
 	DockerTypeCompose DockerType = "compose"
 	DockerTypeSwarm   DockerType = "swarm"
 
-	DeploymentStatusTypeOK          DeploymentStatusType = "ok"
+	DeploymentStatusTypeHealthy     DeploymentStatusType = "healthy"
+	DeploymentStatusTypeRunning     DeploymentStatusType = "running"
 	DeploymentStatusTypeProgressing DeploymentStatusType = "progressing"
 	DeploymentStatusTypeError       DeploymentStatusType = "error"
 
