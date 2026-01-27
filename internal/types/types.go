@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/distr-sh/distr/internal/util"
@@ -68,10 +69,47 @@ const (
 	FeatureArtifactVersionMutable Feature = "artifact_version_mutable"
 )
 
+type DeploymentStatusType string
+
+const (
+	DeploymentStatusTypeHealthy     DeploymentStatusType = "healthy"
+	DeploymentStatusTypeRunning     DeploymentStatusType = "running"
+	DeploymentStatusTypeProgressing DeploymentStatusType = "progressing"
+	DeploymentStatusTypeError       DeploymentStatusType = "error"
+)
+
+var ErrInvalidDeploymentStatusType = errors.New("invalid deployment status type")
+
+func ParseDeploymentStatusType(status string) (DeploymentStatusType, error) {
+	switch status {
+	case string(DeploymentStatusTypeHealthy):
+		return DeploymentStatusTypeHealthy, nil
+	case string(DeploymentStatusTypeRunning), "ok":
+		return DeploymentStatusTypeRunning, nil
+	case string(DeploymentStatusTypeProgressing):
+		return DeploymentStatusTypeProgressing, nil
+	case string(DeploymentStatusTypeError):
+		return DeploymentStatusTypeError, nil
+	default:
+		return "", fmt.Errorf("%w: %v", ErrInvalidDeploymentStatusType, status)
+	}
+}
+
+func (ref *DeploymentStatusType) UnmarshalJSON(data []byte) error {
+	var statusStr string
+	if err := json.Unmarshal(data, &statusStr); err != nil {
+		return err
+	} else if status, err := ParseDeploymentStatusType(statusStr); err != nil {
+		return err
+	} else {
+		*ref = status
+		return nil
+	}
+}
+
 type (
 	DeploymentType        string
 	HelmChartType         string
-	DeploymentStatusType  string
 	DeploymentTargetScope string
 	DockerType            string
 	Tutorial              string
@@ -88,11 +126,6 @@ const (
 
 	DockerTypeCompose DockerType = "compose"
 	DockerTypeSwarm   DockerType = "swarm"
-
-	DeploymentStatusTypeHealthy     DeploymentStatusType = "healthy"
-	DeploymentStatusTypeRunning     DeploymentStatusType = "running"
-	DeploymentStatusTypeProgressing DeploymentStatusType = "progressing"
-	DeploymentStatusTypeError       DeploymentStatusType = "error"
 
 	DeploymentTargetScopeCluster   DeploymentTargetScope = "cluster"
 	DeploymentTargetScopeNamespace DeploymentTargetScope = "namespace"

@@ -404,8 +404,8 @@ func agentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, apierrors.ErrConflict) {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		} else {
-			sentry.GetHubFromContext(ctx).CaptureException(err)
 			log.Error("failed to create deployment revision status", zap.Error(err))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 		return
