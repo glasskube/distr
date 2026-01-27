@@ -17,8 +17,8 @@ func SaveNotificationRecord(ctx context.Context, record *types.NotificationRecor
 		`WITH inserted AS (
 			INSERT INTO NotificationRecord (
 				deployment_status_notification_configuration_id,
-				previous_deployment_status_id,
-				current_deployment_status_id,
+				previous_deployment_revision_status_id,
+				current_deployment_revision_status_id,
 				message
 			)
 			VALUES (
@@ -57,7 +57,7 @@ func ExistsNotificationRecord(ctx context.Context, configID, previousID uuid.UUI
 			SELECT 1
 			FROM NotificationRecord
 			WHERE deployment_status_notification_configuration_id = @deploymentStatusNotificationConfigurationID
-				AND previous_deployment_status_id = @previousDeploymentStatusID
+				AND previous_deployment_revision_status_id = @previousDeploymentStatusID
 		)`,
 		pgx.NamedArgs{
 			"deploymentStatusNotificationConfigurationID": configID,

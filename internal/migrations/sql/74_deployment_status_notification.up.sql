@@ -25,7 +25,7 @@ CREATE TABLE NotificationRecord (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   deployment_status_notification_configuration_id UUID REFERENCES DeploymentStatusNotificationConfiguration(id) ON DELETE CASCADE,
-  previous_deployment_status_id UUID REFERENCES DeploymentStatus(id) ON DELETE CASCADE,
-  current_deployment_status_id UUID REFERENCES DeploymentStatus(id) ON DELETE CASCADE,
+  previous_deployment_revision_status_id UUID REFERENCES DeploymentRevisionStatus(id) ON DELETE CASCADE,
+  current_deployment_revision_status_id UUID REFERENCES DeploymentRevisionStatus(id) ON DELETE CASCADE,
   message TEXT NOT NULL
 );
