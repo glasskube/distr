@@ -83,7 +83,66 @@ func CreateDeploymentStatusNotificationConfiguration(
 	ctx context.Context,
 	config *types.DeploymentStatusNotificationConfiguration,
 ) error {
-	panic("not implemented")
+	db := internalctx.GetDb(ctx)
+
+	rows, err := db.Query(
+		ctx,
+		`WITH inserted AS (
+			INSERT INTO DeploymentStatusNotificationConfiguration (
+				organization_id,
+				customer_organization_id,
+				name,
+				enabled
+			) VALUES (
+				:organizationID,
+				:customerOrganizationID,
+				:name,
+				:enabled
+			)
+		)
+		SELECT id FROM inserted`,
+		pgx.NamedArgs{
+			"organizationID":         config.OrganizationID,
+			"customerOrganizationID": config.CustomerOrganizationID,
+			"name":                   config.Name,
+			"enabled":                config.Enabled,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert DeploymentStatusNotificationConfiguration: %w", err)
+	}
+
+	if insertedID, err := pgx.CollectExactlyOneRow(rows, pgx.RowTo[uuid.UUID]); err != nil {
+		return fmt.Errorf("failed to collect inserted ID: %w", err)
+	} else {
+		config.ID = insertedID
+	}
+
+	if err := updateDeploymentStatusConfigUserAccountIDs(ctx, config); err != nil {
+		return fmt.Errorf("failed to update user account IDs: %w", err)
+	}
+
+	if err := updateDeploymentStatusConfigDeploymentTargetIDs(ctx, config); err != nil {
+		return fmt.Errorf("failed to update deployment target IDs: %w", err)
+	}
+
+	if rows, err := db.Query(
+		ctx,
+		`SELECT`+deploymentStatusNotificationConfigurationOutputExpr+
+			`FROM DeploymentStatusNotificationConfiguration c WHERE c.id = @id`,
+		pgx.NamedArgs{"id": config.ID},
+	); err != nil {
+		return fmt.Errorf("failed to query DeploymentStatusNotificationConfiguration: %w", err)
+	} else if result, err := pgx.CollectExactlyOneRow(
+		rows,
+		pgx.RowToStructByName[types.DeploymentStatusNotificationConfiguration],
+	); err != nil {
+		return fmt.Errorf("failed to collect DeploymentStatusNotificationConfiguration: %w", err)
+	} else {
+		*config = result
+	}
+
+	return nil
 }
 
 func UpdateDeploymentStatusNotificationConfiguration(
@@ -91,6 +150,82 @@ func UpdateDeploymentStatusNotificationConfiguration(
 	config *types.DeploymentStatusNotificationConfiguration,
 ) error {
 	panic("not implemented")
+}
+
+func updateDeploymentStatusConfigUserAccountIDs(ctx context.Context, config *types.DeploymentStatusNotificationConfiguration) error {
+	db := internalctx.GetDb(ctx)
+
+	_, err := db.Exec(
+		ctx,
+		`INSERT INTO DeploymentStatusNotificationConfiguration_UserAccount (
+			deployment_status_notification_configuration_id,
+			organization_id,
+			user_account_id
+		)
+		SELECT :id, :organizationID, id FROM UserAccount WHERE id IN @userAccountIDs
+		ON CONFLICT (deployment_status_notification_configuration_id, organization_id, user_account_id) DO NOTHING`,
+		pgx.NamedArgs{
+			"id":             config.ID,
+			"organizationID": config.OrganizationID,
+			"userAccountIDs": config.UserAccountIDs,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert user account IDs: %w", err)
+	}
+
+	_, err = db.Exec(
+		ctx,
+		`DELETE FROM DeploymentStatusNotificationConfiguration_UserAccount
+		WHERE deployment_status_notification_configuration_id = @id
+			AND user_account_id NOT IN @userAccountIDs`,
+		pgx.NamedArgs{
+			"id":             config.ID,
+			"userAccountIDs": config.UserAccountIDs,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete user account IDs: %w", err)
+	}
+
+	return nil
+}
+
+func updateDeploymentStatusConfigDeploymentTargetIDs(ctx context.Context, config *types.DeploymentStatusNotificationConfiguration) error {
+	db := internalctx.GetDb(ctx)
+
+	_, err := db.Exec(
+		ctx,
+		`INSERT INTO DeploymentStatusNotificationConfiguration_DeploymentTarget (
+			deployment_status_notification_configuration_id,
+			deployment_target_id
+		)
+		SELECT :id, id FROM DeploymentTarget WHERE id IN @deploymentTargetIDs
+		ON CONFLICT (deployment_status_notification_configuration_id, deployment_target_id) DO NOTHING`,
+		pgx.NamedArgs{
+			"id":                  config.ID,
+			"deploymentTargetIDs": config.DeploymentTargetIDs,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert deployment target IDs: %w", err)
+	}
+
+	_, err = db.Exec(
+		ctx,
+		`DELETE FROM DeploymentStatusNotificationConfiguration_DeploymentTarget
+		WHERE deployment_status_notification_configuration_id = :id
+			AND deployment_target_id NOT IN @deploymentTargetIDs`,
+		pgx.NamedArgs{
+			"id":                  config.ID,
+			"deploymentTargetIDs": config.DeploymentTargetIDs,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete deployment target IDs: %w", err)
+	}
+
+	return nil
 }
 
 func DeleteDeploymentStatusNotificationConfiguration(ctx context.Context, id uuid.UUID) error {
