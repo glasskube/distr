@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.7.0](https://github.com/distr-sh/distr/compare/2.6.0...2.7.0) (2026-01-27)
+
+
+### Features
+
+* add customer organization features ([#1691](https://github.com/distr-sh/distr/issues/1691)) ([970ed09](https://github.com/distr-sh/distr/commit/970ed0928e7f9c6fb96b46508e73e6a91cc0cfc5))
+* add customer organization to artifact version pull ([#1690](https://github.com/distr-sh/distr/issues/1690)) ([c57f069](https://github.com/distr-sh/distr/commit/c57f06930c36bf695de7d0145e7fc96c38a30c31))
+* add health checks for compose deployments and distinct status types for "running" and "healthy" ([#1703](https://github.com/distr-sh/distr/issues/1703)) ([bcb7248](https://github.com/distr-sh/distr/commit/bcb7248d31de4a8f5eba320f7e35f926ef426f0f))
+* collect agent logs ([#1692](https://github.com/distr-sh/distr/issues/1692)) ([d892639](https://github.com/distr-sh/distr/commit/d892639574cf967aff15aecff64f55cef54efaee))
+
+
+### Bug Fixes
+
+* **backend:** improve subscription update error handling ([#1714](https://github.com/distr-sh/distr/issues/1714)) ([05f66f9](https://github.com/distr-sh/distr/commit/05f66f930d88413c0c90bb4cf7666c15cacd1d77))
+* **backend:** use correct hello-distr version name in agents tutorial ([#1715](https://github.com/distr-sh/distr/issues/1715)) ([d5eb6a9](https://github.com/distr-sh/distr/commit/d5eb6a9a08e6d836e25e490b2cb08be62d2cb21e))
+* **deps:** update module helm.sh/helm/v3 to v3.20.0 ([#1699](https://github.com/distr-sh/distr/issues/1699)) ([5993e57](https://github.com/distr-sh/distr/commit/5993e579cbd4d1932dc51eabc8fba704182f5415))
+* **ui:** prevent deployment menu from being cut off ([#1713](https://github.com/distr-sh/distr/issues/1713)) ([443ab06](https://github.com/distr-sh/distr/commit/443ab06e942f3f3e259267784dc8c028e54808fd))
+
+
+### Other
+
+* allow deleting non-empty customer but show a warning ([#1702](https://github.com/distr-sh/distr/issues/1702)) ([b19665e](https://github.com/distr-sh/distr/commit/b19665e41f56a5d4fa1ac905577cd725752f8f27))
+* clarify subscription renews on wording ([#1706](https://github.com/distr-sh/distr/issues/1706)) ([5390432](https://github.com/distr-sh/distr/commit/539043249b8038cb368a88ceb1f80fb90203d238))
+* **deps:** bump tar from 7.5.3 to 7.5.6 in the npm_and_yarn group across 1 directory ([#1693](https://github.com/distr-sh/distr/issues/1693)) ([c62f549](https://github.com/distr-sh/distr/commit/c62f549856bbfdab98e9411af7a6bf8f686e7fe2))
+* **deps:** update actions/checkout action to v6.0.2 ([#1704](https://github.com/distr-sh/distr/issues/1704)) ([7ae34be](https://github.com/distr-sh/distr/commit/7ae34bee04561d6c7a26fb5b1998889c47fae6a7))
+* **deps:** update anchore/sbom-action action to v0.22.0 ([#1698](https://github.com/distr-sh/distr/issues/1698)) ([ff63999](https://github.com/distr-sh/distr/commit/ff63999a1901be94dc5abc63ea78e90604c40fcc))
+* **deps:** update angular monorepo to v21.1.1 ([#1696](https://github.com/distr-sh/distr/issues/1696)) ([4f00ee6](https://github.com/distr-sh/distr/commit/4f00ee627408990bfffa4661c67af397ef406da0))
+* **deps:** update angular-cli monorepo to v21.1.1 ([#1694](https://github.com/distr-sh/distr/issues/1694)) ([461bf50](https://github.com/distr-sh/distr/commit/461bf502e05f4cc5a7eae7efb1671ff1ed87a68b))
+* **deps:** update axllent/mailpit docker tag to v1.28.4 ([#1708](https://github.com/distr-sh/distr/issues/1708)) ([167ffe9](https://github.com/distr-sh/distr/commit/167ffe9170102edb9ee3f1a1b58444e6b899388b))
+* **deps:** update dependency @angular/cdk to v21.1.1 ([#1695](https://github.com/distr-sh/distr/issues/1695)) ([24b0668](https://github.com/distr-sh/distr/commit/24b0668f7e6323f029f152e97bd4351885afde2d))
+* **deps:** update dependency @types/jasmine to v6 ([#1701](https://github.com/distr-sh/distr/issues/1701)) ([5037a14](https://github.com/distr-sh/distr/commit/5037a148e2bab9dba94c6adfbb4d97ed79cd7776))
+* **deps:** update dependency pnpm to v10.28.2 ([#1718](https://github.com/distr-sh/distr/issues/1718)) ([e4c2359](https://github.com/distr-sh/distr/commit/e4c23596467bd74c503f227890fa284d5fdf2b6f))
+* **deps:** update dependency posthog-js to v1.335.2 ([#1709](https://github.com/distr-sh/distr/issues/1709)) ([4cbdf61](https://github.com/distr-sh/distr/commit/4cbdf61a58e3258926cb0ec20d4c210b3217d661))
+* **deps:** update dependency prettier to v3.8.1 ([#1697](https://github.com/distr-sh/distr/issues/1697)) ([6e5efe3](https://github.com/distr-sh/distr/commit/6e5efe3fe524d1356486f2cf90c02b1d20f67c88))
+* **deps:** update dependency vitest to v4.0.18 ([#1705](https://github.com/distr-sh/distr/issues/1705)) ([6f20c87](https://github.com/distr-sh/distr/commit/6f20c87ac08bf2a81e261ebe9db2161262cce7ce))
+* **deps:** update distr-sh/hello-distr to v0.2.3 ([#1719](https://github.com/distr-sh/distr/issues/1719)) ([0fe68c4](https://github.com/distr-sh/distr/commit/0fe68c43ffe35301214d3a2af60895d468f11231))
+* **deps:** update docker docker tag to v29.2.0 ([#1722](https://github.com/distr-sh/distr/issues/1722)) ([f1ccd8f](https://github.com/distr-sh/distr/commit/f1ccd8ff048eefe6d28d74d704a1a997d3e7da19))
+* **deps:** update sentry-javascript monorepo to v10.36.0 ([#1710](https://github.com/distr-sh/distr/issues/1710)) ([34ef8a4](https://github.com/distr-sh/distr/commit/34ef8a423fd38639720d1f186ff67c0623dce457))
+* **frontend:** sort artifacts by last push ([#1716](https://github.com/distr-sh/distr/issues/1716)) ([b1bbac8](https://github.com/distr-sh/distr/commit/b1bbac882fe2d700af476d5a32d7a07466d02b22))
+* **kubernetes-agent:** use parent resource name for collected logs ([#1712](https://github.com/distr-sh/distr/issues/1712)) ([8e99c99](https://github.com/distr-sh/distr/commit/8e99c99631b667a05ca33ae9d91bc10e9752b353))
+
 ## [2.6.0](https://github.com/distr-sh/distr/compare/2.5.2...2.6.0) (2026-01-20)
 
 
