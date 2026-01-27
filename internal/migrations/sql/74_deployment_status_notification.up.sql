@@ -2,7 +2,7 @@ CREATE TABLE DeploymentStatusNotificationConfiguration (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   organization_id UUID NOT NULL REFERENCES Organization(id) ON DELETE CASCADE,
-  customer_organization_id UUID NOT NULL REFERENCES CustomerOrganization(id) ON DELETE CASCADE,
+  customer_organization_id UUID REFERENCES CustomerOrganization(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   enabled BOOLEAN NOT NULL DEFAULT TRUE
 );

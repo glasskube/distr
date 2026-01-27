@@ -24,25 +24,25 @@ const (
 		FROM DeploymentTarget dt
 		WHERE exists(
 			SELECT 1 FROM DeploymentStatusNotificationConfiguration_DeploymentTarget j
-			WHERE j.deployment_status_notification_configuration_id = c.id
+			WHERE j.deployment_status_notification_configuration_id = c.id AND j.deployment_target_id = dt.id
 		)
 	) AS deployment_target_ids,
 	(
-		SELECT array_agg(ua.id)
-		FROM UserAccount ua
+		SELECT array_agg(u.id)
+		FROM UserAccount u
 		WHERE exists(
 			SELECT 1 FROM DeploymentStatusNotificationConfiguration_Organization_UserAccount j
 			WHERE j.deployment_status_notification_configuration_id = c.id
-				AND j.user_account_id = ua.id
+				AND j.user_account_id = u.id
 		)
 	) AS user_account_ids,
 	(
 		SELECT array_agg(row(` + userAccountOutputExpr + `))
-		FROM UserAccount ua
+		FROM UserAccount u
 		WHERE exists(
 			SELECT 1 FROM DeploymentStatusNotificationConfiguration_Organization_UserAccount j
 			WHERE j.deployment_status_notification_configuration_id = c.id
-				AND j.user_account_id = ua.id
+				AND j.user_account_id = u.id
 		)
 	) AS user_accounts
 	`
@@ -59,11 +59,12 @@ func GetDeploymentStatusNotificationConfigurations(
 		ctx,
 		`SELECT `+deploymentStatusNotificationConfigurationOutputExpr+`
 		FROM DeploymentStatusNotificationConfiguration c
-		WHERE c.organization_id = @organizationID
-			AND (@isVendorScope OR c.customer_organization_id = @customerOrganizationID)`,
+		WHERE c.organization_id = @orgID
+			AND (@customerOrgIsNull AND customer_organization_id IS NULL) OR (customer_organization_id = @customerOrgID)`,
 		pgx.NamedArgs{
-			"organizationID":         organizationID,
-			"customerOrganizationID": customerOrganizationID,
+			"orgID":             organizationID,
+			"customerOrgID":     customerOrganizationID,
+			"customerOrgIsNull": customerOrganizationID == nil,
 		},
 	)
 	if err != nil {
@@ -91,10 +92,10 @@ func GetDeploymentStatusNotificationConfigurationsForDeploymentTarget(
 		WHERE exists(
 			SELECT 1 FROM DeploymentStatusNotificationConfiguration_DeploymentTarget
 			WHERE deployment_status_notification_configuration_id = id
-				AND deployment_target_id = :deployment_target_id
+				AND deployment_target_id = @deploymentTargetID
 		)`,
 		pgx.NamedArgs{
-			"deployment_target_id": deploymentTargetID,
+			"deploymentTargetID": deploymentTargetID,
 		},
 	)
 	if err != nil {
@@ -125,11 +126,12 @@ func CreateDeploymentStatusNotificationConfiguration(
 				name,
 				enabled
 			) VALUES (
-				:organizationID,
-				:customerOrganizationID,
-				:name,
-				:enabled
+				@organizationID,
+				@customerOrganizationID,
+				@name,
+				@enabled
 			)
+			RETURNING id
 		)
 		SELECT id FROM inserted`,
 			pgx.NamedArgs{
@@ -171,13 +173,18 @@ func UpdateDeploymentStatusNotificationConfiguration(
 		_, err := db.Exec(
 			ctx,
 			`UPDATE DeploymentStatusNotificationConfiguration SET
-			name = @name,
-			enabled = @enabled
-		WHERE id = @id`,
+				name = @name,
+				enabled = @enabled
+			WHERE id = @id
+				AND organization_id = @orgID
+				AND (@customerOrgIsNull AND customer_organization_id IS NULL) OR (customer_organization_id = @customerOrgID)`,
 			pgx.NamedArgs{
-				"id":      config.ID,
-				"name":    config.Name,
-				"enabled": config.Enabled,
+				"id":                config.ID,
+				"name":              config.Name,
+				"enabled":           config.Enabled,
+				"orgID":             config.OrganizationID,
+				"customerOrgID":     config.CustomerOrganizationID,
+				"customerOrgIsNull": config.CustomerOrganizationID == nil,
 			},
 		)
 		if err != nil {
@@ -201,12 +208,12 @@ func updateDeploymentStatusConfigUserAccountIDs(ctx context.Context, config *typ
 
 	_, err := db.Exec(
 		ctx,
-		`INSERT INTO DeploymentStatusNotificationConfiguration_UserAccount (
+		`INSERT INTO DeploymentStatusNotificationConfiguration_Organization_UserAccount (
 			deployment_status_notification_configuration_id,
 			organization_id,
 			user_account_id
 		)
-		SELECT :id, :organizationID, id FROM UserAccount WHERE id IN @userAccountIDs
+		(SELECT @id, @organizationID, id FROM UserAccount WHERE id = any(@userAccountIDs))
 		ON CONFLICT (deployment_status_notification_configuration_id, organization_id, user_account_id) DO NOTHING`,
 		pgx.NamedArgs{
 			"id":             config.ID,
@@ -220,9 +227,9 @@ func updateDeploymentStatusConfigUserAccountIDs(ctx context.Context, config *typ
 
 	_, err = db.Exec(
 		ctx,
-		`DELETE FROM DeploymentStatusNotificationConfiguration_UserAccount
+		`DELETE FROM DeploymentStatusNotificationConfiguration_Organization_UserAccount
 		WHERE deployment_status_notification_configuration_id = @id
-			AND user_account_id NOT IN @userAccountIDs`,
+			AND user_account_id != any(@userAccountIDs)`,
 		pgx.NamedArgs{
 			"id":             config.ID,
 			"userAccountIDs": config.UserAccountIDs,
@@ -244,7 +251,7 @@ func updateDeploymentStatusConfigDeploymentTargetIDs(ctx context.Context, config
 			deployment_status_notification_configuration_id,
 			deployment_target_id
 		)
-		SELECT :id, id FROM DeploymentTarget WHERE id IN @deploymentTargetIDs
+		SELECT @id, id FROM DeploymentTarget WHERE id = any(@deploymentTargetIDs)
 		ON CONFLICT (deployment_status_notification_configuration_id, deployment_target_id) DO NOTHING`,
 		pgx.NamedArgs{
 			"id":                  config.ID,
@@ -258,8 +265,8 @@ func updateDeploymentStatusConfigDeploymentTargetIDs(ctx context.Context, config
 	_, err = db.Exec(
 		ctx,
 		`DELETE FROM DeploymentStatusNotificationConfiguration_DeploymentTarget
-		WHERE deployment_status_notification_configuration_id = :id
-			AND deployment_target_id NOT IN @deploymentTargetIDs`,
+		WHERE deployment_status_notification_configuration_id = @id
+			AND deployment_target_id != any(@deploymentTargetIDs)`,
 		pgx.NamedArgs{
 			"id":                  config.ID,
 			"deploymentTargetIDs": config.DeploymentTargetIDs,
@@ -292,13 +299,26 @@ func getDeploymentStatusNotificationConfigurationInto(ctx context.Context, id uu
 	}
 }
 
-func DeleteDeploymentStatusNotificationConfiguration(ctx context.Context, id uuid.UUID) error {
+func DeleteDeploymentStatusNotificationConfiguration(
+	ctx context.Context,
+	id uuid.UUID,
+	orgID uuid.UUID,
+	customerOrgID *uuid.UUID,
+) error {
 	db := internalctx.GetDb(ctx)
 
 	cmd, err := db.Exec(
 		ctx,
-		`DELETE FROM DeploymentStatusNotificationConfiguration WHERE id = :id`,
-		pgx.NamedArgs{"id": id},
+		`DELETE FROM DeploymentStatusNotificationConfiguration
+		WHERE id = @id
+			AND organization_id = @orgID
+			AND (@customerOrgIsNull AND customer_organization_id IS NULL) OR (customer_organization_id = @customerOrgID)`,
+		pgx.NamedArgs{
+			"id":                id,
+			"orgID":             orgID,
+			"customerOrgIsNull": customerOrgID == nil,
+			"customerOrgID":     customerOrgID,
+		},
 	)
 
 	if err == nil && cmd.RowsAffected() == 0 {
