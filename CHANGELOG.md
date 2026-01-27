@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.2](https://github.com/distr-sh/distr/compare/2.7.1...2.7.2) (2026-01-27)
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.22.1 ([#1727](https://github.com/distr-sh/distr/issues/1727)) ([947ce71](https://github.com/distr-sh/distr/commit/947ce71c4687807ddf8471fab75438c5f966a0e0))
+
 ## [2.7.1](https://github.com/distr-sh/distr/compare/2.7.0...2.7.1) (2026-01-27)
 
 
