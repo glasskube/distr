@@ -464,7 +464,7 @@ func getDeploymentStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if deploymentStatus, err := db.GetDeploymentStatus(ctx, deployment.ID, limit, before, after); err != nil {
+	if deploymentStatus, err := db.GetDeploymentRevisionStatus(ctx, deployment.ID, limit, before, after); err != nil {
 		internalctx.GetLogger(ctx).Error("failed to get deploymentstatus", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -487,7 +487,7 @@ func exportDeploymentStatusHandler() http.HandlerFunc {
 
 		SetFileDownloadHeaders(w, filename)
 
-		err := db.GetDeploymentStatusForExport(
+		err := db.GetDeploymentRevisionStatusForExport(
 			ctx, deployment.ID, limit,
 			func(record types.DeploymentRevisionStatus) error {
 				_, err := fmt.Fprintf(w, "[%s] [%s] %s\n",
