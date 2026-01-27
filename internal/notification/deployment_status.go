@@ -2,9 +2,12 @@ package notification
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/distr-sh/distr/internal/db"
+	"github.com/distr-sh/distr/internal/mail"
 	"github.com/distr-sh/distr/internal/types"
 	"go.uber.org/zap"
 )
@@ -31,7 +34,9 @@ func DispatchDeploymentStatusNotification(
 	}
 
 	log := internalctx.GetLogger(ctx)
+	mailer := internalctx.GetMailer(ctx)
 
+	// TODO: use a background context populated with the necessary services
 	go func(ctx context.Context) {
 		configs, err := db.GetDeploymentStatusNotificationConfigurationsForDeploymentTarget(ctx, deploymentTarget.ID)
 		if err != nil {
@@ -61,17 +66,25 @@ func DispatchDeploymentStatusNotification(
 			for _, user := range config.UserAccounts {
 				log := log.With(zap.Stringer("user_id", user.ID))
 				log.Info("send notification")
-
-				// TODO: Send email to users
+				aggErr = errors.Join(aggErr, mailer.Send(ctx, mail.New(
+					mail.Subject("Deployment Status Notification"),
+					mail.TextBody(fmt.Sprintf(`Deployment status has changed:
+ * Deployment Target: %v
+ * Application: %v
+ * Timestamp: %v
+ * Message: %v`,
+						deploymentTarget.Name, deployment.ApplicationName, currentStatus.CreatedAt, currentStatus.Message)),
+					mail.To(user.Email),
+				)))
 			}
 
 			record := types.NotificationRecord{
 				DeploymentStatusNotificationConfigurationID: &config.ID,
-				PreviousDeploymentStatusID:                  &previousStatus.ID,
+				PreviousDeploymentRevisionStatusID:          &previousStatus.ID,
 			}
 
 			if currentStatus != nil {
-				record.CurrentDeploymentStatusID = &currentStatus.ID
+				record.CurrentDeploymentRevisionStatusID = &currentStatus.ID
 			}
 
 			if aggErr != nil {

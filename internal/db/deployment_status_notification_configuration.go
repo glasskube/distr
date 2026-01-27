@@ -90,9 +90,9 @@ func GetDeploymentStatusNotificationConfigurationsForDeploymentTarget(
 		`SELECT `+deploymentStatusNotificationConfigurationOutputExpr+`
 		FROM DeploymentStatusNotificationConfiguration c
 		WHERE exists(
-			SELECT 1 FROM DeploymentStatusNotificationConfiguration_DeploymentTarget
-			WHERE deployment_status_notification_configuration_id = id
-				AND deployment_target_id = @deploymentTargetID
+			SELECT 1 FROM DeploymentStatusNotificationConfiguration_DeploymentTarget j
+			WHERE j.deployment_status_notification_configuration_id = c.id
+				AND j.deployment_target_id = @deploymentTargetID
 		)`,
 		pgx.NamedArgs{
 			"deploymentTargetID": deploymentTargetID,

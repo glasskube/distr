@@ -23,6 +23,7 @@ func CreateDeploymentRevisionStatus(ctx context.Context, status *types.Deploymen
 		`WITH inserted AS (
 			INSERT INTO DeploymentRevisionStatus (deployment_revision_id, message, type)
 			VALUES (@deploymentRevisionId, @message, @type)
+			RETURNING *
 		)
 		SELECT id, created_at, deployment_revision_id, type, message FROM inserted
 		`,

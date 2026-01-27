@@ -22,17 +22,18 @@ func SaveNotificationRecord(ctx context.Context, record *types.NotificationRecor
 				message
 			)
 			VALUES (
-				:deploymentStatusNotificationConfigurationID,
-				:previousDeploymentStatusID,
-				:currentDeploymentStatusID,
-				:message
+				@deploymentStatusNotificationConfigurationID,
+				@previousDeploymentStatusID,
+				@currentDeploymentStatusID,
+				@message
 			)
+			RETURNING *
 		)
-		RETURNING *`,
+		SELECT * FROM inserted`,
 		pgx.NamedArgs{
 			"deploymentStatusNotificationConfigurationID": record.DeploymentStatusNotificationConfigurationID,
-			"previousDeploymentStatusID":                  record.PreviousDeploymentStatusID,
-			"currentDeploymentStatusID":                   record.CurrentDeploymentStatusID,
+			"previousDeploymentStatusID":                  record.PreviousDeploymentRevisionStatusID,
+			"currentDeploymentStatusID":                   record.CurrentDeploymentRevisionStatusID,
 			"message":                                     record.Message,
 		},
 	)
