@@ -369,6 +369,7 @@ func angentPostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Error("failed to create deployment revision status – skipping cleanup of old statuses", zap.Error(err),
 				zap.Reflect("status", status))
+			sentry.GetHubFromContext(ctx).CaptureException(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
