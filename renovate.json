@@ -76,8 +76,8 @@
       ]
     },
     {
-      "matchSourceUrls": [
-        "https://github.com/distr-sh/hello-distr"
+      "matchPackageNames": [
+        "distr-sh/hello-distr"
       ],
       "groupName": "distr-sh/hello-distr"
     }
@@ -85,9 +85,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["^internal/handlers/tutorials\\.go$"],
+      "managerFilePatterns": ["internal/handlers/tutorials.go"],
       "matchStrings": [
-        "\"(?<currentValue>.*?)\",\\s+// renovate: datasource=(?<datasource>\\S*) depName=(?<depName>\\S*)"
+        "\"(?<currentValue>[^\"]+)\",\\s+// renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)"
       ]
     }
   ]
