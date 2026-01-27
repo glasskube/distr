@@ -32,7 +32,6 @@ func CreateDeploymentRevisionStatus(ctx context.Context, status *types.Deploymen
 			"type":                 status.Type,
 		},
 	)
-
 	if err != nil {
 		return err
 	}
@@ -173,7 +172,10 @@ func GetDeploymentRevisionStatusForExport(
 	return nil
 }
 
-func GetLatestDeploymentRevisionStatus(ctx context.Context, deploymentID uuid.UUID) (*types.DeploymentRevisionStatus, error) {
+func GetLatestDeploymentRevisionStatus(
+	ctx context.Context,
+	deploymentID uuid.UUID,
+) (*types.DeploymentRevisionStatus, error) {
 	db := internalctx.GetDb(ctx)
 
 	revisionIDs, err := GetDeploymentRevisionIDs(ctx, deploymentID)
