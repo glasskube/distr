@@ -54,7 +54,7 @@ func GetArtifactsByOrgID(ctx context.Context, orgID uuid.UUID) ([]types.Artifact
 			LEFT JOIN ArtifactVersionPull avpl ON avpl.artifact_version_id = av.id
 			WHERE a.organization_id = @orgId
 			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug
-			ORDER BY a.name`,
+			ORDER BY max(av.created_at) DESC`,
 		pgx.NamedArgs{
 			"orgId": orgID,
 		}); err != nil {
@@ -92,7 +92,7 @@ func GetArtifactsByLicenseOwnerID(ctx context.Context, orgID uuid.UUID, ownerID 
 				AND ala.artifact_id = a.id
 			)
 			GROUP BY a.id, a.created_at, a.organization_id, a.name, o.slug
-			ORDER BY a.name`,
+			ORDER BY max(av.created_at) DESC`,
 		pgx.NamedArgs{
 			"orgId":   orgID,
 			"ownerId": ownerID,

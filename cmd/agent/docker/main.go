@@ -101,7 +101,7 @@ loop:
 						logger.Error("self update failed", zap.Error(err))
 						// TODO: Support status without revision ID?
 						if len(resource.Deployments) > 0 {
-							if err := client.StatusWithError(ctx, resource.Deployments[0].RevisionID, "", err); err != nil {
+							if err := client.StatusWithError(ctx, resource.Deployments[0].RevisionID, err); err != nil {
 								logger.Error("failed to send status", zap.Error(err))
 							}
 						}
@@ -148,6 +148,7 @@ loop:
 			for _, deployment := range resource.Deployments {
 				var agentDeployment *AgentDeployment
 				var status string
+				statusType := types.DeploymentStatusTypeProgressing
 				_, err = agentauth.EnsureAuth(ctx, client.RawToken(), deployment)
 				if err != nil {
 					logger.Error("docker auth error", zap.Error(err))
@@ -158,33 +159,42 @@ loop:
 						continue
 					}
 
-					var isUpgrade, skipApply bool
 					if existing, ok := deployments[deployment.ID]; ok {
-						isUpgrade = existing.RevisionID != deployment.RevisionID
-						skipApply = !isUpgrade && *deployment.DockerType == types.DockerTypeSwarm
+						agentDeployment = &existing
 					}
 
-					if skipApply {
-						logger.Info("skip apply in swarm mode")
-						status = "status checks are not yet supported in swarm mode"
+					if agentDeployment == nil || agentDeployment.RevisionID != deployment.RevisionID {
+						func() {
+							progressCtx, progressCancel := context.WithCancel(ctx)
+							defer progressCancel()
+							go sendProgressInterval(progressCtx, deployment.RevisionID)
+
+							if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
+								multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+							}
+
+							if err == nil && deployment.ForceRestart {
+								multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
+							}
+						}()
 					} else {
-						progressCtx, progressCancel := context.WithCancel(ctx)
-						go sendProgressInterval(progressCtx, deployment.RevisionID)
-
-						if agentDeployment, status, err = DockerEngineApply(ctx, deployment); err == nil {
-							multierr.AppendInto(&err, SaveDeployment(*agentDeployment))
+						if statusType1, statusMessage, err1 := CheckStatus(ctx, *agentDeployment); err1 != nil {
+							multierr.AppendInto(&err, err1)
+						} else {
+							status = statusMessage
+							statusType = statusType1
 						}
-
-						if err == nil && isUpgrade && deployment.ForceRestart {
-							multierr.AppendInto(&err, RunDockerRestart(ctx, *agentDeployment))
-						}
-
-						progressCancel()
 					}
 				}
 
-				if statusErr := client.StatusWithError(ctx, deployment.RevisionID, status, err); statusErr != nil {
-					logger.Error("failed to send status", zap.Error(statusErr))
+				if err != nil {
+					err = client.StatusWithError(ctx, deployment.RevisionID, err)
+				} else {
+					err = client.Status(ctx, deployment.RevisionID, statusType, status)
+				}
+
+				if err != nil {
+					logger.Error("failed to send status", zap.Error(err))
 				}
 			}
 		}

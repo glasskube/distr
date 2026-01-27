@@ -7,6 +7,7 @@ type ReactiveListEvent<T> = {type: 'save' | 'remove'; object: T} | {type: 'reset
 export abstract class ReactiveList<T> {
   protected abstract readonly identify: Predicate<T, unknown>;
   protected abstract readonly sortAttr: Predicate<T, string>;
+  protected readonly sortInverted: boolean = false;
 
   private readonly events$ = new Subject<ReactiveListEvent<T>>();
   private readonly state$: Observable<T[]>;
@@ -31,7 +32,7 @@ export abstract class ReactiveList<T> {
           return state;
         }
       }, []),
-      map((ls: T[]) => ls.sort(compareBy(this.sortAttr))),
+      map((ls: T[]) => ls.sort(compareBy(this.sortAttr, this.sortInverted))),
       shareReplay(1)
     );
   }

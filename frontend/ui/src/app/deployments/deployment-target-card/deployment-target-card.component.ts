@@ -49,7 +49,7 @@ import {drawerFlyInOut} from '../../animations/drawer';
 import {dropdownAnimation} from '../../animations/dropdown';
 import {modalFlyInOut} from '../../animations/modal';
 import {ConnectInstructionsComponent} from '../../components/connect-instructions/connect-instructions.component';
-import {DeploymentStatusDot, StatusDotComponent} from '../../components/status-dot';
+import {DeploymentStatusDotDirective, StatusDotComponent} from '../../components/status-dot';
 import {UuidComponent} from '../../components/uuid';
 import {AgentVersionService} from '../../services/agent-version.service';
 import {ApplicationsService} from '../../services/applications.service';
@@ -75,7 +75,7 @@ import {DeploymentTargetMetricsComponent} from './deployment-target-metrics.comp
     DatePipe,
     FaIconComponent,
     IsStalePipe,
-    DeploymentStatusDot,
+    DeploymentStatusDotDirective,
     OverlayModule,
     ConnectInstructionsComponent,
     ReactiveFormsModule,

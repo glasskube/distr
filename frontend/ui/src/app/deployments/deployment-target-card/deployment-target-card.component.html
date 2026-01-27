@@ -280,7 +280,7 @@
               }
               <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 <button (click)="openStatusModal(deployment)" class="flex items-center">
-                  <app-deployment-status-dot class="size-4 me-1" [deployment]="deployment"></app-deployment-status-dot>
+                  <div class="size-4 me-1" appDeploymentStatusDot [deployment]="deployment"></div>
                   @if (deployment.latestStatus; as drs) {
                     @if (drs.type === 'error') {
                       Error
@@ -288,8 +288,10 @@
                       Stale
                     } @else if (drs.type === 'progressing') {
                       Progressing
+                    } @else if (drs.type === 'running') {
+                      Running
                     } @else {
-                      OK
+                      Healthy
                     }
                   } @else {
                     No status
