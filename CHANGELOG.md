@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.1](https://github.com/distr-sh/distr/compare/2.7.0...2.7.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* **backend:** add backwards-compatible parsing of DeploymentStatusType ([#1725](https://github.com/distr-sh/distr/issues/1725)) ([c3c93f7](https://github.com/distr-sh/distr/commit/c3c93f701bf42eef525705bc629fcf6c589d5da9))
+
 ## [2.7.0](https://github.com/distr-sh/distr/compare/2.6.0...2.7.0) (2026-01-27)
 
 
