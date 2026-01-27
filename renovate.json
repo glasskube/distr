@@ -85,9 +85,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["^internal/handlers/tutorials\\.go$"],
+      "fileMatch": ["^internal/handlers/tutorials\\.go$"],
       "matchStrings": [
-        "\"(?<currentValue>.*?)\",\\s+// renovate: datasource=(?<datasource>\\S*) depName=(?<depName>\\S*)"
+        "\"(?<currentValue>[^\"]+)\",\\s+// renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)"
       ]
     }
   ]
