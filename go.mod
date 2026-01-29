@@ -38,6 +38,7 @@ require (
 	github.com/oaswrap/spec/adapter/chiopenapi v0.3.6
 	github.com/onsi/gomega v1.39.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.144.0
+	github.com/pquerna/otp v1.5.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stripe/stripe-go/v84 v84.2.0
 	github.com/wneessen/go-mail v0.7.2
@@ -75,6 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.5 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect

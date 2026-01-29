@@ -26,6 +26,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/oaswrap/spec/adapter/chiopenapi"
 	"github.com/oaswrap/spec/option"
+	"github.com/pquerna/otp/totp"
 	"go.uber.org/zap"
 )
 
@@ -134,6 +135,26 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 				}
+			}
+		}
+
+		if user.MFAEnabled {
+			if request.MFACode == nil {
+				RespondJSON(w, api.AuthLoginResponse{RequiresMFA: true})
+				return nil
+			}
+
+			if user.MFASecret == nil {
+				// this can never happen because we guard against it with a db constraint
+				sentry.GetHubFromContext(ctx).CaptureException(errors.New("user has mfa enabled but no secret"))
+				http.Error(w, "MFA configuration error", http.StatusInternalServerError)
+				return nil
+			}
+
+			valid := totp.Validate(*request.MFACode, *user.MFASecret)
+			if !valid {
+				http.Error(w, "invalid MFA code", http.StatusUnauthorized)
+				return nil
 			}
 		}
 

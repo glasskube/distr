@@ -9,13 +9,11 @@ import (
 	"github.com/distr-sh/distr/internal/apierrors"
 	"github.com/distr-sh/distr/internal/auth"
 	"github.com/distr-sh/distr/internal/authjwt"
-	"github.com/distr-sh/distr/internal/authkey"
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/distr-sh/distr/internal/db"
 	"github.com/distr-sh/distr/internal/mail"
 	"github.com/distr-sh/distr/internal/mailsending"
 	"github.com/distr-sh/distr/internal/mailtemplates"
-	"github.com/distr-sh/distr/internal/mapping"
 	"github.com/distr-sh/distr/internal/middleware"
 	"github.com/distr-sh/distr/internal/security"
 	"github.com/distr-sh/distr/internal/types"
@@ -50,6 +48,22 @@ func SettingsRouter(r chiopenapi.Router) {
 			Post("/request", userSettingsVerifyRequestHandler)
 
 		r.Post("/confirm", userSettingsVerifyConfirmHandler)
+	})
+
+	r.Route("/mfa", func(r chiopenapi.Router) {
+		r.WithOptions(option.GroupTags("Security"))
+
+		r.Post("/setup", mfaSetupHandler).
+			With(option.Description("Setup a new TOTP secret for the current user. MFA must still be enabled afterwards")).
+			With(option.Response(http.StatusOK, api.SetupMFAResponse{}))
+
+		r.Post("/enable", mfaEnableHandler).
+			With(option.Description("Enable MFA for the current user")).
+			With(option.Request(api.EnableMFARequest{}))
+
+		r.Post("/disable", mfaDisableHandler).
+			With(option.Description("Disable MFA for the current user. This will also remove the TOTP secret")).
+			With(option.Request(api.DisableMFARequest{}))
 	})
 
 	r.Route("/tokens", func(r chiopenapi.Router) {
@@ -240,77 +254,6 @@ func userSettingsVerifyConfirmHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func getAccessTokensHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		log := internalctx.GetLogger(ctx)
-		auth := auth.Authentication.Require(ctx)
-		tokens, err := db.GetAccessTokens(ctx, auth.CurrentUserID(), *auth.CurrentOrgID())
-		if err != nil {
-			log.Warn("error getting tokens", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else {
-			RespondJSON(w, mapping.List(tokens, mapping.AccessTokenToDTO))
-		}
-	}
-}
-
-func createAccessTokenHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		log := internalctx.GetLogger(ctx)
-		auth := auth.Authentication.Require(ctx)
-		request, err := JsonBody[api.CreateAccessTokenRequest](w, r)
-		if err != nil {
-			return
-		}
-
-		key, err := authkey.NewKey()
-		if err != nil {
-			log.Warn("error creating token", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		token := types.AccessToken{
-			ExpiresAt:      request.ExpiresAt,
-			Label:          request.Label,
-			UserAccountID:  auth.CurrentUserID(),
-			Key:            key,
-			OrganizationID: *auth.CurrentOrgID(),
-		}
-		if err := db.CreateAccessToken(ctx, &token); err != nil {
-			log.Warn("error creating token", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else {
-			RespondJSON(w, mapping.AccessTokenToDTO(token).WithKey(token.Key))
-		}
-	}
-}
-
-func deleteAccessTokenHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		log := internalctx.GetLogger(ctx)
-		tokenID, err := uuid.Parse(r.PathValue("accessTokenId"))
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		auth := auth.Authentication.Require(ctx)
-		if err := db.DeleteAccessToken(ctx, tokenID, auth.CurrentUserID()); err != nil {
-			log.Warn("error deleting token", zap.Error(err))
-			sentry.GetHubFromContext(ctx).CaptureException(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusNoContent)
-		}
 	}
 }
 
