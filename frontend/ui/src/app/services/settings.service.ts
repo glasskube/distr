@@ -11,6 +11,11 @@ export interface UpdateUserAccountRequest {
   imageId?: string;
 }
 
+export interface MFASetupData {
+  qrCodeUrl: string;
+  secret: string;
+}
+
 @Injectable({providedIn: 'root'})
 export class SettingsService {
   private readonly httpClient = inject(HttpClient);
@@ -31,5 +36,17 @@ export class SettingsService {
 
   public confirmEmailVerification() {
     return this.httpClient.post<void>(`${this.baseUrl}/verify/confirm`, undefined);
+  }
+
+  public startMFASetup() {
+    return this.httpClient.post<MFASetupData>(`${this.baseUrl}/mfa/setup`, undefined);
+  }
+
+  public enableMFA(code: string) {
+    return this.httpClient.post<void>(`${this.baseUrl}/mfa/enable`, {code}).pipe(tap(() => this.ctx.reload()));
+  }
+
+  public disableMFA(password: string) {
+    return this.httpClient.post<void>(`${this.baseUrl}/mfa/disable`, {password}).pipe(tap(() => this.ctx.reload()));
   }
 }

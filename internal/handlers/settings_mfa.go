@@ -82,8 +82,8 @@ func mfaSetupHandler(w http.ResponseWriter, r *http.Request) {
 	qrCode := "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 
 	RespondJSON(w, api.SetupMFAResponse{
-		Secret: key.Secret(),
-		QRCode: qrCode,
+		Secret:    key.Secret(),
+		QRCodeUrl: qrCode,
 	})
 }
 

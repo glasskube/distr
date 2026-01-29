@@ -1,8 +1,8 @@
 package api
 
 type SetupMFAResponse struct {
-	Secret string `json:"secret"`
-	QRCode string `json:"qrCode"`
+	Secret    string `json:"secret"`
+	QRCodeUrl string `json:"qrCodeUrl"`
 }
 
 type EnableMFARequest struct {

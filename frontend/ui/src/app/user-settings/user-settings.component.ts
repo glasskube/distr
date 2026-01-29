@@ -1,16 +1,17 @@
 import {AsyncPipe} from '@angular/common';
-import {Component, inject, signal} from '@angular/core';
+import {Component, inject, signal, TemplateRef, viewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faFloppyDisk, faPen} from '@fortawesome/free-solid-svg-icons';
+import {faCheck, faCircleExclamation, faFloppyDisk, faPen, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {filter, firstValueFrom, take} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {SecureImagePipe} from '../../util/secureImage';
 import {AutotrimDirective} from '../directives/autotrim.directive';
 import {ContextService} from '../services/context.service';
 import {ImageUploadService} from '../services/image-upload.service';
-import {SettingsService} from '../services/settings.service';
+import {DialogRef, OverlayService} from '../services/overlay.service';
+import {MFASetupData, SettingsService} from '../services/settings.service';
 import {ToastService} from '../services/toast.service';
 
 @Component({
@@ -20,12 +21,16 @@ import {ToastService} from '../services/toast.service';
 export class UserSettingsComponent {
   protected readonly faFloppyDisk = faFloppyDisk;
   protected readonly faPen = faPen;
+  protected readonly faCheck = faCheck;
+  protected readonly faXmark = faXmark;
+  protected readonly faCircleExclamation = faCircleExclamation;
 
   private readonly fb = inject(FormBuilder);
   private readonly ctx = inject(ContextService);
   private readonly toast = inject(ToastService);
   private readonly imageUploadService = inject(ImageUploadService);
   private readonly settingsService = inject(SettingsService);
+  private readonly overlay = inject(OverlayService);
 
   protected readonly user = toSignal(this.ctx.getUser());
 
@@ -38,7 +43,24 @@ export class UserSettingsComponent {
     email: this.fb.control('', [Validators.required, Validators.email]),
   });
 
+  protected readonly setupMfaForm = this.fb.group({
+    mfaCode: this.fb.control('', [
+      Validators.required,
+      Validators.pattern(/^\d*$/),
+      Validators.minLength(6),
+      Validators.maxLength(6),
+    ]),
+  });
+
+  protected readonly disableMfaForm = this.fb.group({
+    password: this.fb.control('', [Validators.required]),
+  });
+
   protected readonly formLoading = signal(true);
+  protected readonly mfaSetupData = signal<MFASetupData | undefined>(undefined);
+  protected disableMfaDialogRef?: DialogRef<void>;
+
+  private readonly disableMfaDialog = viewChild.required<TemplateRef<unknown>>('disableMfaDialog');
 
   constructor() {
     this.ctx
@@ -99,6 +121,67 @@ export class UserSettingsComponent {
       await firstValueFrom(this.settingsService.requestEmailVerification(email));
       this.toast.success('Verification request sent. Please check your inbox.');
       this.emailForm.reset();
+    } catch (e) {
+      const errorMessage = getFormDisplayedError(e);
+      if (errorMessage) {
+        this.toast.error(errorMessage);
+      }
+    } finally {
+      this.formLoading.set(false);
+    }
+  }
+
+  protected async startMfaSetup(): Promise<void> {
+    try {
+      this.mfaSetupData.set(await firstValueFrom(this.settingsService.startMFASetup()));
+    } catch (e) {
+      const errorMessage = getFormDisplayedError(e);
+      if (errorMessage) {
+        this.toast.error(errorMessage);
+      }
+    }
+  }
+
+  protected async enableMfa(): Promise<void> {
+    const code = this.setupMfaForm.value.mfaCode;
+    if (this.setupMfaForm.invalid || !code) {
+      this.setupMfaForm.markAllAsTouched();
+      return;
+    }
+
+    try {
+      this.formLoading.set(true);
+      await firstValueFrom(this.settingsService.enableMFA(code));
+      this.toast.success('Multi-factor authentication enabled successfully.');
+      this.mfaSetupData.set(undefined);
+      this.setupMfaForm.reset();
+    } catch (e) {
+      const errorMessage = getFormDisplayedError(e);
+      if (errorMessage) {
+        this.toast.error(errorMessage);
+      }
+    } finally {
+      this.formLoading.set(false);
+    }
+  }
+
+  protected async disableMfa() {
+    this.disableMfaDialogRef?.dismiss();
+    this.disableMfaDialogRef = this.overlay.showModal<void>(this.disableMfaDialog());
+  }
+
+  protected async disableMfaFinish() {
+    const password = this.disableMfaForm.value.password;
+    if (this.disableMfaForm.invalid || !password) {
+      this.disableMfaForm.markAllAsTouched();
+      return;
+    }
+
+    try {
+      this.formLoading.set(true);
+      await firstValueFrom(this.settingsService.disableMFA(password));
+      this.toast.success('Multi-factor authentication disabled successfully.');
+      this.disableMfaDialogRef?.close();
     } catch (e) {
       const errorMessage = getFormDisplayedError(e);
       if (errorMessage) {
