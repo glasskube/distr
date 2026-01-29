@@ -85,24 +85,44 @@ export class LoginComponent implements OnInit {
   public async submit(): Promise<void> {
     this.emailPasswordForm.markAllAsTouched();
     this.errorMessage.set(undefined);
-    if (this.emailPasswordForm.valid) {
-      this.loading.set(true);
-      const value = this.emailPasswordForm.value;
-      try {
-        const response = await lastValueFrom(this.auth.login(value.email!, value.password!));
-        if (response.requiresMfa) {
-          this.mfaRequired.set(true);
-        } else if (this.auth.isCustomer()) {
-          await this.router.navigate(['/home']);
-        } else {
-          await this.router.navigate(['/dashboard'], {queryParams: {from: 'login'}});
-        }
-      } catch (e) {
-        this.errorMessage.set(getFormDisplayedError(e));
-      } finally {
-        this.loading.set(false);
-      }
+
+    const email = this.emailPasswordForm.value.email;
+    const password = this.emailPasswordForm.value.password;
+    const mfaCode = this.mfaCodeForm.value.mfaCode || undefined;
+
+    if (this.emailPasswordForm.invalid || !email || !password) {
+      this.emailPasswordForm.markAllAsTouched();
+      return;
     }
+
+    if (this.mfaRequired() && (this.mfaCodeForm.invalid || !mfaCode)) {
+      this.mfaCodeForm.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
+
+    try {
+      const response = await lastValueFrom(this.auth.login(email, password, mfaCode));
+      if (response.requiresMfa) {
+        this.mfaRequired.set(true);
+      } else if (this.auth.isCustomer()) {
+        await this.router.navigate(['/home']);
+      } else {
+        await this.router.navigate(['/dashboard'], {queryParams: {from: 'login'}});
+      }
+    } catch (e) {
+      this.errorMessage.set(getFormDisplayedError(e));
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  public reset() {
+    this.emailPasswordForm.reset();
+    this.mfaCodeForm.reset();
+    this.mfaRequired.set(false);
+    this.errorMessage.set(undefined);
   }
 
   protected getLoginURL(provider: string): string {
