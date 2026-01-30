@@ -39,7 +39,7 @@ services:
       - app_network
 
   frontend:
-    image: ghcr.io/distr-sh/hello-distr/frontend:0.2.3 # x-release-please-version
+    image: ghcr.io/distr-sh/hello-distr/frontend:0.2.4 # x-release-please-version
     environment:
       <<: *shared-env
       NEXT_PUBLIC_API_URL: 'http://${HELLO_DISTR_HOST:?error}/api'
