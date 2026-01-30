@@ -11,9 +11,13 @@
 }
 
 .modal-fly-in {
-  animation: fly-fade-top 150ms ease-out forwards;
+  animation: fly-fade-top 150ms ease-out;
 }
 
 .modal-fly-out {
-  animation: fly-fade-top 150ms ease-in backwards;
+  opacity: 0;
+  transform: translateY(-100%);
+  transition:
+    opacity 150ms ease-in,
+    transform 150ms ease-in;
 }
