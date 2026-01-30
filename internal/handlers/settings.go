@@ -58,12 +58,23 @@ func SettingsRouter(r chiopenapi.Router) {
 			With(option.Response(http.StatusOK, api.SetupMFAResponse{}))
 
 		r.Post("/enable", mfaEnableHandler).
-			With(option.Description("Enable MFA for the current user")).
-			With(option.Request(api.EnableMFARequest{}))
+			With(option.Description("Enable MFA for the current user and receive recovery codes")).
+			With(option.Request(api.EnableMFARequest{})).
+			With(option.Response(http.StatusOK, api.EnableMFAResponse{}))
 
 		r.Post("/disable", mfaDisableHandler).
-			With(option.Description("Disable MFA for the current user. This will also remove the TOTP secret")).
+			With(option.Description(
+				"Disable MFA for the current user. This will also remove the TOTP secret and all recovery codes")).
 			With(option.Request(api.DisableMFARequest{}))
+
+		r.Post("/recovery-codes/regenerate", mfaRegenerateRecoveryCodesHandler).
+			With(option.Description("Regenerate all recovery codes. This invalidates all existing codes")).
+			With(option.Request(api.RegenerateMFARecoveryCodesRequest{})).
+			With(option.Response(http.StatusOK, api.RegenerateMFARecoveryCodesResponse{}))
+
+		r.Get("/recovery-codes/status", mfaRecoveryCodesStatusHandler).
+			With(option.Description("Get the count of remaining unused recovery codes")).
+			With(option.Response(http.StatusOK, api.MFARecoveryCodesStatusResponse{}))
 	})
 
 	r.Route("/tokens", func(r chiopenapi.Router) {

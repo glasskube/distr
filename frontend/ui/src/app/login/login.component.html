@@ -39,6 +39,7 @@
                   formControlName="password"
                   id="password"
                   autocomplete="current-password"
+                  placeholder="Your password"
                   autotrim
                   class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   required />
@@ -146,17 +147,25 @@
                   class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50" />
               </div>
               <div>
-                <label for="mfa-code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >MFA Code</label
-                >
-                <input
-                  type="text"
-                  formControlName="mfaCode"
-                  id="mfa-code"
-                  autotrim
-                  class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Enter code from authenticator app"
-                  required />
+                <label for="totp" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">MFA Code</label>
+                <!--
+                This input field is wrapped in a div in order to make autofill services ignore the help text below.
+                This is needed because some interpret the phrase "recovery code" as conflicting with the TOTP fild name.
+                -->
+                <div>
+                  <input
+                    type="text"
+                    formControlName="mfaCode"
+                    id="totp"
+                    autocomplete="one-time-code"
+                    autotrim
+                    class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Enter code"
+                    required />
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  You can use a code from your authenticator app or a one-time recovery code.
+                </div>
                 @if (mfaCodeForm.controls.mfaCode.touched && mfaCodeForm.controls.mfaCode.errors) {
                   <div class="text-sm text-red-500">Please enter your MFA code</div>
                 }

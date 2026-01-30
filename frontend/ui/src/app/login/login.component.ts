@@ -30,7 +30,12 @@ export class LoginComponent implements OnInit {
   });
 
   protected readonly mfaCodeForm = this.fb.group({
-    mfaCode: this.fb.control('', [Validators.required]),
+    mfaCode: this.fb.control('', [
+      Validators.required,
+      Validators.pattern(/^(\d*)|(\w+-\w+)$/),
+      Validators.minLength(6),
+      Validators.maxLength(11),
+    ]),
   });
 
   protected readonly mfaRequired = signal(false);

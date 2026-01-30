@@ -152,9 +152,30 @@ func authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			valid := totp.Validate(*request.MFACode, *user.MFASecret)
+
 			if !valid {
-				http.Error(w, "invalid MFA code", http.StatusUnauthorized)
-				return nil
+				normalized := security.NormalizeRecoveryCode(*request.MFACode)
+				codes, err := db.GetUnusedMFARecoveryCodes(ctx, user.ID)
+				if err != nil {
+					return fmt.Errorf("failed to get recovery codes: %w", err)
+				}
+
+				var matchedCodeID *uuid.UUID
+				for _, code := range codes {
+					if security.VerifyRecoveryCode(normalized, code.CodeSalt, code.CodeHash) {
+						matchedCodeID = &code.ID
+						break
+					}
+				}
+
+				if matchedCodeID == nil {
+					http.Error(w, "invalid MFA code or recovery code", http.StatusUnauthorized)
+					return nil
+				}
+
+				if err := db.MarkMFARecoveryCodeAsUsed(ctx, *matchedCodeID); err != nil {
+					log.Warn("failed to mark recovery code as used", zap.Error(err))
+				}
 			}
 		}
 

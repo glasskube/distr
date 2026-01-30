@@ -3,7 +3,14 @@ import {Component, inject, signal, TemplateRef, viewChild} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCheck, faCircleExclamation, faFloppyDisk, faPen, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheck,
+  faCircleExclamation,
+  faExclamationTriangle,
+  faFloppyDisk,
+  faPen,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import {filter, firstValueFrom, take} from 'rxjs';
 import {getFormDisplayedError} from '../../util/errors';
 import {SecureImagePipe} from '../../util/secureImage';
@@ -24,6 +31,7 @@ export class UserSettingsComponent {
   protected readonly faCheck = faCheck;
   protected readonly faXmark = faXmark;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faExclamationTriangle = faExclamationTriangle;
 
   private readonly fb = inject(FormBuilder);
   private readonly ctx = inject(ContextService);
@@ -56,11 +64,21 @@ export class UserSettingsComponent {
     password: this.fb.control('', [Validators.required]),
   });
 
+  protected readonly regenerateRecoveryCodesForm = this.fb.group({
+    password: this.fb.control('', [Validators.required]),
+  });
+
   protected readonly formLoading = signal(true);
   protected readonly mfaSetupData = signal<MFASetupData | undefined>(undefined);
+  protected readonly recoveryCodes = signal<string[] | undefined>(undefined);
+  protected readonly recoveryCodesCount = signal<number>(0);
   protected disableMfaDialogRef?: DialogRef<void>;
+  protected regenerateRecoveryCodesDialogRef?: DialogRef<void>;
 
   private readonly disableMfaDialog = viewChild.required<TemplateRef<unknown>>('disableMfaDialog');
+  private readonly regenerateRecoveryCodesDialog = viewChild.required<TemplateRef<unknown>>(
+    'regenerateRecoveryCodesDialog'
+  );
 
   constructor() {
     this.ctx
@@ -69,6 +87,7 @@ export class UserSettingsComponent {
       .subscribe((user) => {
         this.generalForm.patchValue(user);
         this.formLoading.set(false);
+        this.loadRecoveryCodesStatus();
       });
   }
 
@@ -151,7 +170,8 @@ export class UserSettingsComponent {
 
     try {
       this.formLoading.set(true);
-      await firstValueFrom(this.settingsService.enableMFA(code));
+      const response = await firstValueFrom(this.settingsService.enableMFA(code));
+      this.recoveryCodes.set(response.recoveryCodes);
       this.toast.success('Multi-factor authentication enabled successfully.');
       this.mfaSetupData.set(undefined);
       this.setupMfaForm.reset();
@@ -182,6 +202,7 @@ export class UserSettingsComponent {
       await firstValueFrom(this.settingsService.disableMFA(password));
       this.toast.success('Multi-factor authentication disabled successfully.');
       this.disableMfaDialogRef?.close();
+      this.disableMfaForm.reset();
     } catch (e) {
       const errorMessage = getFormDisplayedError(e);
       if (errorMessage) {
@@ -189,6 +210,72 @@ export class UserSettingsComponent {
       }
     } finally {
       this.formLoading.set(false);
+    }
+  }
+
+  protected acknowledgeRecoveryCodes(): void {
+    this.recoveryCodes.set(undefined);
+    this.loadRecoveryCodesStatus();
+  }
+
+  protected copyRecoveryCodes(): void {
+    const codes = this.recoveryCodes();
+    if (codes) {
+      navigator.clipboard.writeText(codes.join('\n'));
+      this.toast.success('Recovery codes copied to clipboard');
+    }
+  }
+
+  protected downloadRecoveryCodes(): void {
+    const codes = this.recoveryCodes();
+    if (codes) {
+      const blob = new Blob([codes.join('\n')], {type: 'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'distr-recovery-codes.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  protected async showRegenerateRecoveryCodesDialog() {
+    this.regenerateRecoveryCodesDialogRef?.dismiss();
+    this.regenerateRecoveryCodesDialogRef = this.overlay.showModal<void>(this.regenerateRecoveryCodesDialog());
+  }
+
+  protected async regenerateRecoveryCodes(): Promise<void> {
+    const password = this.regenerateRecoveryCodesForm.value.password;
+    if (this.regenerateRecoveryCodesForm.invalid || !password) {
+      this.regenerateRecoveryCodesForm.markAllAsTouched();
+      return;
+    }
+
+    try {
+      this.formLoading.set(true);
+      const response = await firstValueFrom(this.settingsService.regenerateMFARecoveryCodes(password));
+      this.recoveryCodes.set(response.recoveryCodes);
+      this.regenerateRecoveryCodesDialogRef?.close();
+      this.regenerateRecoveryCodesForm.reset();
+      this.toast.success('Recovery codes regenerated successfully.');
+    } catch (e) {
+      const errorMessage = getFormDisplayedError(e);
+      if (errorMessage) {
+        this.toast.error(errorMessage);
+      }
+    } finally {
+      this.formLoading.set(false);
+    }
+  }
+
+  protected async loadRecoveryCodesStatus(): Promise<void> {
+    if (this.user()?.mfaEnabled) {
+      try {
+        const status = await firstValueFrom(this.settingsService.getMFARecoveryCodesStatus());
+        this.recoveryCodesCount.set(status.remainingCodes);
+      } catch (e) {
+        // Silently fail, not critical
+      }
     }
   }
 }
