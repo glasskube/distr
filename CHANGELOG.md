@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.7.2](https://github.com/distr-sh/distr/compare/2.7.1...2.7.2) (2026-01-30)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/getsentry/sentry-go/otel to v0.42.0 ([#1723](https://github.com/distr-sh/distr/issues/1723)) ([da7a28d](https://github.com/distr-sh/distr/commit/da7a28dede784c31afb0bd4ac98875b79e902130))
+* **deps:** update module github.com/go-co-op/gocron/v2 to v2.19.1 ([#1731](https://github.com/distr-sh/distr/issues/1731)) ([555c5ac](https://github.com/distr-sh/distr/commit/555c5ac6736bfca261c3649ae1b8a0844ab63612))
+
+
+### Other
+
+* **deps:** update anchore/sbom-action action to v0.22.1 ([#1727](https://github.com/distr-sh/distr/issues/1727)) ([947ce71](https://github.com/distr-sh/distr/commit/947ce71c4687807ddf8471fab75438c5f966a0e0))
+* **deps:** update angular monorepo to v21.1.2 ([#1732](https://github.com/distr-sh/distr/issues/1732)) ([2d08949](https://github.com/distr-sh/distr/commit/2d08949063bc4b5ef2d1ec77b2690ad6a1fdc162))
+* **deps:** update angular-cli monorepo to v21.1.2 ([#1729](https://github.com/distr-sh/distr/issues/1729)) ([8902c0e](https://github.com/distr-sh/distr/commit/8902c0e63a920721dbad0ccd8b1681d30b0684a9))
+* **deps:** update docker/login-action action to v3.7.0 ([#1730](https://github.com/distr-sh/distr/issues/1730)) ([cd6f146](https://github.com/distr-sh/distr/commit/cd6f1465f5b79d06fa6def97dd7e4b9d45717325))
+
 ## [2.7.1](https://github.com/distr-sh/distr/compare/2.7.0...2.7.1) (2026-01-27)
 
 
