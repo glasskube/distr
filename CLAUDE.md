@@ -222,7 +222,7 @@ When you add a Postgres enum type, register it (and its array type, prefixed wit
 
 Sensitive columns are stored encrypted (`internal/dbcrypto`). A value lives in a `BYTEA` column named
 `<column>_enc` and never in the plaintext `<column>`, which only still exists so that rows written before
-migration 129 stay readable until `distr maintenance encrypt-database` has moved them over. Rules for these
+migration 130 stay readable until `distr maintenance encrypt-database` has moved them over. Rules for these
 columns:
 
 - Type the field in `internal/types` as `dbcrypto.String`, `*dbcrypto.String` or `dbcrypto.Bytes`, never as
