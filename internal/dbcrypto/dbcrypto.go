@@ -1,25 +1,27 @@
 package dbcrypto
 
-import (
-	"fmt"
-	"sync"
+import "fmt"
 
-	"github.com/distr-sh/distr/internal/env"
-	"github.com/distr-sh/distr/internal/util"
-)
+var keys *Keyring
 
-var keys = sync.OnceValues(func() (*Keyring, error) {
-	return ParseKeyring(env.DatabaseEncryptionKey())
-})
+// Init parses the given DATABASE_ENCRYPTION_KEY value into the keyring of this instance. Every
+// command that reads or writes an encrypted column has to call it before it does, so that a
+// malformed key aborts startup instead of failing the first query that touches such a column.
+func Init(spec string) error {
+	keyring, err := ParseKeyring(spec)
+	if err != nil {
+		return err
+	}
+	keys = keyring
+	return nil
+}
 
-// Keys is the keyring of this instance.
-func Keys() *Keyring { return util.Require(keys()) }
-
-// Validate builds the keyring, so that a malformed DATABASE_ENCRYPTION_KEY aborts startup instead of
-// failing the first query that touches an encrypted column.
-func Validate() error {
-	_, err := keys()
-	return err
+// Keys MUST be called after [Init], otherwise it WILL panic.
+func Keys() *Keyring {
+	if keys == nil {
+		panic("detected call to dbcrypto.Keys before calling dbcrypto.Init")
+	}
+	return keys
 }
 
 // TextValue renders the expression that reads an encrypted TEXT column. Until the encryption

@@ -32,7 +32,7 @@ var ServeCommand = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		env.Initialize()
-		util.Must(dbcrypto.Validate())
+		util.Must(dbcrypto.Init(env.DatabaseEncryptionKey()))
 		util.Must(license.Initialize())
 	},
 	Run: func(cmd *cobra.Command, args []string) {

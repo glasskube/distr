@@ -352,8 +352,8 @@ func DatabaseReadonlyMaxConns() *int {
 	return databaseReadonlyMaxConns
 }
 
-// DatabaseEncryptionKey returns the raw DATABASE_ENCRYPTION_KEY value. Use dbcrypto.Keys instead,
-// which parses it into a keyring; this getter exists so that env does not have to import dbcrypto.
+// DatabaseEncryptionKey is the raw spec of the keyring. Pass it to dbcrypto.Init rather than parsing
+// it anywhere else, and read the keyring itself through dbcrypto.Keys.
 func DatabaseEncryptionKey() string {
 	return databaseEncryptionKey
 }

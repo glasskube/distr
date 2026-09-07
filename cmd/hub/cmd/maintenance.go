@@ -44,7 +44,7 @@ func newMaintenanceTaskCommand(
 		Args:  cobra.NoArgs,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			env.Initialize()
-			util.Must(dbcrypto.Validate())
+			util.Must(dbcrypto.Init(env.DatabaseEncryptionKey()))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := runMaintenanceTask(cmd.Context(), use, timeout, run); err != nil {

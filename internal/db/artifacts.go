@@ -22,10 +22,19 @@ import (
 	"go.uber.org/zap"
 )
 
-var artifactOutputExpr = ` a.id, a.created_at, a.organization_id, a.name, a.image_id, ` +
-	`a.upstream_url, a.last_synced_at, a.last_sync_error, a.upstream_auth_type, ` +
-	dbcrypto.TextColumn("a", "upstream_username") + `, ` +
-	dbcrypto.TextColumn("a", "upstream_password") + ` `
+var (
+	artifactOutputExpr = artifactOutputExprWith(dbcrypto.TextColumn)
+	// artifactRowOutputExpr is artifactOutputExpr for a row constructor, where the alias that a scan
+	// by name needs is a syntax error.
+	artifactRowOutputExpr = artifactOutputExprWith(dbcrypto.TextValue)
+)
+
+func artifactOutputExprWith(upstreamCredential func(alias, column string) string) string {
+	return ` a.id, a.created_at, a.organization_id, a.name, a.image_id, ` +
+		`a.upstream_url, a.last_synced_at, a.last_sync_error, a.upstream_auth_type, ` +
+		upstreamCredential("a", "upstream_username") + `, ` +
+		upstreamCredential("a", "upstream_password") + ` `
+}
 
 var artifactWithDownloadsOutputExpr = artifactOutputExpr +
 	", o.slug AS organization_slug," +
@@ -1078,7 +1087,7 @@ func GetArtifactVersionPulls(
 			CASE WHEN u.id IS NOT NULL THEN (` + userAccountOutputExpr + `) ELSE NULL END,
 			CASE WHEN co.id IS NOT NULL THEN (` + customerOrganizationOutputExpr + `) ELSE NULL END,
 			CASE WHEN dt.id IS NOT NULL THEN (dt.id, dt.name) ELSE NULL END,
-			(` + artifactOutputExpr + `),
+			(` + artifactRowOutputExpr + `),
 			(` + artifactVersionOutputExpr + `)
 		FROM ArtifactVersionPull p
 			LEFT JOIN UserAccount u ON u.id = p.useraccount_id

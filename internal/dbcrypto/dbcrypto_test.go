@@ -26,7 +26,7 @@ func mustKeyring(t *testing.T, spec string) *Keyring {
 func useKeyring(t *testing.T, keyring *Keyring) {
 	t.Helper()
 	previous := keys
-	keys = func() (*Keyring, error) { return keyring, nil }
+	keys = keyring
 	t.Cleanup(func() { keys = previous })
 }
 
