@@ -85,19 +85,6 @@ ALTER TABLE SupportBundle
   ADD CONSTRAINT SupportBundle_bundle_secret_encryption
     CHECK (num_nonnulls(bundle_secret, bundle_secret_enc) <= 1);
 
--- An access token is the only credential here that a query looks up by value alone, with no id to
--- narrow the row down first, so it cannot be encrypted with a fresh nonce per write. It is replaced
--- by a keyed hash, which keeps the lookup exact and the unique constraint intact while making the
--- stored value useless to anyone holding a database dump. Nothing ever needs the token back: it is
--- returned to the user once, when it is created. Unlike the columns above it must therefore always
--- have exactly one representation.
-ALTER TABLE AccessToken
-  ADD COLUMN key_hmac BYTEA,
-  ALTER COLUMN key DROP NOT NULL,
-  ADD CONSTRAINT AccessToken_key_encryption CHECK (num_nonnulls(key, key_hmac) = 1);
-
-CREATE UNIQUE INDEX AccessToken_key_hmac ON AccessToken (key_hmac);
-
 -- These two tables are the only ones here that grow without bound, so the encryption migration and
 -- the startup check that reports leftover plaintext get a partial index instead of a sequential
 -- scan. Both indexes are empty once every row is encrypted.

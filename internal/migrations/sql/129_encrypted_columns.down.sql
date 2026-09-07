@@ -1,20 +1,10 @@
--- Rolling back cannot recover any value that has already been encrypted: SQL has no access to the
--- key, and the access token and support bundle secrets are keyed hashes that are one-way by design.
--- Decrypt first if the data matters. What is left encrypted is replaced with an empty value below so
--- that the NOT NULL constraints can be restored, and migrated access tokens are deleted rather than
--- given a fabricated key.
+-- Rolling back cannot recover any value that has already been encrypted, because SQL has no access
+-- to the key. Decrypt first if the data matters. What is left encrypted is replaced with an empty
+-- value below so that the NOT NULL constraints can be restored, except for the support bundle
+-- secret, which is given a fresh random value instead so that no two bundles share one.
 
 DROP INDEX SupportBundleResource_unencrypted;
 DROP INDEX DeploymentRevision_unencrypted;
-
-DELETE FROM AccessToken WHERE key IS NULL;
-
-DROP INDEX AccessToken_key_hmac;
-
-ALTER TABLE AccessToken
-  DROP CONSTRAINT AccessToken_key_encryption,
-  DROP COLUMN key_hmac,
-  ALTER COLUMN key SET NOT NULL;
 
 UPDATE SupportBundle SET bundle_secret = encode(gen_random_uuid()::TEXT::BYTEA, 'hex')
   WHERE bundle_secret IS NULL;

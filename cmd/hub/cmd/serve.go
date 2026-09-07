@@ -82,7 +82,7 @@ func runServe(ctx context.Context, opts ServeOptions) {
 	if env.DatabaseEncryptionMigrateOnBoot() {
 		util.Must(dbencryption.Run(dbLogCtx))
 	} else {
-		dbencryption.WarnAboutUnsealed(dbLogCtx)
+		dbencryption.WarnAboutUnencrypted(dbLogCtx)
 	}
 
 	if env.MetricsEnabled() {

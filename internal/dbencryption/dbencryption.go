@@ -1,6 +1,6 @@
 // Package dbencryption moves values that are still stored in plaintext into the encrypted columns
-// introduced by migration 129. It is the one-off counterpart to internal/dbcrypto, which seals and
-// opens the values an already migrated instance reads and writes.
+// introduced by migration 129. It is the one-off counterpart to internal/dbcrypto, which encrypts
+// and decrypts the values an already migrated instance reads and writes.
 package dbencryption
 
 import (
@@ -12,10 +12,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// Run seals every value that is still stored in a plaintext column and re-seals every value that is
-// still encrypted with a key that is no longer active, which is what lets a retired key be removed
-// from the keyring. It is safe to run repeatedly and while the server is serving traffic, and it can
-// be interrupted and resumed.
+// Run encrypts every value that is still stored in a plaintext column and re-encrypts every value
+// that still uses a key that is no longer active, which is what lets a retired key be removed from
+// the keyring. It is safe to run repeatedly and while the server is serving traffic, and it can be
+// interrupted and resumed.
 func Run(ctx context.Context) error {
 	log := internalctx.GetLogger(ctx)
 	var errs []error
@@ -52,10 +52,10 @@ func Run(ctx context.Context) error {
 	return nil
 }
 
-// WarnAboutUnsealed logs which columns still hold values in plaintext or under a retired key, so
+// WarnAboutUnencrypted logs which columns still hold values in plaintext or under a retired key, so
 // that an instance that has never run the encryption migration, or has rotated its key without
 // finishing the rotation, says so on every start instead of silently carrying them.
-func WarnAboutUnsealed(ctx context.Context) {
+func WarnAboutUnencrypted(ctx context.Context) {
 	log := internalctx.GetLogger(ctx)
 	var plaintext, staleKey []string
 	for _, column := range db.EncryptedColumns {

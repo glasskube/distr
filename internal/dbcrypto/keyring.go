@@ -198,10 +198,13 @@ func (k *Keyring) Decrypt(value []byte) ([]byte, error) {
 	return plaintext, nil
 }
 
-// HMAC derives the lookup value of a credential that has to stay searchable, such as an access token,
-// with the active key. Unlike [Keyring.Encrypt] it is deterministic and cannot be reversed, so a
-// credential stored this way is neither guessable from a database dump nor recoverable by this
-// instance.
+// HMAC derives the lookup value of a credential that has to stay searchable, with the active key.
+// Unlike [Keyring.Encrypt] it is deterministic and cannot be reversed, so a credential stored this
+// way is neither guessable from a database dump nor recoverable by this instance.
+//
+// No column uses this yet. It exists for the personal access token work, which needs the keyring
+// format to be settled: the two subkeys below are derived from the configured key, and adding the
+// second one later would be a format change.
 func (k *Keyring) HMAC(value []byte) []byte {
 	mac := hmac.New(sha256.New, k.active.mac)
 	mac.Write(value)
