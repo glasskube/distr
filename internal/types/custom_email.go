@@ -19,7 +19,7 @@ type CustomEmailConfiguration struct {
 	FromAddress     string          `db:"from_address"      json:"fromAddress"`
 	SMTPHost        string          `db:"smtp_host"         json:"smtpHost"`
 	SMTPPort        int             `db:"smtp_port"         json:"smtpPort"`
-	SMTPUsername    string          `db:"smtp_username"     json:"smtpUsername"`
+	SMTPUsername    dbcrypto.String `db:"smtp_username"     json:"smtpUsername"`
 	SMTPPassword    dbcrypto.String `db:"smtp_password"     json:"-"`
 	SMTPImplicitTLS bool            `db:"smtp_implicit_tls" json:"smtpImplicitTls"`
 }

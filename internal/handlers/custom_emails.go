@@ -166,7 +166,7 @@ func customEmailConfigurationFromRequest(
 		FromAddress:     settings.FromAddress,
 		SMTPHost:        settings.SMTPHost,
 		SMTPPort:        settings.SMTPPort,
-		SMTPUsername:    settings.SMTPUsername,
+		SMTPUsername:    dbcrypto.String(settings.SMTPUsername),
 		SMTPImplicitTLS: settings.SMTPImplicitTLS,
 	}
 	if settings.SMTPPassword != nil {

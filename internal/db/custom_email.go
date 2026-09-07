@@ -15,7 +15,8 @@ import (
 
 var customEmailConfigurationOutputExpr = `
 	c.id, c.created_at, c.updated_at, c.updated_by_user_account_id, c.organization_id, c.enabled,
-	c.from_address, c.smtp_host, c.smtp_port, c.smtp_username, ` +
+	c.from_address, c.smtp_host, c.smtp_port, ` +
+	dbcrypto.TextColumn("c", "smtp_username") + `, ` +
 	dbcrypto.TextColumn("c", "smtp_password") + `, c.smtp_implicit_tls
 `
 
@@ -44,6 +45,10 @@ func GetCustomEmailConfiguration(
 
 // The stored state is written back into the given struct.
 func UpsertCustomEmailConfiguration(ctx context.Context, config *types.CustomEmailConfiguration) error {
+	smtpUsernameEnc, err := config.SMTPUsername.Encrypt()
+	if err != nil {
+		return fmt.Errorf("could not encrypt SMTP username: %w", err)
+	}
 	smtpPasswordEnc, err := config.SMTPPassword.Encrypt()
 	if err != nil {
 		return fmt.Errorf("could not encrypt SMTP password: %w", err)
@@ -52,10 +57,10 @@ func UpsertCustomEmailConfiguration(ctx context.Context, config *types.CustomEma
 	rows, err := db.Query(ctx,
 		`INSERT INTO CustomEmailConfiguration AS c (
 			updated_by_user_account_id, organization_id, enabled, from_address,
-			smtp_host, smtp_port, smtp_username, smtp_password_enc, smtp_implicit_tls
+			smtp_host, smtp_port, smtp_username_enc, smtp_password_enc, smtp_implicit_tls
 		) VALUES (
 			@updatedByUserAccountId, @organizationId, @enabled, @fromAddress,
-			@smtpHost, @smtpPort, @smtpUsername, @smtpPasswordEnc, @smtpImplicitTls
+			@smtpHost, @smtpPort, @smtpUsernameEnc, @smtpPasswordEnc, @smtpImplicitTls
 		) ON CONFLICT (organization_id) DO UPDATE SET
 			updated_at = now(),
 			updated_by_user_account_id = excluded.updated_by_user_account_id,
@@ -63,7 +68,8 @@ func UpsertCustomEmailConfiguration(ctx context.Context, config *types.CustomEma
 			from_address = excluded.from_address,
 			smtp_host = excluded.smtp_host,
 			smtp_port = excluded.smtp_port,
-			smtp_username = excluded.smtp_username,
+			smtp_username = NULL,
+			smtp_username_enc = excluded.smtp_username_enc,
 			smtp_password = NULL,
 			smtp_password_enc = excluded.smtp_password_enc,
 			smtp_implicit_tls = excluded.smtp_implicit_tls
@@ -75,7 +81,7 @@ func UpsertCustomEmailConfiguration(ctx context.Context, config *types.CustomEma
 			"fromAddress":            config.FromAddress,
 			"smtpHost":               config.SMTPHost,
 			"smtpPort":               config.SMTPPort,
-			"smtpUsername":           config.SMTPUsername,
+			"smtpUsernameEnc":        smtpUsernameEnc,
 			"smtpPasswordEnc":        smtpPasswordEnc,
 			"smtpImplicitTls":        config.SMTPImplicitTLS,
 		},

@@ -29,11 +29,13 @@ type EncryptedColumn struct {
 var EncryptedColumns = []EncryptedColumn{
 	{Table: "Secret", Column: "value", Target: "value_enc"},
 	{Table: "CustomOIDCConfiguration", Column: "client_secret", Target: "client_secret_enc"},
+	{Table: "CustomEmailConfiguration", Column: "smtp_username", Target: "smtp_username_enc"},
 	{Table: "CustomEmailConfiguration", Column: "smtp_password", Target: "smtp_password_enc"},
 	{Table: "Artifact", Column: "upstream_username", Target: "upstream_username_enc"},
 	{Table: "Artifact", Column: "upstream_password", Target: "upstream_password_enc"},
 	{Table: "UserAccount", Column: "mfa_secret", Target: "mfa_secret_enc"},
 	{Table: "Organization", Column: "stripe_webhook_secret", Target: "stripe_webhook_secret_enc"},
+	{Table: "ApplicationEntitlement", Column: "registry_username", Target: "registry_username_enc"},
 	{Table: "ApplicationEntitlement", Column: "registry_password", Target: "registry_password_enc"},
 	{Table: "SupportBundle", Column: "bundle_secret", Target: "bundle_secret_enc"},
 	{

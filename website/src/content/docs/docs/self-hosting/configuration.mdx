@@ -60,8 +60,8 @@ The Kubernetes probes target `/`, which keeps being served, so the pod stays in 
 ### Database encryption
 
 The Hub encrypts the sensitive columns of its database with AES-256-GCM before writing them: secret values, OIDC
-client secrets, SMTP passwords, pull-through registry credentials, deployment value and env files, support bundle
-resources, MFA secrets, Stripe webhook secrets and entitlement registry passwords.
+client secrets, SMTP credentials, pull-through registry credentials, deployment value and env files, support bundle
+resources, MFA secrets, Stripe webhook secrets and entitlement registry credentials.
 
 `DATABASE_ENCRYPTION_KEY` is required and the Hub refuses to start without it. Generate one with
 `openssl rand -base64 32`. **Back it up separately from the database:** a dump is worthless without the key, and so is

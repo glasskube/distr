@@ -18,7 +18,8 @@ import (
 var (
 	applicationEntitlementOutputExpr = `
 		al.id, al.created_at, al.name, al.expires_at, al.application_id, al.organization_id,
-		al.customer_organization_id, al.registry_url, al.registry_username,
+		al.customer_organization_id, al.registry_url,
+		` + dbcrypto.TextColumn("al", "registry_username") + `,
 		` + dbcrypto.TextColumn("al", "registry_password") + `
 	`
 	applicationEntitlementWithVersionsOutputExpr = applicationEntitlementOutputExpr + `,
@@ -60,6 +61,10 @@ func HasAnyApplicationEntitlement(ctx context.Context, orgID uuid.UUID) (bool, e
 }
 
 func CreateApplicationEntitlement(ctx context.Context, entitlement *types.ApplicationEntitlementBase) error {
+	registryUsernameEnc, err := dbcrypto.EncryptString(entitlement.RegistryUsername)
+	if err != nil {
+		return fmt.Errorf("could not encrypt registry username: %w", err)
+	}
 	registryPasswordEnc, err := dbcrypto.EncryptString(entitlement.RegistryPassword)
 	if err != nil {
 		return fmt.Errorf("could not encrypt registry password: %w", err)
@@ -68,11 +73,11 @@ func CreateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO ApplicationEntitlement AS al (
-			name, expires_at, application_id, organization_id, customer_organization_id, registry_url, registry_username,
-			registry_password_enc
+			name, expires_at, application_id, organization_id, customer_organization_id, registry_url,
+			registry_username_enc, registry_password_enc
 		) VALUES (
-			@name, @expiresAt, @applicationId, @organizationId, @customerOrganizationId, @registryUrl, @registryUsername,
-			@registryPasswordEnc
+			@name, @expiresAt, @applicationId, @organizationId, @customerOrganizationId, @registryUrl,
+			@registryUsernameEnc, @registryPasswordEnc
 		) RETURNING`+applicationEntitlementOutputExpr,
 		pgx.NamedArgs{
 			"name":                   entitlement.Name,
@@ -81,7 +86,7 @@ func CreateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
 			"organizationId":         entitlement.OrganizationID,
 			"customerOrganizationId": entitlement.CustomerOrganizationID,
 			"registryUrl":            entitlement.RegistryURL,
-			"registryUsername":       entitlement.RegistryUsername,
+			"registryUsernameEnc":    registryUsernameEnc,
 			"registryPasswordEnc":    registryPasswordEnc,
 		},
 	)
@@ -100,6 +105,10 @@ func CreateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
 }
 
 func UpdateApplicationEntitlement(ctx context.Context, entitlement *types.ApplicationEntitlementBase) error {
+	registryUsernameEnc, err := dbcrypto.EncryptString(entitlement.RegistryUsername)
+	if err != nil {
+		return fmt.Errorf("could not encrypt registry username: %w", err)
+	}
 	registryPasswordEnc, err := dbcrypto.EncryptString(entitlement.RegistryPassword)
 	if err != nil {
 		return fmt.Errorf("could not encrypt registry password: %w", err)
@@ -112,7 +121,8 @@ func UpdateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
             expires_at = @expiresAt,
             customer_organization_id = @customerOrganizationId,
             registry_url = @registryUrl,
-            registry_username = @registryUsername,
+            registry_username = NULL,
+            registry_username_enc = @registryUsernameEnc,
             registry_password = NULL,
             registry_password_enc = @registryPasswordEnc
 		 WHERE al.id = @id RETURNING`+applicationEntitlementOutputExpr,
@@ -122,7 +132,7 @@ func UpdateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
 			"expiresAt":              entitlement.ExpiresAt,
 			"customerOrganizationId": entitlement.CustomerOrganizationID,
 			"registryUrl":            entitlement.RegistryURL,
-			"registryUsername":       entitlement.RegistryUsername,
+			"registryUsernameEnc":    registryUsernameEnc,
 			"registryPasswordEnc":    registryPasswordEnc,
 		},
 	)

@@ -22,11 +22,15 @@ ALTER TABLE SupportBundle
 
 ALTER TABLE ApplicationEntitlement
   DROP CONSTRAINT ApplicationEntitlement_registry_credentials,
+  DROP CONSTRAINT ApplicationEntitlement_registry_username_encryption,
   DROP CONSTRAINT ApplicationEntitlement_registry_password_encryption;
 
+UPDATE ApplicationEntitlement SET registry_username = '' WHERE registry_username_enc IS NOT NULL;
 UPDATE ApplicationEntitlement SET registry_password = '' WHERE registry_password_enc IS NOT NULL;
 
-ALTER TABLE ApplicationEntitlement DROP COLUMN registry_password_enc;
+ALTER TABLE ApplicationEntitlement
+  DROP COLUMN registry_username_enc,
+  DROP COLUMN registry_password_enc;
 
 ALTER TABLE ApplicationEntitlement ADD CONSTRAINT applicationlicense_check CHECK (
   (registry_url IS NULL AND registry_username IS NULL AND registry_password IS NULL)
@@ -68,12 +72,18 @@ ALTER TABLE Artifact
   DROP COLUMN upstream_password_enc,
   DROP COLUMN upstream_username_enc;
 
-ALTER TABLE CustomEmailConfiguration DROP CONSTRAINT CustomEmailConfiguration_smtp_password_encryption;
+ALTER TABLE CustomEmailConfiguration
+  DROP CONSTRAINT CustomEmailConfiguration_smtp_username_encryption,
+  DROP CONSTRAINT CustomEmailConfiguration_smtp_password_encryption;
 
+UPDATE CustomEmailConfiguration SET smtp_username = '' WHERE smtp_username IS NULL;
 UPDATE CustomEmailConfiguration SET smtp_password = '' WHERE smtp_password IS NULL;
 
 ALTER TABLE CustomEmailConfiguration
+  DROP COLUMN smtp_username_enc,
   DROP COLUMN smtp_password_enc,
+  ALTER COLUMN smtp_username SET DEFAULT '',
+  ALTER COLUMN smtp_username SET NOT NULL,
   ALTER COLUMN smtp_password SET DEFAULT '',
   ALTER COLUMN smtp_password SET NOT NULL;
 

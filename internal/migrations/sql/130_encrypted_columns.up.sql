@@ -21,9 +21,14 @@ ALTER TABLE CustomOIDCConfiguration
     CHECK (num_nonnulls(client_secret, client_secret_enc) = 1);
 
 ALTER TABLE CustomEmailConfiguration
+  ADD COLUMN smtp_username_enc BYTEA,
   ADD COLUMN smtp_password_enc BYTEA,
+  ALTER COLUMN smtp_username DROP NOT NULL,
+  ALTER COLUMN smtp_username DROP DEFAULT,
   ALTER COLUMN smtp_password DROP NOT NULL,
   ALTER COLUMN smtp_password DROP DEFAULT,
+  ADD CONSTRAINT CustomEmailConfiguration_smtp_username_encryption
+    CHECK (num_nonnulls(smtp_username, smtp_username_enc) = 1),
   ADD CONSTRAINT CustomEmailConfiguration_smtp_password_encryption
     CHECK (num_nonnulls(smtp_password, smtp_password_enc) = 1);
 
@@ -65,7 +70,10 @@ ALTER TABLE UserAccount ADD CONSTRAINT mfa_secret_not_null_if_enabled
   CHECK (mfa_enabled = false OR num_nonnulls(mfa_secret, mfa_secret_enc) = 1);
 
 ALTER TABLE ApplicationEntitlement
+  ADD COLUMN registry_username_enc BYTEA,
   ADD COLUMN registry_password_enc BYTEA,
+  ADD CONSTRAINT ApplicationEntitlement_registry_username_encryption
+    CHECK (num_nonnulls(registry_username, registry_username_enc) <= 1),
   ADD CONSTRAINT ApplicationEntitlement_registry_password_encryption
     CHECK (num_nonnulls(registry_password, registry_password_enc) <= 1);
 
@@ -74,11 +82,13 @@ ALTER TABLE ApplicationEntitlement
 ALTER TABLE ApplicationEntitlement DROP CONSTRAINT applicationlicense_check;
 ALTER TABLE ApplicationEntitlement ADD CONSTRAINT ApplicationEntitlement_registry_credentials CHECK (
   (
-    registry_url IS NULL AND registry_username IS NULL
+    registry_url IS NULL
+    AND num_nonnulls(registry_username, registry_username_enc) = 0
     AND num_nonnulls(registry_password, registry_password_enc) = 0
   )
   OR (
-    registry_url IS NOT NULL AND registry_username IS NOT NULL
+    registry_url IS NOT NULL
+    AND num_nonnulls(registry_username, registry_username_enc) = 1
     AND num_nonnulls(registry_password, registry_password_enc) = 1
   )
 );

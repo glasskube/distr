@@ -16,7 +16,7 @@ type ApplicationEntitlementBase struct {
 	OrganizationID         uuid.UUID        `db:"organization_id" json:"-"`
 	CustomerOrganizationID *uuid.UUID       `db:"customer_organization_id" json:"customerOrganizationId,omitempty"`
 	RegistryURL            *string          `db:"registry_url" json:"registryUrl,omitempty"`
-	RegistryUsername       *string          `db:"registry_username" json:"registryUsername,omitempty"`
+	RegistryUsername       *dbcrypto.String `db:"registry_username" json:"registryUsername,omitempty"`
 	RegistryPassword       *dbcrypto.String `db:"registry_password" json:"registryPassword,omitempty"`
 }
 
