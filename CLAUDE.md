@@ -273,6 +273,8 @@ _, err := db.CopyFrom(
 
 A job has to be runnable from outside the hub process, because a high-availability installation would otherwise run it once per replica. Register it in `internal/svc/jobs_scheduler.go` behind its own `*_CRON` env var that defaults to unscheduled, give it a subcommand (`cleanup` for pruning, `maintenance` for everything else), and add a `cronJobs` entry to `deploy/charts/distr/values.yaml` that calls it. Never make behaviour outside the job itself depend on whether its cron is scheduled: in the chart it never is, since the CronJob runs it.
 
+This applies to recurring work. A one-time migration such as `maintenance encrypt-database` gets the subcommand and nothing else: no `*_CRON` env var, no `cronJobs` entry and no Helm hook. Its work appears only when an operator upgrades or changes the configuration, so a schedule polls for an event that a human causes, and every run that finds nothing still pays for the scan that proves it. Document the command instead and let the hub say on startup that there is work left.
+
 ### Subscription Gating
 
 Never gate a feature by listing the subscription types that are allowed to use it. Every such allowlist has to be touched again whenever a new plan is introduced, and the plan silently loses the feature if it is forgotten. Always express gating as a denylist of the lower plans instead, so a new plan gets access by default:

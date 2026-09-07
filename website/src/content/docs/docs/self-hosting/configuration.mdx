@@ -70,12 +70,15 @@ your data if you lose it.
 Encryption is transparent — nothing else in your configuration changes — but the values that were written before you
 upgraded to a version with encryption are still in plaintext. Move them over in one of two ways:
 
-- run `distr maintenance encrypt-database` once, either from a shell in the Hub container or through the
-  `database-encryption` CronJob that the Helm chart ships, or
-- set `DATABASE_ENCRYPTION_MIGRATE_ON_BOOT=true` and restart the Hub, which does the same during startup.
+- run [`distr maintenance encrypt-database`](/docs/self-hosting/maintenance#database-encryption) once, in a Hub
+  container, or
+- set `DATABASE_ENCRYPTION_MIGRATE_ON_BOOT=true` and restart the Hub, which does the same during startup. This is
+  for single instance deployments only.
 
 Either way it is safe to run while the Hub is serving traffic, and it can be interrupted and resumed. Until it has
-finished, the Hub logs a warning on every start listing the columns that are still unencrypted.
+finished, the Hub logs a warning on every start listing the columns that are still unencrypted. With more than one
+replica, wait for the upgrade to roll out completely first — see
+[Database Encryption](/docs/self-hosting/maintenance#database-encryption).
 
 #### Rotating the key
 
