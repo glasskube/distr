@@ -23,7 +23,7 @@ func (s *String) Scan(src any) error {
 		*s = ""
 		return nil
 	}
-	plaintext, err := Keys().Decrypt(value)
+	plaintext, err := Decrypt(value)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (s *String) Scan(src any) error {
 
 func (String) Value() (driver.Value, error) { return nil, ErrNotEncrypted }
 
-func (s String) Encrypt() ([]byte, error) { return Keys().Encrypt([]byte(s)) }
+func (s String) Encrypt() ([]byte, error) { return Encrypt([]byte(s)) }
 
 // Bytes is the value of an encrypted BYTEA column. Scanning it decrypts what [BytesColumn] read.
 type Bytes []byte
@@ -47,7 +47,7 @@ func (b *Bytes) Scan(src any) error {
 		*b = nil
 		return nil
 	}
-	plaintext, err := Keys().Decrypt(value)
+	plaintext, err := Decrypt(value)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (b Bytes) Encrypt() ([]byte, error) {
 	if b == nil {
 		return nil, nil
 	}
-	return Keys().Encrypt(b)
+	return Encrypt(b)
 }
 
 // EncryptString seals a nullable [String], keeping nil as NULL.

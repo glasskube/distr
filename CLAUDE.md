@@ -230,14 +230,18 @@ columns:
   plaintext column to `NULL` in the same statement. An output expression that is a `const` becomes a `var`.
 - Register every new encrypted column in `db.EncryptedColumns`, or the migration and the startup warning
   will silently skip it.
+- Seal and open through `dbcrypto.Encrypt`/`dbcrypto.Decrypt`, never through `dbcrypto.Keys().Encrypt`/
+  `Decrypt`. The keyring itself lives in `github.com/glasskube/pkg/crypto` and knows nothing about this
+  database: only the wrappers apply the compression these columns need and recognize the plaintext marker
+  of a row the migration has not moved over yet.
 - `dbcrypto` holds no configuration of its own: a command that touches an encrypted column has to call
   `dbcrypto.Init(env.DatabaseEncryptionKey())` in its `PreRun`, and `dbcrypto.Keys` panics until it has.
   Never make `dbcrypto` read `env` itself — `internal/types` imports it, and through that so does every
   agent binary, which has no `env` at all.
 - A column that a query looks up by value cannot be encrypted, because every write uses a fresh nonce.
   Narrow the row down by its id and compare in Go with `subtle.ConstantTimeCompare` (see
-  `db.GetSupportBundleByBundleSecret`). `Keyring.HMAC`/`HMACAll` is the primitive for a credential that
-  has no id to narrow it down, but nothing uses it yet, so do not reach for it without a design.
+  `db.GetSupportBundleByBundleSecret`). `crypto.Keyring.HMAC`/`HMACAll` is the primitive for a credential
+  that has no id to narrow it down, but nothing uses it yet, so do not reach for it without a design.
 
 #### Read-only Database
 

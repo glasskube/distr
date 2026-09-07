@@ -392,3 +392,6 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 	tags.cncf.io/container-device-interface v1.1.0 // indirect
 )
+
+// TODO: remove once https://github.com/glasskube/pkg/pull/6 is released as crypto/v0.2.0
+replace github.com/glasskube/pkg/crypto => github.com/glasskube/pkg/crypto v0.1.1-0.20260907120920-6a9248e2ec19

@@ -115,7 +115,7 @@ func EncryptPlaintextRows(ctx context.Context, c EncryptedColumn) (int64, error)
 	return rewrite(ctx, c,
 		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL", c.plaintextExpr(), c.Table, c.Column),
 		fmt.Sprintf("%s IS NOT NULL", c.Column),
-		(*dbcrypto.Keyring).Encrypt,
+		dbcrypto.Encrypt,
 	)
 }
 
@@ -126,12 +126,12 @@ func ReencryptStaleKeyRows(ctx context.Context, c EncryptedColumn) (int64, error
 		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL AND %s",
 			c.Target, c.Table, c.Target, c.staleKeyExpr()),
 		c.staleKeyExpr(),
-		func(keyring *dbcrypto.Keyring, value []byte) ([]byte, error) {
-			plaintext, err := keyring.Decrypt(value)
+		func(value []byte) ([]byte, error) {
+			plaintext, err := dbcrypto.Decrypt(value)
 			if err != nil {
 				return nil, err
 			}
-			return keyring.Encrypt(plaintext)
+			return dbcrypto.Encrypt(plaintext)
 		},
 	)
 }
@@ -144,10 +144,9 @@ func rewrite(
 	ctx context.Context,
 	c EncryptedColumn,
 	from, guard string,
-	encrypt func(*dbcrypto.Keyring, []byte) ([]byte, error),
+	encrypt func([]byte) ([]byte, error),
 ) (int64, error) {
 	db := internalctx.GetDb(ctx)
-	keyring := dbcrypto.Keys()
 	var total int64
 	for {
 		rows, err := db.Query(ctx, fmt.Sprintf("SELECT id, %s LIMIT %d", from, c.batchSize()))
@@ -166,7 +165,7 @@ func rewrite(
 		encrypted := make([][]byte, len(batch))
 		for i, row := range batch {
 			ids[i] = row.ID
-			if encrypted[i], err = encrypt(keyring, row.Value); err != nil {
+			if encrypted[i], err = encrypt(row.Value); err != nil {
 				return total, fmt.Errorf("could not encrypt %v of row %v: %w", c, row.ID, err)
 			}
 		}
