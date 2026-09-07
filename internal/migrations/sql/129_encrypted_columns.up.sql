@@ -1,27 +1,31 @@
 -- Every sensitive value moves from its plaintext column into a BYTEA column holding the ciphertext
--- of internal/dbcrypto. A value lives in exactly one of the two, never in both, which the
--- num_nonnulls check enforces. After this migration the application only ever writes the _enc
--- column; the plaintext columns remain readable until `distr maintenance encrypt-database` (or
+-- of internal/dbcrypto. After this migration the application only ever writes the _enc column; the
+-- plaintext columns remain readable until `distr maintenance encrypt-database` (or
 -- DATABASE_ENCRYPTION_MIGRATE_ON_BOOT) has moved existing rows over, and are then always NULL.
+--
+-- A num_nonnulls check keeps the nullability the column had before this migration, since dropping
+-- NOT NULL from a plaintext column would otherwise lose it: = 1 where the value is required, so
+-- that it lives in exactly one of the two columns, and <= 1 where it is optional, so that it may
+-- also be absent from both. Neither ever holds a value in both at once.
 
 ALTER TABLE Secret
   ADD COLUMN value_enc BYTEA,
   ALTER COLUMN value DROP NOT NULL,
-  ADD CONSTRAINT Secret_value_encryption CHECK (num_nonnulls(value, value_enc) <= 1);
+  ADD CONSTRAINT Secret_value_encryption CHECK (num_nonnulls(value, value_enc) = 1);
 
 ALTER TABLE CustomOIDCConfiguration
   ADD COLUMN client_secret_enc BYTEA,
   ALTER COLUMN client_secret DROP NOT NULL,
   ALTER COLUMN client_secret DROP DEFAULT,
   ADD CONSTRAINT CustomOIDCConfiguration_client_secret_encryption
-    CHECK (num_nonnulls(client_secret, client_secret_enc) <= 1);
+    CHECK (num_nonnulls(client_secret, client_secret_enc) = 1);
 
 ALTER TABLE CustomEmailConfiguration
   ADD COLUMN smtp_password_enc BYTEA,
   ALTER COLUMN smtp_password DROP NOT NULL,
   ALTER COLUMN smtp_password DROP DEFAULT,
   ADD CONSTRAINT CustomEmailConfiguration_smtp_password_encryption
-    CHECK (num_nonnulls(smtp_password, smtp_password_enc) <= 1);
+    CHECK (num_nonnulls(smtp_password, smtp_password_enc) = 1);
 
 ALTER TABLE Artifact
   ADD COLUMN upstream_username_enc BYTEA,
@@ -43,7 +47,7 @@ ALTER TABLE SupportBundleResource
   ADD COLUMN content_enc BYTEA,
   ALTER COLUMN content DROP NOT NULL,
   ADD CONSTRAINT SupportBundleResource_content_encryption
-    CHECK (num_nonnulls(content, content_enc) <= 1);
+    CHECK (num_nonnulls(content, content_enc) = 1);
 
 ALTER TABLE Organization
   ADD COLUMN stripe_webhook_secret_enc BYTEA,
@@ -83,7 +87,7 @@ ALTER TABLE SupportBundle
   ADD COLUMN bundle_secret_enc BYTEA,
   ALTER COLUMN bundle_secret DROP NOT NULL,
   ADD CONSTRAINT SupportBundle_bundle_secret_encryption
-    CHECK (num_nonnulls(bundle_secret, bundle_secret_enc) <= 1);
+    CHECK (num_nonnulls(bundle_secret, bundle_secret_enc) = 1);
 
 -- These two tables are the only ones here that grow without bound, so the encryption migration and
 -- the startup check that reports leftover plaintext get a partial index instead of a sequential
