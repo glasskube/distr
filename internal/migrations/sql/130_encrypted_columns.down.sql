@@ -10,6 +10,9 @@
 
 DROP INDEX SupportBundleResource_unencrypted;
 DROP INDEX DeploymentRevision_unencrypted;
+DROP INDEX SupportBundleResource_content_key;
+DROP INDEX DeploymentRevision_env_file_data_key;
+DROP INDEX DeploymentRevision_values_yaml_key;
 
 ALTER TABLE SupportBundle DROP CONSTRAINT SupportBundle_bundle_secret_encryption;
 

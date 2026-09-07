@@ -11,7 +11,7 @@ import (
 )
 
 // EncryptedColumn is one column whose value moved from a plaintext column into an encrypted column
-// in migration 129. Rows written before that migration still hold their value in the plaintext
+// in migration 130. Rows written before that migration still hold their value in the plaintext
 // column until EncryptPlaintextRows has moved it over.
 type EncryptedColumn struct {
 	Table  string
@@ -69,18 +69,25 @@ func (c EncryptedColumn) plaintextExpr() string {
 	return fmt.Sprintf("convert_to(%s, 'UTF8')", c.Column)
 }
 
-// staleKeyCond matches rows whose ciphertext uses a key that is no longer the active one.
-// The key id is the second byte of the stored value, which is what makes this answerable in SQL
-// without decrypting anything.
-const staleKeyCond = "get_byte(%[1]s, 0) = %[2]d AND get_byte(%[1]s, 1) <> %[3]d"
-
-func (c EncryptedColumn) staleKeyExpr() string {
-	return fmt.Sprintf(staleKeyCond, c.Target, dbcrypto.FormatVersion, dbcrypto.Keys().ActiveKeyID())
+// keyPrefixExpr reads the format version and key id a value was sealed with. It has to stay
+// identical to the expression migration 130 indexes, and uses substring rather than get_byte
+// because that reads a TOAST slice instead of the whole value.
+func (c EncryptedColumn) keyPrefixExpr() string {
+	return fmt.Sprintf("substring(%s FROM 1 FOR 2)", c.Target)
 }
 
-func exists(ctx context.Context, query string) (bool, error) {
+// activeKeyPrefix is the literal that keyPrefixExpr yields for a value sealed with the active key.
+func activeKeyPrefix() string {
+	return fmt.Sprintf(`'\x%02x%02x'::BYTEA`, dbcrypto.FormatVersion, dbcrypto.Keys().ActiveKeyID())
+}
+
+func (c EncryptedColumn) staleKeyExpr() string {
+	return fmt.Sprintf("%s <> %s", c.keyPrefixExpr(), activeKeyPrefix())
+}
+
+func queryBool(ctx context.Context, query string) (bool, error) {
 	db := internalctx.GetDb(ctx)
-	rows, err := db.Query(ctx, "SELECT EXISTS("+query+")")
+	rows, err := db.Query(ctx, query)
 	if err != nil {
 		return false, err
 	}
@@ -89,7 +96,8 @@ func exists(ctx context.Context, query string) (bool, error) {
 
 // HasPlaintextRows reports whether any row still holds its value in the plaintext column.
 func HasPlaintextRows(ctx context.Context, c EncryptedColumn) (bool, error) {
-	found, err := exists(ctx, fmt.Sprintf("SELECT 1 FROM %s WHERE %s IS NOT NULL", c.Table, c.Column))
+	found, err := queryBool(ctx,
+		fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s IS NOT NULL)", c.Table, c.Column))
 	if err != nil {
 		return false, fmt.Errorf("could not check %v for plaintext rows: %w", c, err)
 	}
@@ -97,9 +105,13 @@ func HasPlaintextRows(ctx context.Context, c EncryptedColumn) (bool, error) {
 }
 
 // HasStaleKeyRows reports whether any row is still encrypted with a key that is no longer active.
+// min and max are answered from the index of migration 130, while a search for a mismatch cannot
+// be: no index serves <>, so every plan for it reads the value of every row.
 func HasStaleKeyRows(ctx context.Context, c EncryptedColumn) (bool, error) {
-	found, err := exists(ctx,
-		fmt.Sprintf("SELECT 1 FROM %s WHERE %s IS NOT NULL AND %s", c.Table, c.Target, c.staleKeyExpr()))
+	found, err := queryBool(ctx, fmt.Sprintf(
+		`SELECT coalesce(min(%[1]s) <> %[2]s OR max(%[1]s) <> %[2]s, false)
+		FROM %[3]s WHERE %[4]s IS NOT NULL`,
+		c.keyPrefixExpr(), activeKeyPrefix(), c.Table, c.Target))
 	if err != nil {
 		return false, fmt.Errorf("could not check %v for rows of a retired key: %w", c, err)
 	}

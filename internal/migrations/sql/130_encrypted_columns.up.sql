@@ -107,3 +107,15 @@ CREATE INDEX DeploymentRevision_unencrypted ON DeploymentRevision (id)
 
 CREATE INDEX SupportBundleResource_unencrypted ON SupportBundleResource (id)
   WHERE content IS NOT NULL;
+
+-- The first two bytes of a stored value are its format version and key id. Indexing them turns the
+-- startup check for a retired key into two index lookups, instead of a scan that fetches every
+-- value out of the TOAST table. The expression has to stay identical to the one in internal/db.
+CREATE INDEX DeploymentRevision_values_yaml_key
+  ON DeploymentRevision (substring(values_yaml_enc FROM 1 FOR 2)) WHERE values_yaml_enc IS NOT NULL;
+
+CREATE INDEX DeploymentRevision_env_file_data_key
+  ON DeploymentRevision (substring(env_file_data_enc FROM 1 FOR 2)) WHERE env_file_data_enc IS NOT NULL;
+
+CREATE INDEX SupportBundleResource_content_key
+  ON SupportBundleResource (substring(content_enc FROM 1 FOR 2)) WHERE content_enc IS NOT NULL;

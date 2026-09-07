@@ -1,5 +1,5 @@
 // Package dbencryption moves values that are still stored in plaintext into the encrypted columns
-// introduced by migration 129. It is the one-off counterpart to internal/dbcrypto, which encrypts
+// introduced by migration 130. It is the one-off counterpart to internal/dbcrypto, which encrypts
 // and decrypts the values an already migrated instance reads and writes.
 package dbencryption
 
@@ -30,6 +30,18 @@ func Run(ctx context.Context) error {
 		}
 		if rows > 0 {
 			log.Info("encrypted column", zap.Stringer("column", column), zap.Int64("rows", rows))
+		}
+
+		// Selecting the rows of a retired key cannot use an index, so the indexed check comes
+		// first: with no rotation to finish, it saves a scan that reads every encrypted value.
+		stale, err := db.HasStaleKeyRows(ctx, column)
+		if err != nil {
+			log.Error("could not check for values of a retired key",
+				zap.Stringer("column", column), zap.Error(err))
+			errs = append(errs, err)
+			continue
+		} else if !stale {
+			continue
 		}
 
 		rows, err = db.ReencryptStaleKeyRows(ctx, column)
