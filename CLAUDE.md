@@ -220,34 +220,15 @@ When you add a Postgres enum type, register it (and its array type, prefixed wit
 
 #### Encrypted Columns
 
-Sensitive columns are stored encrypted (`internal/dbcrypto`). A value lives in a `BYTEA` column named
-`<column>_enc` and never in the plaintext `<column>`, which only still exists so that rows written before
-migration 130 stay readable until `distr maintenance encrypt-database` has moved them over. Rules for these
-columns:
+A sensitive column is stored encrypted (`internal/dbcrypto`) in a `BYTEA` column named `<column>_enc`, next to the plaintext `<column>` that rows written before the encryption migration still use.
 
-- Type the field in `internal/types` as `dbcrypto.String`, `*dbcrypto.String` or `dbcrypto.Bytes`, never as
-  `string` or `[]byte`. Both types refuse to be written as a query parameter, so a plaintext write cannot
-  compile away unnoticed.
-- Read through `dbcrypto.TextValue`/`BytesValue` (no alias, for an output expression that is scanned by
-  position or embedded in a row constructor) or `TextColumn`/`BytesColumn` (aliased, for a scan by name).
-  An output expression that is reused inside `(...)` must use the unaliased form, since `AS` is a syntax
-  error there. Use `dbcrypto.IsSetValue` for the boolean an API exposes in place of the secret itself.
-- Write only the `_enc` column, from `value.Encrypt()` or `dbcrypto.EncryptString(ptr)`, and set the
-  plaintext column to `NULL` in the same statement. An output expression that is a `const` becomes a `var`.
-- Register every new encrypted column in `db.EncryptedColumns`, or the migration and the startup warning
-  will silently skip it.
-- Seal and open through `dbcrypto.Encrypt`/`dbcrypto.Decrypt`, never through `dbcrypto.Keys().Encrypt`/
-  `Decrypt`. The keyring itself lives in `github.com/glasskube/pkg/crypto` and knows nothing about this
-  database: only the wrappers apply the compression these columns need and recognize the plaintext marker
-  of a row the migration has not moved over yet.
-- `dbcrypto` holds no configuration of its own: a command that touches an encrypted column has to call
-  `dbcrypto.Init(env.DatabaseEncryptionKey())` in its `PreRun`, and `dbcrypto.Keys` panics until it has.
-  Never make `dbcrypto` read `env` itself — `internal/types` imports it, and through that so does every
-  agent binary, which has no `env` at all.
-- A column that a query looks up by value cannot be encrypted, because every write uses a fresh nonce.
-  Narrow the row down by its id and compare in Go with `subtle.ConstantTimeCompare` (see
-  `db.GetSupportBundleByBundleSecret`). `crypto.Keyring.HMAC`/`HMACAll` is the primitive for a credential
-  that has no id to narrow it down, but nothing uses it yet, so do not reach for it without a design.
+- Type the field in `internal/types` as `dbcrypto.String`, `*dbcrypto.String` or `dbcrypto.Bytes`, never as `string` or `[]byte`.
+- Read through `dbcrypto.TextColumn`/`BytesColumn`, or through `TextValue`/`BytesValue` where an alias is not allowed, and use `dbcrypto.IsSetValue` for the boolean an API exposes in place of the secret itself.
+- Write only the `_enc` column, from `value.Encrypt()` or `dbcrypto.EncryptString(ptr)`, and set the plaintext column to `NULL` in the same statement.
+- Register every new encrypted column in `db.EncryptedColumns`, or the migration and the startup warning silently skip it.
+- Seal and open through `dbcrypto.Encrypt`/`dbcrypto.Decrypt`, never through `dbcrypto.Keys().Encrypt`/`Decrypt`.
+- Call `dbcrypto.Init(env.DatabaseEncryptionKey())` in the `PreRun` of every command that touches an encrypted column, and never make `dbcrypto` read `env` itself.
+- Do not encrypt a column that a query looks up by value. Narrow the row down by its id and compare in Go with `subtle.ConstantTimeCompare` (see `db.GetSupportBundleByBundleSecret`).
 
 #### Read-only Database
 
