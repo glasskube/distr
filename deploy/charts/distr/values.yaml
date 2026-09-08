@@ -99,8 +99,8 @@ hub:
     # The base64 encoded key that sensitive database columns are encrypted with.
     # Can be generated with `openssl rand -base64 32`. Losing it makes every encrypted value
     # unreadable, so back it up separately from the database.
-    # To rotate, prepend the new key with a higher id and keep the old one ("1:<new key>,0:<old key>")
-    # until `distr maintenance encrypt-database` has re-encrypted every row.
+    # Rotating it takes two rollouts with more than one replica, see
+    # https://distr.sh/docs/self-hosting/configuration/#rotating-the-key
     - name: DATABASE_ENCRYPTION_KEY
       value: 8fVQ3nZ5kL0xR7cWtYbA1sJmEuHpDgNiO2vXqTzKcRo=
       # We recommend reading the encryption key from a secretKeyRef

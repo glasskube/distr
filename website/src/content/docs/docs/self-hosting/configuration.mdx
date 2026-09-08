@@ -95,6 +95,15 @@ DATABASE_ENCRYPTION_KEY="1:<new key>,0:<old key>"
 Then run `distr maintenance encrypt-database`, which re-encrypts every value that still uses the old key. Once it
 reports nothing left to do, drop the old entry and keep only `1:<new key>`.
 
+With more than one replica, put the new key on every replica before you make it active. A rolling update replaces
+one replica at a time, so an updated one would otherwise seal writes with a key the others do not have yet, and
+their reads of those values fail until the rollout finishes:
+
+1. roll out `DATABASE_ENCRYPTION_KEY="0:<old key>,1:<new key>"`. The old key stays active, so nothing about how
+   values are written changes, but every replica can read the new one.
+2. roll out `DATABASE_ENCRYPTION_KEY="1:<new key>,0:<old key>"` to make the new key active.
+3. run `distr maintenance encrypt-database` and drop the old entry as above.
+
 ## Tokens & Sessions
 
 | Variable                         | Required | Default | Description                                                       |
