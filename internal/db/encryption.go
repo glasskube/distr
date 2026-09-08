@@ -179,8 +179,12 @@ func ReencryptStaleKeyRows(ctx context.Context, c EncryptedColumn) (int64, error
 // resumed, and guard repeats the selection criteria in the update, which makes it a no-op for a row
 // someone else has rewritten since it was read.
 //
-// The transformed value is called rewritten rather than value because Secret has a column of that
-// name, which would make every unqualified reference to it in set and guard ambiguous.
+// Batches resume at the id of the last one, because no index answers a search for a key that is not
+// the active one, so a rotation would otherwise rescan everything it has already rewritten. Nothing
+// falls behind the cursor and back into the selection: every write seals with the active key.
+//
+// The value is named rewritten because Secret has a column called value, which would make every
+// unqualified reference to it in set and guard ambiguous.
 func rewrite(
 	ctx context.Context,
 	c EncryptedColumn,
@@ -189,8 +193,11 @@ func rewrite(
 ) (int64, error) {
 	db := internalctx.GetDb(ctx)
 	var total int64
+	var cursor uuid.UUID
 	for {
-		rows, err := db.Query(ctx, fmt.Sprintf("SELECT id, %s LIMIT %d", from, c.batchSize()))
+		rows, err := db.Query(ctx,
+			fmt.Sprintf("SELECT id, %s AND id > @cursor ORDER BY id LIMIT %d", from, c.batchSize()),
+			pgx.NamedArgs{"cursor": cursor})
 		if err != nil {
 			return total, fmt.Errorf("could not query rows of %v: %w", c, err)
 		}
@@ -201,6 +208,7 @@ func rewrite(
 		if len(batch) == 0 {
 			return total, nil
 		}
+		cursor = batch[len(batch)-1].ID
 
 		ids := make([]uuid.UUID, len(batch))
 		rewritten := make([][]byte, len(batch))
