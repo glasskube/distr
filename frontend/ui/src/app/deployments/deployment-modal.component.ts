@@ -1,13 +1,18 @@
-import {ChangeDetectionStrategy, Component, effect, inject, input, output, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DeploymentTarget, DeploymentWithLatestRevision} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCircleExclamation, faShip} from '@fortawesome/free-solid-svg-icons';
-import {firstValueFrom} from 'rxjs';
+import {faCircleExclamation, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {catchError, first, firstValueFrom, forkJoin, map, of, switchMap} from 'rxjs';
 import {fromBase64} from '../../util/encoding';
 import {getFormDisplayedError} from '../../util/errors';
+import {SpinnerComponent} from '../components/spinner/spinner.component';
+import {ApplicationEntitlementsService} from '../services/application-entitlements.service';
+import {ApplicationsService} from '../services/applications.service';
 import {AuthService} from '../services/auth.service';
 import {DeploymentTargetsService} from '../services/deployment-targets.service';
+import {FeatureFlagService} from '../services/feature-flag.service';
 import {ToastService} from '../services/toast.service';
 import {
   DeploymentFormComponent,
@@ -17,64 +22,9 @@ import {
 
 @Component({
   selector: 'app-deployment-modal',
-  template: `<div class="z-50 w-256 max-w-full max-h-full overflow-x-hidden overflow-y-auto">
-    <div class="relative w-full max-h-full">
-      <!-- Modal content -->
-      <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-        <!-- Modal header -->
-        <div
-          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-t dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            @if (deployment()?.id) {
-              Update Deployment
-            } @else {
-              Deploy new application version
-            }
-          </h3>
-          <button
-            type="button"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-            (click)="closed.emit()">
-            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-            </svg>
-            <span class="sr-only">Close modal</span>
-          </button>
-        </div>
-        <!-- Modal body -->
-        <form class="p-4 md:p-5" [formGroup]="deployFormWrapper" (ngSubmit)="saveDeployment()">
-          @if (deploymentTarget().customerOrganization !== undefined && auth.isVendor()) {
-            <div
-              class="flex items-center p-4 mb-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300"
-              role="alert">
-              <fa-icon [icon]="faCircleExclamation" />
-              <span class="sr-only">Info</span>
-              <div class="ms-3 text-sm font-medium">
-                Warning: You are about to overwrite a customer-managed deployment. Ensure this is done in coordination
-                with the customer.
-              </div>
-            </div>
-          }
-          <app-deployment-form
-            [formControl]="deployForm"
-            [deploymentType]="deploymentTarget().type"
-            [customerOrganizationId]="deploymentTarget().customerOrganization?.id"
-            [deploymentTargetName]="deploymentTarget().name" />
-          <button type="submit" [disabled]="loading()" class="text-white inline-flex items-center distr-btn-primary">
-            <fa-icon [icon]="faShip" class="h-5 w-5 mr-2 -ml-0.5 dark:text-gray-400" />
-            Deploy
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>`,
+  templateUrl: './deployment-modal.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [DeploymentFormComponent, FaIconComponent, ReactiveFormsModule],
+  imports: [DeploymentFormComponent, FaIconComponent, ReactiveFormsModule, SpinnerComponent],
 })
 export class DeploymentModalComponent {
   public readonly deploymentTarget = input.required<DeploymentTarget>();
@@ -82,9 +32,33 @@ export class DeploymentModalComponent {
   public readonly versionId = input<string>();
   public readonly closed = output();
 
-  protected readonly auth = inject(AuthService);
+  private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly deploymentTargets = inject(DeploymentTargetsService);
+  private readonly applications = inject(ApplicationsService);
+  private readonly applicationEntitlements = inject(ApplicationEntitlementsService);
+  private readonly featureFlags = inject(FeatureFlagService);
+
+  /**
+   * The application list is cached for the whole session, so a version released after the page was loaded would
+   * otherwise be missing from the version select. The form is only built once the refetch is done, because it picks
+   * the newest version at the time it initializes and would not move off a stale one later.
+   */
+  protected readonly dataLoaded = toSignal(
+    this.featureFlags.isLicensingEnabled$.pipe(
+      first(),
+      switchMap((licensingEnabled) =>
+        forkJoin([this.applications.refresh(), licensingEnabled ? this.applicationEntitlements.refresh() : of([])])
+      ),
+      map(() => true),
+      catchError(() => of(true))
+    ),
+    {initialValue: false}
+  );
+
+  protected readonly customerManagedWarningVisible = computed(
+    () => this.deploymentTarget().customerOrganization !== undefined && this.auth.isVendor()
+  );
 
   protected readonly deployForm = new FormControl<DeploymentFormValue | undefined>(undefined, Validators.required);
   /**
@@ -95,6 +69,7 @@ export class DeploymentModalComponent {
 
   protected readonly faShip = faShip;
   protected readonly faCircleExclamation = faCircleExclamation;
+  protected readonly faXmark = faXmark;
 
   constructor() {
     effect(() => {

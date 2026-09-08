@@ -246,8 +246,8 @@ export class CustomerOrganizationsComponent {
       .subscribe({
         next: () => {
           this.refresh$.next();
-          this.artifactEntitlementsService.refresh();
-          this.applicationEntitlementsService.refresh();
+          this.artifactEntitlementsService.refresh().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+          this.applicationEntitlementsService.refresh().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
         },
         error: (e) => {
           const msg = getFormDisplayedError(e);
