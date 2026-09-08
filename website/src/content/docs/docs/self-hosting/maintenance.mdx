@@ -201,9 +201,11 @@ columns that are left.
   encrypts has rolled out completely before you run this. The command clears
   each plaintext column as it encrypts it, and a replica still running the
   previous version reads that column instead of the encrypted one, so it would
-  see those values as empty until it is replaced. Nothing else is affected: once
-  the migration is done no value is left in plaintext, and a key rotation only
-  ever rewrites the encrypted column.
+  see those values as empty until it is replaced. Once the migration is done no
+  value is left in plaintext, so this cannot happen again. A key rotation never
+  produces an empty value, since it only ever rewrites the encrypted column, but
+  it has a rollout order of its own, see [Rotating the
+  key](/docs/self-hosting/configuration#rotating-the-key).
 </Aside>
 
 On Kubernetes, run it in a Hub pod, which already has the database URL and the encryption key in its
