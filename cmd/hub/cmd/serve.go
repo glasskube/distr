@@ -80,7 +80,7 @@ func runServe(ctx context.Context, opts ServeOptions) {
 	util.Must(subscription.ReconcileEditionFeatures(dbLogCtx))
 
 	if env.DatabaseEncryptionMigrateOnBoot() {
-		util.Must(dbencryption.Run(dbLogCtx))
+		util.Must(dbencryption.RunEncrypt(dbLogCtx))
 	} else {
 		dbencryption.WarnAboutUnencrypted(dbLogCtx)
 	}

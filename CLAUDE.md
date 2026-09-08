@@ -225,7 +225,7 @@ A sensitive column is stored encrypted (`internal/dbcrypto`) in a `BYTEA` column
 - Type the field in `internal/types` as `dbcrypto.String`, `*dbcrypto.String` or `dbcrypto.Bytes`, never as `string` or `[]byte`.
 - Read through `dbcrypto.TextColumn`/`BytesColumn`, or through `TextValue`/`BytesValue` where an alias is not allowed, and use `dbcrypto.IsSetValue` for the boolean an API exposes in place of the secret itself.
 - Write only the `_enc` column, from `value.Encrypt()` or `dbcrypto.EncryptString(ptr)`, and set the plaintext column to `NULL` in the same statement.
-- Register every new encrypted column in `db.EncryptedColumns`, or the migration and the startup warning silently skip it.
+- Register every new encrypted column in `db.EncryptedColumns`, or the migration, the rollback (`maintenance decrypt-database`) and the startup warning silently skip it.
 - Seal and open through `dbcrypto.Encrypt`/`dbcrypto.Decrypt`, never through `dbcrypto.Keys().Encrypt`/`Decrypt`.
 - Call `dbcrypto.Init(env.DatabaseEncryptionKey())` in the `PreRun` of every command that touches an encrypted column, and never make `dbcrypto` read `env` itself.
 - Do not encrypt a column that a query looks up by value. Narrow the row down by its id and compare in Go with `subtle.ConstantTimeCompare` (see `db.GetSupportBundleByBundleSecret`).

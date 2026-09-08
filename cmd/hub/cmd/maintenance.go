@@ -30,6 +30,7 @@ func NewMaintenanceCommand() *cobra.Command {
 	cmd.AddCommand(NewSyncArtifactsUpstreamCommand())
 	cmd.AddCommand(NewVerifyCustomDomainsCommand())
 	cmd.AddCommand(NewEncryptDatabaseCommand())
+	cmd.AddCommand(NewDecryptDatabaseCommand())
 	return cmd
 }
 
@@ -76,7 +77,15 @@ func NewEncryptDatabaseCommand() *cobra.Command {
 	return newMaintenanceTaskCommand(
 		"encrypt-database",
 		"encrypt sensitive values that are still stored in plaintext",
-		dbencryption.Run,
+		dbencryption.RunEncrypt,
+	)
+}
+
+func NewDecryptDatabaseCommand() *cobra.Command {
+	return newMaintenanceTaskCommand(
+		"decrypt-database",
+		"store every encrypted value in plaintext again, to migrate the database down",
+		dbencryption.RunDecrypt,
 	)
 }
 

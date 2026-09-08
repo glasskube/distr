@@ -69,6 +69,15 @@ func (c EncryptedColumn) plaintextExpr() string {
 	return fmt.Sprintf("convert_to(%s, 'UTF8')", c.Column)
 }
 
+// decryptedExpr is the inverse of plaintextExpr: it writes decrypted bytes back into the plaintext
+// column, in whichever type that column has.
+func (c EncryptedColumn) decryptedExpr() string {
+	if c.Binary {
+		return "v.rewritten"
+	}
+	return "convert_from(v.rewritten, 'UTF8')"
+}
+
 // keyPrefixExpr reads the format version and key id a value was sealed with. It has to stay
 // identical to the expression migration 130 indexes, and uses substring rather than get_byte
 // because that reads a TOAST slice instead of the whole value.
@@ -128,8 +137,22 @@ type encryptedRow struct {
 func EncryptPlaintextRows(ctx context.Context, c EncryptedColumn) (int64, error) {
 	return rewrite(ctx, c,
 		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL", c.plaintextExpr(), c.Table, c.Column),
+		fmt.Sprintf("%s = NULL, %s = v.rewritten", c.Column, c.Target),
 		fmt.Sprintf("%s IS NOT NULL", c.Column),
 		dbcrypto.Encrypt,
+	)
+}
+
+// DecryptEncryptedRows moves every encrypted row of one column back into its plaintext column. It is
+// the inverse of EncryptPlaintextRows and, unlike it, must not run while the server is serving:
+// every write of an encrypted column produces a new ciphertext, so a row rewritten between the read
+// and the update here would lose that write, and a column the server keeps writing to never empties.
+func DecryptEncryptedRows(ctx context.Context, c EncryptedColumn) (int64, error) {
+	return rewrite(ctx, c,
+		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL", c.Target, c.Table, c.Target),
+		fmt.Sprintf("%s = NULL, %s = %s", c.Target, c.Column, c.decryptedExpr()),
+		fmt.Sprintf("%s IS NOT NULL", c.Target),
+		dbcrypto.Decrypt,
 	)
 }
 
@@ -139,6 +162,7 @@ func ReencryptStaleKeyRows(ctx context.Context, c EncryptedColumn) (int64, error
 	return rewrite(ctx, c,
 		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL AND %s",
 			c.Target, c.Table, c.Target, c.staleKeyExpr()),
+		fmt.Sprintf("%s = v.rewritten", c.Target),
 		c.staleKeyExpr(),
 		func(value []byte) ([]byte, error) {
 			plaintext, err := dbcrypto.Decrypt(value)
@@ -150,15 +174,18 @@ func ReencryptStaleKeyRows(ctx context.Context, c EncryptedColumn) (int64, error
 	)
 }
 
-// rewrite reads the rows selected by from in batches, re-encrypts each one, and writes the result to
-// the target column. Each batch is a statement of its own, so the work can be interrupted and
-// resumed, and it can run while the server is serving traffic: guard repeats the selection criteria
-// in the update, which makes it a no-op for a row someone else has rewritten since it was read.
+// rewrite reads the rows selected by from in batches, transforms each value and applies set to the
+// row it came from. Each batch is a statement of its own, so the work can be interrupted and
+// resumed, and guard repeats the selection criteria in the update, which makes it a no-op for a row
+// someone else has rewritten since it was read.
+//
+// The transformed value is called rewritten rather than value because Secret has a column of that
+// name, which would make every unqualified reference to it in set and guard ambiguous.
 func rewrite(
 	ctx context.Context,
 	c EncryptedColumn,
-	from, guard string,
-	encrypt func([]byte) ([]byte, error),
+	from, set, guard string,
+	transform func([]byte) ([]byte, error),
 ) (int64, error) {
 	db := internalctx.GetDb(ctx)
 	var total int64
@@ -176,24 +203,24 @@ func rewrite(
 		}
 
 		ids := make([]uuid.UUID, len(batch))
-		encrypted := make([][]byte, len(batch))
+		rewritten := make([][]byte, len(batch))
 		for i, row := range batch {
 			ids[i] = row.ID
-			if encrypted[i], err = encrypt(row.Value); err != nil {
-				return total, fmt.Errorf("could not encrypt %v of row %v: %w", c, row.ID, err)
+			if rewritten[i], err = transform(row.Value); err != nil {
+				return total, fmt.Errorf("could not rewrite %v of row %v: %w", c, row.ID, err)
 			}
 		}
 
 		tag, err := db.Exec(ctx,
 			fmt.Sprintf(
-				`UPDATE %[1]s AS t SET %[2]s = NULL, %[3]s = v.encrypted
-				FROM (SELECT unnest(@ids::UUID[]) AS id, unnest(@encrypted::BYTEA[]) AS encrypted) v
-				WHERE t.id = v.id AND %[4]s`,
-				c.Table, c.Column, c.Target, guard),
-			pgx.NamedArgs{"ids": ids, "encrypted": encrypted},
+				`UPDATE %[1]s AS t SET %[2]s
+				FROM (SELECT unnest(@ids::UUID[]) AS id, unnest(@rewritten::BYTEA[]) AS rewritten) v
+				WHERE t.id = v.id AND %[3]s`,
+				c.Table, set, guard),
+			pgx.NamedArgs{"ids": ids, "rewritten": rewritten},
 		)
 		if err != nil {
-			return total, fmt.Errorf("could not encrypt rows of %v: %w", c, err)
+			return total, fmt.Errorf("could not rewrite rows of %v: %w", c, err)
 		}
 		total += tag.RowsAffected()
 

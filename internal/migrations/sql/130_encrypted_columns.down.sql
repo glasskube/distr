@@ -1,7 +1,9 @@
 -- Rolling back cannot recover any value that has already been encrypted, because SQL has no access
--- to the key. Decrypt first if the data matters. What is left encrypted is replaced with an empty
--- value below so that the NOT NULL constraints can be restored, except for the support bundle
--- secret, which is given a fresh random value instead so that no two bundles share one.
+-- to the key. Run `distr maintenance decrypt-database` before this to move every encrypted value
+-- back into its plaintext column, which makes the rollback lossless. What is left encrypted without
+-- it is replaced with an empty value below so that the NOT NULL constraints can be restored, except
+-- for the support bundle secret, which is given a fresh random value instead so that no two bundles
+-- share one.
 --
 -- Every one of those updates has to run after its num_nonnulls constraint is dropped and before its
 -- _enc column is: writing the plaintext column of an encrypted row is exactly the state the
