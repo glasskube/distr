@@ -137,7 +137,7 @@ func (a *authorizer) AuthorizeReference(ctx context.Context, nameStr string, ref
 func (a *authorizer) AuthorizeBlob(ctx context.Context, digest digest.Digest, action Action) error {
 	auth := auth.ArtifactsAuthentication.Require(ctx)
 
-	// A write targets a digest that does not exist yet, so there is no owner to check it against.
+	// For writes we skip ownership checks: the push may (re)associate this digest with the org, even if it already exists.
 	if action == ActionWrite {
 		return authorizeWrite(auth)
 	}
