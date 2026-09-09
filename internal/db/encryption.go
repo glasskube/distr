@@ -14,10 +14,7 @@ import (
 // in migration 130. Rows written before that migration still hold their value in the plaintext
 // column until EncryptPlaintextRows has moved it over.
 type EncryptedColumn struct {
-	Table  string
-	Column string
-	// Target is the column the encrypted value is written to.
-	Target string
+	dbcrypto.Column
 	// Binary is true when the plaintext column is a BYTEA rather than a TEXT.
 	Binary bool
 	// BatchSize is how many rows are read into memory at once. It is small for the tables whose rows
@@ -25,31 +22,79 @@ type EncryptedColumn struct {
 	BatchSize int
 }
 
-// EncryptedColumns is every column the encryption migration covers, in the order it processes them.
-var EncryptedColumns = []EncryptedColumn{
-	{Table: "Secret", Column: "value", Target: "value_enc"},
-	{Table: "CustomOIDCConfiguration", Column: "client_secret", Target: "client_secret_enc"},
-	{Table: "CustomEmailConfiguration", Column: "smtp_username", Target: "smtp_username_enc"},
-	{Table: "CustomEmailConfiguration", Column: "smtp_password", Target: "smtp_password_enc"},
-	{Table: "Artifact", Column: "upstream_username", Target: "upstream_username_enc"},
-	{Table: "Artifact", Column: "upstream_password", Target: "upstream_password_enc"},
-	{Table: "UserAccount", Column: "mfa_secret", Target: "mfa_secret_enc"},
-	{Table: "Organization", Column: "stripe_webhook_secret", Target: "stripe_webhook_secret_enc"},
-	{Table: "ApplicationEntitlement", Column: "registry_username", Target: "registry_username_enc"},
-	{Table: "ApplicationEntitlement", Column: "registry_password", Target: "registry_password_enc"},
-	{Table: "SupportBundle", Column: "bundle_secret", Target: "bundle_secret_enc"},
-	{
-		Table: "DeploymentRevision", Column: "values_yaml", Target: "values_yaml_enc",
-		Binary: true, BatchSize: 200,
-	},
-	{
-		Table: "DeploymentRevision", Column: "env_file_data", Target: "env_file_data_enc",
-		Binary: true, BatchSize: 200,
-	},
-	{Table: "SupportBundleResource", Column: "content", Target: "content_enc", BatchSize: 50},
+func encrypted(table, name string) EncryptedColumn {
+	return EncryptedColumn{Column: dbcrypto.NewColumn(table, name)}
 }
 
-func (c EncryptedColumn) String() string { return c.Table + "." + c.Column }
+func (c EncryptedColumn) scopedTo(scope string) EncryptedColumn {
+	c.Column = c.ScopedTo(scope)
+	return c
+}
+
+func (c EncryptedColumn) binary() EncryptedColumn {
+	c.Binary = true
+	return c
+}
+
+func (c EncryptedColumn) batched(size int) EncryptedColumn {
+	c.BatchSize = size
+	return c
+}
+
+// Every encrypted column of the schema. A column that is missing here is skipped by the encryption
+// migration, by the rollback and by the startup warning, so it is declared once and referenced from
+// the queries that read and write it, rather than named again at every call site.
+var (
+	secretValue                  = encrypted("Secret", "value")
+	oidcClientSecret             = encrypted("CustomOIDCConfiguration", "client_secret")
+	emailSMTPUsername            = encrypted("CustomEmailConfiguration", "smtp_username").scopedTo("organization_id")
+	emailSMTPPassword            = encrypted("CustomEmailConfiguration", "smtp_password").scopedTo("organization_id")
+	artifactUpstreamUsername     = encrypted("Artifact", "upstream_username")
+	artifactUpstreamPassword     = encrypted("Artifact", "upstream_password")
+	userAccountMFASecret         = encrypted("UserAccount", "mfa_secret")
+	organizationStripeSecret     = encrypted("Organization", "stripe_webhook_secret")
+	entitlementRegistryUsername  = encrypted("ApplicationEntitlement", "registry_username")
+	entitlementRegistryPassword  = encrypted("ApplicationEntitlement", "registry_password")
+	supportBundleSecret          = encrypted("SupportBundle", "bundle_secret")
+	deploymentValuesYaml         = encrypted("DeploymentRevision", "values_yaml").binary().batched(200)
+	deploymentEnvFileData        = encrypted("DeploymentRevision", "env_file_data").binary().batched(200)
+	supportBundleResourceContent = encrypted("SupportBundleResource", "content").batched(50)
+)
+
+// EncryptedColumns is every column the encryption migration covers, in the order it processes them.
+var EncryptedColumns = []EncryptedColumn{
+	secretValue,
+	oidcClientSecret,
+	emailSMTPUsername,
+	emailSMTPPassword,
+	artifactUpstreamUsername,
+	artifactUpstreamPassword,
+	userAccountMFASecret,
+	organizationStripeSecret,
+	entitlementRegistryUsername,
+	entitlementRegistryPassword,
+	supportBundleSecret,
+	deploymentValuesYaml,
+	deploymentEnvFileData,
+	supportBundleResourceContent,
+}
+
+// Output renders the expression that reads this column, named after it for a scan by name.
+func (c EncryptedColumn) Output(alias string) string {
+	if c.Binary {
+		return c.BytesColumn(alias)
+	}
+	return c.TextColumn(alias)
+}
+
+// Value is [EncryptedColumn.Output] without the column alias, for a row constructor where an alias
+// is a syntax error.
+func (c EncryptedColumn) Value(alias string) string {
+	if c.Binary {
+		return c.BytesValue(alias)
+	}
+	return c.TextValue(alias)
+}
 
 const defaultEncryptionBatchSize = 500
 
@@ -64,9 +109,9 @@ func (c EncryptedColumn) batchSize() int {
 // encrypted by the same code and produce exactly what the application writes.
 func (c EncryptedColumn) plaintextExpr() string {
 	if c.Binary {
-		return c.Column
+		return c.Name
 	}
-	return fmt.Sprintf("convert_to(%s, 'UTF8')", c.Column)
+	return fmt.Sprintf("convert_to(%s, 'UTF8')", c.Name)
 }
 
 // decryptedExpr is the inverse of plaintextExpr: it writes decrypted bytes back into the plaintext
@@ -80,9 +125,10 @@ func (c EncryptedColumn) decryptedExpr() string {
 
 // keyPrefixExpr reads the format version and key id a value was sealed with. It has to stay
 // identical to the expression migration 130 indexes, and uses substring rather than get_byte
-// because that reads a TOAST slice instead of the whole value.
+// because that reads a TOAST slice instead of the whole value. The data a value is bound to is
+// authenticated rather than stored, so it does not appear here.
 func (c EncryptedColumn) keyPrefixExpr() string {
-	return fmt.Sprintf("substring(%s FROM 1 FOR 2)", c.Target)
+	return fmt.Sprintf("substring(%s FROM 1 FOR 2)", c.Enc())
 }
 
 // activeKeyPrefix is the literal that keyPrefixExpr yields for a value sealed with the active key.
@@ -106,7 +152,7 @@ func queryBool(ctx context.Context, query string) (bool, error) {
 // HasPlaintextRows reports whether any row still holds its value in the plaintext column.
 func HasPlaintextRows(ctx context.Context, c EncryptedColumn) (bool, error) {
 	found, err := queryBool(ctx,
-		fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s IS NOT NULL)", c.Table, c.Column))
+		fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s IS NOT NULL)", c.Table, c.Name))
 	if err != nil {
 		return false, fmt.Errorf("could not check %v for plaintext rows: %w", c, err)
 	}
@@ -120,7 +166,7 @@ func HasStaleKeyRows(ctx context.Context, c EncryptedColumn) (bool, error) {
 	found, err := queryBool(ctx, fmt.Sprintf(
 		`SELECT coalesce(min(%[1]s) <> %[2]s OR max(%[1]s) <> %[2]s, false)
 		FROM %[3]s WHERE %[4]s IS NOT NULL`,
-		c.keyPrefixExpr(), activeKeyPrefix(), c.Table, c.Target))
+		c.keyPrefixExpr(), activeKeyPrefix(), c.Table, c.Enc()))
 	if err != nil {
 		return false, fmt.Errorf("could not check %v for rows of a retired key: %w", c, err)
 	}
@@ -129,6 +175,7 @@ func HasStaleKeyRows(ctx context.Context, c EncryptedColumn) (bool, error) {
 
 type encryptedRow struct {
 	ID    uuid.UUID `db:"id"`
+	Scope uuid.UUID `db:"scope"`
 	Value []byte    `db:"value"`
 }
 
@@ -136,10 +183,10 @@ type encryptedRow struct {
 // returns how many rows it rewrote.
 func EncryptPlaintextRows(ctx context.Context, c EncryptedColumn) (int64, error) {
 	return rewrite(ctx, c,
-		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL", c.plaintextExpr(), c.Table, c.Column),
-		fmt.Sprintf("%s = NULL, %s = v.rewritten", c.Column, c.Target),
-		fmt.Sprintf("%s IS NOT NULL", c.Column),
-		dbcrypto.Encrypt,
+		c.plaintextExpr(),
+		fmt.Sprintf("%s IS NOT NULL", c.Name),
+		fmt.Sprintf("%s = NULL, %s = v.rewritten", c.Name, c.Enc()),
+		c.EncryptRaw,
 	)
 }
 
@@ -149,10 +196,10 @@ func EncryptPlaintextRows(ctx context.Context, c EncryptedColumn) (int64, error)
 // and the update here would lose that write, and a column the server keeps writing to never empties.
 func DecryptEncryptedRows(ctx context.Context, c EncryptedColumn) (int64, error) {
 	return rewrite(ctx, c,
-		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL", c.Target, c.Table, c.Target),
-		fmt.Sprintf("%s = NULL, %s = %s", c.Target, c.Column, c.decryptedExpr()),
-		fmt.Sprintf("%s IS NOT NULL", c.Target),
-		dbcrypto.Decrypt,
+		c.Enc(),
+		fmt.Sprintf("%s IS NOT NULL", c.Enc()),
+		fmt.Sprintf("%s = NULL, %s = %s", c.Enc(), c.Name, c.decryptedExpr()),
+		c.Decrypt,
 	)
 }
 
@@ -160,43 +207,45 @@ func DecryptEncryptedRows(ctx context.Context, c EncryptedColumn) (int64, error)
 // longer active, which is what lets a retired key be removed from the keyring.
 func ReencryptStaleKeyRows(ctx context.Context, c EncryptedColumn) (int64, error) {
 	return rewrite(ctx, c,
-		fmt.Sprintf("%s AS value FROM %s WHERE %s IS NOT NULL AND %s",
-			c.Target, c.Table, c.Target, c.staleKeyExpr()),
-		fmt.Sprintf("%s = v.rewritten", c.Target),
-		c.staleKeyExpr(),
-		func(value []byte) ([]byte, error) {
-			plaintext, err := dbcrypto.Decrypt(value)
+		c.Enc(),
+		fmt.Sprintf("%s IS NOT NULL AND %s", c.Enc(), c.staleKeyExpr()),
+		fmt.Sprintf("%s = v.rewritten", c.Enc()),
+		func(value []byte, scope uuid.UUID) ([]byte, error) {
+			plaintext, err := c.Decrypt(value, scope)
 			if err != nil {
 				return nil, err
 			}
-			return dbcrypto.Encrypt(plaintext)
+			return c.EncryptRaw(plaintext, scope)
 		},
 	)
 }
 
-// rewrite reads the rows selected by from in batches, transforms each value and applies set to the
+// rewrite reads the rows selected by where in batches, transforms each value and applies set to the
 // row it came from. Each batch is a statement of its own, so the work can be interrupted and
-// resumed, and guard repeats the selection criteria in the update, which makes it a no-op for a row
-// someone else has rewritten since it was read.
+// resumed, and where is repeated in the update, which makes it a no-op for a row someone else has
+// rewritten since it was read.
 //
 // Batches resume at the id of the last one, because no index answers a search for a key that is not
 // the active one, so a rotation would otherwise rescan everything it has already rewritten. Nothing
 // falls behind the cursor and back into the selection: every write seals with the active key.
 //
 // The value is named rewritten because Secret has a column called value, which would make every
-// unqualified reference to it in set and guard ambiguous.
+// unqualified reference to it in set ambiguous.
 func rewrite(
 	ctx context.Context,
 	c EncryptedColumn,
-	from, set, guard string,
-	transform func([]byte) ([]byte, error),
+	valueExpr, where, set string,
+	transform func([]byte, uuid.UUID) ([]byte, error),
 ) (int64, error) {
 	db := internalctx.GetDb(ctx)
 	var total int64
 	var cursor uuid.UUID
 	for {
 		rows, err := db.Query(ctx,
-			fmt.Sprintf("SELECT id, %s AND id > @cursor ORDER BY id LIMIT %d", from, c.batchSize()),
+			fmt.Sprintf(
+				`SELECT id, %s AS scope, %s AS value FROM %s
+				WHERE %s AND id > @cursor ORDER BY id LIMIT %d`,
+				c.ScopeColumn(), valueExpr, c.Table, where, c.batchSize()),
 			pgx.NamedArgs{"cursor": cursor})
 		if err != nil {
 			return total, fmt.Errorf("could not query rows of %v: %w", c, err)
@@ -214,7 +263,7 @@ func rewrite(
 		rewritten := make([][]byte, len(batch))
 		for i, row := range batch {
 			ids[i] = row.ID
-			if rewritten[i], err = transform(row.Value); err != nil {
+			if rewritten[i], err = transform(row.Value, row.Scope); err != nil {
 				return total, fmt.Errorf("could not rewrite %v of row %v: %w", c, row.ID, err)
 			}
 		}
@@ -224,7 +273,7 @@ func rewrite(
 				`UPDATE %[1]s AS t SET %[2]s
 				FROM (SELECT unnest(@ids::UUID[]) AS id, unnest(@rewritten::BYTEA[]) AS rewritten) v
 				WHERE t.id = v.id AND %[3]s`,
-				c.Table, set, guard),
+				c.Table, set, where),
 			pgx.NamedArgs{"ids": ids, "rewritten": rewritten},
 		)
 		if err != nil {

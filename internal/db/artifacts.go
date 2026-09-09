@@ -23,17 +23,17 @@ import (
 )
 
 var (
-	artifactOutputExpr = artifactOutputExprWith(dbcrypto.TextColumn)
+	artifactOutputExpr = artifactOutputExprWith(EncryptedColumn.Output)
 	// artifactRowOutputExpr is artifactOutputExpr for a row constructor, where the alias that a scan
 	// by name needs is a syntax error.
-	artifactRowOutputExpr = artifactOutputExprWith(dbcrypto.TextValue)
+	artifactRowOutputExpr = artifactOutputExprWith(EncryptedColumn.Value)
 )
 
-func artifactOutputExprWith(upstreamCredential func(alias, column string) string) string {
+func artifactOutputExprWith(upstreamCredential func(EncryptedColumn, string) string) string {
 	return ` a.id, a.created_at, a.organization_id, a.name, a.image_id, ` +
 		`a.upstream_url, a.last_synced_at, a.last_sync_error, a.upstream_auth_type, ` +
-		upstreamCredential("a", "upstream_username") + `, ` +
-		upstreamCredential("a", "upstream_password") + ` `
+		upstreamCredential(artifactUpstreamUsername, "a") + `, ` +
+		upstreamCredential(artifactUpstreamPassword, "a") + ` `
 }
 
 var artifactWithDownloadsOutputExpr = artifactOutputExpr +
@@ -423,22 +423,27 @@ func GetOrCreateArtifact(ctx context.Context, orgID uuid.UUID, artifactName stri
 }
 
 func CreateArtifact(ctx context.Context, artifact *types.Artifact) error {
-	upstreamUsernameEnc, err := dbcrypto.EncryptString(artifact.UpstreamUsername)
+	// The id is generated here rather than by the column default, because the credentials are bound
+	// to the row they are stored in and therefore have to be sealed before the row exists.
+	id := uuid.New()
+	upstreamUsernameEnc, err := artifactUpstreamUsername.EncryptPtr(artifact.UpstreamUsername, id)
 	if err != nil {
 		return fmt.Errorf("could not encrypt upstream username: %w", err)
 	}
-	upstreamPasswordEnc, err := dbcrypto.EncryptString(artifact.UpstreamPassword)
+	upstreamPasswordEnc, err := artifactUpstreamPassword.EncryptPtr(artifact.UpstreamPassword, id)
 	if err != nil {
 		return fmt.Errorf("could not encrypt upstream password: %w", err)
 	}
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`INSERT INTO Artifact AS a (name, organization_id, upstream_url, upstream_auth_type, upstream_username_enc,
+		`INSERT INTO Artifact AS a (id, name, organization_id, upstream_url, upstream_auth_type, upstream_username_enc,
 			upstream_password_enc)
-		VALUES (@name, @organizationId, @upstreamUrl, @upstreamAuthType, @upstreamUsernameEnc, @upstreamPasswordEnc)
+		VALUES (@id, @name, @organizationId, @upstreamUrl, @upstreamAuthType, @upstreamUsernameEnc,
+			@upstreamPasswordEnc)
 		RETURNING `+artifactOutputExpr,
 		pgx.NamedArgs{
+			"id":                  id,
 			"name":                artifact.Name,
 			"organizationId":      artifact.OrganizationID,
 			"upstreamUrl":         artifact.UpstreamURL,
@@ -503,11 +508,11 @@ func UpdateArtifactUpstream(ctx context.Context, artifactID uuid.UUID, p UpdateA
 		args["upstreamUrl"] = p.UpstreamURL
 	}
 	if p.UpdateAuth {
-		usernameEnc, err := dbcrypto.EncryptString(p.Username)
+		usernameEnc, err := artifactUpstreamUsername.EncryptPtr(p.Username, artifactID)
 		if err != nil {
 			return fmt.Errorf("could not encrypt upstream username: %w", err)
 		}
-		passwordEnc, err := dbcrypto.EncryptString(p.Password)
+		passwordEnc, err := artifactUpstreamPassword.EncryptPtr(p.Password, artifactID)
 		if err != nil {
 			return fmt.Errorf("could not encrypt upstream password: %w", err)
 		}

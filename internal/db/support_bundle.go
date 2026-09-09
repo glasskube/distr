@@ -8,7 +8,6 @@ import (
 
 	"github.com/distr-sh/distr/internal/apierrors"
 	internalctx "github.com/distr-sh/distr/internal/context"
-	"github.com/distr-sh/distr/internal/dbcrypto"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -218,7 +217,7 @@ var supportBundleWithDetailsOutputExpr = `
 	sb.title,
 	sb.description,
 	sb.status,
-	` + dbcrypto.TextColumn("sb", "bundle_secret") + `,
+	` + supportBundleSecret.Output("sb") + `,
 	sb.bundle_secret_expires_at,
 	sb.status_changed_by_user_account_id,
 	sb.status_changed_at,
@@ -304,7 +303,7 @@ func GetSupportBundleByBundleSecret(
 		ctx,
 		`SELECT id, created_at, organization_id, customer_organization_id,
 			created_by_user_account_id, title, description, status,
-			`+dbcrypto.TextColumn("sb", "bundle_secret")+`, bundle_secret_expires_at,
+			`+supportBundleSecret.Output("sb")+`, bundle_secret_expires_at,
 			status_changed_by_user_account_id, status_changed_at
 		FROM SupportBundle sb
 		WHERE id = @id
@@ -328,7 +327,10 @@ func GetSupportBundleByBundleSecret(
 }
 
 func CreateSupportBundle(ctx context.Context, bundle *types.SupportBundle) error {
-	bundleSecretEnc, err := bundle.BundleSecret.Encrypt()
+	// The id is generated here rather than by the column default, because the secret is bound to the
+	// row it is stored in and therefore has to be sealed before the row exists.
+	id := uuid.New()
+	bundleSecretEnc, err := supportBundleSecret.Encrypt(bundle.BundleSecret, id)
 	if err != nil {
 		return fmt.Errorf("could not encrypt support bundle secret: %w", err)
 	}
@@ -336,15 +338,16 @@ func CreateSupportBundle(ctx context.Context, bundle *types.SupportBundle) error
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO SupportBundle AS sb
-			(organization_id, customer_organization_id, created_by_user_account_id,
+			(id, organization_id, customer_organization_id, created_by_user_account_id,
 			title, description, bundle_secret_enc, bundle_secret_expires_at)
-		VALUES (@orgId, @customerOrgId, @userId, @title, @description,
+		VALUES (@id, @orgId, @customerOrgId, @userId, @title, @description,
 			@bundleSecretEnc, @bundleSecretExpiresAt)
 		RETURNING id, created_at, organization_id, customer_organization_id,
 			created_by_user_account_id, title, description, status,
-			`+dbcrypto.TextColumn("sb", "bundle_secret")+`, bundle_secret_expires_at,
+			`+supportBundleSecret.Output("sb")+`, bundle_secret_expires_at,
 			status_changed_by_user_account_id, status_changed_at`,
 		pgx.NamedArgs{
+			"id":                    id,
 			"orgId":                 bundle.OrganizationID,
 			"customerOrgId":         bundle.CustomerOrganizationID,
 			"userId":                bundle.CreatedByUserAccountID,
@@ -410,7 +413,7 @@ func GetSupportBundleResources(ctx context.Context, bundleID uuid.UUID) ([]types
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`SELECT id, created_at, support_bundle_id, name, `+dbcrypto.TextColumn("r", "content")+`
+		`SELECT id, created_at, support_bundle_id, name, `+supportBundleResourceContent.Output("r")+`
 		FROM SupportBundleResource r
 		WHERE support_bundle_id = @bundleId
 		ORDER BY created_at`,
@@ -427,17 +430,21 @@ func GetSupportBundleResources(ctx context.Context, bundleID uuid.UUID) ([]types
 }
 
 func CreateSupportBundleResource(ctx context.Context, resource *types.SupportBundleResource) error {
-	contentEnc, err := resource.Content.Encrypt()
+	// The id is generated here rather than by the column default, because the content is bound to the
+	// row it is stored in and therefore has to be sealed before the row exists.
+	id := uuid.New()
+	contentEnc, err := supportBundleResourceContent.Encrypt(resource.Content, id)
 	if err != nil {
 		return fmt.Errorf("could not encrypt support bundle resource: %w", err)
 	}
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`INSERT INTO SupportBundleResource AS r (support_bundle_id, name, content_enc)
-		VALUES (@bundleId, @name, @contentEnc)
-		RETURNING id, created_at, support_bundle_id, name, `+dbcrypto.TextColumn("r", "content"),
+		`INSERT INTO SupportBundleResource AS r (id, support_bundle_id, name, content_enc)
+		VALUES (@id, @bundleId, @name, @contentEnc)
+		RETURNING id, created_at, support_bundle_id, name, `+supportBundleResourceContent.Output("r"),
 		pgx.NamedArgs{
+			"id":         id,
 			"bundleId":   resource.SupportBundleID,
 			"name":       resource.Name,
 			"contentEnc": contentEnc,

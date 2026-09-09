@@ -7,7 +7,6 @@ import (
 
 	"github.com/distr-sh/distr/internal/apierrors"
 	internalctx "github.com/distr-sh/distr/internal/context"
-	"github.com/distr-sh/distr/internal/dbcrypto"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -17,17 +16,18 @@ import (
 
 var customOIDCConfigurationOutputExpr = `
 	c.id, c.created_at, c.updated_at, c.updated_by_user_account_id, c.organization_id, c.custom_domain_id,
-	c.name, c.slug, c.enabled, c.issuer, c.client_id, ` + dbcrypto.TextColumn("c", "client_secret") + `,
+	c.name, c.slug, c.enabled, c.issuer, c.client_id, ` + oidcClientSecret.Output("c") + `,
 	c.scopes, c.pkce_enabled, c.sp_initiated,
 	c.create_unknown_users, c.default_user_role, c.allowed_email_domains
 `
 
-func customOIDCConfigurationArgs(c types.CustomOIDCConfiguration) (pgx.NamedArgs, error) {
-	clientSecretEnc, err := c.ClientSecret.Encrypt()
+func customOIDCConfigurationArgs(c types.CustomOIDCConfiguration, id uuid.UUID) (pgx.NamedArgs, error) {
+	clientSecretEnc, err := oidcClientSecret.Encrypt(c.ClientSecret, id)
 	if err != nil {
 		return nil, fmt.Errorf("could not encrypt OIDC client secret: %w", err)
 	}
 	return pgx.NamedArgs{
+		"id":                     id,
 		"organizationId":         c.OrganizationID,
 		"customDomainId":         c.CustomDomainID,
 		"updatedByUserAccountId": c.UpdatedByUserAccountID,
@@ -47,18 +47,20 @@ func customOIDCConfigurationArgs(c types.CustomOIDCConfiguration) (pgx.NamedArgs
 }
 
 func CreateCustomOIDCConfiguration(ctx context.Context, c *types.CustomOIDCConfiguration) error {
-	args, err := customOIDCConfigurationArgs(*c)
+	// The id is generated here rather than by the column default, because the client secret is bound
+	// to the row it is stored in and therefore has to be sealed before the row exists.
+	args, err := customOIDCConfigurationArgs(*c, uuid.New())
 	if err != nil {
 		return err
 	}
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(ctx,
 		`INSERT INTO CustomOIDCConfiguration AS c (
-			organization_id, custom_domain_id, updated_by_user_account_id, name, slug, enabled, issuer, client_id,
+			id, organization_id, custom_domain_id, updated_by_user_account_id, name, slug, enabled, issuer, client_id,
 			client_secret_enc, scopes, pkce_enabled, sp_initiated, create_unknown_users, default_user_role,
 			allowed_email_domains
 		) VALUES (
-			@organizationId, @customDomainId, @updatedByUserAccountId, @name, @slug, @enabled, @issuer, @clientId,
+			@id, @organizationId, @customDomainId, @updatedByUserAccountId, @name, @slug, @enabled, @issuer, @clientId,
 			@clientSecretEnc, @scopes, @pkceEnabled, @spInitiated, @createUnknownUsers, @defaultUserRole,
 			@allowedEmailDomains
 		) RETURNING`+customOIDCConfigurationOutputExpr,
@@ -76,12 +78,11 @@ func CreateCustomOIDCConfiguration(ctx context.Context, c *types.CustomOIDCConfi
 }
 
 func UpdateCustomOIDCConfiguration(ctx context.Context, c *types.CustomOIDCConfiguration) error {
-	args, err := customOIDCConfigurationArgs(*c)
+	args, err := customOIDCConfigurationArgs(*c, c.ID)
 	if err != nil {
 		return err
 	}
 	db := internalctx.GetDb(ctx)
-	args["id"] = c.ID
 	rows, err := db.Query(ctx,
 		`UPDATE CustomOIDCConfiguration AS c SET
 			updated_at = now(),

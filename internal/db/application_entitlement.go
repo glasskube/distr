@@ -7,7 +7,6 @@ import (
 
 	"github.com/distr-sh/distr/internal/apierrors"
 	internalctx "github.com/distr-sh/distr/internal/context"
-	"github.com/distr-sh/distr/internal/dbcrypto"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -19,8 +18,8 @@ var (
 	applicationEntitlementOutputExpr = `
 		al.id, al.created_at, al.name, al.expires_at, al.application_id, al.organization_id,
 		al.customer_organization_id, al.registry_url,
-		` + dbcrypto.TextColumn("al", "registry_username") + `,
-		` + dbcrypto.TextColumn("al", "registry_password") + `
+		` + entitlementRegistryUsername.Output("al") + `,
+		` + entitlementRegistryPassword.Output("al") + `
 	`
 	applicationEntitlementWithVersionsOutputExpr = applicationEntitlementOutputExpr + `,
 		coalesce((
@@ -61,11 +60,14 @@ func HasAnyApplicationEntitlement(ctx context.Context, orgID uuid.UUID) (bool, e
 }
 
 func CreateApplicationEntitlement(ctx context.Context, entitlement *types.ApplicationEntitlementBase) error {
-	registryUsernameEnc, err := dbcrypto.EncryptString(entitlement.RegistryUsername)
+	// The id is generated here rather than by the column default, because the credentials are bound
+	// to the row they are stored in and therefore have to be sealed before the row exists.
+	id := uuid.New()
+	registryUsernameEnc, err := entitlementRegistryUsername.EncryptPtr(entitlement.RegistryUsername, id)
 	if err != nil {
 		return fmt.Errorf("could not encrypt registry username: %w", err)
 	}
-	registryPasswordEnc, err := dbcrypto.EncryptString(entitlement.RegistryPassword)
+	registryPasswordEnc, err := entitlementRegistryPassword.EncryptPtr(entitlement.RegistryPassword, id)
 	if err != nil {
 		return fmt.Errorf("could not encrypt registry password: %w", err)
 	}
@@ -73,13 +75,14 @@ func CreateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO ApplicationEntitlement AS al (
-			name, expires_at, application_id, organization_id, customer_organization_id, registry_url,
+			id, name, expires_at, application_id, organization_id, customer_organization_id, registry_url,
 			registry_username_enc, registry_password_enc
 		) VALUES (
-			@name, @expiresAt, @applicationId, @organizationId, @customerOrganizationId, @registryUrl,
+			@id, @name, @expiresAt, @applicationId, @organizationId, @customerOrganizationId, @registryUrl,
 			@registryUsernameEnc, @registryPasswordEnc
 		) RETURNING`+applicationEntitlementOutputExpr,
 		pgx.NamedArgs{
+			"id":                     id,
 			"name":                   entitlement.Name,
 			"expiresAt":              entitlement.ExpiresAt,
 			"applicationId":          entitlement.ApplicationID,
@@ -105,11 +108,11 @@ func CreateApplicationEntitlement(ctx context.Context, entitlement *types.Applic
 }
 
 func UpdateApplicationEntitlement(ctx context.Context, entitlement *types.ApplicationEntitlementBase) error {
-	registryUsernameEnc, err := dbcrypto.EncryptString(entitlement.RegistryUsername)
+	registryUsernameEnc, err := entitlementRegistryUsername.EncryptPtr(entitlement.RegistryUsername, entitlement.ID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt registry username: %w", err)
 	}
-	registryPasswordEnc, err := dbcrypto.EncryptString(entitlement.RegistryPassword)
+	registryPasswordEnc, err := entitlementRegistryPassword.EncryptPtr(entitlement.RegistryPassword, entitlement.ID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt registry password: %w", err)
 	}

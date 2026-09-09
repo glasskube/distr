@@ -7,7 +7,6 @@ import (
 
 	"github.com/distr-sh/distr/internal/apierrors"
 	internalctx "github.com/distr-sh/distr/internal/context"
-	"github.com/distr-sh/distr/internal/dbcrypto"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -16,8 +15,8 @@ import (
 var customEmailConfigurationOutputExpr = `
 	c.id, c.created_at, c.updated_at, c.updated_by_user_account_id, c.organization_id, c.enabled,
 	c.from_address, c.smtp_host, c.smtp_port, ` +
-	dbcrypto.TextColumn("c", "smtp_username") + `, ` +
-	dbcrypto.TextColumn("c", "smtp_password") + `, c.smtp_implicit_tls
+	emailSMTPUsername.Output("c") + `, ` +
+	emailSMTPPassword.Output("c") + `, c.smtp_implicit_tls
 `
 
 // The result includes the SMTP password, which must never be returned to a client.
@@ -45,11 +44,13 @@ func GetCustomEmailConfiguration(
 
 // The stored state is written back into the given struct.
 func UpsertCustomEmailConfiguration(ctx context.Context, config *types.CustomEmailConfiguration) error {
-	smtpUsernameEnc, err := config.SMTPUsername.Encrypt()
+	// Both values are bound to the organization rather than to the row, because the conflict path of
+	// the upsert below keeps the id of the row it finds instead of one generated here.
+	smtpUsernameEnc, err := emailSMTPUsername.Encrypt(config.SMTPUsername, config.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt SMTP username: %w", err)
 	}
-	smtpPasswordEnc, err := config.SMTPPassword.Encrypt()
+	smtpPasswordEnc, err := emailSMTPPassword.Encrypt(config.SMTPPassword, config.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt SMTP password: %w", err)
 	}

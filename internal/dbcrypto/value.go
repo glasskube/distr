@@ -7,11 +7,11 @@ import (
 )
 
 // ErrNotEncrypted is returned when a value of an encrypted column is passed to a query as itself.
-// Such a value has to be sealed with Encrypt and written to the encrypted column instead, and
-// failing here is what keeps a plaintext write from succeeding unnoticed.
-var ErrNotEncrypted = errors.New("value must be sealed with Encrypt before it is written")
+// Such a value has to be sealed with [Column.Encrypt] and written to the encrypted column instead,
+// and failing here is what keeps a plaintext write from succeeding unnoticed.
+var ErrNotEncrypted = errors.New("value must be sealed for its column before it is written")
 
-// String is the value of an encrypted TEXT column. Scanning it decrypts what [TextColumn] read.
+// String is the value of an encrypted TEXT column. Scanning it decrypts what [Column.TextColumn] read.
 type String string
 
 func (s *String) Scan(src any) error {
@@ -23,7 +23,7 @@ func (s *String) Scan(src any) error {
 		*s = ""
 		return nil
 	}
-	plaintext, err := Decrypt(value)
+	plaintext, err := decryptScanned(value)
 	if err != nil {
 		return err
 	}
@@ -33,9 +33,7 @@ func (s *String) Scan(src any) error {
 
 func (String) Value() (driver.Value, error) { return nil, ErrNotEncrypted }
 
-func (s String) Encrypt() ([]byte, error) { return Encrypt([]byte(s)) }
-
-// Bytes is the value of an encrypted BYTEA column. Scanning it decrypts what [BytesColumn] read.
+// Bytes is the value of an encrypted BYTEA column. Scanning it decrypts what [Column.BytesColumn] read.
 type Bytes []byte
 
 func (b *Bytes) Scan(src any) error {
@@ -47,7 +45,7 @@ func (b *Bytes) Scan(src any) error {
 		*b = nil
 		return nil
 	}
-	plaintext, err := Decrypt(value)
+	plaintext, err := decryptScanned(value)
 	if err != nil {
 		return err
 	}
@@ -56,23 +54,6 @@ func (b *Bytes) Scan(src any) error {
 }
 
 func (Bytes) Value() (driver.Value, error) { return nil, ErrNotEncrypted }
-
-// Encrypt keeps nil as NULL, because a nullable column of this kind uses NULL to mean that there is
-// no value rather than that there is an empty one.
-func (b Bytes) Encrypt() ([]byte, error) {
-	if b == nil {
-		return nil, nil
-	}
-	return Encrypt(b)
-}
-
-// EncryptString seals a nullable [String], keeping nil as NULL.
-func EncryptString(s *String) ([]byte, error) {
-	if s == nil {
-		return nil, nil
-	}
-	return s.Encrypt()
-}
 
 // StringPtr converts the nullable plain string of an api type into a nullable [String].
 func StringPtr(s *string) *String {

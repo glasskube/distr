@@ -27,7 +27,7 @@ var (
 		u.name,
 		u.image_id,
 		u.last_used_organization_id,
-		` + dbcrypto.TextValue("u", "mfa_secret") + `,
+		` + userAccountMFASecret.Value("u") + `,
 		u.mfa_enabled,
 		u.mfa_enabled_at,
 		u.is_super_admin`
@@ -597,7 +597,7 @@ func ExistsUserAccountWithEmail(ctx context.Context, email string) (bool, error)
 }
 
 func UpdateUserAccountMFASecret(ctx context.Context, userID uuid.UUID, secret dbcrypto.String) error {
-	secretEnc, err := secret.Encrypt()
+	secretEnc, err := userAccountMFASecret.Encrypt(secret, userID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt MFA secret: %w", err)
 	}

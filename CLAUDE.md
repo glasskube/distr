@@ -222,11 +222,14 @@ When you add a Postgres enum type, register it (and its array type, prefixed wit
 
 A sensitive column is stored encrypted (`internal/dbcrypto`) in a `BYTEA` column named `<column>_enc`, next to the plaintext `<column>` that rows written before the encryption migration still use.
 
+Every encrypted value is bound to the column and the row it is stored in: both are authenticated with the ciphertext, so a value copied into another column or another row no longer decrypts. Without that, anyone able to write to the database can move a ciphertext into a column whose plaintext the application hands out or sends somewhere, and read it back without the key.
+
+- Declare every encrypted column once in `internal/db/encryption.go`, as a package-level variable that `EncryptedColumns` also lists, and reference that variable from the queries that read and write it. Naming a column as a loose string at a call site is what lets a read and a write disagree about what a value is bound to, which fails at runtime rather than at compile time. A column that is missing from `EncryptedColumns` is silently skipped by the migration, by the rollback (`maintenance decrypt-database`) and by the startup warning.
 - Type the field in `internal/types` as `dbcrypto.String`, `*dbcrypto.String` or `dbcrypto.Bytes`, never as `string` or `[]byte`.
-- Read through `dbcrypto.TextColumn`/`BytesColumn`, or through `TextValue`/`BytesValue` where an alias is not allowed, and use `dbcrypto.IsSetValue` for the boolean an API exposes in place of the secret itself.
-- Write only the `_enc` column, from `value.Encrypt()` or `dbcrypto.EncryptString(ptr)`, and set the plaintext column to `NULL` in the same statement.
-- Register every new encrypted column in `db.EncryptedColumns`, or the migration, the rollback (`maintenance decrypt-database`) and the startup warning silently skip it.
-- Seal and open through `dbcrypto.Encrypt`/`dbcrypto.Decrypt`, never through `dbcrypto.Keys().Encrypt`/`Decrypt`.
+- Read through `column.Output(alias)`, or `column.Value(alias)` where a column alias is not allowed, and use `column.IsSetValue(alias)` for the boolean an API exposes in place of the secret itself.
+- Write only the `_enc` column, from `column.Encrypt`, `EncryptPtr` or `EncryptBytes`, and set the plaintext column to `NULL` in the same statement.
+- A value is bound to the row's primary key, so an `INSERT` has to generate the id in Go instead of leaving it to `gen_random_uuid()`. Use `ScopedTo` for a column written by an upsert, whose conflict path keeps the id of the row it found: bind it to the conflict target instead. The scope column must be `NOT NULL`, since a `NULL` makes the read fall through to the plaintext column.
+- What a value is bound to is part of the stored format. Renaming a table or a column, or changing what a column is scoped to, invalidates every value in it until `maintenance encrypt-database` has rewritten them.
 - Call `dbcrypto.Init(env.DatabaseEncryptionKey())` in the `PreRun` of every command that touches an encrypted column, and never make `dbcrypto` read `env` itself.
 - Do not encrypt a column that a query looks up by value. Narrow the row down by its id and compare in Go with `subtle.ConstantTimeCompare` (see `db.GetSupportBundleByBundleSecret`).
 

@@ -23,7 +23,7 @@ var secretOutputExpr = `
 	s.organization_id,
 	s.customer_organization_id,
 	s.key,
-	` + dbcrypto.TextColumn("s", "value")
+	` + secretValue.Output("s")
 
 var secretWithUpdatedByOutputExpr = secretOutputExpr + `,
 	CASE WHEN u.id IS NULL
@@ -187,7 +187,10 @@ func CreateSecret(
 	key string,
 	value dbcrypto.String,
 ) (*types.SecretWithUpdatedBy, error) {
-	valueEnc, err := value.Encrypt()
+	// The id is generated here rather than by the column default, because the value is bound to the
+	// row it is stored in and therefore has to be sealed before the row exists.
+	id := uuid.New()
+	valueEnc, err := secretValue.Encrypt(value, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt secret value: %w", err)
 	}
@@ -195,8 +198,8 @@ func CreateSecret(
 	rows, err := db.Query(
 		ctx,
 		`WITH inserted AS (
-			INSERT INTO Secret (key, value_enc, organization_id, customer_organization_id, updated_by_useraccount_id)
-			VALUES (@key, @value_enc, @organization_id, @customer_organization_id, @updated_by_useraccount_id)
+			INSERT INTO Secret (id, key, value_enc, organization_id, customer_organization_id, updated_by_useraccount_id)
+			VALUES (@id, @key, @value_enc, @organization_id, @customer_organization_id, @updated_by_useraccount_id)
 			RETURNING *
 		)
 		SELECT `+secretWithUpdatedByOutputExpr+` FROM inserted s
@@ -204,6 +207,7 @@ func CreateSecret(
 			ON s.updated_by_useraccount_id = u.id
 		`,
 		pgx.NamedArgs{
+			"id":                        id,
 			"key":                       key,
 			"organization_id":           organizationID,
 			"customer_organization_id":  customerOrganizationID,
@@ -231,7 +235,7 @@ func UpdateSecret(ctx context.Context,
 	updatedByUserAccountID uuid.UUID,
 	value dbcrypto.String,
 ) (*types.SecretWithUpdatedBy, error) {
-	valueEnc, err := value.Encrypt()
+	valueEnc, err := secretValue.Encrypt(value, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt secret value: %w", err)
 	}

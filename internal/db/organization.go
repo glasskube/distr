@@ -36,8 +36,8 @@ var (
 		o.pre_connect_script,
 		o.post_connect_script,
 		o.connect_script_is_sudo,
-		` + dbcrypto.TextValue("o", "stripe_webhook_secret") + `,
-		` + dbcrypto.IsSetValue("o", "stripe_webhook_secret") + `
+		` + organizationStripeSecret.Value("o") + `,
+		` + organizationStripeSecret.IsSetValue("o") + `
 	`
 	organizationWithUserRoleOutputExpr = organizationOutputExpr + `,
 		j.user_role,
@@ -126,7 +126,7 @@ func CreateOrganization(ctx context.Context, org *types.Organization) error {
 }
 
 func UpdateOrganization(ctx context.Context, org *types.Organization) error {
-	stripeWebhookSecretEnc, err := dbcrypto.EncryptString(org.StripeWebhookSecret)
+	stripeWebhookSecretEnc, err := organizationStripeSecret.EncryptPtr(org.StripeWebhookSecret, org.ID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt Stripe webhook secret: %w", err)
 	}
@@ -378,7 +378,7 @@ func GetOrganizationWithBranding(ctx context.Context, orgID uuid.UUID) (*types.O
 }
 
 func SetOrganizationStripeWebhookSecret(ctx context.Context, orgID uuid.UUID, secret *dbcrypto.String) error {
-	secretEnc, err := dbcrypto.EncryptString(secret)
+	secretEnc, err := organizationStripeSecret.EncryptPtr(secret, orgID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt Stripe webhook secret: %w", err)
 	}

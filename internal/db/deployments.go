@@ -12,7 +12,6 @@ import (
 	"github.com/distr-sh/distr/api"
 	"github.com/distr-sh/distr/internal/apierrors"
 	internalctx "github.com/distr-sh/distr/internal/context"
-	"github.com/distr-sh/distr/internal/dbcrypto"
 	"github.com/distr-sh/distr/internal/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -112,8 +111,8 @@ func GetDeploymentsForDeploymentTarget(
 		ctx,
 		`SELECT`+deploymentOutputExpr+`,
 				dr.application_version_id AS application_version_id,
-				`+dbcrypto.BytesColumn("dr", "values_yaml")+`,
-				`+dbcrypto.BytesColumn("dr", "env_file_data")+`,
+				`+deploymentValuesYaml.Output("dr")+`,
+				`+deploymentEnvFileData.Output("dr")+`,
 				dr.values_hash AS values_hash,
 				dr.id AS deployment_revision_id,
 				dr.created_at AS deployment_revision_created_at,
@@ -316,16 +315,20 @@ func DeleteDeploymentWithID(ctx context.Context, id uuid.UUID) error {
 }
 
 func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentRequest) (*types.DeploymentRevision, error) {
-	valuesYamlEnc, err := dbcrypto.Bytes(request.ValuesYaml).Encrypt()
+	// The id is generated here rather than by the column default, because both values are bound to
+	// the row they are stored in and therefore have to be sealed before the row exists.
+	id := uuid.New()
+	valuesYamlEnc, err := deploymentValuesYaml.EncryptBytes(request.ValuesYaml, id)
 	if err != nil {
 		return nil, fmt.Errorf("could not encrypt deployment values: %w", err)
 	}
-	envFileDataEnc, err := dbcrypto.Bytes(request.EnvFileData).Encrypt()
+	envFileDataEnc, err := deploymentEnvFileData.EncryptBytes(request.EnvFileData, id)
 	if err != nil {
 		return nil, fmt.Errorf("could not encrypt deployment env file: %w", err)
 	}
 	db := internalctx.GetDb(ctx)
 	args := pgx.NamedArgs{
+		"id":                     id,
 		"deploymentId":           request.DeploymentID,
 		"applicationVersionId":   request.ApplicationVersionID,
 		"valuesYamlEnc":          valuesYamlEnc,
@@ -349,6 +352,7 @@ func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentReques
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO DeploymentRevision AS dr (
+			id,
 			deployment_id,
 			application_version_id,
 			values_yaml_enc,
@@ -363,6 +367,7 @@ func CreateDeploymentRevision(ctx context.Context, request *api.DeploymentReques
 			helm_options_force_conflicts,
 			created_by_user_account_id
 		) VALUES (
+			@id,
 		 	@deploymentId,
 			@applicationVersionId,
 			@valuesYamlEnc,
@@ -442,8 +447,8 @@ func GetDeploymentRevisions(
 				av.name AS application_version_name,
 				d.release_name AS release_name,
 				d.docker_type AS docker_type,
-				`+dbcrypto.BytesColumn("dr", "values_yaml")+`,
-				`+dbcrypto.BytesColumn("dr", "env_file_data")+`,
+				`+deploymentValuesYaml.Output("dr")+`,
+				`+deploymentEnvFileData.Output("dr")+`,
 				dr.force_restart AS force_restart,
 				dr.ignore_revision_skew AS ignore_revision_skew,
 				CASE WHEN dr.helm_options_timeout IS NOT NULL THEN (
