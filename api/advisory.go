@@ -177,8 +177,9 @@ func (r *ListAdvisoriesRequest) Parse() (ParsedListAdvisoriesRequest, error) {
 }
 
 type CreateUpdateAdvisoryRequest struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title string `json:"title"`
+	// The description is rendered as markdown, where leading whitespace is syntax.
+	Description string `json:"description" trim:"-"`
 	Severity    string `json:"severity"`
 	// Status defaults to "triage" on create and leaves the status untouched when omitted on
 	// update.
