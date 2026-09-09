@@ -51,7 +51,14 @@ export class DeploymentModalComponent {
         forkJoin([this.applications.refresh(), licensingEnabled ? this.applicationEntitlements.refresh() : of([])])
       ),
       map(() => true),
-      catchError(() => of(true))
+      catchError((e) => {
+        const msg = getFormDisplayedError(e);
+        if (msg) {
+          this.toast.error(msg);
+        }
+        // Falling back to the cached list still lets the user deploy, which a modal stuck on a spinner would not.
+        return of(true);
+      })
     ),
     {initialValue: false}
   );
