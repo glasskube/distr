@@ -195,7 +195,6 @@ type CreateUpdateAdvisoryRequest struct {
 }
 
 func (r *CreateUpdateAdvisoryRequest) Validate() error {
-	r.Title = strings.TrimSpace(r.Title)
 	if r.Title == "" {
 		return validation.NewValidationFailedError("title must not be empty")
 	}
@@ -216,13 +215,8 @@ func (r *CreateUpdateAdvisoryRequest) Validate() error {
 		r.Status = status
 	}
 
-	if r.CveID != nil {
-		cveID := strings.TrimSpace(*r.CveID)
-		if cveID == "" {
-			r.CveID = nil
-		} else {
-			r.CveID = &cveID
-		}
+	if r.CveID != nil && *r.CveID == "" {
+		r.CveID = nil
 	}
 
 	if err := r.validateTags(); err != nil {
@@ -242,7 +236,6 @@ func (r *CreateUpdateAdvisoryRequest) validateTags() error {
 	seen := make(map[string]struct{}, len(r.Tags))
 	tags := make([]string, 0, len(r.Tags))
 	for _, tag := range r.Tags {
-		tag = strings.TrimSpace(tag)
 		if tag == "" {
 			return validation.NewValidationFailedError("tag must not be empty")
 		}
@@ -263,24 +256,17 @@ func (r *CreateUpdateAdvisoryRequest) validateTags() error {
 func (r *CreateUpdateAdvisoryRequest) validateReferences() error {
 	references := make([]AdvisoryReference, 0, len(r.References))
 	for _, reference := range r.References {
-		rawURL := strings.TrimSpace(reference.URL)
-		if rawURL == "" {
+		if reference.URL == "" {
 			return validation.NewValidationFailedError("reference url must not be empty")
 		}
-		parsed, err := url.Parse(rawURL)
+		parsed, err := url.Parse(reference.URL)
 		if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
 			return validation.NewValidationFailedError(
 				fmt.Sprintf("reference url must be a valid http(s) url: %v", reference.URL))
 		}
-		if reference.Label != nil {
-			label := strings.TrimSpace(*reference.Label)
-			if label == "" {
-				reference.Label = nil
-			} else {
-				reference.Label = &label
-			}
+		if reference.Label != nil && *reference.Label == "" {
+			reference.Label = nil
 		}
-		reference.URL = rawURL
 		references = append(references, reference)
 	}
 	r.References = references
@@ -364,7 +350,6 @@ type CreateAdvisoryCommentRequest struct {
 }
 
 func (r *CreateAdvisoryCommentRequest) Validate() error {
-	r.Content = strings.TrimSpace(r.Content)
 	if r.Content == "" {
 		return validation.NewValidationFailedError("content must not be empty")
 	}

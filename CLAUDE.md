@@ -265,6 +265,10 @@ Never take the mailer straight from the context. An organization can configure i
 
 The organization must be passed explicitly rather than read from the authentication: background jobs have no authentication in their context (`internal/jobs/runner.go`), and notification mail is sent from exactly there.
 
+### Input Trimming
+
+Request body strings are trimmed generically by `validation.TrimStrings` in `handlers.JsonBody` and by the frontend's `trimInterceptor`, so never trim a single field by hand; where surrounding whitespace is significant, opt out with `trim:"-"` and `skipTrim()`.
+
 ### API Routes
 
 API routes are defined in `internal/routing/`. Routes are grouped by authentication requirements:
