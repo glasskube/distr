@@ -1,13 +1,22 @@
 import {OverlayModule} from '@angular/cdk/overlay';
-import {AsyncPipe, DatePipe} from '@angular/common';
-import {ChangeDetectionStrategy, Component, computed, inject, TemplateRef} from '@angular/core';
+import {DatePipe} from '@angular/common';
+import {Component, computed, inject, signal, TemplateRef} from '@angular/core';
+import {rxResource} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {AccessToken, AccessTokenWithKey, CreateAccessTokenRequest, UserRole} from '@distr-sh/distr-sdk';
+import {
+  AccessToken,
+  AccessTokenSecret,
+  AccessTokenSecretSlot,
+  AccessTokenWithKey,
+  CreateAccessTokenRequest,
+  UserRole,
+} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faClipboard, faPlus, faTrash, faXmark} from '@fortawesome/free-solid-svg-icons';
+import {faClipboard, faKey, faPlus, faTrash, faTriangleExclamation, faXmark} from '@fortawesome/free-solid-svg-icons';
 import dayjs from 'dayjs';
-import {firstValueFrom, startWith, Subject, switchMap} from 'rxjs';
+import {firstValueFrom} from 'rxjs';
 import {isExpired, RelativeDatePipe} from '../../util/dates';
+import {getFormDisplayedError} from '../../util/errors';
 import {USER_ROLE_LABELS, UserRoleLabelPipe} from '../../util/user-role';
 import {CreatedAccessTokenComponent} from '../components/created-access-token.component';
 import {ExpiresAtPickerComponent} from '../components/expires-at-picker/expires-at-picker.component';
@@ -19,12 +28,22 @@ import {AuthService} from '../services/auth.service';
 import {DialogRef, OverlayService} from '../services/overlay.service';
 import {ToastService} from '../services/toast.service';
 
+interface AccessTokenRow {
+  token: AccessToken;
+  expired: boolean;
+  // A token without secrets predates them and is stored in plain text. Its first secret can only
+  // be added at the cost of invalidating the token that is in circulation.
+  legacy: boolean;
+  secrets: AccessTokenSecret[];
+  canCreateSecret: boolean;
+  canDeleteSecret: boolean;
+}
+
 @Component({
   selector: 'app-access-tokens',
   imports: [
     ReactiveFormsModule,
     FaIconComponent,
-    AsyncPipe,
     DatePipe,
     AutotrimDirective,
     OverlayModule,
@@ -35,7 +54,6 @@ import {ToastService} from '../services/toast.service';
     UserRoleLabelPipe,
     PageComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './access-tokens.component.html',
 })
 export class AccessTokensComponent {
@@ -43,18 +61,27 @@ export class AccessTokensComponent {
   protected readonly faPlus = faPlus;
   protected readonly faXmark = faXmark;
   protected readonly faClipboard = faClipboard;
+  protected readonly faKey = faKey;
+  protected readonly faTriangleExclamation = faTriangleExclamation;
 
-  private readonly accessTokens = inject(AccessTokensService);
+  private readonly accessTokensService = inject(AccessTokensService);
   private readonly auth = inject(AuthService);
-  private readonly refresh$ = new Subject<void>();
-  protected readonly accessTokens$ = this.refresh$.pipe(
-    startWith(0),
-    switchMap(() => this.accessTokens.list())
+  private readonly toast = inject(ToastService);
+  private readonly overlay = inject(OverlayService);
+
+  private readonly accessTokens = rxResource({stream: () => this.accessTokensService.list()});
+
+  protected readonly rows = computed<AccessTokenRow[]>(() =>
+    (this.accessTokens.value() ?? []).map((token) => ({
+      token,
+      expired: isExpired(token),
+      legacy: token.secrets.length === 0,
+      secrets: token.secrets,
+      canCreateSecret: token.secrets.length < 2,
+      canDeleteSecret: token.secrets.length > 1,
+    }))
   );
 
-  private readonly toast = inject(ToastService);
-
-  private readonly overlay = inject(OverlayService);
   protected drawer: DialogRef<void> | null = null;
 
   protected readonly currentUserRole = computed<UserRole | undefined>(() => this.auth.getClaims()?.role);
@@ -69,8 +96,8 @@ export class AccessTokensComponent {
     userRole: new FormControl<UserRole | undefined>(undefined),
   });
 
-  protected editFormLoading = false;
-  protected createdToken: AccessTokenWithKey | null = null;
+  protected readonly editFormLoading = signal(false);
+  protected readonly createdToken = signal<AccessTokenWithKey | null>(null);
 
   public openDrawer(template: TemplateRef<unknown>) {
     this.hideDrawer();
@@ -89,7 +116,7 @@ export class AccessTokensComponent {
   }
 
   public async createAccessToken() {
-    this.editFormLoading = true;
+    this.editFormLoading.set(true);
     const request: CreateAccessTokenRequest = {};
     if (this.editForm.value.label) {
       request.label = this.editForm.value.label;
@@ -101,23 +128,61 @@ export class AccessTokensComponent {
       request.userRole = this.editForm.value.userRole;
     }
     try {
-      this.createdToken = await firstValueFrom(this.accessTokens.create(request));
+      this.createdToken.set(await firstValueFrom(this.accessTokensService.create(request)));
       this.toast.success('token created');
       this.hideDrawer();
-      this.refresh$.next();
+      this.accessTokens.reload();
     } finally {
-      this.editFormLoading = false;
+      this.editFormLoading.set(false);
     }
   }
 
-  public async deleteAccessToken(accessToken: AccessToken) {
-    if (await firstValueFrom(this.overlay.confirm(`Really delete token '${accessToken.label}'?`))) {
+  public async deleteAccessToken(row: AccessTokenRow) {
+    if (await firstValueFrom(this.overlay.confirm(`Really delete token '${row.token.label}'?`))) {
       try {
-        await firstValueFrom(this.accessTokens.delete(accessToken.id!));
-        this.refresh$.next();
-      } catch (e) {}
+        await firstValueFrom(this.accessTokensService.delete(row.token.id!));
+        this.accessTokens.reload();
+      } catch (e) {
+        this.showError(e);
+      }
     }
   }
 
-  protected readonly isExpired = isExpired;
+  public async createSecret(row: AccessTokenRow) {
+    const confirmation = row.legacy
+      ? `Token '${row.token.label}' is still stored in plain text. Securing it replaces it with a new token, ` +
+        'so the one currently in use stops working. Continue?'
+      : `Add a second secret to token '${row.token.label}'?`;
+    if (!(await firstValueFrom(this.overlay.confirm(confirmation)))) {
+      return;
+    }
+    try {
+      this.createdToken.set(await firstValueFrom(this.accessTokensService.createSecret(row.token.id!)));
+      this.toast.success('secret created');
+      this.accessTokens.reload();
+    } catch (e) {
+      this.showError(e);
+    }
+  }
+
+  public async deleteSecret(row: AccessTokenRow, slot: AccessTokenSecretSlot) {
+    const confirmation =
+      `Really delete secret ${slot} of token '${row.token.label}'? ` +
+      'Everything that still authenticates with it stops working.';
+    if (await firstValueFrom(this.overlay.confirm(confirmation))) {
+      try {
+        await firstValueFrom(this.accessTokensService.deleteSecret(row.token.id!, slot));
+        this.accessTokens.reload();
+      } catch (e) {
+        this.showError(e);
+      }
+    }
+  }
+
+  private showError(e: unknown) {
+    const message = getFormDisplayedError(e);
+    if (message) {
+      this.toast.error(message);
+    }
+  }
 }
