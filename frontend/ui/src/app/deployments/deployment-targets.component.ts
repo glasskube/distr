@@ -189,7 +189,7 @@ export class DeploymentTargetsComponent implements AfterViewInit {
 
   constructor() {
     // The cached list decides whether a deployment is shown as outdated, so it has to be current when the page opens.
-    this.applications.refresh().pipe(takeUntilDestroyed()).subscribe();
+    this.applications.refresh();
     effect(() => localStorage.setItem(localStoragerCollapsedCustomerIds, JSON.stringify(this.collapsedCustomerIds())));
   }
 

@@ -1,10 +1,9 @@
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {DeploymentTarget, DeploymentWithLatestRevision} from '@distr-sh/distr-sdk';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {faCircleExclamation, faShip, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {catchError, first, firstValueFrom, forkJoin, map, of, switchMap} from 'rxjs';
+import {firstValueFrom} from 'rxjs';
 import {fromBase64} from '../../util/encoding';
 import {getFormDisplayedError} from '../../util/errors';
 import {SpinnerComponent} from '../components/spinner/spinner.component';
@@ -39,29 +38,7 @@ export class DeploymentModalComponent {
   private readonly applicationEntitlements = inject(ApplicationEntitlementsService);
   private readonly featureFlags = inject(FeatureFlagService);
 
-  /**
-   * The application list is cached for the whole session, so a version released after the page was loaded would
-   * otherwise be missing from the version select. The form is only built once the refetch is done, because it picks
-   * the newest version at the time it initializes and would not move off a stale one later.
-   */
-  protected readonly dataLoaded = toSignal(
-    this.featureFlags.isLicensingEnabled$.pipe(
-      first(),
-      switchMap((licensingEnabled) =>
-        forkJoin([this.applications.refresh(), licensingEnabled ? this.applicationEntitlements.refresh() : of([])])
-      ),
-      map(() => true),
-      catchError((e) => {
-        const msg = getFormDisplayedError(e);
-        if (msg) {
-          this.toast.error(msg);
-        }
-        // Falling back to the cached list still lets the user deploy, which a modal stuck on a spinner would not.
-        return of(true);
-      })
-    ),
-    {initialValue: false}
-  );
+  protected readonly dataLoaded = signal(false);
 
   protected readonly customerManagedWarningVisible = computed(
     () => this.deploymentTarget().customerOrganization !== undefined && this.auth.isVendor()
@@ -79,6 +56,7 @@ export class DeploymentModalComponent {
   protected readonly faXmark = faXmark;
 
   constructor() {
+    this.refreshCachedLists();
     effect(() => {
       const deployment = this.deployment();
       this.deployForm.reset({
@@ -93,6 +71,24 @@ export class DeploymentModalComponent {
         helmOptions: deployment?.helmOptions,
       });
     });
+  }
+
+  private async refreshCachedLists() {
+    try {
+      const licensingEnabled = await firstValueFrom(this.featureFlags.isLicensingEnabled$);
+      await Promise.all([
+        this.applications.refresh(),
+        ...(licensingEnabled ? [this.applicationEntitlements.refresh()] : []),
+      ]);
+    } catch (e) {
+      const msg = getFormDisplayedError(e);
+      if (msg) {
+        this.toast.error(msg);
+      }
+    } finally {
+      // Falling back to the cached list still lets the user deploy, which a modal stuck on a spinner would not.
+      this.dataLoaded.set(true);
+    }
   }
 
   protected async saveDeployment() {

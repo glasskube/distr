@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable, inject} from '@angular/core';
-import {Observable, tap} from 'rxjs';
+import {inject, Injectable} from '@angular/core';
+import {firstValueFrom, Observable, tap} from 'rxjs';
 import {ApplicationEntitlement} from '../types/application-entitlement';
 import {DefaultReactiveList} from './cache';
 import {CrudService} from './interfaces';
@@ -22,10 +22,12 @@ export class ApplicationEntitlementsService implements CrudService<ApplicationEn
     }
   }
 
-  refresh(): Observable<ApplicationEntitlement[]> {
-    return this.httpClient
-      .get<ApplicationEntitlement[]>(this.entitlementsUrl)
-      .pipe(tap((entitlements) => this.cache.reset(entitlements)));
+  refresh(): Promise<ApplicationEntitlement[]> {
+    return firstValueFrom(
+      this.httpClient
+        .get<ApplicationEntitlement[]>(this.entitlementsUrl)
+        .pipe(tap((entitlements) => this.cache.reset(entitlements)))
+    );
   }
 
   create(entitlement: ApplicationEntitlement): Observable<ApplicationEntitlement> {

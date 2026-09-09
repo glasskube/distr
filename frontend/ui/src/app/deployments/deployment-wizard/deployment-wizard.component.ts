@@ -236,7 +236,7 @@ export class DeploymentWizardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
-    this.applications.refresh().pipe(takeUntilDestroyed()).subscribe();
+    this.applications.refresh();
     // Initialize deployment form with initial data reactively
     effect(() => {
       const initialData = this.deploymentFormInitialData();
@@ -400,7 +400,7 @@ export class DeploymentWizardComponent implements OnInit {
     if (!this.deploymentTargetForm.valid) {
       return;
     }
-    this.applications.refresh().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    this.applications.refresh();
     this.nextStep();
   }
 

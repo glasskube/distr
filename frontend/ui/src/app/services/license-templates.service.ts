@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable, inject} from '@angular/core';
-import {Observable, tap} from 'rxjs';
+import {inject, Injectable} from '@angular/core';
+import {firstValueFrom, Observable, tap} from 'rxjs';
 import {LicenseTemplate} from '../types/license-template';
 import {DefaultReactiveList} from './cache';
 
@@ -15,8 +15,10 @@ export class LicenseTemplatesService {
     return this.cache.get();
   }
 
-  refresh(): Observable<LicenseTemplate[]> {
-    return this.http.get<LicenseTemplate[]>(this.templatesUrl).pipe(tap((templates) => this.cache.reset(templates)));
+  refresh(): Promise<LicenseTemplate[]> {
+    return firstValueFrom(
+      this.http.get<LicenseTemplate[]>(this.templatesUrl).pipe(tap((templates) => this.cache.reset(templates)))
+    );
   }
 
   create(

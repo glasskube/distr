@@ -175,7 +175,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit {
         taskId: welcomeTaskStart,
       })
     );
-    this.applicationsService.refresh().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    await this.applicationsService.refresh();
   }
 
   private prepareDeployStep() {

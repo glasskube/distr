@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable, inject} from '@angular/core';
-import {Observable, tap} from 'rxjs';
+import {inject, Injectable} from '@angular/core';
+import {firstValueFrom, Observable, tap} from 'rxjs';
 import {ArtifactEntitlement} from '../types/artifact-entitlement';
 import {DefaultReactiveList} from './cache';
 import {CrudService} from './interfaces';
@@ -16,10 +16,12 @@ export class ArtifactEntitlementsService implements CrudService<ArtifactEntitlem
     return this.cache.get();
   }
 
-  refresh(): Observable<ArtifactEntitlement[]> {
-    return this.http
-      .get<ArtifactEntitlement[]>(this.artifactEntitlementsUrl)
-      .pipe(tap((entitlements) => this.cache.reset(entitlements)));
+  refresh(): Promise<ArtifactEntitlement[]> {
+    return firstValueFrom(
+      this.http
+        .get<ArtifactEntitlement[]>(this.artifactEntitlementsUrl)
+        .pipe(tap((entitlements) => this.cache.reset(entitlements)))
+    );
   }
 
   create(request: ArtifactEntitlement): Observable<ArtifactEntitlement> {
