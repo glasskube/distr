@@ -23,6 +23,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/getsentry/sentry-go v0.49.0
 	github.com/getsentry/sentry-go/otel/otlp v0.49.0
+	github.com/glasskube/pkg/crypto v0.1.0
 	github.com/glasskube/pkg/seekbuf v0.1.1
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-chi/httprate v0.16.0
@@ -344,3 +345,6 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 	tags.cncf.io/container-device-interface v1.1.0 // indirect
 )
+
+// TODO: remove once https://github.com/glasskube/pkg/pull/6 is released as crypto/v0.2.0
+replace github.com/glasskube/pkg/crypto => github.com/glasskube/pkg/crypto v0.1.1-0.20260907123438-13d0c2b572d7
