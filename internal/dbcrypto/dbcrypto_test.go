@@ -29,17 +29,20 @@ func useKeyring(t *testing.T) {
 
 // scanned is what the read expression of a column yields for a stored value: the length and the
 // bytes of the data it is bound to, followed by the value itself.
-func scanned(c Column, scope uuid.UUID, stored []byte) []byte {
-	aad := c.aad(scope)
+func scanned(t *testing.T, c Column, scope []uuid.UUID, stored []byte) []byte {
+	t.Helper()
+	aad, err := c.aad(scope)
+	NewWithT(t).Expect(err).NotTo(HaveOccurred())
 	return append(append([]byte{byte(len(aad))}, aad...), stored...)
 }
 
 var (
-	secretValue   = NewColumn("Secret", "value")
-	smtpUsername  = NewColumn("CustomEmailConfiguration", "smtp_username").ScopedTo("organization_id")
-	smtpPassword  = NewColumn("CustomEmailConfiguration", "smtp_password").ScopedTo("organization_id")
-	someRow       = uuid.MustParse("6f3f1a5e-0f7a-4f6d-9a1e-7c9a6b2d4e10")
-	someOtherRow  = uuid.MustParse("b2c7d9e1-3a45-4c8b-9f02-1d6e8a3b5c74")
+	secretValue   = NewColumn("Secret", "value", "customer_organization_id", "organization_id")
+	smtpUsername  = NewColumn("CustomEmailConfiguration", "smtp_username", "organization_id")
+	smtpPassword  = NewColumn("CustomEmailConfiguration", "smtp_password", "organization_id")
+	someOrg       = uuid.MustParse("6f3f1a5e-0f7a-4f6d-9a1e-7c9a6b2d4e10")
+	someOtherOrg  = uuid.MustParse("b2c7d9e1-3a45-4c8b-9f02-1d6e8a3b5c74")
+	someCustomer  = uuid.MustParse("4d8e2f60-95b3-4a17-8c2d-5e0f7a1b3c96")
 	someSecretVal = String("hunter2")
 )
 
@@ -47,38 +50,54 @@ func TestEncryptDecrypt(t *testing.T) {
 	t.Run("round trips a value", func(t *testing.T) {
 		g := NewWithT(t)
 		useKeyring(t)
-		sealed, err := secretValue.Encrypt(someSecretVal, someRow)
+		sealed, err := secretValue.Encrypt(someSecretVal, someCustomer, someOrg)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(string(sealed)).NotTo(ContainSubstring(string(someSecretVal)))
-		g.Expect(secretValue.Decrypt(sealed, someRow)).To(Equal([]byte(someSecretVal)))
+		g.Expect(secretValue.Decrypt(sealed, someCustomer, someOrg)).To(Equal([]byte(someSecretVal)))
 	})
 
 	t.Run("compresses a large value, which a column can no longer do for itself", func(t *testing.T) {
 		g := NewWithT(t)
 		useKeyring(t)
 		plaintext := strings.Repeat("deployment log line\n", 1000)
-		sealed, err := secretValue.Encrypt(String(plaintext), someRow)
+		sealed, err := secretValue.Encrypt(String(plaintext), someCustomer, someOrg)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(len(sealed)).To(BeNumerically("<", len(plaintext)))
-		g.Expect(secretValue.Decrypt(sealed, someRow)).To(Equal([]byte(plaintext)))
+		g.Expect(secretValue.Decrypt(sealed, someCustomer, someOrg)).To(Equal([]byte(plaintext)))
 	})
 
 	t.Run("rejects a value moved to another column", func(t *testing.T) {
 		g := NewWithT(t)
 		useKeyring(t)
-		sealed, err := smtpPassword.Encrypt(someSecretVal, someRow)
+		sealed, err := smtpPassword.Encrypt(someSecretVal, someOrg)
 		g.Expect(err).NotTo(HaveOccurred())
-		_, err = smtpUsername.Decrypt(sealed, someRow)
+		_, err = smtpUsername.Decrypt(sealed, someOrg)
 		g.Expect(err).To(HaveOccurred())
 	})
 
-	t.Run("rejects a value moved to another row", func(t *testing.T) {
+	t.Run("rejects a value whose row was moved to another organization", func(t *testing.T) {
 		g := NewWithT(t)
 		useKeyring(t)
-		sealed, err := secretValue.Encrypt(someSecretVal, someRow)
+		sealed, err := secretValue.Encrypt(someSecretVal, someCustomer, someOrg)
 		g.Expect(err).NotTo(HaveOccurred())
-		_, err = secretValue.Decrypt(sealed, someOtherRow)
+		_, err = secretValue.Decrypt(sealed, someCustomer, someOtherOrg)
 		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("rejects a value whose row was handed to a customer", func(t *testing.T) {
+		g := NewWithT(t)
+		useKeyring(t)
+		sealed, err := secretValue.Encrypt(someSecretVal, uuid.Nil, someOrg)
+		g.Expect(err).NotTo(HaveOccurred())
+		_, err = secretValue.Decrypt(sealed, someCustomer, someOrg)
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("rejects a scope of the wrong length", func(t *testing.T) {
+		g := NewWithT(t)
+		useKeyring(t)
+		_, err := secretValue.Encrypt(someSecretVal, someOrg)
+		g.Expect(err).To(MatchError(ContainSubstring("Secret.value is bound to")))
 	})
 }
 
@@ -109,9 +128,10 @@ func TestDecryptScanned(t *testing.T) {
 // than assigning the raw ciphertext to the underlying string or byte slice.
 func TestScanPlan(t *testing.T) {
 	useKeyring(t)
-	sealed, err := secretValue.Encrypt(someSecretVal, someRow)
+	scope := []uuid.UUID{someCustomer, someOrg}
+	sealed, err := secretValue.Encrypt(someSecretVal, scope...)
 	NewWithT(t).Expect(err).NotTo(HaveOccurred())
-	value := scanned(secretValue, someRow, sealed)
+	value := scanned(t, secretValue, scope, sealed)
 	m := pgtype.NewMap()
 
 	t.Run("String", func(t *testing.T) {

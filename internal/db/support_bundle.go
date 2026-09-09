@@ -327,10 +327,8 @@ func GetSupportBundleByBundleSecret(
 }
 
 func CreateSupportBundle(ctx context.Context, bundle *types.SupportBundle) error {
-	// The id is generated here rather than by the column default, because the secret is bound to the
-	// row it is stored in and therefore has to be sealed before the row exists.
-	id := uuid.New()
-	bundleSecretEnc, err := supportBundleSecret.Encrypt(bundle.BundleSecret, id)
+	bundleSecretEnc, err := supportBundleSecret.Encrypt(
+		bundle.BundleSecret, bundle.CustomerOrganizationID, bundle.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt support bundle secret: %w", err)
 	}
@@ -338,16 +336,15 @@ func CreateSupportBundle(ctx context.Context, bundle *types.SupportBundle) error
 	rows, err := db.Query(
 		ctx,
 		`INSERT INTO SupportBundle AS sb
-			(id, organization_id, customer_organization_id, created_by_user_account_id,
+			(organization_id, customer_organization_id, created_by_user_account_id,
 			title, description, bundle_secret_enc, bundle_secret_expires_at)
-		VALUES (@id, @orgId, @customerOrgId, @userId, @title, @description,
+		VALUES (@orgId, @customerOrgId, @userId, @title, @description,
 			@bundleSecretEnc, @bundleSecretExpiresAt)
 		RETURNING id, created_at, organization_id, customer_organization_id,
 			created_by_user_account_id, title, description, status,
 			`+supportBundleSecret.Output("sb")+`, bundle_secret_expires_at,
 			status_changed_by_user_account_id, status_changed_at`,
 		pgx.NamedArgs{
-			"id":                    id,
 			"orgId":                 bundle.OrganizationID,
 			"customerOrgId":         bundle.CustomerOrganizationID,
 			"userId":                bundle.CreatedByUserAccountID,
@@ -430,21 +427,17 @@ func GetSupportBundleResources(ctx context.Context, bundleID uuid.UUID) ([]types
 }
 
 func CreateSupportBundleResource(ctx context.Context, resource *types.SupportBundleResource) error {
-	// The id is generated here rather than by the column default, because the content is bound to the
-	// row it is stored in and therefore has to be sealed before the row exists.
-	id := uuid.New()
-	contentEnc, err := supportBundleResourceContent.Encrypt(resource.Content, id)
+	contentEnc, err := supportBundleResourceContent.Encrypt(resource.Content, resource.SupportBundleID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt support bundle resource: %w", err)
 	}
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`INSERT INTO SupportBundleResource AS r (id, support_bundle_id, name, content_enc)
-		VALUES (@id, @bundleId, @name, @contentEnc)
+		`INSERT INTO SupportBundleResource AS r (support_bundle_id, name, content_enc)
+		VALUES (@bundleId, @name, @contentEnc)
 		RETURNING id, created_at, support_bundle_id, name, `+supportBundleResourceContent.Output("r"),
 		pgx.NamedArgs{
-			"id":         id,
 			"bundleId":   resource.SupportBundleID,
 			"name":       resource.Name,
 			"contentEnc": contentEnc,

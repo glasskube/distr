@@ -51,32 +51,23 @@ func Keys() *crypto.Keyring {
 	return keys
 }
 
-// Column is one encrypted column. Every value it holds is bound to the column it is stored in and to
-// the row it belongs to: both are authenticated along with the ciphertext, so a value that is copied
-// into another column or another row no longer decrypts. That closes the decryption oracle an
-// application otherwise is for someone who can write to the database without holding the key, who
-// could move any ciphertext into a column whose plaintext the application hands out or sends
-// somewhere.
-//
-// What a value is bound to is part of the stored format, so renaming a table or a column, or
-// changing [Column.Scope], invalidates every value stored in it until it has been re-encrypted.
+// Column is one encrypted column. Every value it holds is authenticated along with the column it is
+// stored in and the scope of its row, so a value copied elsewhere, or a row handed to another owner,
+// no longer decrypts. Both are part of the stored format: renaming either, or changing
+// [Column.Scope], invalidates every value in the column until it has been re-encrypted.
 type Column struct {
 	Table string
 	Name  string
-	// Scope is the column of the same row whose value the stored value is bound to. It defaults to
-	// the primary key, which is the most restrictive choice, and has to name something else only
-	// where a row is written by an upsert, whose conflict path keeps the id of the row it found
-	// rather than the one the insert generated. It must be a NOT NULL UUID column of the same row,
-	// since a NULL makes the read expression fall through to the plaintext column.
-	Scope string
+	// Scope names the columns of the same row that an authorization check reads to decide who the
+	// value belongs to, most specific first. Binding the owner rather than the row id is what stops
+	// someone who can write the database from claiming a row, since the owner is stored in the clear
+	// next to the ciphertext. A statement that changes one of them has to rewrite the encrypted
+	// column too, or the value it leaves behind cannot be opened.
+	Scope []string
 }
 
-func NewColumn(table, name string) Column { return Column{Table: table, Name: name} }
-
-// ScopedTo binds the values of this column to a column other than the primary key. See [Column.Scope].
-func (c Column) ScopedTo(scope string) Column {
-	c.Scope = scope
-	return c
+func NewColumn(table, name string, scope ...string) Column {
+	return Column{Table: table, Name: name, Scope: scope}
 }
 
 func (c Column) String() string { return c.Table + "." + c.Name }
@@ -85,58 +76,74 @@ func (c Column) String() string { return c.Table + "." + c.Name }
 // before the encryption migration still use.
 func (c Column) Enc() string { return c.Name + "_enc" }
 
-// ScopeColumn is [Column.Scope] with its default applied.
-func (c Column) ScopeColumn() string {
-	if c.Scope == "" {
-		return "id"
+// ScopeOf maps a nullable scope column to the nil UUID the read expression substitutes for a NULL.
+// No row carries that value, so the two cannot collide.
+func ScopeOf(id *uuid.UUID) uuid.UUID {
+	if id == nil {
+		return uuid.Nil
 	}
-	return c.Scope
+	return *id
 }
 
-// aad is the additional authenticated data of a value of this column in the row scope identifies. It
-// is never stored: a read reconstructs it from the column it reads and the row it reads it from.
-func (c Column) aad(scope uuid.UUID) []byte {
-	aad := make([]byte, 0, len(c.String())+scopeLen)
+// aad is never stored: a read reconstructs it from the column and the row it reads. Every scope
+// value has the same length, so concatenating them is unambiguous.
+func (c Column) aad(scope []uuid.UUID) ([]byte, error) {
+	if len(scope) != len(c.Scope) {
+		return nil, fmt.Errorf("%v is bound to %v, but %d scope values were given",
+			c, c.Scope, len(scope))
+	}
+	aad := make([]byte, 0, len(c.String())+len(scope)*scopeLen)
 	aad = append(aad, c.String()...)
-	return append(aad, scope[:]...)
+	for _, value := range scope {
+		aad = append(aad, value[:]...)
+	}
+	return aad, nil
 }
 
-// Encrypt seals a value of this column for the row scope identifies. Compression is on because
+// Encrypt seals a value of this column for a row of the given scope. Compression is on because
 // Postgres can no longer TOAST-compress a column once it holds ciphertext, and the columns this
 // package covers include support bundle resources and deployment revision values, which are large
 // enough for that to matter.
-func (c Column) Encrypt(value String, scope uuid.UUID) ([]byte, error) {
-	return c.EncryptRaw([]byte(value), scope)
+func (c Column) Encrypt(value String, scope ...uuid.UUID) ([]byte, error) {
+	return c.EncryptRaw([]byte(value), scope...)
 }
 
 // EncryptPtr seals a nullable [String], keeping nil as NULL.
-func (c Column) EncryptPtr(value *String, scope uuid.UUID) ([]byte, error) {
+func (c Column) EncryptPtr(value *String, scope ...uuid.UUID) ([]byte, error) {
 	if value == nil {
 		return nil, nil
 	}
-	return c.Encrypt(*value, scope)
+	return c.Encrypt(*value, scope...)
 }
 
 // EncryptBytes seals a [Bytes], keeping nil as NULL, because a nullable column of this kind uses
 // NULL to mean that there is no value rather than that there is an empty one.
-func (c Column) EncryptBytes(value Bytes, scope uuid.UUID) ([]byte, error) {
+func (c Column) EncryptBytes(value Bytes, scope ...uuid.UUID) ([]byte, error) {
 	if value == nil {
 		return nil, nil
 	}
-	return c.EncryptRaw(value, scope)
+	return c.EncryptRaw(value, scope...)
 }
 
 // EncryptRaw seals bytes that are neither a [String] nor a [Bytes], which only the encryption
 // migration has, since it moves a TEXT and a BYTEA column with the same code.
-func (c Column) EncryptRaw(value []byte, scope uuid.UUID) ([]byte, error) {
-	return Keys().Encrypt(value, crypto.WithCompression(), crypto.WithAAD(c.aad(scope)))
+func (c Column) EncryptRaw(value []byte, scope ...uuid.UUID) ([]byte, error) {
+	aad, err := c.aad(scope)
+	if err != nil {
+		return nil, err
+	}
+	return Keys().Encrypt(value, crypto.WithCompression(), crypto.WithAAD(aad))
 }
 
 // Decrypt opens a value read straight from the encrypted column, which only the encryption migration
 // does. Everything else reads through [Column.TextColumn] and its siblings and decrypts while
 // scanning.
-func (c Column) Decrypt(value []byte, scope uuid.UUID) ([]byte, error) {
-	return Keys().DecryptWithAAD(value, c.aad(scope))
+func (c Column) Decrypt(value []byte, scope ...uuid.UUID) ([]byte, error) {
+	aad, err := c.aad(scope)
+	if err != nil {
+		return nil, err
+	}
+	return Keys().DecryptWithAAD(value, aad)
 }
 
 // TextValue renders the expression that reads this column as a TEXT column, scannable into a
@@ -170,17 +177,26 @@ func (c Column) IsSetValue(alias string) string {
 	return fmt.Sprintf(`num_nonnulls(%[1]s.%[2]s, %[1]s.%[3]s) > 0`, alias, c.Name, c.Enc())
 }
 
+// ScopeValue reads one scope column, substituting the nil UUID for a NULL. See [ScopeOf].
+func (c Column) ScopeValue(alias, scope string) string {
+	return fmt.Sprintf(`coalesce(%s.%s, '%s'::UUID)`, alias, scope, uuid.Nil)
+}
+
 // boundValue is the stored value prefixed with the length and the bytes of its additional
 // authenticated data, which is what lets a scan reconstruct it from bytes alone. The whole
-// expression is NULL when the column is, so it can be the first argument of a coalesce that falls
-// back to the plaintext column.
+// expression is NULL when the encrypted column is, so it can be the first argument of a coalesce
+// that falls back to the plaintext column.
 func (c Column) boundValue(alias string) string {
 	name := []byte(c.String())
-	if len(name)+scopeLen > 255 {
+	aadLen := len(name) + len(c.Scope)*scopeLen
+	if aadLen > 255 {
 		panic("dbcrypto: additional authenticated data of " + c.String() + " does not fit its length prefix")
 	}
-	return fmt.Sprintf(`'\x%02x%x'::BYTEA || uuid_send(%s.%s) || %s.%s`,
-		len(name)+scopeLen, name, alias, c.ScopeColumn(), alias, c.Enc())
+	expr := fmt.Sprintf(`'\x%02x%x'::BYTEA`, aadLen, name)
+	for _, scope := range c.Scope {
+		expr += fmt.Sprintf(` || uuid_send(%s)`, c.ScopeValue(alias, scope))
+	}
+	return expr + fmt.Sprintf(` || %s.%s`, alias, c.Enc())
 }
 
 // decryptScanned opens what [Column.TextValue] and its siblings read: either a value that is still

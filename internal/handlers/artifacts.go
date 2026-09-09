@@ -340,7 +340,7 @@ func patchArtifactUpstreamHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := db.UpdateArtifactUpstream(ctx, artifact.ID, params); err != nil {
+	if err := db.UpdateArtifactUpstream(ctx, artifact.ID, artifact.OrganizationID, params); err != nil {
 		log.Error("failed to update artifact upstream", zap.Error(err))
 		sentry.GetHubFromContext(ctx).CaptureException(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

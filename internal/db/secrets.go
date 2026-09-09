@@ -187,10 +187,7 @@ func CreateSecret(
 	key string,
 	value dbcrypto.String,
 ) (*types.SecretWithUpdatedBy, error) {
-	// The id is generated here rather than by the column default, because the value is bound to the
-	// row it is stored in and therefore has to be sealed before the row exists.
-	id := uuid.New()
-	valueEnc, err := secretValue.Encrypt(value, id)
+	valueEnc, err := secretValue.Encrypt(value, dbcrypto.ScopeOf(customerOrganizationID), organizationID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt secret value: %w", err)
 	}
@@ -198,8 +195,8 @@ func CreateSecret(
 	rows, err := db.Query(
 		ctx,
 		`WITH inserted AS (
-			INSERT INTO Secret (id, key, value_enc, organization_id, customer_organization_id, updated_by_useraccount_id)
-			VALUES (@id, @key, @value_enc, @organization_id, @customer_organization_id, @updated_by_useraccount_id)
+			INSERT INTO Secret (key, value_enc, organization_id, customer_organization_id, updated_by_useraccount_id)
+			VALUES (@key, @value_enc, @organization_id, @customer_organization_id, @updated_by_useraccount_id)
 			RETURNING *
 		)
 		SELECT `+secretWithUpdatedByOutputExpr+` FROM inserted s
@@ -207,7 +204,6 @@ func CreateSecret(
 			ON s.updated_by_useraccount_id = u.id
 		`,
 		pgx.NamedArgs{
-			"id":                        id,
 			"key":                       key,
 			"organization_id":           organizationID,
 			"customer_organization_id":  customerOrganizationID,
@@ -229,13 +225,16 @@ func CreateSecret(
 	}
 }
 
+// UpdateSecret takes the owner of the stored row, not of the caller, and requires it to still hold:
+// the new value is sealed for it and could not be opened in a row moved to another owner meanwhile.
 func UpdateSecret(ctx context.Context,
 	id uuid.UUID,
+	organizationID uuid.UUID,
 	customerOrganizationID *uuid.UUID,
 	updatedByUserAccountID uuid.UUID,
 	value dbcrypto.String,
 ) (*types.SecretWithUpdatedBy, error) {
-	valueEnc, err := secretValue.Encrypt(value, id)
+	valueEnc, err := secretValue.Encrypt(value, dbcrypto.ScopeOf(customerOrganizationID), organizationID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt secret value: %w", err)
 	}
@@ -249,7 +248,8 @@ func UpdateSecret(ctx context.Context,
 				value = NULL,
 				value_enc = @value_enc
 			WHERE id = @id
-				AND (@is_vendor OR customer_organization_id = @customer_organization_id)
+				AND organization_id = @organization_id
+				AND customer_organization_id IS NOT DISTINCT FROM @customer_organization_id
 			RETURNING *
 		)
 		SELECT `+secretWithUpdatedByOutputExpr+` FROM updated s
@@ -257,8 +257,8 @@ func UpdateSecret(ctx context.Context,
 			ON s.updated_by_useraccount_id = u.id`,
 		pgx.NamedArgs{
 			"id":                        id,
+			"organization_id":           organizationID,
 			"customer_organization_id":  customerOrganizationID,
-			"is_vendor":                 customerOrganizationID == nil,
 			"updated_by_useraccount_id": updatedByUserAccountID,
 			"value_enc":                 valueEnc,
 		},

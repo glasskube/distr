@@ -201,6 +201,7 @@ func updateSecretHandler() http.HandlerFunc {
 			secret, err = db.UpdateSecret(
 				ctx,
 				id,
+				existing.OrganizationID,
 				existing.CustomerOrganizationID,
 				auth.CurrentUserID(),
 				dbcrypto.String(body.Value),

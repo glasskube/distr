@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	internalctx "github.com/distr-sh/distr/internal/context"
 	"github.com/distr-sh/distr/internal/dbcrypto"
@@ -22,13 +23,8 @@ type EncryptedColumn struct {
 	BatchSize int
 }
 
-func encrypted(table, name string) EncryptedColumn {
-	return EncryptedColumn{Column: dbcrypto.NewColumn(table, name)}
-}
-
-func (c EncryptedColumn) scopedTo(scope string) EncryptedColumn {
-	c.Column = c.ScopedTo(scope)
-	return c
+func encrypted(table, name string, scope ...string) EncryptedColumn {
+	return EncryptedColumn{Column: dbcrypto.NewColumn(table, name, scope...)}
 }
 
 func (c EncryptedColumn) binary() EncryptedColumn {
@@ -41,24 +37,34 @@ func (c EncryptedColumn) batched(size int) EncryptedColumn {
 	return c
 }
 
-// Every encrypted column of the schema. A column that is missing here is skipped by the encryption
-// migration, by the rollback and by the startup warning, so it is declared once and referenced from
-// the queries that read and write it, rather than named again at every call site.
+// Every encrypted column of the schema, with the scope its values are bound to. A column that is
+// missing here is skipped by the encryption migration, by the rollback and by the startup warning,
+// so it is declared once and referenced from the queries that read and write it, rather than named
+// again at every call site. Organization and UserAccount are scoped to their own id because that id
+// is the owner an authorization check reads.
 var (
-	secretValue                  = encrypted("Secret", "value")
-	oidcClientSecret             = encrypted("CustomOIDCConfiguration", "client_secret")
-	emailSMTPUsername            = encrypted("CustomEmailConfiguration", "smtp_username").scopedTo("organization_id")
-	emailSMTPPassword            = encrypted("CustomEmailConfiguration", "smtp_password").scopedTo("organization_id")
-	artifactUpstreamUsername     = encrypted("Artifact", "upstream_username")
-	artifactUpstreamPassword     = encrypted("Artifact", "upstream_password")
-	userAccountMFASecret         = encrypted("UserAccount", "mfa_secret")
-	organizationStripeSecret     = encrypted("Organization", "stripe_webhook_secret")
-	entitlementRegistryUsername  = encrypted("ApplicationEntitlement", "registry_username")
-	entitlementRegistryPassword  = encrypted("ApplicationEntitlement", "registry_password")
-	supportBundleSecret          = encrypted("SupportBundle", "bundle_secret")
-	deploymentValuesYaml         = encrypted("DeploymentRevision", "values_yaml").binary().batched(200)
-	deploymentEnvFileData        = encrypted("DeploymentRevision", "env_file_data").binary().batched(200)
-	supportBundleResourceContent = encrypted("SupportBundleResource", "content").batched(50)
+	secretValue = encrypted("Secret", "value",
+		"customer_organization_id", "organization_id")
+	oidcClientSecret = encrypted("CustomOIDCConfiguration", "client_secret",
+		"custom_domain_id", "organization_id")
+	emailSMTPUsername           = encrypted("CustomEmailConfiguration", "smtp_username", "organization_id")
+	emailSMTPPassword           = encrypted("CustomEmailConfiguration", "smtp_password", "organization_id")
+	artifactUpstreamUsername    = encrypted("Artifact", "upstream_username", "organization_id")
+	artifactUpstreamPassword    = encrypted("Artifact", "upstream_password", "organization_id")
+	userAccountMFASecret        = encrypted("UserAccount", "mfa_secret", "id")
+	organizationStripeSecret    = encrypted("Organization", "stripe_webhook_secret", "id")
+	entitlementRegistryUsername = encrypted("ApplicationEntitlement", "registry_username",
+		"customer_organization_id", "organization_id")
+	entitlementRegistryPassword = encrypted("ApplicationEntitlement", "registry_password",
+		"customer_organization_id", "organization_id")
+	supportBundleSecret = encrypted("SupportBundle", "bundle_secret",
+		"customer_organization_id", "organization_id")
+	deploymentValuesYaml = encrypted("DeploymentRevision", "values_yaml", "deployment_id").
+				binary().batched(200)
+	deploymentEnvFileData = encrypted("DeploymentRevision", "env_file_data", "deployment_id").
+				binary().batched(200)
+	supportBundleResourceContent = encrypted("SupportBundleResource", "content", "support_bundle_id").
+					batched(50)
 )
 
 // EncryptedColumns is every column the encryption migration covers, in the order it processes them.
@@ -174,9 +180,18 @@ func HasStaleKeyRows(ctx context.Context, c EncryptedColumn) (bool, error) {
 }
 
 type encryptedRow struct {
-	ID    uuid.UUID `db:"id"`
-	Scope uuid.UUID `db:"scope"`
-	Value []byte    `db:"value"`
+	ID    uuid.UUID   `db:"id"`
+	Scope []uuid.UUID `db:"scope"`
+	Value []byte      `db:"value"`
+}
+
+// scopeExpr reads the scope of a row in the order the column is bound to it.
+func (c EncryptedColumn) scopeExpr(alias string) string {
+	values := make([]string, len(c.Scope))
+	for i, scope := range c.Scope {
+		values[i] = c.ScopeValue(alias, scope)
+	}
+	return "ARRAY[" + strings.Join(values, ", ") + "]::UUID[]"
 }
 
 // EncryptPlaintextRows encrypts every row of one column that is still stored in plaintext and
@@ -186,7 +201,7 @@ func EncryptPlaintextRows(ctx context.Context, c EncryptedColumn) (int64, error)
 		c.plaintextExpr(),
 		fmt.Sprintf("%s IS NOT NULL", c.Name),
 		fmt.Sprintf("%s = NULL, %s = v.rewritten", c.Name, c.Enc()),
-		c.EncryptRaw,
+		func(value []byte, scope []uuid.UUID) ([]byte, error) { return c.EncryptRaw(value, scope...) },
 	)
 }
 
@@ -199,7 +214,7 @@ func DecryptEncryptedRows(ctx context.Context, c EncryptedColumn) (int64, error)
 		c.Enc(),
 		fmt.Sprintf("%s IS NOT NULL", c.Enc()),
 		fmt.Sprintf("%s = NULL, %s = %s", c.Enc(), c.Name, c.decryptedExpr()),
-		c.Decrypt,
+		func(value []byte, scope []uuid.UUID) ([]byte, error) { return c.Decrypt(value, scope...) },
 	)
 }
 
@@ -210,12 +225,12 @@ func ReencryptStaleKeyRows(ctx context.Context, c EncryptedColumn) (int64, error
 		c.Enc(),
 		fmt.Sprintf("%s IS NOT NULL AND %s", c.Enc(), c.staleKeyExpr()),
 		fmt.Sprintf("%s = v.rewritten", c.Enc()),
-		func(value []byte, scope uuid.UUID) ([]byte, error) {
-			plaintext, err := c.Decrypt(value, scope)
+		func(value []byte, scope []uuid.UUID) ([]byte, error) {
+			plaintext, err := c.Decrypt(value, scope...)
 			if err != nil {
 				return nil, err
 			}
-			return c.EncryptRaw(plaintext, scope)
+			return c.EncryptRaw(plaintext, scope...)
 		},
 	)
 }
@@ -235,7 +250,7 @@ func rewrite(
 	ctx context.Context,
 	c EncryptedColumn,
 	valueExpr, where, set string,
-	transform func([]byte, uuid.UUID) ([]byte, error),
+	transform func([]byte, []uuid.UUID) ([]byte, error),
 ) (int64, error) {
 	db := internalctx.GetDb(ctx)
 	var total int64
@@ -243,9 +258,9 @@ func rewrite(
 	for {
 		rows, err := db.Query(ctx,
 			fmt.Sprintf(
-				`SELECT id, %s AS scope, %s AS value FROM %s
+				`SELECT id, %s AS scope, %s AS value FROM %s AS t
 				WHERE %s AND id > @cursor ORDER BY id LIMIT %d`,
-				c.ScopeColumn(), valueExpr, c.Table, where, c.batchSize()),
+				c.scopeExpr("t"), valueExpr, c.Table, where, c.batchSize()),
 			pgx.NamedArgs{"cursor": cursor})
 		if err != nil {
 			return total, fmt.Errorf("could not query rows of %v: %w", c, err)

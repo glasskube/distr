@@ -423,27 +423,23 @@ func GetOrCreateArtifact(ctx context.Context, orgID uuid.UUID, artifactName stri
 }
 
 func CreateArtifact(ctx context.Context, artifact *types.Artifact) error {
-	// The id is generated here rather than by the column default, because the credentials are bound
-	// to the row they are stored in and therefore have to be sealed before the row exists.
-	id := uuid.New()
-	upstreamUsernameEnc, err := artifactUpstreamUsername.EncryptPtr(artifact.UpstreamUsername, id)
+	upstreamUsernameEnc, err := artifactUpstreamUsername.EncryptPtr(artifact.UpstreamUsername, artifact.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt upstream username: %w", err)
 	}
-	upstreamPasswordEnc, err := artifactUpstreamPassword.EncryptPtr(artifact.UpstreamPassword, id)
+	upstreamPasswordEnc, err := artifactUpstreamPassword.EncryptPtr(artifact.UpstreamPassword, artifact.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("could not encrypt upstream password: %w", err)
 	}
 	db := internalctx.GetDb(ctx)
 	rows, err := db.Query(
 		ctx,
-		`INSERT INTO Artifact AS a (id, name, organization_id, upstream_url, upstream_auth_type, upstream_username_enc,
+		`INSERT INTO Artifact AS a (name, organization_id, upstream_url, upstream_auth_type, upstream_username_enc,
 			upstream_password_enc)
-		VALUES (@id, @name, @organizationId, @upstreamUrl, @upstreamAuthType, @upstreamUsernameEnc,
+		VALUES (@name, @organizationId, @upstreamUrl, @upstreamAuthType, @upstreamUsernameEnc,
 			@upstreamPasswordEnc)
 		RETURNING `+artifactOutputExpr,
 		pgx.NamedArgs{
-			"id":                  id,
 			"name":                artifact.Name,
 			"organizationId":      artifact.OrganizationID,
 			"upstreamUrl":         artifact.UpstreamURL,
@@ -496,23 +492,29 @@ type UpdateArtifactUpstreamParams struct {
 	Password    *dbcrypto.String
 }
 
-func UpdateArtifactUpstream(ctx context.Context, artifactID uuid.UUID, p UpdateArtifactUpstreamParams) error {
+// UpdateArtifactUpstream requires the organization of the stored row to still hold: the new
+// credentials are sealed for it and could not be opened in a row moved to another one meanwhile.
+func UpdateArtifactUpstream(
+	ctx context.Context,
+	artifactID, organizationID uuid.UUID,
+	p UpdateArtifactUpstreamParams,
+) error {
 	if !p.UpdateURL && !p.UpdateAuth {
 		return nil
 	}
 	db := internalctx.GetDb(ctx)
 	var setClauses []string
-	args := pgx.NamedArgs{"id": artifactID}
+	args := pgx.NamedArgs{"id": artifactID, "organizationId": organizationID}
 	if p.UpdateURL {
 		setClauses = append(setClauses, "upstream_url = @upstreamUrl")
 		args["upstreamUrl"] = p.UpstreamURL
 	}
 	if p.UpdateAuth {
-		usernameEnc, err := artifactUpstreamUsername.EncryptPtr(p.Username, artifactID)
+		usernameEnc, err := artifactUpstreamUsername.EncryptPtr(p.Username, organizationID)
 		if err != nil {
 			return fmt.Errorf("could not encrypt upstream username: %w", err)
 		}
-		passwordEnc, err := artifactUpstreamPassword.EncryptPtr(p.Password, artifactID)
+		passwordEnc, err := artifactUpstreamPassword.EncryptPtr(p.Password, organizationID)
 		if err != nil {
 			return fmt.Errorf("could not encrypt upstream password: %w", err)
 		}
@@ -528,7 +530,8 @@ func UpdateArtifactUpstream(ctx context.Context, artifactID uuid.UUID, p UpdateA
 		args["passwordEnc"] = passwordEnc
 	}
 	_, err := db.Exec(ctx,
-		`UPDATE Artifact SET `+strings.Join(setClauses, ", ")+` WHERE id = @id`,
+		`UPDATE Artifact SET `+strings.Join(setClauses, ", ")+
+			` WHERE id = @id AND organization_id = @organizationId`,
 		args,
 	)
 	if err != nil {
