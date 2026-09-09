@@ -175,7 +175,7 @@ export class AgentsTutorialComponent implements OnInit, AfterViewInit {
         taskId: welcomeTaskStart,
       })
     );
-    await this.applicationsService.refresh();
+    this.applicationsService.refresh();
   }
 
   private prepareDeployStep() {
