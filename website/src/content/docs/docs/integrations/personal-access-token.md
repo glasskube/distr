@@ -12,6 +12,8 @@ This applies for any kind of integration, no matter whether you are using the Di
 
 A Personal Access Token is a unique string that you generate in the Distr web interface. It is directly associated with the user who created it, and with the organization it was created in. It cannot be used to access data of other organizations of the same user.
 
+A token consists of a key and a secret, separated by an underscore: `distr-<key>_<secret>`. The key identifies the token, while the secret is what proves that you are allowed to use it. Distr only stores a salted hash of the secret, which is why a token is shown to you exactly once and cannot be recovered afterwards.
+
 ## Creating a Personal Access Token
 
 In the top right corner of the Distr web interface, click on your user icon and select **Personal Access Tokens** from the dropdown menu.
@@ -45,6 +47,22 @@ This is the only time the token will be shown to you. Make sure to copy it and s
 Remember, anybody that has access to this token can authenticate with the Distr API on your behalf. Treat it like your password.
 
 ![Personal Access Tokens](../../../../assets/docs/integrations/pat_output.png)
+
+## Rotating a token's secret
+
+A token can hold two secrets at the same time, so that you can replace one without ever having a moment where nothing works. Both secrets grant exactly the same access, and the token page shows for each of them when it was created and when it was last used.
+
+To rotate a secret:
+
+1. Click **Add secret** next to the token. Distr shows you the new token, which is the same key with the new secret. Note it down, it is only shown once.
+2. Roll the new token out everywhere the old one is in use. The "last used" timestamp of the old secret tells you whether anything is still authenticating with it.
+3. Delete the old secret once its "last used" timestamp stops moving.
+
+A token always keeps at least one secret, so the last remaining secret cannot be deleted. Delete the token itself instead.
+
+## Securing a token created before secrets existed
+
+Tokens created before Distr split them into a key and a secret have no secret at all, and the token page marks them with **No secret**. Click **Secure token** to give such a token a secret. Doing so replaces the token, so anything still using the old one has to be updated with the new token that is shown to you.
 
 ## Deleting Personal Access Tokens
 

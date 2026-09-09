@@ -54,6 +54,12 @@
 
 ---
 
+### secrets
+
+> **secrets**: [`AccessTokenSecret`](AccessTokenSecret.md)[]
+
+---
+
 ### userRole?
 
 > `optional` **userRole?**: [`UserRole`](../type-aliases/UserRole.md)

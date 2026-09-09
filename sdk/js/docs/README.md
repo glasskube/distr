@@ -12,6 +12,7 @@
 ## Interfaces
 
 - [AccessToken](interfaces/AccessToken.md)
+- [AccessTokenSecret](interfaces/AccessTokenSecret.md)
 - [AccessTokenWithKey](interfaces/AccessTokenWithKey.md)
 - [Advisory](interfaces/Advisory.md)
 - [AdvisoryApplicationVersion](interfaces/AdvisoryApplicationVersion.md)
@@ -71,6 +72,7 @@
 
 ## Type Aliases
 
+- [AccessTokenSecretSlot](type-aliases/AccessTokenSecretSlot.md)
 - [AdvisoryEventType](type-aliases/AdvisoryEventType.md)
 - [AdvisoryImpactState](type-aliases/AdvisoryImpactState.md)
 - [AdvisorySeverity](type-aliases/AdvisorySeverity.md)

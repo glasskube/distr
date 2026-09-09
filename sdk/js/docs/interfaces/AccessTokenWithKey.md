@@ -68,6 +68,16 @@
 
 ---
 
+### secrets
+
+> **secrets**: [`AccessTokenSecret`](AccessTokenSecret.md)[]
+
+#### Inherited from
+
+[`AccessToken`](AccessToken.md).[`secrets`](AccessToken.md#secrets)
+
+---
+
 ### userRole?
 
 > `optional` **userRole?**: [`UserRole`](../type-aliases/UserRole.md)
